@@ -13,5 +13,6 @@ Some ideas for what this project will create:
 
 * People - cast of characters
 * Big ideas - just an overview, or maybe deeper analysis
-* Timeline - list of big ideas and events, ordered by date
+* Timeline - list of big ideas and events, ordered by date. Orta already has [a list that covers most of the timeline](https://orta.io/notes/js/why-typescript), especially recent events.
 * Interviews
+
