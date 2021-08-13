@@ -1,6 +1,12 @@
 # typescript-history
 A History of TypeScript
 
+## Why?
+
+1. Typescript is by now an important part of the history of programming.
+2. The current Typescript team is best placed to collect and generate primary documents.
+3. Typescript is open source in everything else; we should be open in making our history available.
+
 ## Storage of Primary Documents
 
 This is the private repo for this project.
