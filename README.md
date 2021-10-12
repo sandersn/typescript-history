@@ -22,3 +22,11 @@ Some ideas for what this project will create:
 * Timeline - list of big ideas and events, ordered by date. Orta already has [a list that covers most of the timeline](https://orta.io/notes/js/why-typescript), especially recent events.
 * Interviews
 
+## Next Tasks
+
+1. Catalogue people.
+2. Create initial timeline.
+3. Convert Onenote to PDF and store in private repo. Also: move this repo to microsoft/
+4. Categorise Onenote notes.
+5. Contact Microsoft legal to ask about making PDF documents public.
+
