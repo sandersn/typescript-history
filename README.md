@@ -32,4 +32,5 @@ Some ideas for what this project will create:
 5. Contact Microsoft legal to ask about making PDF documents public.
 6. Extract interesting trends and factoids from design notes.
 7. Track down missing notes from 2011-2013. (Anders presumably has them in his email.)
+8. Restore a local copy of the Codeplex archive and upload the source to a new repo named typescript-codeplex or something. Also try to mirror the issues, discussions and wiki in some way.
 
