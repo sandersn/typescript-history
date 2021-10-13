@@ -33,6 +33,10 @@ const people: People = [
     { name: "Bowden Kelly", abbreviation: "BK", role: "PM, 2015-2017" },
     { name: "Dirk Baeumer", abbreviation: "DB", role: "VS Code Engineer" },
     { name: "Anders Hejlsberg", abbreviation: "AH", role: "Technical Fellow" },
+    { name: "Steve Lucco", abbreviation: "SteveLuc", role: "Technical Fellow" },
+    { name: "Mads Torgersen", abbreviation: "MadsT", role: "C# PM" },
+    { name: "ChuckJ", role: "??" },
+    { name: "ToddPro", role: "??" },
 ]
 function generateTable() {
     console.log("# People #")
