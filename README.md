@@ -25,7 +25,7 @@ Some ideas for what this project will create:
 
 ## Next Tasks
 
-1. Catalogue people.
+1. Catalogue people from github and codeplex.
 2. Create initial timeline.
 3. Convert Onenote to PDF and store in private repo. Also: move this repo to microsoft/
 4. Categorise Onenote notes.
@@ -34,3 +34,6 @@ Some ideas for what this project will create:
 7. Track down missing notes from 2011-2013. (Anders presumably has them in his email.)
 8. Restore a local copy of the Codeplex archive and upload the source to a new repo named typescript-codeplex or something. Also try to mirror the issues, discussions and wiki in some way.
 
+## Done Tasks
+
+1. Catalogue people from Onenote.
