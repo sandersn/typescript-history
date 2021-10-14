@@ -151,3 +151,37 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
 
 - first mention of ambient declarations with `extern` keyword
 
+## 2011/08/19
+
+- first drafts of lib.d.ts attached
+
+## 2011/09/21
+
+- discussion of modules, building on commonjs it appears
+
+## 2011/09/30
+
+- more modules, lib
+- unions officially shelved for later
+- first mention of variance: "covariant subtyping"
+
+## 2011/10/07
+
+- just a lot of code. syntax for index signatures shows up for the first time.
+
+## 2011/10/14
+
+- scope and visibility of F#-style class members
+
+## 2011/10/24
+
+- first mention of brands; enums will be branded internally
+- more scope and visibility of F#-style classes
+
+## 2011/10/28
+
+- first mention of exact types, but mostly means unit types
+
+## 2011/11/07
+
+- x
