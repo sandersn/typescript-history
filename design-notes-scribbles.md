@@ -184,4 +184,40 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
 
 ## 2011/11/07
 
-- x
+- suggesting a keyword like `extends` or `implements`: `requires`
+- seems to be a function, or to connect constructor functions with interfaces
+- this would allow getting rid of construct signatures?
+- somehow this would help mixins?
+
+## 2011/11/14
+
+- first mention of ES6 classes
+- construct signatures are back in
+- mixins are now supported! (?)
+
+## 2011/12/02
+
+- discussing hiring, branding, website, copyright
+- explanation of mixins; seems to be when a class uses `requires`
+
+## 2011/12/06
+
+- first mention of optional parmaeters
+- more mixins, ES conformance like accessors and destructuring
+
+## 2011/12/09
+
+- Mads wrote a whole bunch on generics, treating them as overloads, ending up by recommending unions and intersections
+- Luke had an in-depth spec comparison of accessors
+- `requires` is out again
+- more discussion of modules, ending with recommendation to add `references`
+
+## 2011/12/14
+
+- first triple-slash references
+- global vs module code
+
+## 2011/12/16
+
+- type hierarchy with `any` as top
+- 
