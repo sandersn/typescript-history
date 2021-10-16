@@ -37,6 +37,7 @@ const people: People = [
     { name: "Mads Torgersen", abbreviation: "MadsT", role: "C# PM" },
     { name: "ChuckJ", role: "??" },
     { name: "ToddPro", role: "??" },
+    { name: "JoshWil", role: "??" }
 ]
 function generateTable() {
     console.log("# People #")

@@ -220,4 +220,91 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
 ## 2011/12/16
 
 - type hierarchy with `any` as top
-- 
+- ambient+module problems
+- at this point, they wanted to remove `extern class` (`declare class`), which might explain why it's rarely used in the lib
+
+## 2011/12/19
+
+- proposal for optional parameters
+- class+module problems
+- decided to remove mixins and keep classes and interfaces
+- interface files now end in .i.str; example of .str emitting .js and .i.str
+
+## 2012/01/06
+
+- recap of December decisions
+  - align with ES modules
+  - remove requires+multiple inheritance (for now)
+  - add optional parameters, ES5 accessors, interface merging
+  - remove ambient classes from our lib files
+- January decisions
+  - implement ES6 arrow functions
+  - add ASI
+  - skip overloading in classes, recursive types, ES class expressions
+  - remove enums if possible, based on the compiler code itself (!)
+- Anders proposed a minimal d.ts subset
+  - It converted everything to only interfaces and ambient functions/vars.
+  - Strada had top-level `property`? I guess it was a `var`.
+  - Steve didn't like throwing out everything else.
+- first mention of contextual-typing of `this` from property assignments.
+- Anders proposed ambient class declarations added to constructor functions in the same file
+- Anders proposed an algorithm for contextual typing (called 'target typing')
+  - it was sensitive to parentheses
+  - an ambient declaration in the same compilation was part of the context
+  - it also included excess property checks
+
+## 2012/01/13
+
+- JoshWil (?) feedback
+  - didn't like casting `x as any as Target`
+- partner feedback
+  - minification
+  - asked for noImplicitAny, basically
+
+## 2012/02/10
+
+- properties
+
+## 2012/03/23
+
+- files' relation to modules
+
+## 2012/03/26
+
+- clear distinction between web (global) and module files
+- distinction between 'internal' and 'loadable' modules
+- mentions of literal types and string enums
+
+## 2012/04/06
+
+- feedback from Mankala app
+  - textual include OK
+  - module merging was order-sensitive
+- feedback from Backbone app
+  - wanted forwarding constructors, prototype properties
+  - problem with base call ordering and property shadowing
+- need to align with ES6 arrow functions
+  - drop `self`
+  - drop `this` parameters
+  - loosen void `return` rules (to present-day state?)
+- Luke proposed looser && and || rules
+
+## 2012/04/09
+
+- enum design
+  - included number and string enums
+  - switch to `:` to imitate object literal syntax (this didn't happen)
+
+## 2012/04/13
+
+- anonymous modules
+- "should number errors/warnings so we can later turn on/off."
+
+## 2012/04/20
+
+- mail from Dirk about Monaco switching to Strada
+  - AMD emit fixes
+  - want real modules, not triple-slash references
+  - want to have a syntax service first, then real language service
+- `object` keyword, looks a bit like namespaces
+- first mention of separating `module` and `namespace`
