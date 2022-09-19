@@ -1,5 +1,7 @@
 Quick notes as I dump the design notes 2011-2014 to PDF.
 
+- Items frequently say 'attached', but I don't see any attachments, even in the desktop onenote app.
+
 ## 2011/01/21
 
 - First design meeting note was 2011/01/21.
@@ -239,7 +241,7 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
   - remove ambient classes from our lib files
 - January decisions
   - implement ES6 arrow functions
-  - add ASI
+  - add ASI (*ed:* this was missing before?)
   - skip overloading in classes, recursive types, ES class expressions
   - remove enums if possible, based on the compiler code itself (!)
 - Anders proposed a minimal d.ts subset
@@ -308,3 +310,83 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
   - want to have a syntax service first, then real language service
 - `object` keyword, looks a bit like namespaces
 - first mention of separating `module` and `namespace`
+
+## 2012/04/27
+
+- modules demo + confirm design
+- "modules as types is back!" (??)
+- first (?) mention that module is anything with import/export
+
+## 2012/05/25
+
+- module accessibility rules
+- circular imports
+
+## 2012/05/30
+
+- TC39 "maximally minimal" classes, and arrows
+- housekeeping: release details, quality/completeness, windows 8 build
+- includes a writeup from Anders on the TC39 proposal, extended with
+  - this-property assignments (cut, but eventually included in 2019 (?))
+  - property declarations (eventually in ES too)
+  - parameter property declarations (but with different `this.x: number` syntax)
+  - `public`/`private` (no `protected` yet)
+  - `static` (I thought this made it into ES2015, actually)
+
+## 2012/06/04
+
+- more discussion about TC39 classes: headed toward requiring declarations in TS
+
+## 2012/06/18
+
+- more discussion about TC39 classes: prototype properties
+- Monaco wanted more triple-slash directives for AMD and compiler config
+- more enum design, with more detail
+  - still includes strings and numbers
+  - completely assignable to string or number (?)
+  - still intend to inline the emit by default
+
+## 2012/07/11
+
+- optional properties: first mention of weak types as "disabling implicit downcasts"
+- first (?) mention of `<Type>` cast syntax
+- first mention of noImplicitAny, envisioned with triple-slash syntax `<style no-any="true" />`
+
+## 2012/07/16
+
+- class feedback from Monaco and others
+
+## 2012/07/20
+
+- classes: no initialisers on inherited property (why not??)
+- optional properties started implementation
+- more discussion of module import/export
+
+## 2012/08/10
+
+- many small class/optional property/module items
+
+## 2012/08/17
+
+- many small class/optional property/module items
+- restrict top-level `this: any` to global files
+
+## 2012/08/22
+
+- still syncing between spec and implementation at this point
+- ES5 vs ES3 as default --target
+- improve namespace merge code emit so that single-file emit can work (guess it didn't at this point)
+
+## 2012/09/07
+
+- spec type relationships of `void`
+- disallow `declare` in d.ts files (??? stupid!?)
+- sticking with `bool` despite liking `boolean`
+- don't use `I`- prefix for interfaces
+
+## 2012/09/12
+
+- `{}` and `IMap` interfaces from Monaco (I couldn't guess what this was about)
+  - should `{}` be `any`
+- should have a working nightly build from 09/13 onward
+- want to work on overloads and typing Function.bind/call/apply in the future
