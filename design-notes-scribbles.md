@@ -1,6 +1,6 @@
 Quick notes as I dump the design notes 2011-2014 to PDF.
 
-- Items frequently say 'attached', but I don't see any attachments, even in the desktop onenote app.
+- Items frequently say 'attached', and sometimes there is an associated text box to the side, but many times there isn't.
 
 ## 2011/01/21
 
@@ -390,3 +390,214 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
   - should `{}` be `any`
 - should have a working nightly build from 09/13 onward
 - want to work on overloads and typing Function.bind/call/apply in the future
+
+## 2012/10/19
+
+- Demo of source-map debugging
+- Steve gave overview of Closure type system
+  - add minification to the feature list (!)
+- Namespace-function and namespace-class merges, aka fundules and clodules
+  - Notes include background and proposal
+- discussion of codeplex issues with *two-digit* IDs
+
+## 2012/10/26
+
+- More namespace merge discussion
+  - Proposed `var foo.bar = ...` syntax for implicitly declaring a merged namespace on classes/functions/vars.
+
+## 2012/10/29
+
+- Review current status of thinking on generics
+- Notes include quite a few examples
+- Initial version will not include constraints
+- One open question: can unprovided `T` default to `any`?
+- Proposal of type compatibility via instantiating all parameters with `any`
+
+## 2012/11/02
+
+- More generics
+  - "Dig out mail on `this` types" in example with a `this` type
+  - Want to infer type arguments in most cases
+  - Proposal of interaction between inference and contextual typing of lambdas.
+  - Documented suspicion of return-only type parameters.
+
+## 2012/11/09
+
+- More generics
+  - inference, especially interaction with contextual typing
+  - examples of Promise.then, WinRT, Knockout, Underscore
+  - overloads and generics, specifically "overloading on constants"
+
+## 2012/11/14
+
+- More generics: inference only happens when no type parameters are provided.
+  - Does inference report errors?
+  - Does an empty constraint set produce `{}` or `any`? (Initially going with `{}`)
+- Lots of examples to spec enums.
+
+## 2012/11/30
+
+- Generics, TC39, implementation progress
+
+## 2012/12/05
+
+- compile-on-save and compiler configuration (link to onenote page on sharepoint is dead)
+- switch design of enums to generate runtime code
+  - elaborate our philosophy of Typescript-as-compiler: only emit ts to js. No constant folding or minification.
+  - specifically, a reverse mapping
+  - so no string enums
+
+## 2012/12/07
+
+- How do private members relate to brands? Are they brands?
+- Overloads on string literals
+  - Notes include a long email discussion about how to type DOM events using type parameters using string literal arguments.
+- Proposal for `readonly`
+- Rethinking `var foo.bar = ...` for declaring implicit namespaces -- why not allow assignment declarations? (this is exactly what we did in 2017 or so)
+
+## 2012/12/14
+
+- Generics: Anders argued that constraints were needed after all, for implementations
+- Modules
+  - Anders argued that namespaces should not declare a type
+  - And that ambient namespaces (as we call them in the compiler today) should not declare or emit a variable.
+  - and proposed `export = ` *expression* to support Commonjs and AMD.
+  - and that namespaces should be able to implement interfaces (this didn't happen)
+  - therefore, dynamically-loaded JS that creates a namespace would be declared to implement a namespace instead of having its down type
+
+## 2013/01/11
+
+- implementation
+  - "pull model in progress" (first mention of lazy compiler?)
+  - generics prototyping to start soon
+- recap of remaining language topics for 1.0
+  - lots of previously discussed things
+  - bool -> boolean
+  - readonly and this types were still discussed for 1.0
+  - unions, generators and mixins were on the post-1.0 wishlist
+
+## 2013/01/23
+
+- computed property syntax support
+- readonly spec (labelled as "off the shelf" and "on the shelf" in different places which I interpret to mean "shelved" and "off the table")
+- this types also delayed past 1.0
+- discussion of `export=` type export semantics
+
+## 2013/02/01
+
+- TC39 updates -- modules, statics, classes
+- structural comparison of generic types
+- still more discussion of `export=`
+
+## 2013/02/08
+
+- `export` keyword to be optional in d.ts modules (and other ambient)
+- more on `export=` and private statics
+
+## 2013/03/01
+
+- Cut for 1.0:
+  - namespaces implementing interfaces
+  - `this` type
+  - `this` parameters for functions (although marked as "on backlog, not ready", and it wasn't finished until late 2015)
+- 0.9 design questions (not sure if these were intended to be implemented during 0.9 as well):
+  - `super` and `this` in static: `super` disallowed, `this` allowed
+  - tuple types
+  - static initialiser
+
+## 2013/03/06
+
+- type-only imports still make the file amodule
+
+## 2013/03/22
+
+- self-hosting compiler on 0.9+generics
+- lots of small spec questions
+
+## 2013/03/29
+
+- Xbox Music team feedback
+- lots of small spec questions
+
+## 2013/04/29
+
+- many small spec questions
+  - return to 0.8 best-common-type semantics
+  - implemented more lenient rule for re-declaration: type must be identical
+- first (serious?) mention of `protected`
+- no implicit any mentioned again
+
+## 2013/05/03
+
+- implementation:
+  - enums are done
+  - another pass on generics
+  - next: `export=`, namespace-function and namespace-class merges
+- modules. many small questions, including: 
+  - align with ES6 syntax? No (I think this refers to namespaces, not ES modules)
+
+## 2013/05/10
+
+- implementation: `export=`, `require`
+- `protected` is cut for 1.0
+- noImplicitAny (says "decision in notes" but these are the notes???)
+
+## 2013/06/07
+
+- implementation: language service robustness
+- 0.9/1.0/1.1 ship decisions for various features
+- proposal to allow dotted names in `typeof`
+
+## 2013/07/29
+
+- implementation: `typeof`, `--noImplicitAny`, performance
+- TC39 update: need to support `export default` eventually
+- noImplicitAny should error on undeclared property names in index access expressions
+
+## 2013/08/02
+
+- rules for name visibility in d.ts generation
+
+## 2013/09/11
+
+New notetaker: Jonathan Turner!
+
+- small spec questions
+- enums are *still* inlined by default
+
+## 2013/10/09
+
+- small spec questions
+
+## 2013/10/14
+
+- d.ts generation discussion led to some principles:
+  - "if the user types `typeof A`, we should emit `typeof A`"
+  - "The .d.ts file should not generate new names"
+
+## 2013/10/21
+
+- `enum` and `super` questions
+
+## 2013/11/04
+
+- type parameters:
+  - should an inference with no candidates be an error? No, current situation is fine.
+  - Should type parameters be all covariant? No, the constraint checks in contextual signature instantiation should allow both co- and contra-variance (I don't know what this means exactly and have no idea if it happened.)
+- d.ts generation:
+  - error when a in-.ts type annotation copied to .d.ts would be an error
+
+## 2013/11/13
+
+- 0.9.5/1.0 release schedule
+- many small design questions
+
+## 2013/11/18
+
+- modelling static `this` where JS libraries make it different from the class itself
+- other spec/implementation bugs
+
+## 2013/11/22
+
+- update from engineering **strongly** implies that type parameters are covariant-only because it's easier to implement quickly
+- same bugs as last time, but with more detail
