@@ -32,9 +32,9 @@ Some ideas for what this project will create:
 - [ ] Contact Microsoft legal to ask about making PDF documents public.
 - [ ] Extract interesting trends and factoids from design notes.
 - [ ] Track down missing notes from 2011-2013. (Anders presumably has them in his email.)
-- [ ] Restore a local copy of the Codeplex archive and upload the source to a new repo named typescript-codeplex or something. Also try to mirror the issues, discussions and wiki in some way.
-  - At one point I downloaded the issues, discussion and wiki. But I don't have notes on where I got it.
-  - I believe somebody else already mirrored the codeplex git repo to github. Again, I don't have notes on where it is.
+- [x] Restore a local copy of the Codeplex archive and upload the source to a new repo named typescript-codeplex or something. Also try to mirror the issues, discussions and wiki in some way.
+  - Issues, discussions and wiki are mirrored in codeplex/
+  - The mirror of the codeplex git repo is http://github.com/Arnavion/typescript-codeplex (also forked non-readonly to sandersn/typescript-codeplex)
 - [ ] Find out how Language Design Constraints wiki page was generated. What discussion happened in 2014? Earlier?
 
 ## Done Tasks
