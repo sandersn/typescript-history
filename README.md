@@ -29,7 +29,7 @@ Some ideas for what this project will create:
 - [ ] Create initial timeline.
 - [x] Convert Onenote to PDF and store in private repo. Also: move this repo to microsoft/
 - [ ] Categorise Onenote notes.
-- [ ] Contact Microsoft legal to ask about making PDF documents public.
+- [x] Contact Microsoft legal to ask about making PDF documents public.
 - [ ] Extract interesting trends and factoids from design notes.
 - [ ] Track down missing notes from 2011-2013. (Anders presumably has them in his email.)
 - [x] Restore a local copy of the Codeplex archive and upload the source to a new repo named typescript-codeplex or something. Also try to mirror the issues, discussions and wiki in some way.
