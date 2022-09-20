@@ -601,3 +601,81 @@ New notetaker: Jonathan Turner!
 
 - update from engineering **strongly** implies that type parameters are covariant-only because it's easier to implement quickly
 - same bugs as last time, but with more detail
+
+## 2013/12/02
+
+- many small spec questions
+
+## 2013/12/09
+
+- same spec questions as last week
+
+## 2013/12/16
+
+- 0.9.5 feedback
+
+## 2014/01/06
+
+- several small 1.0 design proposals
+
+## 2014/02/28
+
+This must have been a planning and scheduling meeting for implementing ES2015.
+
+## 2014/03/28
+
+- Summary of ES6 modules
+  - conclusion: we can support the syntax, but the semantics differ from CommonJS.
+
+## 2014/04/18
+
+- update on ES6 modules
+  - semantics+syntax of `export default`
+  - module resolution algorithm
+- ES6 symbols, especially iterator protocol and index access types
+
+## 2014/04/25
+
+- `protected` noted as the top-voted issue.
+- destructuring mentioned, but the notes then cover tuple and symbol type issues.
+
+## 2014/05/23
+
+- design questions around inference and type parameters
+- depth limiter for assignability (is this the first depth limiter?)
+- "protected: what does it really mean?" -- along with some example usage
+
+## 2014/06/06
+
+- "Update on compiler adoption" (?)
+- ES6 features, including where to put type annotations on destructuring
+
+## 2014/07/11
+
+Another planning and scheduling meeting for implementing ES2015.
+
+- noted that downlevel emit for for-of on arrays is easy and cheap, unlike general for-of iteration.
+- lots of notes on ES2015 features:
+  - array spread elements
+  - spread arguments
+  - class expressions
+  - mixins (not really ES2015)
+  - metaclasses (this seems to mean a class factory, which is now possible in restricted cases)
+  - destructuring
+- also notes on namespace emit, return type widening, and errors on calling a constructor
+
+## 2014/07/18
+
+- regression from inference change proposed on 05/23
+- when to give `{}` value an index signature
+
+## 2014/09/05
+
+- recursive type literals, interface type literals
+- `this` types
+- class expressions
+- first github link! #522
+
+## 2014/09/12 Bonus
+
+A letter from Brian Terlson to TC39 commitee members about types in Javascript.
