@@ -1,0 +1,57 @@
+module abstract {
+    export interface ICallback {
+        (...args: any[]): any;
+    }
+    export interface IAsyncOp {
+        (callback: ICallback): any;
+    }
+}
+
+export class Chain {
+    task : abstract.IAsyncOp;
+
+    constructor(...tasks : abstract.IAsyncOp[]) {
+        if (tasks.length === 1)     this.task = tasks[0];
+        else if (tasks.length > 1)  this.task = cb => this.sync(() => cb.apply(null, arguments), tasks);
+        else                        this.task = cb => cb();
+    }
+
+    next(getNextAsyncTasks /*: (...args: any[]) => abstract.IAsyncOp*/) {
+        return new Chain(
+            (cb: abstract.ICallback) =>
+                this.task(
+                    () => getNextAsyncTasks.apply(null, arguments)(cb);
+                )
+        );
+    }
+
+    last(cb : abstract.ICallback) {
+        this.task(cb);
+    }
+
+    sync(cb: (...resultArgs: IArguments[]) => void, tasks: abstract.IAsyncOp[]) {
+        var resultArgs : IArguments[] = [], done = 0;
+
+        var getCb = (i) => {
+            return () => {
+                resultArgs[i] = arguments;
+                done++;
+
+                if (done === tasks.length) cb.apply(null, resultArgs);
+            }
+        };
+
+        for (var i = 0, op; op = tasks[i]; i++) op(getCb(i));
+    }
+}
+
+// use example
+new Chain( cb => setTimeout(() => cb("foo"), 60)
+         , cb => setTimeout(() => cb("bar"), 10)
+         ).next((op1, op2) => { console.log(op1, op2)
+                              ; return cb => setTimeout(() => cb(op1[0], op2[0]), 120)
+                              }
+         ).next((foo, bar) => { console.log(foo, bar)
+                              ; return cb => setTimeout(() => cb(foo, bar, "baz"), 30)
+                              }
+         ).last((foo, bar, baz) => console.log(foo, bar, baz));

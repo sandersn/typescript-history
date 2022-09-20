@@ -1,0 +1,42 @@
+$ cat bug_244.ts
+function takesCallback(callback:(n)=>any) {
+
+}
+
+takesCallback(
+  function inner(n) {
+    // Displays an error in the playground. Does not display an
+    // error with the tsc command.
+    var k : string = 10;
+  }
+)
+
+
+// These display errors both with tsc and on the playground:
+
+var expression = function() {
+  var k : string = 10;
+}
+
+var functions = [function() {
+  var k : string = 10;
+}];
+
+function topLevel() {
+  var k : string = 10;
+}
+
+takesCallback(
+  function inner(n:string) {
+    var k : string = 10;
+  }
+)
+
+$ git rev-parse HEAD
+69f3d77aac091a6ace265fd80ce4f0c869c6b210
+
+$ node bin/tsc bug_244.ts # Expecting five warnings here:
+/Users/rictic/open/typescript/bug_244.ts(17,19): Cannot convert 'number' to 'string'
+/Users/rictic/open/typescript/bug_244.ts(21,19): Cannot convert 'number' to 'string'
+/Users/rictic/open/typescript/bug_244.ts(25,19): Cannot convert 'number' to 'string'
+/Users/rictic/open/typescript/bug_244.ts(30,21): Cannot convert 'number' to 'string'

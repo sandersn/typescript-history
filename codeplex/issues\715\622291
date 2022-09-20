@@ -1,0 +1,102 @@
+/// <reference path="jqueryui.d.ts" />
+/// <reference path="jaydata.d.ts" />
+/// <reference path="knockout.mapping.d.ts" />
+/// <reference path="knockout.d.ts" />
+/// <reference path="jquery.d.ts" />
+
+module proj
+{
+    export class ViewModel
+    {
+        constructor()
+        {}
+
+        AlertAndLog(message: string)
+        {
+            this.AlertUI(message);
+            this.LogToDB();
+        };
+
+        AlertUI(message: string) { alert(message); };
+        LogToDB() { };
+    }
+
+    export class AdminViewModel extends ViewModel
+    {
+        ServerContext: any;
+        SaveChanges()
+        {
+            this.ServerContext.saveChanges()
+            .then(() => { Application.Controller.EventManager.publish(Application.Events.AdminSavedChanges); })
+            .fail((err: Error) => { alert(err.message); });
+        };
+
+        CancelChanges()
+        {
+            this.ServerContext = null;
+            Application.Controller.EventManager.publish(Application.Events.AdminCancelledChanges);
+        };
+     }
+
+    // TODO:  Dynamically loaded hashtable with nodetype guids
+    export class NodeTypes
+    {
+        static NoParent = new $data.Guid("11111111-1111-1111-1111-111111111111");
+
+        static stuff1 = new $data.Guid("00000000-0000-0000-0000-000000000000");
+        static stuff2 = new $data.Guid("8BB1C62A-AD4E-4AB7-A541-7484A83C4082");
+        static stuff3 = new $data.Guid("3A4F5BDE-DC69-4330-B46A-8456FCCAE346");
+        static stuff4 = new $data.Guid("23B12D85-23BE-4F14-83AB-8ED29DD1D493");
+        static stuff5 = new $data.Guid("238B2AAE-2FCF-4165-A0AF-95DB9240418F");
+        static stuff6 = new $data.Guid("E6038CDA-4B0A-4C16-B430-A75150D1E62E");
+        static stuff7 = new $data.Guid("69A9DDB6-CE74-4E25-BAD2-E87446300888");
+        static stuff8 = new $data.Guid("B70C0682-63F1-488F-B976-EBC3CE7CB553");
+    }
+
+    export module Application
+    {
+        export class EventManager
+        {
+            subscribe(event: string, callback: (event: Event, any) => void )
+            {
+                if (Utilities.undefinedOrNull(event) || Utilities.undefinedOrNull(callback))
+                    throw "In order to subscribe to an event, the event name AND callback must be supplied.";
+
+                $(this).bind(event, callback);
+            }
+            publish(event: string, params?: any[])
+            {
+                if (Utilities.undefinedOrNull(event))
+                    throw "In order to publish an event the event name must be supplied.";
+
+                if (params)
+                    $(this).trigger(event, params);
+                else
+                    $(this).trigger(event);
+            }
+            unsubscribe(event: string)
+            {
+                if (Utilities.undefinedOrNull(event))
+                    throw "In order to publish an event the event name must be supplied.";
+
+                $(this).unbind(event);
+            }
+        }
+
+        // this class will give intellisense for events that can be raised.
+        // use distinct event names to prevent accidental removal of similarly named event handlers
+        export class Events
+        {
+            static NodeClick = "NodeClick";
+            static LoadNavigationTree = "LoadNavigationTree";
+            static ViewModelLoaded = "ViewModelLoaded";
+            static AdminComplete = "AdminComplete";
+        };
+
+        export class Controller
+        {
+            static AdminMode: bool = false;
+            static EventManager = new EventManager();
+        }
+    }
+}

@@ -1,0 +1,32 @@
+module Gae {
+	export class ErrorResponse {
+		type:string;
+		message:string;
+		redirectTo:string;
+		causeParameters:string[];
+
+		constructor(data:any) {
+			this.type = data.type;
+			this.message = data.message;
+			this.redirectTo = data.redirectTo;
+			this.causeParameters = data.causeParameters;
+		}
+	}
+
+	class SampleA {
+		private handleErrorNG<ErrorResponse>(error:ErrorResponse) {
+			// GenericsBug.ts(19,22): error TS2094: The property 'redirectTo' does not exist on value of type 'Object'.
+			console.log(error.redirectTo);
+		}
+
+		private handleErrorOK<ErrorResponse>(error:Gae.ErrorResponse) {
+			console.log(error.redirectTo);
+		}
+	}
+
+	class SampleB {
+		private handleErrorOK(error:ErrorResponse) {
+			console.log(error.redirectTo);
+		}
+	}
+}

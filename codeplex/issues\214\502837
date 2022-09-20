@@ -1,0 +1,535 @@
+var WebGL = (function () {
+    function WebGL(midi) {
+        var o = this;
+        var shaderProgram;
+        var buffer;
+
+        var u_dy;
+        var u_dx;
+        var u_active;
+
+        var a_position;
+        var a_id;
+        var a_color;
+        var a_activeColor;
+
+        var attrLength;
+        var vertices;
+
+        var sceneWidth = $(window).width();
+        var sceneHeight = $(window).height();
+
+        var whiteNotes;
+        var blackNotes;
+        var blackNotesPos;
+        var noteColors;
+
+        var black = [
+            [
+                0, 
+                0, 
+                0, 
+                1
+            ]
+        ];
+        var white = [
+            [
+                1, 
+                1, 
+                1, 
+                1
+            ]
+        ];
+
+        o.Canvas = $("#canvas")[0];
+        o.Canvas.width = $(window).width();
+        o.Canvas.height = $(window).height();
+        o.DX = 0 , o.DY = 0;
+        o.Draw = draw;
+        o.ActiveNotes = new Int32Array(127);
+        o.GL;
+        o.Redraw = redraw;
+function resizeCanvas() {
+            o.Canvas.width = $(window).width();
+            sceneWidth = o.Canvas.width;
+            o.Canvas.height = $(window).height();
+            sceneHeight = o.Canvas.height;
+            o.GL.clear(o.GL.COLOR_BUFFER_BIT);
+            o.Redraw();
+            o.Draw();
+        }
+        $(window).resize(resizeCanvas);
+        setNoteIds();
+        setColors();
+        initWebGL();
+        initShaders();
+        redraw();
+function initWebGL() {
+            o.GL = o.Canvas.getContext("experimental-webgl", {
+                antialias: true
+            });
+            o.GL.clearColor(0.1, 0.1, 0.1, 1);
+        }
+function initShaders() {
+            var vertexShader = getShader("shaders/vertex.glsl");
+            var fragmentShader = getShader("shaders/fragment.glsl");
+            shaderProgram = o.GL.createProgram();
+            o.GL.attachShader(shaderProgram, vertexShader);
+            o.GL.attachShader(shaderProgram, fragmentShader);
+            o.GL.linkProgram(shaderProgram);
+            if(!o.GL.getProgramParameter(shaderProgram, o.GL.LINK_STATUS)) {
+                throw ("Unable to initialize the shader program.");
+            }
+            o.GL.useProgram(shaderProgram);
+            u_dx = o.GL.getUniformLocation(shaderProgram, "u_dx");
+            u_dy = o.GL.getUniformLocation(shaderProgram, "u_dy");
+            u_active = o.GL.getUniformLocation(shaderProgram, "u_active");
+            a_position = o.GL.getAttribLocation(shaderProgram, "a_position");
+            a_color = o.GL.getAttribLocation(shaderProgram, "a_color");
+            a_id = o.GL.getAttribLocation(shaderProgram, "a_id");
+            a_activeColor = o.GL.getAttribLocation(shaderProgram, "a_activeColor");
+            o.GL.enableVertexAttribArray(a_position);
+            o.GL.enableVertexAttribArray(a_color);
+            o.GL.enableVertexAttribArray(a_id);
+            o.GL.enableVertexAttribArray(a_activeColor);
+        }
+function redraw() {
+            var scaleY = 1 / midi.TicksPerBeat * 0.25 * sceneHeight;
+            var whiteWidth = Math.floor(sceneWidth / whiteNotes.length);
+            var blackWidth = Math.round(0.25 * whiteWidth);
+            var pedalWidth = sceneWidth - whiteNotes.length * whiteWidth;
+            var pianoHeight = Math.floor(0.2 * sceneHeight);
+            midi.TracksNotes.forEach(function (track, i) {
+                track.forEach(function (note) {
+                    var y = pianoHeight + scaleY * note[0];
+                    var noteHeight = pianoHeight + scaleY * note[1] - y;
+                    var ipos = whiteNotes.indexOf(note[2]);
+                    if(ipos >= 0) {
+                        var x = ipos * whiteWidth + 2;
+                        var noteWidth = whiteWidth - 3;
+                        drawRect(x, y, noteWidth, noteHeight, [
+                            i + 200
+                        ], noteColors[i + 2]);
+                        drawRect(x + 1, y + 1, noteWidth - 2, noteHeight - 2, [
+                            i + 200
+                        ], noteColors[i]);
+                        drawLetter(note[2], x + 0.5 * noteWidth, y + 0.8 * noteWidth, 0.3 * noteWidth, white[0], 1000, 1);
+                    } else {
+                        var pos = blackNotes.indexOf(note[2]);
+                        if(pos >= 0) {
+                            var x = blackNotesPos[pos] * whiteWidth - blackWidth + 2;
+                            var noteWidth = 2 * blackWidth - 3;
+                            drawRect(x, y, noteWidth, noteHeight, [
+                                i + 202
+                            ], noteColors[i + 2]);
+                        }
+                    }
+                });
+            });
+            drawRect(0, 0, sceneWidth, pianoHeight, [
+                150
+            ], black);
+            drawRect(0, pianoHeight - 5, sceneWidth, 5, [
+                151
+            ], white);
+            drawRect(0, pianoHeight - 5, 1, 5, [
+                151, 
+                152, 
+                152, 
+                151
+            ], noteColors[5]);
+            for(var i = 0; i < whiteNotes.length; i++) {
+                var x = i * whiteWidth;
+                var noteWidth = whiteWidth - 1;
+                var y = 2;
+                var noteHeight = pianoHeight - 10;
+                drawRect(x, y, noteWidth, noteHeight, [
+                    whiteNotes[i]
+                ], white, noteColors[4]);
+                if((i + 5) % 7 == 0) {
+                    drawLetter(whiteNotes[i], x + 0.5 * noteWidth, y + 0.15 * noteHeight, 0.3 * noteWidth, black[0], 155, 2);
+                } else {
+                    if((i + 2) % 7 == 0) {
+                        drawLetter(whiteNotes[i], x + 0.5 * noteWidth, y + 0.15 * noteHeight, 0.3 * noteWidth, black[0], 155, 1);
+                    }
+                }
+            }
+            for(var i = 0; i < blackNotes.length; i++) {
+                var x = blackNotesPos[i] * whiteWidth - blackWidth + 2;
+                var noteWidth = 2 * blackWidth - 3;
+                var y = Math.floor(pianoHeight * 0.4);
+                var noteHeight = pianoHeight - 8 - y;
+                drawRect(x, y, noteWidth, noteHeight, [
+                    blackNotes[i]
+                ], black, noteColors[5]);
+            }
+            attrLength = vertices.length / 11;
+            if(buffer) {
+                o.GL.deleteBuffer(buffer);
+            }
+            buffer = o.GL.createBuffer();
+            o.GL.bindBuffer(o.GL.ARRAY_BUFFER, buffer);
+            o.GL.bufferData(o.GL.ARRAY_BUFFER, new Float32Array(vertices), o.GL.STATIC_DRAW);
+            vertices = [];
+            o.GL.vertexAttribPointer(a_position, 2, o.GL.FLOAT, false, 44, 0);
+            o.GL.vertexAttribPointer(a_color, 4, o.GL.FLOAT, false, 44, 8);
+            o.GL.vertexAttribPointer(a_id, 1, o.GL.FLOAT, false, 44, 24);
+            o.GL.vertexAttribPointer(a_activeColor, 4, o.GL.FLOAT, false, 44, 28);
+        }
+function draw() {
+            o.GL.clear(o.GL.COLOR_BUFFER_BIT);
+            o.GL.uniform1f(u_dy, o.DY);
+            o.GL.uniform1f(u_dx, o.DX);
+            o.GL.uniform1iv(u_active, o.ActiveNotes);
+            o.GL.drawArrays(o.GL.TRIANGLES, 0, attrLength);
+        }
+function drawLetter(note, cogx, cogy, width, color_, id_, thickness) {
+            var width = Math.round(width);
+            var height = 2 * width;
+            var left = Math.ceil(cogx - 0.5 * width);
+            var down = Math.ceil(cogy - 0.5 * height);
+            var t = thickness ? thickness : 1;
+            var id = [
+                id_
+            ];
+            var color = [
+                color_
+            ];
+
+            switch(note % 12) {
+                case 0: {
+                    drawRect(left, down + t, t, height - 2 * t, id, color);
+                    drawRect(left + t, down + height - t, width - t, t, id, color);
+                    drawRect(left + t, down, width - t, t, id, color);
+                    break;
+
+                }
+                case 2: {
+                    drawRect(left, down, t, height, id, color);
+                    drawRect(left + width - t, down + t, t, height - 2 * t, id, color);
+                    drawRect(left + t, down + height - t, width - 2 * t, t, id, color);
+                    drawRect(left + t, down, width - 2 * t, t, id, color);
+                    break;
+
+                }
+                case 4: {
+                    drawRect(left, down, t, height, id, color);
+                    drawRect(left + t, down + height - t, width - t, t, id, color);
+                    drawRect(left + t, Math.round(down + 0.5 * height - 0.5 * t), Math.round(0.8 * width - t), t, id, color);
+                    drawRect(left + t, down, width - t, t, id, color);
+                    break;
+
+                }
+                case 5: {
+                    drawRect(left, down, t, height, id, color);
+                    drawRect(left + t, down + height - t, width - t, t, id, color);
+                    drawRect(left + t, Math.round(down + 0.4 * height), Math.round(0.8 * width - t), t, id, color);
+                    break;
+
+                }
+                case 7: {
+                    drawRect(left, down + t, t, height - 2 * t, id, color);
+                    drawRect(left + width - t, down + t, t, Math.round(0.3 * height), id, color);
+                    drawRect(left + t, down + height - t, Math.round(0.8 * width), t, id, color);
+                    drawRect(Math.round(left + 0.6 * width), Math.round(down + 0.3 * height + t), Math.round(0.7 * width), t, id, color);
+                    drawRect(left + t, down, width - 2 * t, t, id, color);
+                    break;
+
+                }
+                case 9: {
+                    drawRect(left, down, t, height - t, id, color);
+                    drawRect(left + width - t, down, t, height - t, id, color);
+                    drawRect(left + t, down + height - t, width - 2 * t, t, id, color);
+                    drawRect(left + t, Math.round(down + 0.35 * height), width - 2 * t, t, id, color);
+                    break;
+
+                }
+                case 11: {
+                    var mid = Math.round(0.5 * height - 0.5 * t);
+                    drawRect(left, down, t, height, id, color);
+                    drawRect(left + width - t, down + mid + t, t, mid - t, id, color);
+                    drawRect(left + width - t, down + t, t, mid - t, id, color);
+                    drawRect(left + t, down + height - t, width - 2 * t, t, id, color);
+                    drawRect(left + t, down + mid, width - 2 * t, t, id, color);
+                    drawRect(left + t, down, width - 2 * t, t, id, color);
+                    break;
+
+                }
+            }
+        }
+function fx(v) {
+            return v / sceneWidth * 2 - 1;
+        }
+function fy(v) {
+            return v / sceneHeight * 2 - 1;
+        }
+function drawTriangle(xA, yA, ids, colors, activeColors) {
+            if(xA.length != 3 || yA.length != 3) {
+                throw "Error in drawTriangle";
+            }
+            if(colors.length === 1) {
+                colors = [
+                    colors, 
+                    colors, 
+                    colors
+                ];
+            }
+            if(ids.length === 1) {
+                ids = [
+                    ids[0], 
+                    ids[0], 
+                    ids[0]
+                ];
+            }
+            if(!activeColors) {
+                activeColors = colors;
+            } else {
+                if(activeColors.length === 1) {
+                    activeColors = [
+                        activeColors, 
+                        activeColors, 
+                        activeColors, 
+                        activeColors
+                    ];
+                }
+            }
+            xA.forEach(function (x, i) {
+                vertices.push(fx(x), fy(yA[i]), colors[i][0], colors[i][1], colors[i][2], colors[i][3], ids[i], activeColors[i][0], activeColors[i][1], activeColors[i][2], activeColors[i][3]);
+            });
+        }
+function drawRect(x, y, width, height, ids, colors, activeColors) {
+            if(colors.length === 1) {
+                colors = [
+                    colors, 
+                    colors, 
+                    colors, 
+                    colors
+                ];
+            }
+            if(!activeColors) {
+                activeColors = colors;
+            } else {
+                if(activeColors.length === 1) {
+                    activeColors = [
+                        activeColors, 
+                        activeColors, 
+                        activeColors, 
+                        activeColors
+                    ];
+                }
+            }
+            if(ids.length === 1) {
+                ids = [
+                    ids[0], 
+                    ids[0], 
+                    ids[0], 
+                    ids[0]
+                ];
+            }
+            vertices.push(fx(x), fy(y), colors[0][0], colors[0][1], colors[0][2], colors[0][3], ids[0], activeColors[0][0], activeColors[0][1], activeColors[0][2], activeColors[0][3], fx(x + width), fy(y), colors[1][0], colors[1][1], colors[1][2], colors[1][3], ids[1], activeColors[1][0], activeColors[1][1], activeColors[1][2], activeColors[1][3], fx(x + width), fy(y + height), colors[2][0], colors[2][1], colors[2][2], colors[2][3], ids[2], activeColors[2][0], activeColors[2][1], activeColors[2][2], activeColors[2][3], fx(x), fy(y), colors[0][0], colors[0][1], colors[0][2], colors[0][3], ids[0], activeColors[0][0], activeColors[0][1], activeColors[0][2], activeColors[0][3], fx(x + width), fy(y + height), colors[2][0], colors[2][1], colors[2][2], colors[2][3], ids[2], activeColors[2][0], activeColors[2][1], activeColors[2][2], activeColors[2][3], fx(x), fy(y + height), colors[3][0], colors[3][1], colors[3][2], colors[3][3], ids[3], activeColors[3][0], activeColors[3][1], activeColors[3][2], activeColors[3][3]);
+        }
+function setColors() {
+            var w1 = 130;
+            var w2 = 0;
+
+            var b1 = 255;
+            var b2 = 100;
+
+            noteColors = [
+                [
+                    w1 / 255, 
+                    w2 / 255, 
+                    w2 / 255, 
+                    1
+                ], 
+                [
+                    w2 / 255, 
+                    w1 / 255, 
+                    w2 / 255, 
+                    1
+                ], 
+                [
+                    b1 / 255, 
+                    b2 / 255, 
+                    b2 / 255, 
+                    1
+                ], 
+                [
+                    b2 / 255, 
+                    b1 / 255, 
+                    b2 / 255, 
+                    1
+                ], 
+                [
+                    b2 / 255, 
+                    b2 / 255, 
+                    b1 / 255, 
+                    1
+                ], 
+                [
+                    w2 / 255, 
+                    w2 / 255, 
+                    w1 / 255, 
+                    1
+                ], 
+                
+            ];
+        }
+function setNoteIds() {
+            whiteNotes = [
+                21, 
+                23, 
+                24, 
+                26, 
+                28, 
+                29, 
+                31, 
+                33, 
+                35, 
+                36, 
+                38, 
+                40, 
+                41, 
+                43, 
+                45, 
+                47, 
+                48, 
+                50, 
+                52, 
+                53, 
+                55, 
+                57, 
+                59, 
+                60, 
+                62, 
+                64, 
+                65, 
+                67, 
+                69, 
+                71, 
+                72, 
+                74, 
+                76, 
+                77, 
+                79, 
+                81, 
+                83, 
+                84, 
+                86, 
+                88, 
+                89, 
+                91, 
+                93, 
+                95, 
+                96, 
+                98, 
+                100, 
+                101, 
+                103, 
+                105, 
+                107, 
+                108
+            ];
+            blackNotes = [
+                22, 
+                25, 
+                27, 
+                30, 
+                32, 
+                34, 
+                37, 
+                39, 
+                42, 
+                44, 
+                46, 
+                49, 
+                51, 
+                54, 
+                56, 
+                58, 
+                61, 
+                63, 
+                66, 
+                68, 
+                70, 
+                73, 
+                75, 
+                78, 
+                80, 
+                82, 
+                85, 
+                87, 
+                90, 
+                92, 
+                94, 
+                97, 
+                99, 
+                102, 
+                104, 
+                106
+            ];
+            blackNotesPos = [
+                1, 
+                3, 
+                4, 
+                6, 
+                7, 
+                8, 
+                10, 
+                11, 
+                13, 
+                14, 
+                15, 
+                17, 
+                18, 
+                20, 
+                21, 
+                22, 
+                24, 
+                25, 
+                27, 
+                28, 
+                29, 
+                31, 
+                32, 
+                34, 
+                35, 
+                36, 
+                38, 
+                39, 
+                41, 
+                42, 
+                43, 
+                45, 
+                46, 
+                48, 
+                49, 
+                50
+            ];
+        }
+function getShader(path) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', path, false);
+            xhr.send();
+            var shader;
+            if(path.indexOf("fragment.glsl") > 0) {
+                shader = o.GL.createShader(o.GL.FRAGMENT_SHADER);
+            } else {
+                if(path.indexOf("vertex.glsl") > 0) {
+                    shader = o.GL.createShader(o.GL.VERTEX_SHADER);
+                }
+            }
+            o.GL.shaderSource(shader, xhr.responseText);
+            o.GL.compileShader(shader);
+            if(!o.GL.getShaderParameter(shader, o.GL.COMPILE_STATUS)) {
+                var lastError = o.GL.getShaderInfoLog(shader);
+                throw ("*** Error compiling shader '" + shader + "':" + lastError);
+                o.GL.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+    }
+    return WebGL;
+})();
+//@ sourceMappingURL=WebGL.js.map

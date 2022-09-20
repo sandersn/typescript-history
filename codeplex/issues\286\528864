@@ -1,0 +1,26 @@
+interface Callback { (data: any): void; }
+
+class EventSource1 {
+    addEventHandler(callback: Callback): void { }
+}
+
+class EventSource2 {
+    onSomeEvent: Callback;
+}
+
+export class Controller {
+    constructor () {
+        var eventSource = new EventSource1();
+        // Commenting the next line will allow it to compile.
+        eventSource.addEventHandler(msg => this.handleEventFromSource1(msg));
+    }
+    private handleEventFromSource1(signalState) {
+        console.log('Handle event from source 1');
+        var eventSource2 = new EventSource2();
+        // Commenting the next line will allow it to compile.
+        eventSource2.onSomeEvent = msg => this.handleEventFromSource2(msg);
+    }
+    private handleEventFromSource2(event) {
+        console.log("Handling event from source 2.");
+    }
+}

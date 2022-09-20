@@ -1,0 +1,87 @@
+// <script>
+
+var obj1 = {
+  f: function () {
+       var _this = this;
+       return function (inc) {
+         _this.count+=inc;
+       }
+     },
+  count: 0
+  };
+
+var obj2 = {
+  f: function () {
+       return function (inc) {
+         this.count+=inc;
+       }.bind(this);
+     },
+  count: 0
+  };
+
+var obj3 = {
+  f: function () {
+       return function (inc) {
+         this.count+=inc;
+       };
+     },
+  count: 0
+  };
+
+function bind(f,obj) {
+  return function() {
+    return f.apply(obj,arguments);
+  }
+}
+
+var obj4 = {
+  f: function () {
+       return bind(function (inc) {
+         this.count+=inc;
+       },this);
+     },
+  count: 0
+  };
+
+console.time('_this');
+for (i=0; i<10000; i++) obj1.f()(1);
+console.timeEnd('_this');
+
+console.time('.bind');
+for (i=0; i<10000; i++) obj2.f()(1);
+console.timeEnd('.bind');
+
+console.time('bind');
+for (i=0; i<10000; i++) obj4.f()(1);
+console.timeEnd('bind');
+
+var g1 = obj1.f();
+console.time('_this, calls only');
+for (i=0; i<10000; i++) g1(1);
+console.timeEnd('_this, calls only');
+
+var g2 = obj2.f();
+console.time('.bind, calls only');
+for (i=0; i<10000; i++) g2(1);
+console.timeEnd('.bind, calls only');
+
+var g4 = obj4.f();
+console.time('bind, calls only');
+for (i=0; i<10000; i++) g4(1);
+console.timeEnd('bind, calls only');
+
+console.time('.bind, inline');
+for (i=0; i<10000; i++) obj3.f().bind(obj3)(1);
+console.timeEnd('.bind, inline');
+
+console.time('.call, inline');
+for (i=0; i<10000; i++) obj3.f().call(obj3,1);
+console.timeEnd('.call, inline');
+
+console.time('.apply, inline');
+for (i=0; i<10000; i++) obj3.f().apply(obj3,[1]);
+console.timeEnd('.apply, inline');
+
+console.log(obj1.count,obj2.count,obj4.count,obj3.count);
+
+// </script>

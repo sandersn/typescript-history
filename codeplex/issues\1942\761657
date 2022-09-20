@@ -1,0 +1,75 @@
+﻿module RIAPP {
+
+    export class CollectionItem {
+        constructor() {
+
+        }
+    }
+
+    export class BaseCollection<TItem extends CollectionItem> {
+        _items: TItem[];
+        constructor() {
+        }
+        _onFillEnd(args: { newItems: TItem[]; }) {
+        }
+        get items() {
+            return this._items;
+        }
+    }
+
+    export class Collection extends BaseCollection<CollectionItem> { }
+
+    export class ListItem extends CollectionItem {
+        constructor() {
+            super();
+        }
+    }
+
+    export interface IListItemConstructor<TItem extends ListItem> {
+        new (coll: BaseList<TItem>): TItem;
+    }
+
+    export class BaseList<TItem extends ListItem> extends BaseCollection<TItem> {
+        
+        constructor() {
+            super();
+        
+        }
+        fillItems() {
+            var newItems = [];
+            //uncomment the below line and comment the above line and the error disappear
+            //var newItems:TItem[] = [];
+            this._onFillEnd({
+                 newItems: newItems
+            });
+        }
+    }
+
+    export class BaseDictionary<TItem extends ListItem> extends BaseList<TItem>{
+        constructor() {
+            super();
+        }
+    }
+
+    export class ColMapListItem extends ListItem {
+        constructor() {
+            super();
+        }
+        get src_name(): string { return null; }
+        set src_name(v: string) {  }
+    }
+
+    export class ColMapDictionary extends BaseDictionary<ColMapListItem> {
+        constructor() {
+            super();
+        }
+    }
+
+    var colMap: ColMapDictionary;
+    colMap = new ColMapDictionary();
+
+    var items = colMap.items, filtered = items.map(function (cm) {
+        var t = <ColMapListItem>cm;
+        return cm.src_name;
+    });
+}

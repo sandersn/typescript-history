@@ -1,0 +1,104 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<hr />
+
+<h1>Introduction</h1>
+Along with traditional OO hierarchies, another popular way of building up classes from reusable components is to build them by combining simpler partial classes.  You may be familiar with the idea of mixins or traits for languages like Scala, and the pattern has also reached some popularity in the JavaScript community.<br />
+<h1>Mixin sample</h1>
+In the code below, we show how you can model mixins in TypeScript.  After the code, we&#39;ll break down how it works.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Disposable Mixin</span>
+<span style="color:Blue;">class</span> Disposable {
+    isDisposed: <span style="color:Blue;">boolean</span>;
+    dispose() {
+        <span style="color:Blue;">this</span>.isDisposed = <span style="color:Blue;">true</span>;
+    }
+ 
+}
+ 
+<span style="color:Green;">// Activatable Mixin</span>
+<span style="color:Blue;">class</span> Activatable {
+    isActive: <span style="color:Blue;">boolean</span>;
+    activate() {
+        <span style="color:Blue;">this</span>.isActive = <span style="color:Blue;">true</span>;
+    }
+    deactivate() {
+        <span style="color:Blue;">this</span>.isActive = <span style="color:Blue;">false</span>;
+    }
+}
+ 
+<span style="color:Blue;">class</span> SmartObject <span style="color:Blue;">implements</span> Disposable, Activatable {
+    constructor() {
+        setInterval(() =&gt; console.log(<span style="color:Blue;">this</span>.isActive + <span style="color:#A31515;">&quot; : &quot;</span> + <span style="color:Blue;">this</span>.isDisposed), 500);
+    }
+ 
+    interact() {
+        <span style="color:Blue;">this</span>.activate();
+    }
+ 
+    <span style="color:Green;">// Disposable</span>
+    isDisposed: <span style="color:Blue;">boolean</span> = <span style="color:Blue;">false</span>;
+    dispose: () =&gt; <span style="color:Blue;">void</span>;
+    <span style="color:Green;">// Activatable</span>
+    isActive: <span style="color:Blue;">boolean</span> = <span style="color:Blue;">false</span>;
+    activate: () =&gt; <span style="color:Blue;">void</span>;
+    deactivate: () =&gt; <span style="color:Blue;">void</span>;
+}
+applyMixins(SmartObject, [Disposable, Activatable])
+ 
+<span style="color:Blue;">var</span> smartObj = <span style="color:Blue;">new</span> SmartObject();
+setTimeout(() =&gt; smartObj.interact(), 1000);
+ 
+<span style="color:Green;">////////////////////////////////////////</span>
+<span style="color:Green;">// In your runtime library somewhere</span>
+<span style="color:Green;">////////////////////////////////////////</span>
+
+<span style="color:Blue;">function</span> applyMixins(derivedCtor: any, baseCtors: any[]) {
+    baseCtors.forEach(baseCtor =&gt; {
+        Object.getOwnPropertyNames(baseCtor.prototype).forEach(name =&gt; {
+            derivedCtor.prototype[name] = baseCtor.prototype[name];
+        })
+    }); 
+}
+</pre></div>
+<h1>Understanding the sample</h1>
+The code sample starts with the two classes that will act is our mixins.  You can see each one is focused on a particular activity or capability.  We&#39;ll later mix these together to form a new class from both capabilities.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Disposable Mixin</span>
+<span style="color:Blue;">class</span> Disposable {
+    isDisposed: <span style="color:Blue;">boolean</span>;
+    dispose() {
+        <span style="color:Blue;">this</span>.isDisposed = <span style="color:Blue;">true</span>;
+    }
+ 
+}
+ 
+<span style="color:Green;">// Activatable Mixin</span>
+<span style="color:Blue;">class</span> Activatable {
+    isActive: <span style="color:Blue;">boolean</span>;
+    activate() {
+        <span style="color:Blue;">this</span>.isActive = <span style="color:Blue;">true</span>;
+    }
+    deactivate() {
+        <span style="color:Blue;">this</span>.isActive = <span style="color:Blue;">false</span>;
+    }
+}
+</pre></div><br />Next, we&#39;ll create the class that will handle the combination of the two mixins.  Let&#39;s look at this in more detail to see how it does this:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> SmartObject <span style="color:Blue;">implements</span> Disposable, Activatable {
+</pre></div><br />The first thing you may notice in the above is that instead of using &#39;extends&#39;, we use &#39;implements&#39;.  This treats the classes as interfaces, and only uses the types behind Disposable and Activatable rather than the implementation.  This means that we&#39;ll have to provide the implementation in class.  Except, that&#39;s exactly what we want to avoid by using mixins.  <br /><br />To satisfy this requirement, we create stand-in properties and their types for the members that will come from our mixins.  This satisfies the compiler that these members will be available at runtime.  This lets us still get the benefit of the mixins, albeit with a some bookkeeping overhead.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Disposable</span>
+isDisposed: <span style="color:Blue;">boolean</span> = <span style="color:Blue;">false</span>;
+dispose: () =&gt; <span style="color:Blue;">void</span>;
+<span style="color:Green;">// Activatable</span>
+isActive: <span style="color:Blue;">boolean</span> = <span style="color:Blue;">false</span>;
+activate: () =&gt; <span style="color:Blue;">void</span>;
+deactivate: () =&gt; <span style="color:Blue;">void</span>;
+</pre></div><br />Finally, we mix our mixins into the class, creating the full implementation.<br /><br /><div style="color:Black;background-color:White;"><pre>
+applyMixins(SmartObject, [Disposable, Activatable])
+</pre></div><br />Lastly, we create a helper function that will do the mixing for us.  This will run through the properties of each of the mixins and copy them over to the target of the mixins, filling out the stand-in properties with their implementations.<br /> <br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> applyMixins(derivedCtor: any, baseCtors: any[]) {
+    baseCtors.forEach(baseCtor =&gt; {
+        Object.getOwnPropertyNames(baseCtor.prototype).forEach(name =&gt; {
+            derivedCtor.prototype[name] = baseCtor.prototype[name];
+        })
+    }); 
+}
+
+</pre></div></div><div class="ClearBoth"></div>

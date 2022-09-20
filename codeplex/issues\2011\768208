@@ -1,0 +1,610 @@
+// Type definitions for RxJS
+// Project: http://rx.codeplex.com/
+// Definitions by: gsino <http://www.codeplex.com/site/users/view/gsino>
+// Definitions: https://github.com/borisyankov/DefinitelyTyped
+
+
+declare module Rx {
+	export module Internals {
+		function inherits(child: Function, parent: Function): Function;
+		function addProperties(obj: Object, ...sourcces: Object[]): void;
+		function addRef<T>(xs: Observable<T>, r: { getDisposable(): IDisposable; }): Observable<T>;
+	}
+
+	//Collections
+	interface IIndexedItem {
+		id: number;
+		value: IScheduledItem;
+
+		compareTo(other: IIndexedItem): number;
+	}
+
+	// Priority Queue for Scheduling
+	interface IPriorityQueue {
+		items: IIndexedItem[];
+		length: number;
+
+		isHigherPriority(left: number, right: number): boolean;
+		percolate(index: number): void;
+		heapify(index: number): void;
+		peek(): IIndexedItem;
+		removeAt(index: number): void;
+		dequeue(): IIndexedItem;
+		enqueue(item: IIndexedItem): void;
+		remove(item: IIndexedItem): boolean;
+	}
+
+	export interface IDisposable {
+		dispose(): void;
+	}
+
+	export class CompositeDisposable implements IDisposable {
+		constructor (...disposables: IDisposable[]);
+		constructor (disposables: IDisposable[]);
+
+		isDisposed: boolean;
+		length: number;
+
+		dispose(): void;
+		add(item: IDisposable): void;
+		remove(item: IDisposable): boolean;
+		clear(): void;
+		contains(item: IDisposable): boolean;
+		toArray(): IDisposable[];
+	}
+
+	export class Disposable implements IDisposable {
+		constructor(action: () => void);
+
+		static create(action: () => void): IDisposable;
+		static empty: IDisposable;
+
+		dispose(): void;
+	}
+
+	// Single assignment
+	export class SingleAssignmentDisposable implements IDisposable {
+		constructor();
+
+		isDisposed: boolean;
+		current: IDisposable;
+
+		dispose(): void ;
+		getDisposable(): IDisposable;
+		setDisposable(value: IDisposable): void ;
+	}
+
+	// Multiple assignment disposable
+	export class SerialDisposable implements IDisposable {
+		constructor();
+
+		isDisposed: boolean;
+
+		dispose(): void;
+		getDisposable(): IDisposable;
+		setDisposable(value: IDisposable): void;
+	}
+
+	export class RefCountDisposable implements IDisposable {
+		constructor(disposable: IDisposable);
+
+		dispose(): void;
+
+		isDisposed: boolean;
+		getDisposable(): IDisposable;
+	}
+
+	interface IScheduledItem {
+		scheduler: IScheduler;
+		state: any;
+		action: (scheduler: IScheduler, state) => IDisposable;
+		dueTime: number;
+		comparer: (x: number, y: number) =>number;
+		disposable: SingleAssignmentDisposable;
+
+		invoke(): void;
+		compareTo(other: IScheduledItem): number;
+		isCancelled(): boolean;
+		invokeCore(): IDisposable;
+	}
+
+	export interface IScheduler {
+		now(): number;
+		catch(handler: (exception: any) => boolean): IScheduler;
+		catchException(handler: (exception: any) => boolean): IScheduler;
+
+		schedule(action: () => void): IDisposable;
+		scheduleWithState<TState>(state: TState, action: (scheduler: IScheduler, state: TState) => IDisposable): IDisposable;
+		scheduleWithAbsolute(dueTime: number, action: () => void): IDisposable;
+		scheduleWithAbsoluteAndState<TState>(state: TState, dueTime: number, action: (scheduler: IScheduler, state: TState) =>IDisposable): IDisposable;
+		scheduleWithRelative(dueTime: number, action: () => void): IDisposable;
+		scheduleWithRelativeAndState<TState>(state: TState, dueTime: number, action: (scheduler: IScheduler, state: TState) =>IDisposable): IDisposable;
+
+		scheduleRecursive(action: (action: () =>void ) =>void ): IDisposable;
+		scheduleRecursiveWithState<TState>(state: TState, action: (state: TState, action: (state: TState) =>void ) =>void ): IDisposable;
+		scheduleRecursiveWithAbsolute(dueTime: number, action: (action: (dueTime: number) => void) => void): IDisposable;
+		scheduleRecursiveWithAbsoluteAndState<TState>(state: TState, dueTime: number, action: (state: TState, action: (state: TState, dueTime: number) => void) => void): IDisposable;
+		scheduleRecursiveWithRelative(dueTime: number, action: (action: (dueTime: number) =>void ) =>void ): IDisposable;
+		scheduleRecursiveWithRelativeAndState<TState>(state: TState, dueTime: number, action: (state: TState, action: (state: TState, dueTime: number) =>void ) =>void ): IDisposable;
+
+		schedulePeriodic(period: number, action: () => void): IDisposable;
+		schedulePeriodicWithState<TState>(state: TState, period: number, action: (state: TState) => TState): IDisposable;
+	}
+
+	export class Scheduler implements IScheduler {
+		constructor(
+			now: () => number,
+			schedule: (state: any, action: (scheduler: IScheduler, state: any) => IDisposable) => IDisposable,
+			scheduleRelative: (state: any, dueTime: number, action: (scheduler: IScheduler, state: any) => IDisposable) => IDisposable,
+			scheduleAbsolute: (state: any, dueTime: number, action: (scheduler: IScheduler, state: any) => IDisposable) => IDisposable);
+
+		static normalize(timeSpan: number): number;
+
+		static immediate: IScheduler;
+		static currentThread: ICurrentThreadScheduler;
+		static timeout: IScheduler;
+
+		now(): number;
+		catch(handler: (exception: any) => boolean): IScheduler;
+		catchException(handler: (exception: any) => boolean): IScheduler;
+
+		schedule(action: () => void): IDisposable;
+		scheduleWithState<TState>(state: TState, action: (scheduler: IScheduler, state: TState) => IDisposable): IDisposable;
+		scheduleWithAbsolute(dueTime: number, action: () => void): IDisposable;
+		scheduleWithAbsoluteAndState<TState>(state: TState, dueTime: number, action: (scheduler: IScheduler, state: TState) => IDisposable): IDisposable;
+		scheduleWithRelative(dueTime: number, action: () => void): IDisposable;
+		scheduleWithRelativeAndState<TState>(state: TState, dueTime: number, action: (scheduler: IScheduler, state: TState) => IDisposable): IDisposable;
+
+		scheduleRecursive(action: (action: () => void) => void): IDisposable;
+		scheduleRecursiveWithState<TState>(state: TState, action: (state: TState, action: (state: TState) => void) => void): IDisposable;
+		scheduleRecursiveWithAbsolute(dueTime: number, action: (action: (dueTime: number) => void) => void): IDisposable;
+		scheduleRecursiveWithAbsoluteAndState<TState>(state: TState, dueTime: number, action: (state: TState, action: (state: TState, dueTime: number) => void) => void): IDisposable;
+		scheduleRecursiveWithRelative(dueTime: number, action: (action: (dueTime: number) => void) => void): IDisposable;
+		scheduleRecursiveWithRelativeAndState<TState>(state: TState, dueTime: number, action: (state: TState, action: (state: TState, dueTime: number) => void) => void): IDisposable;
+
+		schedulePeriodic(period: number, action: () => void): IDisposable;
+		schedulePeriodicWithState<TState>(state: TState, period: number, action: (state: TState) => TState): IDisposable;
+	}
+
+	// Current Thread IScheduler
+	interface ICurrentThreadScheduler extends IScheduler {
+		scheduleRequired(): boolean;
+		ensureTrampoline(action: () =>IDisposable): IDisposable;
+	}
+
+	// Notifications
+	export class Notification<T> {
+		accept(observer: Observer<T>): void;
+		accept<TResult>(onNext: (value: T) => TResult, onError?: (exception: any) => TResult, onCompleted?: () => TResult): TResult;
+		toObservable(scheduler?: IScheduler): Observable<T>;
+		hasValue: boolean;
+		equals(other: Notification<T>): boolean;
+		kind: string;
+		value: T;
+		exception: any;
+
+		static createOnNext<T>(value: T): Notification<T>;
+		static createOnError<T>(exception): Notification<T>;
+		static createOnCompleted<T>(): Notification<T>;
+	}
+
+	// Observer
+	export class Observer<T> {
+		onNext(value: T): void;
+		onError(exception: any): void;
+		onCompleted(): void;
+
+		toNotifier(): (notification: Notification<T>) =>void;
+		asObserver(): Observer<T>;
+		checked(): Observer<any>;
+
+		static create<T>(onNext?: (value: T) => void, onError?: (exception: any) => void, onCompleted?: () => void): Observer<T>;
+		static fromNotifier<T>(handler: (notification: Notification<T>) => void): Observer<T>;
+	}
+
+	export interface Observable<T> {
+		subscribe(observer: Observer<T>): IDisposable;
+		subscribe(onNext?: (value: T) => void, onError?: (exception: any) => void, onCompleted?: () => void): IDisposable;
+
+		toArray(): Observable<T[]>;
+
+		observeOn(scheduler: IScheduler): Observable<T>;
+		subscribeOn(scheduler: IScheduler): Observable<T>;
+
+		amb(rightSource: Observable<T>): Observable<T>;
+		catch(handler: (exception: any) => Observable<T>): Observable<T>;
+		catchException(handler: (exception: any) => Observable<T>): Observable<T>;
+		catch(second: Observable<T>): Observable<T>;
+		catchException(second: Observable<T>): Observable<T>;
+		combineLatest<T2, TResult>(second: Observable<T2>, resultSelector: (v1: T, v2: T2) => TResult): Observable<TResult>;
+		combineLatest<T2, T3, TResult>(second: Observable<T2>, third: Observable<T3>, resultSelector: (v1: T, v2: T2, v3: T3) => TResult): Observable<TResult>;
+		combineLatest<T2, T3, T4, TResult>(second: Observable<T2>, third: Observable<T3>, fourth: Observable<T4>, resultSelector: (v1: T, v2: T2, v3: T3, v4: T4) => TResult): Observable<TResult>;
+		combineLatest<T2, T3, T4, T5, TResult>(second: Observable<T2>, third: Observable<T3>, fourth: Observable<T4>, fifth: Observable<T5>, resultSelector: (v1: T, v2: T2, v3: T3, v4: T4, v5: T5) => TResult): Observable<TResult>;
+		combineLatest<TOther, TResult>(souces: Observable<TOther>[], resultSelector: (firstValue: T, ...otherValues: TOther[]) => TResult): Observable<TResult>;
+		concat(...sources: Observable<T>[]): Observable<T>;
+		concat(sources: Observable<T>[]): Observable<T>;
+		concatObservable(): T;
+		concatAll(): T;
+		merge(maxConcurrent: number): Observable<T>;
+		merge(other: Observable<T>): Observable<T>;
+		mergeObservable(): T;
+		mergeAll(): T;
+		onErrorResumeNext(second: Observable<T>): Observable<T>;
+		skipUntil<T2>(other: Observable<T2>): Observable<T>;
+		switchLatest(): T;
+		takeUntil<T2>(other: Observable<T2>): Observable<T>;
+		zip<T2, TResult>(second: Observable<T2>, resultSelector: (v1: T, v2: T2) => TResult): Observable<TResult>;
+		zip<T2, T3, TResult>(second: Observable<T2>, third: Observable<T3>, resultSelector: (v1: T, v2: T2, v3: T3) => TResult): Observable<TResult>;
+		zip<T2, T3, T4, TResult>(second: Observable<T2>, third: Observable<T3>, fourth: Observable<T4>, resultSelector: (v1: T, v2: T2, v3: T3, v4: T4) => TResult): Observable<TResult>;
+		zip<T2, T3, T4, T5, TResult>(second: Observable<T2>, third: Observable<T3>, fourth: Observable<T4>, fifth: Observable<T5>, resultSelector: (v1: T, v2: T2, v3: T3, v4: T4, v5: T5) => TResult): Observable<TResult>;
+		zip<TOther, TResult>(second: Observable<TOther>[], resultSelector: (left: T, right: Observable<TOther>) => TResult): Observable<TResult>;
+		asObservable(): Observable<T>;
+		bufferWithCount(count: number, skip?: number): Observable<T[]>;
+		dematerialize<TOrigin>(): Observable<TOrigin>;
+		distinctUntilChanged(skipParameter: boolean, comparer: (x: T, y: T) => boolean): Observable<T>;
+		distinctUntilChanged<TValue>(keySelector?: (value: T) => TValue, comparer?: (x: TValue, y: TValue) => boolean): Observable<T>;
+		do(observer: Observer<T>): Observable<T>;
+		doAction(observer: Observer<T>): Observable<T>;
+		do(onNext?: (value: T) => void, onError?: (exception: any) => void, onCompleted?: () => void): Observable<T>;
+		doAction(onNext?: (value: T) => void, onError?: (exception: any) => void, onCompleted?: () => void): Observable<T>;
+		finally(action: () => void): Observable<T>;
+		finallyAction(action: () => void): Observable<T>;
+		ignoreElements(): Observable<T>;
+		materialize(): Observable<Notification<T>>;
+		repeat(repeatCount?: number): Observable<T>;
+		retry(retryCount?: number): Observable<T>;
+		scan<TAcc>(seed: TAcc, accumulator: (acc: TAcc, value: T) => TAcc): Observable<TAcc>;
+		scan(accumulator: (acc: T, value: T) => T): Observable<T>;
+		skipLast(count: number): Observable<T>;
+		startWith(...values: T[]): Observable<T>;
+		startWith(scheduler: IScheduler, ...values: T[]): Observable<T>;
+		takeLast(count: number, scheduler?: IScheduler): Observable<T>;
+		takeLastBuffer(count: number): Observable<T[]>;
+		windowWithCount(count: number, skip?: number): Observable<Observable<T>>;
+		defaultIfEmpty(defaultValue?: T): Observable<T>;
+		distinct<TKey>(keySelector?: (value: T) => TKey, keySerializer?: (key: TKey) => string): Observable<T>;
+		groupBy<TKey, TElement>(keySelector: (value: T) => TKey, elementSelector?: (value: T) => TElement, keySerializer?: (key: TKey) => string): GroupedObservable<TKey, TElement>;
+		groupByUntil<TKey, TElement>(keySelector: (value: T) => TKey, elementSelector: (value: T) => TElement, durationSelector: (group: GroupedObservable<TKey, TElement>) => Observable<number>, keySerializer?: (key: TKey) => string): GroupedObservable<TKey, TElement>;
+		select<T2>(selector: (value: T, index: number) => T2): Observable<T2>;
+		selectMany<T2>(selector: (value: T) => Observable<T2>, resultSelector?: (x: any, y: any) => any): Observable<T2>;
+		selectMany<T2>(other: Observable<T2>): Observable<T2>;
+		skip(count: number): Observable<T>;
+		skipWhile(predicate: (value: T, index?: number) => boolean): Observable<T>;
+		take(count: number, scheduler?: IScheduler): Observable<T>;
+		takeWhile(predicate: (value: T, index?: number) => boolean): Observable<T>;
+		where(predicate: (value: T, index?: number) => boolean): Observable<T>;
+	}
+
+	interface ObservableStatic {
+		create<T>(subscribe: (observer: Observer<T>) => void): Observable<T>;
+		create<T>(subscribe: (observer: Observer<T>) => () => void): Observable<T>;
+		createWithDisposable<T>(subscribe: (observer: Observer<T>) => IDisposable): Observable<T>;
+		defer<T>(observableFactory: () => Observable<T>): Observable<T>;
+		empty<T>(scheduler?: IScheduler): Observable<T>;
+		fromArray<T>(array: T[], scheduler?: IScheduler): Observable<T>;
+		fromArray<T>(array: { length: number;[index: number]: T; }, scheduler?: IScheduler): Observable<T>;
+		generate<TState, TResult>(initialState: TState, condition: (state: TState) => boolean, iterate: (state: TState) => TState, resultSelector: (state: TState) => TResult, scheduler?: IScheduler): Observable<TResult>;
+		never<T>(): Observable<T>;
+		range(start: number, count: number, scheduler?: IScheduler): Observable<number>;
+		repeat<T>(value: T, repeatCount?: number, scheduler?: IScheduler): Observable<T>;
+		return<T>(value: T, scheduler?: IScheduler): Observable<T>;
+		returnValue<T>(value: T, scheduler?: IScheduler): Observable<T>;
+		throw<T>(exception: Error, scheduler?: IScheduler): Observable<T>;
+		throw<T>(exception: any, scheduler?: IScheduler): Observable<T>;
+		throwException<T>(exception: Error, scheduler?: IScheduler): Observable<T>;
+		throwException<T>(exception: any, scheduler?: IScheduler): Observable<T>;
+		using<TSource, TResource extends IDisposable>(resourceFactory: () => TResource, observableFactory: (resource: TResource) => Observable<TSource>): Observable<TSource>;
+		amb<T>(...sources: Observable<T>[]): Observable<T>;
+		amb<T>(sources: Observable<T>[]): Observable<T>;
+		catch<T>(sources: Observable<T>[]): Observable<T>;
+		catchException<T>(sources: Observable<T>[]): Observable<T>;
+		catch<T>(...sources: Observable<T>[]): Observable<T>;
+		catchException<T>(...sources: Observable<T>[]): Observable<T>;
+		concat<T>(...sources: Observable<T>[]): Observable<T>;
+		concat<T>(sources: Observable<T>[]): Observable<T>;
+		merge<T>(...sources: Observable<T>[]): Observable<T>;
+		merge<T>(sources: Observable<T>[]): Observable<T>;
+		merge<T>(scheduler: IScheduler, ...sources: Observable<T>[]): Observable<T>;
+		merge<T>(scheduler: IScheduler, sources: Observable<T>[]): Observable<T>;
+		onErrorResumeNext<T>(...sources: Observable<T>[]): Observable<T>;
+		onErrorResumeNext<T>(sources: Observable<T>[]): Observable<T>;
+		zip<T1, T2, TResult>(first: Observable<T1>, sources: Observable<T2>[], resultSelector: (item1: T1, right: Observable<T2>) => TResult): Observable<TResult>;
+		zip<T1, T2, TResult>(source1: Observable<T1>, source2: Observable<T2>, resultSelector: (item1: T1, item2: T2) => TResult): Observable<TResult>;
+		zip<T1, T2, T3, TResult>(source1: Observable<T1>, source2: Observable<T2>, source3: Observable<T3>, resultSelector: (item1: T1, item2: T2, item3: T3) => TResult): Observable<TResult>;
+		zip<T1, T2, T3, T4, TResult>(source1: Observable<T1>, source2: Observable<T2>, source3: Observable<T3>, source4: Observable<T4>, resultSelector: (item1: T1, item2: T2, item3: T3, item4: T4) => TResult): Observable<TResult>;
+		zip<T1, T2, T3, T4, T5, TResult>(source1: Observable<T1>, source2: Observable<T2>, source3: Observable<T3>, source4: Observable<T4>, source5: Observable<T5>, resultSelector: (item1: T1, item2: T2, item3: T3, item4: T4, item5: T5) => TResult): Observable<TResult>;
+		zipArray<T>(...sources: Observable<T>[]): Observable<T[]>;
+		//zipArray<T>(sources: Observable<T>[]): Observable<T[]>;
+	}
+
+	export var Observable: ObservableStatic;
+
+	interface GroupedObservable<TKey, TElement> extends Observable<TElement> {
+		key: TKey;
+		underlyingObservable: Observable<TElement>;
+	}
+
+	interface ISubject<T> extends Observable<T>, Observer<T>, IDisposable {
+		hasObservers(): boolean;
+	}
+
+    export interface Subject<T> extends ISubject<T> {
+    }
+
+    interface SubjectStatic {
+        new <T>(): Subject<T>;
+		create<T>(observer?: Observer<T>, observable?: Observable<T>): ISubject<T>;
+	}
+
+	export var Subject: SubjectStatic;
+
+	export interface AsyncSubject<T> extends Subject<T> {
+	}
+
+	interface AsyncSubjectStatic {
+		new <T>(): AsyncSubject<T>;
+	}
+
+	export var AsyncSubject: AsyncSubjectStatic;
+
+	export interface BehaviorSubject<T> extends Subject<T> {
+	}
+
+	interface BehaviorSubjectStatic {
+		new <T>(initialValue: T): BehaviorSubject<T>;
+	}
+
+	export var BehaviorSubject: BehaviorSubjectStatic;
+
+	export interface ReplaySubject<T> extends Subject<T> {
+	}
+
+	interface ReplaySubjectStatic {
+		new <T>(initialValue: T): ReplaySubject<T>;
+	}
+
+	export var ReplaySubject: ReplaySubjectStatic;
+}
+
+// Disposable
+var d: Rx.IDisposable = new Rx.Disposable(() => { });
+d = Rx.Disposable.create(() => { });
+d = Rx.Disposable.empty;
+d.dispose();
+
+// CompositeDisposable
+var cd = new Rx.CompositeDisposable(d, d, d);
+d = cd;
+cd = new Rx.CompositeDisposable([d, d]);
+cd.add(d);
+cd.clear();
+var b: boolean = cd.contains(d);
+var da: Rx.IDisposable[] = cd.toArray();
+cd.remove(d);
+
+// SingleAssignmentDisposable
+var sad = new Rx.SingleAssignmentDisposable();
+d = sad;
+sad.setDisposable(d);
+d = sad.getDisposable();
+b = sad.isDisposed;
+
+// SerialDisposable
+var sd = new Rx.SerialDisposable();
+d = sd;
+sd.setDisposable(d);
+d = sd.getDisposable();
+b = sd.isDisposed;
+
+// RefCountDisposable
+var rcd = new Rx.RefCountDisposable(d);
+d = rcd;
+d = rcd.getDisposable();
+b = rcd.isDisposed;
+
+// IScheduler
+var s: Rx.IScheduler;
+var n: number = s.now();
+s = s.catch(ex => true);
+s = s.catchException(ex => true);
+d = s.schedule(() => { });
+d = s.scheduleWithState(1,
+	(sh, s) => sh.scheduleWithAbsoluteAndState(s + 1, 100,
+		(sh, s) => sh.scheduleWithRelativeAndState(s + 1, 200,
+			(sh, s) => sh.scheduleRecursiveWithState(s + 1,
+				(s, self) => self(s + 1)))));
+d = s.scheduleWithAbsolute(100, () => { });
+d = s.scheduleWithRelative(100, () => { });
+d = s.scheduleRecursive(self => self());
+d = s.scheduleRecursiveWithAbsolute(100, self => self(200));
+d = s.scheduleRecursiveWithRelative(100, self => self(200));
+d = s.schedulePeriodic(100, () => { });
+d = s.schedulePeriodicWithState('a', 100, s => s + 'b');
+
+// ICurrentThreadScheduler
+Rx.Scheduler.currentThread.scheduleRequired();
+Rx.Scheduler.currentThread.ensureTrampoline(() => Rx.Disposable.empty);
+
+// Observer
+var o: Rx.Observer<number> = Rx.Observer.create<number>();
+o = Rx.Observer.create<number>(i => { });
+o = Rx.Observer.create<number>(i => { }, err => { });
+o = Rx.Observer.create<number>(i => { }, err => { }, () => { });
+o = Rx.Observer.fromNotifier<number>(n => { });
+
+o.onNext(10);
+o.onError(new Error());
+o.onCompleted();
+
+// Observable static methods tests
+
+var ns: Rx.Observable<number> = Rx.Observable.create<number>(observer => { });
+var ss: Rx.Observable<string> = Rx.Observable.create<string>(observer => (() => { }));
+var bs: Rx.Observable<boolean> = Rx.Observable.createWithDisposable<boolean>(observer => Rx.Disposable.empty);
+
+ns = Rx.Observable.defer(() => ns);
+
+ss = Rx.Observable.empty<string>();
+bs = Rx.Observable.empty<boolean>(Rx.Scheduler.currentThread);
+
+ns = Rx.Observable.fromArray([0, 3, -7, 18]);
+ss = Rx.Observable.fromArray(['a', 'ab', 'abc'], Rx.Scheduler.timeout);
+
+ns = Rx.Observable.generate(0, i => i < 100, i => i + 1, i => i * i);
+ns = Rx.Observable.generate(0, i => i < 100, i => i + 1, i => i * i, Rx.Scheduler.timeout);
+
+bs = Rx.Observable.never<boolean>();
+
+ns = Rx.Observable.range(0, 100);
+ns = Rx.Observable.range(0, 100, Rx.Scheduler.timeout);
+
+ns = Rx.Observable.repeat(0, 100);
+ns = Rx.Observable.repeat(0, 100, Rx.Scheduler.timeout);
+
+ss = Rx.Observable.return('a');
+ss = Rx.Observable.return('a', Rx.Scheduler.timeout);
+ss = Rx.Observable.returnValue('a');
+ss = Rx.Observable.returnValue('a', Rx.Scheduler.timeout);
+
+bs = Rx.Observable.throw<boolean>(new Error("error"));
+bs = Rx.Observable.throw<boolean>(new Error("error"), Rx.Scheduler.timeout);
+bs = Rx.Observable.throwException<boolean>(new Error("error"));
+bs = Rx.Observable.throwException<boolean>(new Error("error"), Rx.Scheduler.timeout);
+
+bs = Rx.Observable.using(() => d, d => Rx.Observable.return(true));
+
+ss = Rx.Observable.amb(ss, ss);
+//ss = Rx.Observable.amb([ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+
+ss = Rx.Observable.catch(ss, ss, ss);
+ss = Rx.Observable.catchException(ss, ss, ss);
+//ss = Rx.Observable.catch([ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+//ss = Rx.Observable.catchException([ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+
+ss = Rx.Observable.concat(ss, ss, ss);
+//ss = Rx.Observable.concat([ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+
+ss = Rx.Observable.merge(ss, ss, ss);
+//ss = Rx.Observable.merge([ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+ss = Rx.Observable.merge(s, ss, ss, ss);
+//ss = Rx.Observable.merge(s, [ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+
+ss = Rx.Observable.onErrorResumeNext(ss, ss, ss);
+//ss = Rx.Observable.onErrorResumeNext([ss, ss, ss]);	// TypeScript bug https://typescript.codeplex.com/workitem/2011
+
+ns = Rx.Observable.zip(ss, [ss, ss, ss], (s, ss2) => { ss = ss2; return s.charCodeAt(0); });
+ns = Rx.Observable.zip(ss, bs, (s, b) => s.length + (b ? 1 : 0));
+ns = Rx.Observable.zip(ss, bs, ns, (s, b, n) => s.length + (b ? 1 : 0) + n);
+ns = Rx.Observable.zip(ss, bs, ns, ns, (s, b, n, n2) => s.length + (b ? 1 : 0) + n + n2);
+ns = Rx.Observable.zip(ss, bs, ns, ns, ss, (s, b, n, n2, s2) => s.length + (b ? 1 : 0) + n + n2 + s2.charCodeAt(0));
+
+var sas: Rx.Observable<string[]> = Rx.Observable.zipArray(ss, ss);
+
+
+// Observable instance methods
+
+d = ns.subscribe(o);
+d = ns.subscribe(n => n + 1, err => { }, () => { });
+d = ns.subscribe(n => n + 1, err => { });
+d = ns.subscribe();
+
+sas = ss.toArray();
+
+ss.observeOn(s);
+ns.subscribeOn(s);
+
+ss = ss.amb(ss);
+
+ss = ss.catch(err => ss);
+ss = ss.catchException(err => ss);
+ss = ss.catch(ss);
+ss = ss.catchException(ss);
+
+ns = ss.combineLatest([ns, ns, ns], (s, ...ns) => s.charCodeAt(0) + ns[0]);
+ns = ss.combineLatest(ns, (s, n) => s.charCodeAt(0) + n);
+ns = ss.combineLatest(ns, ns, (s, n, n2) => s.charCodeAt(0) + n + n2);
+ns = ss.combineLatest(ns, ns, bs, (s, n, n2, b) => s.charCodeAt(0) + n + n2 + (b ? 1 : 0));
+ns = ss.combineLatest(ns, ns, bs, ss, (s, n, n2, b, s2) => s.charCodeAt(0) + n + n2 + (b ? 1 : 0) + s2.charCodeAt(0));
+
+ss = ss.concat(ss, ss);
+ss = ss.concat([ss, ss]);
+
+var sss: Rx.Observable<Rx.Observable<string>>;
+ss = sss.concatAll();
+ss = sss.concatObservable();
+
+ss = ss.merge(2);
+ss = ss.merge(ss);
+
+ss = sss.mergeAll();
+ss = sss.mergeObservable();
+
+ss = ss.onErrorResumeNext(ss);
+
+ss = ss.skipUntil(ns);
+
+ss = ss.takeUntil(ns);
+
+ss = sss.switchLatest();
+
+ns = ss.zip([ns, ns], (s, ns2) => { ns = ns2; return s.charCodeAt(0); });
+
+ns = ss.zip(ns, (s, n) => s.charCodeAt(0) + n);
+ns = ss.zip(ns, bs, (s, n, b) => s.charCodeAt(0) + n + (b?1:0));
+ns = ss.zip(ns, bs, ss, (s, n, b, s2) => s.charCodeAt(0) + n + (b?1:0) + s2.charCodeAt(0));
+ns = ss.zip(ns, bs, ss, ns, (s, n, b, s2, n2) => s.charCodeAt(0) + n + (b?1:0) + s2.charCodeAt(0) + n2);
+
+ss = ss.asObservable();
+
+sas = ss.bufferWithCount(2);
+sas = ss.bufferWithCount(2, 1);
+
+var notifications: Rx.Observable<Rx.Notification<number>>;
+
+ns = notifications.dematerialize<number>();
+
+ns = ns.distinctUntilChanged();
+ns = ns.distinctUntilChanged(n => (n + 1).toString());
+ns = ns.distinctUntilChanged(n => (n + 1).toString(), (s1, s2) => s1.charCodeAt(0) === s2.charCodeAt(0));
+ns = ns.distinctUntilChanged(undefined, (n1, n2) => (n1 + 1) === (n2 + 1));
+
+ns = ns.do(o);
+ns = ns.doAction(o);
+ns = ns.do(n => n + 1, err => { }, () => { });
+ns = ns.doAction(n => n + 1, err => { }, () => { });
+ns = ns.do(n => n + 1, err => { });
+ns = ns.doAction(n => n + 1, err => { });
+ns = ns.do();
+ns = ns.doAction();
+
+ns = ns.finally(() => { });
+ns = ns.finallyAction(() => { });
+
+ss = ss.ignoreElements();
+
+notifications = ns.materialize();
+
+ss = ss.repeat();
+ss = ss.repeat(10);
+
+ss = ss.retry();
+ss = ss.retry(10);
+
+ns = ss.scan(0, (sum, s) => sum + s.charCodeAt(0));
+ns = ns.scan((sum, n) => sum + n);
+
+ns = ns.skipLast(10);
+
+ns = ns.startWith(10, 20);
+ns = ns.startWith(s, 10, 20);
+
+ns = ns.takeLast(2);
+ns = ns.takeLast(2, s);
+
+sas = ss.takeLastBuffer(5);
+
+sss = ss.windowWithCount(2);
+sss = ss.windowWithCount(2, 3);
+
+ns = ns.defaultIfEmpty();
+ns = ns.defaultIfEmpty(0);

@@ -1,0 +1,167 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<hr />
+
+<h1>Introduction</h1>
+A major part of software engineering is building components that not only have well-defined and consistent APIs, but are also reusable.  Components that are capable of working on the data of today as well as the data of tomorrow will give you the most flexible capabilities for building up large software systems.<br /><br />In languages like C# and Java, one of the main tools in the toolbox for creating reusable components is &#39;generics&#39;, that is, being able to create a component that can work over a variety of types rather than a single one.  This allows users to consume these components and use their own types.<br />
+<h1>Hello World of Generics</h1>
+To start off, let&#39;s do the &quot;hello world&quot; of generics: the identity function.  The identity function is a function that will return back whatever is passed in.  You can think of this in a similar way to the &#39;echo&#39; command.  <br /><br />Without generics, we would either have to give the identity function a specific type:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity(arg: number): number {
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />Or, we could describe the identity function using the &#39;any&#39; type:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity(arg: any): any {
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />While using &#39;any&#39; is certainly generic in that will accept any and all types for the type of &#39;arg&#39;, we actually are losing the information about what that type was when the function returns.  If we passed in a number, the only information we have is that any type could be returned.  <br /><br />Instead, we need a way of capturing the type of the argument in such a way that we can also use it to denote what is being returned.  Here, we will use a <i>type variable</i>, a special kind of variable that works on types rather than values.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />We&#39;ve now added a type variable &#39;T&#39; to the identity function.  This &#39;T&#39; allows us to capture the type the user provides (eg, number), so that we can use that information later.  Here, we use &#39;T&#39; again as the return type.  On inspection, we can now see the same type is used for the argument and the return type.  This allows us to traffic that type information in one side of the function and out the other.<br /><br />We say that this version of the &#39;identity&#39; function is generic, as it works over a range of types.  Unlike using &#39;any&#39;, it&#39;s also just as precise (ie, it doesn&#39;t lose any information) as the first &#39;identity&#39; function that used numbers for the argument and return type.<br /><br />Once we&#39;ve written the generic identity function, we can call it in one of two ways.  The first way is to pass all of the arguments, including the type argument, to the function:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> output = identity&lt;string&gt;(<span style="color:#A31515;">&quot;myString&quot;</span>);  <span style="color:Green;">// type of output will be &#39;string&#39;</span>
+</pre></div><br />Here we explicitly set &#39;T&#39; to be string as one of the arguments to the function call, denoted using the &lt;&gt; around the arguments rather than ().<br /><br />The second way is also perhaps the most common.  Here we use /type argument inference/, that is, we want the compiler to set the value of T for us automatically based on the type of the argument we pass in:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> output = identity(<span style="color:#A31515;">&quot;myString&quot;</span>);  <span style="color:Green;">// type of output will be &#39;string&#39;</span>
+</pre></div><br />Notice that we didn&#39;t have explicitly pass the type in the angle brackets (&lt;&gt;), the compiler just looked at the value &quot;myString&quot;, and set T to its type.  While type argument inference can be a helpful tool to keep code shorter and more readable, you may need to explicitly pass in the type arguments as we did in the previous example when the compiler fails to infer the type, as may happen in more complex examples.<br />
+<h1>Working with Generic Type Variables</h1>
+When you begin to use generics, you&#39;ll notice that when you create generic functions like &#39;identity&#39;, the compiler will enforce that you use any generically typed parameters in the body of the function correctly.  That is, that you actually treat these parameters as if they could be any and all types.<br /><br />Let&#39;s take our &#39;identity&#39; function from earlier:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />What if want to also log the length of the argument &#39;arg&#39; to the console with each call.  We might be tempted to write this:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> loggingIdentity&lt;T&gt;(arg: T): T {
+    console.log(arg.length);  <span style="color:Green;">// Error: T doesn&#39;t have .length</span>
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />When we do, the compiler will give us an error that we&#39;re using the &quot;.length&quot; member of &#39;arg&#39;, but nowhere have we said that &#39;arg&#39; has this member.  Remember, we said earlier that these type variables stand in for any and all types, so someone using this function could have passed in a &#39;number&#39; instead, which does not have a &quot;.length&quot; member.  <br /><br />Let&#39;s say that we&#39;ve actually intended this function to work on arrays of T rather that T directly.  Since we&#39;re working with arrays, the .length member should be available.  We can describe this just like we would create arrays of other types:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> loggingIdentity&lt;T&gt;(arg: T[]): T[] {
+    console.log(arg.length);  <span style="color:Green;">// Array has a .length, so no more error</span>
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />You can read the type of logging Identity as &quot;the generic function loggingIdentity, takes a type parameter T, and an argument &#39;arg&#39; which is an array of these T&#39;s, and returns an array of T&#39;s.  If we passed in an array of numbers, we&#39;d get an array of numbers back out, as T would bind to number.  This allows us to use our generic type variable &#39;T&#39; as part of the types we&#39;re working with, rather than the whole type, giving us greater flexibility.  <br /><br />We can alternatively write the sample example this way:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> loggingIdentity&lt;T&gt;(arg: Array&lt;T&gt;): Array&lt;T&gt; {
+    console.log(arg.length);  <span style="color:Green;">// Array has a .length, so no more error</span>
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />You may already be familiar with this style of type from other languages.  In the next section, we&#39;ll cover how you can create your own generic types like Array&lt;T&gt;.<br />
+<h1>Generic Types</h1>
+In previous sections, we created generic identity functions that worked over a range of types.  In this section, we&#39;ll explore the type of the functions themselves and how to create generic interfaces.<br /><br />The type of generic functions is just like those of non-generic functions, with the type parameters listed first, similarly to function declarations:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+
+<span style="color:Blue;">var</span> myIdentity: &lt;T&gt;(arg: T)=&gt;T = identity;
+</pre></div><br />We could also have used a different name for the generic type parameter in the type, so long as the number of type variables and how the type variables are used line up.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+
+<span style="color:Blue;">var</span> myIdentity: &lt;U&gt;(arg: U)=&gt;U = identity;
+</pre></div><br />We can also write the generic type as a call signature of an object literal type:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+
+<span style="color:Blue;">var</span> myIdentity: {&lt;T&gt;(arg: T): T} = identity;
+</pre></div><br />Which leads us to writing our first generic interface.  Let&#39;s take the object literal from the previous example and move it to an interface:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> GenericIdentityFn {
+    &lt;T&gt;(arg: T): T;
+}
+
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+
+<span style="color:Blue;">var</span> myIdentity: GenericIdentityFn = identity;
+</pre></div><br />In a similar example, we may want to move the generic parameter to be a parameter of the whole interface.  This lets us see what type(s) we&#39;re generic over (eg Dictionary&lt;string&gt; rather than just Dictionary).  This makes the type parameter visible to all the other members of the interface.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> GenericIdentityFn&lt;T&gt; {
+    (arg: T): T;
+}
+
+<span style="color:Blue;">function</span> identity&lt;T&gt;(arg: T): T {
+    <span style="color:Blue;">return</span> arg;
+}
+
+<span style="color:Blue;">var</span> myIdentity: GenericIdentityFn&lt;number&gt; = identity;
+</pre></div><br />Notice that our example has changed to be something slightly different.  Instead of describing a generic function, we now have a non-generic function signature that is a part of a generic type.  When we use GenericIdentityFn, we now will also need to specify the corresponding type argument (here: number), effectively locking in what the underlying call signature will use.  Understanding when to put the type parameter directly on the call signature and when to put it on the interface itself will be helpful in describing what aspects of a type are generic.<br /><br />In addition to generic interfaces, we can also create generic classes.  Note that it is not possible to create generic enums and modules.<br />
+<h1>Generic Classes</h1>
+A generic class has a similar shape to a generic interface.  Generic classes have a generic type parameter list in angle brackets (&lt;&gt;) following the name of the class.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> GenericNumber&lt;T&gt; {
+    zeroValue: T;
+    add: (x: T, y: T) =&gt; T;
+}
+
+<span style="color:Blue;">var</span> myGenericNumber = <span style="color:Blue;">new</span> GenericNumber&lt;number&gt;();
+myGenericNumber.zeroValue = 0;
+myGenericNumber.add = <span style="color:Blue;">function</span>(x, y) { <span style="color:Blue;">return</span> x + y; };
+</pre></div><br />This is a pretty literal use of the &#39;GenericNumber&#39; class, but you may have noticed that nothing is restricting is to only use the &#39;number&#39; type.  We could have instead used &#39;string&#39; or even more complex objects.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> stringNumeric = <span style="color:Blue;">new</span> GenericNumber&lt;string&gt;();
+stringNumeric.zeroValue = <span style="color:#A31515;">&quot;&quot;</span>;
+stringNumeric.add = <span style="color:Blue;">function</span>(x, y) { <span style="color:Blue;">return</span> x + y; };
+
+alert(stringNumeric.add(stringNumeric.zeroValue, <span style="color:#A31515;">&quot;test&quot;</span>));
+</pre></div><br />Just as with interface, putting the type parameter on the class itself lets us make sure all of the properties of the class are working with the same type.<br /><br />As we covered in <a href="https://typescript.codeplex.com/wikipage?title=Classes%20in%20TypeScript&referringTitle=Generics%20in%20TypeScript">Classes</a>, a class has two side to its type: the static side and the instance side.  Generic classes are only generic over their instance side rather than their static side, so when working with classes, static members can not use the class&#39;s type parameter.<br />
+<h1>Generic Constraints</h1>
+If you remember from an earlier example, you may sometimes want to write a generic function that works on a set of types where you have some knowledge about what capabilities that set of types will have.  In our &#39;loggingIdentity&#39; example, we wanted to be able access the &quot;.length&quot; property of &#39;arg&#39;, but the compiler could not prove that every type had a &quot;.length&quot; property, so it warns us that we can&#39;t make this assumption.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> loggingIdentity&lt;T&gt;(arg: T): T {
+    console.log(arg.length);  <span style="color:Green;">// Error: T doesn&#39;t have .length</span>
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />Instead of working with any and all types, we&#39;d like to constrain this function to work with any and all types that also have the &quot;.length&quot; property.  As long as the type has this member, we&#39;ll allow it, but it&#39;s required to have at least this member.  To do so, we must list our requirement as a constraint on what T can be.<br /><br />To do so, we&#39;ll create an interface that describes our constraint.  Here, we&#39;ll create an interface that has a single &quot;.length&quot; property and then we&#39;ll use this interface and the <span class="codeInline">extends</span> keyword to denote our constraint:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Lengthwise {
+    length: number;
+}
+
+<span style="color:Blue;">function</span> loggingIdentity&lt;T <span style="color:Blue;">extends</span> Lengthwise&gt;(arg: T): T {
+    console.log(arg.length);  <span style="color:Green;">// Now we know it has a .length property, so no more error</span>
+    <span style="color:Blue;">return</span> arg;
+}
+</pre></div><br />Because the generic function is now constrained, it will no longer work over any and all types:<br /><br /><div style="color:Black;background-color:White;"><pre>
+loggingIdentity(3);  <span style="color:Green;">// Error, number doesn&#39;t have a .length property</span>
+</pre></div><br />Instead, we need to pass in values whose type has all the required properties:<br /><br /><div style="color:Black;background-color:White;"><pre>
+loggingIdentity({length: 10, value: 3});  
+</pre></div>
+<h2>Using Type Parameters in Generic Constraints</h2>
+In some cases, it may be useful to declare a type parameter that is constrained by another type parameter.  For example,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> find&lt;T, U <span style="color:Blue;">extends</span> Findable&lt;T&gt;&gt;(n: T, s: U) {   <span style="color:Green;">// errors because type parameter used in constraint</span>
+  <span style="color:Green;">// ...</span>
+} 
+find (giraffe, myAnimals);
+</pre></div><br />You can achieve the pattern above by replacing the type parameter with its constraint.  Rewriting the example above,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> find&lt;T&gt;(n: T, s: Findable&lt;T&gt;) {   
+  <span style="color:Green;">// ...</span>
+} 
+find(giraffe, myAnimals);
+</pre></div><br /><i>Note:</i> The above is not strictly identical, as the return type of the first function could have returned &#39;U&#39;, which the second function pattern does not provide a means to do.<br />
+<h2>Using Class Types in Generics</h2>
+When creating factories in TypeScript using generics, it is necessary to refer to class types by their constructor functions.  For example,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> create&lt;T&gt;(c: {<span style="color:Blue;">new</span>(): T; }): T { 
+    <span style="color:Blue;">return</span> <span style="color:Blue;">new</span> c();
+}
+</pre></div><br />A more advanced example uses the prototype property to infer and constrain relationships between the constructor function and the instance side of class types.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> BeeKeeper {
+    hasMask: <span style="color:Blue;">boolean</span>;
+}
+
+<span style="color:Blue;">class</span> ZooKeeper {
+    nametag: string; 
+}
+
+<span style="color:Blue;">class</span> Animal {
+    numLegs: number;
+}
+
+<span style="color:Blue;">class</span> Bee <span style="color:Blue;">extends</span> Animal {
+    keeper: BeeKeeper;
+}
+
+<span style="color:Blue;">class</span> Lion <span style="color:Blue;">extends</span> Animal {
+    keeper: ZooKeeper;
+}
+
+<span style="color:Blue;">function</span> findKeeper&lt;A <span style="color:Blue;">extends</span> Animal, K&gt; (a: {<span style="color:Blue;">new</span>(): A; 
+    prototype: {keeper: K}}): K {
+
+    <span style="color:Blue;">return</span> a.prototype.keeper;
+}
+
+findKeeper(Lion).nametag;  <span style="color:Green;">// typechecks!</span>
+</pre></div></div><div class="ClearBoth"></div>

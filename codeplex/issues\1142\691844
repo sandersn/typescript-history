@@ -1,0 +1,45 @@
+﻿interface FulfillFunction<ValueType, ReturnType> {
+    (value: ValueType): ReturnType;
+    (value: ValueType): IPromise<ReturnType>;
+}
+
+interface RejectFunction<ExceptionType, ReturnType> {
+    (reason: ExceptionType): ReturnType;
+    (reason: ExceptionType): IPromise<ReturnType>;
+}
+
+interface IPromise<T> {
+    then<U>(onFulfilled?: FulfillFunction<T,U>, onReject?: RejectFunction<any,U>): IPromise<U>;
+}
+
+var y = <IPromise<number>>{};
+
+y.then<string>((value: number) => {
+    return <IPromise<string>>{};
+}, (reason) => {
+    return "asdf";
+});
+
+y.then<string>((value: number) => {
+    return "blah";
+});
+
+interface MultiReturnFunction {
+    (value: number): string;
+    (value: number): number;
+}
+
+interface MultiReturnFunction2 {
+    (value): string;
+    (value): number;
+}
+
+interface OtherInterface {
+    func(first?: MultiReturnFunction, second?: MultiReturnFunction2): OtherInterface;
+}
+
+var x = <OtherInterface>{};
+
+x.func((val: number) => {
+    return "";
+});

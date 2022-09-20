@@ -1,0 +1,829 @@
+﻿declare var DEBUG: boolean;
+declare var resolveUrl: {
+    (relative: string): string;
+};
+declare var bundlePath
+
+module app {
+    export var site: app.Site;
+    export var index: app.Default;
+    export var router: app.spa.Router;
+    export var siteMenu: app.ui.menu.Site;
+    export var dashboardMenu: app.ui.menu.Dashboard;
+    export var pageRefresh = true;
+    export var scriptNotiferPlugin = null;
+
+    export function start(authenticated: boolean): void {
+        app.security.setMembershipInstance(authenticated);
+        app.security.setRolesInstance();
+        site = new app.Site();
+        index = new app.Default(true);
+        router = new app.spa.Router();
+        router.start();
+        //router.navigate(app.spa.routes.home.name, true);
+        pageRefresh = false;
+    }
+
+    export function reset(): void {
+        site && site.reset();
+    }
+
+    export function info(title: string, message: string): void {
+        if (window.console && console.info) {
+            console.info(title + ": " + message);
+        }
+    }
+
+    export function error(title: string, message: string): void {
+        if (window.console && console.error) {
+            console.error(title + ": " + message);
+        }
+        else {
+            app.warn(title, message);
+        }
+    }
+
+    export function warn(title: string, message: string): void {
+        if (window.console && console.warn) {
+            console.warn(title + ": " + message);
+        }
+        else {
+            app.info(title, message);
+        }
+    }
+
+    export function debug(message: string): void {
+        if (window.console && console.debug) {
+            console.debug("DEBUG: " + message);
+        }
+    }
+
+    export function wait<T>(func: Function, msec?: number): Q.Promise<T> {
+        var defer = Q.defer<T>(),
+            resolve = () => func() && defer.resolve(null);
+
+        if ((!msec || msec === 0) && window.setImmediate) {
+            window.setImmediate(resolve);
+        }
+        else {
+            window.setTimeout(resolve, msec);
+        }
+
+        return defer.promise;
+    }
+
+    export function safeExec(func: Function): void {
+        router.safeExec(func);
+    }
+
+    export function generateGuid(): string {
+        var result, i, j;
+        result = "";
+        for (j = 0; j < 32; j++) {
+            if (j == 8 || j == 12 || j == 16 || j == 20) {
+                result = result + '-';
+            }
+            i = Math.floor(Math.random() * 16).toString(16).toUpperCase();
+            result = result + i;
+        }
+        return result;
+    }
+
+    export function getScriptNotiferPlugin(): any {
+        if (!app.scriptNotiferPlugin) {
+            var sl = <any>parent.document.getElementById("silverlightPlugin");
+            sl && sl.Content && (app.scriptNotiferPlugin = sl.Content.HtmlViewModel);
+        }
+
+        return app.scriptNotiferPlugin;
+    }
+
+    export function notifyUrlChange(pageName: string, url: string): void {
+        var plugin = app.getScriptNotiferPlugin();
+
+        if (plugin) {
+            plugin.ScriptNotifyUrlChange(JSON.stringify({ PageName: pageName, UrlParameters: url }));
+        }
+    }
+
+    export function shallowClone(obj: any): any {
+        return $.extend({}, obj);
+    }
+
+    export function deepClone(obj: any): any {
+        return $.extend(true, {}, obj);
+    }
+
+    export interface IViewModel {
+        uid?: string;
+        destroy(): void;
+    }
+
+    export class TabView {
+        private _viewModel: ITabViewModel;
+        public shouldRefresh = true;
+        public evaluateUrlParams = true;
+        public html: string;
+
+        constructor(private _viewModelGenerator: (e: any) => any, public async = false) { }
+
+        public load(caller: Object, evaluateUrlParams = false): void {
+            if (true/*this.shouldRefresh || !this._viewModel*/) {
+                this._viewModel && this._viewModel.destroy && this._viewModel.destroy();
+                this._viewModel = this._viewModelGenerator(caller);
+                this.shouldRefresh = false;
+            }
+            else {
+                this._viewModel.load && this._viewModel.load(this.evaluateUrlParams);
+            }
+            this.evaluateUrlParams = false;
+        }
+
+        public getViewModel(): ITabViewModel {
+            return this._viewModel;
+        }
+
+        public isLoaded(): boolean {
+            return !!this._viewModel;
+        }
+    }
+
+    export interface ITabViewModel {
+        load: (refresh: boolean) => void;
+        destroy(): void;
+    }
+
+    export interface IDashboardWidgetViewModel {
+        widgetName: string;
+        refresh: (full?: boolean) => void;
+        destroy: () => void;
+    }
+}
+
+module app.convert {
+    export function toCamelCase(...args: any[]): string {
+        var result = "";
+
+        for (var i = 0, len = args.length; i < len; i++) {
+            var arg = "" + args[i];
+            result += i === 0 ? arg.toLowerCase() : arg.substr(0, 1).toUpperCase() + arg.substr(1).toLowerCase();
+            //if (i === 0) {
+            //    result = arg.toLowerCase();
+            //}
+            //else {
+            //    result = arg.substr(0, 1).toUpperCase() + arg.substr(1).toLowerCase();
+            //}
+        }
+
+        return result;
+    }
+
+    export function toPascalCase(value: string) {
+        return value.substr(0, 1).toUpperCase() + value.substring(1);
+    }
+
+    export function rgbToHex(rgb: string): string {
+        var colors = rgb.match(/rgb\(([0-9]*),\s([0-9]*),\s([0-9]*)\)/i),
+            toHexString = function toHexString(value: number): string {
+                var chars = new Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
+                var low = value & 0xf;
+                var high = (value >> 4) & 0xf;
+                return "" + chars[high] + chars[low];
+            };
+
+        if (colors && colors.length === 4) {
+            return (
+                "#"
+                + toHexString(parseInt(colors[1]))
+                + toHexString(parseInt(colors[2]))
+                + toHexString(parseInt(colors[3]))
+                ).toUpperCase();
+        }
+        else {
+            return rgb;
+        }
+    }
+
+    export function objectToString(obj: Object): string {
+        var str = "";
+
+        if (obj) {
+            for (var prop in obj) {
+
+            }
+        }
+
+        return str;
+    }
+}
+
+module app.config {
+    export var baseUrl = window.location.protocol + "//" + window.location.host;
+    export var url = baseUrl + window.location.pathname;
+    export var imageGalleryUrl = baseUrl + "/imagegallery/";
+    export function rootUrl() {
+        //var root = /\/([a-z]+)(?!.*\/)/i.exec(window.location.pathname);
+        var root = /(\w+)/i.exec(window.location.pathname);
+        return app.config.baseUrl + (root && root.length >= 2 ? "/" + root[1] : "");
+    }
+    export var reportUrlFormat = kendo.format("{0}/DmcOld/Reporting/ReportViewer.aspx?ReportType={1}", rootUrl(), "{0}");
+}
+
+module app.css {
+    export var parentSiteCssName = "Site.css";
+    export var dashboardWidgetWrapper = "dashboard-widget-wrapper";
+    export var dashboardWidgetWrapperSelector = "." + dashboardWidgetWrapper;
+
+    export module animation {
+        export var animating = "app-animating";
+        export var animatingPage = "animating-page";
+        export var animatingPageDone = "animating-page-done";
+        export var animatingDashboardIntroDone = "animating-dashboard-intro-done";
+        export var animatingDashboardDone = "animating-dashboard-done";
+        export var showPage = "show-page";
+        export var hidePage = "hide-page";
+    }
+
+    export module state {
+        export var disabled = "k-state-disabled";
+        export var active = "k-state-active";
+        export var selected = "app-state-selected";
+        export var selectedSelector = "." + selected;
+        export var hover = "app-state-hover";
+    }
+}
+
+module app.culture {
+    export var dateParseFormats = ["MM/dd/yyyy", "MM/d/yyyy", "M/dd/yyyy", "M/d/yyyy",
+        "MM/dd/yy", "MM/d/yy", "M/dd/yy", "M/d/yy",
+        "MM dd yyyy", "MM d yyyy", "M dd yyyy", "M d yyyy",
+        "MM dd yy", "MM d yy", "M dd yy", "M d yy",
+        "MMddyyyy", "MMdyyyy", "Mddyyyy", "MMddyy", "Mdyyyy",
+        "Mdyy", "mdyy", "Mddyy", "MMdyy", "Mdy", "mdy"];
+}
+
+module app.data {
+    var keyValueRegExp = /[A-Za-z0-9_\-]+:(\{([^}]*)\}|[^,}]+)/g
+
+    export function parseBindings(bind: string): { [key: string]: any } {
+        var result: { [key: string]: any } = {},
+            idx,
+            length,
+            token,
+            colonIndex,
+            key,
+            value,
+            tokens;
+
+        tokens = bind.replace(/\s/g, "").match(keyValueRegExp);
+
+        for (idx = 0, length = tokens.length; idx < length; idx++) {
+            token = tokens[idx];
+            colonIndex = token.indexOf(":");
+
+            key = token.substring(0, colonIndex);
+            value = token.substring(colonIndex + 1);
+
+            if (value.charAt(0) == "{") {
+                value = parseBindings(value);
+            }
+
+            result[key] = value;
+        }
+
+        return result;
+    }
+
+    export class ObservableObject extends kendo.data.ObservableObject {
+        private _busy = false;
+
+        public element: JQuery;
+        public viewContent: JQuery;
+        public destroyed: boolean;
+
+        constructor();
+        constructor(selector: string, manualBind?: boolean);
+        constructor(element: HTMLElement, manualBind?: boolean);
+        constructor(obj: JQuery, manualBind?: boolean);
+        constructor(thing?: any, manualBind?: boolean) {
+            super();
+            if (thing) {
+                this.element = thing instanceof jQuery ? thing : $(thing);
+
+                if (this.element) {
+                    this.viewContent = this.element.find(".view-content").eq(0);
+
+                    if (this.viewContent.length === 0) {
+                        this.viewContent = this.element;
+                    }
+                    !manualBind && kendo.bind(this.element, this);
+                }
+            }
+        }
+
+        public destroy(): void {
+            if (!this.destroyed) {
+                kendo.unbind(this.element);
+                kendo.destroy(this.element);
+                this.destroyed = true;
+            }
+        }
+
+        public busy(busy: boolean = null, message?: string, callback?: () => void, removeLoading?: boolean): boolean {
+            if (busy !== null) {
+                app.ui.progress(this.viewContent, busy, busy ? (removeLoading ? "" : "loading") + (message ? " " + message : "") : null, { "top": 33, "min-height": 500 });
+                app.wait(() => callback && callback());
+                this._busy = busy;
+            }
+            return this._busy;
+        }
+    }
+}
+
+module app.web.optimization {
+    export declare var bundlePaths: {
+        editorCleaner: string
+    };
+}
+
+module app.ui {
+    var progressContainerResizeHandler: (e: JQueryEventObject) => void;
+
+    export var progress = function (container: JQuery, show: boolean, message: string = null, css?: Object, offsetTop: number = 0, fill = false) {
+        var mask = container.find(".app-loading-container").first();
+        if (show) {
+            !message && (message = "loading");
+
+            if (+mask.length === 0) {
+                var html = "";
+
+                if (Modernizr.flexbox) {
+                    html = '<div class="app-loading-container">' +
+                    '<div class="app-loading-spinner-container">' +
+                    '<div class="app-loading-spinner">' +
+                    '<div class="app-loading-segment-container">' +
+                    '<div class="app-loading-segment"></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<span class="app-loading-text">' + message + '</span>' +
+                    '</div>';
+                }
+                else {
+                    html = "<div class='app-loading-container'>" +
+                    "<div class='app-loading-center'>" +
+                    "<span class='app-loading-text' >" + message + "</span>" +
+                    "</div><div class='app-loading-color'>" +
+                    "</div>";
+                }
+
+                mask = $(html)
+                    .width("100%").height(container.height() - 90 - offsetTop)
+                    .prependTo(container)
+                    .css({ top: 45 + offsetTop, left: 0 });
+
+                if (css) {
+                    mask.css(css);
+                }
+
+                if (!fill) {
+                    progressContainerResizeHandler = () => mask.height(container.height() - 90 - offsetTop);
+                    $(window).on("resize", progressContainerResizeHandler);
+                }
+                else {
+                    mask.css({ "z-index": "10000000", "top": "0", "right": "0", "bottom": "0", "left": "0", "height": "auto" });
+                }
+            }
+            else {
+                mask.find(".app-loading-text").text(message);
+            }
+        } else if (mask && +mask.length > 0) {
+            progressContainerResizeHandler && $(window).off("resize", progressContainerResizeHandler);
+            mask.remove();
+        }
+    };
+}
+
+module app.ui {
+    export class Keyboard {
+        private static _keyCodeMap = {
+            8: "backspace", 9: "tab", 13: "return", 16: "shift", 17: "ctrl", 18: "alt", 19: "pausebreak", 20: "capslock", 27: "escape", 32: " ", 33: "pageup",
+            34: "pagedown", 35: "end", 36: "home", 37: "left", 38: "up", 39: "right", 40: "down", 43: "+", 44: "printscreen", 45: "insert", 46: "delete",
+            48: "0", 49: "1", 50: "2", 51: "3", 52: "4", 53: "5", 54: "6", 55: "7", 56: "8", 57: "9", 59: ";",
+            61: "=", 65: "a", 66: "b", 67: "c", 68: "d", 69: "e", 70: "f", 71: "g", 72: "h", 73: "i", 74: "j", 75: "k", 76: "l",
+            77: "m", 78: "n", 79: "o", 80: "p", 81: "q", 82: "r", 83: "s", 84: "t", 85: "u", 86: "v", 87: "w", 88: "x", 89: "y", 90: "z",
+            96: "0", 97: "1", 98: "2", 99: "3", 100: "4", 101: "5", 102: "6", 103: "7", 104: "8", 105: "9",
+            106: "*", 107: "+", 109: "-", 110: ".", 111: "/",
+            112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8", 120: "f9", 121: "f10", 122: "f11", 123: "f12",
+            144: "numlock", 145: "scrolllock", 186: ";", 187: "=", 188: ",", 189: "-", 190: ".", 191: "/", 192: "`", 219: "[", 220: "\\", 221: "]", 222: "'"
+        };
+
+        static keyFromEvent(e: KeyboardEvent): string {
+            if (app.support.browser.isLteIe8) {
+                return this._keyCodeMap[e.keyCode];
+            }
+            else {
+                return e.key;
+            }
+        }
+
+        static isNavigationKey(e: KeyboardEvent): boolean {
+            var keyCode = e.keyCode;
+            return keyCode >= 37 && keyCode <= 40;
+        }
+
+
+        static isVerticalNavigationKey(e: KeyboardEvent): boolean {
+            var keyCode = e.keyCode;
+            return keyCode === 38 || keyCode === 40;
+        }
+
+        static isPageNavigationKey(e: KeyboardEvent): boolean {
+            var keyCode = e.keyCode;
+            return keyCode === 33 || keyCode === 34;
+        }
+
+        static isRefreshScreenKey(e: KeyboardEvent): boolean {
+            var keyCode = e.keyCode;
+            return keyCode === 82 && e.ctrlKey;
+        }
+
+        static isTempFileKey(e: KeyboardEvent): boolean {
+            var keyCode = e.keyCode;
+            return e.ctrlKey && e.shiftKey;
+        }
+    }
+}
+
+module app.url {
+    export function friendlyUrl(url: string): string {
+        return url.replace(/\/|%|:|"|'|#|@|\*|\^/g, "");
+    }
+
+    export module param {
+        export function valueAsType(type: string, value: any): any {
+            switch (type.toLowerCase()) {
+                case ParamTypeName.programId:
+                case ParamTypeName.prospectId:
+                case ParamTypeName.clientId:
+                case ParamTypeName.contactId:
+                case ParamTypeName.hotelId:
+                case ParamTypeName.vendorId:
+                case ParamTypeName.action:
+                case ParamTypeName.tab:
+                case ParamTypeName.year:
+                case ParamTypeName.type:
+                case ParamTypeName.serviceId:
+                case ParamTypeName.prevYear:
+                case ParamTypeName.startMonth:
+                case ParamTypeName.endMonth:
+                case ParamTypeName.templateId:
+                    return parseInt(value);
+                default:
+                    return "" + value;
+            }
+        }
+
+        /*
+        * Parameter builder class. This class helps build parameter strings for
+        * the navigation URL fragments.
+        **/
+        export class ParamBuilder {
+            private _params = new Array<string>();
+
+            public clear(): ParamBuilder {
+                this._params.clear();
+                return this;
+            }
+
+            public add(type: ParamType, value: any): ParamBuilder {
+                var paramString = ParamBuilder.asString(type, value);
+                if (!this._params.contains(paramString)) {
+                    this._params.push(ParamBuilder.asString(type, value));
+                }
+                return this;
+            }
+
+            public toString(): string {
+                var result = "";
+
+                if (this._params.length > 0) {
+                    result = this._params[0];
+
+                    for (var i = 1, len = this._params.length; i < len; i++) {
+                        result += "," + this._params[i];
+                    }
+                }
+
+                return result;
+            }
+
+            public static asString(type: ParamType, value: any): string {
+                return kendo.format("{0}:{1}", ParamTypeName[ParamType[type]], "" + value !== undefined ? value : null);
+            }
+        }
+
+        export function paramTypeFromName(name: string): ParamType {
+            name = name.toLowerCase();
+            for (var type in ParamType) {
+                if (ParamType[type].toLowerCase() === name) {
+                    return parseInt(type);
+                }
+            }
+            return null;
+        }
+
+        export enum ActionType {
+            create = 0
+        }
+
+        export enum ParamType {
+            programId,
+            programNumber,
+            programServiceId,
+            prospectId,
+            clientId,
+            hotelId,
+            vendorId,
+            supplierId,
+            action,
+            tab,
+            officeId,
+            year,
+            status,
+            role,
+            viewMode,
+            source,
+            city,
+            type,
+            serviceId,
+            prevYear,
+            startMonth,
+            endMonth,
+            templateId,
+            contactId,
+            crmType,
+            startDate,
+            endDate,
+            serviceTemplateId,
+            description,
+            widgetType,
+            team,
+            viewSubordinates
+        }
+
+        export class ParamTypeName {
+            static programId = "programid";
+            static programNumber = "programnumber";
+            static programServiceId = "programserviceid";
+            static prospectId = "prospectid";
+            static clientId = "clientid";
+            static hotelId = "hotelid";
+            static vendorId = "vendorid";
+            static supplierId = "supplierid";
+            static action = "action";
+            static tab = "tab";
+            static officeId = "officeid";
+            static year = "year";
+            static status = "status";
+            static role = "role";
+            static viewMode = "viewmode";
+            static source = "source";
+            static city = "city";
+            static type = "type";
+            static serviceId = "serviceid";
+            static prevYear = "prevyear";
+            static startMonth = "startmonth";
+            static endMonth = "endmonth";
+            static templateId = "templateid";
+            static contactId = "contactid";
+            static crmType = "crmtype";
+            static startDate = "startdate";
+            static endDate = "enddate";
+            static serviceTemplateId = "serviceTemplateId";
+            static description = "description";
+            static widgetType = "widgetType";
+            static team = "team";
+            static viewSubordinates = "viewsubordinates";
+        }
+    }
+}
+
+module app.support.browser {
+    export var isIe = kendo.support.browser.msie;
+    export var ieVersion = kendo.support.browser.msie && +kendo.support.browser.version;
+    export var isLteIe8 = kendo.support.browser.msie && +kendo.support.browser.version <= 8;
+    export var isGteIe9 = kendo.support.browser.msie && +kendo.support.browser.version >= 9;
+    export var isLteIe10 = kendo.support.browser.msie && +kendo.support.browser.version <= 10;
+}
+
+module app.webForms {
+    export class RequestManager {
+        private _pageLoadedHandler: (sender: Sys.WebForms.PageRequestManager, args: Sys.WebForms.PageLoadedEventArgs) => void;
+        private _requestBeginHandler: (sender: Sys.WebForms.PageRequestManager, args: Sys.WebForms.BeginRequestEventArgs) => void;
+        private _requestEndHandler: (sender: Sys.WebForms.PageRequestManager, args: Sys.WebForms.EndRequestEventArgs) => void;
+        public requestEnd = new TypedEvent();
+        public pageLoaded = new TypedEvent();
+
+        //public postBack(targetId: string, args: string): IPromise<Sys.WebForms.PageLoadedEventArgs> {
+        //    return null;
+        //}
+
+        public postBack(targetId: string, args: string): void {
+            var requestManager = Sys.WebForms.PageRequestManager.getInstance();
+
+            if (requestManager) {
+
+                this._requestBeginHandler = (sender, args) => {
+                    requestManager.remove_beginRequest(this._requestBeginHandler);
+                };
+
+                requestManager.add_beginRequest(this._requestBeginHandler);
+
+                // register requestEnd handler
+                if (this.requestEnd.count() > 0) {
+                    this._requestEndHandler = (sender, args) => {
+                        requestManager.remove_endRequest(this._requestEndHandler);
+                        app.wait(() => this.requestEnd.trigger(true));
+                    };
+                    requestManager.add_endRequest(this._requestEndHandler);
+                }
+
+                // register pageLoaded handler
+                if (this.pageLoaded.count() > 0) {
+                    this._pageLoadedHandler = (sender, args) => {
+                        sender.remove_pageLoaded(this._pageLoadedHandler);
+                        app.wait(() => this.pageLoaded.trigger(true));
+                    }
+                    requestManager.add_pageLoaded(this._pageLoadedHandler);
+                }
+
+                if (!requestManager._asyncPostBackControlIDs) {
+                    requestManager._asyncPostBackControlIDs = [];
+                }
+
+                if (!requestManager._postBackControlIDs) {
+                    requestManager._postBackControlIDs = [];
+                }
+
+                // perform ajax request
+                requestManager._doPostBack(targetId, args);
+            }
+        }
+    }
+}
+
+module app.report {
+    export enum ReportType {
+        none = 0,
+        receivables = 1,
+        depositsDue = 2,
+        forecastByAe = 3,
+        forecastByHotel = 4,
+        forecastByBusSource = 5,
+        forecastByClient = 6,
+        program = 7,
+        programSummaryContractedFinal = 8,
+        programSummaryProposedContracted = 9,
+        programSummaryProposedFinal = 10,
+        costingSheetSummaryActual = 11,
+        costingSheetSummaryFinal = 12,
+        costingSheetSummaryProposed = 13,
+        profitLossContracted = 14,
+        profitLossFinal = 15,
+        profitLossProposed = 16,
+        prospects = 17,
+        checkRequest = 18,
+        forecastByProgramLocation = 19,
+        rfpCreative = 20,
+        rfpSimple = 21,
+        rfc = 22,
+        vendorExpenditures = 23,
+        forecastByHotelExternal = 24,
+        forecastCommissionByHotel = 25,
+        invoiceDepositRequest = 26,
+        invoicePreliminary = 27,
+        invoiceFinal = 28,
+        forecastByAll = 29,
+        quarterlyGPComparison = 30,
+        programsByType = 31,
+        programTypeHistory = 32,
+        programsByNationalAE = 33,
+        programCostAndRevenueOverview = 36,
+        programsByCancellation = 37,
+        programsByThirdParty = 38,
+        forecastByNationalAE = 39,
+        upcomingPrograms = 40,
+        dbiWorksheet = 41,
+        operationProgramListing = 42,
+        otherCommissions = 43,
+        ServiceLibrarySummary = 44,
+        employeeByOfficeAndRole = 45,
+        securityRolesWithPermissions = 46,
+        securityRolesWithUsers = 47,
+        invoiceDepositRequestNoTax = 48,
+        invoicePreliminaryNoTax = 49,
+        invoiceFinalNoTax = 50,
+        cancelledCosts = 51,
+        programAdjustments = 52,
+        taxableCostingItems = 54,
+        grossProfitByState = 55,
+        ThirdPartyContacts = 56,
+        QSGRFinal = 57,
+        CreativeRFP = 58,
+        QSGRFinalNoTax = 59,
+        CheckRequest2013 = 60,
+        CardRequest2013 = 61,
+        SalesPipeLineDetails = 62,
+        RfcDetails = 63,
+        RfpDetails = 64,
+        CommissionReport = 65,
+        AdjustmentsByPeriod = 66,
+        VendorCostVsPaid = 67,
+        CreativeRFPLog = 68
+    }
+}
+
+//
+// toastr configuration
+//
+//toastr.options.fadeIn = 0;
+//toastr.options.fadeOut = 0;
+toastr.options.timeOut = 0;
+toastr.options.extendedTimeOut = 0;
+toastr.options.tapToDismiss = true;
+toastr.options.positionClass = "toast-center";
+toastr.options.onclick = () => toastr.clear();
+
+interface ToastrOptions {
+    onclickOnce: (func: Function) => void;
+}
+
+toastr.options.onclickOnce = func => {
+    toastr.options.onclick = () => {
+        func();
+        toastr.options.onclickOnce = null;
+        toastr.clear();
+    };
+};
+
+//
+// jQuery overrides
+//
+
+if (Modernizr.comparedocumentposition) {
+    jQuery.contains = function (container: Element, contained: Element): boolean {
+        return (container.compareDocumentPosition(contained) & Node.DOCUMENT_POSITION_CONTAINED_BY) !== 0;
+    };
+}
+
+//
+// jQuery methods
+//
+interface JQuery {
+    data<T>(key: string): T;
+    currentOrParentWithClass(selector?: string): JQuery;
+    animationEnd(func: (element: Element, e: JQueryEventObject) => void): JQuery;
+    outerHtml(): string;
+}
+
+interface JQueryStatic {
+    whenArray<T>(deferreds: Array<JQueryDeferred<T>>): JQueryPromise<T>
+}
+
+jQuery.fn.currentOrParentWithClass = function (className: string): JQuery {
+    return this.hasClass(className) ? this : this.parents("." + className).first();
+};
+
+jQuery.fn.animationEnd = function (func: (element: Element, e: JQueryEventObject) => void): JQuery {
+    var $that = $(this);
+    $that.one("webkitAnimationEnd oanimationend msAnimationEnd animationend", e => {
+        func(this, e);
+    });
+    return $that;
+};
+
+jQuery.whenArray = function <T>(deferreds: Array<JQueryDeferred<T>>): JQueryPromise<T> {
+    return $.when.apply($, deferreds);
+};
+
+jQuery.fn.outerHtml = function (): string {
+    return this[0].outerHTML;
+};
+
+//
+// helper methods
+//
+function tryParseInt(value: any): number {
+    value = parseInt(value);
+    return !isNaN(value) ? value : null;
+}
+
+function tryParseBoolean(value: any): boolean {
+    value = ("" + value).toLowerCase();
+    return value === "true" || value === "1";
+}
+
+//function tryParseDate(value: any): Date {
+//    value = new Date(value);
+//}

@@ -1,0 +1,69 @@
+/// <reference path="C:/Work/FictionHub/tools/TypeScript/typings/lib.d.ts"/>
+module FB2DOM{
+	export interface IPointer extends Array {};
+
+	export interface IFB2Block {
+		GetPartialHTML(HyphOn:bool,From:number,To:number):string;
+		GetHTML(HyphOn:bool);
+	}
+
+	export interface IFB2DOM {
+//		constructor(URL:string);
+	}
+
+	export class FB2DOM implements IFB2DOM{
+		constructor (URL:string){
+			return this;
+		}
+	}
+}
+
+module FBReader {
+	// General-purpose interfaces
+	export interface ITocNode {
+		Title:string;
+		Subitems:Array;
+		StartBlock:number;
+		EndBlock:number;
+	}
+	export interface IFBReaderNavigator {
+		PositionPercent():number;
+		TOC():ITocNode;
+	}
+	export interface IFBReaderCustomiser {
+		HyphON:bool;
+		BookStyleNotes:bool;
+	}
+
+	// FBReaderItself
+	export interface IFBReader {
+		Progress:FBReaderSite.ILoadProgress;
+		alert:FBReaderSite.IAlert;
+		NotePopup:FBReaderSite.INotePopup;
+
+//		constructor(URL:string);
+
+		GoTO(Bloc:FB2DOM.IPointer):void;
+	}
+
+	// Implementation
+	class FBReader implements IFBReader{
+		private FB2DOM:FB2DOM.IFB2DOM;
+		public Progress:FBReaderSite.ILoadProgress;
+		public alert:FBReaderSite.IAlert;
+		public NotePopup:FBReaderSite.INotePopup;
+
+		constructor (URL:string){
+			this.FB2DOM = new FB2DOM.FB2DOM(URL);
+		}
+		GoTO(Bloc:FB2DOM.IPointer){
+		}
+	}
+}
+
+module FBReaderSite {
+	export interface INotePopup{(NoteBody:FB2DOM.IFB2Block):void;}
+	export interface ILoadProgress{(Progress:number):void;}
+	export interface IAlert{(Message:string):void;}
+
+}

@@ -1,0 +1,119 @@
+﻿/// <reference path="Err.ts"/>
+
+class Matrica {
+    private polje: number[][] = new number[9][9];
+    constructor () {
+        for (var i = 0; i < 9; i++)
+        for (var j = 0; j < 9; j++)
+            this.polje[i][j] = 0;
+    }
+
+    public get(i: number, j: number):number {
+        if (i <= 9 && i > 0 && j <= 9 && j > 0) {
+            return this.polje[i-1][j-1];
+        }
+        else
+            return Err.bad;
+    }
+    
+    public set(i: number, j: number, val: number) { this.polje[i][j] = val; }
+}
+
+class Posmatrac {
+    private nije: bool[][][] = new bool[9][9][9];
+
+    constructor () {      
+        for (var i = 0; i < 9; i++) 
+        for (var j = 0; j < 9; j++)
+        for (var k = 0; k < 9; k++) {
+            this.nije[i][j][k] = false;
+        }
+    }
+
+    public set(i: number, j: number, broj:number):void {
+        for (var k = 0; k < 9; k++) {
+            this.nije[i][k][broj] = true;
+            this.nije[k][j][broj] = true;
+            this.nije[i][j][k] = true;
+        }
+
+        for (var red = i - (i % 3); red < i - (i % 3) + 3; red++)
+        for (var kol = j - (j % 3); kol < j - (j % 3) + 3; kol++) {
+            this.nije[red][kol][broj] = true;
+        }
+    }
+
+    public postavi(i: number, j: number, broj: number): void {
+        this.nije[i][j][broj] = true;
+    }
+
+    public moguc(i: number, j: number): number[] {
+        var rez: number[];
+        for (var k = 0; k < 9; k++) {
+            if (!this.nije[i][j][k])
+                rez.push(k);
+        } 
+        return rez;
+    }
+
+}
+
+class Polje {
+    private mat: Matrica = new Matrica();
+    private nije: Posmatrac = new Posmatrac();
+
+    constructor () { }
+
+    public getMat() { return this.mat; }
+    public at(i: number, j: number): number { return this.mat.get(i, j); }
+
+    public srediSve(): void {
+        for (var i = 0; i < 9; i++)
+            for (var j = 0; j < 9; j++) {
+                if (this.mat.get(i, j) != 0)
+                    this.srediJed(i, j);
+                else {
+                    this.postaviVred(i, j, this.mat.get(i, j));
+                }
+            }
+    }
+    private srediJed(i: number, j: number): void {
+        var rez: number[] = this.nije.moguc(i, j);
+
+        if (rez.length == 1) {
+            var val = rez.pop();
+            this.postaviVred(i, j, val);
+        }
+    }
+
+    private postaviVred(i: number, j: number, val: number): void {
+        this.mat.set(i, j, val);
+        this.nije.set(i, j, val);
+
+        for (var k = 0; k < 9; k++) {
+            this.nije.postavi(i, k, val);
+            this.nije.postavi(k, j, val);
+            this.srediJed(i, k);
+            this.srediJed(k, j);
+        }
+
+        for (var red = i - (i % 3); red < i - (i % 3) + 3; red++)
+            for (var kol = j - (j % 3); kol < j - (j % 3) + 3; kol++) {
+                this.nije.postavi(red, kol, val);
+                this.srediJed(red, kol);
+            }
+    }
+}
+
+function kliknutoDugm() {
+    var g: NodeList = document.getElementsByClassName('broj');
+
+    for (var i = 0; i < g.length; i++) {
+        var elem: Node = g.item(i);
+        console.log(elem.nodeValue);
+    }
+}
+
+var butt = document.getElementById('salji');
+
+butt.onclick = kliknutoDugm;

@@ -1,0 +1,183 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<hr />
+
+<h1>Introduction</h1>
+Functions are the fundamental building block of any applications in JavaScript.  They&#39;re how you build up layers of abstraction, mimicking classes, information hiding, and modules.  In TypeScript, while there are classes and modules, function still play the key role in describing how to &#39;do&#39; things.  TypeScript also adds some new capabilities to the standard JavaScript functions to make them easier to work with.<br />
+<h1>Functions</h1>
+To begin, just as in JavaScript, TypeScript functions can be created both as a named function or as an anonymous function.  This allows you to choose the most appropriate approach for your application, whether you&#39;re building a list of functions in an API or a one-off function to hand off to another function.<br /><br />To quickly recap what these two approaches look like in JavaScript:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">//Named function</span>
+<span style="color:Blue;">function</span> add(x, y) {
+    <span style="color:Blue;">return</span> x+y;
+}
+
+<span style="color:Green;">//Anonymous function</span>
+<span style="color:Blue;">var</span> myAdd = <span style="color:Blue;">function</span>(x, y) { <span style="color:Blue;">return</span> x+y; };
+</pre></div><br />Just as in JavaScript, functions can return to variables outside of the function body.  When they do so, they&#39;re said to &#39;capture&#39; these variables.  While understanding how this works, and the trade-offs when using this technique, are outside of the scope of this article, having a firm understanding how this mechanic is an important piece of working with JavaScript and TypeScript.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> z = 100;
+
+<span style="color:Blue;">function</span> addToZ(x, y) {
+    <span style="color:Blue;">return</span> x+y+z;
+}
+</pre></div>
+<h1>Function Types</h1>
+<h2>Typing the function</h2>
+Let&#39;s add types to our simple examples from earlier:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> add(x: number, y: number): number {
+    <span style="color:Blue;">return</span> x+y;
+}
+
+<span style="color:Blue;">var</span> myAdd = <span style="color:Blue;">function</span>(x: number, y: number): number { <span style="color:Blue;">return</span> x+y; };
+</pre></div><br />We can add types to each of the parameters and then to the function itself to add a return type.  TypeScript can figure the return type out by looking at the return statements, so we can also optionally leave this off in many cases.<br />
+<h2>Writing the function type</h2>
+Now that we&#39;ve typed the function, let&#39;s write the full type of the function out by looking at the each piece of the function type.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> myAdd: (x:number, y:number)=&gt;number = 
+    <span style="color:Blue;">function</span>(x: number, y: number): number { <span style="color:Blue;">return</span> x+y; };
+</pre></div><br />A function&#39;s type has the same two parts: the type of the arguments and the return type.  When writing out the whole function type, both parts are required.  We write out the parameter types just like a parameter list, giving each parameter a name and a type.  This name is just to help with readability.  We could have instead written:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> myAdd: (baseValue:number, increment:number)=&gt;number = 
+    <span style="color:Blue;">function</span>(x: number, y: number): number { <span style="color:Blue;">return</span> x+y; };
+</pre></div><br />As long as the parameter types line up, it&#39;s considered a valid type for the function, regardless of the names you give the parameters in the function type.  <br /><br />The second part is the return type.  We make it clear which is the return type by using a fat arrow (=&gt;) between the parameters and the return type.  As mentioned before, this is a required part of the function type, so if the function doesn&#39;t return a value, you would use &#39;void&#39; instead of leaving it off.<br /><br />Of note, only the parameters and the return type make up the function type.  Captured variables are not reflected in the type.  In effect, captured variables are part of the &#39;hidden state&#39; of any function and do not make up its API.<br />
+<h2>Inferring the types</h2>
+In playing with the example, you may notice that the TypeScript compiler can figure out the type if you have types on one side of the equation but not the other:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// myAdd has the full function type</span>
+<span style="color:Blue;">var</span> myAdd = <span style="color:Blue;">function</span>(x: number, y: number): number { <span style="color:Blue;">return</span> x+y; };
+
+<span style="color:Green;">// The parameters &#39;x&#39; and &#39;y&#39; have the type number</span>
+<span style="color:Blue;">var</span> myAdd: (baseValue:number, increment:number)=&gt;number = 
+    <span style="color:Blue;">function</span>(x, y) { <span style="color:Blue;">return</span> x+y; };
+</pre></div><br />This is called &#39;contextual typing&#39;, a form of type inference.  This helps cut down on the amount of effort to keep your program typed.<br />
+<h1>Optional and Default Parameters</h1>
+Unlike JavaScript, in TypeScript every parameter to a function is assumed to be required by the function.  This doesn&#39;t mean that it isn&#39;t a &#39;null&#39; value, but rather, when the function is called the compiler will check that the user has provided a value for each parameter.  The compiler also assumes that these parameters are the only parameters that will be passed to the function.  In short, the number of parameters to the function has to match the number of parameters the function expects.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, lastName: string) {
+    <span style="color:Blue;">return</span> firstName + <span style="color:#A31515;">&quot; &quot;</span> + lastName;
+}
+
+<span style="color:Blue;">var</span> result1 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>);  <span style="color:Green;">//error, too few parameters</span>
+<span style="color:Blue;">var</span> result2 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>, <span style="color:#A31515;">&quot;Sr.&quot;</span>);  <span style="color:Green;">//error, too many parameters</span>
+<span style="color:Blue;">var</span> result3 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>);  <span style="color:Green;">//ah, just right</span>
+</pre></div><br />In JavaScript, every parameter is considered optional, and users may leave them off as they see fit.  When they do, they&#39;re assumed to be undefined.  We can get this functionality in TypeScript by using the &#39;?&#39; beside parameters we want optional.  For example, let&#39;s say we want the last name to be optional:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, lastName?: string) {
+    <span style="color:Blue;">if</span> (lastName)
+        <span style="color:Blue;">return</span> firstName + <span style="color:#A31515;">&quot; &quot;</span> + lastName;
+    <span style="color:Blue;">else</span>
+        <span style="color:Blue;">return</span> firstName;
+}
+
+<span style="color:Blue;">var</span> result1 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>);  <span style="color:Green;">//works correctly now</span>
+<span style="color:Blue;">var</span> result2 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>, <span style="color:#A31515;">&quot;Sr.&quot;</span>);  <span style="color:Green;">//error, too many parameters</span>
+<span style="color:Blue;">var</span> result3 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>);  <span style="color:Green;">//ah, just right</span>
+</pre></div><br />Optional parameters must follow required parameters.  Had we wanted to make the first name optional rather than the last name, we would need to change the order of parameters in the function, putting the first name last in the list.<br /><br />In TypeScript, we can also set up a value that an optional parameter will have if the user does not provide one.  These are called default parameters.  Let&#39;s take the previous example and default the last name to &quot;Smith&quot;.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, lastName = <span style="color:#A31515;">&quot;Smith&quot;</span>) {
+    <span style="color:Blue;">return</span> firstName + <span style="color:#A31515;">&quot; &quot;</span> + lastName;
+}
+
+<span style="color:Blue;">var</span> result1 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>);  <span style="color:Green;">//works correctly now, also</span>
+<span style="color:Blue;">var</span> result2 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>, <span style="color:#A31515;">&quot;Sr.&quot;</span>);  <span style="color:Green;">//error, too many parameters</span>
+<span style="color:Blue;">var</span> result3 = buildName(<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Adams&quot;</span>);  <span style="color:Green;">//ah, just right</span>
+</pre></div><br />Just as with optional parameters, default parameters must come after required parameters in the parameter list.  <br /><br />Optional parameters and default parameters also share what the type looks like.  Both:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, lastName?: string) {
+</pre></div><br />and<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, lastName = <span style="color:#A31515;">&quot;Smith&quot;</span>) {
+</pre></div><br />share the same type &quot;(firstName: string, lastName?: string)=&gt;string&quot;.  The default value of the default parameter disappears, leaving only the knowledge that the parameter is optional.<br />
+<h1>Rest Parameters</h1>
+Required, optional, and default parameters all have one thing in common: they&#39;re about talking about one parameter at a time.  Sometimes, you want to work with multiple parameters as a group, or you may not know how many parameters a function will ultimately take.  In JavaScript, you can work with the arguments direction using the <span class="codeInline">arguments</span> variable that is visible inside every function body.<br /><br />In TypeScript, you can gather these arguments together into a variable:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, ...restOfName: string[]) {
+	<span style="color:Blue;">return</span> firstName + <span style="color:#A31515;">&quot; &quot;</span> + restOfName.join(<span style="color:#A31515;">&quot; &quot;</span>);
+}
+
+<span style="color:Blue;">var</span> employeeName = buildName(<span style="color:#A31515;">&quot;Joseph&quot;</span>, <span style="color:#A31515;">&quot;Samuel&quot;</span>, <span style="color:#A31515;">&quot;Lucas&quot;</span>, <span style="color:#A31515;">&quot;MacKinzie&quot;</span>);
+</pre></div><br />Rest parameters are treated as a boundless number of optional parameters.  You may leave them off, or have as many as you want.  The compiler will build an array of the arguments you pass to the function under the name given after the ellipsis (...), allowing you to use it in your function.  <br /><br />The ellipsis is also used in the type of the function with rest parameters:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildName(firstName: string, ...restOfName: string[]) {
+	<span style="color:Blue;">return</span> firstName + <span style="color:#A31515;">&quot; &quot;</span> + restOfName.join(<span style="color:#A31515;">&quot; &quot;</span>);
+}
+
+<span style="color:Blue;">var</span> buildNameFun: (fname: string, ...rest: string[])=&gt;string = buildName;
+</pre></div>
+<h1>Lambdas and using &#39;this&#39;</h1>
+How &#39;this&#39; works in JavaScript functions is a common theme in programmers coming to JavaScript.  Indeed, learning how to use it is something of a rite of passage as developers become more accustomed to working in JavaScript.  Since TypeScript is a superset of JavaScript, TypeScript developers also need to learn how to use &#39;this&#39; and how to spot when it&#39;s not being used correctly.  A whole article could be written on how to use &#39;this&#39; in JavaScript, and many have.  Here, we&#39;ll focus on some of the basics.  <br /><br />In JavaScript, &#39;this&#39; is a variable that&#39;s set when a function is called.  This makes it a very powerful and flexible feature, but it comes at the cost of always having to know about the context that a function is executing in.  This can be notoriously confusing, when, for example, when a function is used as a callback.<br /><br />Let&#39;s look at an example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> deck = {
+    suits: [<span style="color:#A31515;">&quot;hearts&quot;</span>, <span style="color:#A31515;">&quot;spades&quot;</span>, <span style="color:#A31515;">&quot;clubs&quot;</span>, <span style="color:#A31515;">&quot;diamonds&quot;</span>],
+    cards: Array(52),
+    createCardPicker: <span style="color:Blue;">function</span>() {
+        <span style="color:Blue;">return</span> <span style="color:Blue;">function</span>() {
+            <span style="color:Blue;">var</span> pickedCard = Math.floor(Math.random() * 52);
+            <span style="color:Blue;">var</span> pickedSuit = Math.floor(pickedCard / 13);
+			
+            <span style="color:Blue;">return</span> {suit: <span style="color:Blue;">this</span>.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+<span style="color:Blue;">var</span> cardPicker = deck.createCardPicker();
+<span style="color:Blue;">var</span> pickedCard = cardPicker();
+
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard.suit);
+</pre></div><br />If we tried to run the example, we would get an error instead of the expected alert box.  This is because the &#39;this&#39; being used in the function created by &#39;createCardPicker&#39; will be set to &#39;window&#39; instead of our &#39;deck&#39; object.  This happens as a result of calling &#39;cardPicker()&#39;.  Here, there is no dynamic binding for &#39;this&#39; other than Window.  (note: under strict mode, this will be undefined rather than window).<br /><br />We can fix this by making sure the function is bound to the correct &#39;this&#39; before we return the function to be used later.  This way, regardless of how its later used, it will still be able to see the original &#39;deck&#39; object.<br /><br />To fix this, we switching the function expression to use the lambda syntax ( ()=&gt;{} ) rather than the JavaScript function expression.  This will automatically capture the &#39;this&#39; available when the function is created rather than when it is invoked:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> deck = {
+    suits: [<span style="color:#A31515;">&quot;hearts&quot;</span>, <span style="color:#A31515;">&quot;spades&quot;</span>, <span style="color:#A31515;">&quot;clubs&quot;</span>, <span style="color:#A31515;">&quot;diamonds&quot;</span>],
+    cards: Array(52),
+    createCardPicker: <span style="color:Blue;">function</span>() {
+        <span style="color:Green;">// Notice: the line below is now a lambda, allowing us to capture &#39;this&#39; earlier</span>
+        <span style="color:Blue;">return</span> () =&gt; {
+            <span style="color:Blue;">var</span> pickedCard = Math.floor(Math.random() * 52);
+            <span style="color:Blue;">var</span> pickedSuit = Math.floor(pickedCard / 13);
+			
+            <span style="color:Blue;">return</span> {suit: <span style="color:Blue;">this</span>.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+<span style="color:Blue;">var</span> cardPicker = deck.createCardPicker();
+<span style="color:Blue;">var</span> pickedCard = cardPicker();
+
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard.suit);
+</pre></div><br />For more information on ways to think about &#39;this&#39;, you can read Yahuda Katz&#39;s <a href="http://yehudakatz.com/2011/08/11/understanding-javascript-function-invocation-and-this/">Understanding JavaScript Function Invocation and “this”</a>.<br />
+<h1>Overloads</h1>
+JavaScript is inherently a very dynamic language.  It&#39;s not uncommon for a single JavaScript function to return different types of objects based on the shape of the arguments passed in.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> suits = [<span style="color:#A31515;">&quot;hearts&quot;</span>, <span style="color:#A31515;">&quot;spades&quot;</span>, <span style="color:#A31515;">&quot;clubs&quot;</span>, <span style="color:#A31515;">&quot;diamonds&quot;</span>];
+
+<span style="color:Blue;">function</span> pickCard(x): any {
+    <span style="color:Green;">// Check to see if we&#39;re working with an object/array</span>
+    <span style="color:Green;">// if so, they gave us the deck and we&#39;ll pick the card</span>
+    <span style="color:Blue;">if</span> (<span style="color:Blue;">typeof</span> x == <span style="color:#A31515;">&quot;object&quot;</span>) {
+        <span style="color:Blue;">var</span> pickedCard = Math.floor(Math.random() * x.length);
+        <span style="color:Blue;">return</span> pickedCard;
+    }
+    <span style="color:Green;">// Otherwise just let them pick the card</span>
+    <span style="color:Blue;">else</span> <span style="color:Blue;">if</span> (<span style="color:Blue;">typeof</span> x == <span style="color:#A31515;">&quot;number&quot;</span>) {
+        <span style="color:Blue;">var</span> pickedSuit = Math.floor(x / 13);
+        <span style="color:Blue;">return</span> { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+<span style="color:Blue;">var</span> myDeck = [{ suit: <span style="color:#A31515;">&quot;diamonds&quot;</span>, card: 2 }, { suit: <span style="color:#A31515;">&quot;spades&quot;</span>, card: 10 }, { suit: <span style="color:#A31515;">&quot;hearts&quot;</span>, card: 4 }];
+<span style="color:Blue;">var</span> pickedCard1 = myDeck[pickCard(myDeck)];
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard1.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard1.suit);
+
+<span style="color:Blue;">var</span> pickedCard2 = pickCard(15);
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard2.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard2.suit);
+</pre></div><br />Here the &#39;pickCard&#39; function will return two different things based on what the user has passed in.  If the users passes in an object that represents the deck, the function will pick the card.  If the user picks the card, we tell them which card they&#39;ve picked.  But how do we describe this to the type system.<br /><br />The answer is to supply multiple function types for the same function as a list of overloads.  This list is what the compiler will use to resolve function calls.  Let&#39;s create a list of overloads that describe what our &#39;pickCard&#39; accepts and what it returns.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> suits = [<span style="color:#A31515;">&quot;hearts&quot;</span>, <span style="color:#A31515;">&quot;spades&quot;</span>, <span style="color:#A31515;">&quot;clubs&quot;</span>, <span style="color:#A31515;">&quot;diamonds&quot;</span>];
+
+<span style="color:Blue;">function</span> pickCard(x: {suit: string; card: number; }[]): number;
+<span style="color:Blue;">function</span> pickCard(x: number): {suit: string; card: number; };
+<span style="color:Blue;">function</span> pickCard(x): any {
+    <span style="color:Green;">// Check to see if we&#39;re working with an object/array</span>
+    <span style="color:Green;">// if so, they gave us the deck and we&#39;ll pick the card</span>
+    <span style="color:Blue;">if</span> (<span style="color:Blue;">typeof</span> x == <span style="color:#A31515;">&quot;object&quot;</span>) {
+        <span style="color:Blue;">var</span> pickedCard = Math.floor(Math.random() * x.length);
+        <span style="color:Blue;">return</span> pickedCard;
+    }
+    <span style="color:Green;">// Otherwise just let them pick the card</span>
+    <span style="color:Blue;">else</span> <span style="color:Blue;">if</span> (<span style="color:Blue;">typeof</span> x == <span style="color:#A31515;">&quot;number&quot;</span>) {
+        <span style="color:Blue;">var</span> pickedSuit = Math.floor(x / 13);
+        <span style="color:Blue;">return</span> { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+<span style="color:Blue;">var</span> myDeck = [{ suit: <span style="color:#A31515;">&quot;diamonds&quot;</span>, card: 2 }, { suit: <span style="color:#A31515;">&quot;spades&quot;</span>, card: 10 }, { suit: <span style="color:#A31515;">&quot;hearts&quot;</span>, card: 4 }];
+<span style="color:Blue;">var</span> pickedCard1 = myDeck[pickCard(myDeck)];
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard1.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard1.suit);
+
+<span style="color:Blue;">var</span> pickedCard2 = pickCard(15);
+alert(<span style="color:#A31515;">&quot;card: &quot;</span> + pickedCard2.card + <span style="color:#A31515;">&quot; of &quot;</span> + pickedCard2.suit);
+</pre></div><br />With this change, the overloads now give us type-checked calls to the &#39;pickCard&#39; function.  <br /><br />In order for the compiler to pick the correct typecheck, it follows a similar process to the underlying JavaScript.  It looks at the overload list, and proceeding with the first overload attempts to call the function with the provided parameters.  If it finds a match, it picks this overload as the correct overload.  For this reason, its customary to order overloads from most specific to least specific.<br /><br />Note that the &#39;function pickCard(x): any&#39; piece is not part of the overload list, so it only has two overloads: one that takes an object and one that takes a number.  Calling &#39;pickCard&#39; with any other parameter types would cause an error.<br /><br /></div><div class="ClearBoth"></div>

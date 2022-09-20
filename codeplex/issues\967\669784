@@ -1,0 +1,171 @@
+var BaseObject = {
+    _create:function _create() {
+        this._super = null;
+    },
+    create:function create() {
+        var instance = Object.create(this);
+        instance._create.apply(instance, arguments);
+        Object.seal(instance);
+        return instance;
+    },
+    extend:function extend(properties, propertyDescriptors, fn_afterExtend) {
+        var pds = propertyDescriptors || {}, propertyName, simpleProperties, i = 0, len, obj;
+        var pdsProperties = Object.getOwnPropertyNames(pds), rx_super = /\._super\s*\(/;
+        pdsProperties.forEach(function (name) {
+            var pd = pds[name];
+            if (pd['enumerable'] === undefined) {
+                pd['enumerable'] = true;
+            }
+            if (pd['configurable'] === undefined) {
+                pd['configurable'] = false;
+            }
+        });
+
+        if (!!properties) {
+            simpleProperties = Object.getOwnPropertyNames(properties);
+            for (i = 0, len = simpleProperties.length; i < len; i += 1) {
+                propertyName = simpleProperties[i];
+                if (pds.hasOwnProperty(propertyName)) {
+                    continue;
+                }
+
+                pds[propertyName] = Object.getOwnPropertyDescriptor(properties, propertyName);
+            }
+        }
+
+        function isFunc (a) {
+            if (!a)
+                return false;
+            var rx = /Function/;
+            return (typeof (a) === 'function') ? rx.test(a.constructor.toString()) : false;
+        };
+
+        obj = Object.create(this, pds);
+        var pnames = Object.getOwnPropertyNames(obj);
+        pnames.forEach(function (name) {
+            var p = Object.getOwnPropertyDescriptor(obj, name), fn, fn_str, superProto;
+            if (!!p.value && isFunc(p.value)) {
+                fn_str = p.value.toString();
+                fn = obj[name];
+                //this wrapping of the original function is only for the functions which use _super function calls
+                if (rx_super.test(fn_str)) {
+                    superProto = Object.getPrototypeOf(obj);
+                    p.value = function () {
+                        var old = this._super;
+                        this._super = superProto[name];
+                        try {
+                            return fn.apply(this, arguments);
+                        }
+                        finally {
+                            this._super = old;
+                        }
+                    };
+                    Object.defineProperty(obj, name, p);
+                }
+            }
+        });
+
+        if (!!fn_afterExtend)
+            fn_afterExtend(obj);
+        return obj;
+    }
+};
+
+var Defaults = BaseObject.extend({
+    _create:function (imagesPath){
+        this._super();
+        this._imagesPath = imagesPath;
+        this._dateTimeFormat = 'dd.MM.yyyy HH:mm:ss';
+        this._timeFormat = 'HH:mm:ss';
+        this._decimalPoint = ',';
+        this._thousandSep = ' ';
+        this._decPrecision = 2;
+        this._ajaxTimeOut = 600; //ten minutes
+    },
+    destroy:function () {
+        this._super();
+    }
+}, {
+    ajaxTimeOut:{
+        set:function (v) {
+            if (this._ajaxTimeOut !== v) {
+                this._ajaxTimeOut = v;
+            }
+        },
+        get:function () {
+            return  this._ajaxTimeOut;
+        }
+    },
+    timeFormat:{
+        set:function (v) {
+            if (this._timeFormat !== v) {
+                this._timeFormat = v;
+            }
+        },
+        get:function () {
+            return this._timeFormat;
+        }
+    },
+    dateTimeFormat:{
+        set:function (v) {
+            if (this._dateTimeFormat !== v) {
+                this._dateTimeFormat = v;
+            }
+        },
+        get:function () {
+            return this._dateTimeFormat;
+        }
+    },
+    imagesPath:{
+        set:function (v) {
+            if (!v)
+                v = "";
+            if (this._imagesPath !== v) {
+                if (!RIAPP.utils.endsWith(v, '/')) {
+                    this._imagesPath = v + '/';
+                }
+                else
+                    this._imagesPath = v;
+            }
+        },
+        get:function () {
+            return this._imagesPath;
+        }
+    },
+    decimalPoint:{
+        set:function (v) {
+            if (this._decimalPoint !== v) {
+                this._decimalPoint = v;
+            }
+        },
+        get:function () {
+            return this._decimalPoint;
+        }
+    },
+    thousandSep:{
+        set:function (v) {
+            if (this._thousandSep !== v) {
+                this._thousandSep = v;
+            }
+        },
+        get:function () {
+            return this._thousandSep;
+        }
+    },
+    decPrecision:{
+        set:function (v) {
+            if (this._decPrecision !== v) {
+                this._decPrecision = v;
+            }
+        },
+        get:function () {
+            return this._decPrecision;
+        }
+    }
+}, function (obj) {
+    //thisModule.Defaults = obj;
+});
+
+var instance= Defaults.create('D:\\TTTT\\test.html');
+
+alert(instance.imagesPath);

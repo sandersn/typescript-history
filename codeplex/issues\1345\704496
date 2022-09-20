@@ -1,0 +1,101 @@
+
+
+module Utilities {
+
+	export function replace(source, attribute, callback) {
+		var old;
+
+		if (typeof source.lookup === "undefined") {
+			source.lookup = {};
+		}
+
+		if (typeof source.lookup[attribute] !== "undefined") {
+			old = source.lookup[attribute];
+		}
+		else {
+			old = (function () {
+				var value = source[attribute];
+				return {
+					next: <any>undefined,
+					get: () => {return value },
+					set: (newval) => { value = newval; return value; }
+				};
+			})();
+		}
+		var isactive = true;
+		var replaceobject = <any>{
+			configurable: true,
+			enumerable: true,
+			set active(newval) {
+				isactive = newval;
+				if (typeof source[attribute + "changed"] !== "undefined") {
+					source[attribute + "changed"]();
+				}
+				return isactive();
+			},
+			get active() { return isactive; },
+			next: <any>undefined,
+			old: old,
+			get callback() { return callback; },
+			get: function () {
+				if (replaceobject.active) {
+					return callback(replaceobject.old.get());
+				}
+				return replaceobject.old.get();
+			},
+			set: function (newval) {
+				return replaceobject.old.set(newval);
+			},
+			remove: function () {
+				replaceobject.old.next = replaceobject.next;
+				replaceobject.next.old = replaceobject.old;
+				if (typeof source[attribute + "changed"] !== "undefined") {
+					source[attribute + "changed"]();
+				}
+			}
+		}
+		old.next = replaceobject;
+		source.lookup[attribute] = replaceobject;
+		Object.defineProperty(source, attribute, replaceobject);
+		if (typeof source[attribute + "changed"] !== "undefined") {
+			source[attribute + "changed"]();
+		}
+		return replaceobject;
+	}
+
+
+	export function watch(source, attribute, callback) {
+		var oldfoo;
+		attribute += "changed";
+
+		if (typeof source.lookup === "undefined") {
+			source.lookup = {};
+		}
+
+		if (typeof source.lookup[attribute] !== "undefined") {
+			oldfoo = source.lookup[attribute];
+		}
+		var isactive = true;
+		var replaceobject = <any>function replaceobject() {
+			if (replaceobject.active) {
+				callback();
+			}
+			return replaceobject.old();
+		};
+
+		replaceobject.active = true;
+		replaceobject.next = <any> undefined;
+		replaceobject.old = oldfoo;
+
+		replaceobject.remove = function remove() {
+			replaceobject.old.next = replaceobject.next;
+			replaceobject.next.old = replaceobject.old;
+		}
+
+		oldfoo.next = replaceobject;
+		source.lookup[attribute] = replaceobject;
+		source[attribute] = replaceobject;
+		//Object.defineProperty(source, attribute, replaceobject);
+		return replaceobject;
+	}
+}

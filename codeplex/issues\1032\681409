@@ -1,0 +1,91 @@
+From ad57ed9290355d123ab1bb6f205078c6cb36ff23 Mon Sep 17 00:00:00 2001
+From: Yannick Le Pennec <yannick.lepennec@gmail.com>
+Date: Sat, 18 May 2013 16:20:38 +0200
+Subject: [PATCH] Fix issue 1032
+
+---
+ src/compiler/sourceMapping.ts | 35 ++++++++++++++++++++++-------------
+ 1 file changed, 22 insertions(+), 13 deletions(-)
+
+diff --git a/src/compiler/sourceMapping.ts b/src/compiler/sourceMapping.ts
+index f6d1150..c7d86ca 100644
+--- a/src/compiler/sourceMapping.ts
++++ b/src/compiler/sourceMapping.ts
+@@ -88,7 +88,7 @@ module TypeScript {
+             var prevSourceLine = 0;
+             var prevSourceIndex = 0;
+             var prevNameIndex = 0;
+-            var namesList: string[] = [];
++            var namesSet: string[] = [];
+             var namesCount = 0;
+             var emitComma = false;
+ 
+@@ -100,9 +100,11 @@ module TypeScript {
+                 var currentSourceIndex = tsFiles.length;
+                 tsFiles.push(sourceMapper.tsFileName);
+ 
+-                // Join namelist
+-                if (sourceMapper.names.length > 0) {
+-                    namesList.push.apply(namesList, sourceMapper.names);
++                // Union nameset
++                for (var i = 0; i < sourceMapper.names.length; i++) {
++                    if (!ArrayUtilities.contains(namesSet, sourceMapper.names[i])) {
++                        namesSet.push(sourceMapper.names[i]);
++                    }
+                 }
+ 
+                 var recordSourceMapping = (mappedPosition: SourceMapPosition, nameIndex: number) => {
+@@ -144,8 +146,8 @@ module TypeScript {
+ 
+                     // 5. Relative namePosition 0 based
+                     if (nameIndex >= 0) {
+-                        mappingsString = mappingsString + Base64VLQFormat.encode(namesCount + nameIndex - prevNameIndex);
+-                        prevNameIndex = namesCount + nameIndex;
++                        mappingsString = mappingsString + Base64VLQFormat.encode(nameIndex - prevNameIndex);
++                        prevNameIndex = nameIndex;
+                     }
+ 
+                     emitComma = true;
+@@ -153,17 +155,24 @@ module TypeScript {
+                 }
+ 
+                 // Record starting spans
+-                var recordSourceMappingSiblings = (sourceMappings: SourceMapping[]) => {
++                var recordSourceMappingSiblings = (sourceMappings: SourceMapping[], names: string[]) => {
+                     for (var i = 0; i < sourceMappings.length; i++) {
+                         var sourceMapping = sourceMappings[i];
+-                        recordSourceMapping(sourceMapping.start, sourceMapping.nameIndex);
+-                        recordSourceMappingSiblings(sourceMapping.childMappings);
+-                        recordSourceMapping(sourceMapping.end, sourceMapping.nameIndex);
++                        var nameIndex = sourceMapping.nameIndex;
++                        
++                        // Map local name index to global name index
++                        if (nameIndex >= 0) {
++                            nameIndex = namesSet.indexOf(names[nameIndex]);
++                        }
++
++                        recordSourceMapping(sourceMapping.start, nameIndex);
++                        recordSourceMappingSiblings(sourceMapping.childMappings, names);
++                        recordSourceMapping(sourceMapping.end, nameIndex);
+                     }
+                 }
+ 
+-                recordSourceMappingSiblings(sourceMapper.sourceMappings);
+-                namesCount = namesCount + sourceMapper.names.length;
++                recordSourceMappingSiblings(sourceMapper.sourceMappings, sourceMapper.names);
++                namesCount = namesSet.length;
+             }
+ 
+             // Write the actual map file
+@@ -171,7 +180,7 @@ module TypeScript {
+                 version: 3,
+                 file: sourceMapper.jsFileName,
+                 sources: tsFiles,
+-                names: namesList,
++                names: namesSet,
+                 mappings: mappingsString
+             }));
+ 
+-- 
+1.7.11.msysgit.1
+

@@ -1,0 +1,110 @@
+<div class="wikidoc"><h2>10/19/2012</h2>
+Fundules, clodules and lightweight mixins.  Motivations:
+<ul><li>Properties on functions
+<ul><li>function foo() {}</li>
+<li>foo.data = &quot;hello&quot;;</li></ul></li>
+<li>Nested classes
+<ul><li>class Geometry {}</li>
+<li>class Geometry.Point extends Geometry {}</li></ul></li>
+<li>Namespace interfaces
+<ul><li>interface jQuery.AjaxSettings {}</li></ul></li>
+<li>Concepts in TS: (T: Types, N: Namespace, P: Properties)
+<ul><li>Interfaces
+<ul><li>T</li></ul></li>
+<li>Modules
+<ul><li>N &amp; T &amp; P</li></ul></li>
+<li>Classes
+<ul><li>T &amp; P</li></ul></li>
+<li>Functions
+<ul><li>P</li></ul></li>
+<li>Variables
+<ul><li>P</li></ul></li></ul></li>
+<li>Names can be:
+<ul><li>Types
+<ul><li>Things that can go after colon</li></ul></li>
+<li>Namespaces:
+<ul><li>Things that can contain namespaces or types</li>
+<li>N.N.N.T</li></ul></li>
+<li>Properties
+<ul><li>Things that are in the value scope referring to things at runtime</li>
+<li>P.P.P.P</li></ul></li></ul></li></ul>
+
+<ul><li>Proposal:
+<ul><li>Module, classes, funciton can all contribute to the same name</li>
+<li>If only &#39;module&#39; definitions contribute to a name, it can be spread across files</li>
+<li>If any class and/or function definition contributes to a name, all contributions must be in the same file</li>
+<li>Allow dotted named declarations
+<ul><li>function x.y(…)</li></ul></li>
+<li>Consider:  When we know a name exists, don&#39;t generate the potential creation code</li>
+<li>Bring back anonymous modules??</li>
+<li>Brands
+<ul><li>Provide:</li>
+<li>Know it was created by your constructor
+<ul><li>This isn&#39;t that important</li></ul></li>
+<li>Captures knowledge of privates
+<ul><li>This is partly handled for free given privates as members of the type</li>
+<li>But need to make sure privates have unique names (GUID attached)</li></ul></li></ul></li></ul></li>
+<li>Summary?
+<ul><li>Namespacing types</li>
+<li>Extending functions/classes with modules</li>
+<li>Getting rid of brands</li>
+<li>Open ended classes</li>
+<li>Anonymous modules</li></ul></li></ul>
+
+<ul><li>Examples:</li></ul>
+<div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> jQuery {
+}
+module jQuery {
+    <span style="color:Blue;">interface</span> XHR { … }
+}
+<span style="color:Blue;">var</span> jQuery: …;
+</pre></div><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// IIFE</span>
+module {
+   <span style="color:Green;">// 1000 lines of code</span>
+
+   <span style="color:Blue;">class</span> Bar <span style="color:Blue;">implements</span> SignalR { }
+   <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> SignalR {}
+   <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> $ {
+       signalR: SignalR;
+   }
+   $.signalR = <span style="color:Blue;">new</span> Bar();
+			
+}
+</pre></div>
+<h2>10/26/2012</h2>
+<ul><li>What should rules be for functions assigned to object types</li>
+<li>Rule for &quot;var foo.data = 3;&quot;:
+<ul><li>Permitted only if foo declared in same statement block</li>
+<li>Any scope, even where a &quot;module&quot; isn&#39;t allowed - so this works:</li></ul></li></ul>
+<div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> baz = (<span style="color:Blue;">function</span>() {
+    <span style="color:Blue;">function</span> bar() { <span style="color:Blue;">return</span> 3;}
+    <span style="color:Blue;">var</span> bar.data = 4;
+    <span style="color:Blue;">return</span> bar;
+})()
+</pre></div> 
+<ul><li>Examples:
+<ul><li>var Foo.origin = ...;	
+<ul><li>Foo.origin = ...;</li></ul></li>
+<li>function Foo.helper() {}
+<ul><li>Foo.helper = function helper() {}</li></ul></li>
+<li>class Foo.Bar {}
+<ul><li>Foo.Bar = (function() {</li>
+<li>   function Bar() {}</li>
+<li>   return Bar;</li>
+<li>})() </li></ul></li></ul></li></ul>
+		
+<ul><li>0th: Already supported, always
+<ul><li>module F.x {}</li></ul></li>
+<li>1st: Class and function declarations F can, in the same scope, be augmented using:
+<ul><li>var F.x;</li>
+<li>class F.x {}</li>
+<li>function F.x() {}</li>
+<li>NOT module F.x {}</li></ul></li>
+<li>2nd: Interfaces can have dotted names which 
+<ul><li>interface F.x {}</li></ul></li>
+<li>3rd: interface + class is allowed (this is lightweight mixins, need to look at motivating examples)
+<ul><li>class F {}; interface F {}</li></ul></li></ul>
+</div><div class="ClearBoth"></div>

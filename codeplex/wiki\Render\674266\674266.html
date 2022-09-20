@@ -1,0 +1,294 @@
+<div class="wikidoc"><h2>10/29/2012</h2>
+Simplest:
+<ul><li>No constraints</li>
+<li>Cannot do any lookups on T, cannot assign anything other than any to T, cannot assign T to anything other than any and T (&quot;T is a branded {}&quot;)</li>
+<li>Function expressions cannot declare generic parameters</li>
+<li>Class methods, function declarations
+<ul><li>Later: What about object literals?</li></ul></li></ul>
+<br />What&#39;s left:
+<ul><li>Inference
+<ul><li>Would like: Infer class type parameters from constructor calls</li></ul></li>
+<li>Type compatibility
+<ul><li>Maybe: any&#39;s can fill in for T?</li></ul></li>
+<li>Try this out for 5 libraries</li></ul>
+
+<h2>11/2/2012</h2>
+Generics recap:
+<ul><li>Type parameters on:
+<ul><li>Interfaces</li>
+<li>Classes</li>
+<li>Functions (some debate, but let&#39;s assume all)</li></ul></li>
+<li>No constraints</li>
+<li>Type parameter type: like a fresh {}
+<ul><li>(&lt;T&gt;x). Shows Object members</li>
+<li>null, undefined and any assignable to T</li></ul></li>
+<li>Assignment and subtyping</li>
+<li>Function signatures can have type params</li></ul>
+
+<ul><li>Type argument inference</li></ul>
+<br />Examples:<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> f: {
+  &lt;T&gt;(t1: T, t2: T): <span style="color:Blue;">void</span>;
+}
+
+<span style="color:Blue;">var</span> g: {
+  &lt;T,U&gt;(t1: T, t2: U): <span style="color:Blue;">void</span>;
+}
+
+<span style="color:Blue;">var</span> h: {
+  (t1: any, t2: any): <span style="color:Blue;">void</span>
+}
+
+f = g;  <span style="color:Green;">// ok</span>
+g = f;  <span style="color:Green;">// error</span>
+f = h; <span style="color:Green;">// ok</span>
+h = f; <span style="color:Green;">// ok</span>
+g = h; <span style="color:Green;">// ok</span>
+h = g; <span style="color:Green;">// ok</span>
+</pre></div><br />Notes:
+<ul><li>Error to have a type parameter on a function signature which is </li></ul>
+
+<ul><li>Inference</li></ul>
+<br /><div style="color:Black;background-color:White;"><pre>
+foo&lt;T&gt;(x: T): T {… }
+foo(5) <span style="color:Green;">// should infer foo&lt;number&gt;(5)</span>
+</pre></div><br />Goal is to rarely have to say the type arguments<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> List&lt;T&gt; {
+   first: T;
+   getAt(i: number): T
+   setAt(i: number, v: T): <span style="color:Blue;">void</span>;
+}
+
+
+map&lt;T,U&gt;(items: List&lt;T&gt;, mapper: (item: T) =&gt; U): List&lt;U&gt;
+<span style="color:Blue;">var</span> foos = <span style="color:Blue;">new</span> List&lt;Customer&gt;();
+<span style="color:Blue;">var</span> names = map(foos, x =&gt; x.name);
+</pre></div><br /><br />Part 1: match foos with List&lt;T&gt; and make a bunch of inferences for T.  Then run best common type on these and use result or error.<br /><br />Part 2: Idea:
+<ol><li>Each argument expression has a list of type parameters it depends on</li>
+<li>In left to right order, when you get to an argument expression that depends on type parameters, lock down those parameters based on all inferense so far, and keep going.</li></ol>
+<br />Inference of generic parameters is fully separate from overload resolution.<br /><br /><div style="color:Black;background-color:White;"><pre>
+f&lt;T&gt;(t1: T, t2: T)
+f&lt;t,U&gt;(t: T, t2: U)
+</pre></div><br />Follow same sort of rule as:<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> f : {
+	(x: number): number;
+	(x: number, options?: any): string;
+}
+
+
+<span style="color:Blue;">var</span> z = f(5)
+</pre></div><br />Q: Are there really any uses for method-level type parameters only in return position?<br /><br />Later topic: Contextual typing:  var x: number = bar();<br /><br />Type arguments and constructors:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> List&lt;T&gt; {
+  constructor(defaultItem: T) {…}
+}
+
+<span style="color:Blue;">var</span> List:{
+  <span style="color:Blue;">new</span> &lt;T&gt;(defaultItem: T): List&lt;T&gt;
+}
+</pre></div><br />Things that you can&#39;t do here:<br />	- Flatten&lt;T&gt; below<br /><br /><div style="color:Black;background-color:White;"><pre>
+flatten&lt;T&gt;(<span style="color:Blue;">this</span>: List&lt;List&lt;T&gt;&gt;): List&lt;T&gt;;
+</pre></div>
+<h2>11/9/2012</h2>
+<div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">/////////&#160; PROMISE /////////////</span>
+<span style="color:Green;">// As discussed in design meeting</span>
+<span style="color:Green;">//&#160; (1) we don&#39;t yet know of any cases where this fails</span>
+<span style="color:Green;">//&#160; (2) seems we need the four overloads of then to deal with success or failure being T </span>
+or Promise&lt;T&gt;
+<span style="color:Green;">//  (3) progress should be added</span>
+<span style="color:Blue;">interface</span> Promise&lt;T&gt; {
+&#160; then&lt;U&gt;(success?: (x: T) =&gt; U, failure?: (x: any) =&gt; U): Promise&lt;U&gt;;
+&#160; then&lt;U&gt;(success?: (x: T) =&gt; U, failure?: (x: any) =&gt; Promise&lt;U&gt;): Promise&lt;U&gt;;
+&#160; then&lt;U&gt;(success?: (x: T) =&gt; Promise&lt;U&gt;, failure?: (x: any) =&gt; U): Promise&lt;U&gt;;
+&#160; then&lt;U&gt;(success?: (x: T) =&gt; Promise&lt;U&gt;, failure?: (x: any) =&gt; Promise&lt;U&gt;): Promise&lt;U&gt;;
+&#160; done(success?: (x: T) =&gt; any, failure? (x: any) =&gt; any): <span style="color:Blue;">void</span>;
+}
+
+
+<span style="color:Blue;">var</span> p = {
+  then(success?: (x: string) =&gt; any): any;
+  <span style="color:Green;">//done</span>
+}
+&#160;
+&#160;
+<span style="color:Green;">/////////&#160; WINRT /////////////</span>
+<span style="color:Green;">// Basic:&#160; </span>
+<span style="color:Green;">//&#160; (1) just a handful of generic types</span>
+<span style="color:Green;">//&#160; (2) no generic methods</span>
+<span style="color:Blue;">interface</span> Windows.Foundation.Collections.IIterable&lt;T&gt; {
+&#160;&#160;&#160; first(): Windows.Foundation.Collections.IIterator&lt;T&gt;
+}
+<span style="color:Blue;">interface</span> Windows.Foundation.Collections.IIterator&lt;T&gt; {
+&#160;&#160;&#160; current: T;
+&#160;&#160;&#160; hasCurrent: bool;
+&#160;&#160;&#160; moveNext(): bool;
+&#160;&#160;&#160; getMany(): T[];
+}
+<span style="color:Blue;">interface</span> Windows.Foundation.Collections.IVector&lt;T&gt; <span style="color:Blue;">extends</span> T[] {
+&#160;&#160;&#160; size: number;
+&#160;&#160;&#160; getAt(index: number): T;
+&#160;&#160;&#160; indexOf(value: T): { index: number; returnValue: bool; };
+&#160;&#160;&#160; getMany(startIndex: number): T[];
+&#160;&#160;&#160; setAt(index: number, value: T): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; insertAt(index: number, value: T): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; removeAt(index: number): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; removeAtEnd(): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; clear(): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; replaceAll(items: T[]): <span style="color:Blue;">void</span>;
+}
+&#160;
+<span style="color:Blue;">interface</span> Windows.Foundation.Collections.IMapView&lt;K,V&gt; {
+&#160;&#160;&#160; size: number;
+&#160;&#160;&#160; lookup(key: K): V;
+&#160;&#160;&#160; hasKey(key: K): bool;
+}
+<span style="color:Blue;">interface</span> Windows.Foundation.Collections.IMap&lt;K,V&gt; {
+&#160;&#160;&#160; size: number;
+&#160;&#160;&#160; lookup(key: K): V;
+&#160;&#160;&#160; hasKey(key: K): bool;
+&#160;&#160;&#160; getView(): Windows.Foundation.Collections.IMapView&lt;K,V&gt;;
+&#160;&#160;&#160; insert(key: K, value: V): bool;
+&#160;&#160;&#160; remove(key: K): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; clear(): <span style="color:Blue;">void</span>;
+}
+&#160;
+<span style="color:Green;">/////////&#160; ES6 Iterators /////////////</span>
+<span style="color:Blue;">interface</span> Iterator&lt;T&gt; {
+&#160; next(): T;
+}
+<span style="color:Blue;">interface</span> Iterable&lt;T&gt; {
+&#160; iterator(): Iterator&lt;T&gt;;
+}
+<span style="color:Green;">// This guy is hard</span>
+<span style="color:Blue;">interface</span> Generator&lt;T&gt; <span style="color:Blue;">extends</span> Iterator&lt;any&gt; {
+&#160;&#160;&#160; send(x: any): any;
+}
+<span style="color:Blue;">var</span> f: () =&gt; Generator&lt;string&gt; = <span style="color:Blue;">function</span> *() {
+&#160;&#160;&#160; <span style="color:Blue;">var</span> data = yield $.ajax(url);
+&#160;&#160;&#160; $(<span style="color:#A31515;">&#39;#result&#39;</span>).html(data);
+&#160;&#160;&#160; <span style="color:Blue;">var</span> status = $(<span style="color:#A31515;">&#39;#status&#39;</span>).html(<span style="color:#A31515;">&#39;Download complete.&#39;</span>);
+&#160;&#160;&#160; yield status.fadeIn().promise();
+&#160;&#160;&#160; yield sleep(2000);
+&#160;&#160;&#160; status.fadeOut();
+&#160;&#160;&#160; <span style="color:Blue;">return</span> <span style="color:#A31515;">&quot;hello&quot;</span>;
+}
+<span style="color:Blue;">var</span> p: Promise&lt;string&gt; = spawn(f);
+&#160;
+<span style="color:Green;">/////////&#160; KNOCKOUT /////////////</span>
+<span style="color:Green;">// (1) Generic &quot;Observable&quot; interface the central object of KnockOut</span>
+<span style="color:Green;">// (2) Nice interaction of generics and interface call signatures</span>
+<span style="color:Green;">// (3) Interesting need for &#39;generic this&#39; for chaining of sets</span>
+declare module ko {
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Observable&lt;T&gt; {
+&#160;&#160;&#160;&#160;&#160;&#160;&#160; (): T;
+&#160;&#160;&#160;&#160;&#160;&#160;&#160; (value: T): <span style="color:Blue;">void</span>; 
+&#160;&#160;&#160;&#160;&#160;&#160;&#160; &lt;O&gt;(<span style="color:Blue;">this</span>: O, value: T): O; <span style="color:Green;">// Is this legit?</span>
+&#160;&#160;&#160;&#160;&#160;&#160;&#160; subscribe((newValue: T) =&gt; <span style="color:Blue;">void</span> ): {
+&#160;&#160;&#160;&#160;&#160;&#160;&#160; dispose(): <span style="color:Blue;">void</span>
+&#160;&#160;&#160; };
+&#160;&#160;&#160; }
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> observable&lt;T&gt;(value: T): Observable&lt;T&gt;;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> applyBindings(viewModel: any): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> computed&lt;T&gt;(() =&gt; T, owner: any): Observable&lt;T&gt;;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> computed&lt;T&gt;({ read: () =&gt; T; write?: (value: T) =&gt; <span style="color:Blue;">void</span>; owner?: any}): Observable&lt;T&gt;;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> isComputed(o: any): bool;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> isObservable(o: any): bool;
+&#160;&#160;&#160; <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> observable(o: any): bool;
+&#160;
+}
+
+<span style="color:Blue;">var</span> o = {
+   x: ko.observable(<span style="color:#A31515;">&quot;hello&quot;</span>),
+   y: ko.observable(5),
+   z: ko.computed(<span style="color:Blue;">function</span>() {
+      <span style="color:Blue;">return</span> <span style="color:Blue;">this</span>.x + <span style="color:Blue;">this</span>.y; 
+   })
+}
+
+o.x(<span style="color:#A31515;">&quot;goodbye&quot;</span>).y(6);
+&#160;
+&#160;
+<span style="color:Green;">/////////&#160; UNDERSCORE /////////////</span>
+<span style="color:Green;">// Looks to be fairly standard LINQ-like library from the generics standpoint</span>
+<span style="color:Green;">// (1) Iteration over both arrays and objects (ordered string keyd dictionaries)</span>
+<span style="color:Green;">// (2) Not yet modelled below - API allows chained mode _([1,2,3]).map(f).filter(g)</span>
+
+_.each({a: 1, b: 4}, <span style="color:Blue;">function</span>(n) { <span style="color:Blue;">return</span> n + 1; });
+<span style="color:Green;">// Note: </span>
+
+<span style="color:Blue;">interface</span> Underscore {
+&#160;
+&#160;&#160;&#160; each&lt;T&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; list: T[],
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (element: T, index: number, list: T[]) =&gt; any,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160;&#160; each&lt;T&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; obj: {[x: string]: T},
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (value: T, key: string, object: {[x: string]: T}) =&gt; any,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160;&#160; map&lt;T, U&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; list: T[],
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (element: T, index?: number, list?: T[]) =&gt; U,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): U[];
+&#160;&#160;&#160;&#160; map&lt;T, U&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; obj: {[x: string]: T},
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (value: T, key?: string, object?: {[x: string]: T}) =&gt; U,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): U[];
+&#160;&#160;&#160; <span style="color:Green;">//?</span>
+&#160;&#160;&#160; invoke(list: any[], methodName: string, ...arguments: any[]): <span style="color:Blue;">void</span>;
+&#160;&#160;&#160; pluck&lt;T,U&gt;(list: T[], propertyName: string): U[];
+&#160;&#160;&#160; max(list: number[]): number;
+&#160;&#160;&#160; max&lt;T&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; list: T[],
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (element: T, index: number, list: T[]) =&gt; number,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): number;
+&#160;&#160;&#160; groupBy&lt;T&gt;(
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; list: T[],
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; iterator: (element: T, index: number, list: T[]) =&gt; string,
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; context?: any): { [key: string]: T[]; };
+    }
+
+_.groupBy([1,2,3, 19], <span style="color:Blue;">function</span>(x) { <span style="color:Blue;">return</span> x.toString()[0]; })
+
+{<span style="color:#A31515;">&quot;1&quot;</span>: [1,19], <span style="color:#A31515;">&quot;2&quot;</span>: [2], <span style="color:#A31515;">&quot;3&quot;</span>: [3] }
+
+
+(&lt;number[]&gt;_.pluck([<span style="color:#A31515;">&quot;a&quot;</span>,<span style="color:#A31515;">&quot;b&quot;</span>,<span style="color:#A31515;">&quot;c&quot;</span>], <span style="color:#A31515;">&quot;length&quot;</span>)) =&gt; [1,1,1]
+_.pluck&lt;string, number&gt;([<span style="color:#A31515;">&quot;a&quot;</span>,<span style="color:#A31515;">&quot;b&quot;</span>,<span style="color:#A31515;">&quot;c&quot;</span>], <span style="color:#A31515;">&quot;length&quot;</span>) =&gt; [1,1,1]
+</pre></div>
+<h2>12/14/2012</h2>
+Generics and constraints.<br /><br />Today: foo(x: Comparable): Comparable {}<br />Generics: foo&lt;TComparable&gt;(x: TComparable): TComparable {}<br /><br />Without constraints, the generic version is less expressive than the non-generic version (and as such, less useful in .d.ts to check against interface contracts).  To regain this expressivity, we need to allow for constraints.  Constraints can be based on a type variable extending an interface.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Bar {}  <span style="color:Green;">//or class Bar {}</span>
+<span style="color:Blue;">class</span> Foo&lt;T <span style="color:Blue;">extends</span> Bar, U <span style="color:Green;">/* extends {} */</span>, V <span style="color:Blue;">extends</span> Bar&gt; {
+  f() {
+    <span style="color:Blue;">var</span> x: T;
+    <span style="color:Blue;">var</span> y: Bar;
+    y = x;
+    x = y; <span style="color:Green;">// error</span>
+
+   <span style="color:Blue;">var</span> z: V; 
+    x = z; <span style="color:Green;">// error</span>
+  }
+}  
+
+
+<span style="color:Blue;">function</span> foo&lt;T <span style="color:Blue;">extends</span> Comparable&gt;(x: T): T {
+  x.compareTo();
+}
+
+<span style="color:Blue;">var</span> myComparable: MyComparable;
+<span style="color:Blue;">var</span> z <span style="color:Green;">/* : MyComparable */</span> = foo(myComparable);
+
+
+<span style="color:Blue;">var</span> foo: &lt;T <span style="color:Blue;">extends</span> Comparable&gt;(x: T) =&gt; T;
+
+Interface Collection&lt;T&gt; {
+  map: &lt;U&gt;(f: T=&gt;U): Collection&lt;U&gt;;
+}
+
+<span style="color:Blue;">var</span> myColl: Collection&lt;Foo&gt; = {
+  map: <span style="color:Blue;">function</span>(f) {
+    
+  }
+}
+</pre></div></div><div class="ClearBoth"></div>

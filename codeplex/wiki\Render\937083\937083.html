@@ -1,0 +1,132 @@
+<div class="wikidoc"><h1>Introduction</h1>When using an external JavaScript library, or new host API, you&#39;ll need to use a declaration file (.d.ts) to describe the shape of that library. This guide covers a few high-level concepts specific to writing definition files, then proceeds with a number of examples that show how to transcribe various concepts to their matching definition file descriptions.<br />
+<h1>Guidelines and Specifics</h1>
+<h2>Workflow</h2>
+The best way to write a .d.ts file is to start from the documentation of the library, not the code. Working from the documentation ensures the surface you present isn&#39;t muddied with implementation details, and is typically much easier to read than JS code. The examples below will be written as if you were reading documentation that presented example calling code.<br />
+<h2>Namespacing</h2>
+When defining interfaces (for example, &quot;options&quot; objects), you have a choice about whether to put these types inside a module or not. This is largely a judgement call -- if the consumer is likely to often declare variables or parameters of that type, and the type can be named without risk of colliding with other types, prefer placing it in the global namespace. If the type is not likely to be referenced directly, or can&#39;t be named with a reasonably unique name, do use a module to prevent it from colliding with other types.<br />
+<h2>Callbacks</h2>
+Many JavaScript libraries take a function as a parameter, then invoke that function later with a known set of arguments. When writing the function signatures for these types, <b>do not</b> mark those parameters as optional. The right way to think of this is <i>&quot;What parameters will be provided?&quot;</i>, not <i>&quot;What parameters will be consumed?&quot;</i>. While TypeScript 0.9.7 and above does not enforce that the optionality, bivariance on argument optionality might be enforced by an external linter.<br />
+<h2>Extensibility and Declaration Merging</h2>
+When writing definition files, it&#39;s important to remember TypeScript&#39;s rules for extending existing objects. You might have a choice of declaring a variable using an anonymous type or an interface type:<br /><br /><b>Anonymously-typed var</b><br /><br /><div style="color:Black;background-color:White;"><pre>
+declare <span style="color:Blue;">var</span> MyPoint: { x: number; y: number; };
+</pre></div><br /><b>Interfaced-typed var</b><br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> SomePoint { x: number; y: number; }
+declare <span style="color:Blue;">var</span> MyPoint: SomePoint;
+</pre></div><br />From a consumption side these declarations are identical, but the type <span class="codeInline">SomePoint</span> can be extended through interface merging:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> SomePoint { z: number; }
+MyPoint.z = 4; <span style="color:Green;">// OK</span>
+</pre></div><br />Whether or not you want your declarations to be extensible in this way is a bit of a judgement call. As always, try to represent the intent of the library here.<br />
+<h2>Class Decomposition</h2>
+Classes in TypeScript create two separate types: the instance type, which defines what members an instance of a class has, and the constructor function type, which defines what members the class constructor function has. The constructor function type is also known as the &quot;static side&quot; type because it includes static members of the class.<br /><br />While you can reference the static side of a class using the <span class="codeInline">typeof</span> keyword, it is sometimes useful or necessary when writing definition files to use the <i>decomposed class</i> pattern which explicitly separates the instance and static types of class.<br /><br />As an example, the following two declarations are nearly equivalent from a consumption perspective:<br /><br /><b>Standard</b><br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> A {
+    <span style="color:Blue;">static</span> st: string;
+    inst: number;
+    constructor(m: any) {}
+}
+</pre></div><br /><b>Decomposed</b><br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> A_Static {
+    <span style="color:Blue;">new</span>(m: any): A_Instance;
+    st: string;
+}
+<span style="color:Blue;">interface</span> A_Instance {
+    inst: number;
+}
+declare <span style="color:Blue;">var</span> A: A_Static;
+</pre></div><br />The trade-offs here are as follows:
+<ul><li>Standard classes can be inherited from using <span class="codeInline">extends</span>; decomposed classes cannot. This might change in later version of TypeScript if arbitrary <span class="codeInline">extends</span> expressions are allowed.</li>
+<li>It is possible to add members later (through declaration merging) to the static side of both standard and decomposed classes</li>
+<li>It is possible to add instance members to decomposed classes, but not standard classes</li>
+<li>You&#39;ll need to come up with sensible names for more types when writing a decomposed class</li></ul>
+
+<h2>Naming Conventions</h2>
+In general, do not prefix interfaces with <span class="codeInline">I</span> (e.g. <span class="codeInline">IColor</span>). Because the concept of an interface in TypeScript is much more broad than in C# or Java, the <span class="codeInline">IFoo</span> naming convention is not broadly useful.<br />
+<h1>Examples</h1>
+Let&#39;s jump in to the examples section. For each example, sample <i>usage</i> of the library is provided, followed by the definition code that accurately types the usage. When there are multiple good representations, more than one definition sample might be listed.<br />
+<h2>Options Objects</h2>
+<b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+animalFactory.create(<span style="color:#A31515;">&quot;dog&quot;</span>);
+animalFactory.create(<span style="color:#A31515;">&quot;giraffe&quot;</span>, { name: <span style="color:#A31515;">&quot;ronald&quot;</span> });
+animalFactory.create(<span style="color:#A31515;">&quot;panda&quot;</span>, { name: <span style="color:#A31515;">&quot;bob&quot;</span>, height: 400 });
+<span style="color:Green;">// Invalid: name must be provided if options is given</span>
+animalFactory.create(<span style="color:#A31515;">&quot;cat&quot;</span>, { height: 32 });
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+module animalFactory {
+    <span style="color:Blue;">interface</span> AnimalOptions {
+        name: string;
+        height?: number;
+        weight?: number;
+    }
+    <span style="color:Blue;">function</span> create(name: string, animalOptions?: AnimalOptions): Animal;
+}
+</pre></div>
+<h2>Functions with Properties</h2><b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+zooKeeper.workSchedule = <span style="color:#A31515;">&quot;morning&quot;</span>;
+zooKeeper(giraffeCage);
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Note: Function must precede module</span>
+<span style="color:Blue;">function</span> zooKeeper(cage: AnimalCage);
+module zooKeeper {
+    <span style="color:Blue;">var</span> workSchedule: string;
+}
+</pre></div>
+<h2>New + callable methods</h2><b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> w = widget(32, 16);
+<span style="color:Blue;">var</span> y = <span style="color:Blue;">new</span> widget(<span style="color:#A31515;">&quot;sprocket&quot;</span>);
+<span style="color:Green;">// w and y are both widgets</span>
+w.sprock();
+y.sprock();
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Widget {
+    sprock(): <span style="color:Blue;">void</span>;
+}
+
+<span style="color:Blue;">interface</span> WidgetFactory {
+    <span style="color:Blue;">new</span>(name: string): Widget;
+    (width: number, height: number): Widget;
+}
+
+declare <span style="color:Blue;">var</span> widget: WidgetFactory;
+</pre></div>
+<h2>Global / External-agnostic Libraries</h2><b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Either</span>
+<span style="color:Blue;">import</span> x = require(<span style="color:#A31515;">&#39;zoo&#39;</span>);
+x.open();
+<span style="color:Green;">// or</span>
+zoo.open();
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+module zoo {
+  <span style="color:Blue;">function</span> open(): <span style="color:Blue;">void</span>;
+}
+
+declare module <span style="color:#A31515;">&quot;zoo&quot;</span> {
+    <span style="color:Blue;">export</span> = zoo;
+}
+</pre></div>
+<h2>Single Complex Object in External Modules</h2><b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Super-chainable library for eagles</span>
+<span style="color:Blue;">import</span> eagle = require(<span style="color:#A31515;">&#39;./eagle&#39;</span>);
+<span style="color:Green;">// Call directly</span>
+eagle(<span style="color:#A31515;">&#39;bald&#39;</span>).fly();
+<span style="color:Green;">// Invoke with new</span>
+<span style="color:Blue;">var</span> eddie = <span style="color:Blue;">new</span> eagle(1000);
+<span style="color:Green;">// Set properties</span>
+eagle.favorite = <span style="color:#A31515;">&#39;golden&#39;</span>;
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Note: can use any name here, but has to be the same throughout this file</span>
+declare <span style="color:Blue;">function</span> eagle(name: string): eagle;
+declare module eagle {
+    <span style="color:Blue;">var</span> favorite: string;
+    <span style="color:Blue;">function</span> fly(): <span style="color:Blue;">void</span>;
+}
+<span style="color:Blue;">interface</span> eagle {
+    <span style="color:Blue;">new</span>(awesomeness: number): eagle;
+}
+
+<span style="color:Blue;">export</span> = eagle;
+</pre></div>
+<h2>Callbacks</h2><b>Usage</b><br /><div style="color:Black;background-color:White;"><pre>
+addLater(3, 4, (x) =&gt; console.log(<span style="color:#A31515;">&#39;x = &#39;</span> + x));
+</pre></div><br /><b>Typing</b><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Note: &#39;void&#39; return type is preferred here</span>
+<span style="color:Blue;">function</span> addLater(x: number, y: number, (sum: number) =&gt; <span style="color:Blue;">void</span>): <span style="color:Blue;">void</span>;
+</pre></div><br />Please post a comment <a href="https://typescript.codeplex.com/wikipage?title=https%3a%2f%2fgithub.com%2fMicrosoft%2fTypeScript%2fissues&referringTitle=Writing%20Definition%20%28.d.ts%29%20Files">here</a> if there&#39;s a pattern you&#39;d like to see documented! We&#39;ll add to this as we can.</div><div class="ClearBoth"></div>

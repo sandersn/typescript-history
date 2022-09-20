@@ -1,0 +1,28 @@
+<div class="wikidoc"><h2>12/7/2012</h2><ul><li>Can specify a string literal in place of a type name (for a parameter).</li></ul>
+<div style="color:Black;background-color:White;"><pre>
+	<span style="color:Blue;">interface</span> Foo {
+	   createElement(name: string, options?: Stuff): Element;
+	   createElement(name: <span style="color:#A31515;">&#39;div&#39;</span>, options?: DivStuff): HTMLDivElement;
+	   createElement(name: <span style="color:#A31515;">&#39;img&#39;</span>): HTMLImageElement;
+	}
+	
+	<span style="color:Blue;">var</span> s = <span style="color:#A31515;">&#39;img&#39;</span>;
+	createElement(s) <span style="color:Green;">// ambiguous unless the string overload added above</span>
+	
+	<span style="color:Blue;">class</span> Bar <span style="color:Blue;">implements</span> Foo {
+	  createElement(name: string): Element {
+	    <span style="color:Blue;">if</span>(name === <span style="color:#A31515;">&#39;div&#39;</span>) <span style="color:Blue;">return</span> <span style="color:Blue;">new</span> HTMLDivElement();
+	    <span style="color:Blue;">if</span>(name === <span style="color:#A31515;">&#39;img&#39;</span>) <span style="color:Blue;">return</span> <span style="color:Blue;">new</span> HTMLImageElement();
+	    <span style="color:Blue;">else</span> <span style="color:Blue;">return</span> <span style="color:Blue;">new</span> HTMLCustomElement();
+	  }
+	}
+	
+	<span style="color:Blue;">var</span> f: (s: <span style="color:#A31515;">&#39;hello&#39;</span>) =&gt; <span style="color:Blue;">void</span>  = <span style="color:Blue;">function</span>(s: string) {}; <span style="color:Green;">// invalid</span>
+	<span style="color:Blue;">var</span> f: { (s: <span style="color:#A31515;">&#39;hello&#39;</span>): <span style="color:Blue;">void</span> } = <span style="color:Blue;">function</span>(s: string) {}; <span style="color:Green;">// invalid</span>
+</pre></div>	
+<ul><li>Any overloaded signature that includes at least one string literal is a &#39;specialized signature&#39;</li>
+<li>Each specialized signature must be assignment compatible to at least one non-specialized signature</li>
+<li>Specialized signatures are ignored for assignment compatibility to the type</li>
+<li>Overload resolution rules need to handle string literals</li>
+<li>Contextual typing always uses only the non-specialized overloads</li></ul>
+</div><div class="ClearBoth"></div>

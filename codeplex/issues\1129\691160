@@ -1,0 +1,36 @@
+// Utilities.ts
+module My.Fancy.Module {
+    export interface UtilitiesStatic {
+        Foo: () => void;
+    }
+
+    export var Utilities: UtilitiesStatic;
+}
+
+module My.Fancy.Module.Utilities {
+    export function DoSomething(): void {
+
+        // Compiler error:
+        // The property 'Foo' does not exist on value of type 'Utilities'.
+        Utilities.Foo();
+    }
+}
+// end of Utilities.ts
+
+// Utilities.desktop.ts
+module My.Fancy.Module {
+
+    // Compiler error:
+    // Class My.Fancy.Module.UtilitiesDesktop declares interface My.Fancy.Module.UtilitiesStatic but does not implement it:
+    // Type 'My.Fancy.Module.UtilitiesDesktop' is missing property 'DoSomething' from type 'My.Fancy.Module.UtilitiesStatic'.
+    class UtilitiesDesktop implements UtilitiesStatic {
+        public Foo(): void {
+        }
+    }
+
+    // Compiler error:
+    // Cannot convert 'My.Fancy.Module.UtilitiesDesktop' to 'My.Fancy.Module.Utilities':
+	// Type 'My.Fancy.Module.UtilitiesDesktop' is missing property 'My.Fancy.Module.Utilities.DoSomething' from type 'My.Fancy.Module.Utilities'.
+    Utilities = new UtilitiesDesktop();
+}
+// end of Utilities.desktop.ts

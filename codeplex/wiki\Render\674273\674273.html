@@ -1,0 +1,78 @@
+<div class="wikidoc"><h2>11/14/212</h2>
+Notes:
+<ul><li>Constant expressions</li>
+<li>Enum value expressions; literal or expr</li>
+<li>Enum type just alias for number/string in assignment compat</li>
+<li>Enum values only unique literals</li>
+<li>Enum is its own map</li>
+<li>Always emit unless &#39;declare&#39; modifier used</li></ul>
+<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// Number based enums&#160;</span>
+<span style="color:Blue;">enum</span> Weekday {
+&#160; Monday: 0,
+&#160; Tuesday: 1
+  AnyDay: Weekday.Monday | Weekday.Tuesday
+}
+&#160;
+<span style="color:Green;">// String-based enums</span>
+<span style="color:Blue;">enum</span> Weekday {
+&#160; Monday: <span style="color:#A31515;">&quot;Monday!!!!&quot;</span>,
+&#160; Tuesday: <span style="color:#A31515;">&quot;Tuesday????&quot;</span>
+}
+&#160;
+<span style="color:Green;">// Shorthand for string-based enums, this means the same as above</span>
+<span style="color:Blue;">enum</span> Weekday {
+&#160; <span style="color:#A31515;">&quot;hello world&quot;</span>,
+&#160; <span style="color:#A31515;">&quot;Tuesday!!!&quot;</span>
+}
+&#160;
+<span style="color:Green;">// Enums introduce a type</span>
+<span style="color:Green;">// Also, the raw string value can be assigned to an enum</span>
+<span style="color:Blue;">var</span> x: Weekday = <span style="color:#A31515;">&quot;Monday&quot;</span>;
+&#160;
+<span style="color:Green;">// Enums provide provide access to values using lookup, regardless of underlying type</span>
+<span style="color:Blue;">var</span> x: Something = Weekday.Monday;
+<span style="color:Blue;">var</span> x: Something = Weekday[<span style="color:#A31515;">&quot;Monday&quot;</span>]; <span style="color:Green;">// should be an error</span>
+&#160;
+<span style="color:Green;">// Integer enums can have un-numbered slots.&#160; </span>
+<span style="color:Green;">// Values are auto-incremented from previous numbered slot</span>
+<span style="color:Blue;">enum</span> Weekday {
+&#160; Monday: 1,
+&#160; Tuesday
+} <span style="color:Green;">// 1 and 2</span>
+&#160;
+<span style="color:Green;">// Enum with no values is treated as integer enum starting at 0</span>
+<span style="color:Blue;">enum</span> Weekday {
+&#160; Monday,
+&#160; Tuesday
+} <span style="color:Green;">// 0 and 1</span>
+&#160;
+<span style="color:Green;">// Automatic conversion from underlying type to enum type</span>
+<span style="color:Blue;">enum</span> Method { <span style="color:#A31515;">&quot;GET&quot;</span>, <span style="color:#A31515;">&quot;POST&quot;</span>, <span style="color:#A31515;">&quot;PUT&quot;</span>, <span style="color:#A31515;">&quot;DELETE&quot;</span> }
+declare <span style="color:Blue;">function</span> getMethod(): string;
+<span style="color:Blue;">var</span> method: Method = getMethod(); <span style="color:Green;">// Okay to convert from string</span>
+&#160;
+<span style="color:Green;">// However, it is an error to assign a literal that is not one of allowed values</span>
+<span style="color:Blue;">var</span> method: Method = <span style="color:#A31515;">&quot;GETT&quot;</span>; <span style="color:Green;">// Error - &quot;GETT&quot; is not legal value of Method</span>
+
+document.createElement(<span style="color:#A31515;">&quot;Div&quot;</span>)
+&#160;
+<span style="color:Green;">//Enum values are inlined during compilation</span>
+<span style="color:Blue;">var</span> x: Something = Weekday.Monday;
+<span style="color:Green;">//...becomes...</span>
+<span style="color:Blue;">var</span> x = 0;
+	&#160;
+<span style="color:Green;">// The above means that enum declarations themselves generate no code, they are erased at compile time</span>
+</pre></div>
+<h2>12/5/2012</h2>Current thinking is to support only numbers (and not strings), using this translation approach.<br /><br />This enum:<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">enum</span> Day { Monday: 0, Tuesday: 1, <span style="color:#A31515;">&quot;Wed nes day&quot;</span>: Day.Monday | Day.Tuesday, }
+<span style="color:Green;">// LHSes can be anything that is a valid Object Literal LHS *except* a number</span>
+</pre></div>Translates to:<br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> Day;
+(<span style="color:Blue;">function</span>(Day) {
+   Day[Day.Monday = 0] = <span style="color:#A31515;">&quot;Monday&quot;</span>;
+   Day[Day.Tuesday = 1] = <span style="color:#A31515;">&quot;Tuesday&quot;</span>;
+   Day[Day[<span style="color:#A31515;">&quot;Wed nes day&quot;</span>] = Day.Monday | Day.Tuesday] = <span style="color:#A31515;">&quot;Wed nes day&quot;</span>;
+})(Day = {});
+</pre></div>	<br />Typing:
+<ul><li>Enums are branded subtypes of number</li></ul></div><div class="ClearBoth"></div>

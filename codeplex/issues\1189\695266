@@ -1,0 +1,335 @@
+// Module/Namespace
+module Controlsxy {
+
+    export class EditableListItemOptions {
+        constructor(public parentEditableList: EditableList,
+                    public optionElement: JQuery,
+                    public isEditing: bool,
+                    public isNew: bool,
+                    public inputHtml: string,
+                    public deleteButtonHtml: string,
+                    public cancelButtonHtml: string,
+                    public isRightButtonPosition: bool = true 
+                    ) { }
+    } 
+     
+    export interface EditableListItemEvent extends JQueryEventObject {
+        editableListItem: EditableListItem;
+    }
+
+    export class EditableListItem {
+        public listItem: JQuery;
+        public optionElement: JQuery;
+        public inputElement: JQuery;
+
+        private _span: JQuery;
+        private _value: string;
+        private _deleteButtonHtml: string;
+        private _cancelButtonHtml: string;       
+        private _parentList: EditableList;
+        private _isNew: bool;
+        private _isRightButtonPosition: bool;
+        private _inputHtml: string;
+        private _wasCommitCanceled: bool = false;
+
+        constructor(options: EditableListItemOptions) {
+            this._parentList = options.parentEditableList;
+            if (options.optionElement !== null) {
+                this.optionElement = options.optionElement;
+                this._value = this.optionElement.val() || this.optionElement.text();
+            }
+            this._inputHtml = options.inputHtml;
+            this._deleteButtonHtml = options.deleteButtonHtml;
+            this._cancelButtonHtml = options.cancelButtonHtml;
+            //The delegate syntax used below allows the handler to reference 'this' as the EditableListItem rather
+            //than this refering to the DOM object that was clicked.            
+            this.listItem = $("<li/>");
+            this._isRightButtonPosition = options.isRightButtonPosition;
+            this.setEditableItemContent();
+            this._isNew = options.isNew;
+            if (options.isEditing) {
+                this._span.trigger("click");
+            }
+        }
+
+        private raiseEvent(eventName: string): EditableListItemEvent {
+            var event: EditableListItemEvent = <EditableListItemEvent> $.Event(eventName, {
+                editableListItem: this
+            });
+            this.listItem.trigger(event);
+            return event;
+        }
+
+        private onEdit() {
+            var itemBeingEdited : EditableListItem = this._parentList.itemBeingEdited;
+            if (itemBeingEdited && itemBeingEdited._wasCommitCanceled){
+                return true;
+            }
+            //Be sure to use custom event names that do not match standard event names, else the custom event handlers will not be invoked.
+            var event: EditableListItemEvent = this.raiseEvent("preEdit.EditableListItem");
+            if (event.isDefaultPrevented()) {
+                return true;
+            }
+            //Create an input element and make it the content of the list item.
+            this.inputElement = $(this._inputHtml).val(this._value)
+                .on("blur", (e: JQueryEventObject) => this.onCommit(e))
+                .on("keyup", (e: JQueryEventObject) => this.inputKeyHandler(e))
+                .on("click focus", () => {
+                    //The use of a lambda function allows the anonymous function to use this as a refernce to the object
+                    //rather than the elment that was clicked.
+                    if (this._isNew) {
+                        var itemBeingEdited: EditableListItem = this._parentList.itemBeingEdited;
+                        if (itemBeingEdited && itemBeingEdited._wasCommitCanceled) {
+                            return false;
+                        }                        
+                        this._parentList.wasNewInputClicked = true;
+                    }
+                    this._parentList.itemBeingEdited = this;
+                });
+            if (this._isNew) {
+                this.inputElement.addClass("new");
+            }
+            this.listItem.children().remove();
+            var cancelButton: JQuery = $(this._cancelButtonHtml).on("mousedown", () => this.onCancel());
+            if (!this._isNew && !this._isRightButtonPosition) {
+                this.listItem.append(cancelButton);
+            }
+            this.listItem.append(this.inputElement);
+            if (!this._isNew && this._isRightButtonPosition) {
+                this.listItem.append(cancelButton);
+            }
+            //Because a blur event cannot be prevented, we have to focus after the blur event by using a timer.              
+            //A timer with zero value will run when the thread becomes idle.
+            setTimeout(() => {
+                //document.focus handles an issue where if the blur event puts focus into the browser url input, the 
+                //input element will not receive focus.                
+                if (document.focus) {
+                    document.focus();
+                }
+                this.inputElement.focus();
+            }, 0);
+            this._parentList.itemBeingEdited = this;
+            event = this.raiseEvent("postEdit.EditableListItem");
+            return true;
+        }
+
+        private spanKeyHandler(e: JQueryEventObject) {
+            //Just let the tabkey do what it does.
+            if (e.which !== 9) {
+                //Go into edit mode
+                this.onEdit();
+            }
+            return true;
+        }
+
+        onCommit(e: JQueryEventObject) {
+            var event: EditableListItemEvent = null;
+            event = this.raiseEvent("preCommit.EditableListItem");
+            if (event.isDefaultPrevented()) {
+                if (e) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                }
+                this._wasCommitCanceled = true;
+                this.inputElement.focus();
+                return false;
+            }
+            var value: string = this.inputElement.val().trim();
+            if (this._isNew && value === '') return true;
+            if (value === '') {
+                return this.deleteHandler();
+            }
+            this.listItem.children().remove();
+            this._value = value;
+            this.optionElement.val(this._value);
+            this.setEditableItemContent();
+            if (this._isNew) {
+                this._isNew = false;
+                event = this.raiseEvent("itemAdded.EditableListItem")
+            } else {
+                if (!this._parentList.wasNewInputClicked) {
+                    this._span.focus();
+                }
+            }
+            this._wasCommitCanceled = false;
+            event = this.raiseEvent("postCommit.EditableListItem");
+            this._parentList.wasNewInputClicked = false;
+            return true;
+        }
+
+        onCancel() {
+            var event: EditableListItemEvent = this.raiseEvent("preCancel.EditableListItem");
+            this.setEditableItemContent();
+            event = this.raiseEvent("postCancel.EditableListItem");
+            return true;
+        }
+
+        private inputKeyHandler(e: JQueryEventObject) {
+            //If escape key
+            if (e.which === 27 && !this._isNew) {
+                this.onCancel();
+            } else if (e.which === 13) {
+                this.onCommit(null);
+            }
+            return true;
+        }
+
+        private setEditableItemContent() {
+            this.listItem.children().remove();            
+            this.inputElement = null;
+            var deleteButton: JQuery = $(this._deleteButtonHtml).on("click", () => this.deleteHandler());
+            //set tabindex property so we can tab through the list items and then type to start editing one of them.
+            this._span = $('<span class="value"/>').prop('tabindex', '0')
+                .text(this._value)
+                .on("click", () => this.onEdit())
+                .on("keyup", (e: JQueryEventObject) => this.spanKeyHandler(e));
+            if (this._isRightButtonPosition) {
+                this.listItem.append(this._span).append(deleteButton);
+            } else {
+                this.listItem.append(deleteButton).append(this._span);
+            }
+            this._parentList.itemBeingEdited = null;
+            this._wasCommitCanceled = false;
+        }
+
+        private deleteHandler() {
+            var event: EditableListItemEvent = this.raiseEvent("preDelete.EditableListItem");
+            this.optionElement.remove();
+            this.raiseEvent("postDelete.EditableListItem");            
+            this.listItem.remove();
+            return true;
+        }
+
+    }
+
+    export class EditableListOptions {
+
+        constructor(public selectElement: JQuery,
+                    public listElementId: string,
+                    public listElementClass: string,
+                    public inputHtml: string = '<input/>',
+                    public deleteButtonHtml: string = '<a href="#" tabindex="0">Delete</a>',
+                    public cancelButtonHtml: string = '<a href="#" tabindex="0">Cancel</a>',
+                    public isRightButtonPosition: bool = true) { }
+    }
+
+    declare var __doPostBack: any;
+    declare var theForm: any;
+    declare var WebForm_OnSubmit: any;
+
+    export class EditableList {
+        private _selectElement: JQuery;
+        private _listItems: EditableListItem[] = [];
+        private _listElement: JQuery;
+        private _inputHtml: string;
+        private _deleteButtonHtml: string;
+        private _cancelButtonHtml: string;
+        private _isRightButtonPosition: bool;
+
+        itemBeingEdited: EditableListItem;
+
+
+        public wasNewInputClicked: bool;
+
+        constructor(private options: EditableListOptions) {            
+            this._selectElement = $(options.selectElement).hide();
+            this._listElement = $("<ul/>").insertAfter(this._selectElement);
+            if (options.listElementClass !== null && options.listElementClass.length > 0) {
+                this._listElement.addClass(options.listElementClass);
+            }
+            if (options.listElementId !== null && options.listElementId.length > 0) {
+                this._listElement.prop('id', options.listElementId);
+            }
+            this._inputHtml = options.inputHtml;
+            this._deleteButtonHtml = options.deleteButtonHtml;
+            this._cancelButtonHtml = options.cancelButtonHtml;
+            this._isRightButtonPosition = options.isRightButtonPosition;
+            this._selectElement.find("option").each((i, elem) => { this.addItem(elem) });
+            this.createItem();
+            this._listElement
+                .bind("postDelete.EditableListItem", (e: EditableListItemEvent) => this.itemDeletedHandler(e))
+                .bind("itemAdded.EditableListItem", (e: EditableListItemEvent) => this.itemAddedHandler(e));
+            this._selectElement.closest("form").submit((e: JQueryEventObject) => this.submitHandler(e));
+            //Override ASP.NET __doPostBack so that jQuery submit handlers will work.
+            $(document).ready(function () {
+                if (__doPostBack && !__doPostBack.override) {                    
+                    __doPostBack = function (eventTarget, eventArgument) {
+                        $(theForm).submit(function () {                            
+                                theForm.__EVENTTARGET.value = eventTarget;
+                                theForm.__EVENTARGUMENT.value = eventArgument;                            
+                        }).submit();
+                    };
+                    __doPostBack.override = true;
+                }
+                //if (WebForm_OnSubmit && !WebForm_OnSubmit.override) {
+                //    var webformonsubmitoriginal: any = WebForm_OnSubmit;
+                //    WebForm_OnSubmit = function () {
+                //        var retVal;
+                //        $(theForm).submit(function (e: JQueryEventObject) {                            
+                //            retVal = webformonsubmitoriginal();
+                //            return retVal;
+                //        }).submit();
+                //        return retVal;
+                //    };
+                //    WebForm_OnSubmit.override = true;
+                //}
+            });
+        }
+
+        private addItem(optionElement: Element) {
+            var item: EditableListItem = new EditableListItem(
+                    new EditableListItemOptions(this,
+                         $(optionElement).prop('selected', true),
+                         false,
+                         false,
+                         this._inputHtml,
+                         this._deleteButtonHtml,
+                         this._cancelButtonHtml,
+                         this._isRightButtonPosition))
+            this._listItems.push(item);
+            this._listElement.append(item.listItem);
+        }
+
+        private createItem() {
+            var option: JQuery = $("<option/>").prop('selected', true);
+            var item: EditableListItem = new EditableListItem(new EditableListItemOptions(this,
+                 option,
+                 true,
+                 true,
+                 this._inputHtml,
+                 this._deleteButtonHtml,
+                 this._cancelButtonHtml,
+                 this._isRightButtonPosition));
+            this._listItems.push(item);
+            this._listElement.append(item.listItem);
+        }
+
+        private itemDeletedHandler(e: EditableListItemEvent) {
+            var index: number = $.inArray(e.editableListItem, this._listItems);
+            delete this._listItems[index];
+            this._listElement.find("input").focus();
+        }
+
+        private itemAddedHandler(e: EditableListItemEvent) {
+            if (e.editableListItem.optionElement.parent().length === 0) {
+                this._selectElement.append(e.editableListItem.optionElement);
+            }
+            this.createItem();
+        }
+
+        private submitHandler(e: JQueryEventObject) {
+            if (this.itemBeingEdited) {
+                return this.itemBeingEdited.onCommit(e);
+            } else {
+                return true;
+            }
+        }
+
+    }
+
+}
+
+
+
+
+

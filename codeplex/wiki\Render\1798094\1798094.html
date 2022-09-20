@@ -1,0 +1,342 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<hr />
+
+<h1>Introduction</h1>This post outlines the various ways to organize your code using modules in TypeScript. We&#39;ll be covering internal and external modules and we&#39;ll discuss when each is appropriate and how to use them. We&#39;ll also go over some advanced topics of how to use external modules, and address some common pitfalls when using modules in TypeScript.<br />
+<h3>First steps</h3>Let&#39;s start with the program we&#39;ll be using as our example throughout this page. We&#39;ve written a small set of simplistic string validators, like you might use when checking a user&#39;s input on a form in a webpage or checking the format of an externally-provided data file.<br />
+<h5>Validators in a single file</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> StringValidator {
+    isAcceptable(s: string): <span style="color:Blue;">boolean</span>;
+}
+
+<span style="color:Blue;">var</span> lettersRegexp = /^[A-Za-z]+$/;
+<span style="color:Blue;">var</span> numberRegexp = /^[0-9]+$/;
+
+<span style="color:Blue;">class</span> LettersOnlyValidator <span style="color:Blue;">implements</span> StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> lettersRegexp.test(s);
+    }
+}
+
+<span style="color:Blue;">class</span> ZipCodeValidator <span style="color:Blue;">implements</span> StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> s.length === 5 &amp;&amp; numberRegexp.test(s);
+    }
+}
+
+<span style="color:Green;">// Some samples to try</span>
+<span style="color:Blue;">var</span> strings = [<span style="color:#A31515;">&#39;Hello&#39;</span>, <span style="color:#A31515;">&#39;98052&#39;</span>, <span style="color:#A31515;">&#39;101&#39;</span>];
+<span style="color:Green;">// Validators to use</span>
+<span style="color:Blue;">var</span> validators: { [s: string]: StringValidator; } = {};
+validators[<span style="color:#A31515;">&#39;ZIP code&#39;</span>] = <span style="color:Blue;">new</span> ZipCodeValidator();
+validators[<span style="color:#A31515;">&#39;Letters only&#39;</span>] = <span style="color:Blue;">new</span> LettersOnlyValidator();
+<span style="color:Green;">// Show whether each string passed each validator</span>
+strings.forEach(s =&gt; {
+    <span style="color:Blue;">for</span> (<span style="color:Blue;">var</span> name <span style="color:Blue;">in</span> validators) {
+        console.log(<span style="color:#A31515;">&#39;&quot;&#39;</span> + s + <span style="color:#A31515;">&#39;&quot; &#39;</span> + (validators[name].isAcceptable(s) ? <span style="color:#A31515;">&#39; matches &#39;</span> : <span style="color:#A31515;">&#39; does not match &#39;</span>) + name);
+    }
+});
+</pre></div>
+<h3>Adding Modularity</h3>As we add more validators, we&#39;re going to want to have some kind of organization scheme so that we can keep track of our types and not worry about name collisions with other objects. Instead of putting lots of different names into the global namespace, let&#39;s wrap up our objects into a module.<br /><br />In this example, we&#39;ve moved all the Validator-related types into a module called <i>Validation</i>. Because we want the interfaces and classes here to be visible outside the module, we preface them with <i>export</i>. Conversely, the variables <i>lettersRegexp</i> and <i>numberRegexp</i> are implementation details, so they are left unexported and will not be visible to code outside the module. In the test code at the bottom of the file, we now need to qualify the names of the types when used outside the module, e.g. <i>Validation.LettersOnlyValidator</i>.<br />
+<h5>Modularized Validators</h5><div style="color:Black;background-color:White;"><pre>
+module Validation {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> StringValidator {
+        isAcceptable(s: string): <span style="color:Blue;">boolean</span>;
+    }
+
+    <span style="color:Blue;">var</span> lettersRegexp = /^[A-Za-z]+$/;
+    <span style="color:Blue;">var</span> numberRegexp = /^[0-9]+$/;
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> LettersOnlyValidator <span style="color:Blue;">implements</span> StringValidator {
+        isAcceptable(s: string) {
+            <span style="color:Blue;">return</span> lettersRegexp.test(s);
+        }
+    }
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> ZipCodeValidator <span style="color:Blue;">implements</span> StringValidator {
+        isAcceptable(s: string) {
+            <span style="color:Blue;">return</span> s.length === 5 &amp;&amp; numberRegexp.test(s);
+        }
+    }
+}
+
+<span style="color:Green;">// Some samples to try</span>
+<span style="color:Blue;">var</span> strings = [<span style="color:#A31515;">&#39;Hello&#39;</span>, <span style="color:#A31515;">&#39;98052&#39;</span>, <span style="color:#A31515;">&#39;101&#39;</span>];
+<span style="color:Green;">// Validators to use</span>
+<span style="color:Blue;">var</span> validators: { [s: string]: Validation.StringValidator; } = {};
+validators[<span style="color:#A31515;">&#39;ZIP code&#39;</span>] = <span style="color:Blue;">new</span> Validation.ZipCodeValidator();
+validators[<span style="color:#A31515;">&#39;Letters only&#39;</span>] = <span style="color:Blue;">new</span> Validation.LettersOnlyValidator();
+<span style="color:Green;">// Show whether each string passed each validator</span>
+strings.forEach(s =&gt; {
+    <span style="color:Blue;">for</span> (<span style="color:Blue;">var</span> name <span style="color:Blue;">in</span> validators) {
+        console.log(<span style="color:#A31515;">&#39;&quot;&#39;</span> + s + <span style="color:#A31515;">&#39;&quot; &#39;</span> + (validators[name].isAcceptable(s) ? <span style="color:#A31515;">&#39; matches &#39;</span> : <span style="color:#A31515;">&#39; does not match &#39;</span>) + name);
+    }
+});
+</pre></div>
+<h1>Splitting Across Files</h1>As our application grows, we&#39;ll want to split the code across multiple files to make it easier to maintain.<br /><br />Here, we&#39;ve split our Validation module across many files. Even though the files are separate, they can each contribute to the same module and can be consumed as if they were all defined in one place. Because there are dependencies between files, we&#39;ve added reference tags to tell the compiler about the relationships between the files. Our test code is otherwise unchanged.<br />
+<h3>Multi-file internal modules</h3><h5>Validation.ts</h5><div style="color:Black;background-color:White;"><pre>
+module Validation {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> StringValidator {
+        isAcceptable(s: string): <span style="color:Blue;">boolean</span>;
+    }
+}
+</pre></div><h5>LettersOnlyValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">/// &lt;reference path=&quot;Validation.ts&quot; /&gt;</span>
+module Validation {
+    <span style="color:Blue;">var</span> lettersRegexp = /^[A-Za-z]+$/;
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> LettersOnlyValidator <span style="color:Blue;">implements</span> StringValidator {
+        isAcceptable(s: string) {
+            <span style="color:Blue;">return</span> lettersRegexp.test(s);
+        }
+    }
+}
+</pre></div>
+<h5>ZipCodeValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">/// &lt;reference path=&quot;Validation.ts&quot; /&gt;</span>
+module Validation {
+    <span style="color:Blue;">var</span> numberRegexp = /^[0-9]+$/;
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> ZipCodeValidator <span style="color:Blue;">implements</span> StringValidator {
+        isAcceptable(s: string) {
+            <span style="color:Blue;">return</span> s.length === 5 &amp;&amp; numberRegexp.test(s);
+        }
+    }
+}
+</pre></div>
+<h5>Test.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">/// &lt;reference path=&quot;Validation.ts&quot; /&gt;</span>
+<span style="color:Green;">/// &lt;reference path=&quot;LettersOnlyValidator.ts&quot; /&gt;</span>
+<span style="color:Green;">/// &lt;reference path=&quot;ZipCodeValidator.ts&quot; /&gt;</span>
+
+<span style="color:Green;">// Some samples to try</span>
+<span style="color:Blue;">var</span> strings = [<span style="color:#A31515;">&#39;Hello&#39;</span>, <span style="color:#A31515;">&#39;98052&#39;</span>, <span style="color:#A31515;">&#39;101&#39;</span>];
+<span style="color:Green;">// Validators to use</span>
+<span style="color:Blue;">var</span> validators: { [s: string]: Validation.StringValidator; } = {};
+validators[<span style="color:#A31515;">&#39;ZIP code&#39;</span>] = <span style="color:Blue;">new</span> Validation.ZipCodeValidator();
+validators[<span style="color:#A31515;">&#39;Letters only&#39;</span>] = <span style="color:Blue;">new</span> Validation.LettersOnlyValidator();
+<span style="color:Green;">// Show whether each string passed each validator</span>
+strings.forEach(s =&gt; {
+    <span style="color:Blue;">for</span> (<span style="color:Blue;">var</span> name <span style="color:Blue;">in</span> validators) {
+        console.log(<span style="color:#A31515;">&#39;&quot;&#39;</span> + s + <span style="color:#A31515;">&#39;&quot; &#39;</span> + (validators[name].isAcceptable(s) ? <span style="color:#A31515;">&#39; matches &#39;</span> : <span style="color:#A31515;">&#39; does not match &#39;</span>) + name);
+    }
+});
+</pre></div><br />Once there are multiple files involved, we&#39;ll need to make sure all of the compiled code gets loaded. There are two ways of doing this.<br /><br />First, we can use concatenated output using the <i>--out</i> flag to compile all of the input files into a single JavaScript output file:<br /><pre>
+tsc --out sample.js Test.ts
+</pre><br />The compiler will automatically order the output file based on the reference tags present in the files. You can also specify each file individually:<br /><pre>
+tsc --out sample.js Validation.ts LettersOnlyValidator.ts ZipCodeValidator.ts Test.ts
+</pre><br /><br />Alternatively, we can use per-file compilation (the default) to emit one JavaScript file for each  input file. If multiple JS files get produced, we&#39;ll need to use <i>&lt;script&gt;</i> tags on our webpage to load each emitted file in the appropriate order, for example:<br />
+<h5>MyTestPage.html (excerpt)</h5><div style="color:Black;background-color:White;"><pre>
+    <span style="color:Blue;">&lt;</span><span style="color:#A31515;">script</span> <span style="color:Red;">src</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;Validation.js&quot;</span> <span style="color:Red;">type</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;text/javascript&quot;</span> <span style="color:Blue;">/&gt;</span>
+    <span style="color:Blue;">&lt;</span><span style="color:#A31515;">script</span> <span style="color:Red;">src</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;LettersOnlyValidator.js&quot;</span> <span style="color:Red;">type</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;text/javascript&quot;</span> <span style="color:Blue;">/&gt;</span>
+    <span style="color:Blue;">&lt;</span><span style="color:#A31515;">script</span> <span style="color:Red;">src</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;ZipCodeValidator.js&quot;</span> <span style="color:Red;">type</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;text/javascript&quot;</span> <span style="color:Blue;">/&gt;</span>
+    <span style="color:Blue;">&lt;</span><span style="color:#A31515;">script</span> <span style="color:Red;">src</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;Test.js&quot;</span> <span style="color:Red;">type</span><span style="color:Blue;">=</span><span style="color:Blue;">&quot;text/javascript&quot;</span> <span style="color:Blue;">/&gt;</span>
+</pre></div>
+<h1>Going External</h1>TypeScript also has the concept of an external module. External modules are used in two cases: node.js and require.js. Applications not using node.js or require.js do not need to use external modules and can best be organized using the internal module concept outlined above.<br /><br />In external modules, relationships between files are specified in terms of imports and exports at the file level. In TypeScript, any file containing a top-level <i>import</i> or <i>export</i> is considered an external module.<br /><br />Below, we have converted the previous example to use external modules. Notice that we no longer use the module keyword – the files themselves constitute a module and are identified by their filenames.<br /><br />The reference tags have been replaced with <i>import</i> statements that specify the dependencies between modules. The <i>import</i> statement has two parts: the name that the module will be known by in this file, and the require keyword that specifies the path to the required module:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> someMod = require(<span style="color:#A31515;">&#39;someModule&#39;</span>);
+</pre></div><br />We specify which objects are visible outside the module by using the <i>export</i> keyword on a top-level declaration, similarly to how <i>export</i> defined the public surface area of an internal module.<br /><br />To compile, we must specify a module target on the command line. For node.js, use <i>--module commonjs</i>; for require.js, use <i>--module amd</i>. For example:<br /><pre>
+tsc --module commonjs Test.ts
+</pre><br />When compiled, each external module will become a separate .js file. Similar to reference tags, the compiler will follow <i>import</i> statements to compile dependent files.<br />
+<h5>Validation.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> StringValidator {
+    isAcceptable(s: string): <span style="color:Blue;">boolean</span>;
+}
+</pre></div>
+<h5>LettersOnlyValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">var</span> lettersRegexp = /^[A-Za-z]+$/;
+<span style="color:Blue;">export</span> <span style="color:Blue;">class</span> LettersOnlyValidator <span style="color:Blue;">implements</span> validation.StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> lettersRegexp.test(s);
+    }
+}
+</pre></div>
+<h5>ZipCodeValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">var</span> numberRegexp = /^[0-9]+$/;
+<span style="color:Blue;">export</span> <span style="color:Blue;">class</span> ZipCodeValidator <span style="color:Blue;">implements</span> validation.StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> s.length === 5 &amp;&amp; numberRegexp.test(s);
+    }
+}
+</pre></div>
+<h5>Test.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">import</span> zip = require(<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>);
+<span style="color:Blue;">import</span> letters = require(<span style="color:#A31515;">&#39;./LettersOnlyValidator&#39;</span>);
+
+<span style="color:Green;">// Some samples to try</span>
+<span style="color:Blue;">var</span> strings = [<span style="color:#A31515;">&#39;Hello&#39;</span>, <span style="color:#A31515;">&#39;98052&#39;</span>, <span style="color:#A31515;">&#39;101&#39;</span>];
+<span style="color:Green;">// Validators to use</span>
+<span style="color:Blue;">var</span> validators: { [s: string]: validation.StringValidator; } = {};
+validators[<span style="color:#A31515;">&#39;ZIP code&#39;</span>] = <span style="color:Blue;">new</span> zip.ZipCodeValidator();
+validators[<span style="color:#A31515;">&#39;Letters only&#39;</span>] = <span style="color:Blue;">new</span> letters.LettersOnlyValidator();
+<span style="color:Green;">// Show whether each string passed each validator</span>
+strings.forEach(s =&gt; {
+    <span style="color:Blue;">for</span> (<span style="color:Blue;">var</span> name <span style="color:Blue;">in</span> validators) {
+        console.log(<span style="color:#A31515;">&#39;&quot;&#39;</span> + s + <span style="color:#A31515;">&#39;&quot; &#39;</span> + (validators[name].isAcceptable(s) ? <span style="color:#A31515;">&#39; matches &#39;</span> : <span style="color:#A31515;">&#39; does not match &#39;</span>) + name);
+    }
+});
+</pre></div>
+<h3>Code Generation for External Modules</h3>Depending on the module target specified during compilation, the compiler will generate appropriate code for either node.js (commonjs) or require.js (AMD) module-loading systems. For more information on what the <i>define</i> and <i>require</i> calls in the generated code do, consult the documentation for each module loader.<br /><br />This simple example shows how the names used during importing and exporting get translated into the module loading code.<br />
+<h5>SimpleModule.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> m = require(<span style="color:#A31515;">&#39;mod&#39;</span>);
+<span style="color:Blue;">export</span> <span style="color:Blue;">var</span> t = m.something + 1;
+</pre></div>
+<h5>AMD / RequireJS SimpleModule.js:</h5><div style="color:Black;background-color:White;"><pre>
+define([<span style="color:#A31515;">&quot;require&quot;</span>, <span style="color:#A31515;">&quot;exports&quot;</span>, <span style="color:#A31515;">&#39;mod&#39;</span>], <span style="color:Blue;">function</span>(require, exports, m) {
+    exports.t = m.something + 1;
+});
+</pre></div>
+<h5>CommonJS / Node SimpleModule.js:</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> m = require(<span style="color:#A31515;">&#39;mod&#39;</span>);
+exports.t = m.something + 1;
+</pre></div>
+<h1>Export =</h1>In the previous example, when we consumed each validator, each module only exported one value. In cases like this, it&#39;s cumbersome to work with these symbols through their qualified name when a single identifier would do just as well.<br /><br />The export = syntax specifies a single object that is exported from the module. This can be a class, interface, module, function, or enum. When imported, the exported symbol is consumed directly and is not qualified by any name.<br /><br />Below, we&#39;ve simplified the Validator implementations to only export a single object from each module using the export = syntax. This simplifies the consumption code – instead of referring to &#39;zip.ZipCodeValidator&#39;, we can simply refer to &#39;zipValidator&#39;.<br />
+<h5>Validation.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> StringValidator {
+    isAcceptable(s: string): <span style="color:Blue;">boolean</span>;
+}
+</pre></div>
+<h5>LettersOnlyValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">var</span> lettersRegexp = /^[A-Za-z]+$/;
+<span style="color:Blue;">class</span> LettersOnlyValidator <span style="color:Blue;">implements</span> validation.StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> lettersRegexp.test(s);
+    }
+}
+<span style="color:Blue;">export</span> = LettersOnlyValidator;
+</pre></div>
+<h5>ZipCodeValidator.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">var</span> numberRegexp = /^[0-9]+$/;
+<span style="color:Blue;">class</span> ZipCodeValidator <span style="color:Blue;">implements</span> validation.StringValidator {
+    isAcceptable(s: string) {
+        <span style="color:Blue;">return</span> s.length === 5 &amp;&amp; numberRegexp.test(s);
+    }
+}
+<span style="color:Blue;">export</span> = ZipCodeValidator;
+</pre></div>
+<h5>Test.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> validation = require(<span style="color:#A31515;">&#39;./Validation&#39;</span>);
+<span style="color:Blue;">import</span> zipValidator = require(<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>);
+<span style="color:Blue;">import</span> lettersValidator = require(<span style="color:#A31515;">&#39;./LettersOnlyValidator&#39;</span>);
+
+<span style="color:Green;">// Some samples to try</span>
+<span style="color:Blue;">var</span> strings = [<span style="color:#A31515;">&#39;Hello&#39;</span>, <span style="color:#A31515;">&#39;98052&#39;</span>, <span style="color:#A31515;">&#39;101&#39;</span>];
+<span style="color:Green;">// Validators to use</span>
+<span style="color:Blue;">var</span> validators: { [s: string]: validation.StringValidator; } = {};
+validators[<span style="color:#A31515;">&#39;ZIP code&#39;</span>] = <span style="color:Blue;">new</span> zipValidator();
+validators[<span style="color:#A31515;">&#39;Letters only&#39;</span>] = <span style="color:Blue;">new</span> lettersValidator();
+<span style="color:Green;">// Show whether each string passed each validator</span>
+strings.forEach(s =&gt; {
+    <span style="color:Blue;">for</span> (<span style="color:Blue;">var</span> name <span style="color:Blue;">in</span> validators) {
+        console.log(<span style="color:#A31515;">&#39;&quot;&#39;</span> + s + <span style="color:#A31515;">&#39;&quot; &#39;</span> + (validators[name].isAcceptable(s) ? <span style="color:#A31515;">&#39; matches &#39;</span> : <span style="color:#A31515;">&#39; does not match &#39;</span>) + name);
+    }
+});
+</pre></div>
+<h1>Alias</h1>Another way that you can simplify working with either kind of module is to use <i>import q = x.y.z</i> to create shorter names for commonly-used objects. Not to be confused with the <i>import x = require(&#39;name&#39;)</i> syntax used to load external modules, this syntax simply creates an alias for the specified symbol. You can use these sorts of imports (commonly referred to as aliases) for any kind of identifier, including objects created from external module imports.<br />
+<h5>Basic Aliasing</h5><div style="color:Black;background-color:White;"><pre>
+module Shapes {
+    <span style="color:Blue;">export</span> module Polygons {
+        <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Triangle { }
+        <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Square { }
+    }
+}
+
+<span style="color:Blue;">import</span> polygons = Shapes.Polygons;
+<span style="color:Blue;">var</span> sq = <span style="color:Blue;">new</span> polygons.Square(); <span style="color:Green;">// Same as &#39;new Shapes.Polygons.Square()&#39;</span>
+</pre></div><br />Notice that we don&#39;t use the <i>require</i> keyword; instead we assign directly from the qualified name of the symbol we&#39;re importing. This is similar to using <i>var</i>, but also works on the type and namespace meanings of the imported symbol. Importantly, for values, <i>import</i> is a distinct reference from the original symbol, so changes to an aliased <i>var</i> will not be reflected in the original variable.<br />
+<h1>Optional Module Loading and Other Advanced Loading Scenarios</h1>In some cases, you may want to only load a module under some conditions. In TypeScript, we can use the pattern shown below to implement this and other advanced loading scenarios to directly invoke the module loaders without losing type safety.<br /><br />The compiler detects whether each module is used in the emitted JavaScript. For modules that are only used as part of the type system, no require calls are emitted. This culling of unused references is a good performance optimization, and also allows for optional loading of those modules.<br /><br />The core idea of the pattern is that the <i>import id = require(&#39;...&#39;)</i> statement gives us access to the types exposed by the external module. The module loader is invoked (through require) dynamically, as shown in the if blocks below. This leverages the reference-culling optimization so that the module is only loaded when needed. For this pattern to work, it&#39;s important that the symbol defined via import is only used in type positions (i.e. never in a position that would be emitted into the JavaScript).<br /><br />To maintain type safety, we can use the <i>typeof</i> keyword. The <i>typeof</i> keyword, when used in a type position, produces the type of a value, in this case the type of the external module.<br />
+<h5>Dynamic Module Loading in node.js</h5><div style="color:Black;background-color:White;"><pre>
+declare <span style="color:Blue;">var</span> require;
+<span style="color:Blue;">import</span> Zip = require(<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>);
+<span style="color:Blue;">if</span> (needZipValidation) {
+    <span style="color:Blue;">var</span> x: <span style="color:Blue;">typeof</span> Zip = require(<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>);
+    <span style="color:Blue;">if</span> (x.isAcceptable(<span style="color:#A31515;">&#39;.....&#39;</span>)) { <span style="color:Green;">/* ... */</span> }
+}
+</pre></div>
+<h5>Sample: Dynamic Module Loading in require.js</h5><div style="color:Black;background-color:White;"><pre>
+declare <span style="color:Blue;">var</span> require;
+<span style="color:Blue;">import</span> Zip = require(<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>);
+<span style="color:Blue;">if</span> (needZipValidation) {
+    require([<span style="color:#A31515;">&#39;./ZipCodeValidator&#39;</span>], (x: <span style="color:Blue;">typeof</span> Zip) =&gt; {
+        <span style="color:Blue;">if</span> (x.isAcceptable(<span style="color:#A31515;">&#39;...&#39;</span>)) { <span style="color:Green;">/* ... */</span> }
+    });
+}
+</pre></div>
+<h1>Working with Other JavaScript Libraries</h1>To describe the shape of libraries not written in TypeScript, we need to declare the API that the library exposes. Because most JavaScript libraries expose only a few top-level objects, modules are a good way to represent them. We call declarations that don&#39;t define an implementation &quot;ambient&quot;. Typically these are defined in .d.ts files. If you&#39;re familiar with C/C++, you can think of these as .h files or &#39;extern&#39;. Let&#39;s look at a few examples with both internal and external examples.<br />
+<h3>Ambient Internal Modules</h3>The popular library D3 defines its functionality in a global object called &#39;D3&#39;. Because this library is loaded through a <i>script</i> tag (instead of a module loader), its declaration uses internal modules to define its shape. For the TypeScript compiler to see this shape, we use an ambient internal module declaration. For example:<br />
+<h5>D3.d.ts (simplified excerpt)</h5><div style="color:Black;background-color:White;"><pre>
+declare module D3 {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Selectors {
+        select: {
+            (selector: string): Selection;
+            (element: EventTarget): Selection;
+        };
+    }
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Event {
+        x: number;
+        y: number;
+    }
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Base <span style="color:Blue;">extends</span> Selectors {
+        event: Event;
+    }
+}
+
+declare <span style="color:Blue;">var</span> d3: D3.Base;
+</pre></div>
+<h3>Ambient External Modules</h3>In node.js, most tasks are accomplished by loading one or more modules. We could define each module in its own .d.ts file with top-level export declarations, but it&#39;s more convenient to write them as one larger .d.ts file. To do so, we use the quoted name of the module, which will be available to a later import.  For example:<br />
+<h5>node.d.ts (simplified excerpt)</h5><div style="color:Black;background-color:White;"><pre>
+declare module <span style="color:#A31515;">&quot;url&quot;</span> {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Url {
+        protocol?: string;
+        hostname?: string;
+        pathname?: string;
+    }
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> parse(urlStr: string, parseQueryString?, slashesDenoteHost?): Url;
+}
+
+declare module <span style="color:#A31515;">&quot;path&quot;</span> {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> normalize(p: string): string;
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> join(...paths: any[]): string;
+    <span style="color:Blue;">export</span> <span style="color:Blue;">var</span> sep: string;
+}
+</pre></div><br />Now we can <i>/// &lt;reference&gt;</i> node.d.ts and then load the modules using e.g. <i>import url = require(&#39;url&#39;);</i>.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">///&lt;reference path=&quot;node.d.ts&quot;/&gt;</span>
+<span style="color:Blue;">import</span> url = require(<span style="color:#A31515;">&quot;url&quot;</span>);
+<span style="color:Blue;">var</span> myUrl = url.parse(<span style="color:#A31515;">&quot;http://www.typescriptlang.org&quot;</span>);
+</pre></div><br />
+<h1>Pitfalls of Modules</h1>In this section we&#39;ll describe various common pitfalls in using internal and external modules, and how to avoid them.<br />
+<h3>/// &lt;reference&gt; to an external module</h3>A common mistake is to try to use the /// &lt;reference&gt; syntax to refer to an external module file, rather than using import. To understand the distinction, we first need to understand the three ways that the compiler can locate the type information for an external module.<br /><br />The first is by finding a .ts file named by an <i>import x = require(...);</i> declaration. That file should be an implementation file with top-level import or export declarations.<br /><br />The second is by finding a .d.ts file, similar to above, except that instead of being an implementation file, it&#39;s a declaration file (also with top-level import or export declarations).<br /><br />The final way is by seeing an &quot;ambient external module declaration&quot;, where we &#39;declare&#39; a module with a matching quoted name.<br />
+<h5>myModules.d.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">// In a .d.ts file or .ts file that is not an external module:</span>
+declare module <span style="color:#A31515;">&quot;SomeModule&quot;</span> {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> fn(): string;
+}
+</pre></div>
+<h5>myOtherModule.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Green;">/// &lt;reference path=&quot;myModules.d.ts&quot; /&gt;</span>
+<span style="color:Blue;">import</span> m = require(<span style="color:#A31515;">&quot;SomeModule&quot;</span>);
+</pre></div><br />The reference tag here allows us to locate the declaration file that contains the declaration for the ambient external module. This is how the node.d.ts file that several of the TypeScript samples use is consumed, for example.<br />
+<h3>Needless Namespacing</h3>If you&#39;re converting a program from internal modules to external modules, it can be easy to end up with a file that looks like this:<br />
+<h5>shapes.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">export</span> module Shapes {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Triangle { <span style="color:Green;">/* ... */</span> }
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Square { <span style="color:Green;">/* ... */</span> }
+}
+</pre></div><br />The top-level module here <i>Shapes</i> wraps up <i>Triangle</i> and <i>Square</i> for no reason. This is confusing and annoying for consumers of your module:
+<h5>shapeConsumer.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> shapes = require(<span style="color:#A31515;">&#39;./shapes&#39;</span>);
+<span style="color:Blue;">var</span> t = <span style="color:Blue;">new</span> shapes.Shapes.Triangle(); <span style="color:Green;">// shapes.Shapes?</span>
+</pre></div><br />A key feature of external modules in TypeScript is that two different external modules will never contribute names to the same scope. Because the consumer of an external module decides what name to assign it, there&#39;s no need to proactively wrap up the exported symbols in a namespace.<br /><br />To reiterate why you shouldn&#39;t try to namespace your external module contents, the general idea of namespacing is to provide logical grouping of constructs and to prevent name collisions. Because the external module file itself is already a logical grouping, and its top-level name is defined by the code that imports it, it&#39;s unnecessary to use an additional module layer for exported objects.<br /> <br />Revised Example:
+<h5>shapes.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Triangle { <span style="color:Green;">/* ... */</span> }
+<span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Square { <span style="color:Green;">/* ... */</span> }
+</pre></div>
+<h5>shapeConsumer.ts</h5><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">import</span> shapes = require(<span style="color:#A31515;">&#39;./shapes&#39;</span>);
+<span style="color:Blue;">var</span> t = <span style="color:Blue;">new</span> shapes.Triangle(); 
+</pre></div>
+<h3>Trade-offs for External Modules</h3>Just as there is a one-to-one correspondence between JS files and modules, TypeScript has a one-to-one correspondence between external module source files and their emitted JS files. One effect of this is that it&#39;s not possible to use the <i>--out</i> compiler switch to concatenate multiple external module source files into a single JavaScript file.</div><div class="ClearBoth"></div>

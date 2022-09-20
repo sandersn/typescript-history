@@ -1,0 +1,143 @@
+///<reference path='../typescript/DefinitelyTyped/node/node.d.ts' />
+var _ = require('underscore');
+
+export class Token {
+  type: any;
+  value: any;
+  leadingSpaces = false;
+  line = 0;
+  column = 0;
+  constructor (type, value) {
+    this.type = type;
+    this.value = value;
+  }
+}
+
+class TokenizeResult {
+  token: Token;
+  consumed: number;
+  constructor (token, consumed) {
+    this.token = token;
+    this.consumed = consumed;
+  }
+}
+
+export class TokenList {
+  tokens: Token[];
+  index = 0;
+  constructor (tokens=[]) {
+    this.tokens = tokens;
+  }
+
+  push (token) {
+    this.tokens.push(token);
+  }
+
+  peek () {
+    if (this.index >= this.tokens.length) {
+      throw new Error('Empty token list')
+    }
+    return this.tokens[this.index];
+  }
+
+  next () {
+    if (this.index >= this.tokens.length) {
+      throw new Error('Empty token list')
+    }
+    var ret = this.tokens[this.index];
+    this.index++;
+    return ret;
+  }
+}
+
+export class Lexer {
+  code: string;
+  line = 1; column = 1; index = 0;
+  tokenlist: TokenList;
+  constructor (code) {
+    this.code = code;
+    this.tokenlist = new TokenList();
+  }
+
+  cur () { return this.code.substr(this.index); }
+  peek () { return this.code[this.index]; }
+  step (n) {
+    for (var i = 0; i < n; ++i) {
+    var c = this.peek();
+      if (c === '\n') {
+        this.line++; this.column = 1
+      } else {
+        this.column++;
+      }
+      this.index++;
+    }
+    return c;
+  }
+
+  report () { return 'Line: ' + this.line + ' Column: ' + this.column; }
+  token (type, value) { new Token(type, value); }
+  exec (pattern) {
+    if (!_.isRegExp(pattern)) {
+      pattern = new RegExp(pattern);
+    }
+    console.log('Execing '+pattern+' on '+this.cur()+', result is '+pattern.exec(this.cur()));
+    return pattern.exec(this.cur());
+  }
+  error (message) { throw new Error(message); }
+
+  nextToken (doReport=false) {
+    var spaces, line, column, res;
+    // Consume any spaces
+    this.index += spaces = this.exec(' *')[0].length
+
+    // Record start line/column
+    line = this.line;
+    column = this.column += spaces;
+
+    // Try all of the patterns
+    res =
+      this.regString() ||
+      this.ident()     ||
+      this.number();
+    if (!res) this.error('Invalid input: '+this.cur());
+    if (spaces) res.token.leadingSpaces = true;
+    res.token.line = line;
+    res.token.column = column;
+    this.step(res.consumed);
+    if (doReport) this.report()
+    return res.token;
+  }
+
+  regString () {
+    if (this.peek() !== "'") return;
+    var idx = this.index + 1;
+    var str = '';
+    while (idx < this.code.length) {
+      var c = this.code[idx++]
+      switch (c) {
+        case '\\':
+          str += "\\#{this.code[idx++]}";
+          break;
+        case "'":
+          return new TokenizeResult(this.token('STRING', str), str.length + 2)
+        default: str += c;
+      }
+    }
+    // If we got here, the string was never terminated.
+    this.error('Unbounded string');
+  }
+
+  ident () {
+    var i = this.exec(/@?[a-zA-Z_][a-zA-Z_0-9]*/)
+    if (!i) return;
+    return new TokenizeResult(this.token('IDENT', i[0]), i[0].length);
+  }
+  number () {
+    var n = this.exec(/[+-]?([0-9]*\.[0-9]+|[0-9]+\.[0-9]*|[0-9]+)/);
+    if (!n) return;
+    return new TokenizeResult(this.token('NUMBER', parseFloat(n[0])), n[0].length);
+  }
+}
+
+
+

@@ -1,0 +1,172 @@
+<div class="wikidoc"><h1>Known breaking changes between 0.9.5 and 0.9.7</h1>
+<h2>The ‘noimplicitany’ option now warns on the use of the hidden default indexer </h2>
+<b>Description:</b> With 0.9.7, we have fixed a bug in the use of ‘noimplicitany’ and indexers, where implicit anys were not being correctly warned in prior versions.<br /><br />In the following example, any use of an index aside from the known ‘abc’ property will be warned with ‘noimplictany’:<br /><br /><pre>
+var x = { abc: 1 };
+x[&quot;abc&quot;];
+x[0];     // warning: implicit any
+x[&quot;def&quot;]; // warning: implicit any
+</pre><br /><br />This is because there is no annotation from the user that tells us they wish to allow this kind of arbitrary indexing, where the compiler can’t confirm that these properties exist via the type system.  Similarly, indexing through an expression of the string type is warned:<br /><br /><pre>
+var x = { abc: 1 };
+var idx = &quot;abc&quot;;
+x[idx];   // warning: implicit any
+</pre><br /><br />Even though, by inspection, we can see that the ‘idx’ variable is set to the “abc” string constant, this information is not tracked by the compiler.  Instead, idx is seen as any string, so the compiler warns it cannot confirm that this string names one of the known properties.  As a result, it will type what comes out of the indexing expression implicitly with an ‘any’ type.<br /><br /><b>Reason:</b> Prior to 0.9.7, users could introduce ‘any’ types implicitly by indexing into objects using arbitrary string values.  As JavaScript practices like this are ones that the ‘noimplicitany’ flag help to detect so that the programmer can annotate the types, indexing with arbitrary string values now gives a warning to help the user detect and annotate the expression.<br /><br /><b>Mitigation:</b> To mitigate this change in existing code bases, you can use one of the following workarounds.  As the key point here is that the compiler is having to imply an ‘any’ type because there is no indexer present, you can provide this indexer:<br /><br /><pre>
+var x: { [index: string]: number; } = { abc: 1 };
+var idx = &quot;abc&quot;;
+x[&quot;abc&quot;];
+x[idx];   // no longer warns
+x[0];     // no longer warns
+x[&quot;def&quot;]; // no longer warns
+</pre><br /><br />The other scenario that is affected is the use of arbitrary string indexing into enumerated values.  Just as before, the use of an arbitrary string value will trigger the ‘noimplicitany’ warning:<br /><br /><pre>
+enum Color { Red, Green, Blue };
+var redString = &quot;Red&quot;;
+var redEnumVal = Color[redString]; // warning: implicit any
+</pre><br /><br />Here are two additional workarounds for enums, as they are treated specially with regards to indexing.<br /><br />The first is to explicitly handle the typing of the indexing expression:<br /><br /><pre>
+enum Color { Red, Green, Blue };
+var redString = &quot;Red&quot;;
+var redEnumVal: Color = (&lt;any&gt;Color)[redString]; // no longer warns
+</pre><br /><br />If the use of indexing of enums is more prevalent in an area of code, it may be more helpful to use an intermediary value that provides this indexer:<br /><br /><pre>
+enum Color { Red, Green, Blue };
+var redString = &quot;Red&quot;;
+var Color2: { [idx: string]: Color; } = &lt;any&gt;Color;
+
+var redEnumVal2 = Color2[redString];
+</pre><br />
+<h2>Generic constraints no longer can reference parameters in the same parameter list</h2>
+<b>Description:</b> In our continued efforts to simplify the language, we&#39;re simplifying what generic constraints can entail.<br /><br />An example like this is now an error:<br /><pre>
+interface Service&lt;T&gt; {
+    service(t: T): T;
+}
+
+//Error: Service&lt;T&gt; references T, which is a type parameter in the same list
+function f&lt;T extends Service&lt;T&gt;&gt;(x: T) { }
+
+//Likewise. Error: Service&lt;U&gt; references U, which is a type parameter in the same list
+function g&lt;U, T extends Service&lt;U&gt;&gt;(x: T) { }
+</pre><br /><br />Instead, use constraint arguments that are not in the same argument list, make constraints non-generic, or simply pass &#39;any&#39; as the parameter to the constraint.<br /><br /><b>Reason:</b> The added overhead in terms of type-checking, error-reporting, and design complexity did not add enough additional expressiveness to make it worthwhile for 1.0.  We may revisit this in future versions of TypeScript.<br />
+<h2>Interfaces now merge with later interfaces having a higher priority</h2>
+<b>Description:</b> With 0.9.5, we simplified the overload resolution algorithm.  In this new algorithm, overloads are tried starting at the top overload, proceeding through each overload looking for a match.  The first match wins.<br /><br />This rule extended to interface merges that merged their overload sets.  The overloads for an earlier interface would have precedence over those from a later merged interface.  This made it difficult to extend the overload set of built-in types (those in lib.d.ts), as well as model the “plugin” architecture of libraries like jQuery.<br /><br />This change will reverse the order interfaces merge overload sets, so that when interface A is merged with a later declaration of interface A (here called interface B to disambiguate), the overload sets of B will get precedence.<br /><br />Example:<br /><pre>
+interface I {
+   foo(x: number): void;
+   foo(x: string): void;
+}
+interface I {
+   foo(x: Date): void;
+   foo(x: {abc: string}): void;
+}
+</pre><br />Will be treated, after merged, as the type:<br /><pre>
+interface I {
+   foo(x: Date): void;
+   foo(x: {abc: string}): void;
+   foo(x: number): void;
+   foo(x: string): void;
+}
+</pre><br />Notice that the overloads in each set themselves do not reverse order, rather the sets are treated as a single unit, and these units are merged in the reverse order.<br /><br /><b>Reason:</b> The previous order made it difficult to work with built-in types (those in lib.d.ts), as users would have had to manually managed when lib.d.ts was referenced in their projects.  Additionally, using jQuery “plugins”, users would have had to include the plugin before base jQuery library, which is unintuitive and cumbersome to manage.<br />
+<h1>Known breaking changes between 0.9.1 and 0.9.5</h1>
+<h2>Default type for type arguments is {} not any</h2><b>Description:</b> Previously, if a type argument was inferred, but had no candidates, its type would go to &#39;any&#39;.  We now infer &#39;{}&#39; in the cases of no inference candidates.<br /><b>Reason:</b> Inferring &#39;any&#39; when there are no candidates allowed the &#39;any&#39; type to leak out into surrounding expressions, effectively turning off type checking when no candidates were involved.  The much closer approximation was what is inferred for the type variable inside of the function, namely &#39;{}&#39;.<br />
+<h2>The explicit indexer for Object has been removed</h2><b>Description:</b> As part of the effort to allow developers to get more benefit out of &quot;no implicit any&quot;, the indexer on the Object has been removed.  This will make any use of the implied indexer on an object a warning under &quot;no implicit any&quot;.<br /><br />This has an impact on code that uses the indexer as part of the type, as in this example:<br /><br /><pre>
+function useEnum(e: { [idx: string]: any}) {
+    return e[&quot;test&quot;];
+}
+
+enum Colors { Blue, Green, Orange }
+
+useEnum(Colors);  //errors in 0.9.5, but has no error in 0.9.1.1
+</pre><br /><b>Reason:</b> This comes from the work to allow developers to tighten the type coverage in their code.<br />
+<h2>The &#39;any&#39; type is now properly disallowed from being the subtype of {}</h2><b>Description:</b> The breaking change here is that any is not a subtype of {} anymore. This would break code like the following:<br /><pre>
+interface MyOptionals {
+    optional1?: number;
+    optional2?: boolean;
+}
+
+interface MyInterface {
+    call(): MyOptionals;
+} 
+
+// MyClass does not implement MyInterface 
+class MyClass implements MyInterface { 
+    call(): any {
+        return null;
+    }
+}
+</pre><br />The issue here is that we used to incorrectly treat “any” as a subtype of MyOptional, or any object type with no required properties. <br /><br /><b>Reason:</b> This was unintentionally allowing subclasses and interface implementer to not follow the specified type contract when specific types are required.<br />
+<h2>Overload resolution rules simplified</h2><b>Description:</b> Overload resolution now follows a much simpler algorithm.  When multiple overloads fit for a given call, we pick the first fit rather than the trying to find the &quot;best fit&quot;.  <br /><br />This means that code with overloads should now be manually sorted from the tightest/more-specific overload to loosest.  The one exception is that an &#39;any&#39; in the callee will try to match an &#39;any&#39; in the caller.  For example:<br /><br /><pre>
+interface Parent { x; }
+interface Child extends Parent { y; }
+
+function f(p: Child): Child;
+function f(p: Parent): Parent;
+function f(p: any): any;
+function f(p: any) { return p; }
+
+var a = f({ x: 3, y: 4}); // a: Child
+var b = f({ x: 5 }); // b: Parent
+
+var y: any;
+var c = f(y); // c: any
+</pre><br /><br /><b>Reason:</b> This greatly simplifies reasoning about the overload during function resolution and more closely matches what the underlying JavaScript logic would be performing.<br />
+<h2>Rest arguments are now properly checked for function arity</h2><b>Description:</b> You will need to properly handle functions with rest args as if they could have 0 or 1 arguments in the position of the rest arg.  For example:<br /><br /><pre>
+function myFunction(f: (...args: string[]) =&gt; void) { }
+
+myFunction((x, y) =&gt; { }); //0.9.1.1
+myFunction((x?, y?) =&gt; { }); //0.9.5
+</pre><br /><b>Reason:</b> The compiler was unintentionally too lenient in this case and allowed errors where functions were mismatched.  We have tightened it to prevent these issues.<br />
+<h2>Parsing rules for arrow functions require parens if the lambda is immediately called</h2><b>Description:</b> We&#39;ve fixed the parsing rules of lambda functions to better align with ES6.  In ES6, if lambda is immediately invoked, you need to put parentheses around the lambda, as in this example:<br /><br /><pre>
+var f1 = () =&gt; { return 5 }();&#160; // Error now, used to be OK in 0.9.1.1
+var f2 = (() =&gt; { return 5 })(); // OK in 0.9.1.1 and 0.9.5
+</pre><br /><b>Reason:</b> This aligns with the ES6 language spec<br />
+<h2>Can not declare external modules inside other external modules</h2><b>Description:</b> It used to be possible to declare new external modules from inside an external module, though this is confusing as external modules can only be declared at global/top-level scope.  We have changed this to require declaring external modules to be declared only at top-level.  For existing code, this would mean moving the declare module to a .d.ts file and referencing it from the external module.<br /><b>Reason:</b> Simplifies reasoning about the scopes that symbols are declared in.<br />
+<h2>Change: Disallow --noResolve and import declaration of the external module reference</h2><b>Description:</b> We now disallow commandline parameters that interact poorly from being used together.  Specifically, --noResolve and external modules can not be used together as resolving the external module is required during codegen.<br /><b>Reason:</b> External modules need to be resolved for correct codegen<br />
+<h1>Known breaking changes between 0.9 and 0.9.1</h1>
+<h2>Clean up of commandline options</h2><b>Description:</b> There was a mix of commandline options, some that were no longer maintained and weren&#39;t expected to work correctly.  With this, we have done a clean-up of the options so that we provide supported options that can be maintained going forward.  Specific changes: --out has been split into --out for filenames and --outDir for directories and some casing changes to make the options more uniform.  The --comments option has also been replaced with its opposite, --removeComments, as we now default to preserving the code closely to the original.<br /><br />Another change is that the module loader style no longer defaults to CommonJS.  This is to help users new to TypeScript get a helpful message when creating external modules accidentally (while likely trying to do something else).  Options for both CommonJS and AMD are still supported, but must be explicitly passed to the compiler.<br /><br /><b>Reason:</b> This is more of a general clean-up to get us in shape for 1.0 with commandline options.<br />
+<h2>In Visual Studio, all TypeScript files in a project are considered to be referencing each other</h2><b>Description:</b> Previously, all TypeScript files in a project had to reference each other explicitly.  With 0.9.1, they now implicitly reference all other TypeScript files in the project.  For existing projects that fit multiple projects into a single projects, these will now have to be separate projects.<br /><br /><b>Reason:</b> This greatly simplifies using TypeScript in the project context.  <br /><br />
+<h1>Known breaking changes between 0.8 and 0.9</h1>
+The 0.9.x series introduces breaking changes to help the language mature, align with the ECMAScript 5 standard and ECMAScript 6 draft recommendations, and general alignment of the compiler with the spec itself.  While we try to limit the number of breaking changes, it’s important to make necessary changes now, before the language and tools reach 1.0.  <br /><br />Below is the list of currently known breaking changes.<br />
+<h2>Tightening of compiler to spec</h2><b>Description:</b> There was functionality allowed by the 0.8.3 compiler that was not explicitly allowed by the spec (eg, exploiting patterns of access modifiers to simulate ‘protected’).  <br /><b>Reason:</b> We tightened the compiler to follow the spec more closely to avoid code that relies on a “loose” compiler implementation.  <br />
+<h2>The type ‘bool’ is now ‘boolean’</h2><b>Description:</b> The name of the Boolean type was initially ‘bool’.  During 0.9.0, ‘bool’ will be marked as deprecated, preferring instead the name ‘boolean’.  As of 0.9.1, ‘bool’ will no longer be accepted.<br /><b>Reason:</b> The official name for the Boolean type in ECMAScript is ‘boolean’.  The ‘bool’ type name is being changed to align with the standard, based on <a href="https://typescript.codeplex.com/workitem/135">user feedback</a>.<br />
+<h2>Default values and optional notation redundant</h2><b>Description:</b> We no longer allow both having an optional parameter with a default value.  Now, you can use the optional parameter when it does not have a default value, otherwise set the default value.<br /><br /><pre>
+function f(defValue = 3) { }
+function f(optValue?:any) { }
+</pre><br /><b>Reason:</b> Simplifying syntax to be clear which of the two the user intended.<br />
+<h2>Syntax of external module imports now uses &#39;require&#39;</h2><b>Description:</b> Previously, an external module could be imported using the syntax &quot;import Utils = module(&#39;utils&#39;)&quot;.  This is now &quot;import Utils = require(&#39;utils&#39;)&quot;.  This is simple syntactic change.<br /><b>Reason:</b> The &#39;require&#39; syntax aligns more closely with the code used in both AMD and CommonJS.  With &quot;export =&quot; in TypeScript 0.9, this also makes clear that the result of an import may not be a module object.<br /> 
+<h2>The ‘module’ keyword no longer creates a type</h2><b>Description:</b> In 0.9.0, a clearer distinction is made between roles of namespaces, types, and values.  Modules now contribute only to namespaces and values and will no longer contribute a type.  <br /><b>Reason:</b> This simplification of the role of modules allow modules to now extend classes and functions more easily.<br /> 
+<h2>Introduction of generic types – Change to ‘Array’ type</h2><b>Description:</b> In 0.9.0, with the introduction of generics, the type of Array is now generic.  <br /><b>Reason:</b> The Array type was less specialized before.  Now, with the advent of generics, we can allow for a more precise typing of Array contents.<br /> 
+<h2>Introduction of generic types – Change to syntax parsing</h2><b>Description:</b> In 0.9.0, with the introduction of generics, a difference in how syntax is parsed was introduced.  This may affect some forms of syntax that previously parsed as acceptable ES5.  Specifically, the following example will no longer be parsed as a comma-delimited expression of two comparisons, but instead as an invocation of a generic function with two arguments:<br /> <br /><pre>
+myfun&lt;x,y&gt;(z)
+</pre><br /><br />To make this unambiguously an expression, use parentheses.  For example:<br /><br /><pre>
+(myfun &lt; x), y &gt; (z)
+</pre><br /><br /><b>Reason:</b> We follow the precedence set by other languages with regards to syntax for generics.  Unfortunately, this does lead to ambiguities in a few cases.<br /> 
+<h2>Overload declarations must immediately precede implementation</h2><b>Description:</b> The 0.8.x series was more lax about what was allowed between overload declaration and its implementation<br /><b>Reason:</b> Tightening compiler to align with grammar<br /> 
+<h2>Indexers must have full type annotation now</h2><b>Description:</b><br /><pre>
+interface a1 {
+    [n: number];  //&lt;-- was allowed in 0.8.x, now an error
+}
+interface a1 {
+    [n: number]: string;  //&lt;-- correctly specifies return type, valid in 0.8.x and 0.9.x
+}
+</pre><br /><b>Reason:</b> Tightening compiler to align with grammar<br /> 
+<h2>Statics must be fully-qualified</h2><b>Description:</b> Previously you could optionally not qualify a static member access when inside a static member definition<br /><b>Reason:</b> Just as classes require “this.”, statics will require “&lt;Class name&gt;.” to denote where the symbol comes from<br /> 
+<h2>No longer accept semicolon at the end of methods</h2><b>Description:</b><br /><pre>
+class Todo extends Backbone.Model {
+ 
+    // Default attributes for the todo.
+    defaults() {
+        return {
+            content: &quot;empty todo...&quot;,
+            done: false
+        }
+    };
+}
+</pre><br /><b>Reason:</b> This may be from following the syntax more strictly in the 0.9.0 fidelity parser.  We may soften this restriction in the future.<br /> 
+<h2>No longer accept &quot;new number[]&quot;</h2><b>Description:</b> In the 0.8.x series, we allowed some exceptions to the rule that an expression should follow &#39;new&#39;.  Here we allowed the type &quot;number[]&quot; to follow new.<br /><b>Reason:</b> This was accidentally allowed in the 0.8.x compiler.  As part of the 0.9.x work, we&#39;re tightening the compiler, and in doing so no longer allow this.<br /> 
+<h2>&#39;declare&#39; now required for top level non-interface declarations in .d.ts files</h2><b>Description:</b> The 0.8.x series had a lot of lenience in the .d.ts file syntax.  We want to tighten the syntax.<br /><b>Reason:</b> Loose syntax rules are confusing to users and lead to inconsistent .d.ts files.  <br />
+<h2>The node.d.ts distributed with 0.8 is not compatible with 0.9</h2><b>Description:</b> The &#39;node.d.ts&#39; distributed as part of 0.8 samples is no longer compatible.  Use the up-to-date node.d.ts distributed with the 0.9 samples.<br /><b>Reason:</b> This is an effect of the &quot;modules no longer create a type&quot; simplification<br /> 
+<h2>String indexers constrain the types of members on the interface</h2><b>Description:</b>  A string indexer with element type Foo is a constraint that all members of the interface will have types compatible with Foo.  The only exception is that members implicitly inherited from Object which can be called on any object type continue to have the type provided in Object unless explicitly overridden.  So this:<br /><pre>    export interface IEventListenerMap {
+        hasOwnProperty(eventName: string): bool;
+        [eventName: string]: IEventCallback[];
+    }
+</pre><br />Can be changed to this without changes to consumers of the interface (that is, they can keep using .hasOwnProperty).<br /><pre>    export interface IEventListenerMap {
+        [eventName: string]: IEventCallback[];
+    }
+</pre><br /><b>Reason:</b>  String indexers are unified with property lookup in 0.9, so that foo.bar and foo[&quot;bar&quot;] behave the same.<br /> 
+<h2>Missing &quot;no implicit any&quot; style option</h2><b>Description:</b> There was an unsupported style option that would error if the compiler had to imply that the type of an expression was &#39;any&#39;.  This generally allowed users to tighten their codebases and only work with typed code.<br /><b>Reason:</b> This was temporarily removed in 0.9 as part of the refactoring work.  We expect to add it back in 0.9.1.<br />
+<h2>Triple slash references must be listed first</h2><b>Description:</b> Triple slash references (eg ///&lt;reference path=&#39;node.d.ts&#39;/&gt;) must be grouped at the top of the file<br /><b>Reason:</b> This may be part of the general tightening we did as part of the 0.9 rewrite</div><div class="ClearBoth"></div>

@@ -1,0 +1,195 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<hr />
+
+<h1>Introduction</h1>
+One of TypeScript&#39;s core principles is that type-checking focuses on the &#39;shape&#39; that values have.  This is sometimes called &quot;duck typing&quot; or &quot;structural subtyping&quot;.  In TypeScript, interfaces fill the role of naming these types, and are a powerful way of defining contracts within your code as well as contracts with code outside of your project.  <br />
+<h1>Our First Interface </h1>
+The easiest way to see how interfaces work is to start with a simple example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> printLabel(labelledObj: {label: string}) {
+  console.log(labelledObj.label);
+}
+
+<span style="color:Blue;">var</span> myObj = {size: 10, label: <span style="color:#A31515;">&quot;Size 10 Object&quot;</span>};
+printLabel(myObj);
+</pre></div><br />The type-checker checks the call to &#39;printLabel&#39;.  The &#39;printLabel&#39; function has a single parameter that requires that the object passed in has a property called &#39;label&#39; of type string.  Notice that our object actually has more properties than this, but the compiler only checks to that <i>at least</i> the ones required are present and match the types required.  <br /><br />We can write the same example again, this time using an interface to describe the requirement of having the &#39;label&#39; property that is a string:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> LabelledValue {
+  label: string;
+}
+
+<span style="color:Blue;">function</span> printLabel(labelledObj: LabelledValue) {
+  console.log(labelledObj.label);
+}
+
+<span style="color:Blue;">var</span> myObj = {size: 10, label: <span style="color:#A31515;">&quot;Size 10 Object&quot;</span>};
+printLabel(myObj);
+</pre></div><br />The interface &#39;LabelledValue&#39; is a name we can now use to describe the requirement in the previous example.  It still represents having a single property called &#39;label&#39; that is of type string.  Notice we didn&#39;t have to explicitly say that the object we pass to &#39;printLabel&#39; implements this interface like we might have to in other languages.  Here, it&#39;s only the shape that matters.  If the object we pass to the function meets the requirements listed, then it&#39;s allowed.<br /><br />It&#39;s worth pointing out that the type-checker does not require that these properties come in any sort of order, only that the properties the interface requires are present and have the required type.<br />
+<h1>Optional Properties</h1>Not all properties of an interface may be required.  Some exist under certain conditions or may not be there at all.  These optional properties are popular when creating patterns like &quot;option bags&quot; where the user passes an object to a function that only has a couple properties filled in.<br /><br />Here&#39;s as example of this pattern:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> SquareConfig {
+  color?: string;
+  width?: number;
+}
+
+<span style="color:Blue;">function</span> createSquare(config: SquareConfig): {color: string; area: number} {
+  <span style="color:Blue;">var</span> newSquare = {color: <span style="color:#A31515;">&quot;white&quot;</span>, area: 100};
+  <span style="color:Blue;">if</span> (config.color) {
+    newSquare.color = config.color;
+  }
+  <span style="color:Blue;">if</span> (config.width) {
+    newSquare.area = config.width * config.width;
+  }
+  <span style="color:Blue;">return</span> newSquare;
+}
+
+<span style="color:Blue;">var</span> mySquare = createSquare({color: <span style="color:#A31515;">&quot;black&quot;</span>});
+</pre></div><br />Interfaces with optional properties are written similar to other interfaces, which each optional property denoted with a &#39;?&#39; as part of the property declaration. <br /><br />The advantage of optional properties is that you can describe these possibly available properties while still also catching properties that you know are not expected to be available.  For example, had we mistyped the name of the property we passed to &#39;createSquare&#39;, we would get an error message letting us know:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> SquareConfig {
+  color?: string;
+  width?: number;
+}
+
+<span style="color:Blue;">function</span> createSquare(config: SquareConfig): {color: string; area: number} {
+  <span style="color:Blue;">var</span> newSquare = {color: <span style="color:#A31515;">&quot;white&quot;</span>, area: 100};
+  <span style="color:Blue;">if</span> (config.color) {
+    newSquare.color = config.collor;  <span style="color:Green;">// Type-checker can catch the mistyped name here</span>
+  }
+  <span style="color:Blue;">if</span> (config.width) {
+    newSquare.area = config.width * config.width;
+  }
+  <span style="color:Blue;">return</span> newSquare;
+}
+
+<span style="color:Blue;">var</span> mySquare = createSquare({color: <span style="color:#A31515;">&quot;black&quot;</span>});  
+</pre></div>
+<h1>Function Types</h1>
+Interfaces are capable of describing the wide range of shapes that JavaScript objects can take.  In addition to describing an object with properties, interfaces are also capable of describing function types.<br /><br />To describe a function type with an interface, we give the interface a call signature.  This is like a function declaration with only the parameter list and return type given.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> SearchFunc {
+  (source: string, subString: string): <span style="color:Blue;">boolean</span>;
+}
+</pre></div><br />Once defined, we can use this function type interface like we would other interfaces.  Here, we show how you can create a variable of a function type and assign it a function value of the same type.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> mySearch: SearchFunc;
+mySearch = <span style="color:Blue;">function</span>(source: string, subString: string) {
+  <span style="color:Blue;">var</span> result = source.search(subString);
+  <span style="color:Blue;">if</span> (result == -1) {
+    <span style="color:Blue;">return</span> <span style="color:Blue;">false</span>;
+  }
+  <span style="color:Blue;">else</span> {
+    <span style="color:Blue;">return</span> <span style="color:Blue;">true</span>;
+  }
+}
+</pre></div><br />For function types to correctly type-check, the name of the parameters do not need to match.  We could have, for example, written the above example like this:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> mySearch: SearchFunc;
+mySearch = <span style="color:Blue;">function</span>(src: string, sub: string) {
+  <span style="color:Blue;">var</span> result = src.search(sub);
+  <span style="color:Blue;">if</span> (result == -1) {
+    <span style="color:Blue;">return</span> <span style="color:Blue;">false</span>;
+  }
+  <span style="color:Blue;">else</span> {
+    <span style="color:Blue;">return</span> <span style="color:Blue;">true</span>;
+  }
+}
+</pre></div><br />Function parameters are checked one at a time, with the type in each corresponding parameter position checked against each other.  Here, also, the return type of our function expression is implied by the values it returns (here <i>false</i> and <i>true</i>).  Had the function expression returned numbers or strings, the type-checker would have warned us that return type doesn&#39;t match the return type described in the SearchFunc interface.<br />
+<h1>Array Types</h1>
+Similarly to how we can use interfaces to describe function types, we can also describe array types.  Array types have an &#39;index&#39; type that describes the types allowed to index the object, along with the corresponding return type for accessing the index.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> StringArray {
+  [index: number]: string;
+}
+
+<span style="color:Blue;">var</span> myArray: StringArray;
+myArray = [<span style="color:#A31515;">&quot;Bob&quot;</span>, <span style="color:#A31515;">&quot;Fred&quot;</span>];
+</pre></div> <br />There are two types of supported index types: string and number.  It is possible to support both types of index, with the restriction that the type returned from the numeric index must be a subtype of the type returned from the string index.<br /><br />While index signatures are a powerful way to describe the array and &#39;dictionary&#39; pattern, they also enforce that all properties match their return type.  In this example, the property does not match the more general index, and the type-checker gives an error:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Dictionary {
+  [index: string]: string;
+  length: number;    <span style="color:Green;">// error, the type of &#39;length&#39; is not a subtype of the indexer</span>
+} 
+</pre></div>
+<h1>Class Types</h1>
+<h2>Implementing an interface</h2>
+One of the most common uses of interfaces in languages like C# and Java, that of explicitly enforcing that a class meets a particular contract, is also possible in TypeScript.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> ClockInterface {
+    currentTime: Date;
+}
+
+<span style="color:Blue;">class</span> Clock <span style="color:Blue;">implements</span> ClockInterface  {
+    currentTime: Date;
+    constructor(h: number, m: number) { }
+}
+</pre></div><br />You can also describe methods in an interface that are implemented in the class, as we do with &#39;setTime&#39; in the below example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> ClockInterface {
+    currentTime: Date;
+    setTime(d: Date);
+}
+
+<span style="color:Blue;">class</span> Clock <span style="color:Blue;">implements</span> ClockInterface  {
+    currentTime: Date;
+    setTime(d: Date) {
+        <span style="color:Blue;">this</span>.currentTime = d;
+    }
+    constructor(h: number, m: number) { }
+}
+</pre></div><br />Interfaces describe the public side of the class, rather than both the public and private side.  This prohibits you from using them to check that a class also has particular types for the private side of the class instance.<br />
+<h2>Difference between static/instance side of class</h2>When working with classes and interfaces, it helps to keep in mind that a class has <i>two</i> types: the type of the static side and the type of the instance side.  You may notice that if you create an interface with a construct signature and try to create a class that implements this interface you get an error:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> ClockInterface {
+    <span style="color:Blue;">new</span> (hour: number, minute: number);
+}
+
+<span style="color:Blue;">class</span> Clock <span style="color:Blue;">implements</span> ClockInterface  {
+    currentTime: Date;
+    constructor(h: number, m: number) { }
+}
+</pre></div><br />This is because when a class implements an interface, only the instance side of the class is checked.  Since the constructor sits in the static side, it is not included in this check.<br /><br />Instead, you would need to work with the &#39;static&#39; side of the class directly.  In this example, we work with the class directly:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> ClockStatic {
+    <span style="color:Blue;">new</span> (hour: number, minute: number);
+}
+
+<span style="color:Blue;">class</span> Clock  {
+    currentTime: Date;
+    constructor(h: number, m: number) { }
+}
+
+<span style="color:Blue;">var</span> cs: ClockStatic = Clock;
+<span style="color:Blue;">var</span> newClock = <span style="color:Blue;">new</span> cs(7, 30);
+</pre></div>
+<h1>Extending Interfaces</h1>
+Like classes, interfaces can extend each other.  This handles the task of copying the members of one interface into another, allowing you more freedom in how you separate your interfaces into reusable components.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Shape {
+    color: string;
+}
+
+<span style="color:Blue;">interface</span> Square <span style="color:Blue;">extends</span> Shape {
+    sideLength: number;
+}
+
+<span style="color:Blue;">var</span> square = &lt;Square&gt;{};
+square.color = <span style="color:#A31515;">&quot;blue&quot;</span>;
+square.sideLength = 10;
+</pre></div><br />An interface can extend multiple interfaces, creating a combination of all of the interfaces.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Shape {
+    color: string;
+}
+
+<span style="color:Blue;">interface</span> PenStroke {
+    penWidth: number;
+}
+
+<span style="color:Blue;">interface</span> Square <span style="color:Blue;">extends</span> Shape, PenStroke {
+    sideLength: number;
+}
+
+<span style="color:Blue;">var</span> square = &lt;Square&gt;{};
+square.color = <span style="color:#A31515;">&quot;blue&quot;</span>;
+square.sideLength = 10;
+square.penWidth = 5.0;
+</pre></div>
+<h1>Hybrid Types</h1>
+As we mentioned earlier, interfaces can describe the rich types present in real world JavaScript.  Because of JavaScript&#39;s dynamic and flexible nature, you may occasionally encounter an object that works as a combination of some of the types described above.  <br /><br />One such example is an object that acts as both a function and an object, with additional properties:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Counter {
+    (start: number): string;
+    interval: number;
+    reset(): <span style="color:Blue;">void</span>;
+}
+
+<span style="color:Blue;">var</span> c: Counter;
+c(10);
+c.reset();
+c.interval = 5.0;
+</pre></div><br />When interacting with 3rd-party JavaScript, you may need to use patterns like the above to fully-describe the shape of the type.</div><div class="ClearBoth"></div>

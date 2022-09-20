@@ -1,0 +1,240 @@
+// Type definitions for linq.js 2.2
+// Project: http://linqjs.codeplex.com/
+// Based on definitions by Marcin Najder
+// Definitions: https://github.com/borisyankov/DefinitelyTyped
+
+// todo: jQuery plugin, RxJS Binding
+
+declare module linq {
+
+    interface EnumerableStatic {
+        Choice<T>(...contents: T[]): Enumerable<T>;
+        Choice<T>(contents: T[]): Enumerable<T>;
+        Cycle<T>(...contents: T[]): Enumerable<T>;
+        Cycle<T>(contents: T[]): Enumerable<T>;
+        Empty<T>(): Enumerable<T>;
+        From<T>(obj: T[]): Enumerable<T>;
+        From<TKey, TValue>(obj: Object): Enumerable<KeyValuePair<TKey, TValue>>;
+        Return<T>(element: T): Enumerable<T>;
+        Matches(input: string, pattern: RegExp): Enumerable<string>;
+        Matches(input: string, pattern: string, flags?: string): Enumerable<string>;
+        Range(start: number, count: number, step?: number): Enumerable<number>;
+        RangeDown(start: number, count: number, step?: number): Enumerable<number>;
+        RangeTo(start: number, to: number, step?: number): Enumerable<number>;
+        Repeat<T>(obj: T, count?: number): Enumerable<T>;
+        RepeatWithFinalize<T>(initializer: () => T, finalizer: (resource: any) => void ): Enumerable<T>;
+        Generate<T>(func: () => any, count?: number): Enumerable<T>;
+        Generate<T>(func: string, count?: number): Enumerable<T>;
+        ToInfinity(start?: number, step?: number): Enumerable<number>;
+        ToNegativeInfinity(start?: number, step?: number): Enumerable<number>;
+        Unfold<T>(seed: T, func: (value: T) => T): Enumerable<T>;
+        Unfold<T>(seed: T, func: string): Enumerable<T>;
+    }
+
+    interface Enumerable<T> {
+        //Projection and Filtering Methods
+        CascadeBreadthFirst<TResult>(func: (element: T) => Enumerable<T>, resultSelector: (element: T, nestLevel: number) => TResult): Enumerable<TResult>;
+        CascadeBreadthFirst<TResult>(func: string, resultSelector: string): Enumerable<TResult>;
+        CascadeDepthFirst<TResult>(func: (element: T) => Enumerable<T>, resultSelector: (element: T, nestLevel: number) => TResult): Enumerable<TResult>;
+        CascadeDepthFirst<TResult>(func: string, resultSelector: string): Enumerable;
+        Flatten(): Enumerable<T>;
+        Pairwise<TResult>(selector: (prev: T, current: T) => TResult): Enumerable<TResult>;
+        Pairwise<TResult>(selector: string): Enumerable<TResult>;
+        Scan(func: (prev: T, current: T) => T): Enumerable<T>;
+        Scan(func: string): Enumerable<T>;
+        Scan<TAccumulate>(seed: TAccumulate, func: (prev: TAccumulate, current: T) => TAccumulate): Enumerable<TAccumulate>;
+        Scan<TAccumulate>(seed: T, func: (prev: T, current: T) => T, resultSelector: (value: T) => TAccumulate): Enumerable<TAccumulate>;
+        Scan<TAccumulate>(seed: TAccumulate, func: string, resultSelector?: string): Enumerable<TAccumulate>;
+        Select<TResult>(selector: (element: T, index: number) => TResult): Enumerable<TResult>;
+        Select<TResult>(selector: string): Enumerable<TResult>;
+        SelectMany(collectionSelector: (element: T, index: number) => T[]): Enumerable<T>;
+        SelectMany<TResult>(collectionSelector: (element: T, index: number) => T[], resultSelector?: (outer: T, collection: Enumerable<T>) => TResult): Enumerable<TResult>;
+        SelectMany<TResult>(collectionSelector: string, resultSelector?: string): Enumerable<TResult>;
+        Where(predicate: (element: T, index: number) => boolean): Enumerable<T>;
+        Where(predicate: string): Enumerable<T>;
+        OfType<TResult>(type: Function): Enumerable<TResult>;
+        Zip<TResult>(second: Enumerable<T>, resultSelector: (first: T, second: T, index: number) => TResult): Enumerable<TResult>;
+        Zip<TResult>(second: { length: number;[x: number]: T; }, resultSelector: (first: T, second: T, index: number) => TResult): Enumerable<TResult>;
+        Zip<TResult>(second: T[], resultSelector: (first: T, second: T, index: number) => TResult): Enumerable<TResult>;
+        Zip<TResult>(...params: any[]): Enumerable<TResult>; // last one is selector
+        //Join Methods
+        Join<TInner, TKey, TResult>(inner: Enumerable<TInner>, outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        Join<TInner, TKey, TResult>(inner: { length: number;[x: number]: TInner; }, outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        Join<TInner, TKey, TResult>(inner: TInner[], outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        GroupJoin<TInner, TKey, TResult>(inner: Enumerable<TInner>, outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        GroupJoin<TInner, TKey, TResult>(inner: { length: number;[x: number]: TInner; }, outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        GroupJoin<TInner, TKey, TResult>(inner: TInner[], outerKeySelector: (outer: T) => TKey, innerKeySelector: (inner: TInner) => TKey, resultSelector: (outer: T, inner: TKey) => TResult, compareSelector?: (obj: T) => TKey): Enumerable<TResult>;
+        //Set Methods
+        All(predicate: (element: T) => boolean): boolean;
+        All(predicate: string): boolean;
+        Any(predicate?: (element: T) => boolean): boolean;
+        Any(predicate?: string): boolean;
+        Concat(second: T[]): Enumerable<T>;
+        Concat(second: Enumerable<T>): Enumerable<T>;
+        Insert(index: number, second: T[]): Enumerable<T>;
+        Insert(index: number, second: Enumerable<T>): Enumerable<T>;
+        Alternate(value: T): Enumerable<T>;
+        Contains<TCompare>(value: T, compareSelector?: (element: T) => TCompare): boolean;
+        Contains(value: T, compareSelector?: string): boolean;
+        DefaultIfEmpty(defaultValue?: T): Enumerable<T>;
+        Distinct<TCompare>(compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Distinct(compareSelector?: string): Enumerable<T>;
+        Except<TCompare>(second: T[], compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Except(second: T[], compareSelector?: string): Enumerable<T>;
+        Except<TCompare>(second: Enumerable<T>, compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Except(second: Enumerable<T>, compareSelector?: string): Enumerable<T>;
+        Intersect<TCompare>(second: T[], compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Intersect(second: T[], compareSelector?: string): Enumerable<T>;
+        Intersect<TCompare>(second: Enumerable<T>, compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Intersect(second: Enumerable<T>, compareSelector?: string): Enumerable<T>;
+        SequenceEqual<TCompare>(second: T[], compareSelector?: (element: T) => TCompare): boolean;
+        SequenceEqual(second: T[], compareSelector?: string): boolean;
+        SequenceEqual<TCompare>(second: Enumerable<T>, compareSelector?: (element: T) => TCompare): boolean;
+        SequenceEqual(second: Enumerable<T>, compareSelector?: string): boolean;
+        Union<TCompare>(second: T[], compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Union(second: T[], compareSelector?: string): Enumerable<T>;
+        Union<TCompare>(second: Enumerable<T>, compareSelector?: (element: T) => TCompare): Enumerable<T>;
+        Union(second: Enumerable<T>, compareSelector?: string): Enumerable<T>;
+        //Ordering Methods
+        OrderBy<TCompare>(keySelector?: (element: T) => TCompare): OrderedEnumerable<T>;
+        OrderBy(keySelector?: string): OrderedEnumerable<T>;
+        OrderByDescending<TCompare>(keySelector?: (element: T) => TCompare): OrderedEnumerable<T>;
+        OrderByDescending(keySelector?: string): OrderedEnumerable<T>;
+        Reverse(): Enumerable<T>;
+        Shuffle(): Enumerable<T>;
+        //Grouping Methods
+        GroupBy<TKey>(keySelector: (element: T) => TKey): Enumerable<Grouping<TKey, T>>;
+        GroupBy<TKey, TElement>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement): Enumerable<Grouping<TKey, TElement>>;
+        GroupBy<TKey, TElement, TResult>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement, resultSelector: (key: TKey, element: Enumerable<TElement>) => TResult): Enumerable<TResult>;
+        GroupBy<TKey, TElement, TResult, TCompare>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement, resultSelector: (key: TKey, element: Enumerable<TElement>) => TResult, compareSelector: (element: T) => TCompare): Enumerable<TResult>;
+        GroupBy(keySelector: string, elementSelector?: string, resultSelector?: string, compareSelector?: string): Enumerable<Grouping<TKey, TElement>>;
+        PartitionBy<TKey>(keySelector: (element: T) => TKey): Enumerable<Grouping<TKey, any>>;        
+        PartitionBy<TKey, TElement>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement): Enumerable<Grouping<TKey, TElement>>;
+        PartitionBy<TKey, TElement, TResult>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement, resultSelector: (key: TKey, element: Enumerable<TElement>) => TResult): Enumerable<TResult>;
+        PartitionBy<TKey, TElement, TResult, TCompare>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement, resultSelector: (key: TKey, element: Enumerable<TElement>) => TResult, compareSelector: (element: T) => TCompare): Enumerable<TResult>;
+        PartitionBy(keySelector: string, elementSelector?: string, resultSelector?: string, compareSelector?: string): Enumerable;
+        BufferWithCount(count: number): Enumerable<T>;
+        // Aggregate Methods
+        Aggregate(func: (prev: T, current: T) => T): T;
+        Aggregate<TAccumulate>(seed: TAccumulate, func: (prev: T, current: T) => T): TAccumulate;
+        Aggregate<TAccumulate, TResult>(seed: TAccumulate, func: (prev: T, current: T) => T, resultSelector: (element: TAccumulate) => TResult): TResult;
+        Aggregate(func: string): T;
+        Aggregate<TAccumulate>(seed: TAccumulate, func: string, resultSelector?: string): TAccumulate;
+        Average(selector?: (element: T) => number): number;
+        Average(selector?: string): number;
+        Count(predicate?: (element: T) => boolean): number;
+        Count(predicate?: string): number;
+        Max(selector?: (element: T) => number): number;
+        Max(selector?: string): number;
+        Min(selector?: (element: T) => number): number;
+        Min(selector?: string): number;
+        MaxBy(selector: (element: T) => number): T;
+        MaxBy(selector: string): T;
+        MinBy(selector: (element: T) => number): T;
+        MinBy(selector: string): T;
+        Sum(selector?: (element: T) => number): number;
+        Sum(selector?: string): number;
+        //Paging Methods
+        ElementAt(index: number): T;
+        ElementAtOrDefault(index: number, defaultValue?: T): T;
+        First(predicate?: (element: T) => boolean): T;
+        First(predicate?: string): T;
+        FirstOrDefault(defaultValue?: T, predicate?: (element: T) => boolean): T;
+        FirstOrDefault(defaultValue?: T, predicate?: string): T;
+        Last(predicate?: (element: T) => boolean): T;
+        Last(predicate?: string): T;
+        LastOrDefault(defaultValue?: T, predicate?: (element: T) => boolean): T;
+        LastOrDefault(defaultValue?: T, predicate?: string): T;
+        Single(predicate?: (element: T) => boolean): T;
+        Single(predicate?: string): T;
+        SingleOrDefault(defaultValue?: T, predicate?: (element: T) => boolean): T;
+        SingleOrDefault(defaultValue?: T, predicate?: string): T;
+        Skip(count: number): Enumerable<T>;
+        SkipWhile(predicate: (element: T, index: number) => boolean): Enumerable<T>;
+        SkipWhile(predicate: string): Enumerable<T>;
+        Take(count: number): Enumerable<T>;
+        TakeWhile(predicate: (element: T, index: number) => boolean): Enumerable<T>;
+        TakeWhile(predicate: string): Enumerable<T>;
+        TakeExceptLast(count?: number): Enumerable<T>;
+        TakeFromLast(count: number): Enumerable<T>;
+        IndexOf(item: T): number;
+        LastIndexOf(item: T): number;
+        // Convert Methods
+        ToArray(): T[];
+        ToLookup<TKey>(keySelector: (element: T) => TKey): Lookup<TKey, T>;
+        ToLookup<TKey, TElement>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement): Lookup<TKey, TElement>;
+        ToLookup<TKey, TElement, TCompare>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TElement, compareSelector: (key: TKey) => TCompare): Lookup<TKey, TElement>;
+        ToLookup<TKey, TValue>(keySelector: string, elementSelector?: string, compareSelector?: string): Lookup<TKey, TValue>;
+        ToObject(keySelector: (element: T) => string, elementSelector?: (element: T) => any): Object;
+        ToObject(keySelector: string, elementSelector: string): Object;
+        ToDictionary<TKey>(keySelector: (element: T) => TKey): Dictionary<TKey, T>;
+        ToDictionary<TKey, TValue>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TValue): Dictionary<TKey, TValue>;
+        ToDictionary<TKey, TValue, TCompare>(keySelector: (element: T) => TKey, elementSelector: (element: T) => TValue, compareSelector: (key: TKey) => TCompare): Dictionary<TKey, TValue>;
+        ToDictionary(keySelector: string, elementSelector: string, compareSelector?: string): Dictionary;
+        ToJSON(replacer?: (key: string, value: any) => any, space?: number): string;
+        ToJSON(replacer?: string, space?: number): string;
+        ToString(separator?: string): string;
+        ToString<TResult>(separator?: string, selector?: (element: T, index: number) => TResult): string;
+        ToString(separator?: string, selector?: string): string;
+        //Action Methods
+        Do(action: (element: T, index: number) => void): Enumerable<T>;
+        Do(action: string): Enumerable<T>;
+        ForEach(action: (element: T, index: number) => void): void;
+        ForEach(func: (element: T, index: number) => boolean): void;
+        ForEach(action_func: string): void;
+        Write(separator?: string): void;
+        Write<TResult>(separator?: string, selector?: (element: T) => TResult): void;
+        Write(separator?: string, selector?: string): void;
+        WriteLine<TResult>(selector?: (element: T) => TResult): void;
+        Force(): void;
+        //Functional Methods
+        Let<TResult>(func: (source: Enumerable<T>) => Enumerable<TResult>): Enumerable<TResult>;
+        Share(): Enumerable<T>;
+        MemoizeAll(): Enumerable<T>;
+        //Error Handling Methods
+        Catch(handler: (error: Error) => void): Enumerable<T>;
+        Catch(handler: string): Enumerable<T>;
+        Finally(finallyAction: () => void): Enumerable<T>;
+        Finally(finallyAction: string): Enumerable<T>;
+        //For Debug Methods
+        Trace(message?: string): Enumerable<T>;
+        Trace<TResult>(message?: string, selector?: (element: T) => TResult): Enumerable<TResult>;
+        Trace(message?: string, selector?: string): Enumerable;
+    }
+
+    interface OrderedEnumerable<T> extends Enumerable<T> {
+        ThenBy<TCompare>(keySelector: (element: T) => TCompare): OrderedEnumerable<T>;
+        ThenBy(keySelector: string): OrderedEnumerable<T>;
+        ThenByDescending<TCompare>(keySelector: ($) => any): OrderedEnumerable;
+        ThenByDescending(keySelector: string): OrderedEnumerable<T>;
+    }
+
+    interface Grouping<TKey, TElement> extends Enumerable<TElement> {
+        Key(): TKey;
+    }
+
+    interface Lookup<TKey, TElement> {
+        Count(): number;
+        Get(key): Enumerable<TElement>;
+        Contains(key): boolean;
+        ToEnumerable(): Enumerable<Grouping<TKey, TElement>>;
+    }
+
+    interface Dictionary<TKey, TValue> {
+        Add(key: TKey, value: TValue): void;
+        Get(ke: TKey): TValue;
+        Set(key: TKey, value: TValue): boolean;
+        Contains(key: TKey): boolean;
+        Clear(): void;
+        Remove(key: TKey): void;
+        Count(): number;
+        ToEnumerable(): Enumerable<KeyValuePair<TKey, TValue>>;
+    }    
+
+    interface KeyValuePair<TKey, TValue> {
+        Key: TKey;
+        Value: TValue;
+    }
+}
+
+declare var Enumerable: linq.EnumerableStatic;

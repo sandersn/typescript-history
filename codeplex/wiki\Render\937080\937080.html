@@ -1,0 +1,120 @@
+<div class="wikidoc"><i><b>Please note:</b> This page is a work-in-progress. It may have errors and is subject to change.</i><br />
+<h1>Introduction</h1>
+Some of the unique concepts in TypeScript come from the need to describe what is happening to the shape of JavaScript objects at the type level.  One example that is especially unique to TypeScript is the concept of &#39;declaration merging&#39;.  Understanding this concept will give you an advantage when working with existing JavaScript in your TypeScript.  It also opens the door to more advanced abstraction concepts.<br /><br />First, before we get into how declarations merge, let&#39;s first describe what we mean by &#39;declaration merging&#39;.<br /><br />For the purposes of this article, declaration merging specifically means that the compiler is doing the work of merging two separate declarations declared with the same name into a single definition.  This merged definition has the features of both of the original declarations.  Declaration merging is not limited to just two declarations, as any number of declarations can be merged.  <br />
+<h1>Basic Concepts</h1>
+In TypeScript, a declaration exists in one of three groups: namespace/module, type, or value.  Declarations that create a namespace/module are accessed using a dotted notation when writing a type.  Declarations that create a type do just that, create a type that is visible with the declared shape and bound to the given name.  Lastly, declarations create a value are those that are visible in the output JavaScript (eg, functions and variables).<br /><br /><table><tr><th> Declaration Type </th><th> Namespace </th><th> Type </th><th> Value </th></tr>
+<tr><td> Module </td><td> X </td><td> </td><td> X </td></tr>
+<tr><td> Class </td><td> </td><td> X </td><td> X </td></tr>
+<tr><td> Interface </td><td> </td><td> X </td><td> </td></tr>
+<tr><td> Function </td><td> </td><td> </td><td> X </td></tr>
+<tr><td> Variable </td><td> </td><td> </td><td> X </td></tr></table><br /><br />Understanding what is created with each declaration will help you understand what is merged when you perform a declaration merge.<br />
+<h1>Merging Interfaces</h1>
+The simplest, and perhaps most common, type of declaration merging is interface merging.  At the most basic level, the merge mechanically joins the members of both declarations into a single interface with the same name.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Box {
+    height: number;
+    width: number;
+}
+
+<span style="color:Blue;">interface</span> Box {
+    scale: number;
+}
+
+<span style="color:Blue;">var</span> box: Box = {height: 5, width: 6, scale: 10};
+</pre></div><br />Non-function members of the interfaces must be unique.  The compiler will issue an error if the interfaces both declare a non-function member of the same name.<br /><br />For function members, each function member of the same name is treated as describing an overload of the same function.  Of note, too, is that in the case of interface A merging with later interface A (here called A&#39;), the overload set of A&#39; will have a higher precedence than that of interface A.  <br /><br />That is, in the example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Document {
+    createElement(tagName: any): Element;
+}
+<span style="color:Blue;">interface</span> Document {
+    createElement(tagName: string): HTMLElement;
+}
+<span style="color:Blue;">interface</span> Document {
+    createElement(tagName: <span style="color:#A31515;">&quot;div&quot;</span>): HTMLDivElement; 
+    createElement(tagName: <span style="color:#A31515;">&quot;span&quot;</span>): HTMLSpanElement;
+    createElement(tagName: <span style="color:#A31515;">&quot;canvas&quot;</span>): HTMLCanvasElement;
+}
+</pre></div><br />The two interfaces will merge to create a single declaration.  Notice that the elements of each group maintains the same order, just the groups themselves are merged with later overload sets coming first:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Document {
+    createElement(tagName: <span style="color:#A31515;">&quot;div&quot;</span>): HTMLDivElement; 
+    createElement(tagName: <span style="color:#A31515;">&quot;span&quot;</span>): HTMLSpanElement;
+    createElement(tagName: <span style="color:#A31515;">&quot;canvas&quot;</span>): HTMLCanvasElement;
+    createElement(tagName: string): HTMLElement;
+    createElement(tagName: any): Element;
+}
+</pre></div><br />
+<h1>Merging Modules</h1>
+Similarly to interfaces, modules of the same name will also merge their members.  Since modules create both a namespace and a value, we need to understand how both merge.<br /><br />To merge the namespaces, type definitions from exported interfaces declared in each module are themselves merged, forming a single namespace with merged interface definitions inside.<br /><br />To merge the value, at each declaration site, if a module already exists with the given name, it is further extended by taking the existing module and adding the exported members of the second module to the first.  <br /><br />The declaration merge of &#39;Animals&#39; in this example:<br /><div style="color:Black;background-color:White;"><pre>
+module Animals {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Zebra { }
+}
+
+module Animals {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Legged { numberOfLegs: number; }
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Dog { }
+}
+</pre></div><br />is equivalent to:<br /><br /><div style="color:Black;background-color:White;"><pre>
+module Animals {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">interface</span> Legged { numberOfLegs: number; }
+    
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Zebra { }
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> Dog { }
+}
+</pre></div><br />This model of module merging is a helpful starting place, but to get a more complete picture we need to also understand what happens with non-exported members.  Non-exported members are only visible in the original (un-merged) module.  This means that after merging, merged members that came from other declarations can not see non-exported members.<br /><br />We can see this more clearly in this example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+module Animal {
+    <span style="color:Blue;">var</span> haveMuscles = <span style="color:Blue;">true</span>;
+
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> animalsHaveMuscles() {
+        <span style="color:Blue;">return</span> haveMuscles;
+    }
+}
+
+module Animal {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> doAnimalsHaveMuscles() {
+        <span style="color:Blue;">return</span> haveMuscles;  <span style="color:Green;">// &lt;-- error, haveMuscles is not visible here</span>
+    }
+}
+</pre></div><br />Because <span class="codeInline">haveMuscles</span> is not exported, only the <span class="codeInline">animalsHaveMuscles</span> function that shares the same un-merged module can see the symbol.  The <span class="codeInline">doAnimalsHaveMuscles</span> function, even though it&#39;s part of the merged Animal module can not see this un-exported member.<br />
+<h1>Merging Modules with Classes, Functions, and Enums</h1>
+Modules are flexible enough to also merge with other types of declarations.  To do so, the module declaration must follow the declaration it will merge with.  The resulting declaration has properties of both declaration types.  TypeScript uses this capability to model some of patterns in JavaScript as well as other programming languages.<br /><br />The first module merge we&#39;ll cover is merging a module with a class.  This gives the user a way of describing inner classes.<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> Album {
+    label: Album.AlbumLabel;
+}
+module Album {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">class</span> AlbumLabel { }
+}
+</pre></div><br />The visibility rules for merged members is the same as described in the &#39;Merging Modules&#39; section, so we must export the AlbumLabel class for the merged class to see it.  The end result is a class managed inside of another class.  You can also use modules to add more static members to an existing class.<br /><br />In addition to the pattern of inner classes, you may also be familiar with JavaScript practice of creating a function and then extending the function further by adding properties onto the function.  TypeScript uses declaration merging to build up definitions like this in a type-safe way.  <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> buildLabel(name: string): string {
+    <span style="color:Blue;">return</span> buildLabel.prefix + name + buildLabel.suffix;
+}
+
+module buildLabel {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">var</span> suffix = <span style="color:#A31515;">&quot;&quot;</span>;
+    <span style="color:Blue;">export</span> <span style="color:Blue;">var</span> prefix = <span style="color:#A31515;">&quot;Hello, &quot;</span>;
+}
+
+alert(buildLabel(<span style="color:#A31515;">&quot;Sam Smith&quot;</span>));
+</pre></div><br />Similarly, modules can be used to extend enums with static members:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">enum</span> Color {
+    red = 1,
+    green = 2,
+    blue = 4
+}
+
+module Color {
+    <span style="color:Blue;">export</span> <span style="color:Blue;">function</span> mixColor(colorName: string) {
+        <span style="color:Blue;">if</span> (colorName == <span style="color:#A31515;">&quot;yellow&quot;</span>) {
+            <span style="color:Blue;">return</span> Color.red + Color.green;
+        }
+        <span style="color:Blue;">else</span> <span style="color:Blue;">if</span> (colorName == <span style="color:#A31515;">&quot;white&quot;</span>) {
+            <span style="color:Blue;">return</span> Color.red + Color.green + Color.blue;
+        }
+        <span style="color:Blue;">else</span> <span style="color:Blue;">if</span> (colorName == <span style="color:#A31515;">&quot;magenta&quot;</span>) {
+            <span style="color:Blue;">return</span> Color.red + Color.blue;
+        }
+        <span style="color:Blue;">else</span> <span style="color:Blue;">if</span> (colorName == <span style="color:#A31515;">&quot;cyan&quot;</span>) {
+            <span style="color:Blue;">return</span> Color.green + Color.blue;
+        }
+    }
+}
+</pre></div>
+<h1>Disallowed Merges</h1>
+Not all merges are allowed in TypeScript.  Currently, classes can not merge with other classes, variables and classes can not merge, nor can interfaces and classes.  For information on mimicking classes merging, see the <a href="https://typescript.codeplex.com/wikipage?title=Mixins%20in%20TypeScript&referringTitle=Declaration%20Merging">Mixins in TypeScript</a> section.</div><div class="ClearBoth"></div>

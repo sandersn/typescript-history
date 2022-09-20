@@ -1,0 +1,295 @@
+var customTableDefaultTitle = "Custom Table"; // CustomTablePageWriter.DEFAULT_TITLE
+
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Table and Column classes
+//
+// These mirror the equivalent Scala classes.  This is largely useful so that we can create URLs in Scala and
+// JavaScript that do the same thing.
+//
+
+interface StringMap {
+    [key : string] : string;
+}
+
+class TableDefinition {
+    constructor(
+        public title : string,
+        public columns : Column[],
+        public minRecordsInRow : number,
+        public sort : ColumnSort,
+        public unusedUrlParameters : StringMap
+        ) {}
+
+    /** Create URL parameters;  unlike in the JVM, we cannot control the order of the parameters. */
+    public urlParameters() : StringMap {
+        var result : StringMap = {
+            t:   this.title,
+            min: ""+this.minRecordsInRow
+        };
+
+        if (this.sort) {
+            result["sort"] = ""+this.sort.descriptor(this.columns);
+        }
+
+        for (var i=0; i<this.columns.length; i++) {
+            var col = this.columns[i];
+            var colParams = col.urlParameters(i, this.columns);
+            for (var paramKey in colParams) {
+                result[paramKey] = colParams[paramKey];
+            }
+        }
+
+        for (var param in this.unusedUrlParameters) {
+            result[param] = this.unusedUrlParameters[param];
+        }
+        return result;
+    }
+}
+
+/**
+ * Create fields from URL parameters;  able to repair data column indexes, but throws an exception if anything more
+ * serious breaks.
+ */
+function tableFromUrlParameters(urlParameters : StringMap, fieldNames : StringMap) : TableDefinition {
+
+    // Decompose into table params, column params, and unused params
+
+    var title = urlParameters["t"];
+    var minRecords = Number(urlParameters["min"]);
+    if (isNaN(minRecords)) {
+        minRecords = 1;
+    }
+    var categoryInfo : StringMap[] = [];
+    var dataColumnInfo : StringMap[] = [];
+    var unusedParams : StringMap = {};
+
+    for (var paramName in urlParameters) {
+        if (paramName === "t" || paramName === "sort" || paramName === "min") {
+            continue;
+        }
+        if (urlParameters[paramName] === null) {
+            continue;
+        }
+        var paramValue = urlParameters[paramName];
+        if (paramValue.match(/^\s*$/)) {
+            continue;
+        }
+
+        var categoryRe = /^k(\d*)(t?)$/;
+        var categoryMatch = paramName.match(categoryRe);
+        if (categoryMatch !== null) {
+            var index = Number(categoryMatch[1]);
+            if (isNaN(index)) {
+                index = 0;
+            }
+            var oldMap = (categoryInfo[index]) ? categoryInfo[index] : {};
+            var info = categoryInfo[index];
+            if ( ! info) {
+                categoryInfo[index] = info = {};
+            }
+            info[categoryMatch[2]] = paramValue;
+        }
+        else {
+            var dataColumnRe = /^(\d+)(|t|f|dd)$/;
+            var dataColumnMatch = paramName.match(dataColumnRe);
+            if (dataColumnMatch !== null) {
+                var index = Number(dataColumnMatch[1]);
+                if (! dataColumnInfo[index]) {
+                    dataColumnInfo[index] = {};
+                }
+                dataColumnInfo[index][dataColumnMatch[2]] = paramValue;
+            }
+            else {
+                unusedParams[paramName] = paramValue;
+            }
+        }
+    }
+
+    if (categoryInfo.length === 0  &&  dataColumnInfo.length === 0) {
+        dataColumnInfo[0] = {f:"num"}; // Default column parameters
+    }
+
+    // Construct the columns
+
+    var columns : Column[] = [];
+
+    function extractField( info : StringMap) : FieldName {
+        var fieldID = <string> info[""];
+        if (typeof(fieldID) === "string") {
+            var key : string = fieldID;
+            var value : string = fieldNames[fieldID];
+            return new FieldName(key, value);
+        }
+        return null;
+    }
+
+    // Category columns
+
+    (function() {
+        for (var urlIndex=0; urlIndex< categoryInfo.length; urlIndex++) {
+            var info = categoryInfo[urlIndex];
+            if ( ! categoryInfo[urlIndex] ) {
+                continue;
+            }
+            var field = extractField(info);
+            if (field === null) {
+                throw new Error("No field for category "+info);
+            }
+            var title = (columns.length === 0) ? info["t"] : null;  // Silently drop unused title attributes
+            columns.push(new CategoryColumn(field, title));
+        }
+    })();
+
+    // Data columns
+
+    var urlIndexToDataColumn = [];  // Used to map the "sort" parameter
+
+    (function() {
+        for (var urlIndex=0; urlIndex< dataColumnInfo.length; urlIndex++) {
+            var info = dataColumnInfo[urlIndex];
+            if (! dataColumnInfo[urlIndex]) {
+                continue;
+            }
+            var field = extractField(info);
+            var title = info["t"];
+            var formula = info["f"];
+            if (formula===null || typeof(formula) === "undefined") {
+                throw new Error("No formula for data column "+info);
+            }
+            var filter = [];
+            var filterStr = info["dd"];
+            if (typeof(filterStr) === "string") {
+                var filterArray = filterStr.split(/\s+/);
+                for (var i=0; i<filterArray.length; i++) {
+                    var filterItem = filterArray[i];
+                    if (filterItem.length > 0) {
+                        filter.push(filterItem);
+                    }
+                }
+            }
+            var column = new DataColumn(field, title, formula, filter);
+            urlIndexToDataColumn[urlIndex] = column;
+            columns.push(column);
+        }
+    })();
+
+    // Interpret the table-level parameters
+
+    var columnSort : ColumnSort = (function() {
+        var sortParam = urlParameters["sort"];
+        var urlIndex = Math.abs(Number(sortParam));
+        if (isNaN(urlIndex)) {
+            return null;
+        }
+        var column = urlIndexToDataColumn[urlIndex];
+        if (typeof(column) === "undefined") {
+            if (typeof(categoryInfo[urlIndex]) === "undefined") {
+                return null;
+            }
+            column = columns[0];
+        }
+        var ascending = ! (sortParam.charAt(0) === "-");
+        return new ColumnSort(column, ascending);
+    })();
+
+    if (title==null) {
+        title = customTableDefaultTitle;
+    }
+
+    return new TableDefinition(title, columns, minRecords, columnSort, unusedParams);
+}
+
+class Column {
+    constructor( public field : FieldName, public name : string = null ) { }
+
+    public urlParameters(index : number, columns : Column[]) : StringMap {
+        throw new Error("Abstract")
+    }
+    public columnId(index : number) : string { throw new Error("Abstract") }
+
+    public titleParameter(index : number) : string {
+        return this.columnId(index)+"t";
+    }
+}
+
+class CategoryColumn extends Column {
+    constructor( field : FieldName, name? : string) { super(field, name); }
+
+    public columnId(index : number) : string {
+        return (index == 0)  ?  "k"  :  "k"+index;
+    }
+
+    public urlParameters(index : number, columns : Column[]) : StringMap {
+        var colId = this.columnId(index);
+        var result = {};
+        result[colId] = this.field.id;
+
+        if (index === 0  &&  this.name !== null) {
+            var defaultName = "";
+            for (var i=0; i<columns.length && (columns[i] instanceof CategoryColumn); i++) {
+                if (defaultName !== "") {
+                    defaultName += ", ";
+                }
+                defaultName += columns[i].field.name;
+            }
+            if (defaultName !== this.name) {
+                result[this.titleParameter(index)] = this.name;
+            }
+        }
+        return result;
+    }
+
+    public toString() : string {
+        return "Category "+this.field.id;
+    }
+}
+
+class DataColumn extends Column {
+    constructor( field : FieldName, name:string,
+                 public formulaId : string,
+                 public filters : string[] = []
+        ) { super(field, name); }
+
+    public columnId(index : number) : string {
+        return ""+index;
+    }
+
+    public urlParameters(index : number, columns : Column[]) : StringMap {
+        var result = {};
+        var prefix = this.columnId(index);
+
+        if (this.field) {
+            result[prefix] = this.field.id;
+        }
+        if (this.name) {
+            result[this.titleParameter(index)] = this.name;
+        }
+        result[prefix+"f"] = this.formulaId;
+        if (this.filters.length > 0) {
+            result[prefix+"dd"] = this.filters.join(" ");
+        }
+        return result;
+    }
+
+    public toString() : string {
+        return this.formulaId;
+    }
+}
+
+class ColumnSort {
+    constructor(public column : Column, public ascending : boolean) {}
+
+    public descriptor(columns : Column[]) : string {
+        var signStr = (this.ascending)  ?  ""  :  "-";
+        for (var i=0; i<columns.length; i++) {
+            if (columns[i]===this.column)
+                return signStr+i;
+        }
+        return signStr+"0";
+    }
+}
+
+class FieldName {
+    constructor( public id : string, public name:string) { }
+}

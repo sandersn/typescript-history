@@ -1,0 +1,143 @@
+<div class="wikidoc"><h1>Introduction</h1>
+Type compatibility in TypeScript is based on structural subtyping.  Structural typing is a way of relating types based solely on their members. This is in contrast with nominal typing. Consider the following code:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Named {
+    name: string;
+}
+
+<span style="color:Blue;">class</span> Person {
+    name: string;
+}
+
+<span style="color:Blue;">var</span> p: Named;
+<span style="color:Green;">// OK, because of structural typing</span>
+p = <span style="color:Blue;">new</span> Person();
+</pre></div><br />In nominally-typed languages like C# or Java, the equivalent code would be an error because the Person class does not explicitly describe itself as being an implementor of the Named interface.<br /><br />TypeScript’s structural type system was designed based on how JavaScript code is typically written. Because JavaScript widely uses anonymous objects like function expressions and object literals, it’s much more natural to represent the kinds of relationships found in JavaScript libraries with a structural type system instead of a nominal one.<br />
+<h2>A Note on Soundness</h2>TypeScript’s type system allows certain operations that can’t be known at compile-time to be safe. When a type system has this property, it is said to not be “sound”. The places where TypeScript allows unsound behavior were carefully considered, and throughout this document we’ll explain where these happen and the motivating scenarios behind them.<br />
+<h1>Starting out</h1>The basic rule for TypeScript’s structural type system is that x is compatible with y if y has at least the same members as x. For example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Named {
+    name: string;
+}
+
+<span style="color:Blue;">var</span> x: Named;
+<span style="color:Green;">// y’s inferred type is { name: string; location: string; }</span>
+<span style="color:Blue;">var</span> y = { name: <span style="color:#A31515;">&#39;Alice&#39;</span>, location: <span style="color:#A31515;">&#39;Seattle&#39;</span> };
+x = y;
+</pre></div><br />To check whether y can be assigned to x, the compiler checks each property of x to find a corresponding compatible property in y. In this case, y must have a member called ‘name’ that is a string. It does, so the assignment is allowed.<br /><br />The same rule for assignment is used when checking function call arguments:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> greet(n: Named) {
+    alert(<span style="color:#A31515;">&#39;Hello, &#39;</span> + n.name);
+}
+greet(y); <span style="color:Green;">// OK</span>
+</pre></div><br />Note that ‘y’ has an extra ‘location’ property, but this does not create an error. Only members of the target type (‘Named’ in this case) are considered when checking for compatibility.<br /><br />This comparison process proceeds recursively, exploring the type of each member and sub-member.<br />
+<h1>Comparing two functions</h1>While comparing primitive types and object types is relatively straightforward, the question of what kinds of functions should be considered compatible. Let’s start with a basic example of two functions that differ only in their argument lists:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> x = (a: number) =&gt; 0;
+<span style="color:Blue;">var</span> y = (b: number, s: string) =&gt; 0;
+
+y = x; <span style="color:Green;">// OK</span>
+x = y; <span style="color:Green;">// Error</span>
+</pre></div><br />To check if x is assignable to y, we first look at the parameter list. Each parameter in y must have a corresponding parameter in x with a compatible type. Note that the names of the parameters are not considered, only their types. In this case, every parameter of x has a corresponding compatible parameter in y, so the assignment is allowed.<br /><br />The second assignment is an error, because y has a required second parameter that ‘x’ does not have, so the assignment is disallowed.<br /><br />You may be wondering why we allow ‘discarding’ parameters like in the example y = x. The reason is that assignment is allowed is that ignoring extra function parameters is actually quite common in JavaScript. For example, Array#forEach provides three arguments to the callback function: the array element, its index, and the containing array. Nevertheless, it’s very useful to provide a callback that only uses the first argument:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> items = [1, 2, 3];
+
+<span style="color:Green;">// Don&#39;t force these extra arguments</span>
+items.forEach((item, index, array) =&gt; console.log(item));
+
+<span style="color:Green;">// Should be OK!</span>
+items.forEach((item) =&gt; console.log(item));
+</pre></div><br />Now let’s look at how return types are treated, using two functions that differ only by their return type:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> x = () =&gt; ({name: <span style="color:#A31515;">&#39;Alice&#39;</span>});
+<span style="color:Blue;">var</span> y = () =&gt; ({name: <span style="color:#A31515;">&#39;Alice&#39;</span>, location: <span style="color:#A31515;">&#39;Seattle&#39;</span>});
+
+x = y; <span style="color:Green;">// OK</span>
+y = x; <span style="color:Green;">// Error because x() lacks a location property</span>
+</pre></div><br />The type system enforces that the source function’s return type be a subtype of the target type’s return type.<br />
+<h2>Function Argument Bivariance</h2>When comparing the types of function parameters, assignment succeeds if either the source parameter is assignable to the target parameter, or vice versa. This is unsound because a caller might end up being given a function that takes a more specialized type, but invokes the function with a less specialized type. In practice, this sort of error is rare, and allowing this enables many common JavaScript patterns. A brief example:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">enum</span> EventType { Mouse, Keyboard }
+
+<span style="color:Blue;">interface</span> Event { timestamp: number; }
+<span style="color:Blue;">interface</span> MouseEvent <span style="color:Blue;">extends</span> Event { x: number; y: number }
+<span style="color:Blue;">interface</span> KeyEvent <span style="color:Blue;">extends</span> Event { keyCode: number }
+
+<span style="color:Blue;">function</span> listenEvent(eventType: EventType, handler: (n: Event) =&gt; <span style="color:Blue;">void</span>) {
+    <span style="color:Green;">/* ... */</span>
+}
+
+<span style="color:Green;">// Unsound, but useful and common</span>
+listenEvent(EventType.Mouse, (e: MouseEvent) =&gt; console.log(e.x + <span style="color:#A31515;">&#39;,&#39;</span> + e.y));
+
+<span style="color:Green;">// Undesirable alternatives in presence of soundness</span>
+listenEvent(EventType.Mouse, (e: Event) =&gt; console.log((&lt;MouseEvent&gt;e).x + <span style="color:#A31515;">&#39;,&#39;</span> + (&lt;MouseEvent&gt;e).y));
+listenEvent(EventType.Mouse, &lt;(e: Event) =&gt; <span style="color:Blue;">void</span>&gt;((e: MouseEvent) =&gt; console.log(e.x + <span style="color:#A31515;">&#39;,&#39;</span> + e.y)));
+
+<span style="color:Green;">// Still disallowed (clear error). Type safety enforced for wholly incompatible types</span>
+listenEvent(EventType.Mouse, (e: number) =&gt; console.log(e));
+</pre></div>
+<h2>Optional Arguments and Rest Arguments</h2>When comparing functions for compatibility, optional and required parameters are interchangeable. Extra optional parameters of the source type are not an error, and optional parameters of the target type without corresponding parameters in the target type are not an error.<br /><br />When a function has a rest parameter, it is treated as if it were an infinite series of optional parameters.<br /><br />This is unsound from a type system perspective, but from a runtime point of view the idea of an optional parameter is generally not well-enforced since passing ‘undefined’ in that position is equivalent for most functions.<br /><br />The motivating example is the common pattern of a function that takes a callback and invokes it with some predictable (to the programmer) but unknown (to the type system) number of arguments:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">function</span> invokeLater(args: any[], callback: (...args: any[]) =&gt; <span style="color:Blue;">void</span>) {
+    <span style="color:Green;">/* ... Invoke callback with &#39;args&#39; ... */</span>
+}
+
+<span style="color:Green;">// Unsound - invokeLater &quot;might&quot; provide any number of arguments</span>
+invokeLater([1, 2], (x, y) =&gt; console.log(x + <span style="color:#A31515;">&#39;, &#39;</span> + y));
+
+<span style="color:Green;">// Confusing (x and y are actually required) and undiscoverable</span>
+invokeLater([1, 2], (x?, y?) =&gt; console.log(x + <span style="color:#A31515;">&#39;, &#39;</span> + y));
+</pre></div>
+<h2>Functions with overloads</h2>
+When a function has overloads, each overload in the source type must be matched by a compatible signature on the target type.  This ensures that the target function can be called in all the same situations as the source function.  Functions with specialized overload signatures (those that use string literals in their overloads) do not use their specialized signatures when checking for compatibility.<br />
+<h1>Enums</h1>
+Enums are compatible with numbers, and numbers are compatible with enums.  Enum values from different enum types are considered incompatible.  For example,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">enum</span> Status { Ready, Waiting };
+<span style="color:Blue;">enum</span> Color { Red, Blue, Green };
+
+<span style="color:Blue;">var</span> status = Status.Ready;
+status = Color.Green;  <span style="color:Green;">//error</span>
+</pre></div>
+<h1>Classes</h1>
+Classes work similarly to object literal types and interfaces with one exception: they have both a static and an instance type.  When comparing two objects of a class type, only members of the instance are compared.  Static members and constructors do not affect compatibility.    <br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">class</span> Animal {
+    feet: number;
+    constructor(name: string, numFeet: number) { }
+}
+
+<span style="color:Blue;">class</span> Size {
+    feet: number;
+    constructor(numFeet: number) { }
+}
+
+<span style="color:Blue;">var</span> a: Animal;
+<span style="color:Blue;">var</span> s: Size;
+
+a = s;  <span style="color:Green;">//OK</span>
+s = a;  <span style="color:Green;">//OK</span>
+</pre></div>
+<h2>Private members in classes</h2>
+Private members in a class affect their compatibility.  When an instance of a class is checked for compatibility, if it contains a private member, the target type must also contain a private member that originated from the same class.  This allows, for example, a class to be assignment compatible with its super class but not with classes from a different inheritance hierarchy which otherwise have the same shape.<br />
+<h1>Generics</h1>
+Because TypeScript is a structural type system, type parameters only affect the resulting type when consumed as part of the type of a member.  For example,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> Empty&lt;T&gt; {
+}
+<span style="color:Blue;">var</span> x: Empty&lt;number&gt;;
+<span style="color:Blue;">var</span> y: Empty&lt;string&gt;;
+
+x = y;  <span style="color:Green;">// okay, y matches structure of x</span>
+</pre></div><br />In the above, x and y are compatible because their structures do not use the type argument in a differentiating way.  Changing this example by adding a member to Empty&lt;T&gt; shows how this works:<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">interface</span> NotEmpty&lt;T&gt; {
+    data: T;
+}
+<span style="color:Blue;">var</span> x: NotEmpty&lt;number&gt;;
+<span style="color:Blue;">var</span> y: NotEmpty&lt;string&gt;;
+
+x = y;  <span style="color:Green;">// error, x and y are not compatible</span>
+</pre></div><br />In this way, a generic type that has its type arguments specified acts just like a non-generic type.<br /><br />For generic types that do not have their type arguments specified, compatibility is checked by specifying &#39;any&#39; in place of all unspecified type arguments.  The resulting types are then checked for compatibility, just as in the non-generic case.<br /><br />For example,<br /><br /><div style="color:Black;background-color:White;"><pre>
+<span style="color:Blue;">var</span> identity = <span style="color:Blue;">function</span>&lt;T&gt;(x: T): T { 
+    <span style="color:Green;">// ...</span>
+}
+
+<span style="color:Blue;">var</span> reverse = <span style="color:Blue;">function</span>&lt;U&gt;(y: U): U {
+    <span style="color:Green;">// ...</span>
+}
+
+identity = reverse;  <span style="color:Green;">// Okay because (x: any)=&gt;any matches (y: any)=&gt;any</span>
+</pre></div>
+<h1>Advanced Topics</h1>
+<h2>Subtype vs Assignment</h2>
+So far, we&#39;ve used &#39;compatible&#39;, which is not a term defined in the language spec.  In TypeScript, there are two kinds of compatibility: subtype and assignment.  These differ only in that assignment extends subtype compatibility with rules to allow assignment to and from &#39;any&#39; and to and from enum with corresponding numeric values.  <br /><br />Different places in the language use one of the two compatibility mechanisms, depending on the situation.  For practical purposes, type compatibility is dictated by assignment compatibility even in the cases of the <span class="codeInline">implements</span> and <span class="codeInline">extends</span> clauses.  For more information, see the <a href="http://go.microsoft.com/fwlink/?LinkId=267121">TypeScript spec</a>.<br /></div><div class="ClearBoth"></div>

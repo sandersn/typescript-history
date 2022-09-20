@@ -1,0 +1,825 @@
+//********************************Torac Technologies***************************************                                      
+//Description: Linq Style Methods In Javascript To Manipulate Collections                 *
+//Release Date: 10/17/2013                                                                *
+//Version: 1.0 - Inital Release                                                           *
+//Documentation And Release History Is Below                                              *
+//*****************************************************************************************
+
+//Release History
+//Version .1 (10/11/2013) - Beta Initial Developement Complete
+//Version .2 (10/15/2013) - Added the following methods (Add, Any, Distinct, Take, Skip, All, Last)
+//Version .3 (10/16/2013) - Added the extension methods (prototype) - at the bottom of the .ts file
+//Version .4 (10/16/2013) - Added min and max functions. Was thinking of adding min / max WithPropertySelect but user can just run a select with a min / max. 
+
+//Version 1.0 (10/17/2013) - Initial Release
+//Version 1.1 (11/27/2013) - Add GroupByMethod. Can be a single property or multiple properties ie. { key1: property1, key2: property2}
+//Version 1.2 (11/28/2013) - Added sum and average.
+//Version 1.3 (1/21/2013)  - Fixed issues along with upgrading to Typescript .9.5 (which broke stuff - mainly generic type functionality)
+//*****************************************************************************************
+
+//Documentation
+//interface jason {
+//    id: number;
+//    txt: string;
+//}
+
+//interface jason2 {
+//    id: number;
+//    txt2: string;
+//}
+
+//var lst: jason[] = new Array<jason>();
+
+//for (var i = 0; i < 5; i++) {
+//    lst.push({ id: i, txt: i.toString() });
+//}
+
+//method type call (just a regular method)
+//var tWhere = Where(lst, x => x.id == 1);
+//var tFirst = FirstOrDefault(lst, x => x.id == 1);
+//var tSelect = Select<jason, jason2>(lst, x => ({ id: x.id, txt2: x.txt }));
+
+//if you want to call it via extension methods use
+//var tWhere = lst.Where(x => x.id == 1);
+//var tFirst = lst.FirstOrDefault(x => x.id == 1);
+//var tSelect = lst.Select<jason, jason2>(x => ({ id: x.id, txt2: x.txt }));
+
+module ToracTechnologies {
+
+    ///Javascript Linq Methods
+    export module JLinq {
+
+        //#region Interfaces
+
+        ///used as a return object in the GroupBy Method
+        export interface IGrouping<T> {
+
+            //holds the key to the group by
+            Key: any;
+
+            //holds the item that are grouped in here because there key match the key to this item
+            Items: Array<T>;
+        }
+
+        //#endregion
+
+        //#region Public Methods
+
+        ///returns a collection where the function returns true
+        export function Where<T>(Collection: Array<T>, WhereClauseSelector: (thisItemToTest: T) => boolean): Array<T> {
+
+            //return collection that all evalulates to true
+            var lst: T[] = new Array<T>();
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //go run the function and test if it returns true
+                if (WhereClauseSelector(Collection[i])) {
+
+                    //it evaulated to true...add it to the collection to be returned
+                    lst.push(Collection[i]);
+                }
+            }
+
+            //return the collection
+            return lst;
+        }
+
+        ///group by a selector and chunk it into groups
+        export function GroupBy<T>(Collection: Array<T>, GroupBySelector: (thisItemKey: T) => any): IGrouping<T>[] {
+
+            //group by will return an array of group's.
+            //each group will have a key (which is what was grouped)
+            //and each will  have an array of items <T> that have the same key as the groups key
+
+            //you can use a regular selector with a single property...
+            //or you can use multiple properties using { key1: x.Property1, key2: x.Property2 }
+
+            //return collection that all evalulates to true
+            var lst: IGrouping<T>[] = new Array<IGrouping<T>>();
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //let's grab the key for this guy
+                var thisItemsKey: any = GroupBySelector(Collection[i]);
+
+                //lets try to see if we have this key yet (we are using json.Stringify so we can compare objects and there property..otherwise object equality will always return false)
+                var thisFoundKeyItemInCollection = FirstOrDefault(lst, function (x: IGrouping<T>) { return JSON.stringify(x.Key) === JSON.stringify(thisItemsKey); });
+
+                //now we are going to loop through each item in the collection we have and check if we have it
+                if (thisFoundKeyItemInCollection == null) {
+
+                    //we don't have this key in the dictionary, we need to add it
+                    lst.push({ Key: thisItemsKey, Items: [Collection[i]] });
+                }
+                else {
+
+                    //we have this key, so we just need to add it to the dictionary
+                    thisFoundKeyItemInCollection.Items.push(Collection[i]);
+                }
+            }
+
+            //return the collection
+            return lst;
+        }
+
+        ///takes x amount of items from the collection
+        export function Take<T>(Collection: Array<T>, HowManyToTake: number): Array<T> {
+
+            //return collection that all evalulates to true
+            var lst: T[] = new Array<T>();
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //if the size of our collection is less then how many we want to take then add it
+                if (lst.length < HowManyToTake) {
+
+                    //it evaulated to true...add it to the collection to be returned
+                    lst.push(Collection[i]);
+                }
+            }
+
+            //return the collection
+            return lst;
+        }
+
+        ///skips x amount of items
+        export function Skip<T>(Collection: Array<T>, HowManyItemsToSkip: number): Array<T> {
+
+            //return collection that all evalulates to true
+            var lst: T[] = new Array<T>();
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //is the index we are up to less then the amount of items to skip
+                if (i >= HowManyItemsToSkip) {
+
+                    //it evaulated to true...add it to the collection to be returned
+                    lst.push(Collection[i]);
+                }
+            }
+
+            //return the collection
+            return lst;
+        }
+
+        ///returns the first item or null if not found
+        export function FirstOrDefault<T>(Collection: Array<T>, Selector: (thisItemToTest: T) => boolean): T {
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //go run the function and test if it returns true
+                if (Selector(Collection[i])) {
+
+                    //it evaulated to true...return it
+                    return Collection[i];
+                }
+            }
+
+            //never found it return null
+            return null;
+        }
+
+        ///returns the select item from an item of T into a new item of TNewObject
+        export function Select<T, TNewObject>(Collection: Array<T>, Creator: (thisItemToTest: T) => TNewObject): Array<TNewObject> {
+
+            //return collection that all evalulates to true
+            var lst: TNewObject[] = new Array<TNewObject>();
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //go build the new object
+                lst.push(Creator(Collection[i]));
+            }
+
+            //return the list now
+            return lst;
+        }
+
+        ///checks to see if all the items match the where clause selector
+        export function All<T>(Collection: Array<T>, WhereClauseSelector: (thisItemToTest: T) => boolean): boolean {
+
+            //let's loop through each of the items in the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //go run the function and test if it returns true
+                if (!WhereClauseSelector(Collection[i])) {
+
+                    //it didnt eval to true, so it failed, return false
+                    return false;
+                }
+            }
+
+            //we made it through the entire collection. They all matched, return true
+            return true;
+        }
+
+        ///checks to see if there are any items in the collection. checks for nulls too
+        export function Any<T>(Collection: Array<T>): boolean {
+
+            //use the overload
+            return AnyWithWhere(Collection, null);
+        }
+
+        ///checks to see if there are any items in the collection after the selector is filtered. checks for nulls too
+        export function AnyWithWhere<T>(Collection: Array<T>, WhereClauseSelector: (thisItemToTest: T) => boolean): boolean {
+
+            //go run the where clause...first make sure the collection is not null
+            if (Collection == null) {
+
+                //collection is null so return false because it has no items
+                return false;
+            }
+            else {
+
+                //the other any uses this method for the results so make sure the where clause is not null
+                if (WhereClauseSelector == null) {
+                    //its the overload so check the length of the collection
+                    return Collection.length > 0;
+                }
+                else {
+                    //use first or default because it short circuit's the method and doesn't run through the entire loop 
+                    return FirstOrDefault(Collection, WhereClauseSelector) != null;
+                }
+            }
+        }
+
+        ///grabs the last item in a collection
+        export function Last<T>(Collection: Array<T>): T {
+
+            //use the overload
+            return LastWithWhere(Collection, null);
+        }
+
+        ///checks to see if there are any items in the collection after the selector is filtered. checks for nulls too
+        export function LastWithWhere<T>(Collection: Array<T>, WhereClauseSelector: (thisItemToTest: T) => boolean): T {
+
+            //the other any uses this method for the results so make sure the where clause is not null
+            if (WhereClauseSelector == null) {
+                //its the overload so check the length of the collection
+                return Collection[Collection.length - 1];
+            }
+            else {
+
+                //holds the working last item
+                var tempWorkingLastItem = null;
+
+                //going to write this all out instead of using a where so we can save on memory and not create an entire array just for the last item
+                //let's loop through each of the items in the collection
+                for (var i: number = 0; i < Collection.length; i++) {
+
+                    //go run the function and test if it returns true
+                    if (WhereClauseSelector(Collection[i])) {
+
+                        //it evaulated to true...set the tempWorkingLastItem
+                        tempWorkingLastItem = Collection[i];
+                    }
+                }
+
+                //we have the last item by now, return it
+                return tempWorkingLastItem;
+            }
+        }
+
+        ///grabs the distinct value for the selector and returns the distinct property value
+        export function Distinct<T, Z>(Collection: Array<T>, Selector: (thisItemToTest: T) => Z): Array<Z> {
+
+            //we are going to loop through the object and grab the distinct values of the selector
+
+            //declare the array which we store the distinct items
+            var DistinctItems: Array<Z> = [];
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //go run the selector
+                var PropertySelector: Z = Selector(Collection[i]);
+
+                //now see if we have that value already
+                if (!AnyWithWhere(DistinctItems, function (x) { return x == PropertySelector; })) {
+
+                    //we don't have that item, add it to the list
+                    DistinctItems.push(PropertySelector);
+                }
+            }
+
+            //return the distinct array
+            return DistinctItems;
+        }
+
+        ///grabs the distinct value for the selector and returns the complete object
+        export function DistinctBy<T, Z>(Collection: Array<T>, Selector: (thisItemToTest: T) => Z): Array<T> {
+
+            //we are going to loop through the object and grab the distinct values of the selector
+
+            //declare the array which we store the distinct items
+            var DistinctItems: Array<T> = [];
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //grab the value from the collection
+                var thisItem: T = Collection[i];
+
+                //go run the selector
+                var PropertySelector: Z = Selector(thisItem);
+
+                //now see if we have that value already
+                if (!AnyWithWhere(DistinctItems, function (x) { return Selector(x) == PropertySelector; })) {
+
+                    //we don't have that item, add it to the list
+                    DistinctItems.push(thisItem);
+                }
+            }
+
+            //return the distinct array
+            return DistinctItems;
+        }
+
+        ///orders the collection based on the sort property selector 
+        export function OrderBy<T, Z>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+
+            //now go sort it ascending or descending...basically just flips if it's descending
+            return OrderByHelper(Collection, SortOrder.Ascending, SortPropertySelector);
+        }
+
+        ///orders the collection based on the sort property selector 
+        export function OrderByDescending<T, Z>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+
+            //now go sort it ascending or descending...basically just flips if it's descending
+            return OrderByHelper(Collection, SortOrder.Descending, SortPropertySelector);
+        }
+
+        ///gets the min value of this number array
+        export function Min(Collection: Array<number>): number {
+
+            //holds the current min value as we loop through the collection
+            var TempMinValue: number = null;
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //grab the collection value
+                var TestValue: number = Collection[i];
+
+                //first make sure the number is not null
+                if (TestValue != null) {
+
+                    //do we have a value set yet?
+                    if (TempMinValue == null) {
+
+                        //we are at the first item because it hasn't been set yet
+                        TempMinValue = Collection[i];
+                    }
+                    else if (TestValue < TempMinValue) {
+
+                        //the item we are up to in the collection is less then the working temp min value so we are going to reset it
+                        TempMinValue = Collection[i];
+                    }
+                }
+            }
+
+            //return the temp min value because we are done looping through the collection
+            return TempMinValue;
+        }
+
+        ///gets the max value of this number array
+        export function Max(Collection: Array<number>): number {
+
+            //holds the current min value as we loop through the collection
+            var TempMaxValue: number;
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //grab the collection value
+                var TestValue: number = Collection[i];
+
+                //first make sure the number is not null
+                if (TestValue != null) {
+
+                    //do we have a value set yet?
+                    if (TempMaxValue == null) {
+
+                        //we are at the first item because it hasn't been set yet
+                        TempMaxValue = Collection[i];
+                    }
+                    else if (TestValue > TempMaxValue) {
+
+                        //the item we are up to in the collection is more then the working temp max value so we are going to reset it
+                        TempMaxValue = Collection[i];
+                    }
+                }
+            }
+
+            //return the temp max value because we are done looping through the collection
+            return TempMaxValue;
+        }
+
+        ///gets the sum of the values in this number array
+        export function Sum(Collection: Array<number>): number {
+
+            //holds the temp sum that we will return
+            var TempSumValue: number = 0;
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //add to the tally
+                TempSumValue += Collection[i];
+            }
+
+            //return the tally
+            return TempSumValue;
+        }
+
+        ///gets the average of the values in this number array
+        export function Average(Collection: Array<number>): number {
+
+            //holds the temp sum that we will average and return
+            var TempSumValue: number = 0;
+
+            //loop through the array
+            for (var i = 0; i < Collection.length; i++) {
+
+                //add to the tally
+                TempSumValue += Collection[i];
+            }
+
+            //return the average of the tally and the length of the collection
+            return TempSumValue / Collection.length;
+        }
+
+        //#endregion
+
+        //#region Order By Helper Methods
+
+        //#region Enum
+
+        enum SortOrder {
+            Ascending,
+            Descending
+        }
+
+        //#endregion
+
+        ///Internal Helper. Sort by ascending / descending call this
+        function OrderByHelper<T, Z>(Collection: Array<T>, SortDirection: SortOrder, SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+
+            //grab the property type that we are sorting on
+            var propertyType: string = SortPropertyDataType(Collection, SortPropertySelector);
+
+            //now grab the collection and sort it ascending
+            var sortedAscending: Array<T> = SortSpecificEngine(Collection, propertyType, SortPropertySelector);
+
+            //now go sort it ascending or descending...basically just flips if it's descending
+            return SortByAscendingOrDescending(sortedAscending, SortDirection);
+        }
+
+        ///figures out what the sort property selector data type is. this determines which sort engine is called
+        function SortPropertyDataType<T, Z>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => Z): string {
+
+            //loop through the collection and keep going until we hit something that is not null and figure out what type it is
+            var PropertyDataType: string = 'string';
+
+            //start looping through the collection
+            for (var i: number = 0; i < Collection.length; i++) {
+
+                //is the item null?
+                if (Collection[i] != null) {
+
+                    //grab the data type
+                    PropertyDataType = typeof (SortPropertySelector(Collection[i]));
+
+                    //let's check if it's a date
+                    if (PropertyDataType == 'object' && SortPropertySelector(Collection[i]) instanceof Date) {
+                        PropertyDataType = 'date';
+                    }
+
+                    //let's break out of the loop because we have what we need
+                    break;
+                }
+            }
+
+            //return the data type
+            return PropertyDataType;
+        }
+
+        ///calls the specific engine to sort the data type
+        function SortSpecificEngine<T, Z>(Collection: Array<T>, WhichSortPropertyDataType: string, SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+            if (WhichSortPropertyDataType == 'number') {
+                return SortByNumber(Collection, <any>SortPropertySelector);
+            }
+            else if (WhichSortPropertyDataType == 'boolean') {
+                return SortByBoolean(Collection, <any>SortPropertySelector);
+            }
+            else if (WhichSortPropertyDataType == 'date') {
+                return SortByDate(Collection, <any>SortPropertySelector);
+            }
+            else {
+                //string
+                return SortByString(Collection, <any>SortPropertySelector);
+            }
+        }
+
+        ///sorts the collection either ascending or desending
+        function SortByAscendingOrDescending<T>(Collection: Array<T>, SortDirection: SortOrder): Array<T> {
+
+            //make sure they passed in a sort type (possible values are "asc" or "desc" [case insensitive])
+            if (SortDirection == SortOrder.Ascending) {
+                return Collection;
+            }
+            else if (SortDirection == SortOrder.Descending) {
+                return Collection.reverse();
+            }
+            else {
+                alert('Invalid Sort Type. Please Pass In Either "asc" or "desc". (Not Case Sensitive)');
+            }
+        }
+
+        //#region Sort By Engines - Determine by what the property is we sort on
+
+        //Less than 0: Sort "a" to be a lower index than "b"
+        //Zero: "a" and "b" should be considered equal, and no sorting performed.
+        //Greater than 0: Sort "b" to be a lower index than "a".
+
+        function SortByString<T>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => string): Array<T> {
+
+            //go sort ascending
+            var sortedItemsAscending = Collection.sort(function (a: T, b: T): number {
+
+                //let's run the compare now
+                var thisA: string = SortPropertySelector(a);
+                var thisB: string = SortPropertySelector(b);
+
+                //check to make sure it's not null
+                if (thisA != null) {
+                    //reset it to lowercase
+                    thisA = thisA.toLowerCase();
+                }
+
+                //check to make sure it's not null
+                if (thisB != null) {
+                    //reset it to lowercase
+                    thisB = thisB.toLowerCase();
+                }
+
+                //run the compare now (look above at the top for the definitions of 1, -1, 0)
+                if (thisA == null && thisB == null)
+                    return 0;
+
+                if (thisA == null && thisB != null)
+                    return -1;
+
+                if (thisA != null && thisB == null)
+                    return 1;
+
+                if (thisA < thisB)
+                    return -1;
+
+                if (thisA > thisB)
+                    return 1;
+
+                //default to it being the same
+                return 0;
+            });
+
+            //return the collection
+            return Collection;
+        }
+
+        function SortByBoolean<T>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => boolean): Array<T> {
+
+            //go sort ascending
+            var sortedItemsAscending = Collection.sort(function (a: T, b: T): number {
+
+                //let's run the compare now
+                var thisA: boolean = SortPropertySelector(a);
+                var thisB: boolean = SortPropertySelector(b);
+
+                //run the compare now (look above at the top for the definitions of 1, -1, 0)
+                if (thisA == null && thisB == null)
+                    return 0;
+
+                if (thisA == null && thisB != null)
+                    return -1;
+
+                if (thisA != null && thisB == null)
+                    return 1;
+
+                if (thisA < thisB)
+                    return -1;
+
+                if (thisA > thisB)
+                    return 1;
+
+                //default to it being the same
+                return 0;
+            });
+
+            //return the collection
+            return Collection;
+        }
+
+        function SortByDate<T>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => Date): Array<T> {
+
+            //go sort ascending
+            var sortedItemsAscending = Collection.sort(function (a: T, b: T): number {
+
+                //is an object array (use the property in the object)
+                var thisDate1: Date = SortPropertySelector(a);
+                var thisDate2: Date = SortPropertySelector(b);
+
+                //run the compare now (look above at the top for the definitions of 1, -1, 0)
+                if (thisDate1 == null && thisDate2 == null)
+                    return 0;
+
+                if (thisDate1 == null && thisDate2 != null)
+                    return -1;
+
+                if (thisDate1 != null && thisDate2 == null)
+                    return 1;
+
+                if (thisDate1 > thisDate2)
+                    return 1;
+
+                if (thisDate1 < thisDate2)
+                    return -1;
+
+                //they are equal return 0
+                return 0;
+            });
+
+            //return the collection
+            return Collection;
+        }
+
+        function SortByNumber<T>(Collection: Array<T>, SortPropertySelector: (thisPropertyToSortOn: T) => number): Array<T> {
+
+            //go sort ascending
+            var sortedItemsAscending = Collection.sort(function (a: T, b: T): number {
+
+                //throw the properties into a local variable
+                var thisNumber1: number = SortPropertySelector(a);
+                var thisNumber2: number = SortPropertySelector(b);
+
+                //run the compare
+                if (thisNumber1 == null && thisNumber2 == null)
+                    return 0;
+
+                if (thisNumber1 == null && thisNumber2 != null)
+                    return -1;
+
+                if (thisNumber1 != null && thisNumber2 == null)
+                    return 1;
+
+                //default to this equation
+                return thisNumber1 - thisNumber2;
+            });
+
+            //return the collection
+            return Collection;
+        }
+
+        //#endregion
+
+        //#endregion
+
+    }
+
+}
+
+//************** Extension Methods For The Methods Above *******************
+
+//extension methods (prototypes) can't be in modules (as of version 0.9.1.1 - Published 8/21/2013)
+//so we are putting it at the end of JLinq.ts
+
+//**************************************************************************
+
+//Notes this allows you to call them by thisArray.Where() which is a little cleaner
+
+//#region Extension Methods
+
+//#region Array Interface
+
+//declare all the methods which we will extend on the typed Array data type
+interface Array<T> {
+
+    //add all the public methods from the JLinq exported module
+    Where<T>(WhereClauseSelector: (thisItemToTest: T) => boolean): Array<T>;
+    GroupBy<T>(GroupBySelector: (thisItemKey: T) => any): Array<ToracTechnologies.JLinq.IGrouping<T>>;
+    Take<T>(HowManyToTake: number): Array<T>;
+    Skip<T>(HowManyItemsToSkip: number): Array<T>;
+    FirstOrDefault<T>(Selector: (thisItemToTest: T) => boolean): T;
+    Select<T, TNewObject>(Creator: (thisItemToTest: T) => TNewObject): Array<TNewObject>;
+    All<T>(WhereClauseSelector: (thisItemToTest: T) => boolean): boolean;
+    Any<T>(): boolean;
+    AnyWithWhere<T>(WhereClauseSelector: (thisItemToTest: T) => boolean): boolean;
+    Last<T>(): T;
+    LastWithWhere<T>(WhereClauseSelector: (thisItemToTest: T) => boolean): T;
+    Distinct<T, Z>(Selector: (thisItemToTest: T) => Z): Array<Z>;
+    DistinctBy<T, Z>(Selector: (thisItemToTest: T) => Z): Array<T>;
+    OrderBy<T, Z>(SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T>;
+    OrderByDescending<T, Z>(SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T>
+    Min(): number;
+    Max(): number;
+    Sum(): number;
+    Average(): number;
+}
+
+//#endregion
+
+//#region Prototype Methods
+
+//now let's add all the methods to Array.prototype so we can call them cleaner
+
+//example 
+//var result = thisArray.Where(function (x) {
+//    return x.id == 2;
+//});
+
+Array.prototype.Where = function <T>(WhereClauseSelector: (thisItemToTest: T) => boolean): Array<T> {
+    return ToracTechnologies.JLinq.Where(this, WhereClauseSelector);
+}
+
+Array.prototype.GroupBy = function <T>(GroupBySelector: (thisItemKey: T) => any): ToracTechnologies.JLinq.IGrouping<T>[] {
+    return ToracTechnologies.JLinq.GroupBy(this, GroupBySelector);
+}
+
+Array.prototype.Take = function <T>(HowManyToTake: number): Array<T> {
+    return ToracTechnologies.JLinq.Take<T>(this, HowManyToTake);
+}
+
+Array.prototype.Skip = function <T>(HowManyItemsToSkip: number): Array<T> {
+    return ToracTechnologies.JLinq.Skip<T>(this, HowManyItemsToSkip);
+}
+
+Array.prototype.FirstOrDefault = function <T>(Selector: (thisItemToTest: T) => boolean): T {
+    return ToracTechnologies.JLinq.FirstOrDefault(this, Selector);
+}
+
+Array.prototype.Select = function <T, TNewObject>(Creator: (thisItemToTest: T) => TNewObject): Array<TNewObject> {
+    return ToracTechnologies.JLinq.Select(this, Creator);
+}
+
+Array.prototype.All = function <T>(WhereClauseSelector: (thisItemToTest: T) => boolean): boolean {
+    return ToracTechnologies.JLinq.All(this, WhereClauseSelector);
+}
+
+Array.prototype.AnyWithWhere = function <T>(WhereClauseSelector: (thisItemToTest: T) => boolean): boolean {
+    return ToracTechnologies.JLinq.AnyWithWhere(this, WhereClauseSelector);
+}
+
+Array.prototype.Any = function <T>(): boolean {
+    return ToracTechnologies.JLinq.Any(this);
+}
+
+Array.prototype.Last = function <T>(): T {
+    return ToracTechnologies.JLinq.Last<T>(this);
+}
+
+Array.prototype.LastWithWhere = function <T>(WhereClauseSelector: (thisItemToTest: T) => boolean): T {
+    return ToracTechnologies.JLinq.LastWithWhere(this, WhereClauseSelector);
+}
+
+Array.prototype.Distinct = function <T, Z>(Selector: (thisItemToTest: T) => Z): Array<Z> {
+    return ToracTechnologies.JLinq.Distinct(this, Selector);
+}
+
+Array.prototype.DistinctBy = function <T, Z>(Selector: (thisItemToTest: T) => Z): Array<T> {
+    return ToracTechnologies.JLinq.DistinctBy(this, Selector);
+}
+
+Array.prototype.OrderBy = function <T, Z>(SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+    return ToracTechnologies.JLinq.OrderBy(this, SortPropertySelector);
+}
+
+Array.prototype.OrderByDescending = function <T, Z>(SortPropertySelector: (thisPropertyToSortOn: T) => Z): Array<T> {
+    return ToracTechnologies.JLinq.OrderByDescending(this, SortPropertySelector);
+}
+
+Array.prototype.Min = function (): number {
+    return ToracTechnologies.JLinq.Min(this);
+}
+
+Array.prototype.Max = function (): number {
+    return ToracTechnologies.JLinq.Max(this);
+}
+
+Array.prototype.Sum = function (): number {
+    return ToracTechnologies.JLinq.Sum(this);
+}
+
+Array.prototype.Average = function (): number {
+    return ToracTechnologies.JLinq.Average(this);
+}
+
+//#endregion
+
+//#endregion
