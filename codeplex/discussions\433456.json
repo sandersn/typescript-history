@@ -1,0 +1,154 @@
+[
+  {
+    "Id": "1002512",
+    "ThreadId": "433456",
+    "Html": "The reference include XML comment provides a mechanism for importing types from external definition or typescript files, e.g. <code>/// &lt;reference path=&quot;node.d.ts&quot; /&gt;</code>. The idea, while not being bad on paper (permits fine-grained control for importing types from various sources), is IMO one of the problem areas in TypeScript at present.<br />\n<br />\nThis level of fine-grained control creates a maintenance headache whenever files are renamed or deleted. It also doesn't help that the implementation itself is buggy, for example files with faulty references continue to compile. This generally induces a loss of confidence in the compiler.<br />\n<br />\nThe first step to fixing this is possibly to remove that fine-grained control. It should no longer be possible to reference individual files; rather, only references to other TypeScript projects should be permitted. References could be defined in a <strong>References.xml</strong> file per project. Here is an example.<br />\n<br />\nLet's assume our solution contains three projects.<br />\n<br />\n(1) <strong>C:\\Trunk\\Typings.proj</strong> <br />\n<pre><code>// File1: Node.d.ts\ndeclare module &quot;http&quot; {\n export interface Server {\n     listen(port: number): void;\n }\n export interface ServerResponse {\n     end(data?: any, encoding?: string): void;\n }\n export function createServer(\n    requestListener?: (request, response: ServerResponse) =&gt; void ): Server;\n }</code></pre>\n\n<pre><code>// File2: Interfaces.d.ts\nmodule my.interfaces {\n    export interface IWeatherProvider {\n        getForecast();\n    }\n}</code></pre>\n\n(2) <strong>C:\\Trunk\\WeatherProvider.proj</strong><br />\n<pre><code>// File: WeatherProvider.ts\nmodule my.providers {\n    export class WeatherProvider implements my.interfaces.IWeatherProvider {\n        getForecast();\n    }\n}</code></pre>\n\n(3) <strong>C:\\Trunk\\Foo.proj</strong><br />\n<pre><code>// File: FooService.ts\n\n/* Import examples  */\n// * CommonJS or AMD\nimport http = module(&quot;http&quot;);\n\n// * Import all types from module my.interfaces\nimport my.interfaces;\n\n// * Create an alias for a specific type\nimport WeatherProvider =  my.providers.WeatherProvider;\n\nhttp.createServer((request, response) =&gt; {\n    var weatherProvider: IWeatherProvider = new WeatherProvider();\n    response.end(&quot;The weather today is &quot; + weatherProvider.getForecast());\n}).listen(8093);\n\nconsole.log(&quot;Foo Service at 8093&quot;);</code></pre>\n\nBasically in the simple example above we create an HTTP server in file &quot;FooService.ts&quot;  (in project &quot;Foo.proj&quot;). The HTTP server type needs access to the http module and the IWeatherProvider interface from one external project and the WeatherProvider type from another. The code file declares <strong>import</strong> statements at the top in order to use external definitions.<br />\n<br />\nWe gain access to these definitions by adding the following <strong>References.xml</strong> file to the Foo project.<br />\n<pre><code>// File: References.xml\n&lt;References&gt;\n    &lt;Reference Include=&quot;Typings&quot;&gt;\n        &lt;HintPath&gt;C:\\Trunk\\&lt;/HintPath&gt;\n    &lt;/Reference&gt;\n    &lt;Reference Include=&quot;WeatherProvider&quot;&gt;\n        &lt;HintPath&gt;C:\\Trunk&lt;/HintPath&gt;\n    &lt;/Reference&gt;\n&lt;/References&gt;</code></pre>\n\nIn summary, here is the structure for the three projects:<br />\n<ul>\n<li>\nC:\\Trunk\\Typings.proj  <br />\nNode.d.ts<br />\nInterfaces.d.ts\n</li>\n<li>C:\\Trunk\\WeatherProvider.proj<br />\n   WeatherProvider.ts</li>\n<li>\nC:\\Trunk\\Foo.proj<br />\n   References.xml <br />\n   FooService.ts<br />\n</li>\n</ul>\nThe key points and benefits are the following:<br />\n<ul>\n<li>The compiler identifies each referenced project and builds up its type repository from every &quot;.ts&quot; and &quot;d.ts&quot; file in those projects.</li>\n<li>Every file that requires a specific type must declare that intention via <code>import</code> statements at the head of the file.</li>\n<li>The declaration syntax unifies the &quot;using&quot; directive with the &quot;import&quot; statement.</li>\n<li>The Reference.xml will integrate with Visual Studio once the tooling is in place for adding references to other projects; it should also work outside Visual Studio without a problem.</li>\n<li>\nThis works particularly well for the case when TypeScript projects are complied into a single file, in which case the TypeScript compiler is not required to search the file system for constituent files in a referenced project.<br />\n</li>\n</ul>\nI wonder whether this will work? And also if there are better alternatives?<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-02-17T13:57:07.063-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1002877",
+    "ThreadId": "433456",
+    "Html": "I do not like this because TypeScript is not Visual Studio dependent and many do not have &quot;projects&quot; as you see them. Looking at the compiler, you'll see that file references are actually somewhat of an afterthought and not baked into the language/parser. Referenced sources are resolved and parsed and the entire set of source is then type checked. Ideally something besides ad-hoc XML in a comment would be better, but I don't know what.<br />\n",
+    "PostedDate": "2013-02-18T08:57:25.473-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003432",
+    "ThreadId": "433456",
+    "Html": "@cretz,\r<br />\n<br />\nThe suggestion above is not dependent on Visual Studio. The terminology may have lead to that conclusion, but one may replace the term &quot;project&quot; with &quot;folder&quot; (i.e. a directory on the file system) in the above without changing the conclusion.\r<br />\n<br />\nSo, all that is required is to organise TypeScript files in a folder structure, inform the compiler where those folders are located via the References.xml config file, and add suitable import statements in the code files.\r<br />\n<br />\nWill that work for you? If not what objections do you have?\r<br />\n<br />\n(What happens with Visual Studio is the following: The References.xml becomes integrated with the project settings file; Visual Studio provides an &quot;Add Reference&quot; UI that then manages the embedded References.xml for you)<br />\n",
+    "PostedDate": "2013-02-19T06:34:46.243-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003543",
+    "ThreadId": "433456",
+    "Html": "Firstly, TypeScript doesn't have a config file or anywhere to store metadata and I would be hesitant to want one added. Secondly, a general References.xml means you expect to share common references, but this is not necessarily the case. It is much more flexible for files to specify their own dependencies. For example, take a project which mostly has shared code but a section for node and a section for the browser...depending upon which entry point file you send to tsc makes a difference on what is compiled. Even TypeScript itself has three builds (typescript, tsc and typescriptServices) which very likely resolve different imports.\r<br />\n<br />\nI do like the idea of automatic inclusion folders but I struggle to think of a way to provide meta data to the tsc compiler in a uniform way. Maybe the best way is to provide a --include=DIR of some sort on the tsc call, but then you would have to manually configure this in your VS to have it resolve the includes from the path. In the meantime, I always keep some type of &quot;component.ts&quot; at the top of my source w/ only ///&lt;references and have all other files that are part of said &quot;component&quot; only reference that file. Granted, I have run into slight issues w/ ordering, but haven't been able to define the problems enough to submit a bug report.<br />\n",
+    "PostedDate": "2013-02-19T09:36:12.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004067",
+    "ThreadId": "433456",
+    "Html": "@cretz, forgive me, but I found too many things to disagree with the last post :-)\r<br />\n<br />\n<strong>It is much more flexible for files to specify their own dependencies</strong>\r<br />\nThis is why we have the problem in the first place. Yes it is flexible - but no, it's not scalable and creates a maintenance problem. We currently have 282 TypeScript code files, and there have been people on the forum who have quoted higher numbers. File-level options and configuration are probably not the way forward.\r<br />\n<br />\n<strong>For example, take a project which mostly has shared code but a section for node and a section for the browser</strong>\r<br />\nI would consider splitting them into separate projects.\r<br />\n<br />\n<strong>Even TypeScript itself has three builds</strong>\r<br />\nI don't think it makes sense to use the argument that &quot;because TypeScript itself does so and so&quot;, because most people in the real world are probably not writing compilers.\r<br />\n<br />\n<strong>[How to] provide meta data to the tsc compiler in a uniform way</strong>\r<br />\nThis is the raison d'etre for having a config file.\r<br />\n<br />\n<strong>Maybe the best way is to provide a --include=DIR of some sort on the tsc call</strong>_\r<br />\nThis cannot be said to be the best solution. One cannot be expected to change compiler options whenever the project organisation needs to change. It just makes things too brittle.<br />\n",
+    "PostedDate": "2013-02-20T07:59:06.467-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004125",
+    "ThreadId": "433456",
+    "Html": "<ol>\n<li>I understand the scalability issue. That's why I suggested including &quot;directories&quot;, but please don't make me have an XML file called References.</li>\n<li>Acknowledged. Unfortunately the componentization/modularization of TypeScript projects I believe is an issue right now. I've even found myself having to generate ambient definition files for my other TypeScript modules as sort of an &quot;interface&quot; between them.</li>\n<li>It's the largest available TypeScript project I know and in the absence of best practices, I know no other resource.</li>\n<li>I could get behind an optional config file that maybe used JSON or something besides being specific to references and XML.</li>\n<li>\nChanging config file, changing Jake script seem similar to me.<br />\n</li>\n</ol>\nI think we can agree that metadata needs to be provided to tsc for large projects. I definitely don't want References.xml. Maybe it could piggy-back on package.json, component.json, .bowerrc, or something. Since the language services in VS are now exposed to alteration and since references are resolved outside of parsing (ref TypeScript.getReferencedFiles) and passed in to the compiler (ref: TypeScript.TypeScriptCompiler.addSourceUnoit) it shouldn't be difficult for you to give your idea a try.<br />\n",
+    "PostedDate": "2013-02-20T09:48:25.437-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005618",
+    "ThreadId": "433456",
+    "Html": "I agree with not adding XML as a dependency. Already the current &lt;reference&gt; tag inside the comment seems like a hack since proper parsing would require a real XML parser which is currently not the case. The way I look at it, references are more a compiler directive and could be easily handled outside the source files. \r<br />\n<br />\nWhat I nowadays do it just create a build file containing all the source files and use this build file from then on. So for example on Linux:\r<br />\n<br />\n   find ./src -name &quot;*.ts&quot; &gt; build\r<br />\n<br />\nand from then on I can just run:<br />\n\r<br />\n   tsc @build\r<br />\n<br />\nYou could also add external dependencies (like declaration files of other projects) to that build file and other items like the ECMAScript version. I guess for really big and complex projects you would need a real build tool like Jake or Grunt.<br />\n",
+    "PostedDate": "2013-02-23T03:12:16.27-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005624",
+    "ThreadId": "433456",
+    "Html": "\r\n<p dir=\"ltr\">Just put all references in a references.ts file and reference that from each file.</p>\r\n<div>On 17 Feb 2013 21:57, &quot;nabog&quot; &lt;<a href=\"mailto:notifications@codeplex.com\">notifications@codeplex.com</a>&gt; wrote:<br type=\"attribution\">\r\n<blockquote style=\"margin:0 0 0 .8ex; border-left:1px #ccc solid; padding-left:1ex\">\r\n<div>\r\n<p>From: nabog</p>\r\n<div>The reference include XML comment provides a mechanism for importing types from external definition or typescript files, e.g.\r\n<code>/// &lt;reference path=&quot;node.d.ts&quot; /&gt;</code>. The idea, while not being bad on paper (permits fine-grained control for importing types from various sources), is IMO one of the problem areas in TypeScript at present.\r\n<br>\r\n<br>\r\nThis level of fine-grained control creates a maintenance headache whenever files are renamed or deleted. It also doesn't help that the implementation itself is buggy, for example files with faulty references continue to compile. This generally induces a loss\r\n of confidence in the compiler. <br>\r\n<br>\r\nThe first step to fixing this is possibly to remove that fine-grained control. It should no longer be possible to reference individual files; rather, only references to other TypeScript projects should be permitted. References could be defined in a\r\n<strong>References.xml</strong> file per project. Here is an example. <br>\r\n<br>\r\nLet's assume our solution contains three projects. <br>\r\n<br>\r\n(1) <strong>C:\\Trunk\\Typings.proj</strong> <br>\r\n<pre><code>// File1: Node.d.ts\r\ndeclare module &quot;http&quot; {\r\n export interface Server {\r\n     listen(port: number): void;\r\n }\r\n export interface ServerResponse {\r\n     end(data?: any, encoding?: string): void;\r\n }\r\n export function createServer(\r\n    requestListener?: (request, response: ServerResponse) =&gt; void ): Server;\r\n }</code></pre>\r\n<pre><code>// File2: Interfaces.d.ts\r\nmodule my.interfaces {\r\n    export interface IWeatherProvider {\r\n        getForecast();\r\n    }\r\n}</code></pre>\r\n(2) <strong>C:\\Trunk\\WeatherProvider.proj</strong><br>\r\n<pre><code>module my.providers {\r\n    export class WeatherProvider implements my.interfaces.IWeatherProvider {\r\n        getForecast();\r\n    }\r\n}</code></pre>\r\n(3) <strong>C:\\Trunk\\Foo.proj</strong><br>\r\n<pre><code> // CommonJS or AMD\r\nimport http = module(&quot;http&quot;);\r\n// Import all types from module my.interfaces\r\nimport my.interfaces;\r\n// Create an alias for a specific type\r\nimport WeatherProvider =  my.providers.WeatherProvider;\r\n\r\nhttp.createServer((request, response) =&gt; {\r\n    var weatherProvider: IWeatherProvider = new WeatherProvider();\r\n    response.end(&quot;The weather today is &quot; &#43; weatherProvider.getForecast());\r\n}).listen(8093);\r\n\r\nconsole.log(&quot;Foo Service at 8093&quot;);</code></pre>\r\nBasically in the simple example above we create an HTTP server in file &quot;FooService.ts&quot; (in project &quot;Foo.proj&quot;). The HTTP server type needs access to the http module and the IWeatherProvider interface from one external project and the WeatherProvider type from\r\n another. <br>\r\n<br>\r\nWe gain access to these definitions by adding the following <strong>References.xml</strong> file to the Foo project.<br>\r\n<pre><code>// File: References.xml\r\n&lt;References&gt;\r\n    &lt;Reference Include=&quot;Typings&quot;&gt;\r\n        &lt;HintPath&gt;C:\\Trunk\\&lt;/HintPath&gt;\r\n    &lt;/Reference&gt;\r\n    &lt;Reference Include=&quot;WeatherProvider&quot;&gt;\r\n        &lt;HintPath&gt;C:\\Trunk&lt;/HintPath&gt;\r\n    &lt;/Reference&gt;\r\n&lt;/References&gt;</code></pre>\r\nIn summary, here is the project structure.<br>\r\n<ul>\r\n<li>C:\\Trunk\\Typings.proj <br>\r\nNode.d.ts<br>\r\nInterfaces.d.ts </li><li>C:\\Trunk\\WeatherProvider.proj <br>\r\nWeatherProvider.ts </li><li>C:\\Trunk\\Foo.proj <br>\r\nReferences.xml <br>\r\nFooService.ts<br>\r\n</li></ul>\r\nThe key points and benefits are the following:<br>\r\n<ul>\r\n<li>The compiler identifies each referenced project and builds up its type repository from every &quot;.ts&quot; and &quot;d.ts&quot; files in those projects.\r\n</li><li>Every file that requires a specific type must declare that intention via <code>\r\nimport</code> statements at the head of the file. </li><li>The declaration syntax unifies the &quot;using&quot; directive with the &quot;import&quot; statement.\r\n</li><li>The Reference.xml will integrate with Visual Studio once the tooling is in place for adding references to other projects; it should also work outside Visual Studio without a problem.\r\n</li><li>This works particularly well for the case when TypeScript projects are complied into a single file, in which case the TypeScript compiler is not required to search the file system for constituent files in a referenced project.<br>\r\n</li></ul>\r\nI wonder whether this will work? And also if there are better alternatives? <br>\r\n<br>\r\nNoel<br>\r\n</div>\r\n<div>\r\n<p>Read the <a href=\"http://typescript.codeplex.com/discussions/433456#post1002512\" target=\"_blank\">\r\nfull discussion online</a>.</p>\r\n<p>To add a post to this discussion, reply to this email (<a href=\"mailto:typescript@discussions.codeplex.com?subject=[typescript:433456]\" target=\"_blank\">typescript@discussions.codeplex.com</a>)</p>\r\n<p>To start a new discussion for this project, email <a href=\"mailto:typescript@discussions.codeplex.com\" target=\"_blank\">\r\ntypescript@discussions.codeplex.com</a></p>\r\n<p>You are receiving this email because you subscribed to this discussion on CodePlex. You can\r\n<a href=\"https://typescript.codeplex.com/subscriptions/thread/project/edit\" target=\"_blank\">\r\nunsubscribe or change your settings</a> on codePlex.com.</p>\r\n<p>Please note: Images and attachments will be removed from emails. Any posts to this discussion will also be available online at\r\n<a href=\"http://codeplex.com\" target=\"_blank\">codeplex.com</a></p>\r\n</div>\r\n</div>\r\n</blockquote>\r\n</div>\r\n",
+    "PostedDate": "2013-02-23T03:51:13.733-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005667",
+    "ThreadId": "433456",
+    "Html": "<strong>markrendle wrote:</strong><br />\n<blockquote>\nJust put all references in a references.ts file and reference that from each file.<br />\n</blockquote>\nThat's what I do. I have a file called <code>include.d.ts</code> in the top level of my project that includes all of the files in the project. Then I just have a simple reference line at the beginning of each file to include that file. It's not quite as easy as an automatic config file, but it's still as simple as adding a line whenever you add a file.<br />\n",
+    "PostedDate": "2013-02-23T08:28:58.207-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005892",
+    "ThreadId": "433456",
+    "Html": "<strong>Just put all references in a references.ts file and reference that from each file.</strong>\r<br />\n<br />\nYes, that is what we do. Just to be clear here is what we do at present:<br />\n<ol>\n<li>\nWe maintain a single &quot;_references.d.ts&quot; for every project (we have over twenty). This file only includes references to those files that contain types that should be visible outside the project.<br />\n</li>\n<li>\nWe also maintain a &quot;Master&quot; reference file that only includes project-level reference files, as described in (1).<br />\n</li>\n<li>\nFinally, individual code files then reference the &quot;Master&quot; reference.d.ts.<br />\n</li>\n</ol>\n<strong>Problems with this</strong><br />\n<ul>\n<li>\nThere is no way to enforce this. One cannot prevent a rogue developer from adding a reference to any file in any project, directly in a code file.<br />\n</li>\n<li>\nCombining all references into a master file means that every single file, in every single project has access to every single type across all projects! This not only tends to clutter up the intellisense, but also makes understanding the interaction more difficult.<br />\n</li>\n<li>\nWe want to be in a position where we are able to pick and chose which project references what. But in order to do that we need to start referencing individual projects (rather than the master reference). This leads to the following problem:<br />\n</li>\n<li>\nThe path in the &lt;reference&gt; comment refers to an actual path in the file system. References to the physical structure of one's projects should not be found in code files, because it prevents renaming or moving projects around.<br />\n</li>\n</ul>\nIt shouldn't matter if one is working on two or twenty projects - this is a fundamental problem that will eventually catch up with most people.\r<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-02-24T06:42:38.467-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1006814",
+    "ThreadId": "433456",
+    "Html": "There is certainly lots of stuff to be desired when working with references, however this is not necessarily something that is missing in typescript, it might as well be the tooling that should support this better.\r<br />\n<br />\nI can see that you could get far with maintaining a &quot;&lt;project&gt;.d.ts&quot; which would point to all files defining a &quot;project&quot;... Not to be confused with project in Visual Studio terms, a &quot;project&quot; here is merely a file containing a well-known list of references to other files, reason I use the term project is that in a Visual Studio environment, it might be natural that that list of files originates from what is within a VS project, but in other editors this can be very different.\r<br />\n<br />\nThis would allow you to referencing all items in that &quot;project&quot; quite swiftly... But maintaining those files becomes quite annoying, that is where the tooling comes in in my opinion.... (Alternative could be &quot;&lt;module&gt;.d.ts&quot; but if you define 2 modules in one file that becomes problematic)\r<br />\n<br />\nSo rather than changing how TS works, we need tools that help us managing references.\r<br />\n<br />\nSince you seem to be using VS, think about how ReSharper works with Assemblies and Imports, Adding a reference to another type script project would allow you to start using the types in there, ones you have typed &quot;other.MyType&quot; and the reference is missing, obviously the tooling should provide you with a &quot;add reference to other.MyType&quot; action... \r<br />\n<br />\nAnd when you begin to think about it, the &quot;&lt;project&gt;.d.ts&quot; might slowly become obsolete again, while it would mean less &quot;clutter&quot; at the top of a ts file, it shouln't be needed, because often if you begin to get way to many references at the top, something might indicate that you headed out of a bad path anyways... (good old high cohesion low coupling principle seem to begin to be broken)\r<br />\n<br />\nSo all in all... I don't think TypeScript needs to change here, I think the tooling needs to be enhanced even further...\r<br />\nThat said, as a small improvement, maybe referencing wildcards wouldn't be overall terrible, but if the tool is there to maintain references, it becomes obsolete...<br />\n",
+    "PostedDate": "2013-02-26T02:13:05.15-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1006816",
+    "ThreadId": "433456",
+    "Html": "Sigh... Dual posts possible through updates on Codeplex, thought that was an issue the entire web got over 10-15 years back &gt;.&lt; (Please delete this if anyone can)<br />\n",
+    "PostedDate": "2013-02-26T02:14:22.077-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1015933",
+    "ThreadId": "433456",
+    "Html": "At least in Visual Studio automatically make the _references.ts to work exactly like _references.js !!!<br />\n",
+    "PostedDate": "2013-03-15T07:37:27.943-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017068",
+    "ThreadId": "433456",
+    "Html": "I use T4 template to generate References.ts file containing references to all .ts files (as well as References.ts from referened project). Its a little complicated since references need to be in specific order (base class must be declared before child class). And if i move some file, i still need to change reference to Reference.ts, since there is no &quot;~/References.ts&quot; that would point to root directory of project.<br />\n<br />\nhere is the template <a href=\"http://pastebin.com/dGtwtRFu\" rel=\"nofollow\">http://pastebin.com/dGtwtRFu</a><br />\n<br />\n<br />\n<br />\nBut this has to be solved somehow in language, its just crazy that you have to link everything like in c times. At least if refactoring worked on this.<br />\n",
+    "PostedDate": "2013-03-18T07:27:54.483-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017082",
+    "ThreadId": "433456",
+    "Html": "<strong>Kikaimaru wrote:</strong><br />\n<blockquote>\nIts a little complicated since references need to be in specific order (base class must be declared before child class).<br />\n</blockquote>\nThat's either not right, or I've been <em>extremely</em> lucky with my application so far.<br />\n",
+    "PostedDate": "2013-03-18T07:46:23.753-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017289",
+    "ThreadId": "433456",
+    "Html": "@markrendle,\r<br />\n<br />\nBase classes are included in the correct order only if the -out flag is set (i.e. all compiled JavaScript files are combined into a single file).\r<br />\n<br />\nIf you are responsible for your own bundling then you do need to worry about that.<br />\n",
+    "PostedDate": "2013-03-18T13:02:53.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017290",
+    "ThreadId": "433456",
+    "Html": "Oh, that'd be it then. I'm using a Grunt task with the -out flag to do my compilation.<br />\n",
+    "PostedDate": "2013-03-18T13:05:13.303-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017662",
+    "ThreadId": "433456",
+    "Html": "I am using --out too, and it doesn't work. But it didnt happen to me in 0.8.1. So it may be a bug (it definitely happnes now in 0.8.3)<br />\n",
+    "PostedDate": "2013-03-19T06:23:31.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1035474",
+    "ThreadId": "433456",
+    "Html": "Hello,<br />\n<br />\nI would like to suggest the following scheme.<br />\n<br />\nWhen we develop projects we have to deal with modularisation, and especially to match two concerns :<br />\n<ul>\n<li>separation of concerns (which enable to apply consequently tle &quot;loose coupling, tight consistence&quot; principle)</li>\n<li>\nreuse of previously done modules<br />\n</li>\n</ul>\nAnother aspect we have to deal with in a large project is the ability to develop the sofware with different teams... It conducts consequently to manage different projects in the solution (ms terminology). <br />\n<br />\nThe proposed solution aims to manage all these constaints.<br />\n<br />\nIn order to achieve this, the developper would have to do :<br />\n<ul>\n<li>each file has to be part of one  module and only one (mandatory)</li>\n<li>the compiler compiles all the files sharing the same module name into one file (like the --out directive) called &quot;&lt;modulename&gt;.js&quot;</li>\n<li>\na module wanting to use another module has only to use the amd-like statement &quot;import mymodule=module('&lt;modulename&gt;')&quot;<br />\n</li>\n</ul>\nThe compiler will look into automatically  all the referenced project inside the current project to find modules, and also inside the imported &quot;&lt;modulename&gt;.js&quot; files if no reference to the project is done.<br />\n<br />\nTo summurize :<br />\n<ul>\n<li>a module may be shared into different files and different projects (possibly)</li>\n<li>the compiler generates one file per module</li>\n<li>\na module uses another module by an import statement, but without having to define the name of the file which is imported ; it is the role of the compiler to do this.<br />\n</li>\n</ul>\nbest regards<br />\nXavier<br />\n",
+    "PostedDate": "2013-04-24T23:57:28.027-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

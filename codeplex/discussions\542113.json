@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1233589",
+    "ThreadId": "542113",
+    "Html": "Suppose I have a TypeScript module defined like:<br />\n<pre><code>module Foo {\n    export var now = new Date();\n}</code></pre>\n\nThis gets transpiled to:<br />\n<pre><code>var Foo;\n(function (Foo) {\n    Foo.now = new Date();\n})(Foo || (Foo = {}));</code></pre>\n\nIf I were writing in pure JavaScript, I would have included something like:<br />\n<pre><code>var Foo;\n(function (Foo) {\n    if (window.Foo) return; // &lt;-- PREVENT DUPLICATES!\n    Foo.now = new Date();\n})(Foo || (Foo = {}));</code></pre>\n\nto ensure that this module gets defined only once even if the &lt;script/&gt; gets included multiple times in a page. How do I achieve the same effect in TypeScript?\r<br />\n<br />\n(cross-posted at <a href=\"http://stackoverflow.com/questions/23005316\" rel=\"nofollow\">http://stackoverflow.com/questions/23005316</a>)<br />\n",
+    "PostedDate": "2014-04-13T00:47:51.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1233777",
+    "ThreadId": "542113",
+    "Html": "You can't define <em>duplicate</em> modules.  They all get merged into one. <br />\n<pre><code>module Foo {\n    export var now = new Date();\n}\n\nmodule Foo {\n    export var now = new Date();\n}</code></pre>\n\ndoesn't compile because the exported property &quot;now&quot; is duplicated, but if it did compile, you'd end up with this:<br />\n<pre><code>var Foo;\n(function (Foo) {\n    Foo.now = new Date();\n})(Foo || (Foo = {}));\n\nvar Foo;\n(function (Foo) {\n    Foo.now = new Date();\n})(Foo || (Foo = {}));\n</code></pre>\n\nwhich is why it doesn't compile.  Since modules specified more than once all merge, you cannot simply jump out of them.<br />\n<br />\nNow, that said, I have just requested [again] more control over classes and modules (<a href=\"https://typescript.codeplex.com/workitem/2432\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2432</a>), but I guess we'll see if it gets shot down or not (a similar request I made was rejected; not sure why - perhaps I didn't explain it well).  I think this could be a powerful feature for more powerful dynamic scripts.<br />\n",
+    "PostedDate": "2014-04-14T00:27:43.177-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1233904",
+    "ThreadId": "542113",
+    "Html": "Some more details of my situation to motivate this requirement better:<br />\n<br />\nI am writing a library in TS. I deliver this library as the compiled JS. The user of this library is expected to include the compiled JS into her page with the &lt;script/&gt; tag. My library is allowed to introduce only a single new name into the global namespace - say Foo, in the example above. Hence all my TS code is organized in the Foo module. But I would like to have this module compile to JS such that it prevents (accidental) duplicate inclusions of itself in the page.<br />\n",
+    "PostedDate": "2014-04-14T07:30:04.613-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234041",
+    "ThreadId": "542113",
+    "Html": "Probably a better way to do this is to load the script dynamically, for example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// loader.js </span>\n\n<span style=\"color:Blue;\">if</span>(!window.Foo) {\n      \n    <span style=\"color:Blue;\">var</span> tag = document.createElement(<span style=\"color:#A31515;\">&#39;script&#39;</span>); \n    tag.type = <span style=\"color:#A31515;\">&#39;text/javascript&#39;</span>;\n    tag.src = <span style=\"color:#A31515;\">&#39;http://foo.com/foo.js&#39;</span>; <span style=\"color:Green;\">// This is your actual script</span>\n    <span style=\"color:Blue;\">var</span> first = document.getElementsByTagName(<span style=\"color:#A31515;\">&#39;script&#39;</span>)[0]; \n     first.parentNode.insertBefore(tag, first);\n}\n\r\n</pre></div>Basically, the user of the library will include <code>loader.js</code>, which checks and loads the actual script if necessary.<br />\n",
+    "PostedDate": "2014-04-14T13:17:04.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234049",
+    "ThreadId": "542113",
+    "Html": "@nabog, thanks!\r<br />\n<br />\nThe approach your outlined works in general, but not in my specific case. I want my JS script to be included in the page early (right after the &lt;HEAD/&gt;) and I want the browser to execute it inline (it basically records to the time of the page load in Foo.now variable).<br />\n",
+    "PostedDate": "2014-04-14T13:34:35.267-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234116",
+    "ThreadId": "542113",
+    "Html": "Well, it would seem this works now:<br />\n<pre><code>module _ {\n    if (_.A) return;\n\n    export module A {\n        export class B {\n        }\n    }\n}</code></pre>\n\n<a href=\"http://goo.gl/k9eo31\" rel=\"nofollow\">http://goo.gl/k9eo31</a>\r<br />\n<br />\nInteresting. :/<br />\n",
+    "PostedDate": "2014-04-14T16:49:17.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234520",
+    "ThreadId": "542113",
+    "Html": "@jamesnw, your code gave me this idea:<br />\n<pre><code>module window {\n    if (window.Foo) return;\n\n    export module Foo {\n        export var now = new Date()\n    }\n}\n</code></pre>\n\nThis compiles to:<br />\n<pre><code>var window;\n(function (window) {\n    if (window.Foo)\n        return;\n\n    (function (Foo) {\n        Foo.now = new Date();\n    })(window.Foo || (window.Foo = {}));\n    var Foo = window.Foo;\n})(window || (window = {}));\n</code></pre>\n\nwhich is what I want! Thanks!<br />\n",
+    "PostedDate": "2014-04-15T17:05:39.31-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234529",
+    "ThreadId": "542113",
+    "Html": "Cool beans.  I figured you could probably jimmy-rig it to fit. ;) <br />\n",
+    "PostedDate": "2014-04-15T19:35:41.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

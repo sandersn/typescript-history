@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-01T18:18:23.52-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Inheritance breaks when defining hasOwnProperty static method. Example code:\r\n\r\n    class A {\r\n\tpublic static x = 'X';\r\n\tprivate static hasOwnProperty(s) { alert(s); } // this should report warning or error as it now does for \"prototype\" property\r\n    }\r\n\r\n    class B extends A {} // should not do much - alerts 'hasOwnProperty' and 'x' instead\r\n\r\n    alert(B.x); // should alert 'X' - alerts 'undefined'",
+    "LastUpdatedDate": "2014-04-01T19:05:03.893-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-01T07:46:49.31-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Inheritance breaks when defining hasOwnProperty static method",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2368
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I don't see the issue here.  Overriding \"hasOwnProperty\" might be a creative way to hide certain static properties from being enumerated.  The fact you are getting undefined is because you are not returning TRUE from 'hasOwnProperty'.",
+      "PostedDate": "2014-04-01T09:39:52.95-07:00",
+      "Id": 140184
+    },
+    {
+      "Message": "It seems unlikely anyone is writing \"hasOwnProperty\" accidently here, or not realizing what that implies. We're certainly not going to change the class emit to prevent you from getting into this state (what if you *want* to redefine hasOwnProeprty?).\n\nIf there's some use case I'm missing, please reopen.\n\r\n\r** Closed by RyanCavanaugh 04/01/2014 10:06AM",
+      "PostedDate": "2014-04-01T10:06:26.773-07:00",
+      "Id": 140221
+    },
+    {
+      "Message": "Reopening just because there is even better and simpler fix by just using Object.prototype.hasOwnProperty.call(obj, key) (or even {}.hasOwnProperty.call(obj, key)) instead of obj.hasOwnProperty(key) in __extends function that would completely eliminate the problem...\r\n\r\nI will not reopen again if this is still not good enough argument.",
+      "PostedDate": "2014-04-01T14:48:40.73-07:00",
+      "Id": 140223
+    },
+    {
+      "Message": "Btw. the problem that B.x is not working is only minor one. The bigger problem is that just writing class B extends A {} runs my custom code in class A for no good reason except as an implementation detail. the proposed way would allow to redefine hasOwnProperty if a user wants and still keep the inheritance semantics intact.",
+      "PostedDate": "2014-04-01T15:01:23.15-07:00",
+      "Id": 140224
+    },
+    {
+      "Message": "Using 'call' has negative performance implications compared to the direct function invocation. \n\nIn addition, if you do call it through Object.prototype as you wrote then you're not able to redefine hasOwnProperty, so you just really want to be able to name a function hasOwnProperty?",
+      "PostedDate": "2014-04-01T18:18:00.18-07:00",
+      "Id": 140237
+    },
+    {
+      "Message": "I was about to say the same thing. ;)\nSee here: http://jsperf.com/call-apply-segu/19\n\n\n",
+      "PostedDate": "2014-04-01T19:05:03.893-07:00",
+      "Id": 140243
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "AdamFreidin is correct, this is by design. When you called idf passing isEven, type argument inference binds A to number and B to boolean. There are no candidate types to bind C to, so it is inferred to be of type 'any' (see section 3.10 Best Common Type of the language spec for this rule). Now idf returns a function of A => C, which has been inferred to mean number => any. The way type inference infers 'any' in various circumstances and the assignment compatibility rules for it ('any' is a subtype and supertype of everything) is important for JavaScript compatibility and interoperability. \n\nFear not though, in the near future we will be providing a compiler flag that you can use to cause most cases of type inference to 'any' to be a compiler error as you want here. Then you would be required to explicitly type things as 'any' or type assert to 'any' in order to use it (this flag was experimental in previous Typescript versions, we will have a more fully fleshed out version of it coming soon).",
+    "ClosedDate": "2013-06-20T13:55:33.11-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "The following function type checks, but shouldn't:\r\n\r\n```\r\nfunction idf <A,B,C> (f : (_ : A) => B) : (_ : A) => C\r\n{\r\n\treturn f;\r\n};\r\n```\r\n\r\nThe function should return `B`, not `C`, but the compiler doesn't pick this up. This allows you to write incorrect crashing code later on:\r\n\r\n```\r\nfunction isEven (x : number)\r\n{\r\n\tif (x % 2 === 0) return true;\r\n\treturn false;\r\n}\r\nvar x : string = idf(isEven)(20)\r\nconsole.log(x.length);\r\n```",
+    "LastUpdatedDate": "2013-08-13T09:38:23.447-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-19T06:19:11.69-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Ill-typed expression accepted with generics and higher-order functions",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1176
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Not sure if this is really a bug.  As I see it, the type of the parameter f binds A and B, so C is left unbound and the compiler leaves it as \"any\".  When f is returned, the type checker matches f against a function which takes an A and returns an any, which is compatible with f.\n\nwhat do you think of code like this?\n```typescript\nfunction f(): any { return false; }\nvar x: string = f();\nconsole.log(x.length);\n```",
+      "PostedDate": "2013-06-19T10:00:30.213-07:00",
+      "Id": 103462
+    },
+    {
+      "Message": "I don't use `any`, I use type variables. The type of `f` is `A => B`, not `A => C`. If I pass it a function from `number` to `boolean`, it should return a function from `number` to `boolean`, not `number` to `string`. A cast to `any` should be explicit, as in:\n\n`return <any>f;`\n\nI'd like your example to be ill-typed as well. The function `f` clearly has type `() => boolean`. And indeed, that code also crashes at runtime.",
+      "PostedDate": "2013-06-19T11:50:48.873-07:00",
+      "Id": 103508
+    },
+    {
+      "Message": "Thanks for the info! Good to know that this is in the pipeline.",
+      "PostedDate": "2013-06-21T00:52:02.82-07:00",
+      "Id": 103753
+    }
+  ]
+}

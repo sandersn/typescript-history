@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-25T12:31:12.783-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Casting from declared types fail because typescript tries to be overprotective. \r\n\r\nThis gives an error:\r\n\r\n```ts\r\nvar foo: JQuery = <JQuery> \"#id\";\r\n// Error: Cannot convert 'string' to 'JQuery':\r\n// Type 'String' is missing property 'ajaxComplete' from type 'JQuery'.\t\r\n```\r\nbut this works:\r\n\r\n```ts\r\nvar foo: JQuery = <JQuery> <any> \"#id\";\r\n```\r\n\r\nThis check doesn't make sense because typescript already supports duck typing. If the cast operand looks like the left side type, no cast is required at all. We cast because we know that the variable will have that type at the runtime. The extra <any> shouldn't be required, and typescript should just accept the cast without any checks.\r\n\r\nThis looks strange, but when dealing with properties transformed at runtime, this makes a lot of sense. Marionette for example converts all strings inside the \"ui\" property from strings to jquery objects during initialization:\r\n\r\n```ts\r\nclass View {\r\n   ui: {\r\n      main: \"#main\",\r\n      button: \".button\"\r\n   }\r\n\r\n   show() {\r\n       this.ui.main.show(); // ui.main is a jquery object here\r\n   }\r\n}\r\n```\r\n\r\nAnother example with Backbone:\r\n\r\n```ts\r\nclass View extends Backbone.View {\r\n    // actually, el is converted to HTMLElement on the constructor.\r\n    el: \"#id\"; \r\n}\r\n```\r\n\r\nIt should be enough to say:\r\n```ts\r\nel: <HTMLElement> \"#id\";\r\nui : {\r\n   main: <JQuery> \"#main\"\r\n}\r\n```\r\n\r\nBut the extra <any> is being required unnecessarily.\r\n\r\n```ts\r\nel: <HTMLElement> <any> \"#id\";\r\nui : {\r\n   main: <JQuery> <any> \"#main\"\r\n}\r\n```\r\n\r\nThis is not adding any extra protection, is just adding extra code.",
+    "LastUpdatedDate": "2013-08-13T09:40:18.39-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-25T06:30:47.447-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Remove checks when casting types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1236
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "IMO the compiler is behaving correctly- if the types of the properties are changing at runtime, it sounds like it should be typed as `any` at compile time. \n\nYou don't want to let the compiler just accept any old cast, because then code that might be obviously broken will get through the compiler, negating the whole point of static type checking. The workaround you demonstrate of an intermediate cast to `any` is only a minor hassle and seems perfectly reasonable for this corner case.",
+      "PostedDate": "2013-06-25T10:08:51.66-07:00",
+      "Id": 104059
+    },
+    {
+      "Message": "Have you ever had to cast to or from anything other than <any>? There is a good chance that 100% of your casts in TypeScript involve casting to or from any. That means that whatever \"obviously broken\" you say would be passing through the compiler already is today.\n\nCasting in typescript is purely typing information for the compiler. Javascript is dynamic in nature. Beside sequential execution code,  there is basically zero chance the compiler knows for sure what is the type of something at runtime. It just does a good job at guessing by convention.\n\nSo, in my opinion, if you are casting in typescript, it is because you are absolutely sure you know more about the type of something than typescript is able to provide.\n\nIn normal cases, TypeScript already gives all the protection you may have if you try to assign incompatible values without a cast. If you cast, it is because you are sure the type is something else. In this case, the extra <any> is just unnecessary boilerplate.\n\nIt would be nice if you could show what kind of problems could arise from removing this boilerplate. I really don't see anything that isn't already a problem today.",
+      "PostedDate": "2013-06-25T11:09:35.37-07:00",
+      "Id": 104069
+    },
+    {
+      "Message": "The current behavior is by design.  Section \"4.13 Type Assertions\" in the language spec cover this, specifically.\n\n_A type assertion expression of the form < T > e requires the type of e to be assignable to T or T to be assignable to the type of e, or otherwise a compile-time error occurs. The type of the result is T.\n\nType assertions check for assignment compatibility in both directions. Thus, type assertions allow type conversions that might be correct, but aren’t known to be correct._ \n\nThe rules require the types are related in some ways in order to provide a level of safety and catch a common class of issues.  If the types are unrelated, then as outlines, asserting all the way 'up' to 'any', and then back 'down' to the required type, allows code to assert any type free from any compiler checks.",
+      "PostedDate": "2013-06-25T12:31:05.75-07:00",
+      "Id": 104090
+    },
+    {
+      "Message": "I can understand how this may make sense in theory. Unfortunately, this doesn't make much sense in practice because of how TypeScript works, it just gets in the way and the intended use is never used.\n\nI hope this will be reconsidered in the future.",
+      "PostedDate": "2013-06-25T14:43:14.997-07:00",
+      "Id": 104127
+    }
+  ]
+}

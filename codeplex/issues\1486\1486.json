@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:30:09.85-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I re-open and I saw that the context and repro-step is much more complex than I expected, this code is test on the playground and does not work :\r\n\r\n```\r\nmodule MyModule {\r\n\r\n    export class MyClass1<T> {\r\n\r\n        private _myObject1: MyClass2;\r\n        private _myObject2: any;\r\n\r\n        constructor(myObject1: MyClass2, myObject2: any) {\r\n            this._myObject1 = myObject1;\r\n            this._myObject2 = myObject2\r\n                .doo((qr) => this.foo(qr));\r\n        }\r\n\r\n        private foo(data: any) {\r\n\r\n        }\r\n    }\r\n\r\n\r\n    export class MyClass2 {\r\n\r\n        foo<T>(): MyClass1<T> {\r\n            return new MyClass1<T>(this, null);\r\n        }\r\n\r\n    }\r\n}\r\n```\r\n\r\nI suppress all unnecessary code to do the repro-step... must more complex :)\r\nYou can go now to the playground and see the _this is not declared.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-11T20:07:19.11-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "constructor and delegate",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1486
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "WTF, ctrl+s (a reflex) post and I can't edit!!!\n\nI restart:\n\nThe \"_this\" is not declared and initialized in constructor\nWith this syntax :\n\n```\nclass Mooo{\n  constructor(list){\n     list.map((item)=>this.do(item));\n  }\n}\n```\nGive this:\n\n```\nfunction Mooo(list){\n  list.map(function(item){ return _this.do(item) })\n}\n```\n\n_this is used but does not exists, in all .js files.\n\nPS: Do already exists.\n",
+      "PostedDate": "2013-08-11T20:11:03.873-07:00",
+      "Id": 109377
+    },
+    {
+      "Message": "This is working in the Playground. Are you perhaps on an older build? Please re-open if you see this on an up-to-date release. Thanks!\n\r\n\r** Closed by RyanCavanaugh 08/12/2013 10:04AM",
+      "PostedDate": "2013-08-12T10:04:11.787-07:00",
+      "Id": 109528
+    },
+    {
+      "Message": "Thanks for digging deeper on this. I reduced this to:\r\n\r\n```\r\nclass MyClass1<T> {\r\n    private obj: MyClass1<string>;\r\n\r\n    constructor() {\t\t\r\n\t\t() => this;\r\n    }\r\n}\r\n```\r\nWe'll investigate",
+      "PostedDate": "2013-08-12T15:01:47.787-07:00",
+      "Id": 109530
+    }
+  ]
+}

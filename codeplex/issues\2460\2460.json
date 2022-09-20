@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "TypeScript does not re-order your code automatically; the base class must come first.",
+    "ClosedDate": "2014-04-28T10:21:12.537-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I think this might be related: http://typescript.codeplex.com/workitem/627\r\n\r\nI've declared two simple files and I keep getting garbage out for inheritance. Manually referencing these with tags does not help (the parent class).\r\n\r\nFor example:\r\n\r\n```\r\nmodule Game\r\n{ \r\n   export class GameSystem\r\n{\r\n\r\n}\r\n}  \r\n```\r\n\r\nAnd then\r\n\r\n```\r\nmodule Game\r\n{\r\n  export class SomeSystem extends GameSystem\r\n {\r\n\r\n\r\n}\r\n\r\n}\r\n```\r\n\r\nI can't actually run this code because SomeSystem depends on GameSystem and it's declared beforehand in the output JS. How can I declare the output GameSystem first? \r\n\r\nThis is a serious issue as it cripples the ability to use inheritance. How can we get our parent classes to compile first? ",
+    "LastUpdatedDate": "2014-04-28T10:21:12.537-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-23T21:58:52.03-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Inheritance is not working with internal modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2460
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sorry, I should specify more:\n\nThis is the same module that exists using two different file. One inherits the other. I'm using Visual Studio 2013 -- the compiler allows these to compile but I get \"prototype undefined is not a function\" when I run the output JS.\n\nThis is a bug -- if I put the classes in the same file it works fine. The fact that the TypeScript compiler is allowing garbage out is a nuisance. How are users supposed to allow different classes that depend on each other in VS 2013 under the TS Module System?\n\n",
+      "PostedDate": "2014-04-24T11:09:11.42-07:00",
+      "Id": 142909
+    },
+    {
+      "Message": "This is really more of a question than a compiler issue; please use Stack Overflow for questions.\n\nThings to check: What reference tags exist? What order are you passing the files to the compiler? What order are you loading the compiled files in? Are you compiling with --out?\n\r\n\r** Closed by RyanCavanaugh 04/24/2014 9:17AM",
+      "PostedDate": "2014-04-24T09:17:21.193-07:00",
+      "Id": 142922
+    },
+    {
+      "Message": "To be clear, the issue here is that you are using --out to concatenate these 2 files into one and you need to ensure a particular ordering of files to the compiler from VS in order to ensure the runtime behavior works correctly? If so, you want to add a _references.ts file that specifies the order files will be compiled via /// references to those files.",
+      "PostedDate": "2014-04-24T14:49:49.913-07:00",
+      "Id": 142924
+    }
+  ]
+}

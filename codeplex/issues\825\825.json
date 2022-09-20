@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:22:45.683-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The specification mentions that the following function will be used for extension : \r\n\r\n```\r\nvar __extends = this.__extends || function(d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function f() { this.constructor = d; }\r\n    f.prototype = b.prototype;\r\n    d.prototype = new f();\r\n}\r\n```\r\n\r\nHowever the function used is : \r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\n```\r\n\r\nThis breaks static member inheritance which is mentioned in the specification. \r\n([Try It](http://www.typescriptlang.org/Playground/#src=class%20A%7B%0A%09fooMem%3D10%3B%0A%09static%20fooStat%3D10%3B%0A%7D%0Aclass%20B%20extends%20A%7B%7D%3B%0A%0Avar%20b%20%3D%20new%20B()%3B%0Aalert(b.fooMem.toString())%3B%0Aalert(B.fooStat.toString())%3B%0A))\r\n\r\nThis would would if we use the extends as per the documentation. ([Try It](http://jsfiddle.net/basarat/bas7X/))",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-17T19:06:16.21-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Typescript extends is broken",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 825
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The TypeScript compiler does not think that class B has a static member fooStat - that seems wrong reading the specs, but the generated JavaScript matches what the compiler thinks at least",
+      "PostedDate": "2013-03-18T07:03:55.603-07:00",
+      "Id": 93515
+    },
+    {
+      "Message": "Marking 'active'",
+      "PostedDate": "2013-03-18T09:34:49.513-07:00",
+      "Id": 93550
+    },
+    {
+      "Message": "Until this is fixed you can work around the issue by using:\n```\nclass Child extends Parent {\n  static member = Parent.member;\n}\n```",
+      "PostedDate": "2013-04-27T14:09:44.773-07:00",
+      "Id": 98692
+    },
+    {
+      "Message": "According to the ES6 spec editor, \n\n>Yes ES6 has \"class-side\" inheritance.  The ES5 equivalent for:\n>\n>   class Sub extends Super {\n>     constructor() {/*constructor body */ }\n>     method1 () {}\n>     static method2 {}\n>   }\n>\n>is:\n>\n>  function Sub() {/*constructor body */ }\n>  Sub.__proto__ = Super;\n>  Sub.prototype = Object.create(Super.prototype);\n>  Sub.prototype.method1 = function method1() {};\n>  Sub.method2 = function method2 () {};\n>\n>Sub.foo looks first looks for a own property on Sub, then on Super, etc.\n\nhttp://lists.w3.org/Archives/Public/public-script-coord/2013AprJun/0029.html\n\nUnfortunately, the TS playground still has trouble with `__proto__`, so we can't just shim our own `__extends`. https://typescript.codeplex.com/workitem/816",
+      "PostedDate": "2013-05-08T01:30:48.387-07:00",
+      "Id": 99665
+    }
+  ]
+}

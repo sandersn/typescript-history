@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is intentional (see spec section 4.14.2). Unary + is a common JavaScript idiom for converting a string to a number; - follows the same rules for symmetry's sake.",
+    "ClosedDate": "2014-04-09T08:49:27.773-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "It seems that the unary negate doesn't check if the type is a number (or any).\r\n\r\nConsider this code\r\n```\r\nclass SomeClass\r\n{\r\n    constructor()\r\n    {\r\n        //...\r\n    }\r\n}\r\n\r\nvar instance = new SomeClass();\r\nvar y = instance / 52;\r\n```\r\nI get a red line under the instance as expected. Dividing an instance of a class by 52 makes no sense.\r\n\r\nBut if I add a minus sign:\r\n```\r\nvar y = -instance / 52;\r\n```\r\nIt gives no error, and compiles without saying anything. Even running the compiled javascript code gives no error because y is now equal to Nan (not a number).\r\n\r\nThis is very annoying because it gives silent errors when accidentally using the wrong variable. There should be an error or at least a warning when you try to negate something that isn't a number (or any).\r\n\r\nUnless, of course, there is a use for negating something that isn't a number.",
+    "LastUpdatedDate": "2014-04-09T08:49:27.773-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-09T05:06:50.423-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Unary Negate Accepts everything",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2408
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "While this may be confusing, this is written as a feature of the language specification:\nhttp://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf  (see page 65)\n\nSo, it's not a bug ( and I'm sure it's staying for interoperability with javascript. )",
+      "PostedDate": "2014-04-09T08:10:39.973-07:00",
+      "Id": 141182
+    },
+    {
+      "Message": "```\nfunction MyNum() { }\nMyNum.prototype.valueOf = function (){ return 1; }\nvar instance = new MyNum();\nvar y = -instance / 52;\n\n// y === -0.019230769230769232\n// (instance == 1) = true\n\n```\n'nough said. ;)",
+      "PostedDate": "2014-04-09T08:40:38.727-07:00",
+      "Id": 141186
+    },
+    {
+      "Message": "Just to add: I suppose one could argue that TS should look at the presence of a \"valueOf\" class function, and take the return type into consideration instead of the class type itself.",
+      "PostedDate": "2014-04-09T08:44:02.137-07:00",
+      "Id": 141187
+    }
+  ]
+}

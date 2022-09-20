@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.863-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I'm modelling a declaration .d.ts file for library that exports a method `try` on a named `module`:\r\n\r\n````\r\ndeclare module Promise {\r\n    function try():Promise {\r\n        // ...\r\n    }\r\n}\r\n````\r\n\r\nAFAIC `try` is a acceptable keyword in ES5, but I get this error report:\r\n\r\n````\r\nbluebird/bluebird.d.ts(385,14): error TS1006: Identifier expected; 'try' is a keyword.\r\nbluebird/bluebird.d.ts(385,17): error TS1005: '{' expected.\r\nbluebird/bluebird.d.ts(385,23): error TS1005: ')' expected.\r\nbluebird/bluebird.d.ts(385,41): error TS1003: Identifier expected.\r\nbluebird/bluebird.d.ts(385,48): error TS1003: Identifier expected.\r\nbluebird/bluebird.d.ts(385,53): error TS1003: Identifier expected.\r\nbluebird/bluebird.d.ts(385,60): error TS1003: Identifier expected.\r\nbluebird/bluebird.d.ts(385,64): error TS1005: ';' expected.\r\nbluebird/bluebird.d.ts(385,65): error TS1008: Unexpected token; 'module, class, interface, enum, import or statement' expected.\r\nbluebird/bluebird.d.ts(385,76): error TS1003: Identifier expected.\r\n````\r\n\r\nMy compiler string is:\r\n````\r\ntsc \"defs/bluebird/bluebird-tests.ts\" --sourcemap --target ES5 --module commonjs --out defs/bluebird/bluebird-tests.js\r\n````\r\n\r\nThis is in `typescript v0.9.5` under `grunt-ts`.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-19T13:19:56.4-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "declarations cannot describe function 'try' on module",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2194
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Not as a loose function, but you can use it as a method (= callable property) in ES5:\n\nI'm modelling this library: https://github.com/petkaantonov/bluebird\n\nIt definitely has a try method: https://github.com/petkaantonov/bluebird/blob/master/API.md\n\n````\nfunction Promise() {\n\n}\nPromise.try = function () {\n\n};\n````",
+      "PostedDate": "2014-02-19T19:49:55.323-08:00",
+      "Id": 134153
+    },
+    {
+      "Message": "@danquirk please re-open this issue:\n\nHere is the example from the Bluebird API I linked before:\n\nWe need to model this: `Promise.try()`:\n\n````\nfunction getUserById(id) {\n    return Promise.try(function(){\n        if (typeof id !== \"number\") {\n            throw new Error(\"id must be a number\");\n        }\n        return db.getUserById(id);\n    });\n}\n````",
+      "PostedDate": "2014-02-21T13:56:36.5-08:00",
+      "Id": 134394
+    },
+    {
+      "Message": "This doesn't work in devel branch (1.0.0):\n\nhttps://github.com/borisyankov/DefinitelyTyped/blob/b76db08d5046efe57a94f01897313ec4d1c910d5/bluebird/bluebird-tests.ts#L493-L515\n\nhttps://github.com/borisyankov/DefinitelyTyped/blob/b76db08d5046efe57a94f01897313ec4d1c910d5/bluebird/bluebird.d.ts#L389-L390\n\nIf I enable it the compiler complains that try is a keyword, while it is exported as a property. (I think the declaration works here differently then module code would). ",
+      "PostedDate": "2014-02-24T20:30:26.527-08:00",
+      "Id": 134631
+    },
+    {
+      "Message": "As the error suggests, try is a keyword not an identifier and it can't be used in this position. If you try to define a function like this in JavaScript you'll also get an error:\n\n>function try() {}\nSyntaxError: Unexpected token try\n\r\n\r** Closed by danquirk 02/19/2014 5:58PM",
+      "PostedDate": "2014-02-19T17:58:46.093-08:00",
+      "Id": 136796
+    },
+    {
+      "Message": "This is a problem: I'm re-opening this issue as *declarations* currently cannot describe certain modules.\r\n\r\nFor example: 'try' can be a valid method name: (like in Bluebird)\r\n\r\nMinimal source:\r\n\r\n````\r\n// foo-module.js from npm/bower\r\nmodule.exports = {\r\n    try: function (x) {\r\n        // ..\r\n    }\r\n}\r\n````\r\n\r\nSo this is a legal case to declare:\r\n\r\n````\r\ndeclare module 'foo-module' {\r\n    export function try (x: any): void;\r\n}\r\n````\r\n\r\nSame for throw (in Chai), catch, finally, return etc (used in promise libraries but others too).\r\n\r\nI am aware th following implementation is *not* valid typescript.\r\n\r\n````\r\nexport module Foo {\r\n    export function try (x: any): void {\r\n        // ..\r\n    }\r\n}\r\n````\r\n\r\nBut this is:\r\n\r\n````\r\nexport var foo = {\r\n    try: function (x) {\r\n        // ..\r\n    }\r\n}\r\n````",
+      "PostedDate": "2014-03-13T18:16:11.15-07:00",
+      "Id": 136797
+    },
+    {
+      "Message": "I see what you mean. The problem is that if we were to allow 'try' in that position we would also be allowing other code patterns that are illegal, essentially putting more burden on the user to make sure they use the right terms in the right places lest their program generate invalid JS. That said, it is possible so I've marked this as a suggestion for the future that we can evaluate.\n\nIn the meantime, I think you can model this using a clodule in the .d.ts which isn't quite as clean but does the job. So this:\n```TypeScript```\nclass Promise {\n    static try(x: any): void { }\n}\n\nmodule Promise {\n    export var value: any;\n}\n```\n\nwill generate this .d.ts:\n```TypeScript```\ndeclare class Promise {\n    static try(x: any): void;\n}\ndeclare module Promise {\n    var value: any;\n}\n```\nand now this works:\n```TypeScript```\n/// <reference path='Promises.d.ts'/>\n\nfunction getUserById(id) {\n    return Promise.try(function () { // no error, try shows up in the completion list, has signature help, etc\n        if (typeof id !== \"number\") {\n            throw new Error(\"id must be a number\");\n        }\n        return db.getUserById(id);\n    });\n}\n```",
+      "PostedDate": "2014-03-13T19:11:52.117-07:00",
+      "Id": 136803
+    },
+    {
+      "Message": "Thanks, that will cover for now. We had some hacks with interface earlier but it wasn't ideal.\n\nBut for later:\n\n> .. burden on the user to make sure they use the right terms in the right places lest their program generate invalid JS. \n\nI think if we're declaring a module then the `try` is a different semantic then when we're actually implementing. \n\nAnd besides that, is there a other use of the `try` keyword in a declaration at all? You can't do much statements there.\n\nIf the rest of the syntax is valid then these keywords should be acceptable in a declaration situation if it is possible to create/use the construct with valid JavaScript.\n",
+      "PostedDate": "2014-03-13T20:23:18.597-07:00",
+      "Id": 136805
+    }
+  ]
+}

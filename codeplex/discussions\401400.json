@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "934673",
+    "ThreadId": "401400",
+    "Html": "\r\n<p>As classes are declared in the global scope, what is the best practice for using jQuery with the '$' alias? Or should I stick with 'jQuery'?</p>\r\n",
+    "PostedDate": "2012-10-31T04:28:32.24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934808",
+    "ThreadId": "401400",
+    "Html": "<p>I'm not sure I follow.&nbsp; Classes are declared at the global scope, but I'm not sure how that conflicts with '$'.&nbsp; They do create a '__extends' function, but I don't know of any '$' symbols that are created.</p>",
+    "PostedDate": "2012-10-31T08:09:55.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935275",
+    "ThreadId": "401400",
+    "Html": "\r\n<p>Sorry Jon, that made a lot more sense in my head when I wrote it :)</p>\r\n<p>If I have the a class in TypeScript:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Greeter {\n    constructor (element: HTMLElement) { \n        $(<span style=\"color:#a31515\">'#h1'</span>).css({ color: <span style=\"color:#a31515\">'Red'</span> });\n    }\n}\n</pre>\r\n</div>\r\n<p>It will compile to the following JavaScript:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">function</span> Greeter(element) {\n        $(<span style=\"color:#a31515\">'#h1'</span>).css({\n            color: <span style=\"color:#a31515\">'Red'</span>\n        });\n    }\n    <span style=\"color:blue\">return</span> Greeter;\n})();</pre>\r\n</div>\r\n<p>Most of the time, we would encapsulated any code that uses $ like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>(<span style=\"color:blue\">function</span> ($) {\n\t<span style=\"color:green\">//...</span>\n})(jQuery);</pre>\r\n</div>\r\n<p>So my question is, is there a best practice way of ensuring that the use of $ in a TypeScript module/class is encapsulated? Or do we have to use 'jQuery' itself, or pass it in to the constructor?</p>\r\n",
+    "PostedDate": "2012-11-01T07:21:42.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "937407",
+    "ThreadId": "401400",
+    "Html": "<p>It is not currently possible in TypeScript to get the isolation from changes to the jQuery binding that the above examples provides.&nbsp; However, in general, it should be very rare that this is actually important.&nbsp; Why do you want to use the enacapsulation technique you described?&nbsp; Note that jQuery provides a binding for $ already, and you can use that directly.</p>\r\n<p>There is a feature we are considering to allow anonymous modules, which would allow your example to be written:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>module {\r\n  <span style=\"color: blue;\">var</span> $ = jQuery;\r\n  <span style=\"color: blue;\">class</span> Foo {\r\n    doIt() { <span style=\"color: blue;\">return</span> $(<span style=\"color: #a31515;\">'#h1'</span>); }\r\n  }\r\n}\r\n</pre>\r\n</div>",
+    "PostedDate": "2012-11-06T10:50:58.8-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "937745",
+    "ThreadId": "401400",
+    "Html": "<p>I think that jQuery is so widely used nowadays, that you can assume it is safe to use the $ without any precautions.</p>",
+    "PostedDate": "2012-11-07T00:55:43.633-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132272",
+    "ThreadId": "401400",
+    "Html": "Not if you're building a SharePoint 2013 WebPart with TypeScript client code.  As one example.<br />\n<br />\n(SharePoint 2013's AssetPickers.js defines <code>$</code> for itself.  Obnoxious!)<br />\n",
+    "PostedDate": "2013-12-05T11:24:28.533-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

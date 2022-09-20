@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is addressed and tests added in commit 21b7c9ca0c829.  \n\nNote that the last issue is actually valid syntax, but will be a run-time error (function calls - which a constructor is - can return a reference type, though none do.  See http://es5.github.com/#x8.7 .  The grammar also permits it).",
+    "ClosedDate": "2013-04-03T15:09:07.247-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "Hi, in the code below the incomplete statement \"var sumin = new\" is compiling by concatenating the next line and automatically adding parentheses to the assumed type:\r\n\r\nclass RudeBoy {\r\n\r\n\tprivate greeting;\r\n\t\r\n\tpublic greet() {\r\n\t\t\r\n\t\tvar sumin = new\r\n\t\tthis.greeting = \"Hello, *@#!!\";\r\n\t\t\r\n\t\t//Compiles to\r\n\t\t//var sumin = new this.greeting() = \"Hello, *@#!!\";\r\n\t\t\r\n\t}\r\n}\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-12T04:59:46.41-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Keyword \"new\" adds parentheses to constructor",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 407
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is exactly the correct behaviour. If you want to avoid this from occurring, you'll need to end the line with a semi-colon. It's unclear what the expectation of this code is—|new| is an operator, but you're not providing it with a NewExpression on the right.",
+      "PostedDate": "2012-11-13T08:38:14.333-08:00",
+      "Id": 82370
+    },
+    {
+      "Message": "Hi, the expectation of this code is for the TypeScript compiler to generate an error.\n\nBecause I did not write this.greeting()  //Please don't put brackets where I did not intend them\n\nI hope that makes sense?",
+      "PostedDate": "2012-11-13T09:24:34.707-08:00",
+      "Id": 82379
+    },
+    {
+      "Message": "The problem is that it appears valid enough, because:\n\n{{\nfunction C() {}\n\nvar c = new\nC()\n}}\n\n...is valid.\n\nAnd so is:\n\n{{\nfunction C() {}\n\nvar c = new\nC\n}}\n\n... Which TypeScript apparently attempts to \"correct\". \n\n\nAnyway... This should throw a ReferenceError. invalid LHS assignment\n\n\n",
+      "PostedDate": "2012-11-13T12:17:34.267-08:00",
+      "Id": 82400
+    },
+    {
+      "Message": "Sorry about the curlies, I thought wiki formatting was finally working. ",
+      "PostedDate": "2012-11-13T12:18:13.41-08:00",
+      "Id": 82401
+    },
+    {
+      "Message": "rwaldron is correct, this is syntactically valid but probably should be giving an error during the assignment. Following up to see if we want to categorize 'new' expressions as values.",
+      "PostedDate": "2012-11-13T13:52:49.47-08:00",
+      "Id": 82417
+    },
+    {
+      "Message": "The idea of supporting JavaScript warts and all is not very appealing. Object instantiation should require that parentheses always follow the type.\n\nHere is something else:  \n\nvar myvar = new();\n\n// TS tries to be helpful and compiles this into\n\nvar vv = new ()();\n\n// Runtime error  \"Unexpected token )\"",
+      "PostedDate": "2012-11-14T02:15:32.79-08:00",
+      "Id": 82453
+    },
+    {
+      "Message": "@nablog yeah that's not valid anywhere and appears to be a naive compilation issue",
+      "PostedDate": "2012-11-14T08:58:53.43-08:00",
+      "Id": 82482
+    },
+    {
+      "Message": "Back to untriaged -- we should treat this as a type error:\r\n\r\n    var y;\r\n    var x = new y = 4; // 'new y' is not a reference\r\n",
+      "PostedDate": "2013-02-25T16:11:05.1-08:00",
+      "Id": 91498
+    },
+    {
+      "Message": "Marked as active, we're going to look into this issue.",
+      "PostedDate": "2013-02-27T10:49:15.523-08:00",
+      "Id": 91703
+    }
+  ]
+}

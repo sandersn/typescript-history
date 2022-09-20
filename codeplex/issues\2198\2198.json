@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the develop branch.\n\nThe errors you get now are:\n\nfile1.ts(11,1): error TS2012: Cannot convert '{ p2: number; }' to 'C<string>':\n        Types of property 'p2' of types '{ p2: number; }' and 'C<string>' are incompatible:\n                Type 'Number' is missing property 'p1' from type 'A<{ x: string; }>'.\n\nfile1.ts(13,1): error TS2012: Cannot convert '{ p1: string; p2: string; }' to 'A<string>':\n        Types of property 'p1' of types '{ p1: string; p2: string; }' and 'A<string>' are incompatible:\n                Type 'String' is missing property 'p1' from type 'A<C<string>>'.",
+    "ClosedDate": "2014-02-21T13:37:36.79-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Paste the following code in Playground or try to compile with TS 0.9.5:\r\n``` TypeScript\r\nclass A<T> {\r\n    p1: T;\r\n}\r\n\r\nclass C<T> {\r\n    p2: A<{ x: T }>;\r\n}\r\n\r\nvar c: C<string>;\r\nvar d: { p2: number; }\r\nc = d;\r\n```\r\nCompiler raises an error on 'c = d' with a message:\r\nerror TS2012: Cannot convert '{ p2: number; }' to 'C<string>': Types of property 'p2' of types '{ p2: number; }' and 'C<string>' are incompatible:  Types 'number' and 'A<{ x: string; }>' originating in inifinitely expanding type reference do not refer to same named type.\r\n\r\nBut type A doesn't reference type C in any way, so by spec it cannot originate infinitely expanding type reference.\r\n\r\nAlso the following type references is also classified as infinitely despite of they don't wraps any type parameters (very strange):\r\n``` TypeScript\r\nclass A<T> {\r\n\tp1 : A<C<string>>;\r\n\tp2 : A<A<C<string>>>;\r\n}\r\n\r\nclass C<T> {\r\n\t\r\n}\r\n\r\nvar a : A<string>;\r\nvar b : {p1 : string; p2 : string;};\r\n\r\na = b;\r\n```\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-02-21T13:37:36.79-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-20T05:57:35.707-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Infinitely expanding type references detection is incorrect",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2198
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in the release-1.0 branch",
+    "ClosedDate": "2014-02-26T15:43:03.553-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\n__Version:__ 1.0RC\r\n\r\nIn order to reproduce this bug one needs two separate projects.\r\n\r\nIn project B I have the following interface\r\n\r\n```TypeScript\r\ndeclare module foo.events {\r\n\r\n    interface Beta {\r\n\r\n        doFoo(): void;\r\n    }\r\n}\r\n```\r\n\r\nI reference this interface in Project A in order to implement it:\r\n\r\n```TypeScript\r\n/// <reference path=\"../Beta/Beta.d.ts\" />\r\n\r\nmodule foo.events.classes {\r\n\r\n    export class Beta implements events.Beta {\r\n\r\n        public doFoo() { }\r\n    }\r\n}\r\n```\r\n\r\nThis generated the following faulty declarations:\r\n\r\n```TypeScript\r\n/// <reference path=\"../Beta/Beta.d.ts\" />\r\ndeclare module foo.events.classes {\r\n    class Beta implements Beta {\r\n        public doFoo(): void;\r\n    }\r\n}\r\n```\r\n\r\nThis is faulty because it should be `class Beta implements events.Beta`.\r\n\r\nAny other projects that reference this declarations file error out with:\r\n\r\nClass 'foo.events.classes.Beta' is recursively referenced as a base type of itself\r\n\r\nThis error is also visible when the declarations file is opened in the IDE.\r\n\r\nI currently do not have a workaround - apart from actually renaming types.\r\n\r\nI'm attaching a simple solution that reproduces the problem.\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-26T03:51:27.47-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Module prefix omitted in generated declarations",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2223
+  },
+  "FileAttachments": [
+    {
+      "FileId": 807571,
+      "FileName": "Foo.zip",
+      "DownloadUrl": ".\\807571"
+    }
+  ],
+  "Comments": []
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1226537",
+    "ThreadId": "540110",
+    "Html": "Monkey patching objects is a common thing in the Javascript world and TypeScript allows you to create interfaces that extend other interfaces so that you can do it in a type safe way. However you have to explicitly define new interfaces for each type of object being patched. It would be very interesting if instead we could do something like the following.<br />\n<pre><code>interface Patched&lt;T&gt; extends T {\n    patchMethod1();\n    patchMethod2();\n    patchMethod3();\n}\n\ndeclare function&lt;T&gt;patchMe(object: T): Patched&lt;T&gt;;\n\nvar a = {foo: 'bar'};\nvar b = patchMe(a);\nb.patchMethod1(); \nb.patchMethod2();\nb.foo </code></pre>\n\nThe precise use case that raised this is how <a href=\"https://github.com/mgonto/restangular\" rel=\"nofollow\">restangular</a> works. It gets the object from an API but it adds a series of methods to it for making subsequent calls to the API easier. What I have been doing so far is the following:<br />\n<pre><code>// Restangular type definition\ninterface RestangularElement {\n    get(...): Promise...;\n    put(...): Promise...;\n    //...\n}</code></pre>\n\n<pre><code>interface Company {\n    id: number;\n    name: string;\n}\ninterface User {\n    id: number;\n    name: string;\n    companyId: number;\n}\n\ninterface RestCompany extends Company, RestangularElement {}\ninterface RestUser extends User, RestangularElement {}\n\nRestangular.one('user', 1).get((user: RestUser) =&gt; {\n    console.log('hello ' + user.name);\n    user.companyId = 4;\n    return user.put();\n});</code></pre>\n\nand what I think it would be nice we could do is<br />\n<pre><code>interface RestangularElement&lt;T&gt; extends T {\n    get(...): Promise...;\n    put(...): Promise...;\n    //...\n}\n\ninterface Company {\n    id: number;\n    name: string;\n}\ninterface User {\n    id: number;\n    name: string;\n    companyId: number;\n}\n\nRestangular.one('user', 1).get((user: RestangularElement&lt;User&gt;) =&gt; {\n    console.log('hello ' + user.name);\n    user.companyId = 4;\n    return user.put();\n});</code></pre>\n\nwithout having to explicitly declare an extra interface for each object in the API.\r<br />\n<br />\nI hope the example is clear enough. What do you guys think?<br />\n",
+    "PostedDate": "2014-03-25T10:26:45.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226708",
+    "ThreadId": "540110",
+    "Html": "Note: You can also do this:<br />\n<pre><code>declare class A {\n    get(...): Promise...;\n    put(...): Promise...;\n    //...\n}\n\ninterface Company extends A {\n    id: number;\n    name: string;\n}\n\ninterface User extends A {\n    id: number;\n    name: string;\n    companyId: number;\n}\n</code></pre>\n\n<a href=\"http://goo.gl/6kjlvp\" rel=\"nofollow\">http://goo.gl/6kjlvp</a><br />\n",
+    "PostedDate": "2014-03-25T16:12:04.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226722",
+    "ThreadId": "540110",
+    "Html": "The problem with this approach is that the type definition for the API is tied to restangular and you lose the ability to create Company or User objects since you will need to implement all class A methods and properties.<br />\n",
+    "PostedDate": "2014-03-25T16:51:36.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226749",
+    "ThreadId": "540110",
+    "Html": "Oh I see what you are trying to do now, sorry.  Sort of like an &quot;on the fly&quot; merger of two interfaces.  Similarly, I find many times I would like to apply two interfaces to an object as a merged type in itself, without declaring the resulting type.  Something like: &quot;var obj : &lt;Interface1, Interface2&gt; = ...;&quot; or &quot;var obj : Interface1 extends Interface2 = ...;&quot;. <br />\n",
+    "PostedDate": "2014-03-25T18:27:26.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226860",
+    "ThreadId": "540110",
+    "Html": "Exactly, that is what I meant.<br />\n",
+    "PostedDate": "2014-03-26T04:32:52.657-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

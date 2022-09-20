@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1109181",
+    "ThreadId": "462711",
+    "Html": "I have a problem with the either-or-usage of the keyword &quot;this&quot;, because sometimes you need the outer scope AND also the inner scope &quot;this&quot;:<br />\n<pre><code>class Blabla{\n\nprivate selectNode(node: JQuery) {...}\n\n// will not work: second &quot;this&quot; references the wrong object\n$(&quot;.treeview_node&quot;).click(() =&gt; {\n      this.selectNode($(this));\n});\n\n// will also not work: first &quot;this&quot; references the wrong object\n$(&quot;.treeview_node&quot;).click(function() {\n      this.selectNode($(this));\n});\n\n}</code></pre>\n\nMy workaround now is to take the second option and define explicetly outside a reference to &quot;this&quot; of the class. (like you would do in vanilla javascript)\r<br />\n<br />\nIs there a more elegant solution?<br />\n",
+    "PostedDate": "2013-10-18T06:22:46.853-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1109239",
+    "ThreadId": "462711",
+    "Html": "The problem, as you've probably realised, is that it's not possible to get &quot;this&quot; to refer to two separate things.\r<br />\n<br />\nHowever, I believe you can get hold of the DOM element with the <code>currentTarget</code> property of the <code>event</code> object. \r<br />\n<br />\nSo:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n$(<span style=\"color:#A31515;\">&quot;.treeview_node&quot;</span>).click((event) =&gt; {\n      <span style=\"color:Blue;\">this</span>.selectNode($(event.currentTarget));\n});\r\n</pre></div>",
+    "PostedDate": "2013-10-18T08:12:10.287-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1109746",
+    "ThreadId": "462711",
+    "Html": "Thanks! I should have read the JQuery API more deeply :-)\r<br />\n<br />\nBut this solution will only work for JQuery events, right? A general approach is to introduce a variable for the outer scope manually. \r<br />\n<br />\nIs this correct?<br />\n",
+    "PostedDate": "2013-10-20T13:19:36.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110042",
+    "ThreadId": "462711",
+    "Html": "@humbrie,<br />\n<br />\nAnother approach for this particular case is the following:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">var</span> $redundantLib = $(<span style=\"color:#A31515;\">&quot;.treeview_node&quot;</span>);\n\n$redundantLib.click( event =&gt; {\n      <span style=\"color:Blue;\">this</span>.selectNode($redundantLib);\n});\n\r\n</pre></div>This is more optimal, because only one JQuery wrapper is created.<br />\n<br />\nThe general approach, I would think, is really a question of locating the object that provides the &quot;this&quot; context for the inner scope; it's normally not too far away.<br />\n<br />\n<strong>Edit</strong>: Reading your question again, no currentTarget is not specific to JQuery events. It's part of the spec, although its implementation in IE &lt; 9 is suspect.<br />\n",
+    "PostedDate": "2013-10-21T08:14:17.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

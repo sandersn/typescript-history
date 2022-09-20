@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed, it will appear in the next public release.",
+    "ClosedDate": "2013-07-03T16:17:36.983-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "When building on a TFS build server you may get an error such as:\r\n\r\n> C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\Microsoft.TypeScript.targets (48): The command \"\"__C:\\Program Files\\Microsoft SDKs\\TypeScript\\tsc.exe__\" ... exited with code 3\r\n\r\nwhich indicates that the tsc.exe wasn't found, because it's installed in __C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript__ .\r\n\r\nIn Microsoft.TypeScript.targets, the __CompileTypeScript__ target is specified as:\r\n\r\n```\r\n<Target Name=\"CompileTypeScript\">\r\n    <Message Text=\"Compiling TypeScript files\" />\r\n    <Message Text=\"Executing tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'\"%(fullpath)\"', ' ')\" />\r\n    <Exec Command=\"\"$(ProgramFiles)\\Microsoft SDKs\\TypeScript\\tsc.exe\" $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'\"%(fullpath)\"', ' ')\" />\r\n  </Target>\r\n```\r\n\r\nThe problem is that __$(ProgramFiles)__ expands to __C:\\Program Files__ when run by a Build Server Agent in a 64-bit process. Instead of $(ProgramFiles), you should use __$(MSBuildProgramFiles32)__ which should always expand to __C:\\Program Files (x86)__ .\r\n\r\nIn TS 0.8.x the compiler executable was specified as __tsc.exe__ only, without path.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-20T06:25:12.683-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Failure to build on TFS Build Server when Build Agent is running as 64-bit process",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1192
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, marked as active.",
+      "PostedDate": "2013-06-20T18:48:00.89-07:00",
+      "Id": 103734
+    }
+  ]
+}

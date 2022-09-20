@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-20T16:03:27.76-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\n\r\nI am getting the following error when compiling: \r\ntsc.js(29049, 24) Microsoft JScript runtime error: Unable to get value of the property 'flags': object is null or undefined \r\nHere is the related line in tsc.js.\r\n```\r\n} else if ((this.emitState.container === 1 /* Module */ || this.emitState.container === 2 /* DynamicModule */) && TypeScript.hasFlag(pullFunctionDecl.flags, 1 /* Exported */)) {\r\n```\r\nThis is inside \"Emitter.prototype.emitFunction\".\r\n\r\nI have narrowed the issue down to the following code:\r\n```\r\ninterface Array<T> {\r\n    GetEnumerator(reverse?: boolean): Fayde.IEnumerator<T>;\r\n}\r\n```",
+    "LastUpdatedDate": "2013-09-20T16:03:27.76-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-20T12:39:30.407-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Error when adding to an interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1706
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "What version of Typescript are you using? We definitely have had crashing bugs in this kind of scenario but currently this works for me with the latest bits. It's possible that the repro requires your definition of IEnumerator.",
+      "PostedDate": "2013-09-20T13:20:32.867-07:00",
+      "Id": 115192
+    },
+    {
+      "Message": "tsc says 0.9.1.1\n\nHere is the definition:\n```\nmodule Fayde {\n    export interface IEnumerator<T> {\n        Current: T;\n        MoveNext(): boolean;\n    }\n}\n```",
+      "PostedDate": "2013-09-20T14:03:10.28-07:00",
+      "Id": 115198
+    },
+    {
+      "Message": "Thanks for the follow up. It appears that whatever was causing it before has since been fixed, in the develop branch I currently see no errors with those types.\n\n```Typescript\nC:\\test>type repro2.ts\nexport module Fayde {\n    export interface IEnumerator<T> {\n        Current: T;\n        MoveNext(): boolean;\n    }\n}\n\nexport interface Array<T> {\n    GetEnumerator(reverse?: boolean): Fayde.IEnumerator<T>;\n}\nC:\\test>tsc --module commonjs -d repro2.ts\n\nC:\\test>\n```",
+      "PostedDate": "2013-09-20T16:03:23.967-07:00",
+      "Id": 115215
+    }
+  ]
+}

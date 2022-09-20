@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1041480",
+    "ThreadId": "443144",
+    "Html": "I'm thinking about something like this:<br />\n<br />\npage-a.ts:<br />\n<pre><code>import p = module('pages')\np.register('a', function (element: HTMLElement) {\n   //do something here\n});</code></pre>\n\npage-b.ts:<br />\n<pre><code>import p = module('pages')\np.register('b', function (element: HTMLElement) {\n   //do something else here\n});</code></pre>\n\nand there might be more.<br />\n<br />\npages.ts:<br />\n<pre><code>var registry = {};\n\nexport function register(id: string, callback: (element: HTMLElement) =&gt;void) {\n    registry[id] = callback;\n}\n\nexport function fire(id: string, element: HTMLElement) {\n    var callback = registry[id];\n    if(callback)\n        callback(element);\n}</code></pre>\n\nmain.ts:<br />\n<pre><code>import p = module(&quot;pages&quot;)\nimport a = module(&quot;page-a&quot;)\nimport b = module(&quot;page-b&quot;)\n\n//now that all callbacks are registered, when something happens, we can just do this:\np.fire(id, element);</code></pre>\n\nBut in the compiled result for main.ts (with options --module amd), there is nothing about 'page-a' or 'page-b', so nothing gets __register__ed. It does not work as I expect. I know it's because these modules are not used in the code, which is by design.<br />\n<br />\nIs there any way I can force the compiler to include a imported module even if that module is not used or doesn't even export anything at all?<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-05-09T10:36:55.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041561",
+    "ThreadId": "443144",
+    "Html": "It appears you want one output file (main.ts) composed of multiple external modules (which is what each of your files are right now) yes? This currently isn't possible but we're aware of issues in this space and considering some possible solutions. When you use --module AMD you will always get 1 .js file per .ts file in your compilation, and the module loader is intended to load the necessary pieces at runtime rather than have everything concatenated into one file.\r<br />\n<br />\nGenerally to get the behavior you want you would have each individual file not be an external module (i.e., no top level import/exports), and then main.ts would use triple slash references rather than module imports. When compiling you would then use the --out flag to have all the files you're interested in concatenated into a single .js output.\r<br />\n<br />\nDoes that make sense?<br />\n",
+    "PostedDate": "2013-05-09T14:02:39.327-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041704",
+    "ThreadId": "443144",
+    "Html": "Thanks for your help. I managed to something like this:<br />\n<br />\npage-a.ts<br />\n<pre><code>/// &lt;reference path=&quot;pages.ts&quot; /&gt;\n\npages.register('a', function (element: HTMLElement) {\n   //do something here\n});</code></pre>\n\npage-b.ts<br />\n<pre><code>/// &lt;reference path=&quot;pages.ts&quot; /&gt;\n\npages.register('b', function (element: HTMLElement) {\n   console.log('b');\n});\n</code></pre>\n\npages.ts<br />\n<pre><code>module pages {\n    var registry = {};\n\n    export function register(id: string, callback: (element: HTMLElement) =&gt;void) {\n        registry[id] = callback;\n    }\n\n    export function fire(id: string, element: HTMLElement) {\n        var callback = registry[id];\n        if(callback)\n            callback(element);\n    }\n}</code></pre>\n\nmain.ts<br />\n<pre><code>/// &lt;reference path=&quot;pages.ts&quot; /&gt;\n/// &lt;reference path=&quot;page-a.ts&quot; /&gt;\n/// &lt;reference path=&quot;page-b.ts&quot; /&gt;\n\n//now that all callbacks are registered, when something happens, we can just do this:\npages.fire(id, element);\n</code></pre>\n\nand I use this command line to compile it:<br />\n<pre><code>tsc --out main.js main.ts</code></pre>\n\nThen the compiled main.js contains all the code from the referenced &quot;pages.ts&quot;, &quot;page-a.ts&quot; and &quot;page-b.ts&quot;. __Now I lost the ability to import <strong>any</strong> module, and have to use triple slash reference on each of them.__ This is <em>not yet</em> <strong>far from</strong> ideal, but <em>totally</em> acceptable for me. Just post it here so any one interested an have a look.<br />\n<br />\nThanks again.<br />\n",
+    "PostedDate": "2013-05-09T22:26:33.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reopen if you're still seeing this on 0.8.2.0. Thanks!",
+    "ClosedDate": "2013-01-28T17:07:32.657-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "1) With version 0.8.1.0 create a new HTML Application with TypeScript\n2) Copy the TypeScript binaries into the project\n3) Add a script source reference to typescript.js in default.htm\n4) Try to debug the application.  Visual Studio crashes.\n\n",
+    "LastUpdatedDate": "2014-06-03T07:30:26.147-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-16T13:06:45.89-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Including TypeScript.js crashes VS when debugging",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 8,
+    "Id": 437
+  },
+  "FileAttachments": [
+    {
+      "FileId": 533672,
+      "FileName": "default.htm",
+      "DownloadUrl": ".\\533672"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I just tried these exact steps with the new release and it worked perfectly for me.  Could you please outline:\n\n - The details of the crash error message, or events logged to the Application Log when this occurs.\n - Which version/build of VS you are using (Help / About, e.g. Visual Studio 2012 Web Express, 11.0.51106.01 Update 1).\n - If you had any issues debugging JavaScript applications prior to installing TypeScript.\n - If the scenario works if you uninstall TypeScript.\n\nWe have noticed that some systems that are pending an update already, don't get full functionality until they reboot (as any pending reboots suppress propagation of some system change notifications).  Could you please also see if a reboot helps in case there was another system update pending.\n\nThanks!",
+      "PostedDate": "2012-11-16T15:33:32.543-08:00",
+      "Id": 82623
+    },
+    {
+      "Message": "Thanks Bill.  I just tried this on a second system and got the same problem.\n\nVS Version: Ultimate 2012, 11.0.50727.1 RTMREL\n\nI have done an uninstall/reboot/install/reboot and same thing.  Here is the callstack from EventViewer:\n\nApplication: devenv.exe\nFramework Version: v4.0.30319\nDescription: The process was terminated due to an unhandled exception.\nException Info: System.NullReferenceException\nStack:\n   at TypeScriptDebugEngine.SourceMapReader.getSourceMappingOfJsSource(Microsoft.VisualStudio.Debugger.Script.DkmScriptDocument)\n   at TypeScriptDebugEngine.SourceMapper.LoadFileMappings(Microsoft.VisualStudio.Debugger.Script.DkmScriptDocument)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmModuleSymbolsUpdatedNotification.OnModuleSymbolsUpdated(Microsoft.VisualStudio.Debugger.DkmModuleInstance, Microsoft.VisualStudio.Debugger.Symbols.DkmModule, Microsoft.VisualStudio.Debugger.DkmWorkList, Microsoft.VisualStudio.Debugger.DkmEventDescriptor)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmModuleSymbolsUpdatedNotification_OnModuleSymbolsUpdated(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr)\n   at Microsoft.VisualStudio.Debugger.NativeDkmModuleInstance.Proc7C740EFAED2FCAE33007EF4EB2BCA3CF(IntPtr, IntPtr)\n   at Microsoft.VisualStudio.Debugger.DkmModuleInstance.OnSymbolsUpdated(Microsoft.VisualStudio.Debugger.Symbols.DkmModule)\n   at TypeScriptDebugEngine.DebugMonitor.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmScriptSymbolsUpdatedNotification.OnScriptSymbolsUpdated(Microsoft.VisualStudio.Debugger.Script.DkmScriptRuntimeInstance, Microsoft.VisualStudio.Debugger.Script.DkmScriptDocument[], Microsoft.VisualStudio.Debugger.DkmWorkList, Microsoft.VisualStudio.Debugger.DkmEventDescriptor)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmScriptSymbolsUpdatedNotification_OnScriptSymbolsUpdated(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr)",
+      "PostedDate": "2012-11-16T16:22:48.207-08:00",
+      "Id": 82626
+    },
+    {
+      "Message": "Thanks.  Looking at the code where this is crashing, looks like we may have an issue if trying to debug a JS or TS file which isn't actually part of the Project being debugged (i.e. pulled in via a reference from somewhere outside the project, or the source file is marked as \"Exclude from project\").  Is that possible in your scenario?",
+      "PostedDate": "2012-11-17T10:15:23.437-08:00",
+      "Id": 82649
+    },
+    {
+      "Message": "Yup.  This appears to be the scenario.  Adding the JS module to the project I can debug without crashing VS.  Thanks for the pointer.",
+      "PostedDate": "2012-11-18T19:39:15.017-08:00",
+      "Id": 82694
+    },
+    {
+      "Message": "It makes my Visual C++ project crash too when i hit f5!",
+      "PostedDate": "2012-11-20T01:12:44.607-08:00",
+      "Id": 82756
+    },
+    {
+      "Message": "This is crashing trying to debug a WP8 project. No javascript files in the solution or in the solution dir.\n\nHere's the stack trace:\nStack:\n   at TypeScriptDebugEngine.TypeScriptInstruction.GetScriptInstructionAddress(Microsoft.VisualStudio.Debugger.DkmInstructionAddress)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmLanguageInstructionDecoder.GetMethodName(Microsoft.VisualStudio.Debugger.Evaluation.DkmLanguageInstructionAddress, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmLanguageInstructionDecoder_GetMethodName(IntPtr, IntPtr, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags, IntPtr ByRef)",
+      "PostedDate": "2012-11-24T15:20:12.857-08:00",
+      "Id": 82957
+    },
+    {
+      "Message": "Not exactly the same error but we upgraded to 0.8.1 is a large project and debugging an exception in another silverlight client project (not using anything typescript, that is only used in the hosting project) visual studio also crashes. Only on the pc of the person developing the typescript the debugging works.\n\nException message from eventlog:\n\nApplication: devenv.exe\nFramework Version: v4.0.30319\nDescription: The process was terminated due to an unhandled exception.\nException Info: System.ArgumentNullException\nStack:\n   at System.Collections.Generic.Dictionary`2[[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]].FindEntry(System.__Canon)\n   at System.Collections.Generic.Dictionary`2[[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]].ContainsKey(System.__Canon)\n   at TypeScriptDebugEngine.SourceMapper.GetFileMappings(Microsoft.VisualStudio.Debugger.Script.DkmScriptDocument)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmSymbolQuery.GetSourcePosition(Microsoft.VisualStudio.Debugger.Symbols.DkmInstructionSymbol, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionSession, Boolean ByRef)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmSymbolQuery_GetSourcePosition(IntPtr, IntPtr, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, IntPtr, Byte ByRef, IntPtr ByRef)\n   at Microsoft.VisualStudio.Debugger.Symbols.NativeDkmInstructionSymbol.Proc74625D16DFFBC0BBB0B76F58AC775415(IntPtr, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, IntPtr, Byte ByRef, IntPtr ByRef)\n   at Microsoft.VisualStudio.Debugger.Symbols.DkmInstructionSymbol.GetSourcePosition(Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionSession, Boolean ByRef)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmLanguageFrameDecoder.GetFrameName(Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionContext, Microsoft.VisualStudio.Debugger.DkmWorkList, Microsoft.VisualStudio.Debugger.CallStack.DkmStackWalkFrame, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags, Microsoft.VisualStudio.Debugger.DkmCompletionRoutine`1<Microsoft.VisualStudio.Debugger.Evaluation.DkmGetFrameNameAsyncResult>)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmLanguageFrameDecoder_GetFrameName(IntPtr, IntPtr, IntPtr, IntPtr, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags, IntPtr)\n",
+      "PostedDate": "2012-11-26T08:40:25.51-08:00",
+      "Id": 83012
+    },
+    {
+      "Message": "billti: Sure, I can pretty much reproduce it on command with one of my projects. Before installing 0.8.1.0 it didn't crash and after installing it started to crash.\n\n- Microsoft Visual Studio Ultimate 2012 11.0.51106.01 Update 1\n- Had no issues debugging this project prior. No javascript files are even included in the solution. The solution contains 4 projects: 2 MVC, 1 WebForm, 1 Class Library. All targeting .Net 4.\n- Debugging works as expected if I uninstall TypeScript. Reinstalling it causes the crashes. Pretty much at demand at this point.\n- Definitely rebooted immediately after installing Update 1. Rebooted a couple times while troubleshooting too.\n\nThe following stack trace is identical for all crashes I encountered with TypeScript installed.\n\nApplication: devenv.exe\nFramework Version: v4.0.30319\nDescription: The process was terminated due to an unhandled exception.\nException Info: System.ArgumentNullException\nStack:\n   at System.Collections.Generic.Dictionary`2[[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]].FindEntry(System.__Canon)\n   at System.Collections.Generic.Dictionary`2[[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.__Canon, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]].ContainsKey(System.__Canon)\n   at TypeScriptDebugEngine.SourceMapper.GetFileMappings(Microsoft.VisualStudio.Debugger.Script.DkmScriptDocument)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmSymbolQuery.GetSourcePosition(Microsoft.VisualStudio.Debugger.Symbols.DkmInstructionSymbol, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionSession, Boolean ByRef)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmSymbolQuery_GetSourcePosition(IntPtr, IntPtr, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, IntPtr, Byte ByRef, IntPtr ByRef)\n   at Microsoft.VisualStudio.Debugger.Symbols.NativeDkmInstructionSymbol.Proc74625D16DFFBC0BBB0B76F58AC775415(IntPtr, Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, IntPtr, Byte ByRef, IntPtr ByRef)\n   at Microsoft.VisualStudio.Debugger.Symbols.DkmInstructionSymbol.GetSourcePosition(Microsoft.VisualStudio.Debugger.Symbols.DkmSourcePositionFlags, Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionSession, Boolean ByRef)\n   at TypeScriptDebugEngine.SymbolProvider.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmLanguageFrameDecoder.GetFrameName(Microsoft.VisualStudio.Debugger.Evaluation.DkmInspectionContext, Microsoft.VisualStudio.Debugger.DkmWorkList, Microsoft.VisualStudio.Debugger.CallStack.DkmStackWalkFrame, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags, Microsoft.VisualStudio.Debugger.DkmCompletionRoutine`1<Microsoft.VisualStudio.Debugger.Evaluation.DkmGetFrameNameAsyncResult>)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmLanguageFrameDecoder_GetFrameName(IntPtr, IntPtr, IntPtr, IntPtr, Microsoft.VisualStudio.Debugger.Evaluation.DkmVariableInfoFlags, IntPtr)\n",
+      "PostedDate": "2012-11-28T13:33:24.8-08:00",
+      "Id": 83181
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-07-07T13:08:17.067-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "\r\nJust bumped into an issue in my code where I essentially did the below (unintentionally via a typo), it compiles with no issues in TypeScript 1.0.1 - essentially I am using the variable value before assigning it, it is a guaranteed null reference error\r\n\r\n\tvar s : string = s.toString();\r\n",
+    "LastUpdatedDate": "2014-07-07T13:08:17.067-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-03T13:09:33.65-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "declaring variable and using same during assignment",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2604
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I imagine it's allowed for the same reason it's allowed in JS - variable hoisting. Your code is equivalent to the following:\n\n    var s: string;\n    s = s.toString();\n\nso it's not a *compile* error.\n\nBut yes, it would be nice for the compiler to emit a diagnostic when using unassigned variables as they are guaranteed to be ```undefined```. I know the Safer TypeScript compiler does so.",
+      "PostedDate": "2014-07-03T14:04:14.84-07:00",
+      "Id": 151562
+    },
+    {
+      "Message": "Arnavion is correct. Note that the type of 's' on the right hand side is actually 'any' and not 'string' as a result of this behavior. If you do not use a type annotation and rely on type inference then the lack of completion results when attempting to type .toString would help clue you in to the fact that something is awry. This is definitely a candidate for a linter rule or something similar.",
+      "PostedDate": "2014-07-07T13:08:11.653-07:00",
+      "Id": 151781
+    }
+  ]
+}

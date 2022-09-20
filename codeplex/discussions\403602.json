@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "943279",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>It would be nice to have classes (<strong>not</strong> instances) themself as types like in Java.</p>\r\n<p>This is already possible in raw JS: code &amp; live example: <a href=\"http://jsbin.com/iyenin/1/edit\">\r\nhttp://jsbin.com/iyenin/1/edit&nbsp;</a></p>\r\n<p>Here is what I dream of:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Handler {\n}\n\n<span style=\"color:blue\">class</span> DerivedHandler {\n}\n\n<span style=\"color:blue\">function</span> createHandler(handler: Class&lt;Handler&gt;) {\n  <span style=\"color:blue\">var</span> obj = <span style=\"color:blue\">new</span> handler();\n  <span style=\"color:green\">// or handler.createInstance()</span>\n\n  <span style=\"color:blue\">return</span> obj;\n}\n\n<span style=\"color:green\">// Both should work</span>\ncreateHandler(Handler);\ncreateHandler(DerivedHandler);\n\n\n<span style=\"color:green\">// The same could also be implemented for interfaces</span>\n<span style=\"color:green\">// where only classes implementing it would be allowed</span>\n<span style=\"color:blue\">interface</span> IHandler {\n}\n\n<span style=\"color:blue\">class</span> SpecialHandler <span style=\"color:blue\">implements</span> IHandler {\n}\n\n<span style=\"color:blue\">function</span> createHandler(handler: Class&lt;IHandler&gt;) {\n  <span style=\"color:green\">// same as above</span>\n}\n\n<span style=\"color:green\">// Throws exception</span>\ncreateHandler(IHandler);\n<span style=\"color:green\">// Should work</span>\ncreateHandler(SpecialHandler);\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p><strong>Edit:</strong> There is already an issue entitled <a href=\"http://typescript.codeplex.com/workitem/246\">\r\n&quot;Passing class type as parameter&quot;</a> which describes the same idea. But I leave this thread opened because class types implementing interfaces are also covered here.</p>\r\n",
+    "PostedDate": "2012-11-17T09:26:42.81-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "943603",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>I believe a class can be passed to a function (on run-time you will actually pass a variable with the same name), you can just not declared a class as parameter type of the function parameters, so it has to be any (or at least I have no idea how to declare\r\n that).</p>\r\n<p>The following should work:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Test {\r\n    hello() { console.log(<span style=\"color:#a31515\">&quot;hello&quot;</span>); }\r\n}\r\n\r\n<span style=\"color:blue\">function</span> createHandler(p) : Test  {\r\n     <span style=\"color:blue\">var</span> x = <span style=\"color:blue\">new</span> p();\r\n     <span style=\"color:blue\">return</span> x\r\n}\r\n\r\n<span style=\"color:blue\">var</span> t = createHandler(Test);\r\nt.hello();\r\n\r\n</pre>\r\n</div>\r\n// Peter\r\n<p></p>\r\n",
+    "PostedDate": "2012-11-18T10:12:26.43-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "943647",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>Hi Peter,</p>\r\n<p>that's exactly the point: invent a type for it.</p>\r\n<p>If you pass the class itself in pure JavaScript, you're actually passing the function (pointer) of the constructor.<br>\r\nThis can already be expressed in TypeScript:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> MyClass {\r\n    constructor (<span style=\"color:blue\">private</span> name: string) {\r\n    }\r\n}\r\n\r\n<span style=\"color:blue\">function</span> sample(ClassType: <span style=\"color:blue\">new</span> (name: string) =&gt; MyClass) {\r\n    <span style=\"color:blue\">var</span> obj = <span style=\"color:blue\">new</span> ClassType(<span style=\"color:#a31515\">&quot;hello&quot;</span>);\r\n}\r\n</pre>\r\n</div>\r\nBut that's just too complicated and redundant!&nbsp;\r\n<p></p>\r\n",
+    "PostedDate": "2012-11-18T13:07:38.47-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "943762",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>Great answer!</p>\r\n<p>The only thing I don't get is what's complicated or redundant? It's about the same number of characters, but you can additionally specify the arguments.&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-18T23:25:56.203-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "943796",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>There are a few topics touched on here:</p>\r\n<p>1) Types for constructors:&nbsp; A class definition does create a class side type for the constructor object, which combines both the 'new' signature and the statics defined on the class.&nbsp;&nbsp; However, there is no name given to this.&nbsp; As noted above, some syntax\r\n to recover this from the class name itself, like &quot;class&lt;MyClass&gt;&quot; or &quot;MyClass.static&quot; or &quot;typeof&lt;MyClass&gt;&quot; are being considered.</p>\r\n<p>2) Class-side inheritance:&nbsp; Are statics of a class inherited by subclasses, therefor ensuring that subclass constructors are themselves subclasses of base class constructors.&nbsp; Currently they are not in TypeScript, but we expect to change this to match the\r\n ES6 class proposal.&nbsp;</p>\r\n<p>3) Passing just the 'new' signature as the parameter type:&nbsp; As noted in the MyClass/sample example above, it is possible to use 'new' signatures to cover some of the use cases already.</p>\r\n",
+    "PostedDate": "2012-11-19T00:54:25.243-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946109",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>Hi mihailik and lukeh!</p>\r\n<p>Sorry for the late response.</p>\r\n<p>@lukeh:</p>\r\n<p style=\"padding-left:30px\">2.) I wondered why static class members aren't accessible in derived classes. That should definitely be implemented!</p>\r\n<p>@lukeh third point and @mihailik:</p>\r\n<p style=\"padding-left:30px\">Imagine you're using an external class. What happens if you (or someone other) change the constructor or at least one 'version' (overloading) of it? You have to change the\r\n<em>new</em> function pointer (e.g. in your function), too!</p>\r\n<p style=\"padding-left:30px\">Another point is that the IntelliSense displays only the constructor you've declared as the 'class type'. What about classes having multiple constructors?</p>\r\n",
+    "PostedDate": "2012-11-23T05:32:14.927-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946173",
+    "ThreadId": "403602",
+    "Html": "\r\n<p>&nbsp;</p>\r\n<p>If your function indeed uses that constructor, you will have to change its code, whether your proposed syntax exists or you use the constructor signature.<br>\r\n<br>\r\nThat also highlights another point: derived classes can overload constructors. How are you going to verify signatures in that case? If you only account for argument types in resolution/binding (same as in method resolution), you make people to get in trouble\r\n when they define a new constructor in a derived class that happens to have the same types of arguments, but new meaning.&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-23T08:30:22.067-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1025186",
+    "ThreadId": "403602",
+    "Html": "Any updates on this?<br />\n",
+    "PostedDate": "2013-04-03T19:53:19.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075658",
+    "ThreadId": "403602",
+    "Html": "I have the same problem, will this feature be implemented?<br />\n",
+    "PostedDate": "2013-08-01T10:38:37.407-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076199",
+    "ThreadId": "403602",
+    "Html": "The following will work in the upcoming 0.9.1 release:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Handler {\n}\n\n<span style=\"color:Blue;\">class</span> DerivedHandler {\n}\n\n<span style=\"color:Blue;\">function</span> createHandler(handler: <span style=\"color:Blue;\">typeof</span> Handler) {\n    <span style=\"color:Blue;\">var</span> obj = <span style=\"color:Blue;\">new</span> handler();\n    <span style=\"color:Blue;\">return</span> obj;\n}\n\ncreateHandler(Handler);\ncreateHandler(DerivedHandler);\r\n</pre></div>When used in a type position, the 'typeof' operator obtains the type of an expression, which in this case is the type of the Handler constructor function.<br />\n",
+    "PostedDate": "2013-08-02T16:52:21.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103891",
+    "ThreadId": "403602",
+    "Html": "Note: Using &quot;typeof&quot; in this context doesn't allow for inheritance.  If you pass a derived type, it will error out.<br />\n",
+    "PostedDate": "2013-10-04T20:15:06.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104666",
+    "ThreadId": "403602",
+    "Html": "Can you clarify which example you mean? Anders' example looks to be working as intended with derived classes (ie no error).<br />\n",
+    "PostedDate": "2013-10-07T10:32:10.77-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104688",
+    "ThreadId": "403602",
+    "Html": "See here: <a href=\"https://typescript.codeplex.com/workitem/1759\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1759</a><br />\n",
+    "PostedDate": "2013-10-07T11:18:19.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

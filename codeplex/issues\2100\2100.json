@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-16T18:14:44.293-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The following code will not compile with TS 0.9.5 (it would in previous versions)\r\n\r\n```typescript\r\nfunction iterate<T>(items:T[],callback:(item:T)=>any){\r\n\tfor(var key in items){\r\n\t\tcallback(items[key]);\r\n\t}\r\n}\r\n\r\nvar foo:any = [1,2,3]; \r\n// iterating over an any should give any not `{}`\r\niterate(foo,(item)=>console.log(item.toFixed())); // compile error\r\n```\r\nOne solution is to explicitly mark item as any:\r\n```typescript\r\niterate(foo,(item:any)=>console.log(item.toFixed()));\r\n```\r\nor foo as `any[]`\r\n```typescript\r\nvar foo:any[] = [1,2,3]; \r\n```\r\n\r\nSuggestion : iterating over an any should give `any` not `{}`.  This would avoid explicitly marking stuff as `any[]` or `any` to get the code to work.",
+    "LastUpdatedDate": "2014-01-16T18:14:44.293-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-15T14:42:08.027-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TS 0.9.5 iterating over any gives `{}` should give `any`",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2100
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The issue here doesn't have to do with the body of your method where the iteration occurs. You can remove that code and observe the same results. In isolation you can see that iterating over an 'any' will have a loop variable of type 'any' as well.\n\nThe issue here relates to type inference at the site of your generic call. When you call 'iterate' the compiler has to try to determine a type for T. The first relation it makes is T[] to 'any' for the argument 'foo'. This generates no candidate types for T since the compiler has no idea what the element type may be. The next argument uses T as a type annotation for a parameter in a function type ('item' in 'callback') which causes the compiler to fix the type of T to the best common type of the current set of candidates. Since there are no candidates the best common type is simply {}. So now 'item' is processed with the type {} which leads to the error you see there. \n\nThe solutions here are what you already noted, either giving a more specific type to the input array or explicitly annotating the callback's argument type, or as a third alternative explicitly pass 'any' as the type argument rather than rely on type argument inference.",
+      "PostedDate": "2014-01-16T18:14:40.02-08:00",
+      "Id": 130633
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "923153",
+    "ThreadId": "398399",
+    "Html": "\r\n<p>Hi! I'm trying to generate a declaration file for the YUI Library and run into something I could use some help figuring out.</p>\r\n<p>YUI works like this.&nbsp;There's a global YUI() function which returns an instance of the YUI class, similar to what jQuery does. I can simulate it by declaring:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">import</span> YUI3 = module(<span style=\"color:#a31515\">'YUI'</span>);\ndeclare <span style=\"color:blue\">var</span> YUI: YUI3.YUI;<br><br>var Y = YUI();</pre>\r\n</div>\r\n<p>So far so good. Now the Y instance also contains constructors that can be invoked with &quot;new&quot;, and I can't figure out how to let VS/TypeScript know that &nbsp;this should work:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Y = YUI();\n<span style=\"color:blue\">var</span> widget = <span style=\"color:blue\">new</span> Y.Widget();</pre>\r\n</div>\r\n<p>Any ideas?</p>\r\n<p>Thanks!</p>\r\n",
+    "PostedDate": "2012-10-07T13:47:26.133-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923159",
+    "ThreadId": "398399",
+    "Html": "<p>﻿Try declaring&nbsp;your YUI class as a module:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>declare module YUI_Class {\r\n\t<span style=\"color: blue;\">class</span> Widget {\r\n\t\t\r\n\t}\r\n}\r\ndeclare <span style=\"color: blue;\">function</span> YUI(): YUI_Class;\r\n\r\n<span style=\"color: blue;\">var</span> y = YUI();\r\n<span style=\"color: blue;\">var</span> widget = <span style=\"color: blue;\">new</span> y.Widget();\r\n\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-07T14:30:26.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923160",
+    "ThreadId": "398399",
+    "Html": "<p>This works too:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> YUI_Widget {\r\n\tfoo();\r\n}\r\n\r\n<span style=\"color: blue;\">interface</span> YUI_Class {\r\n\tWidget: <span style=\"color: blue;\">new</span> () =&gt; YUI_Widget;\r\n}\r\ndeclare <span style=\"color: blue;\">function</span> YUI(): YUI_Class;\r\n\r\n<span style=\"color: blue;\">var</span> y = YUI();\r\n<span style=\"color: blue;\">var</span> widget = <span style=\"color: blue;\">new</span> y.Widget();\r\nwidget.foo();\r\n</pre>\r\n</div>",
+    "PostedDate": "2012-10-07T14:33:21.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923164",
+    "ThreadId": "398399",
+    "Html": "<p>That last one is exactly what I needed. Thanks!</p>",
+    "PostedDate": "2012-10-07T14:42:29.307-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923168",
+    "ThreadId": "398399",
+    "Html": "\r\n<p>Well, it got a lot more complicated, but I finally understood how I'm supposed to declare all this.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module Y {\n\n    <span style=\"color:blue\">interface</span> Widget {\n        render(): Widget;\n    }\n\n    <span style=\"color:blue\">interface</span> WidgetStatic {\n        <span style=\"color:blue\">new</span> (config?: Object): Widget;\n\n        getByNode(node: HTMLElement): Widget;\n    }\n\n    <span style=\"color:blue\">interface</span> YUI {\n        use(modules: string[], fn: (Y: YUI) =&gt; any): YUI;\n\n        Widget: WidgetStatic;\n    }\n\n    <span style=\"color:blue\">interface</span> YUIStatic {\n        (config?: Object): YUI;\n\n        add(name: string, factory: (Y: YUIStatic) =&gt; any , version?: string, options?: Object);\n    }\n\n}\n\ndeclare <span style=\"color:blue\">var</span> YUI: Y.YUIStatic;</pre>\r\n</div>\r\n<p>Thanks again!</p>\r\n",
+    "PostedDate": "2012-10-07T15:09:34.027-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923172",
+    "ThreadId": "398399",
+    "Html": "<p>There are probably 2 or 3 ways you could define it and yes... It can't get complicated in a hurry :)</p>",
+    "PostedDate": "2012-10-07T15:25:15.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "Id": "1132710",
+    "ThreadId": "472172",
+    "Html": "I'm a contributor of DefinitelyTyped. I've got the error when was working on porting some definitions to new 0.9.5 version of TypeScript. It filed as <a href=\"http://typescript.codeplex.com/workitem/1976\" rel=\"nofollow\">#1976</a> then it was closed that it follows the spec.\r<br />\nThat's true, the latest changes simplifies overload resolution.\r<br />\nBut I found it very bad decision because it makes impossible to define many of existing JavaScript libraries.\r<br />\nConsider we have one library definition 'A.d.ts':<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> A {}\n\n<span style=\"color:Blue;\">interface</span> X {\n    on(s: <span style=\"color:Blue;\">string</span>, cb: (a: A) =&gt; <span style=\"color:Blue;\">any</span>): X;\n}\r\n</pre></div>and we have another library definition 'B.d.ts', that extends A:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;A.d.ts&quot;&gt;</span>\n\n<span style=\"color:Blue;\">interface</span> B {\n    b: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> X {\n    on(s: <span style=\"color:#A31515;\">&quot;a&quot;</span>, cb: (b: B) =&gt; <span style=\"color:Blue;\">any</span>): X;\n}\r\n</pre></div>In the example no way to both refer the parent library and correct order more-specific overload.\r<br />\n<br />\nIt's reduced example of jQuery's extension.\r<br />\n<br />\nThe main reason that in some cases we can't order overloads correctly because definitions of the interface separated to files.\r<br />\nThe one of the best benefit of using TS is the ability to describe existing JS libraries, with new simplifications (<a href=\"https://typescript.codeplex.com/discussions/471751\" rel=\"nofollow\">see other descussion</a>) this feature comes less useful.<br />\n",
+    "PostedDate": "2013-12-07T00:43:03.617-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133278",
+    "ThreadId": "472172",
+    "Html": "I'd also like the TS team to reconsider this change, at least for specialization based on strings. It is very useful to be able to extend core functions, defined in e.g. lib.d.ts or the jquery specification, with custom overloads for a specific application. An example is custom jQuery extensions or custom events. These definitions are separated over different files, and trying to manage the order is sometimes even impossible (in the case of lib.d.ts).\r<br />\n<br />\nI support simplification, but in the case of string overloads, I think 'specific strings first, then all other strings' is still pretty simple, and would solve a lot of use cases.<br />\n",
+    "PostedDate": "2013-12-09T12:24:40.393-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134284",
+    "ThreadId": "472172",
+    "Html": "I think there are some valid concerns raised here. It is indeed hard (and sometimes impossible) to arrange the order of definition files such that all specialized signatures appear first in merged types. The notion of giving higher priority to specialized signatures is one we discussed, but it gets tricky when signatures contain a mix of string literals and regular types. Consider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo(x: <span style=\"color:Blue;\">string</span>, y: <span style=\"color:Blue;\">string</span>): Type1;\n<span style=\"color:Blue;\">function</span> foo(x: <span style=\"color:Blue;\">string</span>, y: <span style=\"color:#A31515;\">&quot;world&quot;</span>): Type2;\n<span style=\"color:Blue;\">function</span> foo(x: <span style=\"color:#A31515;\">&quot;hello&quot;</span>, y: <span style=\"color:Blue;\">string</span>): Type3;\n<span style=\"color:Blue;\">function</span> foo(x: <span style=\"color:#A31515;\">&quot;hello&quot;</span>, y: <span style=\"color:#A31515;\">&quot;world&quot;</span>): Type4;\r\n</pre></div>Ideally, in the call <code>foo(&quot;hello&quot;, &quot;world&quot;)</code> the rules would pick the last overload, so we would have to rank candidates first by number of matching string literals and then by order of declaration. It's possible to do, but it adds complexity. Ultimately we'll have to balance it against other things we'd like to do--including shipping 1.0 :-) But I hear your concerns.<br />\n",
+    "PostedDate": "2013-12-11T06:44:33.18-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134719",
+    "ThreadId": "472172",
+    "Html": "Just to follow up on Anders' comments.  We had to balance some of the simplifications we were doing against some of the code patterns people wanted to use.  One side effect is that the order of how you reference definition files now matters when you want to model plugins.  If you'll allow me a contrived example:\r<br />\n<br />\nplugin.d.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> CentimetersResult <span style=\"color:Blue;\">extends</span> Result {\n    meters: <span style=\"color:Blue;\">number</span>;\n    centimeters: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> Measure {\n    (s: <span style=\"color:#A31515;\">&quot;cm&quot;</span>): CentimetersResult;\n} \r\n</pre></div>baselib.d.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Result {\n    value: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> InchesResult <span style=\"color:Blue;\">extends</span> Result {\n    feet: <span style=\"color:Blue;\">number</span>;\n    inches: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> Measure {\n    (s: <span style=\"color:#A31515;\">&quot;inches&quot;</span>): InchesResult;\n    (s: <span style=\"color:Blue;\">string</span>): Result;\n}\r\n</pre></div>uselib.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;plugin.d.ts&quot;/&gt;</span>\n<span style=\"color:Green;\">///&lt;reference path=&quot;baselib.d.ts&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">var</span> m: Measure;\n<span style=\"color:Blue;\">var</span> y = m(<span style=\"color:#A31515;\">&quot;cm&quot;</span>).centimeters;\r\n</pre></div>The trick is that you need to reference the &quot;plugin.d.ts&quot; first, so its overloads are seen before the base library you're extending.  As the definitions are merged together, you can use types from the base library in your extension, as I show.  Once the .d.ts files are referenced in the correct order, you can then use the merged interface in the .ts file that consumes them.\r<br />\n<br />\nIt's a couple more steps to remember vs 0.9.1.1, but should be possible in some cases.  As Anders points out, others are difficult or impossible to model.  We're definitely keeping an eye on this use case (with luck we'll be able to improve on it in the future).<br />\n",
+    "PostedDate": "2013-12-11T16:11:17.96-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134921",
+    "ThreadId": "472172",
+    "Html": "@JonTurner,\r<br />\n<br />\nThanks for the simplified example.  I wonder if you could use it to cover off a number of other scenarios that spring to mind?\r<br />\n<br />\nFor instance, let's say we were going to need plugin.d.ts and baselib.d.ts throughout our project.  I'm guessing we couldn't rely on the implicitly referencing functionality anymore and we'd need to add in a _references.ts that stated the reference order required: <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;plugin.d.ts&quot;/&gt;</span>\n<span style=\"color:Green;\">///&lt;reference path=&quot;baselib.d.ts&quot;/&gt;</span>\r\n</pre></div>Would this work as I imagine?\r<br />\n<br />\nOn a separate topic I'm wondering how this scenario works for typing libraries in DefinitelyTyped.    I'm wondering if plugin.d.ts would need to be have a reference added to it's header so that it references baselib.d.ts like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;baselib.d.ts&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">interface</span> CentimetersResult <span style=\"color:Blue;\">extends</span> Result {\n    meters: <span style=\"color:Blue;\">number</span>;\n    centimeters: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> Measure {\n    (s: <span style=\"color:#A31515;\">&quot;cm&quot;</span>): CentimetersResult;\n} \r\n</pre></div>Is that necessary?  Will adding that reference in cause any problems when you are consuming plugin.d.ts elsewhere?  Would your uselib.ts example still work with this tweak in place?<br />\n\r<br />\nAlternatively is adding that reference unnecessary?  Should we actually only be enforcing the reference order where we consume the library rather than directly stating a reference in plugin.d.ts as I have here?\r<br />\n<br />\nFinally, you're no doubt aware that the DefinitelyTyped unit tests are essentially TypeScript files containing examples of how the library under test can be used.  If a test file compiles it is considered to have passed the test.  So we might have plugin-tests.ts file that looks like this: (we're essentially re-using the uselib.ts file to create our test file)<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;plugin.d.ts&quot;/&gt;</span>\n<span style=\"color:Green;\">///&lt;reference path=&quot;baselib.d.ts&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">var</span> m: Measure;\n<span style=\"color:Blue;\">var</span> y = m(<span style=\"color:#A31515;\">&quot;cm&quot;</span>).centimeters;\r\n</pre></div>Does all this sound correct / hang together as I imagine?  Apologies if my examples are somewhat stating the obvious but I just want to get a little clarity on the approach we should be using.<br />\n",
+    "PostedDate": "2013-12-12T00:46:31.833-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135116",
+    "ThreadId": "472172",
+    "Html": "Lots of good questions.  Let me see if I can cover them.<br />\n<blockquote>\nFor instance, let's say we were going to need plugin.d.ts and baselib.d.ts throughout our project. I'm guessing we couldn't rely on the implicitly <br />\nreferencing functionality anymore and we'd need to add in a _references.ts that stated the reference order required<br />\n</blockquote>\nThat's right.  Inside of a VS project that uses implicit references, you would use the _references.ts file to order the .d.ts files so that plugins came first before the base libraries.  The _references.ts file is specifically to handle times where order matters, like function resolution and controlling codegen order when using --out.<br />\n<blockquote>\nOn a separate topic I'm wondering how this scenario works for typing libraries in DefinitelyTyped. I'm wondering if plugin.d.ts would need to be have a <br />\nreference added to it's header so that it references baselib.d.ts like this<br />\n</blockquote>\nOne way I think about this is to think of plugin.d.ts as a &quot;partial&quot; that can't live by itself.  That is, it's going to be up to the user to include it along with the proper dependencies, and you can't add references to it to make it more complete.  If you add the ///&lt;ref&gt; as you show, your hunch is right - this will prevent the signature in plugin.d.ts from being seen, and once you make the change, you'll get an error in uselib.ts.  While plugin.d.ts is a &quot;partial&quot; definition that requires the other baselib.d.ts, baselib.d.ts is standalone and can be used by itself.  \r<br />\n<blockquote>\nFinally, you're no doubt aware that the DefinitelyTyped unit tests are essentially TypeScript files containing examples of how the library <br />\nunder test can be used. If a test file compiles it is considered to have passed the test. So we might have plugin-tests.ts file that looks like <br />\nthis: (we're essentially re-using the uselib.ts file to create our test file)<br />\n</blockquote>\nExactly.  The unit test can control the reference order, and verify that the specialized signatures are working properly.  You could even go a step further and make sure that overloads across both references work correctly:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;plugin.d.ts&quot;/&gt;</span>\n<span style=\"color:Green;\">///&lt;reference path=&quot;baselib.d.ts&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">var</span> m: Measure;\n<span style=\"color:Blue;\">var</span> a = m(<span style=\"color:#A31515;\">&quot;cm&quot;</span>).centimeters;\n<span style=\"color:Blue;\">var</span> b = m(<span style=\"color:#A31515;\">&quot;inches&quot;</span>).feet;\n<span style=\"color:Blue;\">var</span> c = m(<span style=\"color:#A31515;\">&quot;none of the above&quot;</span>).value;\r\n</pre></div>",
+    "PostedDate": "2013-12-12T08:33:58.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135399",
+    "ThreadId": "472172",
+    "Html": "That's a fantastic explanation Jon - thank you!  It might be good to share this explanation more widely. (I'm not sure how many people are watching this discussion)\r<br />\n<br />\nFor my part I'll try and let the Definitely Typed community know about this as people are working on porting typing libraries from 0.9.1 to 0.9.5.<br />\n",
+    "PostedDate": "2013-12-13T01:06:31.947-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135412",
+    "ThreadId": "472172",
+    "Html": "Thank you @ahejlsberg that you read our discussion and heard our concerns. I think ranking of overloads will be good decision and should't add any valuable performance cost.<br />\nThank you @jonturner for some explanation and workarounds of the problem. But it still looks like some hack or even spike-nail =)<br />\n<br />\nI think that ordering of the referenced files is not a good idea.<br />\n<br />\nChild library must describe by itself the references that is used. It's a principle of responsibility.<br />\n<br />\nThis principle used everywhere in development: .Net assemblies describe referenced assemblies, Dlls have imports table, NuGet, node and other packages systems do it too. So the TypeScript will be inconsistent with this. More that this, it's inverse it wit such implementation.<br />\n<br />\nConsumer of the libraries should not know how to order dependencies of the libraries. In other case, every typing definition provider that depends on another must also give the instructions how to order references.<br />\nDevelopers who use the definition won't even look at these instructions. If they provide invalid order, code will be working still, but they will lose more-specific more-useful more-safe type information.<br />\n<br />\nAnother point of inconsistent. We can use any of the types before it described. The code compiles well:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> a: A;\n<span style=\"color:Blue;\">var</span> n: <span style=\"color:Blue;\">number</span> = a.g();\n\n<span style=\"color:Blue;\">interface</span> A {\n    g(): <span style=\"color:Blue;\">number</span>;\n}\r\n</pre></div>In this case we do not depend of the order of type declaration. We can also 'extend' interface in any place and it will take effect for whole code and we also don't depend of the order. So why we should take care of declaration order for function overloads?<br />\n<br />\nPS. The last reason, I think, is also applicable for <a href=\"https://typescript.codeplex.com/discussions/471751\" rel=\"nofollow\">discussion 471751</a>. I want to developers will take a look from my positions to.<br />\n<br />\nIt's a cry from the heart! =)<br />\n",
+    "PostedDate": "2013-12-13T02:06:30.84-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135621",
+    "ThreadId": "472172",
+    "Html": "Another TS enthusiasts &amp; DefinitelyTyped contributor here:\r<br />\n<br />\n+1 for Igorbek's case:\r<br />\n<br />\nI too have problems with 0.9.5's ordering scheme: I'm used to doing a lot of patching and modification of definitions and it is now a harder to expand on existing overloads (it conflicted with my own patch-up hackery so much I stashed my projects 0.9.5 effort for now).\r<br />\n<br />\n@Igorbek nicely described how easy it is to expand interfaces and types, and compared to this flexibility (and its creative freedom) the new overload ordering scheme is very strict and peculiar.\r<br />\n<br />\nI feel it is limiting expression and usability of the typing platform if it become too fiddly to add or expand typing for existing code. We need maximum flexibility in how we work with multiple definition files (because practicalities are not always as tidy as we'd like). \r<br />\n<br />\nIf every user has to manually manage references and their complex ordering of all his sub/client modules then it becomes more of a drag to work typed. <br />\n",
+    "PostedDate": "2013-12-13T11:10:03.177-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1140213",
+    "ThreadId": "472172",
+    "Html": "@ahejlsberg, @jonturner<br />\nI've found that you <a href=\"https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9\" rel=\"nofollow\">going to change behavior of interface merging</a> in order to fix the problem discussed here.<br />\nThat's definitely better then it was before. Thanks!<br />\n<br />\nBut I have still some doubts about your solution.<br />\n<ol>\n<li>I understand that situations when need to extend interface with less-specific overloads is uncommon, nonetheless could be. In this case we have mirrored situation.</li>\n<li>\nOverload resolution based on order can't decide <a href=\"https://typescript.codeplex.com/discussions/474481\" rel=\"nofollow\">situations described in other discussion</a>.<br />\n</li>\n</ol>\nJust think about this for future releases.<br />\n",
+    "PostedDate": "2013-12-20T00:59:03.643-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1140217",
+    "ThreadId": "472172",
+    "Html": "Hi @ahejlsberg, @jonturner,\r<br />\n<br />\nJust noticed the <a href=\"https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9\" rel=\"nofollow\">Interfaces now merge with later interfaces having a higher priority</a> section under &quot;Known breaking changes between 0.9.5 and 1.0&quot;.\r<br />\n<br />\nIt's not stated but I assume that this requires that enforce you interface order using _references.ts?  I don't know how script ordering is determined in the absence of _references.ts?  <br />\n",
+    "PostedDate": "2013-12-20T01:20:10.83-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1140465",
+    "ThreadId": "472172",
+    "Html": "In Visual Studio script order is currently just the order that files appear in the Solution Explorer. So _references.ts is a means to more precisely control the script order in Visual Studio scenarios. Outside of Visual Studio script order is just the order that the files are passed to the compiler on the command line.<br />\n",
+    "PostedDate": "2013-12-20T16:54:51.04-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1186537",
+    "ThreadId": "472172",
+    "Html": "<blockquote>\nOutside of Visual Studio script order is just the order that the files are passed to the compiler on the command line.<br />\n</blockquote>\nTrue. But note that you can just pass _references.ts to tsc outside of visual studio to get the same effect as visual studio<br />\n",
+    "PostedDate": "2014-01-21T00:01:03.823-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246012",
+    "ThreadId": "472172",
+    "Html": "I had the issue with the order of references, when I created node.js app and tried to use setTimeout function from node.js like so:<br />\n<pre><code>var timer: NodeTimer;\ntimer = setTimeout(somecallback, 1000);</code></pre>\n\nThe code didn't compile saying 'Cannot convert 'Number' to 'NodeTimer''<br />\nI understood that the compiler thought I was using standard setTimeout instead of the one from node.js<br />\n<br />\nAfter posting a question on stackoverflow I was advised to create _references.ts file and explicitly state the order of references :<br />\n<pre><code>/// &lt;reference path=&quot;Scripts/typings/node/node.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\1.0\\lib.d.ts&quot; /&gt;</code></pre>\n\nThis did solve the problem, though the user experience is really far from expected.<br />\n",
+    "PostedDate": "2014-05-15T23:51:32.21-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I don't repro this anymore in the current develop branch.",
+    "ClosedDate": "2014-01-14T14:29:10.577-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "There is a related ticket https://typescript.codeplex.com/workitem/1402 , but my browser won't let me reopen it.\r\n\r\nIn my typescript-tools project (a language service client and server), I have been having the subject issue when trying to generate completions (with details) after updating an initially empty file.\r\n\r\nFor a long time, I wasn't able to reproduce in TS' test runner, so I thought I was using the language services incorrectly, but I couldn't see any differences in my usage and the TS test runner's usage of the services.\r\n\r\nToday, I finally stumbled on the cause: `TestState.prototype.checkPostEditInvariants` has the side-effect of hiding the issue from the test runner!\r\n\r\nConsider the following fourslash test:\r\n```\r\n/// <reference path=\"fourslash.ts\" />\r\n\r\n/////**/\r\n\r\ndebug.printCurrentFileStateWithWhitespace();\r\ngoTo.marker();\r\nedit.replace(0,0,\"function foo(bar) {\\n    b\\n}\\n\");\r\ngoTo.position(27);\r\ndebug.printCurrentFileStateWithWhitespace();\r\n// debug.printCompletionListMembers();\r\n// verify.completionListContains(\"bar\");\r\nFourSlash.currentTestState.getCompletionListAtCaret().entries\r\n  .forEach(entry =>\r\n    console.log(FourSlash.currentTestState.getCompletionEntryDetails(entry.name)));\r\n```\r\n\r\nWhen run normally, there is no error. However, when you modify `built\\localtest\\run.js` to disable the check:\r\n```\r\n            this.enableIncrementalUpdateValidation = false;\r\n```\r\nand run the test again, you should see the error given in the subject:\r\n```\r\ncp -r built\\local\\typescriptServices.js built/localtest/\r\ncp -r typings\\lib.d.ts built/localtest/\r\nrm -rf tests/baselines/local/\r\nnode built\\localtest\\run.js tests/cases/fourslash/completions.ts\r\nRunning tests.\r\n=== Script (tests/cases/fourslash/completions.ts) (active, cursor at |) ===\r\n|\r\n=== Script (tests/cases/fourslash/completions.ts) (active, cursor at |) ===\r\nfunctionÂ·foo(bar)Â·{â†“\r\nÂ·Â·Â·Â·bâ†“\r\n}|â†“\r\n\r\nF\r\n\r\nFourSlash test completions.ts\r\n  Runs correctly\r\n    TypeError: Cannot call method 'setUnresolved' of null\r\n        at TypeScriptCompiler.pullGetDeclInformation (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:57774:20)\r\n        at CompilerState.pullGetDeclInformation (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:61105:34)\r\n        at LanguageService.getCompletionEntryDetails (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:62936:57)\r\n        at TestState.getCompletionEntryDetails (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:68274:41)\r\n        at eval (eval at runFourSlashTestContent (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:69286:18), <anonymous>:492:51)\r\n        at Array.forEach (native)\r\n        at eval (eval at runFourSlashTestContent (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:69286:18), <anonymous>:491:63)\r\n        at runFourSlashTestContent (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:69286:13)\r\n        at Object.runFourSlashTest (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:69228:9)\r\n        at c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:70430:35\r\n        at TestCase.Runnable.call (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65953:21)\r\n        at TestCase.Runnable.runBlock (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65979:25)\r\n        at TestCase.run (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66031:34)\r\n        at c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65985:45\r\n        at Scenario.Runnable.call (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65960:21)\r\n        at Scenario.Runnable.runChild (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65984:25)\r\n        at Scenario.runChildren (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66091:30)\r\n        at c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66080:26\r\n        at Scenario.Runnable.call (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65954:21)\r\n        at Scenario.Runnable.runBlock (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65979:25)\r\n        at Scenario.run (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66066:30)\r\n        at c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65985:45\r\n        at Runnable.call (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65960:21)\r\n        at Runnable.runChild (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:65984:25)\r\n        at Run.runChildren (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66133:30)\r\n        at Run.run (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:66122:18)\r\n        at run (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:67623:20)\r\n        at runTests (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:73152:5)\r\n        at Object.<anonymous> (c:\\javascript\\typescript\\0.9\\typescript\\built\\localtest\\run.js:73283:1)\r\n        at Module._compile (module.js:456:26)\r\n        at Object.Module._extensions..js (module.js:474:10)\r\n        at Module.load (module.js:356:32)\r\n        at Function.Module._load (module.js:312:12)\r\n        at Function.Module.runMain (module.js:497:10)\r\n        at startup (node.js:119:16)\r\n        at node.js:901:3\r\n\r\n\r\nScenarios: 1 passed, 1 failed.\r\nTestcases: 0 passed, 1 failed.\r\n  Blocked: 0\r\n```",
+    "LastUpdatedDate": "2014-01-14T14:29:10.577-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-26T08:10:25.533-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Cannot call method 'setUnresolved' of null",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1592
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "My current workaround is to check syntax and semantics diagnostics after updating a file, indirectly triggering the missing analyses.\n\n- is that sufficient? (if yes, the need for it should be documented)\n- is there a more direct way to trigger the neccessary analyses?\n- shouldn't `getCompletionEntryDetails` itself ensure that the stored information is uptodate wrt to updated files?",
+      "PostedDate": "2013-08-26T15:00:00.757-07:00",
+      "Id": 111219
+    },
+    {
+      "Message": "This is a bug on our side. The suggested workaround of calling getSemanticDiagnostics is fine; it shouldn't have any negative side effects. I don't think there is a more direct workaround.",
+      "PostedDate": "2013-08-26T16:48:21.607-07:00",
+      "Id": 111232
+    },
+    {
+      "Message": "One negative side-effect is performance: ~1-2s with diagnostics, near instant without. For use in combination with completion generation, this is too slow.",
+      "PostedDate": "2013-09-02T03:39:04.527-07:00",
+      "Id": 111842
+    },
+    {
+      "Message": "looks like the test no longer fails in develop - does this mean the underlying issue is fixed, or just that this particular test no longer runs into it?",
+      "PostedDate": "2013-09-02T13:15:33.967-07:00",
+      "Id": 111866
+    },
+    {
+      "Message": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.\n\r\n\r** Closed by RyanCavanaugh 11/19/2013 1:37PM",
+      "PostedDate": "2013-11-19T13:37:38.643-08:00",
+      "Id": 123754
+    },
+    {
+      "Message": "Not completely fixed (in `release-0.9.5` branch).\r\n\r\nIf you check the output of the test I gave, there are several `null` results for completion entry details. Adding a `console.log(entry)`, one can  see these are for primitive types:\r\n```\r\n{ name: 'any', kind: 'primitive type', kindModifiers: '' }\r\nnull\r\n{ name: 'boolean', kind: 'primitive type', kindModifiers: '' }\r\nnull\r\n{ name: 'number', kind: 'primitive type', kindModifiers: '' }\r\nnull\r\n{ name: 'string', kind: 'primitive type', kindModifiers: '' }\r\nnull\r\n{ name: 'void', kind: 'primitive type', kindModifiers: '' }\r\nnull\r\n{ name: 'undefined', kind: 'var', kindModifiers: 'declare' }\r\nnull\r\n```\r\nShouldn't they reproduce at least the non-detail info?",
+      "PostedDate": "2013-11-21T04:20:08.217-08:00",
+      "Id": 123756
+    }
+  ]
+}

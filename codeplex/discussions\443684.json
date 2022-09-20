@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1043716",
+    "ThreadId": "443684",
+    "Html": "I've created a variant of generic Promises for Typescript. \r<br />\n<br />\nRequires 0.9 alpha and targets ES5.\r<br />\n<br />\nNuget is here: <a href=\"http://nuget.org/packages/Promise.TypeScript/\" rel=\"nofollow\">http://nuget.org/packages/Promise.TypeScript/</a>\r<br />\nand the Project on Github: <a href=\"https://github.com/pragmatrix/Promise\" rel=\"nofollow\">https://github.com/pragmatrix/Promise</a>\r<br />\n<br />\nHeavily inspired by the non-generic version:\r<br />\n<a href=\"https://github.com/stevan/promises-typescript\" rel=\"nofollow\">https://github.com/stevan/promises-typescript</a>\r<br />\n<br />\nFeedback is very appreciated. Thanks!<br />\n",
+    "PostedDate": "2013-05-15T01:09:31.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1056012",
+    "ThreadId": "443684",
+    "Html": "I can't get the Promise.ts to compile. The compiler does not like the Partial[] type being passed to deferred generic. What &quot;Partial&quot;?<br />\n",
+    "PostedDate": "2013-06-12T11:52:56.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1056349",
+    "ThreadId": "443684",
+    "Html": "Thank you for looking into it. I've updated the project and the nuget package so that it compiles with the 0.9 beta compiler.<br />\n",
+    "PostedDate": "2013-06-13T05:32:23.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1056469",
+    "ThreadId": "443684",
+    "Html": "I can't seem to get my head around promises, and what purpose they provide.\r<br />\nThe example code shown at <a href=\"https://github.com/stevan/promises-typescript\" rel=\"nofollow\">https://github.com/stevan/promises-typescript</a>  just seems to confuse even more.\r<br />\n<br />\nI assume it can prevent code from getting closure hell with callbacks.\r<br />\n<br />\nBut to me the following seems to be much easer to understand -&gt;<br />\n<pre><code>\ninterface ISimpleCallback { ( cb:()=&gt;void ):void; }\nfunction executeCallbacksInOrder(cbs:ISimpleCallback[],done:()=&gt;void) {\n    var l=0;\n    var ll=cbs.length;\n    function doNextCallback() {\n        if(l&gt;=ll) {\n            done();\n            return;\n        }\n        var tl=l;l++;\n        if(cbs[tl]) cbs[tl](doNextCallback);\n        else doNextCallback();\n    }\n    doNextCallback();\n}\n\n\nvar thingsToDo:ISimpleCallback[] = [\n    (cb)=&gt;{\n        console.log('Our first callback..');\n        cb();\n    },\n    (cb)=&gt;{\n        console.log('Our second callback, that could take some time to complete');\n        //lets fake a long time.. ok, 1 second.. :)\n        setTimeout(()=&gt;{ console.log('Not too long eh!!');cb(); },1000);\n    },\n    (cb)=&gt;{\n        console.log('Our last callback, all done now..');\n        cb();\n    }\n];\n\nexecuteCallbacksInOrder(thingsToDo,\n  ()=&gt;{console.log('All callbacks complete');}\n);</code></pre>\n\nOf course it also very simple to create a an executeCallbackTogether function, and also implement error handling.\r<br />\nps, also found an error with the current 0.8.3.0..\r<br />\nIf I try and place the callback directly into the function the compiler crashes..\r<br />\neg.<br />\n<pre><code>executeCallbacksInOrder(\n    [\n        (cb)=&gt;{\n            console.log('Our first callback..');\n            cb();\n        },\n        (cb)=&gt;{\n            console.log('Our second callback, that could take some time to complete');\n            //lets fake a long time.. ok, 1 second.. :)\n            setTimeout(()=&gt;{ console.log('Not too long eh!!');cb(); },1000);\n        },\n        (cb)=&gt;{\n            console.log('Our last callback, all done now..');\n            cb();\n        }\n    ],\n    ()=&gt;{console.log('All callbacks complete');}\n);\n</code></pre>\n\n",
+    "PostedDate": "2013-06-13T09:45:28.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057361",
+    "ThreadId": "443684",
+    "Html": "A promise is not really about executing callbacks. The word &quot;Promise&quot; in English means &quot;to give an assurance that something will be done&quot;. \r<br />\n<br />\nThe thing that &quot;will be done&quot; in the context of a JavaScript promise is normally to return a value. In short a Promise undertakes to return a value computed through an arbitrarily complex operation (or report back an error) when a caller requests that value:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n <span style=\"color:Blue;\">var</span> promise = <span style=\"color:Blue;\">new</span> Promise();\n \n ...\n <span style=\"color:Green;\">// Caller requests value</span>\n promise.then(value =&gt; <span style=\"color:Green;\">/* I promise to return this value*/</span>);\r\n</pre></div>Now this might look like a callback on the face of it, but in fact the Promise is a statefull object with well defined behaviour (see the <a href=\"http://promises-aplus.github.io/promises-spec/\" rel=\"nofollow\">Promise A+ spec</a> for a good explanation); for example one of the rules of Promises is that &quot;then&quot; may be called multiple times, but must return the same result every time. Essentially this permits one to treat a Promise as an object with an immutable value.\r<br />\n<br />\nConsider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n <span style=\"color:Blue;\">function</span> foo(value:number){\n    console.log(value);\n    console.log(value+1);\n}\n\n <span style=\"color:Blue;\">function</span> bar(promise: Promise){\n    promise.then( value =&gt;   console.log(value));\n    promise.then( value =&gt;   console.log(value+1));\n }  \n\n <span style=\"color:Blue;\">var</span> primitive = 10;\n <span style=\"color:Blue;\">var</span> promise = <span style=\"color:Blue;\">new</span> Promise();\n promise.resolve(10); \n \n  foo(primitive);  <span style=\"color:Green;\">// logs 10, 11</span>\n  bar(promise);  <span style=\"color:Green;\">// logs 10, 11</span>\n  \r\n</pre></div>The point is the value from the promise can be the result of an arbitrarily complex sequence of events, but we can still treat it very much like a primitive.<br />\n",
+    "PostedDate": "2013-06-16T02:49:18.37-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1167029",
+    "ThreadId": "443684",
+    "Html": "Not working for TypeScript 0.9.5.<br />\n",
+    "PostedDate": "2014-01-14T17:59:25.433-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1170255",
+    "ThreadId": "443684",
+    "Html": "Promises do nothing but offer cute semantics around callbacks.\r<br />\n<br />\nThe problem with callbacks and async code in general is readability. Subtle bugs creep in when you read a method from top to bottom and it executes in a much different order.\r<br />\n<br />\nI really like KpjComp's style of handling async flows. It's more like a state machine, and the order you read things is the order in which they are executed. I think web developers need to understand and embrace this style. Treat callbacks as dependencies. &quot;Callback hell&quot; is purely a self-made nightmare (and I've been there).\r<br />\n<br />\nWith that aside, I like your lib, pragmatix. It's nice with TypeScript's beautiful &quot;fat arrow&quot; syntax.<br />\n",
+    "PostedDate": "2014-01-15T21:55:41.36-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1170318",
+    "ThreadId": "443684",
+    "Html": "This code:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> thingsToDo:ISimpleCallback[] = [\n    (cb)=&gt;{\n        console.log(<span style=\"color:#A31515;\">&#39;Our first callback..&#39;</span>);\n        cb();\n    },\n    (cb)=&gt;{\n        console.log(<span style=\"color:#A31515;\">&#39;Our second callback, that could take some time to complete&#39;</span>);\n        <span style=\"color:Green;\">//lets fake a long time.. ok, 1 second.. :)</span>\n        setTimeout(()=&gt;{ console.log(<span style=\"color:#A31515;\">&#39;Not too long eh!!&#39;</span>);cb(); },1000);\n    },\n    (cb)=&gt;{\n        console.log(<span style=\"color:#A31515;\">&#39;Our last callback, all done now..&#39;</span>);\n        cb();\n    }\n];\r\n</pre></div>can be represented using those promises:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// helper function</span>\n<span style=\"color:Blue;\">function</span> wait(millis) {\n  <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">new</span> Promise(resolve =&gt; setTimeout(resolve, millis));\n}\n\nPromise.resolve(console.log(<span style=\"color:#A31515;\">&#39;Our first callback..&#39;</span>))\n.then(() =&gt; wait(1000))\n.then(() =&gt; console.log(<span style=\"color:#A31515;\">&#39;Not too long eh&#39;</span>))\n.then(() =&gt; console.log(<span style=\"color:#A31515;\">&#39;our last callback&#39;</span>));\r\n</pre></div>I don't know but for me the second version is more readable and less indented :) Moreover the Promise object is slowly introduced in browsers: <a href=\"http://caniuse.com/promises\" rel=\"nofollow\">http://caniuse.com/promises</a> so in Chrome I don't need any custom code to run it.\r<br />\n<br />\nPromises are good in resolving data-flow like problems when usually you end-up with pyramid of callbacks:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nimportDataSet(<span style=\"color:#A31515;\">&#39;myFile.csv&#39;</span>,<span style=\"color:Blue;\">function</span> () {\n  importDataSet(<span style=\"color:#A31515;\">&#39;myFile.csv&#39;</span>,<span style=\"color:Blue;\">function</span> () {\n    DataSet.find({title: 1}, <span style=\"color:Blue;\">function</span> (err, result) {\n        result.length.should.be.equal(2);\n        result[0].title.should.startWith(<span style=\"color:#A31515;\">&#39;myFile&#39;</span>);\n        result[1].title.should.startWith(<span style=\"color:#A31515;\">&#39;myFile&#39;</span>);\n        result[0].title.should.not.be.equal(result[0].title);\n        done();\n      });\n    });\n  });\n  done();\n}); \r\n</pre></div>After rewriting you get this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nimportDataSet(<span style=\"color:#A31515;\">&#39;myFile.csv&#39;</span>)\n  .then(<span style=\"color:Blue;\">function</span> () {\n  <span style=\"color:Blue;\">return</span> importDataSet(<span style=\"color:#A31515;\">&#39;myFile.csv&#39;</span>)\n}).then(<span style=\"color:Blue;\">function</span> () {\n  <span style=\"color:Blue;\">return</span> DataSet.find({title: 1})\n}).then(<span style=\"color:Blue;\">function</span> (result) {\n  result.length.should.be.equal(2);\n  result[0].title.should.startWith(<span style=\"color:#A31515;\">&#39;myFile&#39;</span>);\n  result[1].title.should.startWith(<span style=\"color:#A31515;\">&#39;myFile&#39;</span>);\n  result[0].title.should.not.be.equal(result[0].title);\n  done();\n});\r\n</pre></div>Taken from: <a href=\"https://stackoverflow.com/questions/20641074/how-to-refactor-a-callback-pyramid-into-promise-based-version\" rel=\"nofollow\">https://stackoverflow.com/questions/20641074/how-to-refactor-a-callback-pyramid-into-promise-based-version</a>\r<br />\n<br />\nPromises have several advantages over KpjComp simple solution:<br />\n<ol>\n<li>result from one promise is passed to next one</li>\n<li>if a promise returns another promise it's added to the chain, in the callback version you would create another step in callback pyramid passing cb along (the setTimeout case)</li>\n<li>\nyou get automatic error propagation as promises have &quot;catch&quot; method<br />\n</li>\n</ol>\nI would argue that promises promote more &quot;functional-like programming&quot; as you tend to write small functions that just work on the arguments and not callbacks with ever growing function scope. Those callbacks can then access variables of any function in scope increasing the number of function dependencies (hidden arguments, like globals).\r<br />\n<br />\nNote that Promises as outlined in the A+ spec also have drawbacks or rather things to keep in mind. This point <a href=\"http://promises-aplus.github.io/promises-spec/#point-39\" rel=\"nofollow\">http://promises-aplus.github.io/promises-spec/#point-39</a> tells to execute then actions with a fresh stack - Promise polyfills do it with setTimeout/requestAnimationFrame and other tricks and that will always be slower than direct callback. Native Promises in Chrome are as fast as callbacks (from my personal experience) but the &quot;fresh stack&quot; requirement can also bite you in cases when you need to be in the same stack. Those are rare but for example when working with IndexedDB transactions the requests (read/write) need to be placed in the same stack or the transaction completes.\r<br />\n<br />\nI recommend reading this excellent article: <a href=\"http://www.html5rocks.com/en/tutorials/es6/promises/\" rel=\"nofollow\">http://www.html5rocks.com/en/tutorials/es6/promises/</a><br />\n",
+    "PostedDate": "2014-01-16T01:06:43.833-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1170404",
+    "ThreadId": "443684",
+    "Html": "@jackjoy I've created an issue on github for that: <a href=\"https://github.com/pragmatrix/Promise/issues/3\" rel=\"nofollow\">https://github.com/pragmatrix/Promise/issues/3</a>\r<br />\n@jscharf thanks :)<br />\n",
+    "PostedDate": "2014-01-16T03:14:00.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

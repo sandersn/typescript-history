@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-02T14:25:22.177-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "___re-re-open update (130702):  this bug occurs even when two files do not reference each other (globals in the same project conflict upon compile).   perhaps that's by-design,  but seems wrong.__\r\n\r\n\r\n__re-open update (130701):  requesting this to be re-opened.   i added repro steps in my last 2 comments__\r\n\r\ni am trying to use amd modules, and per the require.js documentation, i should be able to pre-populate the require or requirejs variable with my config.\r\n\r\nso i have a .ts file with ONLY the following (no module / imports):\r\n\r\n```\r\nvar require={ /* some config */ };\r\n\r\n```\r\n\r\nunfortunatly when trying to build, that file errors with a duplicate identifier.   when i change it to be \"requirejs\" instead, i get another duplicate identifier error.\r\n\r\ni tried tricks like putting \"define var require:any\" on top but it's not helping.",
+    "LastUpdatedDate": "2013-08-27T09:40:29.543-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-25T17:49:21.803-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.0: duplicate identifier",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1241
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "sorry but the issue isn't my usage (or misusage).  however it may not be typescript directly, it could be web-essentials, or maybe something about the VS integration causing the issue.\n\n1) i was getting a build-time error\n2) i had no references to any other file (not using requirejs, but even if i was, i am getting a build-time error, not runtime error)   \n3) I was not referencing any .d.ts file  (indeed, all I had in my .ts file was that single line of code)\n4) reverting to typescript 0.8.3.1 and the problem goes away\n\nhope that helps you figure this out.  i moved back to 0.8.3.1 in the meantime\n\n",
+      "PostedDate": "2013-06-27T18:38:19.713-07:00",
+      "Id": 104460
+    },
+    {
+      "Message": "fyi, the issue is still occuring with 0.9.0.1\n\nhere's some more details:\n\nfile A.d.ts has the following definition:\n```\ndeclare var a;\n```\n\nfile B.ts has the same definition:\n```\ndeclare var a;\n```\n\nfile C, D, E,F,G reference some combination of file A and B\n",
+      "PostedDate": "2013-06-29T17:44:35.227-07:00",
+      "Id": 104664
+    },
+    {
+      "Message": "sorry hit the wrong key and submitted early.   more details on repro steps:\n\ncompiling each of these files INDIVIDUALLY works, as in:\n```\ntsc B.ts\ntsc C.ts\ntsc D.ts\n//everything compiles!\n```\ncompiling these files in-bulk works in 0.8.3.1, but does NOT work in 0.9.x (as in, ctrl-shift-b in visual studio)\n\n```\ntsc B.ts C.ts\n//error in 0.9.x:  \"error TS2000: Duplicate identifier 'a'.\n```\n\nso it looks to me that the new compiler isn't clearing local scopes properly with multiple file compiles, but of course that's my naive guess.",
+      "PostedDate": "2013-06-29T17:52:22.97-07:00",
+      "Id": 104665
+    },
+    {
+      "Message": "Your variable is conflicting with variables of the same name defined by requires. You might want to try looking here for some help getting started with RequireJS (uses a slightly older version of Typescript):\n\nhttp://blorkfish.wordpress.com/2012/10/23/typescript-organizing-your-code-with-amd-modules-and-require-js/\n\r\n\r** Closed by danquirk 06/27/2013 4:51PM",
+      "PostedDate": "2013-06-27T16:51:47.877-07:00",
+      "Id": 104712
+    },
+    {
+      "Message": "Same here !\n\ndeclared vars seems to be interpreted as global and this can break lot of things.\nI managed to get it fixed but it's really a weired way to handle dependencies :/",
+      "PostedDate": "2013-07-01T07:02:43.4-07:00",
+      "Id": 104755
+    },
+    {
+      "Message": "Having more than 1 'declare var' of the same name is an error. The general correct fix here is to move the declarations to a .d.ts file and reference that file.\n\r\n\r** Closed by RyanCavanaugh 07/01/2013 10:45AM",
+      "PostedDate": "2013-07-01T10:45:07.493-07:00",
+      "Id": 104819
+    },
+    {
+      "Message": "_re-re-open update (130702):  this bug occurs even when two files do not reference each other (globals in the same project conflict upon compile).   perhaps that's by-design,  but seems wrong.",
+      "PostedDate": "2013-07-01T20:03:16.453-07:00",
+      "Id": 104820
+    },
+    {
+      "Message": "Thanks for persisting with us and reopening again :-)  You are indeed correct that multiple declarations of a variable in the same scope should be allowed (provided there is no conflict in the type of the declaration, i.e. you can't \"declare var a: string\" in one file, \"declare var a: number' elsewhere, and compile together).\n\nI tried reproducing with a couple of different scenarios outlined above, namely having independent files declare the same var and compiling both on the same command-line, and having the declarations in separate files both included via a reference in a common file.  With our latest bits (in the 'develop' branch) I don't see any such error.  So looks like we already fixed this.\n\nIf you still see any issues in this area once you pick up our latest changes, please reopen.  Thanks again for persisting on this, and apologies for the premature closing earlier.",
+      "PostedDate": "2013-07-02T14:25:13.287-07:00",
+      "Id": 104924
+    },
+    {
+      "Message": "Hi.\n\nI also have this problem still as August 22. \n\nI think it is a Visual Studio 2012 with TypeScript problem.\n\nTo seperate ts files in the project, not linked and in different folders, cannot compile because they use some of the same names for global variables.\n\nThey are not being referenced in the Intelisense.\n\nI installed newest version of typescript 0.9.11 and disabled web essentials - but the \"duplicate identifier\" is still there.\n\nBest Regards,\n\nAnders Both\nDenmark.\n\n",
+      "PostedDate": "2013-08-22T04:59:15.253-07:00",
+      "Id": 110735
+    },
+    {
+      "Message": "If needed I can set up a remote desktop with a instalation of Visual Studio, Typescript and a project that produces the bug. ",
+      "PostedDate": "2013-08-22T05:43:17.987-07:00",
+      "Id": 110737
+    },
+    {
+      "Message": "Anders, can you open up a separate issue with a description of your setup (and upload a representative project, if possible) so we can track the issue better? Thanks!",
+      "PostedDate": "2013-08-27T09:40:29.543-07:00",
+      "Id": 111302
+    }
+  ]
+}

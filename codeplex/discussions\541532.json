@@ -1,0 +1,330 @@
+[
+  {
+    "Id": "1231503",
+    "ThreadId": "541532",
+    "Html": "Hi,\r<br />\nI'm new to ts. Trying to figure out whether I can port a library originally written for dart.\r<br />\nPlease see <a href=\"https://github.com/tatumizer/circuit-dart\" rel=\"nofollow\">https://github.com/tatumizer/circuit-dart</a>\r<br />\n<br />\nThere's a number of difficulties in porting it, starting with syntax. Dart library makes use of annotations and user-defined operators. I tried to express the same idea in pure javascript, but had to use rather ugly workarounds, which defeated the whole purpose. I'm wondering whether ts provides more syntactic possibilities.\r<br />\n<br />\nI would be happy to discuss details/motivations/etc if there's any interest among ts users.\r<br />\nThank you,\r<br />\nAlex<br />\n",
+    "PostedDate": "2014-04-07T13:01:59.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231536",
+    "ThreadId": "541532",
+    "Html": "I don't know anything about Dart, but if you post examples of exactly what you want to convert, perhaps I can help shed some light. :)<br />\n",
+    "PostedDate": "2014-04-07T14:17:46.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231570",
+    "ThreadId": "541532",
+    "Html": "Please consider example.\r<br />\nThe following program computes 1+2+3+4 (please see comments)\r<br />\n<br />\nFuture&lt;int&gt; add4(a, b, c, d) {\r<br />\n  return new Circuit([ // list of functions (called &quot;gates&quot;), =&gt; is similar to -&gt; in js, it's just a definition of simple function.<br />\n<pre><code>  (@out sum1) =&gt; sum1 &lt;&lt; add(a, b),  // &quot;add&quot; is a function returning Future, which completes with a+b\n  (@out sum2) =&gt; sum2 &lt;&lt; add(c, d), \n  (sum1, sum2, @out result) =&gt; result &lt;&lt; add(sum1, sum2)</code></pre>\n\n]);\r<br />\n}\r<br />\nmain() {\r<br />\n   add4(1, 2, 3, 4).then(print); // prints 10\r<br />\n}\r<br />\n<br />\nDart has user-defined operators, so you can define &lt;&lt; to mean whatever you want. It's defined in such a way that sum1&lt;&lt;add(a,b) means something like\r<br />\nsum1.setFuture(add(a,b))\r<br />\n@out is an annotation. In dart. you can annotate anything, and through reflection, find out that function has, say, one parameter (sum1), which is annotated with token &quot;@out&quot;\r<br />\nYeah, it might sound cryptic still.  Maybe you can you browse through readme for 5 min, the idea is simple. <br />\n",
+    "PostedDate": "2014-04-07T15:48:03.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231609",
+    "ThreadId": "541532",
+    "Html": "First thing to note is that TS does not have user defined operators.  Another thing to keep in mind is that TS is not another programming language.  It's sole purpose (IMHO) is to add a layer of types for compile-time checking, and modifiers that help when transcoding to JavaScript (as less-invasive as possible, so what you see is what you get - mostly).   User-defined operators don't exist in JavaScript, which is why I'm sure it is not currently in TS (though there is/was an feature request for inline functions I believe, so if that happens, it wouldn't be far fetched I suppose).\r<br />\n<br />\nThat aside, when working with TS, you simply have to think in terms of JavaScript and Lambda expressions (which just output functions directly).  Since there are no user-defined operators, you will need to create those methods BY NAME, or do the operation another way.\r<br />\n<br />\nTake a look at this: <a href=\"http://goo.gl/fbDLQZ\" rel=\"nofollow\">http://goo.gl/fbDLQZ</a>\r<br />\n<br />\nThis is as good as you can get with TS currently I think.  You'll have to give more thought to how your &quot;gates&quot; are processed in the Circuit constructor.\r<br />\n<br />\nSide note:  You are doing something similar to a project I started on many years back.  I still own the &quot;circuitscript.com&quot; domain name from it (it's on hold currently ;) ).<br />\n",
+    "PostedDate": "2014-04-07T17:41:46.487-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231617",
+    "ThreadId": "541532",
+    "Html": "<blockquote>\nSide note: You are doing something similar to a project I started on many years back<br />\n</blockquote>\nGlad to hear that!<br />\nIncidentally, I also used it many years back (in Fortran, long before the term &quot;domain&quot; acquired its modern meaning :-)<br />\nThis idea is probably so old it's a part of folklore, it's just it never went mainstream, at least with respect to evented runtime, where it's the most natural way of reasoning (IMO).<br />\n<br />\nThe thing is: I need to parse parameter list of each gate to figure out what is input and what is output - the whole idea revolves around that.<br />\nWhen parameter is specified as output (with @out annotation), I pass Latch object while calling a gate; when it's specified as input (no annotations), I pass the value, but only after it becomes known (or, more precisely, when all inputs of the gate become known).<br />\nWhen Latch is passed, the only thing gate can do is to write a future to it (Latch has no other visible methods).<br />\nWhen value is passed, it's just a normal value; gate can do with it whatever it wants.<br />\nThat's the whole trick. <br />\n<br />\nGenerally, gate can have more than one output parameter (that's how you can implement branching, for example: depending on condition, write future to output latch x or output latch y - so execution takes different path; sometimes there's no inputs; sometimes there's no outputs. So return value of the gate really has no meaning, and not used in any way.<br />\n<br />\nThe difficulty is to find a good syntax expression. After N iterations, I was able to do it in dart, but the audience for dart (at least for now) is limited, to put it mildly.<br />\n(there are other problems with dart - it can sort-of  compile to javascript, but while doing so, it kind-of loses a bunch of most interesting features, e.g. reflection, so the whole thing just falls apart; the meaning of &quot;sort-of&quot; and &quot;kind-of&quot; above is too complicated to be explained in a concise manner). <br />\n<br />\nThere can be many workarounds, but those I know, I don't like -  they are ugly. E.g. you can use something like comment (which can be just a string literal in the beginning of method body) to denote outputs, but it will look like hack.<br />\n<br />\nI thought there's something that I missed that can be used, but probably no miracles here. Too bad. <br />\n<br />\nI think the idea is so fundamental and simple and natural, it deserves to be supported by language directly - but it is unlikely to happen any time soon :(<br />\n<br />\nThanks for your comments. <br />\n//Alex<br />\n",
+    "PostedDate": "2014-04-07T18:51:16.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231624",
+    "ThreadId": "541532",
+    "Html": "Hi Alex, \r<br />\n<br />\nFYI: This is also on the radar already.  Please vote/comment here: <a href=\"https://typescript.codeplex.com/workitem/90\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/90</a><br />\n",
+    "PostedDate": "2014-04-07T19:29:38.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231631",
+    "ThreadId": "541532",
+    "Html": "FYI: There's also this discussion: <a href=\"https://typescript.codeplex.com/discussions/447874\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/447874</a><br />\n<br />\nBTW: Besides what you mentioned about comments (such as &quot;<code>(/*out*/ sum1) =&gt; add(a, b)</code>&quot;), have you considered requiring it as part of the name?  Sort of like: &quot;<code>(out_sum1) =&gt; add(a, b)</code>&quot;?<br />\n",
+    "PostedDate": "2014-04-07T20:29:18.213-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231872",
+    "ThreadId": "541532",
+    "Html": "Yes, I considered &quot;out_sum1&quot;, but it breaks the beauty of idea, so to speak.\r<br />\nMost obvious replacement that doesn't look like a hack is to specify type Latch for output parameters (so, no &quot;out&quot; annotation, but if it's a latch, we know it's output), e.g.\r<br />\n(sum1: int, sum2, int, result: Latch) =&gt; ...\r<br />\nHowever, it won't work because ts (probably) erases all type annotations, and they are not available in runtime at all. Or I'm wrong?\r<br />\nIs it possible to see original code somehow in runtime? \r<br />\nAnother issue is lack of generics; we can't say Latch&lt;int&gt;, can we?\r<br />\n<br />\nInteresting question that people ask: why do we need all this, if we can use raw futures. \r<br />\nThe problem is that while using language on server-side, there's enormous amount of futures involved (hundreds, even thousands), and it's a complete mess.\r<br />\nVery good explanation why this is perceived as a mess comes from unexpected source:\r<br />\n<a href=\"http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html\" rel=\"nofollow\">http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html</a>\r<br />\n<br />\nThe article contains very deep insight about kind of coordinate system missing in unstructured code. With async code, it's even more complicated: your program effectively creates another program (set of interconnected futures), and this second-order (monadic) program then loses any connection to the code that created it, and exists as one huge blob. <br />\n",
+    "PostedDate": "2014-04-08T06:44:32.547-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232058",
+    "ThreadId": "541532",
+    "Html": "I thought of that already also, but as you guessed, you cannot access type information at runtime.  The original code is in the .ts file only.\r<br />\n<br />\nYes, you can have a &quot;class Latch&lt;T&gt; { }&quot; and say &quot;new Latch&lt;number&gt;()&quot;.  You can also create a dummy interface named 'int' if you wish (i.e. &quot;interface int extends Number { }&quot;).<br />\n",
+    "PostedDate": "2014-04-08T15:17:33.71-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232088",
+    "ThreadId": "541532",
+    "Html": "BTW: If you are thinking on the &quot;(sum1:int, sum2:int, result:Latch) =&gt; ... &quot; route, you could do this: &quot;(sum1$int, sum2$int, result$Latch) =&gt; ... &quot;. You'd just have to make a note to users that text after the last &quot;$&quot; in the name (or before if in front) is a modifier.<br />\n",
+    "PostedDate": "2014-04-08T17:24:45.653-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232090",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>Oh, there are generics? Good to know, thanks! This makes things more symmetric.</div>\r\n<div>BTW, &quot;int&quot; I used was a mistake - I don't need new type, whatever TS provides for int type is OK, Number is just fine.</div>\r\n<div><br>\r\n</div>\r\n<div>In principle, something can be done about type erasure, by running pretty simple preprocessor</div>\r\n<div>Does typescript provide a way to integrate with custom preprocessor?</div>\r\n<div>In dart, there's an attempt to &quot;institutionalize&quot; these preprocessors, so it's easy to integrate with build (e.g. you install somebody's package, it comes with preprocessor, which gets picked up automatically - user doesn't have to configure anything extra).</div>\r\n<div><br>\r\n</div>\r\n<div>To help writing preprocessors, dart provides kind of source reflection mechanism (long story, work in progress), but for simple things like circuit it's probably not necessary.<br>\r\n</div>\r\n<div>\r\n<div>If TS doesn't have this feature, it would be a good idea to consider it IMO. What do you think?</div>\r\n<div><br>\r\n</div>\r\n<div>(In principle, dart is a cute language, worth checking out, though there are some circumstances beyond the language that make its future very uncertain).</div>\r\n<div><br>\r\n</div>\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>.</div>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-08T17:49:14.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232091",
+    "ThreadId": "541532",
+    "Html": "Sorry, no pre-processors in typescript just yet.  There is however a feature request to extend the typescript compiler.<br />\n",
+    "PostedDate": "2014-04-08T18:13:09.407-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232093",
+    "ThreadId": "541532",
+    "Html": "See here: <a href=\"https://typescript.codeplex.com/workitem/1370\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1370</a><br />\n",
+    "PostedDate": "2014-04-08T18:18:11.957-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232099",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>I added my vote, of course. Thanks, </div>\r\n<div>Is there any summary of releases where I can find the history of changes in the language? Just curious about the progress made so far.</div>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-08T19:35:16.67-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232107",
+    "ThreadId": "541532",
+    "Html": "Look at the release notes under each release here:<br />\n<a href=\"http://www.microsoft.com/en-ca/download/details.aspx?id=34790\" rel=\"nofollow\">http://www.microsoft.com/en-ca/download/details.aspx?id=34790</a> (expand &quot;details&quot;)<br />\nIt's actually just a blog post of some new features, not a consolidated list. :)<br />\n<br />\nThere's also a hand book: <a href=\"http://www.typescriptlang.org/Handbook\" rel=\"nofollow\">http://www.typescriptlang.org/Handbook</a><br />\nand the language specs: <a href=\"http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf\" rel=\"nofollow\">http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf</a><br />\n<br />\nHope that helps. :)<br />\n",
+    "PostedDate": "2014-04-08T20:06:32.863-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232345",
+    "ThreadId": "541532",
+    "Html": "I have an idea how to implement it with existing syntax. Similar to out_ prefix, but with better narrative.\r<br />\nLet's define latch as a device that transforms future into value.\r<br />\nLatch has 2 ports - you drop a future into one port, and eventually get a value from another port.\r<br />\nSuppose we have a latch called &quot;sum&quot;. Then the port where you drop the future is called $sum, and the port where you get the value is simply &quot;sum&quot;.\r<br />\nOperation of dropping the future looks like function call. Operation of reading result looks like access to simple variable.\r<br />\nExample:\r<br />\nPromise&lt;number&gt; add4(a, b, c, d) { \r<br />\n  return new Circuit([ <br />\n<pre><code>($sum1) =&gt; $sum1(add(a, b)), \n($sum2) =&gt; $sum2(add(c, d)), \n(sum1, sum2, $result) =&gt; $result(add(sum1, sum2))</code></pre>\n\n]); \r<br />\n}\r<br />\n<br />\nHow do you like it? It looks even more concise than dart version, but is it good? \r<br />\nAnd probably, it can't withstand minification: all dollars will be replaced with something else, no? <br />\n",
+    "PostedDate": "2014-04-09T07:26:30.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232370",
+    "ThreadId": "541532",
+    "Html": "Sure, not bad at all, but yes, minification may cause a problem. ;)<br />\n<pre><code>function add4(a, b, c, d) { \n    return new Circuit([ \n        function($sum1) { return $sum1(add(a, b)); }, \n        function($sum2) { return $sum2(add(c, d)); }, \n        function(sum1, sum2, $result) { return $result(add(sum1, sum2)); }\n    ]); \n} \n</code></pre>\n\nbecomes <br />\n<pre><code>function add4(e,t,n,r){return new Circuit([function(n){return n(add(e,t))},function(e){return e(add(n,r))},function(e,t,n){return n(add(e,t))}])}\n</code></pre>\n\n(using <a href=\"http://jscompress.com\" rel=\"nofollow\">http://jscompress.com</a>)<br />\n",
+    "PostedDate": "2014-04-09T08:12:57.13-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232413",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>\r\n<div>\r\n<div>\r\n<div>Can &quot;source maps&quot; feature of HTML5 be used to find out original names? We would need to do it only once per run, after that we cache results (I'm doing the same in dart: use reflection, and cache results, then there's no performance penalty at all).<br>\r\n</div>\r\nOn the other hand, having mandatory runtime dependency on source maps is probably a bad idea (not sure, I'm a bit confused)<br>\r\n<br>\r\n</div>\r\nWith minification, a lot of metaprogramming otherwise available in javascript is gone. I'm not sure why minification is so important: browser caches scripts, so it's one-time issue, just to load faster when you run it for the first time?\r\n<br>\r\n</div>\r\nProbably, there are some performance benefits, too, but with modern javascript engines, I'm not sure the gains are that great.<br>\r\n<br>\r\n</div>\r\nWhat do you think?<br>\r\n<div>\r\n<div><br>\r\n<div><br>\r\n<br>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-09T09:20:14.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232507",
+    "ThreadId": "541532",
+    "Html": "I've looked at TS map files some time ago and only saw identifier names (for modules, types, functions), but not original source code (i.e. function parameters).  That is only in the .ts file.\r<br />\n<br />\nKeep in mind caching seems to work best when resources have expirations properly set in the response headers. Typically if done right, the scripts should be cached, and reloading should not be an issue.  I guess it comes down to frequency of expected script updates (i.e. new HTML page loading old scripts), and bandwidth for high traffic sites.<br />\n",
+    "PostedDate": "2014-04-09T12:17:22.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232512",
+    "ThreadId": "541532",
+    "Html": "Personally, I think if scripts are loaded dynamically to prevent page display lag, it wouldn't be a huge issue (except, again, where bandwidth may be an issue for high traffic APIs, such as the Google Maps API).<br />\n",
+    "PostedDate": "2014-04-09T12:20:22.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232566",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>\r\n<div>\r\n<div>\r\n<div>Hi James,<br>\r\nA couple of questions:<br>\r\n</div>\r\n1) are people in the habit of minifying nodejs server-side javascript files, too?<br>\r\n</div>\r\n2) if browser caching is effective for scripts (and it should be), why people bother with minification at all? So much hassle for nothing, plus losing metaprogramming completely? Is it that hard to set headers? (Probably there's a reason, but I can't find it\r\n by googling. Maybe it's just a false belief?)<br>\r\n</div>\r\nThanks,<br>\r\n</div>\r\n//Alex<br>\r\n<div>\r\n<div><br>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-09T14:36:54.943-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232595",
+    "ThreadId": "541532",
+    "Html": "Sorry, no idea, I have little experience with NodeJS.\r<br />\n<br />\nCaching should work if done correctly (<a href=\"http://goo.gl/lavbUX\" rel=\"nofollow\">http://goo.gl/lavbUX</a>), but again, I think it's people like mobile users visiting the site for the first time that suffer the most.  I'm sure this won't be as much an issue if/when speeds increase.\r<br />\n<br />\nThere's an article that may shed more light on this: <a href=\"http://engineeredweb.com/blog/why-minify-javascript/\" rel=\"nofollow\">http://engineeredweb.com/blog/why-minify-javascript/</a>\r<br />\n<br />\nBut I think it only reiterates what I figured: page display lag; but, it also mentions the round trips (communication) made before a single script is loaded (so n trips * n scripts in the header).  Drupal puts scripts in the header so they all get loaded first, and minifies them to speed up the process before the page can display (the body won't render until the header completes loading the inline scripts).  Personally, I employ script &quot;load on demand&quot; where only a &quot;loader&quot; .js file is loaded (one script), then the page can display as normal while the other scripts load dynamically.  Usually the first time user will be reading the page, which gives extra time to load the other scripts. :)<br />\n",
+    "PostedDate": "2014-04-09T15:46:03.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232635",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>The reasons mentioned in the article don't explain why minification is done with the loss of information.</div>\r\n<div>Obvious approach would be: 1) strip out comments 2) strip insignificant whitespace 3) introduce a dictionary, and replace every identifier with 1- or 2-char identifier **uniquely** within a module</div>\r\n<div>4) on receiving end, restore original identifiers</div>\r\n<div>How that is different from uglify? Sure, Uglify uses mostly 1-char replacement identifiers; The lossless algo above will use 1-char replacement for 64 most frequent identifiers, and 2-chars for the rest.\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>I'm pretty sure this would achieve 90% of savings or more. Will try to verify it though - just for curiosity.</div>\r\n<div>Maybe you know the reason why it's NOT done this way?</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-09T19:03:25.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232659",
+    "ThreadId": "541532",
+    "Html": "Minification is just a way to compress the file space, identifier name lengths, and remove comments.  Information is usually lost with the reduction of a file size.\r<br />\n<br />\nA dictionary would only help if a private identifier was used many times across scopes (which in my experience is rarely the case).  Usually though, it is many functions or sub scopes with private vars, and a dictionary may only serve to increase or negate the reduction.  Publicly accessible functions and properties are never minified (for obvious reasons).\r<br />\n<br />\nI pondered about this for TS, and was thinking: what would be nice is a minify modifier so we can select when and where it applies to a script. I think this level of control would cover both worlds.<br />\n",
+    "PostedDate": "2014-04-09T21:26:39.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1235257",
+    "ThreadId": "541532",
+    "Html": "Turns out, there's a way to write it in a way that withstands minification.\r<br />\nI put together a write-up for javascript:\r<br />\n<a href=\"https://github.com/tatumizer/circuit-js\" rel=\"nofollow\">https://github.com/tatumizer/circuit-js</a>\r<br />\n<br />\nYou can notice a lot of similarities between this variant and the basic idea of requirejs - it's just with circuit, it's taken from the level of modules to the level of individual function calls.\r<br />\n(Somebody helped me figure this out :-)\r<br />\nI'd like to discuss, Criticism is welcome.<br />\n",
+    "PostedDate": "2014-04-17T17:08:42.407-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1235983",
+    "ThreadId": "541532",
+    "Html": "Yeah, this crossed my mind, but I didn't know you were willing to completely change your thought on the approach - I just assumed you had a good reason for an array of functions, and that the parameter names should be validated by the compiler (as valid identifiers).  Of course, you can do anything in strings, and it's not like jQuery doesn't do something similar (using strings) for element selection. ;)  Personally, I hate the thought of having to put ANY code of any kind in a string (which is why I really loved LINQ [C#] when it came out).  By the way: Do you really want to rely on the definition order?  Did you know it's not even standard?<br />\n<br />\nECMA-262, section 12.6.4: &quot;The mechanics and order of enumerating the properties (step 6.a in the first algorithm, step 7.a in the second) is not specified [implementation dependent].&quot;  That means this could change (though I'm sure not any time soon, if ever)<br />\n<br />\nWhy not just take it a step further from an array to nested function calls?<br />\n<pre><code>function add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate(&quot;sum1&quot;, function() { return add(a, b); })\n    .gate(&quot;sum2&quot;, function() { return add(c, d); })\n    .result(&quot;sum1,sum2&quot;, function(x, y) { return add(x, y); });\n}</code></pre>\n\nWhich would confine the names to the strings only.  This also seems more clear to me regarding whats going on.<br />\n",
+    "PostedDate": "2014-04-20T16:28:53.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236152",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>In general, I need to know names of N input parameters and one output parameter. Notation i1,i2,...-&gt;o satisfies that.</div>\r\n<div>For order of keys, please see</div>\r\n<div><a href=\"http://stackoverflow.com/questions/280713/elements-order-in-a-for-in-loop\">http://stackoverflow.com/questions/280713/elements-order-in-a-for-in-loop</a><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>Not specified, but everybody support it, so it's non-issue: They can't suddenly break whatever they already supported.</div>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-21T06:47:15.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236297",
+    "ThreadId": "541532",
+    "Html": "The top answer says &quot;Do not rely on things staying this way.&quot;.  :P   ;)<br />\n<br />\nMy thought was that each &quot;.gate()&quot; (or whatever) could simply &quot;build&quot; the list internally, which would contain both the names and number of items, right up to the call to &quot;.result()&quot;.   Also, that inputs/outputs would be given as a list of strings (though I was missing something above). Perhaps something like this:<br />\n<pre><code>function add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate(&quot;&quot;, &quot;sum1&quot;, function() { return add(a, b); })  // gate(inputs, outputs, func)\n    .gate(&quot;&quot;, &quot;sum2&quot;, function() { return add(c, d); }) // gate(inputs, outputs, func)\n    .result(&quot;sum1, sum2&quot;, &quot;&quot;, function(x, y) { return add(x, y); }); // result(inputs, outputs, func)\n}</code></pre>\n\n(might prevent typos, and at least you won't have to parse the &quot;-&gt;&quot;, and simply split by &quot;,&quot; instead [though not a big deal I'm sure])<br />\n<br />\nUltimately, in the end, it's whatever looks/feels the best to you. ;)<br />\n<br />\nEdit: Or use arrays for inputs:<br />\n<pre><code>function add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate([], &quot;sum1&quot;, function() { return add(a, b); })  // gate(inputs[], output, func)\n    .gate(null, &quot;sum2&quot;, function() { return add(c, d); }) // gate(inputs[], output, func)\n    .result([&quot;sum1&quot;, &quot;sum2&quot;], &quot;&quot;, function(x, y) { return add(x, y); }); // result(inputs[], output, func)\n}</code></pre>\n\n",
+    "PostedDate": "2014-04-21T12:39:08.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236328",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>\r\n<div>\r\n<div>\r\n<div>\r\n<div>I think there's a pretty fine line here with the syntax. Sure, your variant is more straightforward. But it is more verbose.<br>\r\n</div>\r\nFor many people, verbosity is a deal-breaker.<br>\r\n</div>\r\nParsing is not a big deal, has no performance penalty - results can be cached (that's what I'm doing in dart).<br>\r\n</div>\r\n<div>I don't know what is better really. It's a matter of individual taste. No idea how to find out what the &quot;majority&quot; prefers :-)<br>\r\n</div>\r\n<div><br>\r\n</div>\r\nA bit unrelated, but curious thing I noticed just recently is this: Circuit is based on Futures, but in nodejs (and in js in general), there's no standard futures library. There's popular Q library, Deferreds in jQuery, and a bunch of others, but nothing standard.\r\n And if you use any of those libraries, you need adapters for every function - because standard APIs (e.g nodejs) work with callbacks, not futures.<br>\r\n<br>\r\n</div>\r\nWith Circuit, you can define semantics such that you don't need futures. Suppose &quot;add&quot; function is defined as\r\n<br>\r\nadd(x, y, cb) -- standard nodejs definition with callback.<br>\r\n</div>\r\nCircuit can be defined to work in callback-based mode so that the program will look like this:<br>\r\n<div>\r\n<pre><code>function add4(a, b, c, d) {\r\n  return Circuit(&quot;add4&quot;)\r\n    .gate(&quot;&quot;, &quot;sum1&quot;, function(cb) { add(a, b, cb); })<br>    .gate(&quot;&quot;, &quot;sum2&quot;, function(cb) { add(c, d, cb); }) \r\n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y, cb) { add(x, y, cb); });</code><br><br></pre>\r\n<pre>It's even shorter without futures.<br></pre>\r\n<pre>What do you think?<br><br></pre>\r\n<pre><br></pre>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-21T14:46:55.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236357",
+    "ThreadId": "541532",
+    "Html": "<blockquote>\nit is more verbose.  For many people, verbosity is a deal-breaker.<br />\n</blockquote>\nI didn't think it would be much more verbose than chainable function calling in jQuery, LinqJS, or Promise/Futures in general. ;)\r<br />\n<br />\nI think I don't fully see how you envision this working internally, so I'm not sure why you've added callbacks.  Are these callbacks &quot;internal Circuit callbacks&quot; to be executed by user code when a custom action is completed to trigger next steps?\r<br />\n<br />\nYou could also consider using the circuit context as the design:<br />\n<pre><code>function add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate(&quot;&quot;, &quot;sum1&quot;, function() { add(a, b, this); })\n    .gate(&quot;&quot;, &quot;sum2&quot;, function() { add(c, d, this); }) \n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y, ) { add(x, y, this); });\n}</code></pre>\n\n... or perhaps ...<br />\n<pre><code>function add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate(&quot;&quot;, &quot;sum1&quot;, function() { add(a, b, this.next); })\n    .gate(&quot;&quot;, &quot;sum2&quot;, function() { add(c, d, this.next); }) \n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y, ) { add(x, y, this.next); });\n}</code></pre>\n\n",
+    "PostedDate": "2014-04-21T16:54:36.93-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236358",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\"><span style=\"font-family:arial,sans-serif; font-size:12.727272033691406px\">&gt; I think I don't fully see how you envision this working internally</span><br>\r\n<div>Let's consider one gate:</div>\r\n<div>\r\n<pre style=\"white-space:pre-wrap\"><code>.gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y, cb) { add(x, y, cb); });</code></pre>\r\n<pre style=\"white-space:pre-wrap\"><div style=\"font-family:arial; white-space:normal\">\r\nIt has 2 inputs and one output (&quot;result&quot;). When inputs are ready, Circuit will call gate function with 3 parameters: first two are values. For the third out, which corresponds to &quot;result&quot;, circuit will pass a function (!) that can be defined roughly as</div>\r\n<div style=\"font-family:arial; white-space:normal\">function(value, err) {</div><div style=\"font-family:arial; white-space:normal\">  if (err)</div><div style=\"font-family:arial; white-space:normal\">\r\n     raise internal error in the circuit (passing err and maybe other info about the point of error)</div><div style=\"font-family:arial; white-space:normal\">  else </div><div style=\"font-family:arial; white-space:normal\">\r\n    assign value to latch &quot;result&quot;</div><div style=\"font-family:arial; white-space:normal\">} :</div><div style=\"font-family:arial; white-space:normal\">Please note the last part: it assigns to &quot;result&quot; BECAUSE result is the output of the gate. So callback cb is bound specifically to &quot;result&quot; latch.</div>\r\n<div style=\"font-family:arial; white-space:normal\">For another gate, like</div><div style=\"font-family:arial; white-space:normal\"><pre style=\"white-space:pre-wrap; font-size:12.727272033691406px\">\r\n<code>.gate(&quot;&quot;, &quot;sum1&quot;, function(cb) { add(a, b, cb)</code></pre><pre style=\"white-space:pre-wrap; font-size:12.727272033691406px\"><pre style=\"white-space:pre-wrap\"><div style=\"font-family:arial; white-space:normal\">\r\nthe thing we pass as parameter cb will be A FUNCTION bound to latch &quot;sum1&quot;</div><div style=\"font-family:arial; white-space:normal\">Therefore, depending on whether latch is specified as input or output, we pass either value of the latch (when it becomes known), or function bound to the latch to be used as callback.</div>\r\n<div style=\"font-family:arial; white-space:normal\">.</div><div style=\"font-family:arial; white-space:normal\"><br></div></pre></pre></div><div style=\"font-family:arial; white-space:normal\">\r\n</div></pre>\r\n<br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-21T17:15:45.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236371",
+    "ThreadId": "541532",
+    "Html": "Oh ok, then it's as I suspected: The end users of the design would call &quot;cb&quot; based on success or failure of the gate function.  Sure, why not...? ;)  Seems fine as well.  Personally, as a developer, I'd rather see &quot;function(x, y) { add(x, y, this); }&quot; be bound to the latch, then I'd have access to latch-specific functions (such as perhaps &quot;latch.result()&quot;), and hopefully the parent Circuit object for max control.\r<br />\n<br />\nExample:<br />\n<pre><code>function add(a, b, latch) {\n    var val = Q(a + b).delay(10);\n   // if (major error) latch.circuit.abort(); !!!, else ...\n    return latch &amp;&amp; latch.result(value) || val;  // (note: possibly allows calling &quot;add(#,#)&quot; by itself)\n}  \n\nfunction add4(a, b, c, d) {\n  return Circuit(&quot;add4&quot;)\n    .gate(&quot;&quot;, &quot;sum1&quot;, function() { add(a, b, this); })\n    .gate(&quot;&quot;, &quot;sum2&quot;, function() { add(c, d, this); }) \n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y) { add(x, y, this); });\n}\n</code></pre>\n\n",
+    "PostedDate": "2014-04-21T18:37:25.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236385",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>I agree that &quot;this: would be easier to explain, but I would go with straightforward implementation of &quot;add&quot;, following nodejs pattern used across all nodejs libraries - they don't have a lot of ceremony about callbacks, just write cb(result,error) without\r\n checking anything - if it crashes, so be it. Functions with last parameter &quot;cb&quot; are not expected to return anything meaningful through &quot;return&quot; (as far as I remember).</div>\r\n<div><br>\r\n</div>\r\n<div>I think though everything can be made even simpler, with less magic, just as\r\n</div>\r\n<div>\r\n<pre style=\"white-space:pre-wrap; font-size:12.727272033691406px\">\r\n<code>function add4(a, b, c, d) {\r\n  return Circuit(&quot;add4&quot;)\r\n    .gate(&quot;&quot;, &quot;sum1&quot;, function() { add(a, b, <b>this.cb</b>); })\r\n    .gate(&quot;&quot;, &quot;sum2&quot;, function() { add(c, d, <b>this.cb</b>); }) \r\n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y) { add(x, y, <b>this.cb</b>); });\r\n}</code></pre>\r\n<pre style=\"white-space:pre-wrap\"><span style=\"font-family:arial\">Where &quot;this&quot; is really a GATE, not latch. Because in the context of .gate(....), you would intuitively expect &quot;this&quot; to point to a gate, not latch. It all reads as &quot;pass callback associated with gate&quot;. Callback associated with gate sets output of the gate</span></pre>\r\n<pre><font face=\"arial\"><span style=\"white-space:normal\">Further, you can define access all properties of a gate through &quot;this&quot; pointer (if needed).</span></font></pre>\r\n<pre><font face=\"arial\"><span style=\"white-space:normal\">Yet another possibility is to really pass the output latch as extra parameter:</span></font></pre>\r\n<pre><pre style=\"font-size:12.727272033691406px; white-space:pre-wrap\"><code>function add4(a, b, c, d) {\r\n  return Circuit(&quot;add4&quot;)\r\n    .gate(&quot;&quot;, &quot;sum1&quot;, function(out) { add(a, b, out<b>.cb</b>); })\r\n    .gate(&quot;&quot;, &quot;sum2&quot;, function(out) { add(c, d, out<b>.cb</b>); }) \r\n    .gate(&quot;sum1, sum2&quot;, &quot;result&quot;, function(x, y, out) { add(x, y, out<b>.cb</b>); });\r\n}</code></pre><div><code>In which case we pass a real latch as &quot;out&quot;, and latch has property &quot;cb&quot; - function to be called to set the latch. Maybe this is the simplest variant?</code></div><div>Too many possibilities, hard to define criteria to choose the best one.</div>\r\n<div><br></div><div><code><br></code></div></pre>\r\n<pre><br></pre>\r\n<pre style=\"white-space:pre-wrap\"><br></pre>\r\n<pre style=\"white-space:pre-wrap; font-size:12.727272033691406px\"><code><br></code></pre>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-21T20:50:35.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236426",
+    "ThreadId": "541532",
+    "Html": "Sure, sounds good.  Personally I would choose the &quot;this.cb&quot; idea - keeps the function parameters clean, and less to type. :) However, I'm not a NodeJS developer, so if that's a big target audience, then perhaps the last idea is better - not sure either in this case. :)<br />\n",
+    "PostedDate": "2014-04-22T00:24:00.793-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236570",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>I agree, probably this.cb is the &quot;lesser evil&quot;, so to speak.</div>\r\n<div>I really don't know how big nodejs audience is. A lot of hype, but no reliable stats. People may say they like something, but they don't. The only way to measure how much they like anything is to make them pay money :-) And if the stuff is free, you will\r\n never know.</div>\r\n<div><br>\r\n</div>\r\n<div>Maybe you can be interested in writing implementation? Or know someone who is interested? I rewrote my dart program 10 times already, got tired. Rewriting the same thing once again in JS would not be a very exciting experience, at least at the moment :-).\r\n</div>\r\n<div>It might be one of ideas that will take a very long time to reach mainstream.</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n<div></div>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-22T06:41:35.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236652",
+    "ThreadId": "541532",
+    "Html": "Interesting search trends: <a href=\"http://goo.gl/S1CnwI\" rel=\"nofollow\">http://goo.gl/S1CnwI</a>  and  <a href=\"http://goo.gl/ss6D8W\" rel=\"nofollow\">http://goo.gl/ss6D8W</a><br />\nBut some JS++ languages are somewhat young still, and TS is fairly new to the game, so it will be interesting to see how things progress.<br />\n<br />\nI appreciate the offer, and really wish I had time to contribute, but unfortunately I can't distract from current projects at the moment.<br />\n",
+    "PostedDate": "2014-04-22T09:01:58.483-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236660",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>\r\n<div>\r\n<div>:)<br>\r\n</div>\r\nDart in this diagram is a different dart, has nothing to do with programming language. Not sure typescript there is really a language either.<br>\r\n</div>\r\nThe chart is not reliable. There are other sites that provide better ranking for languages, e.g\r\n<a href=\"http://langpop.corger.nl/\">http://langpop.corger.nl/</a><br>\r\n</div>\r\nAnyway, dart is a cute language, might be worth taking a look. It may evolve into something useful, hard to know.<br>\r\n<br>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-22T09:24:56.103-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236743",
+    "ThreadId": "541532",
+    "Html": "True - should have qualified the names better I guess. ;) Perhaps this is better: <a href=\"http://www.google.ca/trends/explore#q=TypeScript%2C%20Google%20Dart%2C%20CoffeeScript&amp;cmpt=q\" rel=\"nofollow\">http://www.google.ca/trends/explore#q=TypeScript%2C%20Google%20Dart%2C%20CoffeeScript&cmpt=q</a><br />\n<br />\nBeing very fluent in JavaScript myself makes me stay away from all JS++ type languages, with TypeScript being the only exception because it doesn't pull too far away from basic JS, and I can refactor my code easily, and prevent many type related errors.  I also like that I can run the compiler as 100% JS itself to use in a JS application. ;)<br />\n<br />\nI remember when I created my own lua-style script language in the 90s, and an assembly-style script language in early 2000 (much higher level of course), then proceeded to experiment with a circuit related script design, as well as other ideas I played with.  These were, however, &quot;add ons&quot; to host applications; but now that JavaScript is JIT compiled, it makes JavaScript basically like the main host language for an application on a device - and I'm more inclined to not called it &quot;script&quot; anymore, since scripts (in my thinking of scripts) are usually interpreted (or transpiled).  To me, writing in a new JS++ language that compiles down to JavaScript is like writing in C# to compile down to TypeScript, where all C# libraries are actually JavaScript files.  I really don't see any need to learn a new level of abstraction (language) which simply transcodes to another level of abstraction that I should really learn anyhow. ;) I am aware, however, that Dart was designed to be a possible replacement for JavaScript - but given the new JS standards coming out over the next few years, I hardly see it going anywhere (nor its point anymore).  The main thing missing from JS is an <em>optional</em> type layer - which Dart also fails at where Generics are concerned (only limited class/type generics supported, and not functions).  Bottom line: I'm more inclined to create script languages to be compiled by a compiler written in JavaScript, since the resulting JS can be JIT-compiled as well. ;)  In fact that is one of the ideas behind a project I'm working on - a complete tooling set in HTML5/JS/CEFSharp with its own VPL-Script hybrid language backed by scriptlets (circuit-ish like block texts with custom script behinds [TypeScript, even C# perhaps, Circuit script? ;), etc., which all compile to JS]) in a seamless client/server networking environment (I'm calling it DreamSpace Studio).  So far the base framework itself (open source) is running a mobile app for a company I work for, and I am working on the IDE as well (using the ACE editor), along with a donated license from Scirra (Construct 2) to support lower level game development and networking.  This is also why I'm so swamped now. ;)<br />\n",
+    "PostedDate": "2014-04-22T12:34:45.173-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236782",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>\r\n<div>\r\n<div>\r\n<div>WOW, this graph is much more meaningful. Before 2011, all mentions of dart are unrelated, which gives us the level of &quot;noise&quot;. After the peak, it gradually re-converges with noise level :-). Quite sad. Or funny. Depends on your perspective :-)<br>\r\n<br>\r\n</div>\r\nI have big issues with dart -&gt; javascript compilation myself. To be honest, I'm interested only in VM (eventually, it will be part of Chrome and Android - I think this will happen by the end of this year). Javascript produced by dart doesn't appeal to me at\r\n all (I think it's just a waste of time to even work on it). I have same reasons for this sentiment as you: it's as much of a kludge as java-&gt;javascript, where you have one problem at the start, and 2.5 or 3 problems at the end. But, considered as separate\r\n language, dart has some good points (BTW, generics for methods will come, they are planned). Programs tend to be quite short, I like it. APIs are polished. Refactoring is much easier (in most cases). I don't know, but maybe TypeScript solves this problem,\r\n too. <br>\r\n<br>\r\n</div>\r\nI'm doing it all mostly for fun (I'm close to retirement age). Learned javascript several years ago out of curiosity, and liked it a lot. Basically, it's kinda LISP in disguise. Very powerful language. But I'm not using it on my day job.<br>\r\n<br>\r\nIn my younger years, I dealt mostly with firmware, low-level performance optimization etc. Not any more - too hard, had to switch to something less stressful :-)<br>\r\n</div>\r\nBTW, I know performance side of dart well, wrote whole suite of benchmarks, compared with other languages etc.<br>\r\n</div>\r\nIn dart mailing list, I specialize in answering performance-related questions :-)\r\n<br>\r\n</div>\r\n",
+    "PostedDate": "2014-04-22T14:10:25.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236833",
+    "ThreadId": "541532",
+    "Html": "I used LISP once for a 3D scene modeling application years ago (can't even remember what it was called now LOL).  I view LISP like another flavor of assembly programming. ;) (actually, I even based my old assembly-scripting specifications on my experiences with it)\r<br />\n<br />\nYes, TypeScript refactors very well (no issues yet).  Performance in JS is highly browser dependant.  In one case, a &quot;replace()&quot; with regex is faster, and in another, a simple &quot;split()&quot; + &quot;join()&quot; is many times faster instead. I doubt any JS++ language gives that much thought.  I have detection in my framework to override and implement the fastest patterns based on detected browser (since it's a framework for building apps [especially games] I need to consider it).  I like being able to milk the speed as much as I can at the lower levels. ;)  I also use JSPerf like there's no tomorrow, and have found many optimizations that many JS++ languages do not even consider. I guess I'm a control freak.  :P  ;)  If it wasn't for development time efficiency, I'd just learn MSIL and skip C#. LOL.  Hey ... there's an idea; JS assembly anyone? :)<br />\n",
+    "PostedDate": "2014-04-22T16:17:13.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236874",
+    "ThreadId": "541532",
+    "Html": "\r\n<div dir=\"ltr\">\r\n<div>I think LLJS was (is?) an attempt to create kind of &quot;assembly&quot; (or, rather, C?) language based on JS:\r\n<a href=\"http://mbebenita.github.io/LLJS/\">http://mbebenita.github.io/LLJS/</a> </div>\r\n<div>I don't know about current state. Latest posts on LLJS are about 1 year old. There are benchmarks js vs lljs vs emscripten:\r\n<a href=\"https://github.com/jlongster/js-lljs-c-benchmarks\">https://github.com/jlongster/js-lljs-c-benchmarks</a></div>\r\n<div>Mozilla is experimenting a lot with low-level JS. I think, having limited resources, they now shifted focus somehow towards (seemingly unrelated) rust.\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>Speaking of regexp: in Chrome, regexp engine is very efficient. Regexps get compiled rather deeply, Ever seen benchmark where javascript beats everybody (including C)?</div>\r\n<div>Here it is: <a href=\"http://benchmarksgame.alioth.debian.org/u32/performance.php?test=regexdna\">\r\nhttp://benchmarksgame.alioth.debian.org/u32/performance.php?test=regexdna</a></div>\r\n<div><br>\r\n</div>\r\n<div>If you are interested how they did it. I can find the article. Some of the people work on dart now, but regexp in dart is not yet optimized like this one.</div>\r\n<div>BTW, the people who devised most of optimization methods for JS runtime (including the hack of &quot;classification&quot; of JS objects) are on dart team.</div>\r\n<div>There's a chance that dart will reach (or even beat) performance of java in a couple of years. They are not very far behind,</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-04-22T20:26:25.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

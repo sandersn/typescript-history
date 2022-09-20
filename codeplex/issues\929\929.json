@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-31T09:04:08.593-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "In the latest versions of TypeScript Services (0.9.x) the versioning of the source files is no longer optional. You have to keep track of older versions of the source code so that the TypeScript Services can make a diff and perform only a party update of the syntax tree. \r\n\r\nIt would be great if this could be made optional.  This only requires a small change (part between the insert comments) in the following code in the PullLanguageService.ts\r\n\r\n        private getSyntaxTree(fileName: string): TypeScript.SyntaxTree {\r\n            var version = this.compilerState.getScriptVersion(fileName);\r\n            var syntaxTree: TypeScript.SyntaxTree = null;\r\n\r\n            if (this.currentFileSyntaxTree === null || this.currentFileName !== fileName) {\r\n                syntaxTree = this.createSyntaxTree(fileName);\r\n            }\r\n            // ################ Begin insert\r\n            else if (version == null) {\r\n                 syntaxTree = this.createSyntaxTree(fileName);\r\n            }\r\n            // ################ End insert\r\n            ....\r\n ",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-21T01:55:12.72-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "make versioning of source optional",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 929
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sounds good. Marking active.",
+      "PostedDate": "2013-04-22T13:34:58.2-07:00",
+      "Id": 97718
+    },
+    {
+      "Message": "Courtesy of Cyrus:\n> This is actually by design.  The \"right\" way to handle this given the API is to do the following:\n> \n>  1) getScriptVersion should return a different value.  This will cause us to try to do an update.\n> \n> 2) We will then call into the host to ask what changed.  The host can then reply with a full file span to indicate that we should reparse everything.",
+      "PostedDate": "2013-05-31T09:04:00.777-07:00",
+      "Id": 101793
+    },
+    {
+      "Message": "The problem as far as I can see is that the API for step 2 requires the host to return also the old text range. \n\nI would have to create a TextChangRrange with a statement looking something like this:\n\nTypeScript.TextChangeRange(new TypeScript.TextSpan(0,oldscript.content.length),newscript.content.length);\n\nSo I would still need to keep track of versions (if only for the old script length). Is there something I'm missing so that I can tell the parser to parse everything without having to refer to the old text span ???\n\nThanks in advance!!!\n",
+      "PostedDate": "2013-05-31T14:13:35.153-07:00",
+      "Id": 101825
+    },
+    {
+      "Message": "We now actually handle null correctly, I believe",
+      "PostedDate": "2013-08-13T12:24:46.127-07:00",
+      "Id": 109682
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:56:40.577-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The import / require of AMD module does not always work as expected.\r\nCompilation with \"--module AMD\". \r\n\r\nTested with newest build (0.9.0 from \"develop\" branch downloaded on 5/22/2013)\r\n\r\nRequired files: \r\n\r\n__module2.ts__\r\n```\r\nexport class Test2<T>  {\r\n\t\tmember: T; \r\n}\r\nexport var bar = function (value: any) {\r\n    \r\n}\r\n```\r\n\r\n__module3.ts__\r\n```\r\nexport class Test3  {\r\n\t\r\n}\r\n\r\nexport var foo = \"test\"; \r\n```\r\n\r\n#Expected outputs for module1.ts: \r\n\r\n__module1.ts:__ \r\n```\r\nimport ns2 = module(\"module2\");\r\nimport ns3 = module(\"module3\");\r\n\r\nexport class Test1 extends ns2.Test2<ns3.Test3>  {\r\n\r\n}\r\n```\r\n=> Should NOT add \"module3\" to require() \r\n=> __This is currently not working...__\r\n\r\nExpected: define([\"require\", \"exports\", \"module2\"], ...\r\n\r\n__module1.ts:__\r\n```\r\nimport ns2 = module(\"module2\");\r\nimport ns3 = module(\"module3\");\r\n\r\nexport class Test1 extends ns2.Test2<ns3.Test3>  {\r\n\ttest() {\r\n\t\tvar x = new ns3.Test3();\r\n\t}\r\n}\r\n```\r\n=> Should add \"module3\" to require() \r\n=> This is working\r\n\r\nExpected: define([\"require\", \"exports\", \"module2\", \"module3\"], ...\r\n\r\n__module1.ts:__ \r\n```\r\nimport ns2 = module(\"module2\");\r\nimport ns3 = module(\"module3\");\r\n\r\nexport class Test1 extends ns2.Test2<ns3.Test3>  {\r\n\ttest() {\r\n\t\tns2.bar(ns3);\r\n\t}\r\n}\r\n```\r\n=> Should add \"module3\" to require() \r\n=> __This is currently not working__ (see https://typescript.codeplex.com/workitem/1029)\r\n\r\nExpected: define([\"require\", \"exports\", \"module2\", \"module3\"], ...\r\n\r\n__module1.ts:__ \r\n```\r\nimport ns2 = module(\"module2\");\r\nimport ns3 = module(\"module3\");\r\n\r\nexport class Test1 extends ns2.Test2<ns3.Test3>  {\r\n\ttest() {\r\n\t\tvar x = ns3.foo; // hack to solve previous problem\r\n\t\tns2.bar(ns3);\r\n\t}\r\n}\r\n```\r\n=> Should add \"module3\" to require() \r\n=> This is working\r\n\r\nExpected: define([\"require\", \"exports\", \"module2\", \"module3\"], ...",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-22T02:15:05.47-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Correctly import AMD modules",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1059
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  As you mention, several of the scenarios given are working as expected, and one already has an open bug, so I believe there is one remaining issue - that an import only used in a type argument position is still generating the dependency.\r\n\r\nI reduced the issue to the below, which shows this still occurring even with an interface (which has no runtime code generated at all)\r\n\r\n__module1.ts__\r\n```typescript\r\nimport M2 = module(\"module2\");\r\n\r\nclass C1<T>{ }\r\n\r\nclass Test1 extends C1<M2.M2C>  {\r\n}\r\n```\r\n\r\n__module2.ts__\r\n```typescript\r\nexport interface M2C { }\r\n```\r\n\r\nThis also requires the module incorrectly, i.e.\r\n\r\n__module1.js__\r\n```javascript\r\ndefine([\"require\", \"exports\", \"module2\"], function(require, exports, __M2__) {\r\n// etc...\r\n```\r\n\r\nThanks for reporting.  We'll take a look into this.",
+      "PostedDate": "2013-05-22T12:14:47.637-07:00",
+      "Id": 100893
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1132253",
+    "ThreadId": "472053",
+    "Html": "This sample code won't compile on 0.9.5:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> JQueryPromise&lt;T&gt; {\n   done(...doneCallbacks: { (value: T, ...args: <span style=\"color:Blue;\">any</span>[]): <span style=\"color:Blue;\">void</span> }[]): JQueryPromise&lt;T&gt;;\n}\n\n<span style=\"color:Blue;\">var</span> test: JQueryPromise&lt;<span style=\"color:Blue;\">number</span>&gt;;\n\ntest.done((a, b) =&gt; {});\r\n</pre></div>Gives:<br />\n<pre><code>Call signatures of types '(a: number, b: any) =&gt; void' and '(value: number, ...args: any[]) =&gt; void' are incompatible:\n        Call signature expects 1 or fewer parameters.</code></pre>\n\nIs this a bug or by design?<br />\n",
+    "PostedDate": "2013-12-05T10:38:24.863-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132302",
+    "ThreadId": "472053",
+    "Html": "This is by design. The callbacks for JQueryPromise&lt;T&gt;.done are saying that they must have a single required parameter and then any number of optional parameters. But you've passed it an implementation for the callback that has 2 required parameters. Now a valid invocation of a done callback can be an invalid invocation of the provided implementation of a done callback. This wasn't being enforced correctly in previous versions of TypeScript. Consider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> JQueryPromise&lt;T&gt; {\n    done(...doneCallbacks: { (value: T, ...args: <span style=\"color:Blue;\">any</span>[]): <span style=\"color:Blue;\">void</span> }[]): JQueryPromise&lt;T&gt;;\n}\n\n<span style=\"color:Blue;\">class</span> MyPromise&lt;T&gt; <span style=\"color:Blue;\">implements</span> JQueryPromise&lt;T&gt; {\n    <span style=\"color:Blue;\">constructor</span>(<span style=\"color:Blue;\">public</span> data: T) { }\n    done(...doneCallbacks: { (value: T, ...args: <span style=\"color:Blue;\">any</span>[]): <span style=\"color:Blue;\">void</span> }[]): JQueryPromise&lt;T&gt; {\n        <span style=\"color:Blue;\">for</span> (<span style=\"color:Blue;\">var</span> i = 0; i &lt; doneCallbacks.length; i++) {\n            doneCallbacks[i](<span style=\"color:Blue;\">this</span>.data); <span style=\"color:Green;\">// myArg now gets invoked with no value for b, null reference runtime error ensues</span>\n        }\n        <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">this</span>;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> test: JQueryPromise&lt;<span style=\"color:Blue;\">number</span>&gt; = <span style=\"color:Blue;\">new</span> MyPromise(1);\n\n<span style=\"color:Blue;\">var</span> myArg = (a, b) =&gt; {\n    console.log(b.someStuff);\n    <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">new</span> MyPromise(a);\n};\ntest.done(myArg);\r\n</pre></div>",
+    "PostedDate": "2013-12-05T13:10:32.867-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132481",
+    "ThreadId": "472053",
+    "Html": "But even with the correct parameters, the value for the callback can be null.  Anyone that calls a member in an object without checking for the instance is just asking for an error. Doesn't make much sense to restrict this type inference because of this.\r<br />\n<br />\nAfter what you said, I made the second parameter optional and then it compiled fine:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> JQueryPromise&lt;T&gt; {\n   done(...doneCallbacks: { (value: T, ...args: <span style=\"color:Blue;\">any</span>[]): <span style=\"color:Blue;\">void</span> }[]): JQueryPromise&lt;T&gt;;\n}\n\n<span style=\"color:Blue;\">var</span> test: JQueryPromise&lt;<span style=\"color:Blue;\">number</span>&gt;;\n\ntest.done((a, b?) =&gt; {});\r\n</pre></div>The problem is that it doesn't make sense for code that really accepts 2 values as the parameter should not be optional.\r<br />\n<br />\nThe ideal would be to have something like Func&lt;T&gt; in .NET, like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> JQueryPromise1&lt;T1&gt;         { done(arg1: T1): <span style=\"color:Blue;\">void</span> }\n<span style=\"color:Blue;\">interface</span> JQueryPromise1&lt;T1, T2&gt;     { done(arg1: T1, arg2: T2): <span style=\"color:Blue;\">void</span> }\n<span style=\"color:Blue;\">interface</span> JQueryPromise1&lt;T1, T2, T3&gt; { done(arg1: T1, arg2: T2, arg3: T3): <span style=\"color:Blue;\">void</span> }\r\n</pre></div>This way, we could define the method correctly like:<br />\n<pre><code>foo() : JQueryPromise&lt;string&gt;\nbar(): JQueryPromise&lt;number, number&gt;</code></pre>\n\nBut TypeScript only sees the third declaration.\r<br />\n<br />\nIs there any way to map the jquery promise correctly in typescript and allow type inference on promise methods?<br />\n",
+    "PostedDate": "2013-12-06T05:46:36.263-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133110",
+    "ThreadId": "472053",
+    "Html": "So, is there any way to make types flow to jquery promise methods correctly in 0.9.5?<br />\n",
+    "PostedDate": "2013-12-09T04:59:33.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

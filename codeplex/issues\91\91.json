@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.503-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Currently TypeScript requires that super()-calls are the very first method executed in constructors.\r\n\r\nAs far as I can see, this is not an actual requirement for the functionality of the code emitted, and you can actually just place a super() call in the last part of the constructor, overwriting whatever work the first super() call did.\r\n\r\nThis has merits with for example interop with Backbone.js, where Backbones.extend(attr, opt?) method expects attr to be an initialized object literal as incoming parameter and not an uninitialized child object. Sort of 'reverse' inheritance.\r\n\r\nIf there's a good reason for this requirement I'd like to know of a workaround for extending function objects such as those in Backbone.js, while keeping in line with their assumptions and getting TypeScript type-checking.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T04:56:47.947-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "super() requirement",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 9,
+    "Id": 91
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Actually it seems I've slightly misunderstood the requirement. The type error says \"If a derived class contains initialized properties or constructor parameter properties, the first statement in the constructor body must be a call to the super constructor\".\n\nHowever the following code is equivalent (type error aside):\n\nfunction call_to_anything() {};\nclass baz {}\nclass foo extends baz {\n\tgreeting: string = 'lala';\n\tconstructor (message?: string) {\n\t\tcall_to_anything();\n\t\tsuper();\n\t}\n}   \n\nclass baz2 {}\nclass foo2 extends baz2 {\n\tgreeting;\n\tconstructor (message?: string) {\n\t\tcall_to_anything();\n\t\tthis.greeting = 'lala';\n\t\tsuper();\n\t}\n}\n\nBut the latter is legal, and the former not.",
+      "PostedDate": "2012-10-04T05:22:44.83-07:00",
+      "Id": 78538
+    },
+    {
+      "Message": "Right - though while the generated JavaScript is technically equivalent, the original TypeScript is not, since the first example contains a property initializer, while the second does not.\n\nThis is an area that we're looking to refine, while still staying aligned with the ES6 proposal for classes.  Adding better inferencing for \"this\" bound properties in constructors is one approach we could take, though it is more difficult to provide tooling for (and in some senses reason about).",
+      "PostedDate": "2012-10-05T12:16:00.127-07:00",
+      "Id": 78714
+    },
+    {
+      "Message": "This may be related with this discussion, which treats about initialized properties:\nhttp://typescript.codeplex.com/discussions/400987\n\nPersonally i feel very uncomfortable with the requirement of calling super at the very beginning.",
+      "PostedDate": "2012-12-13T04:00:55.03-08:00",
+      "Id": 84059
+    },
+    {
+      "Message": "For consistency with other languages the super call is expected to be the first call in the constructor, ensuring that the base class is fully initialised prior to constructing the derived class. The only issue for me is the use of the super() function call as the base class initialiser. I'd welcome a change to C++ syntax:\n```\nclass B extends A\n{\n  constructor (v:number) : A(v)\n  {\n  }\n}\n```",
+      "PostedDate": "2013-03-20T14:51:09.81-07:00",
+      "Id": 93828
+    },
+    {
+      "Message": "Found this in an ES6 proposal (highlight by me):\n\n> If a constructor function needs to perform superclass initialization, it must do so by explicitly calling super(/*arguments*/) __at some point__ within the constructor body.\n \nAlso, with TypeScript's support for __constructor overloading__, I found myself in the following situation\n```\nconstructor(a:string);\nconstructor(obj:MyClass);\nconstructor(p1:any) {\n  if(typeof p1 === 'string') {\n     p1 = Util.createFrom(p1);\n  }\n  super((<MyClass>p1).b, (<MyClass>p1).c);\n}\n```\n",
+      "PostedDate": "2013-04-24T03:12:29.27-07:00",
+      "Id": 98305
+    },
+    {
+      "Message": "From the proposal, it is not clear at all if a call to super() in the constructor is even required. It said \"if it needs to perform superclass initialization\", not that it requires to perform superclass initialization. I really doubt implementations will throw an error if you don't call super() in the child class.\n\nDue to how javascript worked for a long time, there are cases where we would like to not call super in the constructor at all. It would be nice if a missing super call even generated a warning, but not an error.\n\nPeople must remember Javascript is not C++ or C# or Java. Borrowing features from those languages is OK, but imposing restrictions they have will not help.",
+      "PostedDate": "2013-07-14T14:54:46.977-07:00",
+      "Id": 106014
+    }
+  ]
+}

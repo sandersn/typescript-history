@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1115276",
+    "ThreadId": "465035",
+    "Html": "Hi,<br />\n<br />\nI have been working with TypeScript for a few weeks now and one of the only real issues that I have faced has been figuring out how to properly model inheritance that does not come from TypeScript’s built-in classes. (In my case, I’m talking about Dojo, but most JS libraries have some utility method for subclassing at this point.) This is important at least until TypeScript’s inheritance system can match the features of other more advanced systems (e.g. mixins/<a href=\"https://typescript.codeplex.com/workitem/838\" rel=\"nofollow\">traits</a>). I don’t want to have to use TypeScript’s system and lose multi-inheritance; I don’t want to have to use a JavaScript library and lose typing; I don’t want to make a hack out of TypeScript that requires me to manually compose the resulting type.<br />\n<br />\nHaving looked at <a href=\"https://typescript.codeplex.com/workitem/1364\" rel=\"nofollow\">issue 1364</a> which discusses union types, and looking at some of the definitions in DefinitivelyTyped that simply return Any types (like backbone.d.ts), I am not sure if this is related to #1364 or if it should be a new issue so I figured I would post my thoughts here. (I have seen some other threads talking about related concepts but nothing that puts it this plainly; hopefully I did not just miss an identical discussion.)<br />\n<br />\nGiven a method that combines two objects, I would like to be able to define the resulting combined type automatically, without needing to explicitly provide a new type that combines all properties from the <em>n</em> other types, like so:<br />\n<pre><code>// + indicates a combined type\nfunction extend&lt;T,U&gt;(superclass:T, subclass:U):T+U;\n\nclass Model {\n  extend&lt;T&gt;(subclass:T):Model+T;\n}\n\n// the rest-argument-like syntax is just some crap to\n// try to indicate it is an array of different generic types,\n// not an array of one type\nfunction decl&lt;T,U&gt;(superclasses:...T[], subclass:U):T+U;\n\nfunction mixin&lt;T,U&gt;(target:T, ...source:...U[]):T+U;</code></pre>\n\nDoes this make any sense? Am I way off base? Should a new issue be opened about this?<br />\n<br />\nThanks for your input,<br />\n",
+    "PostedDate": "2013-10-31T12:08:20.08-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119968",
+    "ThreadId": "465035",
+    "Html": "This seems to me like you want any future union types to work correctly over generics yes? The second thing you do with rest param syntax and generics seems better accomplished by a constraint on the generic type that is the base type of all the array elements.<br />\n",
+    "PostedDate": "2013-11-07T11:20:54.157-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119987",
+    "ThreadId": "465035",
+    "Html": "Well, the thing is that there is no “generic base type” for all the array elements being passed. Let me try explaining better by example.\r<br />\n<br />\nCreating a constructor for a data grid component, with modules to add keyboard navigation support and row selection support, would be declared like this: <code>var CustomGrid = decl([ OnDemandGrid, Keyboard, Selection ], { someCustomProperty: true });</code>.\r<br />\n<br />\n<code>OnDemandGrid</code> is the primary superclass, <code>Keyboard</code> is a mixin that adds <code>keyMap</code>, <code>pageSkip</code>, <code>addKeyHandler</code>, <code>focus</code>, etc. properties, and <code>Selection</code> is a mixin that adds <code>selection</code>, <code>selectionMode</code>, <code>allowTextSelection</code>, <code>select</code>, etc. properties. The subclass object adds an additional <code>someCustomProperty</code> property that exists only on instances of the newly created type.\r<br />\n<br />\nI would like to be able to make it so TypeScript knows that CustomGrid is a combination, not an exclusive subset, of the types of OnDemandGrid, Keyboard, Selection, and the anonymous “subclass” type, without needing to laboriously create a new anonymous type myself that includes all the properties of all the mixins. It is my understanding that this is different from a classical “union type” which is one of several <em>possible</em> types, but only <em>one</em> of them at a time. In this case, the resulting type is a combination of <em>all</em> types at the same time.\r<br />\n<br />\nDoes this make more sense?<br />\n",
+    "PostedDate": "2013-11-07T11:51:35.07-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201603",
+    "ThreadId": "465035",
+    "Html": "This is exactly the missing feature I have hit right now in typescript. I think this is much cleaner solution to the mixin 'problem', it gives the ability to define a mixin method without forcing mixins to be a first class concept that some other suggestions require.\r<br />\n<br />\nWas there any more TypeScript developer thoughts on this language extensions?<br />\n",
+    "PostedDate": "2014-02-01T04:33:46.933-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

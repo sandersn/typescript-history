@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1158006",
+    "ThreadId": "490134",
+    "Html": "Hello,\r<br />\n<br />\nI'd like to know if it's possible (or will be possible) to treat classes as regular variables. What I need is to create a factory function that creates classes that close over the outer function's arguments.\r<br />\n<br />\nContrived example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> makeClass(fun: (a: <span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>) {\n    <span style=\"color:Blue;\">class</span> Cls { <span style=\"color:Green;\">// error here - statement expected</span>\n        calc(a: <span style=\"color:Blue;\">number</span>) {\n            <span style=\"color:Blue;\">return</span> fun(a);\n        }\n    }\n    <span style=\"color:Blue;\">return</span> Cls;\n}\r\n</pre></div>I could use regular JavaScript functions but I'd lose the types and class syntactic sugar features.<br />\n",
+    "PostedDate": "2014-01-12T08:59:44.653-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1160845",
+    "ThreadId": "490134",
+    "Html": "I'd just declare the public interface of the class externally, something like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> Cls {\n     calc(a: <span style=\"color:Blue;\">number</span>);\n}\n\n<span style=\"color:Blue;\">function</span> makeClass(fun: (a: <span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>) : <span style=\"color:Blue;\">typeof</span> Cls {\n    \n    <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;(\n        <span style=\"color:Blue;\">function</span> Cls(){\n            <span style=\"color:Blue;\">this</span>.calc = fun;    \n        }\n    );\n}\n\n<span style=\"color:Blue;\">var</span> Type = makeClass((a:<span style=\"color:Blue;\">number</span>)=&gt;alert(a));\n\n<span style=\"color:Blue;\">var</span> instance = <span style=\"color:Blue;\">new</span> Type();\ninstance.calc(5);\n\r\n</pre></div>",
+    "PostedDate": "2014-01-13T04:09:20.47-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1160902",
+    "ThreadId": "490134",
+    "Html": "That's a nice workaround to get the types to match.\r<br />\n<br />\nSadly inside the makeClass function you still can't use full class syntax sugar (for example for instance methods) and I'd have to write prototype functions and the rest of regular JavaScript like that:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> Cls {\n     calc(a: <span style=\"color:Blue;\">number</span>);\n}\n\n<span style=\"color:Blue;\">function</span> makeClass(fun: (a: <span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>) : <span style=\"color:Blue;\">typeof</span> Cls {\n    <span style=\"color:Blue;\">function</span> Cls(){\n    }\n\n    Cls.prototype.calc = (a: <span style=\"color:Blue;\">number</span>) =&gt; fun(a);\n    \n    <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;Cls;\n}\n\n<span style=\"color:Blue;\">var</span> Type = makeClass((a:<span style=\"color:Blue;\">number</span>)=&gt;alert(a));\n\n<span style=\"color:Blue;\">var</span> instance = <span style=\"color:Blue;\">new</span> Type();\ninstance.calc(5);\r\n</pre></div>The real class that I want to use it is not that simple and turning it into JS inside TS would make it a lot less readable.\r<br />\n<br />\nBut thanks for the suggestion!<br />\n",
+    "PostedDate": "2014-01-13T04:32:00.1-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1161296",
+    "ThreadId": "490134",
+    "Html": "There are no plans to support classes nested within functions in 1.0, but since it is a planned feature of ES6 it is certainly something we'll look at post-1.0. BTW, an interesting aspect of this feature is that you wouldn't be able to reference the class outside the containing function, so you wouldn't have a name for the type of objects returned by the function unless you also declare an interface outside.<br />\n",
+    "PostedDate": "2014-01-13T06:54:48.873-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1161414",
+    "ThreadId": "490134",
+    "Html": "Thanks for the explanation!\r<br />\n<br />\nWouldn't (in my example) Type contain the reference to the nested class (if nested classes were implemented)?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Type = makeClass((a:<span style=\"color:Blue;\">number</span>)=&gt;alert(a));\n\n<span style=\"color:Green;\">// later</span>\n<span style=\"color:Blue;\">export</span> = Type;\r\n</pre></div>The Cls inside the function would be returned and assigned to Type and Type would be of the same shape as Cls (meaning typeof Cls).\r<br />\n<br />\nOr do you mean that I wouldn't be able to reference the type of the nested class in makeClass function declaration (typeof Cls wouldn't be valid as Cls is nested)?<br />\n",
+    "PostedDate": "2014-01-13T07:36:32.297-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1161797",
+    "ThreadId": "490134",
+    "Html": "What I mean is that you wouldn't be able to reference the class as a type. In the example above, Type would be a <em>variable</em> that references the constructor function of the class. You'd be able to call it to produce class instances, but you wouldn't have a name for the type of those instances--unless you declare a compatible interface outside the 'makeClass' function.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Type = makeClass((a: <span style=\"color:Blue;\">number</span>) =&gt; alert(a));\n<span style=\"color:Blue;\">var</span> x: ??? = <span style=\"color:Blue;\">new</span> Type();   <span style=\"color:Green;\">// No denotable name for type of x</span>\r\n</pre></div>Since the type system is structural this isn't a problem per se. You can just declare an interface with the appropriate shape and you're fine. It's just something to note.<br />\n",
+    "PostedDate": "2014-01-13T09:46:00.723-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1162125",
+    "ThreadId": "490134",
+    "Html": "Oh, now I get it. Or at least I think I do :)\r<br />\n<br />\nVariables do not introduce types like class statements. Class statements (class X { ... }) introduce type (for the static type analysis) as well as variable with the name.\r<br />\n<br />\nThanks again!<br />\n",
+    "PostedDate": "2014-01-13T11:42:14.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1162275",
+    "ThreadId": "490134",
+    "Html": "<blockquote>\nThe real class that I want to use it is not that simple and turning it into JS inside TS would make it a lot less readable.<br />\n</blockquote>\n_\r<br />\n<br />\nCloning <code>Cls</code> is an alternative in that case:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Cls {\n     foo = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n     calc(a: <span style=\"color:Blue;\">number</span>){}\n     bar(){ \n         alert(<span style=\"color:Blue;\">this</span>.foo);\n     }\n}\n\n<span style=\"color:Blue;\">function</span> makeClass(fun: (a: <span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>) : <span style=\"color:Blue;\">typeof</span> Cls {\n    \n    <span style=\"color:Blue;\">function</span> ClsClone(){\n        <span style=\"color:Blue;\">this</span>.foo = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n    }\n    \n    <span style=\"color:Blue;\">for</span>(<span style=\"color:Blue;\">var</span> prop <span style=\"color:Blue;\">in</span> Cls.prototype){\n        ClsClone.prototype[prop] = Cls.prototype[prop];\n    }\n\n    ClsClone.prototype.calc = (a: <span style=\"color:Blue;\">number</span>) =&gt; fun(a);\n    \n    <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;ClsClone;\n}\r\n</pre></div>",
+    "PostedDate": "2014-01-13T12:34:23.767-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1162343",
+    "ThreadId": "490134",
+    "Html": "Well, that's interesting! Why didn't I think about this?!\r<br />\n<br />\nPersonally I'd create a subclass instead of clone (code below) but I like your idea as it preserves 99% of TypeScript sugar with 1% of &quot;native JavaScript shim&quot;.\r<br />\n<br />\nExcellent, thanks nabog!<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Cls {\n     foo = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n     calc(a: <span style=\"color:Blue;\">number</span>) { }\n     bar(){ \n         alert(<span style=\"color:Blue;\">this</span>.foo);\n     }\n}\n\n<span style=\"color:Blue;\">function</span> makeClass(fun: (a: <span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>) : <span style=\"color:Blue;\">typeof</span> Cls {\n    \n    <span style=\"color:Blue;\">function</span> ClsClone() {\n        Cls.apply(<span style=\"color:Blue;\">this</span>, arguments); <span style=\"color:Green;\">// calls super constructor, this takes care of foo = &quot;foo&quot;</span>\n    }\n    \n    ClsClone.prototype = Object.create(Cls.prototype); <span style=\"color:Green;\">// instead of copying everything we just setup prototype chain</span>\n\n    ClsClone.prototype.calc = (a: <span style=\"color:Blue;\">number</span>) =&gt; fun(a);\n    \n    <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;ClsClone;\n}\r\n</pre></div>",
+    "PostedDate": "2014-01-13T12:59:39.963-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

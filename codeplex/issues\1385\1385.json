@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-25T14:34:17.007-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Calling a method from the constructor of the base class does not updates the properties.\r\n\r\nIf I pass data into the constructor that calls a method to update the Class properties. It will not update the property values because if properties have default values they get set after _super.call(this, data);.\r\n\r\n```\r\nclass ValueObject {\r\n\r\n    constructor(data:any) {\r\n        this.update(data);\r\n    }\r\n\r\n    public update(data:any):void {\r\n\r\n    }\r\n}\r\n\r\nclass LanguageVO extends ValueObject {\r\n\r\n    public id:number = 0;\r\n    public lang:string = 'English';\r\n\r\n    constructor(data:any) {\r\n        super(data);\r\n    }\r\n\r\n    public update(data:any):void {\r\n        this.id = data.id;\r\n        this.lang = data.lang;\r\n    }\r\n}\r\n\r\nvar vo:LanguageVO = new LanguageVO({id: 1, lang: 'French'});\r\nconsole.log(vo.id, vo.lang);\r\n```\r\nThe console log is: ( 0 \"English\" ) but it should be ( 1 \"French\" ).\r\n\r\nCompiled JavaScript snippet:\r\n```\r\nfunction LanguageVO(data) {\r\n    _super.call(this, data);\r\n    this.id = 0;\r\n    this.lang = 'English';\r\n}\r\n```",
+    "LastUpdatedDate": "2014-04-01T15:20:20.89-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-23T17:49:30.887-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Base Class constructor calling method does not update properties.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 9,
+    "Id": 1385
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I ran into this issue also. To me it seems like a bug. Is there a reason the __super__ call is called on the first line of the constructor? Could it be setup to have all properties before the __super__ call and all methods after the __super__?",
+      "PostedDate": "2013-07-24T06:35:14.913-07:00",
+      "Id": 107262
+    },
+    {
+      "Message": "I noticed that when you use default parameters. They get added above the __super__ call but they get set after the __super__ call which seems like it could cause issues if the super calls another method that uses the properties that are set in the constructor.\n\n```\nconstructor(type:string, bubbles:boolean = false, cancelable:boolean = false) {\n    super();\n\n    this.type = type;\n    this.bubble = bubbles;\n    this.cancelable = cancelable;\n}\n```\n\nCompiled to:\n```\nfunction BaseEvent(type, bubbles, cancelable) {\n    if (typeof bubbles === \"undefined\") { bubbles = false; }\n    if (typeof cancelable === \"undefined\") { cancelable = false; }\n    _super.call(this);\n\n    this.type = type;\n    this.bubble = bubbles;\n    this.cancelable = cancelable;\n}\n```\n\nIf we take the following example:\n```\npublic type:string = null;\npublic target:any = null;\npublic bubble:boolean = false;\npublic cancelable:boolean = false;\npublic isPropagationStopped:boolean = false;\npublic isImmediatePropagationStopped:boolean = false;\n\nconstructor(type:string, bubbles:boolean = false, cancelable:boolean = false) {\n    super();\n\n    this.type = type;\n    this.bubble = bubbles;\n    this.cancelable = cancelable;\n}\n```\nIt compiles to:\n```\nfunction BaseEvent(type, bubbles, cancelable) {\n    if (typeof bubbles === \"undefined\") { bubbles = false; }\n    if (typeof cancelable === \"undefined\") { cancelable = false; }\n    _super.call(this);\n    this.type = null;\n    this.target = null;\n    this.bubble = false;\n    this.cancelable = false;\n    this.isPropagationStopped = false;\n    this.isImmediatePropagationStopped = false;\n\n    this.type = type;\n    this.bubble = bubbles;\n    this.cancelable = cancelable;\n}\n```\n\nI am thinking it should compile to something like below. This way if __super__ calls a method in the extend class there shouldn't be any issue with properties having the wrong data.\n```\nfunction BaseEvent(type, bubbles, cancelable) {\n    this.type = null;\n    this.target = null;\n    this.bubble = false;\n    this.cancelable = false;\n    this.isPropagationStopped = false;\n    this.isImmediatePropagationStopped = false;\n    \n    if (typeof bubbles === \"undefined\") { bubbles = false; }\n    if (typeof cancelable === \"undefined\") { cancelable = false; }\n    \n     this.type = type;\n     this.bubble = bubbles;\n     this.cancelable = cancelable;\n        \n    _super.call(this);\n}\n```",
+      "PostedDate": "2013-07-24T11:28:55.757-07:00",
+      "Id": 107297
+    },
+    {
+      "Message": "This is all by design. This is standard object initialization behavior in most programming languages and it is generally the case that you should never be calling virtual methods in a base class constructor like this (ex http://www.artima.com/cppsource/nevercall.html). The entire purpose of requiring super() to be the first statement in a derived class constructor is because the implication of derived is that you depend on your base class to be fully initialized, so you can use various parts of it. Standard static analysis tools (like FxCop in C#: http://msdn.microsoft.com/en-us/library/ms182331(v=VS.80).aspx) will warn on patterns like this because it is highly likely to result in errors. It so happens that JavaScript's lack of syntax for classes allows you to concoct individual hierarchies where you can manually ensure initialization happens in the way you want but there is no one good emit pattern for all cases which Typescript could emit. The solution to hierarchies like this is to use static factory methods (http://en.wikipedia.org/wiki/Factory_method_pattern) to do your class construction. ",
+      "PostedDate": "2013-07-25T14:34:12.327-07:00",
+      "Id": 107467
+    },
+    {
+      "Message": "Maybe it's by design, but it's nonetheless stupid, consider the following example:\n```\nclass A {\n  x: boolean = false;\n  constructor() {\n    console.log(this.x);\n  }\n}\nclass B extends A {\n  x: boolean = true;\n  constructor() {\n    super();\n  }\n}\nnew B();\n```\nThis prints \"false\" to the console, even though if it were to follow any sane logic it would've printed \"true\".\nYou can say whatever you want, but this is a major problem, one that prevents me from using typescript altogether, and if it was in fact done by design (I hope it wasn't) then I can't help by feel sorry for Microsoft and their good for nothing software engineers.\n\n1. The call of super() should not under any circumstances be required;\n2. It should be possible to call it at any point during the execution of a method;",
+      "PostedDate": "2013-12-13T11:05:02.533-08:00",
+      "Id": 127385
+    },
+    {
+      "Message": "As I said, you can no doubt concoct individual instances of this pattern that are safe, but in general it is not. Feel free to create a forum thread for some more discussion on this. I would be curious to know what about your design is so reliant on using a pattern that many major languages disallow due to its error prone nature. There are well understood patterns for handling this is a safer way (as I linked with static factories for example).",
+      "PostedDate": "2014-04-01T13:08:06.103-07:00",
+      "Id": 140212
+    },
+    {
+      "Message": "I agree also.  The concept of abstraction is such that the base classes shouldn't know anything about specific details of the derived classes.  If they should, then a virtual methods should be created, or a define property declared on the base (if possible).\n\nAnyhow, this may be a good workaround for now: \n\n```\n    public id:number = this.id || 0;\n    public lang:string = this.lang || 'English';\n\n```",
+      "PostedDate": "2014-04-01T15:20:20.89-07:00",
+      "Id": 140229
+    }
+  ]
+}

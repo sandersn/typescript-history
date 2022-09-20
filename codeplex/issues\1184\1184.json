@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Because overload on constant signature are not used for subtype checking we can't easily give a better error message here as we do for the normal function overload cases. Hopefully something we can address in the future.",
+    "ClosedDate": "2013-07-01T18:38:53.193-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following code should throw a type error at compile time, but currently compiles cleanly (in 0.9).\r\n.get('done') should return a bool, but the results of it can be assigned to a variable (and passed to a function) of unrelated type A.  \r\n\r\n```\r\ninterface Todo {\r\n  get(name: string) : any;\r\n  get(name:'content') : string;\r\n  get(name:'done') : bool;\r\n}\r\n\r\nclass T implements Todo {\r\n  get(name: string) {\r\n    return {'content': 'foo','done': true}[name];\r\n  }\r\n}\r\n\r\nclass A {}\r\nvar t = new T();\r\nvar d:A = t.get('done');\r\n\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-19T13:28:38.637-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Overloading on constants too weak",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1184
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "\nThe `var t` is of type T not interface `Todo`, hence `t.get('done')` actually returns `any`.\n\nAlso\n\n```JavaScript\nclass A { }\nvar b = false;\nvar c: A = b;\n```\n\nI believe this happens because `A` doesn't have any properties that clash with boolean.",
+      "PostedDate": "2013-06-20T02:37:47.69-07:00",
+      "Id": 103587
+    },
+    {
+      "Message": "Thanks for the report. nabog is correct. Your class T only has a single implementation for get and it returns 'any' which is assignable to anything. Further, as noted, since Typescript is structurally typed you'll find weird looking assignment compatibility if you use a class with no members even if the 'get' you called didn't return 'any'. If you had this instead\r\n```\r\nclass A { foo() { } }\r\nvar t = new T();\r\nvar d: A = (<Todo>t).get('done');\r\n```\r\nyou would get the error you expect (and Intellisense for the get function would show the overloads). You need to redeclare the overloads of interest in the derived class, much like traditional function overloads. That said, with traditional function overloads we give you a more useful error to indicate this necessary condition and we could perhaps do the same for overload on constants. Marking this as active to investigate that part of the issue.",
+      "PostedDate": "2013-06-20T13:28:36.17-07:00",
+      "Id": 103671
+    }
+  ]
+}

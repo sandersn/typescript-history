@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1094522",
+    "ThreadId": "457442",
+    "Html": "as reported in bug #1694 I'm confused by the behavior of type constraints in the following example.<br />\n<pre><code>class test&lt;A&gt; {\n    public testMethod (param: A): void {\n    }\n}\n\nclass base {\n    constructor (public field: string) {}\n}\n\nvar method = &lt;T extends base&gt; () : void =&gt; {\n    var z = new test&lt;T&gt;();\n    z.testMethod(new base(&quot;text&quot;)); // should not generate an error in text editor\n}\n\nvar method2 = (): void =&gt; {\n    var z = new test&lt;number&gt;();\n    z.testMethod(&quot;text&quot;); // should not compile\n}\n\nclass B {\n    public method3&lt;T extends base&gt; (): void {\n        var z = new test&lt;T&gt;();\n        z.testMethod(new base(&quot;text&quot;)); // should not generate an error in text editor\n    }\n    \n    public method4 (): void {\n        var z = new test&lt;number&gt;();\n        z.testMethod(&quot;text&quot;); // should not compile\n    }\n}</code></pre>\n\nI think here &quot;method&quot; and &quot;method3&quot; should compile correctly, while &quot;method2&quot; and &quot;method3&quot; should not compile at all.\r<br />\n<br />\nI'm not really convinced by danquirk&quot;s asnwer on this subject (see bug discussion).<br />\n",
+    "PostedDate": "2013-09-19T08:52:15.177-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094530",
+    "ThreadId": "457442",
+    "Html": "I've taken your <code>method</code> example and renamed some things:<br />\n<pre><code>class List&lt;A&gt; {\n    public add(param: A): void {\n        /* ... */\n    }\n}\n\nclass Animal {\n    constructor (public field: string) {}\n}\n\nvar addAnimal = &lt;T extends Animal&gt; (someList: List&lt;T&gt;) : void =&gt; {\n    someList.add(new Animal(&quot;rabbit!&quot;)); // Allowed?\n}\n</code></pre>\n\nLet's say we allow this. Consider this code -- it is obviously unsafe:<br />\n<pre><code>class Horse extends Animal {\n    constructor(public height: number) {\n        super('hay');\n    }\n}\n\nvar horses = new List&lt;Horse&gt;();\naddAnimal(horses); // 'horses' now contains a non-horse (Animal)</code></pre>\n\n",
+    "PostedDate": "2013-09-19T09:10:32.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

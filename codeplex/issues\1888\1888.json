@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-13T18:31:49.08-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Since 0.9.1.x, you don't need to reference files internal to your project.\r\n\r\nHowever, if you do not use AMD modules, and you do not explicity reference the class you are extending, extend is broken IF in your project file, the class that extends comes before the base class. The compiler does not seem to order them correctly in the single output JS file.\r\n\r\n    <TypeScriptCompile Include=\"X.ts\" />\r\n    <TypeScriptCompile Include=\"A.ts\" />\r\n    <TypeScriptCompile Include=\"Y.ts\" />\r\n\r\nIf X and Y extend A, you will get a runtime error on initial page load for the generated code for X, since in the generated file, it outputs the javascript for X then A then Y.\r\n",
+    "LastUpdatedDate": "2014-03-31T16:42:23.52-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-12T10:21:38.897-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Runtime errors due to extend",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1888
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "As a side note, we moved to 0.9.1.x and still ran into a lot of issues. We did not remove our explicit references so they seemed to be competing with the implicit references. \n\nThis seems to be one of the major causes of a lot of VS crashes, double error reporting, slower autocomplete, general performance issues (especially when adding/removing files). \n\nFor instance, the compiler would seemingly get confused (read: crashy) from an item that was still being referenced from a /// <reference path, but no longer existed in our .csproj file.",
+      "PostedDate": "2013-11-12T10:29:54.743-08:00",
+      "Id": 122780
+    },
+    {
+      "Message": "This is currently by design but we're aware of issues here and are working on a solution that will smooth out the Visual Studio experience. The compiler only ever processes files in the order they are provided. If you have references or circular dependencies which require a particular file ordering then it is up to you to specify that order for the compiler when using --out. Currently the Visual Studio experience lacks a way to specify this order which is what we will be addressing soon.\n\nAs far as your second comment goes, if you have any specific repros you can share with us (can be done privately if necessary) that would be very helpful. We certainly want to fix the sorts of issues you're seeing and anything causing a crash but the basic versions of those scenarios seem to work for me (ex I can safely /// reference files outside my project just fine). Feel free to open a new issue if you're able to find a specific repro we can debug.",
+      "PostedDate": "2013-11-13T18:31:44.587-08:00",
+      "Id": 123004
+    },
+    {
+      "Message": "Could it throw a compile error instead of a runtime error at the very least, since it should know during code gen when it resolves the extends?",
+      "PostedDate": "2013-11-27T12:39:50.527-08:00",
+      "Id": 125491
+    },
+    {
+      "Message": "Tracking circularity/recursion is generally difficult and expensive to do which is why we have left it up to the user to handle correctly.",
+      "PostedDate": "2014-03-31T16:42:23.52-07:00",
+      "Id": 140117
+    }
+  ]
+}

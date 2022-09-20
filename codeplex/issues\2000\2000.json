@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-10T09:48:27.75-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Smallest code to reproduce the issue:\r\n\r\nmain.ts file\r\n```\r\nimport lib = require('./testlib');\r\n\r\nlib.test();\r\n\r\n```\r\n\r\ntestlib.d.ts file (in the same directory):\r\n```\r\ndeclare module 'testlib' {\r\n    export function test();\r\n}\r\n```\r\n\r\nError:\r\n```\r\n> tsc.cmd --module amd main.ts\r\nmain.ts(1,1): error TS2071: Unable to resolve external module ''./testlib''. \r\nmain.ts(1,1): error TS2072: Module cannot be aliased to a non-module type.\r\n```\r\n\r\nThe problem is require with path. require('testlib') works. require('./testlib') worked in previous version of the typescript compiler. In this trivial example I could live with 'testlib' but in my real application I use relative paths to reference declaration files for libraries written in JS that lie in a different directory.",
+    "LastUpdatedDate": "2014-03-31T16:23:05.07-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-10T06:59:31.537-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "0.9.5: External module import fails for .d.ts file if using require with path",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2000
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The above is as expected.  Your testlib.d.ts file is not a definition for an external module, it just contains a definition for another external module called \"testlib\".  That is why require('testlib') works, as this is the module you have declared.\n\nReplace your entire testlib.d.ts file contents with the below.\n\n```\nexport declare function test();\n```\n\nNow your file is the declaration for an external module which contains the function \"test\".  Your code should now compile as expected.",
+      "PostedDate": "2013-12-10T09:48:18.78-08:00",
+      "Id": 126811
+    },
+    {
+      "Message": "Thank you. Yes it works as expected.\n\nI've seen the Breaking Changes page ( https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9&referringTitle=Documentation ) and the section \"Can not declare external modules inside other external modules\" but it was not obvious this was the described case. Maybe a code example in documentation would help others that may face the same issue?\n\nThanks again!",
+      "PostedDate": "2013-12-10T10:44:07.82-08:00",
+      "Id": 126831
+    }
+  ]
+}

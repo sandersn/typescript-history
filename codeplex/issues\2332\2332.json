@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.94-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Suppose I want to make a class with tons of chainable methods, like setters. This works fine. \r\n\r\n```\r\n\r\nclass Chainable {\r\n  public set1(arg) {\r\n    this.arg1 = arg;\r\n    return this;\r\n  } \r\n  \r\n  public set2(arg) {\r\n    this.arg2 = arg;\r\n    return this;\r\n  }\r\n  \r\n  public set3(arg) {\r\n    this.arg3 = arg;\r\n    return this;\r\n  }\r\n}\r\n```\r\n\r\nThis allows us to create and setup a new Chainable much more concisely than would otherwise be possible. \r\n```\r\n\r\na = new Chainable().set1(foo).set2(bar).set3(baz);\r\n// vs\r\na = new Chainable();\r\na.set1(foo);\r\na.set2(bar);\r\na.set3(baz);\r\n\r\n```\r\n\r\nThe problem occurs when we want to extend our Chainable class and maintain the chainability of the function calls. \r\n\r\n```\r\nclass SuperChainable extends Chainable {\r\n  public set4(arg) {\r\n    this.arg4 = arg;\r\n    return this;\r\n  }\r\n\r\n  public set5(arg) {\r\n    this.arg5 = arg;\r\n    return this;\r\n  }\r\n\r\n  public set6(arg) {\r\n    this.arg6 = arg;\r\n    return this;\r\n  }\r\n}\r\n```\r\n```\r\na = new SuperChainable().set4(foo).set1(baz); \r\n// this is fine, because setA returns a SuperChainable \r\n\r\na = new SuperChainable().set1(baz).set4(foo);\r\n// this breaks, because set1 is returning a Chainable, not SuperChainable\r\n\r\nvar a: SuperChainable;\r\na = new SuperChainable.set1(baz); // typeError, set1 returns a Chainable, not SuperChainable\r\n\r\n\r\n```\r\n\r\nThere is a workaround, but it is verbose and boiler-platey:\r\n```\r\nclass SuperChainable extends Chainable {\r\n  public set4(arg) {\r\n    this.arg4 = arg;\r\n    return this;\r\n  }\r\n\r\n  public set5(arg) {\r\n    this.arg5 = arg;\r\n    return this;\r\n  }\r\n\r\n  public set6(arg) {\r\n    this.arg6 = arg;\r\n    return this;\r\n  }\r\n  \r\n  public set1(arg) {\r\n    super.set1(arg);\r\n    return this;\r\n  }\r\n\r\n  public set2(arg) {\r\n    super.set2(arg);\r\n    return this;\r\n  }\r\n  \r\n  public set3(arg) {\r\n    super.set3(arg);\r\n    return this;\r\n  }\r\n}\r\n```\r\n\r\n\r\nWhen set1 is called on a SuperChainable and returns ```this```, the ```this``` really is a SuperChainable and not a Chainable. So it seems to me that the typescript compiler is in error in treating the return value as a Chainable. If this error were fixed, it would be much easier to create inherited objects that support method chaining.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-17T14:55:56.167-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Return type of inherited methods breaks function chaining",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 2332
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Definitely something we've been talking about addressing post-1.0",
+      "PostedDate": "2014-03-17T14:58:58.62-07:00",
+      "Id": 137157
+    },
+    {
+      "Message": "module Chaining {\n    export class Event {\n        constructor()\n        { }\n        arg1: string;\n         begins(arg:string) {\n            this.arg1 = arg;\n            return this;\n        }\n\n         ends(arg:string) {\n            this.arg1 = arg+this.arg1;\n            return this;\n         }\n        getArg()\n        {\n            return this.arg1;\n        }\n    }\n\n    export class EventSuper extends Event {\n\n        private newArg: string = super.getArg(); \n        public addtionalMethod(arg:string)\n        {\n            this.newArg = this.newArg + \"amazing\"; \n            return this;\n        }\n    }\n\n   \n  \n}\n\n\n$(function () {\n\n    var whatever = new Chaining.Event().begins(\"1\").ends(\"2\"); \n    new Chaining.EventSuper().begins(\"1\").ends(\"ed\");\n    new Chaining.EventSuper().begins(\"yay\").addtionalMethod(\"d\");\n    //lol still not fixed... or i need to copy and paste the whole library and put super on each method\n\n\n    \n    // this is unbearable...\n\n\n    console.log(whatever.arg1); \n}); ",
+      "PostedDate": "2014-05-23T17:02:49.787-07:00",
+      "Id": 147593
+    }
+  ]
+}

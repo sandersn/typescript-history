@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-04T17:12:17.51-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "# 7.2: Declaration Merging\r\n\r\n\"When a generic interface has multiple declarations, all declarations must have identical type parameter \r\nlists, i.e. identical type parameter names with identical constraints in identical order.\"\r\n\r\nI believe this means that \r\n```typescript\r\ninterface X { id: string }\r\ninterface X { id: string }\r\n```\r\nshould not show an error on the second instance of id.\r\n\r\n# Why this is bad\r\n\r\nThis problem makes --declarations not as fun as it could be.\r\n\r\nConsider a file \"a.ts\", which defines an interface and references b.ts.\r\n```typescript\r\n/// <reference path=\"b.ts\" />\r\nmodule A {\r\n\texport interface X {\r\n\t\tid: string;\r\n\t}\r\n}\r\n```\r\nAnd then suppose that \"b.ts\" references \"a.ts\".\r\n\r\nNow suppose one wished to optimize rebuilds so that a.ts referenced \"b.d.ts\" and b.ts referenced \"a.d.ts\".\r\nThis is fairly easy to do with msbuild and a rule to write x.d.ts files that look like\r\n```typescript\r\n/// <reference path=\"x.ts\" />\r\n```\r\nfor every typescript file and then compile with --declarations to replace those stubs with real declaration files.  Now future compilations need not reparse .ts files, only the .d.ts files produced by them.\r\n\r\nHowever, this compiler optimization does not work, because on the first compile a.ts includes (indirectly) a.ts, and tsc understands that the A.X interface is not duplicated.  However, once a.ts includes (indrectly/directly) a.d.ts, the interface definition is considered duplicated (the actual complaint by the compiler is that \"id\" is a duplicate identifier).",
+    "LastUpdatedDate": "2013-09-20T11:59:56.773-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-03T18:36:33.607-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "repeated interface declarations not working",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1638
+  },
+  "FileAttachments": [
+    {
+      "FileId": 725494,
+      "FileName": "ummm.png",
+      "DownloadUrl": ".\\725494"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "On a closer reading, that paragraph refers to \"generic interfaces\", so the example that actually shows the divergence from the specification is:\n```\ninterface X<Y> { id: string }\ninterface X<Y> { id: string }\n```\n\nEither way, I see no reason why typescript would need to prevent multiple compatible ambient declarations.",
+      "PostedDate": "2013-09-04T08:59:32.817-07:00",
+      "Id": 112037
+    },
+    {
+      "Message": "This is by design. The section of the spec you've quoted is not making reference to the interface body, only the interface name and its type parameters and their constraints. The duplicate identifier error you see is covered later in that section:\n\n\"In an interface with multiple declarations, the extends clauses are merged into a single set of base types and the bodies of the interface declarations are merged into a single object type.\"\n\nTo be clear, these are not ambient declarations. They're only ambient in a .d.ts or with the 'declare' modifier prepended. In any case, you'll note that a single object type with 2 fields of the same name is also an error:\n\n```\nvar x = {\n    id: 'a',\n    id: 'b'\n}\n```\n\nWhile you could imagine a world in which we allow duplicate field names and one wins when it comes time to resolve that property access (either the first or the last property of that name) it seems far more likely that this type of code is a bug and it is hard to imagine a reason you would actually need or want duplicated field names (as most languages disallow them for similar reasons). This is made worse by the difficulty in tracking down such a bug, particularly if you did not intend to merge declarations but happened to use an interface name and field which were also in use somewhere else in your project at the same scope. \n",
+      "PostedDate": "2013-09-04T17:12:14.28-07:00",
+      "Id": 112546
+    },
+    {
+      "Message": "Ahh, you are correct that I read the standard wrong.  My apologies.\r\n\r\nI don't see where it says in the standard that multiple declarations of the same field require a compile error.\r\n\r\nIn any case, I'm not trying to argue the standard.  I'm pleading that --declaration should be useful for speeding up the compilation of large projects.  As it stands, it would be possible if the interfaces were declared in separate files but I find this obtuse.\r\n\r\nI don't understand why you say interface declarations are not ambient (since they don't generate any code).\r\nIf the same interface were declared in both an ambient context and a non-ambient context then would you expect them to merge ok?  Because this is *exactly* the use-case (droid) I am looking for.\r\n\r\nFor what it's worth, your example is also invalid (see attached).",
+      "PostedDate": "2013-09-09T09:03:21.377-07:00",
+      "Id": 112864
+    },
+    {
+      "Message": "I refiled this as https://typescript.codeplex.com/workitem/1663 to avoid confusion with my misreading of the spec, which was not my main point.",
+      "PostedDate": "2013-09-09T10:25:39.89-07:00",
+      "Id": 112874
+    }
+  ]
+}

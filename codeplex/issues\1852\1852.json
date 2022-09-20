@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We support the generation of sourcemaps, with the -sourcemap flag, which allows you to debug the typescript files directly. \n\nBoth Visual Studio and Chrome support this (and other tools).\n\nSee this for a demo: \n\nhttp://www.html5rocks.com/en/tutorials/developertools/sourcemaps/",
+    "ClosedDate": "2013-11-01T10:20:39.093-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm using TypeScript in a game engine.\r\nThe engine uses TSC.exe to compile a folder of typescript files into javascript.  It uses the --outputDir option to send it to the final folder.\r\nThen these javascript files are loaded by the engine into a hosted implementation of V8.\r\nWhen errors occur I am given the file and line number at which the error occurred in the compiled .js file.\r\nThese line numbers are useless when used in the original .ts file.\r\nBecause of this I must first open the .js file, go to the error line, examine the lines of code, then search the original .ts file for the code that looks similar, rather than just opening the .ts file and going directly to the line number at which the error occurred.\r\n\r\nI would have a bit more understanding for the line numbers being off if I had used the keywords class, module, or interface in these files.\r\nBut these code files are simply javascript with a few type annotations.  The interfaces are kept in separate files.\r\n\r\nDebugging such problems would be a lot smoother if the compiled .js line numbers matched the original .ts line numbers in all cases.\r\nOr if this is unreasonable for lines generated using the class or other special keywords, then at least for the .ts code that only need have it's type annotations removed and is otherwise straight javascript code.\r\n\r\nThanks for your consideration.\r\nBTW I love TypeScript for the compile time error checking alone.\r\n",
+    "LastUpdatedDate": "2013-11-19T16:00:08.257-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-30T20:40:06.587-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TypeScript does not maintain line numbers in generated javascript files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1852
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Here is an example snippet of code that messes up the line numbers.\nIn the .ts file:\n\t\t\tif(listContainsItemByIndexedName(target.effects, effect)){\n\t\t\t\treturn false;\n\t\t\t}\n\t\t\telse if((name == \"Flaming Weapon\" || name == \"Blessed Weapon\") && !getEquipped(target, \"main hand\")) {\nIn the compiled .js file:\n            if (listContainsItemByIndexedName(target.effects, effect)) {\n                return false;\n            } else if ((name == \"Flaming Weapon\" || name == \"Blessed Weapon\") && !getEquipped(target, \"main hand\")) {\n4 lines became 3.\n\nAnd another example.\nIn the .ts file:\nfunction override_handle_causers(args) {\n\tvar returnValue = { handled: true }; // handled indicates this script decided to handle it and the engine should not do any further perform skill logic.\n\t// these variables make it easy to use the rest of the stat calculations in both combat and the character details screen.\nIn the compiled .js file:\nfunction override_handle_causers(args) {\n    var returnValue = { handled: true };\n\n    // these variables make it easy to use the rest of the stat calculations in both combat and the character details screen.\n3 lines became 4.\nIn these cases the compiler would only need to leave the closing curly brace on the line it was originally on rather than moving it and not add extra newlines where they did not exist.\n\nIt's also worth noting that all the tabs in the original files became spaces in the output.  (Not as crucial as the line numbers not being maintained, but would be nice to have it fixed as well.)\n",
+      "PostedDate": "2013-10-30T21:10:15.427-07:00",
+      "Id": 120279
+    },
+    {
+      "Message": "Ah, now I see.  Thanks!",
+      "PostedDate": "2013-11-01T22:16:41.627-07:00",
+      "Id": 121567
+    }
+  ]
+}

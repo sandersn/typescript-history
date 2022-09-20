@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.737-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I think this might be a missing feature in the language.  I have the same problem as Nickon here ([StackOverflow](http://stackoverflow.com/questions/14156489/implement-all-interface-members)) and I suspect he's doing the same thing I am - trying to apply a bit of sanity to JSON propertybags.  I think the language feature that is missing is the ability to make an interface *optionally* extend another interface.  Consider the following:\r\n\r\n\r\n    module OptionalInterfaces {\r\n        export interface IBaz extends IFoo, IBar {\r\n            aaa: number;\r\n            bbb: string;\r\n            ccc: boolean;\r\n        }\r\n\r\n        export interface IFoo {\r\n            ddd: number;\r\n            eee: string;\r\n        }\r\n\r\n        export interface IBar {\r\n            fff: boolean;\r\n            ggg: number;\r\n        }\r\n\r\n        var thisWorks: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n            ddd: 5, eee: \"testing\", fff: false, ggg: 12 };\r\n        var thisDoesNotWork: IBaz = { aaa: 1, bbb: \"test\",\r\n            ccc: false, fff: false, ggg: 12 };\r\n        var thisDoesNotWorkEither: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n            ddd: 5, eee: \"testing\"};\r\n\r\n    }\r\n\r\nAs you can see, the bottom two variables don't properly implement the interface, so they produce a TypeScript compiler error.  If you implement IFoo and IBar with optional properties, the compiler does not produce an error.\r\n\r\n        export interface IFoo {\r\n            ddd?: number;\r\n            eee?: string;\r\n        }\r\n\r\n        export interface IBar {\r\n            fff?: boolean;\r\n            ggg?: number;\r\n        }\r\n\r\nHowever, by declaring each member optional, the compiler would validate even objects that incompletely implement (in spirit) either of IFoo or IBar.\r\n\r\n        var thisWorksBasedOnEveryPropertyBeingOptional: IBaz =\r\n            { aaa: 1, bbb: \"test\", ccc: false, ddd: 1, ggg: 12 };\r\n\r\nThis could lead to a nonsense implementation of an interface being considered valid.  For example, an IDensity interface would be nonsense without both a mass and volume property.  However in today's TypeScript there would be no way to say \"objects that implement this interface _might_ support IDensity\".  What is needed is the ability to declare that a type will either implement an interface _completely_ or it will not implement it _at all_.\r\n\r\n    module OptionalInterfaces {\r\n        //optionally implement IFoo and IBar\r\n        export interface IBaz extends IFoo?, IBar? {\r\n            aaa: number;\r\n            bbb: string;\r\n            ccc: boolean;\r\n        }\r\n\r\n        export interface IFoo {\r\n            ddd: number;\r\n            eee: string;\r\n        }\r\n\r\n        export interface IBar {\r\n            fff: boolean;\r\n            ggg: number;\r\n        }\r\n\r\n        var thisWorks: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n                ddd: 5, eee: \"testing\", fff: false, ggg: 12 };\r\n        //Valid: implements IBar but not IFoo\r\n        var thisNowWorks: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n                fff: false, ggg: 12 };\r\n        //Valid: implements IFoo but not IBar\r\n        var thisNowWorksAlso: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n                ddd: 5, eee: \"testing\" };\r\n\r\n        //Partially implements IFoo and IBar\r\n        // will properly cause errors missing property eee of IFoo\r\n        //  and fff of IBar.\r\n        var thisCorrectlyDoesNotWork: IBaz = { aaa: 1, bbb: \"test\", ccc: false,\r\n                ddd: 1, ggg: 12 };\r\n    }\r\n\r\nWhen this compiles to JavaScript, all of the interfaces wash away anyway, so we're just talking about the compiler being able to do this validation work for us.  If optional interfaces were supported in TypeScript, definitions could be even more expressive about an object's shape without needing to unnecessarily mark properties as optional.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-02T12:18:11.317-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Unable to optionally implement an interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1631
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This might be more easily expressed in typescript's type system using has-a, instead of is-a relationships.  After all, there's no runtime support for validation of interfaces, but there is runtime support for checking if a value is non-null.\n\nSo, I would suggest writing IBaz like so:\n```javascript\nexport interface IBaz {\n        aaa: number;\n        bbb: string;\n        ccc: boolean;\n        foo?: IFoo;\n        bar?: IBar;\n}\n```\nThen foo and bar, if present, must therefore implement the full specification of IFoo and IBar as far as the compiler is concerned.",
+      "PostedDate": "2013-09-04T09:17:14.72-07:00",
+      "Id": 112040
+    },
+    {
+      "Message": "Adam - You're correct that \"has-a\" would be a good solution that works today, but unfortunately it would also change the shape of the object.\n\nThat might be a fair trade-off in a new project, but it doesn't help in the scenario of \"I want to define interfaces on existing JSON property bags that I can't change\" - essentially legacy JSON data transfer objects.  Changing to has-a pattern would also require the resulting minified JS file to be slightly larger for no benefit at runtime (since the interfaces don't exist anyway).\n\nPut another way, I'm requesting this feature from the perspective of someone implementing a _d.ts file_, not a .ts file.\n\nThis work item is requesting a slightly more expressive way to define interfaces and allow slightly stricter type-checking for existing JSON property bags.  The only way to do this today is to declare each of the interface members as optional and then implement unit tests checking to confirm that any interface implementations on a known set of public objects are complete.",
+      "PostedDate": "2013-09-04T10:55:23.707-07:00",
+      "Id": 112048
+    }
+  ]
+}

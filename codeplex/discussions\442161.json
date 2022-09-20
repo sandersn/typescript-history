@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1037893",
+    "ThreadId": "442161",
+    "Html": "My project is successfully compiling into a single JS outfile. But I need to generate a declarations file as well. It appears the 2 don't want to happily exist in the same csproj settings file, the declaration statement is always ignored. Here is my csproj snippet:<br />\n<pre><code>  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Debug'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptIncludeComments&gt;true&lt;/TypeScriptIncludeComments&gt;\n    &lt;TypeScriptSourceMap&gt;false&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptOutFile&gt;../build/phaser.js&lt;/TypeScriptOutFile&gt;\n    &lt;TypeScriptGeneratesDeclarations&gt;../build/phaser.lib.ts&lt;/TypeScriptGeneratesDeclarations&gt;\n  &lt;/PropertyGroup&gt;\n</code></pre>\n\nIs there an easy way around this? I can't compile on the command-line because there are too many files to include. I tried making an args.txt which I call on the command-line, but it gets its knickers in a right twist over the ORDER of the ts files in there, i.e. you get lots of compiler errors about one TS file not being able to reference another, like it's stuck in circular dependency hell. Which is strange because it works perfectly fine from within Visual Studio.\r<br />\n<br />\nSuggestions welcome!<br />\n",
+    "PostedDate": "2013-04-30T17:36:08.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038204",
+    "ThreadId": "442161",
+    "Html": "TypeScriptGeneratesDeclarations takes a Boolean value. so you want to set:\r<br />\n<strong>&lt;TypeScriptGeneratesDeclarations&gt;true&lt;/TypeScriptGeneratesDeclarations&gt;</strong>\r<br />\n<br />\n<br />\nThis will cause the generation of a new file <strong>../build/phaser.d.ts</strong> in the same output directory along with <strong>../build/phaser.js.</strong> \r<br />\n<br />\nThe compiler does not support giving a different name to the library file, the library file will always be names &quot;out.d.ts&quot; for output file name &quot;out.js&quot; and will end up in the same directory. you can always add a build event that runs after successful builds to rename the file to phaser.lib.d.ts.\r<br />\n<br />\nfor more information on how these properties work please look at the targets file under:\r<br />\n <strong>%programfiles(x86)%\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\Microsoft.TypeScript.targets</strong><br />\n",
+    "PostedDate": "2013-05-01T10:20:46.787-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038206",
+    "ThreadId": "442161",
+    "Html": "Thanks, that did indeed work. Really hoping they finally expose the compiler options directly in VS.<br />\n",
+    "PostedDate": "2013-05-01T10:25:05.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

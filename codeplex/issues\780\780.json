@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Duplicate of http://typescript.codeplex.com/workitem/779 as far as I can tell. Thanks for the repro -- this will help us narrow it down more quickly.",
+    "ClosedDate": "2013-03-04T17:17:32.087-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I've been using TypeScript for a week or so and have hit a number of problems with Visual Studio just hanging and needing to be terminated via Task Manager after editing TypeScript code.  I've never seen this before (well, very very rarely) in my normal C#/C++ development.\r\n\r\nI got a reproducible example using 0.8.2 a few days ago.  We had about two dozen JS files we were trying to port to TS, and the contained a lot of errors, mostly missing references to each other and things like that.  I upgraded to 0.8.3 and the hangs seemed to stop, so I was very pleased.  However, I've now found a simple example that causes VS 2012 SR1 to hang on my machine with the latest TS 0.8.3:\r\n\r\n  (1)  Create a new \"HTML with TypeScript\" project\r\n\r\n  (2)  Paste the following code over the top of the sample code in app.ts:\r\n\r\n```\r\nmodule M {\r\n\texport static class S {\r\n\t\tstatic f(): bool { return false; }\r\n\t}\r\n\r\n\texport class D extends S {\r\n\t}\r\n}\r\n```\r\n\r\nAs soon as you save the file you'll find VS freezes and clicks in the editor window are not registered.  On my machine, devenv.exe sits there using about half a core pretty much continuously.\r\n\r\nIf you use the keyboard to move the cursor around the editor window, *sometimes* it seems to come back to life, allowing me to stop the hang (for example, removing the first 'static' in the above example), but sometimes it never seems to return.\r\n\r\nIt does seem that invalid TypeScript syntax, or files with certain kinds of errors, can cause VS to stop responding.  My suspicion is the Intellisense engine trying to parse/work on the (invalid) TypeScript.  The above example is, of course, trivially fixed, but in a real-world project with many files I keep repeatedly finding errors in various places of various types seem to cause VS to hang, which is very frustrating!\r\n\r\nHas anyone else noticed similar hangs?\r\n\r\nP.S.  Later I've found that you can often just paste all sorts of garbage into the editor window and it causes VS to hang as well.",
+    "LastUpdatedDate": "2013-03-04T17:17:32.087-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-04T08:12:31.263-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Visual Studio hang editing TypeScript - reproducible example",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 780
+  },
+  "FileAttachments": [
+    {
+      "FileId": 634022,
+      "FileName": "example-hang.zip",
+      "DownloadUrl": ".\\634022"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "This discussion may help: https://typescript.codeplex.com/discussions/428909\n\nThe problem is to do with pasting duplicate declarations. Also try disabling Web Essentials and see if you can reproduce.",
+      "PostedDate": "2013-03-04T10:06:55.377-08:00",
+      "Id": 92215
+    }
+  ]
+}

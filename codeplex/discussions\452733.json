@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1077897",
+    "ThreadId": "452733",
+    "Html": "Hi,\r<br />\n<br />\nI'm currently trying to start converting our codebase from JS to TS and there is one thing about typescript modules which makes it inconvenient. In our code we use CommonJS-style imports  with top-level paths (i.e. all paths are relative to the top-level project directory). However tsc converts all top-level path to relative paths which renders them incorrect. For example consider the following listing:<br />\n<pre><code># cat a/a.ts\nimport b = require(&quot;b/b&quot;);\n\nexport class A {\n  public foo() : b.B {\n    return new b.B();\n  }\n}\n# cat b/b.ts\nexport class B {\n  public foo(): void {\n  }\n}\n# tsc -m commonjs a/a.ts\n# cat a/a.js\nvar b = require(&quot;./b/b&quot;);\n\nvar A = (function () {\n    function A() {\n    }\n    A.prototype.foo = function () {\n        return new b.B();\n    };\n    return A;\n})();\nexports.A = A;</code></pre>\n\nYou can see here that require(&quot;b/b&quot;) was converted to require(&quot;./b/b&quot;). There is a snippet of code in the TypeScript compiler that specifically does that (in emitter.ts):<br />\n<pre><code>modPath = isAmbient ? modPath : (!isRelative(stripQuotes(modPath)) ? quoteStr(&quot;./&quot; + stripQuotes(modPath)) : modPath);\nthis.writeToOutput(&quot;require(&quot; + modPath + &quot;)&quot;);</code></pre>\n\nWhat I don't understand is why this happens? And how can I get around it?\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-08-07T11:55:40.42-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077997",
+    "ThreadId": "452733",
+    "Html": "From the Node.js docs: \r<br />\n<br />\n&quot;A module prefixed with '/' is an absolute path to the file. For example, require('/home/marco/foo.js') will load the file at /home/marco/foo.js.\r<br />\nA module prefixed with './' is relative to the file calling require(). That is, circle.js must be in the same directory as foo.js for require('./circle') to find it.\r<br />\nWithout a leading '/' or './' to indicate a file, the module is either a &quot;core module&quot; or is loaded from a node_modules folder. &quot;\r<br />\n<br />\nI suspect we prepend the ./ because we don't yet support creating core modules or loading from the node_modules folder.<br />\n",
+    "PostedDate": "2013-08-07T15:12:08.483-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078137",
+    "ThreadId": "452733",
+    "Html": "I see, thanks. Node also has support for a NODE_PATH environment variable, which is sometimes useful, for example in my case. Anyway, isn't the current behavior of tsc broken? I mean, when it loads a/a for compilation, it correctly resolves the reference to b/b and typechecks. But the code that it emits is not going to work - blindly adding &quot;./&quot; to all require paths is only going to break them. Why won't it leave require paths as they are, and delegate it to a programmer to correctly set up NODE_PATH and directory structure for the output files?<br />\n",
+    "PostedDate": "2013-08-08T02:23:54.567-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078283",
+    "ThreadId": "452733",
+    "Html": "It assumes, I believe, that &quot;a/a&quot; and &quot;./a/a&quot; are the same thing since it doesn't support the other kind of lookup.  When it looks for matching .ts or .d.ts, it's going to assume that's a relative path rather than one that is a core module or something in the node_modules folder.  You should generally just use the format it supports, which is the &quot;./a/a&quot; rather than the &quot;a/a&quot; format.<br />\n",
+    "PostedDate": "2013-08-08T08:40:19.547-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078294",
+    "ThreadId": "452733",
+    "Html": "But this is exactly my point - &quot;a/a&quot; and &quot;./a/a&quot; are not the same thing for tsc. It correctly resolves the former relative to the project root. If you instead use &quot;./a/a&quot; it will complain that the file does not exists, which is also correct. What is wrong, is the generated JavaScript file, and it is inconsistent with the behavior of tsc when it resolves the requirements.\r<br />\n<br />\nFor that matter, the typescript specification also suggests that &quot;a/a&quot; and &quot;./a/a&quot; should be treated differently:<br />\n<ul>\n<li>External module names may be “relative” or “top-level”. An external module name is “relative” if \r<br />\nthe first term is “.” or “..”.</li>\n<li>Top-level names are resolved off the conceptual module name space root.</li>\n</ul>\n",
+    "PostedDate": "2013-08-08T08:52:45.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078296",
+    "ThreadId": "452733",
+    "Html": "Ah, sorry, I think I understand now.  Sounds like a bug.  I'll copy this over to a work item.<br />\n",
+    "PostedDate": "2013-08-08T08:55:48.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078297",
+    "ThreadId": "452733",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/1460\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-08-08T08:55:59.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

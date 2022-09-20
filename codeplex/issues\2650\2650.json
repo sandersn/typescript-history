@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "In the following code, the Animal's `constructor` is invoking Horse's `move` method, which is ok, but the Horse's `type` is still undefined, which is not ok.\r\n\r\nThe following example was compiled using gulp-typescript 2.3:\r\n\r\n```\r\nclass Animal {\r\n    public name = \"Abstract\";\r\n\r\n    constructor() {\r\n        this.move();\r\n    }\r\n\r\n    move() {\r\n        console.debug(\"Animal is moving: \", this.name);\r\n    }\r\n}\r\n\r\nclass Horse extends Animal {\r\n    public type = \"White\";\r\n\r\n    move() {\r\n        console.debug(\"This is: \", this);\r\n        // console.debug(\"Super is: \", super.animal); // Error compiling\r\n        console.debug(\"Animal is moving: \", this.type);\r\n    }\r\n}\r\n\r\nvar horse = new Horse();\r\n\r\n// === Output: ===\r\n// This is: Horse { name=\"Abstract\", constructor=Horse(), move=function()}\r\n// Animal is moving: undefined\r\n```\r\n\r\nThis happens because the compiled code calls super constructor before initializing the default instance values:\r\n\r\n```\r\n// ...\r\nvar Horse = (function (_super) {\r\n    __extends(Horse, _super);\r\n    function Horse() {\r\n        _super.apply(this, arguments);\r\n        this.type = \"White\";\r\n    }\r\n// ...\r\n})(Animal);\r\n```\r\n\r\nI don't know what would be the ECMAScript 6 behaviour, but this is not the standard behaviour of standard OO languages so I think that could be a bug.",
+    "LastUpdatedDate": "2014-11-30T19:10:37.753-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-11-30T12:38:10.603-08:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Subclass attributes init not before super.constructor()",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2650
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is JavaScript, not really an OO language.  It works on prototype chains, and the derived objects can easily override a super object's properties. If the derived object initialized first, it might be chaos.",
+      "PostedDate": "2014-11-30T19:10:37.753-08:00",
+      "Id": 166939
+    }
+  ]
+}

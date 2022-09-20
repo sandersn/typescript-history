@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1058044",
+    "ThreadId": "447372",
+    "Html": "Hello!<br />\n<br />\nMy work is trying to use a singleton pattern, and the way we're currently doing it in javascript is by exporting a new object instead of the constructing class.<br />\n<br />\ne.g. in a module:<br />\n<pre><code>function Greeter() {\n    //...\n}\nGreeter.prototype.greet = function() {\n    //...\n}\nmodule.exports = new Greeter();</code></pre>\n\nWhat this allows us to do is:<br />\n<ul>\n<li>inherit classes, overriding methods where needed and also calling super methods.</li>\n<li>\nreturn an instantiated object <strong>as</strong> the <strong>module.exports</strong> variable.<br />\n</li>\n</ul>\nThings to note:<br />\n<ul>\n<li>I do not want to have to put the class declaration in another file.</li>\n<li>I am happy to export the class as well, however I require that the object is attached to <strong>module.exports</strong>.</li>\n<li>\nI do not want to have to manage an interface that the class implements/the object is cast to, as trying to keep interfaces up to date is a pain.<br />\n</li>\n</ul>\nThe main reason for this request is because we require module.exports to equal the new object, the object <strong>must not</strong> be an attribute of module.exports. However Typescript currently complains about exporting private types.<br />\n<br />\nI would like to know if there is any way that I can do this currently? Or if there isn't, perhaps a way to declare that you want intellisense for a particular variable, even if it's type is private?<br />\n<br />\nThanks in advance!<br />\n<br />\nGriffork.<br />\n",
+    "PostedDate": "2013-06-18T00:25:54.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059408",
+    "ThreadId": "447372",
+    "Html": "Bump?<br />\n",
+    "PostedDate": "2013-06-20T15:50:01.743-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1061404",
+    "ThreadId": "447372",
+    "Html": "I agree with Griffork. In javascript i'm using same singleton pattern as he described and miss this feature in TS.<br />\n",
+    "PostedDate": "2013-06-26T06:00:47.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063420",
+    "ThreadId": "447372",
+    "Html": "I would really like to know if this is ever going to be supported, so I can decide now whether or not to support it.<br />\n",
+    "PostedDate": "2013-07-01T20:50:04.577-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063773",
+    "ThreadId": "447372",
+    "Html": "I believe this accomplishes what you want, there is some subtlety involved:<br />\n<pre><code>interface GreeterExport {\n    greet(): void;\n}\n\nclass Greeter implements GreeterExport {\n    greet() {\n        return;\n    }\n}\n\nvar GreeterExport: GreeterExport = new Greeter();\nexport = GreeterExport;</code></pre>\n\nwhich emits this JavaScript:<br />\n<pre><code>var Greeter = (function () {\n    function Greeter() {\n    }\n    Greeter.prototype.greet = function () {\n        return;\n    };\n    return Greeter;\n})();\n\nvar GreeterExport = new Greeter();\n\nmodule.exports = GreeterExport;</code></pre>\n\nWhat's happened here is we're using export= to export all meanings of the identifier GreeterExport (in this case a var and an interface definition) and ensuring that the var is explicitly typed to the interface name so that it is of an exported type rather than the non-exported (aka private) class type.\r<br />\n<br />\nDoes that do what you want?<br />\n",
+    "PostedDate": "2013-07-02T12:50:21.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063813",
+    "ThreadId": "447372",
+    "Html": "<blockquote>\nDoes that do what you want?<br />\n</blockquote>\nTechnically yes, but NO (at least not for me).\r<br />\nIn your example you have to define all public members twice - first as an Interface and then in Class definition.\r<br />\nIt's ugly and adding lots of typing.\r<br />\n<br />\nWhat i want is this:<br />\n<pre><code>class Greeter {\n    greet() {\n        return;\n    }\n}\n\nvar greeter: Greeter = new Greeter()\nexport = greeter\n// or simply: export = new Greeter()</code></pre>\n\nIt's not a killing feature, but brings cleaner code and must be easy to implement.<br />\n",
+    "PostedDate": "2013-07-02T14:28:42.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063833",
+    "ThreadId": "447372",
+    "Html": "Yes, I agree, the duplication is not ideal, but there is at least a strongly typed solution that emits the right, minimal JS for this pattern. Feel free to log an issue about improvements in how this pattern is modeled here.<br />\n",
+    "PostedDate": "2013-07-02T15:34:46.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063880",
+    "ThreadId": "447372",
+    "Html": "Due to another issue that got raised the handling of singletons in my project has changed, making this a moot issue.\r<br />\n<br />\nHowever I can see it becoming a problem again in the future. Would you like to raise it as an issue dorny? If you do, post here and I'll vote on it.<br />\n",
+    "PostedDate": "2013-07-02T18:28:48.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063923",
+    "ThreadId": "447372",
+    "Html": "\r\n<div dir=\"ltr\">As an aside that perhaps may not be relevant, couldn't you use a TypeScript module to create the singleton?</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-07-02T22:46:15.24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064231",
+    "ThreadId": "447372",
+    "Html": "Yes, depending on your needs a module could do the job. I offered the class solution since it does allow you to model some additional things that can't be used as a top level module element (ex index signatures).<br />\n",
+    "PostedDate": "2013-07-03T11:24:06.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065127",
+    "ThreadId": "447372",
+    "Html": "Issue created: <a href=\"https://typescript.codeplex.com/workitem/1312\" rel=\"nofollow\">#1312</a>.<br />\n",
+    "PostedDate": "2013-07-06T07:22:53.697-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

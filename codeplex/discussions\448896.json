@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1063841",
+    "ThreadId": "448896",
+    "Html": "Hello everyone, I've been using 0.9 for a few days now, and man! Fantastic! Generics are a great addition to the language, especially since I'm writing a lot of Knockout code.\r<br />\n<br />\nI use a fair number of associative arrays in my code, with definitions like:<br />\n<pre><code>interface LocationItemById { [locationId: string]: LocationItem; }</code></pre>\n\nThe id fields are actually numbers, but, well, you know, JavaScript.\r<br />\n<br />\nAnyway, in TypeScript 0.8, I had a lot of code that looked like<br />\n<pre><code>var location = this.locations[locationId.toString()];</code></pre>\n\nBut in TypeScript 0.9, it seems that this is now accepted:<br />\n<pre><code>var location = this.locations[locationId];</code></pre>\n\nI like the convenience, but the 0.8 behavior seemed to be more &quot;correct&quot; -- it always reminded me that JavaScript objects use string keys, period. And I feel uneasy that I can index by number when I declared the indexer as a string type...\r<br />\n<br />\nWas this change intentional?<br />\n",
+    "PostedDate": "2013-07-02T16:00:08.03-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063860",
+    "ThreadId": "448896",
+    "Html": "Yes, this is intentional. You can see the rules for resolving property accesses in section 4.10 Property Access of the language spec. Relevant part here:<br />\n<blockquote>\nA bracket notation property access of the form<br />\nObjExpr [ IndexExpr ]<br />\nwhere ObjExpr and IndexExpr are expressions, is used to access the property with the name computed by the index expression on the given object. A bracket notation &gt; property access is processed as follows at compile-time:<br />\n•\tIf IndexExpr is a string literal or a numeric literal and ObjExpr is of a type that has a property with the name given by that literal (converted to its string representation in the case of a numeric literal), the property access is of the type of that property.<br />\n•\tOtherwise, if ObjExpr is of a type that has a numeric index signature and IndexExpr is of type Any, the Number primitive type, or an enum type, the property access is of the type of that index signature.<br />\n•\tOtherwise, if ObjExpr is of a type that has a string index signature and IndexExpr is of type Any, the String or Number primitive type, or an enum type, the property access is of the type of that index signature.<br />\n•\tOtherwise, if IndexExpr is of type Any, the String or Number primitive type, or an enum type, the property access is of type Any.<br />\n•\tOtherwise, the property access is invalid and a compile-time error occurs.<br />\n</blockquote>\nIf I recall correctly this rule was introduced specifically for scenarios like yours where object literals use numbers as the names for fields and want to used in 'array-like' fashion without additional ceremony like using toString on every index expression.<br />\n",
+    "PostedDate": "2013-07-02T17:07:28.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1067172",
+    "ThreadId": "448896",
+    "Html": "Thanks!<br />\n",
+    "PostedDate": "2013-07-11T11:15:41.08-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1067603",
+    "ThreadId": "448896",
+    "Html": "I notice that in previous versions of TypeScript:<br />\n<pre><code>for (var x in obj)</code></pre>\n\nx was of type string. But now in 0.9, x is of type any, and you can't even do something like:<br />\n<pre><code>for (var x: string in obj)</code></pre>\n\nto help TypeScript out.\r<br />\n<br />\nI can't find any section of the spec dealing with what the type of x should be in this construction. Surely it should always be a string? I mean, unless you wanted to do something clever like:<br />\n<pre><code>var obj: { [index: number]: number; } = { 1: 2 };\nfor (var x in obj)  // number is the best common type of all obj's defined index expressions, so the type of x is number</code></pre>\n\n",
+    "PostedDate": "2013-07-12T10:27:22.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

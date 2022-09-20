@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is just a by product of how JavaScript semantics work which we are trying to preserve as closely as possible in most cases. I agree it can lead to some unfortunate errors but this (scoping and the context of 'this') is just a concept that a JS/TS developer must be familiar with. See this thread for some discussion on the issue: https://typescript.codeplex.com/discussions/429350",
+    "ClosedDate": "2013-06-20T12:28:54.457-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "``` TS\r\nclass A {\r\n\tconstructor(public x : string) {\r\n\t\tx = \"1\";\r\n\t\tthis.x = \"1\";\r\n\t}\r\n}\r\n\r\nnew A(\"1\");\r\n```\r\nis compiled to\r\n``` JS\r\nvar A = (function () {\r\n    function A(x) {\r\n        this.x = x;\r\n        x = \"1\";\r\n        this.x = \"1\";\r\n    }\r\n    return A;\r\n})();\r\n\r\nnew A(\"1\");\r\n\r\n```\r\n\r\nMany developers can assume that \"x\" in the constructor body is a field of this class. But actually any usage of 'x' without 'this' qualifier refer to constructor argument which is just a local variable, so any modification of it doesn't affect field value (look at the compiled JS).\r\nMy suggestions:\r\n* Disallow modifications of field without \"this\". You can write this.x = 100, but not x = 100; \r\n* Or treat any usages of \"x\" as \"this.x\" in constructor body, so modification of \"x\" will cause modification of a field not a local variable/argument.\r\n",
+    "LastUpdatedDate": "2013-08-13T11:32:40.713-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-20T10:34:09.84-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Constructor-declared fields assigning is misleading",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1193
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi danquirk, this is not related to that thread. That thread discuss omitting \"this\" in general case (and I agree that is something that should not be done), and this issue deals with a particular case where compiler doesn't give an error when a field-related parameter is used without \"this.\". Please read the issue again.",
+      "PostedDate": "2013-06-21T04:25:22.79-07:00",
+      "Id": 103764
+    },
+    {
+      "Message": "The parameter is left in scope for convenience here.",
+      "PostedDate": "2013-08-13T11:32:40.713-07:00",
+      "Id": 109655
+    }
+  ]
+}

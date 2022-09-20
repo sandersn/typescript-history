@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-19T18:21:03.003-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "if you export a var in a module that references a type, than you can instantiate it but you cannot inherit it. It says then that the property could not be found...\r\n\r\n```\r\nexport class Test {\r\n\r\n}\r\n\r\nexport module something {\r\n    export var Test = Test\r\n}\r\n\r\n// works\r\nvar test = new something.Test();\r\n\r\n//does not work\r\nclass OtherTest extends something.Test {\r\n\r\n}\r\n\r\n```",
+    "LastUpdatedDate": "2013-09-19T18:21:03.003-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-19T07:21:55.753-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Exported var referencing a Type is not extendable",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1702
+  },
+  "FileAttachments": [
+    {
+      "FileId": 731868,
+      "FileName": "test.png",
+      "DownloadUrl": ".\\731868"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "This is by design. Your use of a variable that references itself is making things more confusing. \n\nWhen you declare a class it introduces 2 things, a type and a value. The value is the constructor function, ie a function which returns instances of the type. So if you say 'var x = Test' you are referencing the constructor function and x is now of type 'new() => Test'. Now you could use x as the target of a new expression and it would work, similar to how you did it above (although in this particular case it works because the type of something.Test is 'any' since the initializer for Test referenced itself). \n\nIn the extends clause the compiler is only looking for names in the declaration space for types, not values, but you have given it a value (a function type with module 'something' which could have also contained type definitions) so the name cannot be resolved. The error message could be clearer but everything here is ultimately working as intended.",
+      "PostedDate": "2013-09-19T18:20:58.76-07:00",
+      "Id": 115086
+    }
+  ]
+}

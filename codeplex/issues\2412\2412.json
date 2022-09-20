@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.377-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "It's usually a good practice to break code into multiple files since it makes it easier to maintain, especially if you have a large codebase and have many people who work on it.\r\n\r\nIn the current implementation if I'm doing something like:\r\n\r\n```\r\n/// file MyModule.ts\r\nmodule MyModule {\r\n\tvar modulePrivateVariable: string = \"can only be accessed from within the module\";\r\n\r\n\texport function getPrivateVariable() {\r\n\t\treturn modulePrivateVariable;\r\n\t}\r\n}\r\n```\r\n\r\n```\r\n///file MyInnerModule.ts\r\nmodule MyModule {\r\n\texport module MyInnerModule {\r\n\t\texport function doit(): number {\r\n\t\t\treturn MyModule.getPrivateVariable().length;\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nThen the compiler will generate two files, each with it's own closure.\r\nEven if i concatenate the two files into one and use that as the input for the compiler (or use the `--out` option when compiling) then I still get two closures in the compiled file.\r\nThis is sometimes the desired behavior, but in some cases it's not very elegant and causes the js output to be much larger than it should...\r\n\r\nThere should be a way to tell the compiler that I want to \"merge\" MyModule so that this is the code that will be compiled to js:\r\n```\r\nmodule MyModule {\r\n\tvar modulePrivateVariable: string = \"can only be accessed from within the module\";\r\n\r\n\texport function getPrivateVariable() {\r\n\t\treturn modulePrivateVariable;\r\n\t}\r\n\r\n\texport module MyInnerModule {\r\n\t\texport function doit(): number {\r\n\t\t\treturn modulePrivateVariable.length;\r\n\t\t\t// or\r\n\t\t\treturn getPrivateVariable().length;\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nThe pros to such a things are:\r\n1. The ability to have private module variables/methods which can then be used in different files (you can `declare` the variable in other files)\r\n2. No need to write the full namespace of the used variables/methods\r\n3. Less compiled js code\r\n\r\nI hope I managed to explain my idea clearly, if not I'll be more than happy to elaborate further.\r\nThanks.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-10T05:30:39.02-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "merging modules which span across files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2412
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

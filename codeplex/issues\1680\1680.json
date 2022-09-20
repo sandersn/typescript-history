@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting, until we find an actual issue with this I'll close this as by design.",
+    "ClosedDate": "2013-09-13T15:31:37.783-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "\r\nNot sure whether this is causing any bugs, so this is a call for review, not (yet) a bug report:\r\n\r\n`for-in` iteration over objects/\"tables\" is popular in the tsc sources. Last time I checked, the order of such iterations was not specified in the ES standard, though implementations follow some variation of insertion-order, with special cases for number-like keys (to account for array-like subsets of object properties). \r\n\r\nOne might hope for insertion-order to remain constant, at least as long as there are no uses of `delete`. There might still be surprises if  number-like and other keys are mixed in a single \"table\". For instance, running the following \"html\" through nodejs or a recent browser engine\r\n```\r\n//<script>\r\nvar t={};\r\nt.x = 1;\r\nt.y = 2;\r\nt[2] = 3;\r\nt.z = 4;\r\ndelete t.x;\r\nt[\"1\"] = 5;\r\nt[\"3\"] = 6;\r\nt.x = 7;\r\nfor(var key in t) console.log(key,t[key])\r\n//</script>\r\n```\r\nresults in\r\n```\r\n1 5\r\n2 3\r\n3 6\r\ny 2\r\nz 4\r\nx 7\r\n```\r\nThough I would not assume that all older engines agree on this ordering. In particular:\r\n```\r\n$ /c/Windows/Microsoft.NET/Framework/v4.0.30319/jsc.exe /c/javascript/tst/for-in-order.html\r\nMicrosoft (R) JScript, Compilerversion 11.00.50709\r\nfür Microsoft (R) .NET Framework, Version 4.0.30319\r\nCopyright (C) Microsoft Corporation. Alle Rechte vorbehalten.\r\n\r\n$ for-in-order.exe\r\ny2\r\n23\r\nz4\r\n15\r\n36\r\nx7\r\n```\r\n\r\nFortunately, there are hardly any uses of `delete` in the sources, eg, one of them is in the file watchers list handling in tsc.ts, and file paths with suffixes tend not to be number-like. I don't know whether there are any other order-dependent tables with number-like keys.\r\n\r\nHowever, it is dangerous to leave assertions on insertion and iteration order implicit.\r\n\r\nMy suggestion is to review any such uses and to annotate them in comments (whether the ordering of `for-in` iteration is critical to code function, or whether the ordering is irrelevant), specifying any invariants that the code relies on (eg, files to be inserted and iterated in dependency-first order; no use of number-like keys; no use of `delete`).",
+    "LastUpdatedDate": "2013-09-13T15:31:37.783-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-12T10:13:02.263-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "please review/document implicit uses of for-in iteration order",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1680
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "ps: for `jsc`, replace `console.log` with `print`",
+      "PostedDate": "2013-09-12T10:16:37.47-07:00",
+      "Id": 113366
+    }
+  ]
+}

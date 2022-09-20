@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the release-0.9.1.1 branch",
+    "ClosedDate": "2013-08-12T10:19:16.353-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I've encountered a rather bizzare compiler error for which I have no explanation. It only shows up under a very specific set of circumstances, but the error I am given provides me with little to go on.\r\n\r\n```\r\ntsc.js(37893, 25) Microsoft JScript runtime error: Unable to get value of the property 'setHasGenericSignature': object is null or undefined\r\n```\r\n\r\nYou can see the above error for yourself by unzipping the attached folder and executing the following command from that directory:\r\n\r\n``` PowerShell\r\ntsc .\\getAccessorWithImpliedReturnTypeAndReference.ts -t \"ES5\"\r\n```\r\n\r\nThe offending code file contains a simple class with a simple Get Accessor, but the return type is implied. It also contains a reference to \"underscore.d.ts\" _(this will become important later)_.\r\n\r\n``` TypeScript\r\n///<reference path=\"underscore.d.ts\"/>\r\n\r\nmodule MyModule { \r\n    export class MyClass {\r\n        public get myGetter() {\r\n            var obj:any = {};\r\n            \r\n            return obj;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nHowever, two things can be done to make this file compile happily.\r\n\r\n__1. Remove the reference to \"underscore.d.ts\"__\r\n\r\n``` TypeScript\r\nmodule MyModule { \r\n    export class MyClass {\r\n        public get myGetter() {\r\n            var obj:any = {};\r\n            \r\n            return obj;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThis might of course lead one to believe that the underscore type def file is the issue. That was my initial reaction until I also discovered the second way of achieving successful compilation.\r\n\r\n__2. Explicitly define the return type for the Get Accessor__\r\n\r\n``` TypeScript\r\n///<reference path=\"underscore.d.ts\"/>\r\n\r\nmodule MyModule { \r\n    export class MyClass {\r\n        public get myGetter() : any {\r\n            var obj:any = {};\r\n            \r\n            return obj;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nHuh, what?!?\r\n\r\nThis is the part that has me scratching my head. Clearly something is amiss here that is causing the interpreter to lose its lunch.\r\n\r\nAgain, this is a very easy bug to reproduce, so hopefully it will help pinpoint the issue.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T11:58:54.437-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "TypeScript Compiler Error",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 1462
+  },
+  "FileAttachments": [
+    {
+      "FileId": 715592,
+      "FileName": "TypeScriptCompilerError.zip",
+      "DownloadUrl": ".\\715592"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, we're taking a look!",
+      "PostedDate": "2013-08-09T10:31:38.343-07:00",
+      "Id": 109223
+    }
+  ]
+}

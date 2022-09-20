@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Not seeing this in the latest release. Please reactivate if you're still able to repro. Thanks!",
+    "ClosedDate": "2013-02-19T17:29:05.667-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "The following TS code generates an internal compiler error:\r\n\r\nObject.defineProperty(Object.prototype, 'become',  {\r\n    enumerable:false,\r\n    value: function become(s) {this.__proto__ = s.prototype ;}\r\n});\r\n\r\n\r\nalso when I write the above in slightly different way, it is still giving same compiler error:\r\n\r\nfunction become(obj,type) {\r\n\tobj.__proto__ = type.prototype;\r\n}\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-06T02:47:02.76-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "compiler cannot handle __proto__ ??",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 130
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Seems to be even a more generic issue. Also the following goes wrong:\n\nContext.__defineGetter__('current', function() { return global.Fiber.current.context;});\n\nPerhaps the parser has issues with __someVariable__  ???\n\nJust in case it might help, the exception I get is:\n=============================================\n/usr/local/lib/node_modules/typescript/bin/tsc.js:19974\n        while(tok.tokenId != TypeScript.TokenID.EOF) {\n                 ^\nTypeError: Cannot read property 'tokenId' of undefined\n    at Object.preProcessFile (/usr/local/lib/node_modules/typescript/bin/tsc.js:19974:18)\n    at CodeResolver.resolveCode (/usr/local/lib/node_modules/typescript/bin/tsc.js:19731:59)\n    at CommandLineHost.resolveCompilationEnvironment (/usr/local/lib/node_modules/typescript/bin/tsc.js:21492:22)\n    at BatchCompiler.resolve (/usr/local/lib/node_modules/typescript/bin/tsc.js:21508:40)\n    at BatchCompiler.batchCompile (/usr/local/lib/node_modules/typescript/bin/tsc.js:21854:76)\n    at Object.<anonymous> (/usr/local/lib/node_modules/typescript/bin/tsc.js:21891:7)\n    at Module._compile (module.js:449:26)\n    at Object.Module._extensions..js (module.js:467:10)\n    at Module.load (module.js:356:32)\n    at Function.Module._load (module.js:312:12)\n============================================================",
+      "PostedDate": "2012-10-06T04:15:33.7-07:00",
+      "Id": 78798
+    },
+    {
+      "Message": "__proto__, __defineGetter__ and __defineSetter__ don't exist in Chakra, therefore they're banned.\n\n__defineGetter__ and __defineSetter__ are non-standard (Why TF would you ever use these instead of ES5+ descriptors???)\n\n__proto__ is currently non-standard, but at the May TC39, Microsoft agreed that they would implement it, so __proto__ will be in ES6\n\nSee also: http://typescript.codeplex.com/workitem/35",
+      "PostedDate": "2012-10-06T16:56:45.91-07:00",
+      "Id": 78873
+    },
+    {
+      "Message": "I agree that there is currently no reason to use __defineGetter__ since there are alternatives and the above are not the recommended approaches. This was just some older code-base that I tried to convert when I found these issues (code from before the ES5 goodies existed).\n\nHowever I think it would be nice to keep a clear separation between correct JS syntax and platform support. Even if Chakra doesn't support these properties (and rightfully so), they should be just treated as regular property names in the compiler. That way for example people targeting nodejs can use __proto__ already if they want to (and also more easily convert existing code-base to typescript modules).\n\n",
+      "PostedDate": "2012-10-06T23:39:13.8-07:00",
+      "Id": 78881
+    },
+    {
+      "Message": "Thanks for the bug report. This issue is resolved on our developer branch!",
+      "PostedDate": "2012-10-08T14:10:55.56-07:00",
+      "Id": 79052
+    },
+    {
+      "Message": "This still repro's on Node. Reactivating the bug. ",
+      "PostedDate": "2012-10-08T14:20:53.167-07:00",
+      "Id": 79056
+    },
+    {
+      "Message": "Perhaps the develop branch needs to be merged and released?",
+      "PostedDate": "2012-10-08T15:09:22.497-07:00",
+      "Id": 79069
+    }
+  ]
+}

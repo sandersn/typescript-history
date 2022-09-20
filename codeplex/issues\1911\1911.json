@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We've removed the string index signature from Object by default. The Kendo .d.ts should define toJSON as `() => {}` instead now.",
+    "ClosedDate": "2013-11-19T10:06:55.957-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "With 0.9.5 beta I started getting errors saying \r\n\r\nClass 'Model' cannot extend class 'kendo.data.Model':\r\n\tTypes of property 'toJSON' of types 'Model' and 'kendo.data.Model' are incompatible:\r\n\t\tCall signatures of types '() => Data.IData' and '() => { [key: string]: any; }' are incompatible:\r\n\t\t\tIndex signatures of types 'Data.IData' and '{ [key: string]: any; }' are incompatible.\t\r\n\r\n\r\nkendo.data.Model extends kendo.data.ObservableObject that has a toJSON method with the following signature:\r\n\r\n```\r\ntoJSON(): { [key: string]: any; };\r\n```\r\n\r\nMy Model class extends kendo.data.Model and overrides the toJSON method. \r\n\r\n```\r\n    toJSON() {\r\n        var result: Data.IData = {};\r\n        if (this.isNew()) {\r\n            if (this.ContentId) {\r\n                result.ContentId = this.ContentId;\r\n            }\r\n        } else {\r\n            result.Id = this.Id;\r\n            result.__metadata = this.__metadata;\r\n        }\r\n\r\n        return result;\r\n    }\r\n```\r\n\r\nIt returns an object that implements Data.IData, which is defined as:\r\n\r\n```\r\nexport interface IData extends ODataModel {\r\n    Id?: number;\r\n    ContentId?: number;\r\n}\r\n```\r\nwhere ODataModel is:\r\n\r\n```\r\ninterface ODataMetadata {\r\n    uri: string;\r\n    etag?: string;\r\n}\r\n\r\ninterface ODataDeferred {\r\n    uri: string;\r\n}\r\n\r\ninterface ODataModel {\r\n    __deferred?: ODataDeferred;\r\n    __metadata?: ODataMetadata;\r\n}\r\n\r\n```\r\n\r\nI would just like to understand why this is an error with TypeScript 0.9.5 beta, but not with 0.9.1.1. Is this an issue with my code or an issue with TypeScript 0.9.5 beta?",
+    "LastUpdatedDate": "2013-11-19T10:06:55.957-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-19T03:26:18.703-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "0.9.5 beta: Index signatures of types 'my interface' and '{[key:string]: any;}' are incompatible",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1911
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

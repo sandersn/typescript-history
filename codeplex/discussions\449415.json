@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1066013",
+    "ThreadId": "449415",
+    "Html": "Hello everybody,<br />\n<br />\nI've written the following typescript-Code<br />\n<pre><code>/*jslint node: true */\n///&lt;reference path='../../typescript/node/node.d.ts'/&gt;\n\n'use strict';\n\nimport fs = module('fs');\n\nexport function fetch(repository) {\n    if (!fs.existsSync(repository.path)) {\n      return false;\n    }\n    return true;\n};\n\nexport function pull(repository) {\n    if (!fs.existsSync(repository.path)) {\n      return false;\n    }\n    return true;\n};</code></pre>\n\nThe typescript compiler generates now the following javascript code:<br />\n<pre><code>'use strict';\n\nvar fs = require('fs');\n\nfunction fetch(repository) {\n    if (!fs.existsSync(repository.path)) {\n        return false;\n    }\n    return true;\n}\nexports.fetch = fetch;\n;\n\nfunction pull(repository) {\n    if (!fs.existsSync(repository.path)) {\n        return false;\n    }\n    return true;\n}\nexports.pull = pull;\n;</code></pre>\n\nThere are some problems that are not valid for JSLint.<br />\n<ul>\n<li>The first is the removed comment in the first line.</li>\n<li>The next problem are the indentation in line 7 and 16 (return false)</li>\n<li>\nThe last problems are the unnecessary semicolon in line 12 and 21.<br />\n</li>\n</ul>\nThis generates unnecessary JSHint errors. Is it possible to configure, what the Typescript compiler should make and what not? For instance my comments or the code indentation?<br />\n",
+    "PostedDate": "2013-07-09T02:57:08.65-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066014",
+    "ThreadId": "449415",
+    "Html": "It seems to me that once you use a tool to generate JS for you, you no longer care about any &quot;code conventions&quot; being enforced.\r<br />\n<br />\nThe unnecessary semicolons are there because you added them yourself. <code>export function Foo() { }</code> is fine, no semicolon needed.<br />\n",
+    "PostedDate": "2013-07-09T03:01:41.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066027",
+    "ThreadId": "449415",
+    "Html": "Thanks for your hint with the semicolon. It has solved the third problem. \r<br />\n<br />\nBut there are still the first and the second problem. Even if Typescript generates the code for me, my grunt-jshint task would be happy, when the code could be JSHint compliant.<br />\n",
+    "PostedDate": "2013-07-09T03:27:58.037-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066051",
+    "ThreadId": "449415",
+    "Html": "\r\n<div dir=\"ltr\">Have you tried the --comments command line option to preserve comments?\r\n<div><br>\r\n</div>\r\n<div>As for whitespace, the compiler front-end was rewritten for 0.9. This now tokenizes whitespace similar to the Roslin C# compiler. However, it still uses the old backend which erases whitespace.\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>Perhaps in a future (post-1.0) release, whitespace will be transpiled out to JavaScript.</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n<div>Richard<br>\r\n<div><br>\r\n<br>\r\n<div></div>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2013-07-09T04:12:15.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066064",
+    "ThreadId": "449415",
+    "Html": "Thanks, this command line option has solved the problem. I've used this option also from the grunt-typescript task and it works!<br />\n",
+    "PostedDate": "2013-07-09T04:57:14.633-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

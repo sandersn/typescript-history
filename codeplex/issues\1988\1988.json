@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:40.877-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\ninterface I<T> {\r\n\t(): T;\r\n\t(n: number): T;\r\n}\r\n\t\r\nfunction f<T>(fn: () => T): I<T> { return null; }\r\n\r\nvar x: I<string>;\r\nvar y = f(x);\r\nvar z = y().length;\r\n```\r\n\r\nOn the last line, the compiler complains that \"property length does not exist on type {}\".\r\nThis happens because the type of `y` is inferred as `I<{}>` instead of the correct type of `I<string>`.\r\n\r\nIf I remove the second call signature from `I<T>`, then compilation succeeds.\r\nIf I replace `f(x)` with `f( () => x() )`, the compilation succeeds.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-08T16:54:31.9-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Type inference fails in the presence of multiple call signatures",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1988
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design because only types with a single call signature are used in relating the generic type parameter when doing type inference (spec section 3.8.6):\n\n > If M is a call signature, no other call signatures exist in T, exactly one call signature N exists in S, N is non-generic, and the number of required parameters in N is greater than or equal to that of M, then inferences are made from parameter types in N to parameter types in the same position in M, and from the return type of N to the return type of M.\n\nA possible overload is to change `I<T>` to be `interface I<T> { (n?: number): T; }`\n\nI'm following up to see if we can modify this rule to be more accommodating.",
+      "PostedDate": "2013-12-09T10:21:41.217-08:00",
+      "Id": 126634
+    },
+    {
+      "Message": "This one is not that important to me personally, because it has an easy workaround.",
+      "PostedDate": "2013-12-09T11:12:49.147-08:00",
+      "Id": 126644
+    }
+  ]
+}

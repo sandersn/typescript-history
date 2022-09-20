@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.757-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Use case:\r\nIn the current language spec, private fields contribute to the structural type of a class, but it is not possible to satisfy that structural type with anything but an instance of the original class. Therefor, adding private fields to a class effectively breaks structural typing everywhere the class is referenced directly. You can no longer assign any value to that function argument or variable that is not exactly that class type. This is to prevent errors on methods of the class itself that take other instances of the class as arguments:\r\n\r\n```\r\nclass Foo {\r\n  private field = \"hello\";\r\n  publicField = \"hi\";\r\n  foo(other: Foo) {\r\n    // this would throw an error if you allowed, say, object literal { publicField: \"blah\" } in place of 'other' here\r\n    return this.field + other.field;\r\n  }\r\n}\r\n```\r\n\r\nUnfortunately, this also means that any function outside of the Foo class is also subject to this limitation, where it would otherwise be safe to do so. In practice, this means that every class with private fields must also have a corresponding interface which it implements, in order for that type to be usable as a structural type in functions outside of the Foo class. \r\n\r\nOne possible workaround would be to allow this interface definition, which currently produces an error:\r\n\r\n```\r\n// ERROR: An interface may only extend another class or interface.\r\ninterface IStructOf<T> extends T {}\r\n```\r\n\r\nIf you loosened the restriction on extends for interfaces to allow referencing type arguments (perhaps with a new generic restriction specifying that it must be a class or interface?), and defined this IStructOf<T> interface by default, then instead of creating a superfluous interface for every class (perhaps for one that you don't maintain yourself, but rather consume in a third party library), then you can just use IStructOf<T> in place of a custom interface for that purpose:\r\n\r\n```\r\n// this:\r\nfunction foo(arg: IStructOf<Foo>) { /* etc... */ }\r\n\r\n// instead of this (repeated for each class like Foo):\r\ninterface IFoo extends Foo {}\r\nfunction foo(arg: IFoo) {}\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2014-07-28T15:20:16.757-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-02T09:51:08.857-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Ability to reference type arguments in extends",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2537
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

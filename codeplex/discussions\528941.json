@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1202728",
+    "ThreadId": "528941",
+    "Html": "I love the fact that you can assign imports in typescript as follows:\r<br />\nimport ClassNameRef = module.path.ClassName;\r<br />\n<br />\nand then reference module.path.ClassName simply by typing ClassNameRef.\r<br />\n<br />\nBut it would be that tiny bit faster and tidier if the typescript compiler was updated so if you didn't specify a name it would just default to the class name..\r<br />\n<br />\nEg:\r<br />\nimport module.path.ClassName;\r<br />\n<br />\nmodule.path.ClassName would be equal to ClassName\r<br />\n<br />\nCan anyone think of any reasons why this would be a bad idea? <br />\n",
+    "PostedDate": "2014-02-04T17:54:47.01-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202978",
+    "ThreadId": "528941",
+    "Html": "I think it would be an excellent idea but there are a lot of small details here. First of all the Harmony spec doesn't have special rules for imports - it's all path based (see: <a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples\" rel=\"nofollow\">http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples</a> ) and TS strives to be ES6 compatible.\r<br />\n<br />\nSecond thing is that I think it should work for both internal and external modules. I've got a lot of imports that look like that:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> DataSource = require(<span style=\"color:#A31515;\">&#39;data/DataSource&#39;</span>);\n<span style=\"color:Blue;\">import</span> DataSourceSync = require(<span style=\"color:#A31515;\">&#39;data/DataSourceSync&#39;</span>);\n<span style=\"color:Blue;\">import</span> HttpServiceDataSource = require(<span style=\"color:#A31515;\">&#39;data/sources/HttpServiceDataSource&#39;</span>);\n<span style=\"color:Blue;\">import</span> IndexedDbDataSource = require(<span style=\"color:#A31515;\">&#39;data/sources/IndexedDbDataSource&#39;</span>);\r\n</pre></div>and it would be nice if they could be written in a more compact form:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> data.DataSource;\n<span style=\"color:Blue;\">import</span> data.DataSourceSync;\n<span style=\"color:Blue;\">import</span> data.sources.HttpServiceDataSource;\n<span style=\"color:Blue;\">import</span> data.sources.IndexedDbDataSource;\r\n</pre></div>but while conversion is easy in this example what would it look like for this one?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> Actions = require(<span style=\"color:#A31515;\">&#39;../../model/Actions&#39;</span>);\r\n</pre></div>tsc doesn't have a concept of base path that all import paths start from as far as I understand. Or more precisely require('test') is the same as require('./test') and that's not the same in requirejs (require.js has a base path that's used to convert relative ones - like 'test' in this example).<br />\n",
+    "PostedDate": "2014-02-05T06:35:37.887-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

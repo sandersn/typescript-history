@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "985163",
+    "ThreadId": "429212",
+    "Html": "\r\n<p>Are there any plans to generate fakes from TypeScript files?</p>\r\n<p>For example, given interface:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module foo {\n\t\n  <span style=\"color:blue\">interface</span> IWriter {\n    writeToFile(fileName:string);\n   }\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>Compiled JavaScript file (say &quot;myFile.fake.js&quot; )</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// JavaScript</span>\n<span style=\"color:blue\">var</span> fake = { foo: { IWriter:undefined }};\n\nfake.foo.IWriter = <span style=\"color:blue\">function</span> IWriter() {\n    <span style=\"color:blue\">this</span>.writeToFileCount = 0;\n};\n    \nfake.foo.IWriter.prototype.writeToFile = <span style=\"color:blue\">function</span> () {\n       <span style=\"color:blue\">this</span>.writeToFileCount&#43;&#43;;\n};\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>And usage:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module footests {\n\n<span style=\"color:blue\"> var</span> instanceThatUsesIWriter = { write: (writer:foo.IWriter) =&gt; {} };\n\n<span style=\"color:blue\"> var</span> fakeWriter = <span style=\"color:blue\">new</span> fake.foo.IWriter();\n instanceThatUsesIWriter.write(fakeWriter);\n\n assertAreEqual(fakeWriter.writeToFileCount, 1);\n\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>We would find this pretty useful because, now with TypeScript, the SUT normally does not have any coupling with concrete types; rather most work is done via interfaces. But unfortunately when it comes to testing we have a problem, as there is no real representation\r\n of interfaces in the generated code.</p>\r\n<p>Any thoughts from anyone?</p>\r\n<p>Thanks</p>\r\n<p>PS: Obligatory thanks to the TS team for producing the most important innovation in Web technology since HTTP!</p>\r\n",
+    "PostedDate": "2013-01-10T13:45:28.103-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "985632",
+    "ThreadId": "429212",
+    "Html": "\r\n<p>Interfaces are not meant to be 'newed'. It's like asking for a music you can eat.</p>\r\n<p>Instead you can do:</p>\r\n<p><span style=\"font-size:10pt\">var fakeWriter = { writeToFile: function() { this.writeToCount++; } };</span></p>\r\n",
+    "PostedDate": "2013-01-11T12:51:59.47-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "985661",
+    "ThreadId": "429212",
+    "Html": "\r\n<p>@mihailik, interesting analogy, but no, music does not make a good diet!</p>\r\n<p>The mock writer is used purely to test expectations, it is not a real type because its implementation is fake, so IMO it is perfectly fine to new it.</p>\r\n<p>The example is equivalent to the following example using Rhino Mocks in C#:</p>\r\n<div>\r\n<pre>  IWriter mockWriter = Rhino.Mocks.MockRepository.GenerateStub&lt;IWriter&gt;();</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>In the end users of the fake library can write their own versions of MockRespository.GenerateStub or GenerateMock so the actual instantiation of the fake will happen behind the scenes.</p>\r\n<p>In any case, IMO, it's a minor point.</p>\r\n<p>Let me know if I didn't understand you.</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2013-01-11T13:44:40.54-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

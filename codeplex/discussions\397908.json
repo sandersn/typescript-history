@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "921321",
+    "ThreadId": "397908",
+    "Html": "\r\n<p>Is there any reason that TypeScript shouldn't default variables to the `any` type?\r\n<em>Pun intended. ;)</em></p>\r\n<p>For example, this code will generate warnings:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> obj = {};\nobj.prop = <span style=\"color:#a31515\">&quot;value&quot;</span>;</pre>\r\n</div>\r\n<p>To fix it we need to tell TypeScript that `obj` is of type `any`. (Or otherwise tell TypeScript about its members.)</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:#0000ff\">declare </span><span style=\"color:blue\">var</span> obj: <span style=\"color:#0000ff\">any</span>;</pre>\r\n</div>\r\n<div>\r\n<div>It seems to me that `any` should be the default type. Since type annotations are optional, it should assume the most generic case and generate no warnings unless we tell it that `obj` is a more specific type.</div>\r\n</div>\r\n",
+    "PostedDate": "2012-10-03T08:56:07.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921405",
+    "ThreadId": "397908",
+    "Html": "<p>This code</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> obj = {};\r\n</pre>\r\n</div>\r\n<p>should not infer obj to be of type `any`.&nbsp;It is obviously an object, and TypeScript should recognize it as such, and allow IntelliSense for object prototype methods like `hasOwnProperty`.</p>\r\n<p>I think the problem is that while you're allowed to define arbitrary properties on a value with type `any`, you can't do so on an object. I think you should be able to define any properties on object, since that's what objects are for.</p>",
+    "PostedDate": "2012-10-03T11:14:08.087-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921409",
+    "ThreadId": "397908",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>peterolson wrote:</strong><br />\r\n<p>...</p>\r\n<p>I think the problem is that while you're allowed to define arbitrary properties on a value with type `any`, you can't do so on an object. I think you should be able to define any properties on object, since that's what objects are for.</p>\r\n</blockquote>\r\n<p>Good point, I suppose <em>any</em>&nbsp;would include some other types that wouldn't make sense here - such as undefined. Also,&nbsp;since other primitives like&nbsp;number,&nbsp;string, function, etc&nbsp;are simply objects they would also allow allow you to define arbitrary properties on them without warnings. This is my intention.</p>",
+    "PostedDate": "2012-10-03T11:29:47.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921417",
+    "ThreadId": "397908",
+    "Html": "<p>I think only the following types should allow arbitrary properties defined without warnings:</p>\r\n<ul>\r\n<li>Object</li>\r\n<li>Function</li>\r\n</ul>\r\n<p>String and Number primitives&nbsp;aren't actually objects. You can see that when you write code like this:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> a = <span style=\"color: #a31515;\">\"\"</span>;\r\n<span style=\"color: blue;\">var</span> b = 1;\r\na.x = <span style=\"color: #a31515;\">\"value\"</span>;\r\nb.x = <span style=\"color: #a31515;\">\"value\"</span>;\r\nconsole.log(a.x, b.x);\r\n</pre>\r\n</div>\r\n<p>a.x and b.x will be undefined.</p>\r\n<p>You can assign properties to an Array, but I adding non-indexed properties to an Array is kind of abusing Array.</p>",
+    "PostedDate": "2012-10-03T11:41:07.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921421",
+    "ThreadId": "397908",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>peterolson wrote:</strong><br />\r\n<p>...</p>\r\n<p>String and Number primitives&nbsp;aren't actually objects. You can see that when you write code like this:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> a = <span style=\"color: #a31515;\">\"\"</span>;\r\n<span style=\"color: blue;\">var</span> b = 1;\r\na.x = <span style=\"color: #a31515;\">\"value\"</span>;\r\nb.x = <span style=\"color: #a31515;\">\"value\"</span>;\r\nconsole.log(a.x, b.x);\r\n</pre>\r\n</div>\r\n<p>a.x and b.x will be undefined.</p>\r\n<p>You can assign properties to an Array, but I adding non-indexed properties to an Array is kind of abusing Array.</p>\r\n</blockquote>\r\n<p>Good catch. Forgot about that.</p>\r\n<p>I think TypeScript should allow this behavior for any type that JS allows it for. If that includes Arrays then so be it, despite the fact that it is abuse. ;)</p>",
+    "PostedDate": "2012-10-03T11:50:20.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

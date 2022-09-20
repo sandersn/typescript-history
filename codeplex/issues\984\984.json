@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Glad you got unblocked quickly. Closing this since it's fixed now.",
+    "ClosedDate": "2013-05-06T15:55:02.163-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\n// compose :: (b->c) -> (a->b) -> (a->c)\r\n// length :: [a] -> Num\r\n// cfilter :: (a -> Bool) -> [a] -> [a]\r\n// pred :: a -> Bool \r\n// countWhere :: (a -> Bool) -> [a] -> Num\r\n\r\nfunction countWhere_1<A>(pred: (a: A) => bool): (a: A[]) => number {\r\n    return compose(length, cfilter(pred));\r\n}\r\n\r\nfunction countWhere_2<A>(pred: (a: A) => bool): (a: A[]) => number {\r\n    var where = cfilter(pred);\r\n    return compose(length, where);\r\n}\r\n```\r\n\r\nThis yields the error:\r\nerror TS2082: Supplied parameters do not match any signature of call target:\r\n  Call signatures of types '(bx: A[]) => C' and '(a: A[]) => A[]' are incompatible:  \r\n  Type 'C' is missing property 'concat' from type 'A[]'.\r\n\r\non both return lines.\r\n\r\nBut if the countWhere_2 is defined above countWhere_1, everything works properly.\r\n\r\nThis is in the .9 beta release of Typescript in Visual Studio 2012 Express for Web.\r\n\r\nPardon if this is a duplicate or could use a better description, I'm very new functional programming.\r\n\r\nAs a supplement, here's the full code for the other functions:\r\n```\r\n// compose :: (b->c) -> (a->b) -> (a->c)\r\nfunction compose<A, B, C>(f: (b: B) => C, g: (a:A) => B): (a:A) => C {\r\n    return function (a:A) : C {\r\n        return f(g.apply(null, a));\r\n    };\r\n}\r\n\r\n// forEach :: [a] -> (a -> ()) -> ()\r\nfunction forEach<A>(list: A[], f: (a: A, n?: number) => void ): void {\r\n    for (var i = 0; i < list.length; ++i) {\r\n        f(list[i], i);\r\n    }\r\n}\r\n\r\n// filter :: (a->bool) -> [a] -> [a]\r\nfunction filter<A>(f: (a: A) => bool, ar: A[]): A[] {\r\n    var ret = [];\r\n    forEach(ar, (el) => {\r\n        if (f(el)) {\r\n            ret.push(el);\r\n        }\r\n    } );\r\n\r\n    return ret;\r\n}\r\n\r\n// length :: [a] -> Num\r\nfunction length<A>(ar: A[]): number {\r\n    return ar.length;\r\n}\r\n\r\n// curry1 :: ((a,b)->c) -> (a->(b->c))\r\nfunction curry1<A, B, C>(f: (a: A, b: B) => C): (ax: A) => (bx: B) => C {\r\n    return function (ay: A) {\r\n        return function (by: B) {\r\n            return f(ay, by);\r\n        };\r\n    };\r\n}\r\n\r\nvar cfilter = curry1(filter);\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-30T12:34:31.693-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Function order and intermediate variable declaration affects type inference",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 984
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, love the functional code!  It looks like some issues have been fixed since the version of 0.9.0 you're using. In particular, the order dependency you're seeing does not repro anymore, both calls to compose are now errors consistently. In addition, the error message is now pointing to a different member that is the source of the incompatible types.\n\nI think there're one or more bugs still breaking this though. We have a known issue where generic type signatures from different declarations are always considered different even if they're structurally equivalent. For example, right now this assignment gives an error when it shouldn't:\n\nvar a = {\n   x: function <T>(y: T): T { return null; }\n}\n\ninterface I {\n   x<T>(y: T): T;\n} \nvar i: I; \na = i; // error\n\nThis bug should hopefully be fixed soon. It's possible that there're additional issues blocking your code from working but they are hard to diagnose while that bug exists. We'll follow up on this issue and verify whether that's the case once it's fixed. If you're able to I would recommend regularly pulling the most recent bits from the develop branch when playing with generics like this. Many bugs are getting fixed daily so you'll hopefully get a smoother experience and be able to keep filing great reports like this one.",
+      "PostedDate": "2013-04-30T13:32:01.15-07:00",
+      "Id": 98959
+    },
+    {
+      "Message": "Using the typescriptServices.js from the developer branch seemed to rectify this issue for me, thanks!",
+      "PostedDate": "2013-05-01T11:40:43.283-07:00",
+      "Id": 99061
+    }
+  ]
+}

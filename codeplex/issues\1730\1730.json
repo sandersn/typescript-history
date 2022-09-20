@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You'll see With Statements in the language specification shortly. They're always a compiler error, strict mode or not. Everything within one is resolved as type 'any.' Trying to do your section suggestion would certainly result in invalid code at some point, since there's no way to know whether foo did mean x.foo or something else without at a minimum some complex control flow analysis that the compiler does not do.",
+    "ClosedDate": "2013-09-26T10:53:27.093-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The compiler permits use of the `with` control structure, event with the `\"use strict\"` predicate in place.\r\n\r\nThe compiler should either respect the `\"use strict\"` predicate, observing [all the constraints](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode) associated with strict mode - or (much simpler) just deprecate the `with` control-structure entirely, as it is largely useless anyhow.\r\n\r\nNote that the `with` control structure isn't even documented as part of the current (0.9.1) [TypeScript specification](http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf), which implies it's not really a feature you count on supporting.\r\n\r\nAlternatively, if you do wish to support the `with` control structure, it could simply resolve and expand references in a with-statement, avoiding it's use in compiled output, e.g.:\r\n\r\n```\r\nvar x = { foo: 'bar' };\r\n\r\nwith (x) {\r\n    foo = 'blam';\r\n}\r\n```\r\n\r\n```\r\nvar x = { foo: 'bar' };\r\n\r\n// with (x) {\r\n    x.foo = 'blam';\r\n// }\r\n```\r\n\r\nThis would alter the behavior of the with-statement somewhat from it's classical JS behavior, but at least it's use would be restricted to use-cases that actually make sense, e.g. resolving known members of a local variable only when the type of that variable is known; disallowing it's use under any other circumstances where classical JS behavior might be inconsistent/buggy across engines/browsers.\r\n\r\n(I personally would be happy to see it simply disappear - it was a \"fiasco\", and the large majority of developers don't count on it, or don't use it at all.)\r\n",
+    "LastUpdatedDate": "2013-11-19T16:18:09.96-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-25T09:48:35.697-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Deprecate with (and/or respect \"use strict\")",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1730
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "> Trying to do your section suggestion would certainly result in invalid code at some point, since there's no way to know whether foo did mean x.foo or something else without at a minimum some complex control flow analysis that the compiler does not do\n\nI'm not sure if I explained myself well, but what I had in mind does not seem complicated, nor does it seem difficult to understand, at least as compared to the existing with-statement:\n\n```\nclass Foo {\n    public a;\n}\n\nvar x: any = new Foo();\n\nwith x {\n    a = 123; // => a = 123;\n}\n\nvar y: Foo = new Foo();\n\nwith y {\n   a = 123; // => y.foo = 123;\n   b = 456; // => b = 456;\n}\n```\n\nOr in other words, symbols inside a with-statement simply look for a known property in the parent lexical scope - so this is resolved at compile-time in a fairly simple way, and only works when the type is known.\n\nIn the first example, `a` doesn't get resolved as a member of `x`, because the type of the local variable `x` is `any` - in the second example, `a` does get resolved as a member of `y`, because the type of the variable is known.\n\nIt seems simple to me, but maybe I'm overlooking something.\n",
+      "PostedDate": "2013-09-26T20:59:18.827-07:00",
+      "Id": 115766
+    },
+    {
+      "Message": "Okay, I guess since `with` is deprecated from ES6, there is no real point in having this discussion.\n\nThe semantics of the `with` statement I described above are also different from JavaScript's `with` semantics, and you're opposed to changing the semantics of the language.\n\nIt's a shame they removed this feature without offering any alternative - having to see the word `this` a hundred times in a function that needs frequent access to various properties is tedious, and many (if not most) other compile-to-JS languages get around this somehow.\n\nWould you be open to adding a *new* feature that accomplishes something similar?\n\nFor example, adopting the `@` shorthand which means `this.` in many compile-to-JS languages.\n\nOr introducing a new statement, for example `using`, identical to what I described above, with static/compile-time resolution, e.g. only permitted for a variable with a known type (not `any`).\n\nToo many people go for something like CoffeeScript which solves little problems like these, but doesn't solve any of the big problems addressed by TypeScript, and that's a shame...\n",
+      "PostedDate": "2013-10-18T14:39:29.653-07:00",
+      "Id": 118878
+    }
+  ]
+}

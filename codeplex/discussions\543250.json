@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1237762",
+    "ThreadId": "543250",
+    "Html": "Hello,\r<br />\n<br />\nI'm having an issue with the latest version of TypeScript where the generic type inference is not working as I would expect it to. I believe that this use to work in the previous release version of TypeScript. \r<br />\n<br />\nBasically, I have a method with a generic parameter that should be inferable based on an input argument, and then used as a return type.\r<br />\n<br />\nSee the &quot;requestResource&quot; method below:<br />\n<pre><code>interface IHttpPromiseCallback&lt;T&gt; {\n    (data: T): void;\n}\n\ninterface IHttpPromise&lt;T&gt; {\n    success(callback: IHttpPromiseCallback&lt;T&gt;): IHttpPromise&lt;T&gt;;\n    error(callback: IHttpPromiseCallback&lt;T&gt;): IHttpPromise&lt;T&gt;;\n}\n\ninterface IRequestEx&lt;TResponse&gt; { }\n\ninterface ILogRep {\n    message: string;\n}\n\ninterface ICreateLogRequestEx extends IRequestEx&lt;ILogRep&gt; { }\n\nclass TestClass {\n    requestResource&lt;TResponse&gt;(request:IRequestEx&lt;TResponse&gt;): IHttpPromise&lt;TResponse&gt; {\n        return null;\n    }\n    \n    test() {\n        var request: ICreateLogRequestEx;\n        var response = this.requestResource(request);   \n        \n        // Note that &quot;response&quot; is inferred to be IHttpPromise&lt;{}&gt; and not IHttpPromise&lt;ILogRep&gt;\n        \n        // !!! This SHOULD work ??   logRep should be inferred to be a ILogRep\n        response.success((logRep) =&gt; console.warn(logRep.message));\n\n        // WORKAROUND #1: add type information to callback parameter\n        response.success((logRep: ILogRep) =&gt; console.warn(logRep.message));\n        \n        // WORKAROUND #2: explicitly specify type in 'requestResource' call\n        var response2 = this.requestResource&lt;ILogRep&gt;(request);\n        response2.success((logRep) =&gt; console.warn(logRep.message));\n    }\n} </code></pre>\n\nPlease let me know what (if anything) I'm doing wrong here. \r<br />\n<br />\nThanks,\r<br />\n<br />\n-Phillip<br />\n",
+    "PostedDate": "2014-04-24T14:48:49.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237776",
+    "ThreadId": "543250",
+    "Html": "That's because &quot;IRequestEx&lt;TResponse&gt;&quot; is missing a member.   Add &quot;r: TResponse;&quot; to it and it will work.   Someone else already posted something on this as well.  Empty interfaces should work in my opinion, but unfortunately you must define at least one member in order for type inference to work.<br />\n",
+    "PostedDate": "2014-04-24T16:31:05.39-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237831",
+    "ThreadId": "543250",
+    "Html": "Sweet, that did fix it!  Thanks.\r<br />\n<br />\nTotally agree that empty interfaces should be supported.<br />\n",
+    "PostedDate": "2014-04-24T21:42:36.157-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

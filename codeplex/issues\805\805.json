@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:55.83-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I'm getting the following compilation error: \"Unable to get value of the property 'publicMembers': object is null or undefined\". Sometimes VS freezes or became very slow, consuming CPU and a lot of memory.\r\n\r\nThe code below reproduces the error:\r\n\r\n```\r\nclass Test {\r\n    private _instanceField: any;\r\n\r\n    public _outer(a: string, cb: () => void ) {\r\n        this._inner1(() => {\r\n            this._inner2(cb);\r\n        });\r\n    }\r\n\r\n    public _inner2(callback: () => void ) {\r\n        var fn: Function[] = []\r\n            , var1: any;\r\n\r\n        fn = [\r\n            (cb) => this._inner3(var1),\r\n            (cb) => this._inner3(var1)\r\n        ];\r\n    }\r\n\r\n    private _inner1(cb: () => any) { }\r\n    private _inner3(a: any) { }\r\n}\r\n```\r\n\r\nThe problem seems to be on declarations of array literals and nested function calls using the fat arrows. For example, the code below compiles ok:\r\n\r\n```\r\nclass Test\r\n     ....\r\n\r\n    public _inner2(callback: () => void ) {\r\n         ....\r\n\r\n        //\r\n        // HERE: using index instead of literal declaration\r\n        //\r\n        fn[0] = (a) => this._inner3(var1);\r\n        fn[1] = (a) => this._inner3(var1);\r\n\r\n    }\r\n    ....\r\n}\r\n\r\n```\r\n\r\nMoving the call to _inner2() outside the fat arrow fn also makes the error disapears.\r\n\r\n```\r\nclass Test {\r\n    ....\r\n    public _outer(a: string, cb: () => void ) {\r\n        this._inner1(() => {\r\n             // calling from a fat arrow fn causes the error.\r\n            // this._inner2(cb);\r\n        });\r\n\r\n        // calling from outside not.\r\n        this._inner2(cb);\r\n    }\r\n    ....\r\n}\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-10T13:27:42.463-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Unable to get value of the property 'publicMembers': object is null or undefined",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 805
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Reduced slightly\n```\nclass Test {\n    public _outer(cb: () => void ) {\n        this._inner1(() => {\n            this._inner2(cb);\n        });\n    }\n\n    public _inner2(callback: () => void ) {\n        var fn: Function[] = [(cb) => null, (cb) => null];\n    }\n\n    private _inner1(cb: () => any) { }\n}\n```",
+      "PostedDate": "2013-03-11T09:46:58.343-07:00",
+      "Id": 92937
+    },
+    {
+      "Message": "Annotated, because this is crazy:\n\n```\nclass Test {\n    // Type annotation on 'cb' is needed\n    public _outer(cb: () => any) {\n        // Call has to happen in a callback\n        // Must be a call to a function taking a function-typed argument\n        this._outer(() => {\n            // This call must happen\n            this._inner2();\n        });\n    }\n\n    // Adding void return type annotation here suppresses the repro\n    public _inner2() {\n        // fn must have an explicit type annotation\n        // array must have at least two elements\n        // second element must be a function that takes at least one argument\n        var fn: Function[] = [undefined, function (a, b) { }];\n    }\n}\n```",
+      "PostedDate": "2013-03-11T09:55:15.953-07:00",
+      "Id": 92938
+    },
+    {
+      "Message": "Marking active/jonturner since this seems to be fixed in the 0.9.x branch",
+      "PostedDate": "2013-03-11T10:06:13.14-07:00",
+      "Id": 92941
+    }
+  ]
+}

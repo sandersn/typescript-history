@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.55-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I posted this in the Language Spec forum but it should probably be here.\r\n\r\nIn JavaScript it is perfectly valid to have a Type with a constructor and prototype and all that, but still use instances of that type as dynamic objects with arbitrary properties. For example, AngularJS's Scope type has lots of methods, but you also assign arbitrary properties to it for binding.\r\n\r\nThere is currently no nice way of expressing this in TypeScript; if I have a strongly-typed variable and try to set an arbitrary property, that is an error. I can type-assert to the Any type, but now I have excess code, and I lose the IntelliSense and refactoring for the members which are declared on the class or interface.\r\n\r\nSo what would be good is a way to specify that a class or interface supports arbitrary properties, either with a modifier keyword, a special interface that can be implemented, or perhaps a member declaration syntax like\r\n\r\nclass Scope {\r\n    $digest(): void;\r\n    *: any;\r\n}",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-05T03:37:09.633-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "A way to allow arbitrary properties on interfaces/classes",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 106
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yes, this is a pretty big problem for AngularJS users wanting to run typescript for any non-trivial AngularJS application. However, simply allowing arbitrary assignment on typed symbols somewhat defeats the purpose of the type checker. It helps to alert you to typos. \n\nSo far in my experimental use of TypeScript and AngularJS, I've been sing two variables for $scope, one of type ng.Scope (typed, with auto-complete for base $scope variables/functions), and one of type any (for all the assignments for the view model). This doesn't work out well and I wish there was a better way. Defining angular services is easier because angular accepts constructor functions for services, which means I can just pass a TS class to it and it creates the service just fine.",
+      "PostedDate": "2013-07-04T23:04:31.483-07:00",
+      "Id": 105164
+    },
+    {
+      "Message": "Does the syntax:\n\n``` Typescript\ninterface ScopeInterface {\n    [name: string]: any;\n}\n\nclass Scope implements ScopeInterface {\n    $digest(): void;\n}\n```\n\n```Typescript\nvar myscope = new Scope();\nmyscope[\"somenewproperty\"] = function () { };\n```\n\nDo what you want?",
+      "PostedDate": "2013-07-04T23:54:53.143-07:00",
+      "Id": 105167
+    },
+    {
+      "Message": "I have used similar syntax, and it worked for me:\n\n```\ninterface Hash { [index: string] : any }\n\nclass Foo implements Hash {}\n\nvar foo = new Foo();\n\nfoo['bar'] = 'baz';\n```\n\nYou have to use syntax like `foo['bar']` rather than `foo.bar` on assignment, but I find this is in fact a plus - it makes a clear unambiguous distinction that you know you *are* accessing a \"dynamic\" property, whereas the `.` syntax implies you're attempting to access an actual defined property, for which you want an error-message if it's misspelled etc.\n\nWorks for me :-)",
+      "PostedDate": "2013-09-27T15:37:21.79-07:00",
+      "Id": 115872
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Duplicate of http://typescript.codeplex.com/workitem/691",
+    "ClosedDate": "2013-03-18T08:46:26.79-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "These three classes illustrate a compiler issue that I consider a flaw:\r\n\r\n```\r\ninterface BaseInterface { /* ... */ };\r\ninterface Implementor { new (): BaseInterface; };\r\n\r\nclass notInlined {\r\n    private newableType: Implementor;\r\n    private instance: BaseInterface;\r\n\r\n    public set NewableType(value: Implementor) {\r\n        this.newableType = value;\r\n\r\n        if (value) this.instance = new value();\r\n    }\r\n\r\n    public get NewableType(): Implementor {\r\n        return this.newableType;\r\n    }\r\n}\r\n\r\nclass inlined {\r\n    private newableType: { new (): BaseInterface; };\r\n    private instance: BaseInterface;\r\n\r\n    public set NewableType(value: { new (): BaseInterface; }) {\r\n        this.newableType = value;\r\n\r\n        if (value) this.instance = new value();\r\n    }\r\n\r\n    public get NewableType(): { new (): BaseInterface; } { // *** \"Getter and setter types do not agree\"\r\n        return this.newableType;\r\n    }\r\n}\r\n\r\nclass inlined2 {\r\n    private newableType: { new (): BaseInterface; };\r\n    private instance: BaseInterface;\r\n\r\n    public set NewableType(value: { new (): BaseInterface; }) {\r\n        this.newableType = value;\r\n\r\n        if (value) this.instance = new value();\r\n    }\r\n\r\n    public get NewableType() { // *** \"Getter and setter types do not agree\"\r\n        return this.newableType;\r\n    }\r\n}\r\n```\r\n\r\nThe notInlined example compiles fine but the inlined and inlined2 example gets an error \"Getter and setter types do not agree\".  inlined2 is only different in that its getter omits its return type specification.\r\n\r\nI sorta understand that the reason for this error could be that while the type definitions are identical, each is compiled as a distinct type and so the type inferencer sees them as different.\r\n\r\nBut the rest of the language is so ducky, I think this ought to be accommodated too.  See inlined3, below!  NewableType____() getter has a different name but does specify the type.  This example has no errors ___EVEN THOUGH___ the return type of the getter is distinctly defined from that of private newableType.\r\n\r\n```\r\nclass inlined3 {\r\n    private newableType: { new (): BaseInterface; };\r\n    private instance: BaseInterface;\r\n\r\n    public set NewableType(value: { new (): BaseInterface; }) {\r\n        this.newableType = value;\r\n\r\n        if (value) this.instance = new value();\r\n    }\r\n\r\n    public get NewableType____(): { new (): BaseInterface; } {\r\n        return this.newableType;\r\n    }\r\n}\r\n```",
+    "LastUpdatedDate": "2013-03-18T08:46:26.79-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-18T07:09:53.607-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "\"Getter and setter types do not agree\" on identical inlined type definitions",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 827
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

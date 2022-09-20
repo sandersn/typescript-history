@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1108730",
+    "ThreadId": "462580",
+    "Html": "I have a suggestion to work with public and private properties and class inheritance.\r<br />\nSuppose we have this Greeter class with ExtraGreeter class that extend Greeter:<br />\n<pre><code>class Greeter {\n    private privateproperty: string = &quot;&quot;;\n    public  publicproperty: string = &quot;&quot;;\n    constructor(message: string) {\n        privateproperty = message;\n    }\n    prototypemethod() {\n        return &quot;Hello, &quot; + privateproperty;\n    }\n    constructordefinedmethod = () =&gt; {\n        return &quot;Hello, &quot; + privateproperty + this.publicproperty;\n    }\n}\n\nclass ExtraGreeter extends Greeter {\n    prototypemethod() {\n        return super.prototypemethod();\n    }\n    constructordefinedmethod = () =&gt; {\n        return super.constructordefinedmethod();\n    }\n}\n</code></pre>\n\nin the typescript 9.1.1 we have this output (excluding compile error):<br />\n<pre><code>var __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\nvar Greeter = (function () {\n    function Greeter(message) {\n        var _this = this;\n        this.privateproperty = &quot;&quot;;\n        this.publicproperty = &quot;&quot;;\n        this.constructordefinedmethod = function () {\n            return &quot;Hello, &quot; + privateproperty + _this.publicproperty;\n        };\n        privateproperty = message;\n    }\n    Greeter.prototype.prototypemethod = function () {\n        return &quot;Hello, &quot; + privateproperty;\n    };\n    return Greeter;\n})();\n\nvar ExtraGreeter = (function (_super) {\n    __extends(ExtraGreeter, _super);\n    function ExtraGreeter() {\n        _super.apply(this, arguments);\n        var _this = this;\n        this.constructordefinedmethod = function () {\n            return _super.prototype.constructordefinedmethod.call(_this);\n        };\n    }\n    ExtraGreeter.prototype.prototypemethod = function () {\n        return _super.prototype.prototypemethod.call(this);\n    };\n    return ExtraGreeter;\n})(Greeter);</code></pre>\n\nI think that the correct output can be this:<br />\n<pre><code>var __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\nvar Greeter = (function () {\n    function Greeter(message) {\n        var _this = this;\n        privateproperty = &quot;&quot;;\n        this.publicproperty = &quot;&quot;;\n        this.constructordefinedmethod = function () {\n            return &quot;Hello, &quot; + privateproperty + _this.publicproperty;\n        };\n        privateproperty = message;\n    }\n    Greeter.prototype.prototypemethod = function () {\n        return &quot;Hello, &quot; + privateproperty;\n    };\n    return Greeter;\n})();\n\nvar ExtraGreeter = (function (_super) {\n    __extends(ExtraGreeter, _super);\n    function ExtraGreeter() {\n        _super.apply(this, arguments);\n        var _this = this;\n        var _super_constructordefinedmethod = _this.constructordefinedmethod;\n        this.constructordefinedmethod = function () {\n            return _super_constructordefinedmethod.call(_this);\n            // or: return _super_constructordefinedmethod(); ?\n        };\n    }\n    ExtraGreeter.prototype.prototypemethod = function () {\n        return _super.prototype.prototypemethod.call(this);\n    };\n    return ExtraGreeter;\n})(Greeter);</code></pre>\n\nWhat do you think about?\r<br />\nThanks!\r<br />\nGabriele<br />\n",
+    "PostedDate": "2013-10-17T05:18:20.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1108825",
+    "ThreadId": "462580",
+    "Html": "The <code>privateproperty</code> in what is labelled the &quot;correct output&quot; is missing a <code>var</code>, which effectively renders it in the global scope.\r<br />\n<br />\nOnce you add the var it's no longer accessible in your prototypemethod. \r<br />\n<br />\nThis issue keeps resurfacing. There is no way to do this.<br />\n",
+    "PostedDate": "2013-10-17T08:25:59.157-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1108939",
+    "ThreadId": "462580",
+    "Html": "Also see this discussion.\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/discussions/397651\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/397651</a><br />\n",
+    "PostedDate": "2013-10-17T12:25:49.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

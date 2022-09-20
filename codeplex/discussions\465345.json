@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1117426",
+    "ThreadId": "465345",
+    "Html": "Based on <a href=\"http://stackoverflow.com/questions/783818/how-do-i-create-a-custom-error-in-javascript#answer-10617983\" rel=\"nofollow\">this answer on StackOverflow</a> I took a stab at writing something closer to a &quot;real&quot; working Exception-class for TypeScript; something I desperately wish the language itself provided.\r<br />\n<br />\nMy goal is to have a class I can actually extend, unlike <code>Error</code> which I can only implement - you don't get proper error-reporting (line-numbers and stack-trace) that way, and you can't do proper type-checking in <code>catch</code> blocks using <code>instanceof</code>...\r<br />\n<br />\nHere's what I got so far:<br />\n<pre><code>window['Exception'] = (function() {\n    var Exception, err;\n    Exception = (function() {\n        function Exception(message) {\n            var err;\n            err = new Error(message);\n            err.name = &quot;Exception&quot;;\n            this.message = err.message;\n            if (err.stack) {\n                this.stack = err.stack;\n            }\n        }\n        return Exception;\n    })();\n    err = new Error();\n    err.name = &quot;Exception&quot;;\n    Exception.prototype = err;\n    \n    return Exception;\n})();\n\ndeclare class Exception implements Error {\n    name: string;\n    message: string;\n    \n    constructor(message?: string);\n}</code></pre>\n\nWith this, you get a new base-type called Exception that you can extend:<br />\n<pre><code>class NotImplemented extends Exception {\n    constructor(message?: string) {\n        super(message || 'Not Implemented');\n    }\n}</code></pre>\n\nCustom exception-classes will pass various type-checks:<br />\n<pre><code>console.log(new Exception() instanceof Error); // =&gt; true\nconsole.log(new Exception() instanceof Exception); // =&gt; true\nconsole.log(new NotImplemented() instanceof Error); // =&gt; true\nconsole.log(new NotImplemented() instanceof Exception); // =&gt; true\nconsole.log(new NotImplemented() instanceof NotImplemented); // =&gt; true</code></pre>\n\nIt has the message and name properties:<br />\n<pre><code>console.log(&quot;message: &quot; + (new NotImplemented(&quot;Hello World&quot;).message));\nconsole.log(&quot;name: &quot; + (new NotImplemented().name));</code></pre>\n\nAnd you can throw it:<br />\n<pre><code>throw new NotImplemented();</code></pre>\n\nHonestly, I'm just sort of stabbing in the dark here - I don't fully understand how this works, and maybe it doesn't work, or doesn't do what I think it does...\r<br />\n<br />\nI would really like to hear from other &quot;JavaScript gurus&quot; out there.\r<br />\n<br />\nIf this can be done (?) with &quot;standard&quot; JavaScript code, I would really like to have support for this in TypeScript, somehow... existing Exception handling seems really feeble.\r<br />\n<br />\nPS: anyone know why throw/try/catch isn't even mentioned in the TypeScript language spec? Is it not officially part of the language?? Or just not documented yet?<br />\n",
+    "PostedDate": "2013-11-04T14:28:20.113-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118144",
+    "ThreadId": "465345",
+    "Html": "<blockquote>\nPS: anyone know why throw/try/catch isn't even mentioned in the TypeScript language spec? Is it not officially part of the language?? Or just not documented yet?<br />\n</blockquote>\nThe latter. You'll see them documented in an upcoming version of the spec.<br />\n",
+    "PostedDate": "2013-11-05T12:57:39.707-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118193",
+    "ThreadId": "465345",
+    "Html": "<strong>danquirk wrote:</strong><br />\n<blockquote>\nThe latter. You'll see them documented in an upcoming version of the spec.<br />\n</blockquote>\nJust the statements? Or has the team made any progress on making Error more extensible or useful than what plain JavaScript has?<br />\n<br />\nI strongly dislike throwing plain Error objects, but I'm starting to think it may be the best option right now.<br />\n<br />\nFor the time being, I'm leaning towards the least complex solution, e.g. adding an error-type property (with an enum) to a <code>new Error()</code> before I throw it...<br />\n",
+    "PostedDate": "2013-11-05T13:27:08.46-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263242",
+    "ThreadId": "465345",
+    "Html": "Any progress on this issue?\r<br />\n<br />\nThe spec has like two paragraphs on try/catch at this point, and not a word about errors/exceptions... this stuff is important, isn't it?<br />\n",
+    "PostedDate": "2014-07-07T06:14:18.27-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263414",
+    "ThreadId": "465345",
+    "Html": "Currently TypeScript supports what JavaScript does as you've noted. We haven't heard significant amounts of feedback on this issue. Thus far TypeScript has avoided added any 'core library' of its own with functionality like this. <br />\n",
+    "PostedDate": "2014-07-07T13:11:05.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263937",
+    "ThreadId": "465345",
+    "Html": "The problem is the lack of ability to extend the JavaScript <code>Error</code> class - this can only be done using non-type-safe hacks.<br />\n<br />\nFor now, I'm using the following pattern: I have a dedicated <code>app.error</code> module with chainable functions to configure Error instances, e.g.:<br />\n<pre><code>    export function undefinedName(error: Error, name: string): Error {\n        error.message = 'Undefined name: ' + name;\n        return error;\n    }</code></pre>\n\nSince backtraces only work correctly when <code>Error</code> instances are constructed at the site of the exception, I use them like this:<br />\n<pre><code>throw app.error.undefinedName(new Error(), 'Rasmus');\n</code></pre>\n\nIt &quot;works&quot; as far as reporting the site of the error and the correct error message - but there is no way to, for example, check the type of an exception, since the only possible type is <code>Error</code>... We can work around this by adding a type-property in a non-type-safe way, and then checking for that property in a non-type-safe way after trapping an exception, but... I keep wishing these patterns/hacks/workarounds could be encapsulated somehow, so you could actually just work with exceptions naturally, the way you'd expect from other languages...<br />\n",
+    "PostedDate": "2014-07-09T04:28:25.467-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264346",
+    "ThreadId": "465345",
+    "Html": "As far as I can see, it's not a language issue at all, and the topic starter will be fine with just some simple changes to lib.d.ts, namely replacing &quot;interface Error&quot; with &quot;declare class Error&quot; and corresponding changes to Error subclasses.<br />\n",
+    "PostedDate": "2014-07-10T04:18:37.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

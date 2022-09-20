@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "What AdamFreidin said -- 'Build' works off the project properties, not the Tools\\Options settings (this is confusing). You'll need to set the module option in the project properties page (VS2013) or by editing the project file as suggested (VS2012).",
+    "ClosedDate": "2014-04-03T15:20:12.403-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI am trying to get my node.js app work with TypeScript after I made some some changes on project file:\r\n```\r\n<ItemGroup>\r\n    <AvailableItemName Include=\"TypeScriptCompile\" />\r\n  </ItemGroup>\r\n  <ItemGroup>\r\n    <TypeScriptCompile Include=\"$(ProjectDir)\\**\\*.ts\">\r\n    </TypeScriptCompile>\r\n  </ItemGroup>\r\n```\r\n\r\nand I changed build target to use TypeScript compiler to compile all TS files in the project:\r\n\r\n```\r\n<Target Name=\"Build\">\r\n    <Exec Command=\"tsc --sourceRoot &quot;$(MSBuildProjectDirectory)&quot; --mapRoot &quot;$(MSBuildProjectDirectory)&quot; --module commonjs --sourcemap @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\r\n  </Target>\r\n```\r\nCompilation succeeds but an error appears in the errors list saying that Cannot compile external modules unless the '--module' flag is provided.\r\n\r\nI know that changing TypeScript options and set compile on save and choose commonjs module will solve this. But I need this to be done without changing IDE options. Is this doable?\r\n\r\nThis appears on VS 2012, 2013. \r\nTypeScript version: 0.9.7.0\r\n\r\nThanks\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-04-03T15:20:12.403-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-03T03:09:39.43-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Cannot compile external modules unless the '--module' flag is provided. error though Build succeeds",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2375
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You're just seeing spew from the language service that needs the typescript module flag to be configured correctly in the IDE options.\n\nI believe the root issue is that these are IDE options, not project options (or per-file, or something).\n\nAnyway, for you, I would try adding the following definition into your project file and hope that the language service picks it up.\n```xml\n<PropertyGroup>\n  <TypeScriptModuleKind>commonjs</TypeScriptModuleKind>\n</PropertyGroup>\n```\n",
+      "PostedDate": "2014-04-03T10:08:27.837-07:00",
+      "Id": 140430
+    }
+  ]
+}

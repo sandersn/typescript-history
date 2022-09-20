@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "I'm not sure if this is appropriate for this forum, as it has to do with VisualStudio intellisense more than TypeScript itself.\r\n\r\nBut I would love it if the language supported syntax completion for object literals. Consider the following valid code:\r\n\r\n```\r\ninterface IAlphaConfig {\r\n\tx: number;\r\n\ty: string;\r\n\tz?: string;\r\n}\r\n\r\nclass Alpha {\r\n\tconfig: IAlphaConfig;\r\n\tconstructor(config: IAlphaConfig) {\r\n\t\tthis.config = config;\r\n\t}\r\n}\r\n\r\nvar alpha = new Alpha({ \r\n\tx: 0, \r\n\ty: \"a\",\r\n\tz: \"b\"\r\n});\r\n```\r\n\r\nWhen initializing alpha using an object literal, as is done above, the compiler will give you errors if you do not meet the interface. This is great. But it doesn't support exploration.\r\n\r\nWhen building up the object literal, it would be great to get to choose from the members of the interface. This feature would have a lot of value to me.",
+    "LastUpdatedDate": "2013-08-14T14:00:19.127-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-11T19:38:29.99-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Syntax completion for object literals",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1141
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We don't trigger intellisense automatically here after then opening paren, but if you start typing, or press CTRL-J to bring up member completion explicitly, then the list of members for the interface should appear.\n\nWe have had a couple of bugs in this area, but on the latest bits under development for me this is working fine.  If you're not on the latest bits, installing the next release when available should give you this behavior.",
+      "PostedDate": "2013-06-12T09:25:18.28-07:00",
+      "Id": 102864
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 06/12/2013 9:25AM",
+      "PostedDate": "2013-06-12T09:25:26.843-07:00",
+      "Id": 102969
+    },
+    {
+      "Message": "Thank you for the tip. That is very helpful.\r\n\r\nI am trying to create an api that allows for building up complex objects via config files. Consider the following code:\r\n\r\n```\r\nmodule Tree {\r\n     export interface INodeConfig {\r\n           name: string;\r\n           children: Node[];\r\n     }\r\n\r\n    class Node {\r\n          name: string;\r\n          children?: Node[];\r\n\r\n          constructor(config: INodeConfig) {\r\n                this.name = config.name;\r\n                this.children = config.children;\r\n          }\r\n    }\r\n\r\n    export function node(config: INodeConfig): Node {\r\n           return new Node(config);\r\n      }\r\n}\r\n\r\nTree.node({\r\n     name: \"0\",\r\n     children: [\r\n          Tree.node({\r\n               name: \"0.0\",\r\n               children: [ Tree.node({ name: \"0.0.0\" }), Tree.node({ name: \"0.0.1\" }) ]\r\n          }),\r\n          Tree.node({\r\n               name: \"0.1\",\r\n               children: [ Tree.node({ name: \"0.1.0\" }), Tree.node({ name: \"0.1.1\" }) ]\r\n          }),\r\n     ]\r\n})\r\n```\r\n\r\nI would have to press CTRL+J 7 times while writing this. Now for an interface this simple, I wouldn't need to do any exploration, but for more complex configs, that exist in a heirarchy, each with more parameters, it would be incredibly useful to have the syntax completion appear automatically. \r\n\r\nIs there any way syntax completion could be set to happen automatically for object literals that are being assigned to any type other than any? For me, this would be extremely valuable for creating apis like the one above.\r\n\r\nThank you.",
+      "PostedDate": "2013-06-13T09:08:29.5-07:00",
+      "Id": 102970
+    },
+    {
+      "Message": "To whom it may concern,\n\nI have tried many times to reopen this issue, but when I click the link at the top, the page hangs on an ajax call.\n\nBest,\nDoug",
+      "PostedDate": "2013-06-13T20:14:27.18-07:00",
+      "Id": 103031
+    },
+    {
+      "Message": "Completion lists seem to be working well as long as you start with the first character of something, which should be common enough.",
+      "PostedDate": "2013-08-13T10:25:06.307-07:00",
+      "Id": 109640
+    },
+    {
+      "Message": "My understanding is that there is no completion for object literals without pressing CTRL+J. Are you saying that this is untrue?",
+      "PostedDate": "2013-08-13T13:35:48.02-07:00",
+      "Id": 109704
+    },
+    {
+      "Message": "In current builds, I see a completion list appear after I start typing the first character of a property name.",
+      "PostedDate": "2013-08-13T13:39:37.313-07:00",
+      "Id": 109706
+    },
+    {
+      "Message": "Great! That's the behavior I was hoping for. This was not the case when I raised this issue.\n\nNow, how about for nested object literals? Suppose there was this interface:\n\n```\ninterface ISilly {\n\tsilly?: ISilly;\n}\n\nvar instance: ISilly = {\n\tsilly: {\n\t\tsilly: {\n\t\t\tsilly: {\n\t\t\t}\n\t\t}\n\t}\n}\n```\nWould I get a completion list for each nested object literal in current builds?",
+      "PostedDate": "2013-08-13T14:57:19.18-07:00",
+      "Id": 109739
+    },
+    {
+      "Message": "Yes, anywhere there's an appropriate contextual type you'll see the completion list (once you start typing 's' in this case)",
+      "PostedDate": "2013-08-14T09:23:57.627-07:00",
+      "Id": 109888
+    },
+    {
+      "Message": "Thanks for the clarification. I'm looking forward to this feature in the next release.",
+      "PostedDate": "2013-08-14T10:04:29.83-07:00",
+      "Id": 109896
+    }
+  ]
+}

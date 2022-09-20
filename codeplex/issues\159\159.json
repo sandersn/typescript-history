@@ -1,0 +1,105 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:38:41.947-07:00",
+    "CommentCount": 13,
+    "Custom": null,
+    "Description": "Consider code:\r\n\r\nmodule A { export module B { export class B { } } }\r\nvar b = new A.B.B();\r\n\r\nWhen executing javascript exception is thrown: \"Uncaught TypeError: undefined is not a function\".",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T12:34:10.747-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Exception when inner module exports class with the same name",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 9,
+    "Id": 159
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a bug. A module's ExportDeclaration is not in conflict with the ModuleDeclaration Id.",
+      "PostedDate": "2012-10-07T14:03:19.52-07:00",
+      "Id": 78928
+    },
+    {
+      "Message": "You mean TypeScript's compiler bug, right?\nIn javascript exported class assigned to wrong object (because it has same name).",
+      "PostedDate": "2012-10-07T14:45:49.687-07:00",
+      "Id": 78930
+    },
+    {
+      "Message": "It's not a compiler bug specifically, it's an \"implementation bug\". As in, TypeScript has a broken module implementation.",
+      "PostedDate": "2012-10-07T15:45:07.767-07:00",
+      "Id": 78932
+    },
+    {
+      "Message": "This will not compile to correct JavaScript anyway, if you translate this to javascript manually other linters would say \"B is already defined\" (i.e. you are shadowing B and thus you cannot assign B to B. Clearly the code does not make sense in JavaScript, why would one expect it to make sense in TypeScript?\n\nHere is a compiled version of your example:\n\nvar A;\n(function (A) {\n    (function (B) {\n// Shadowing B\n        var B = (function () {\n            function B() { }\n            return B;\n        })();\n// Does not make sense\n        B.B = B;        \n    })(A.B || (A.B = {}));\n    var B = A.B;\n\n})(A || (A = {}));\n\nvar b = new A.B.B(); // Undefined is not a function.\n",
+      "PostedDate": "2012-10-08T01:36:57.047-07:00",
+      "Id": 78968
+    },
+    {
+      "Message": "@pstj The bigger issue is that (real) ES6 modules cannot be \"shimmed\" this way, ie. sharing the same global scope contour. The closest analogous mechanism is the node.js require/module/exports system.",
+      "PostedDate": "2012-10-08T08:41:10.897-07:00",
+      "Id": 79003
+    },
+    {
+      "Message": "This is a bug in the compiler. Thanks for reporting it! We're now tracking this item and will get it fixed.",
+      "PostedDate": "2012-10-08T14:30:16.08-07:00",
+      "Id": 79061
+    },
+    {
+      "Message": "What exactly is the bug? \n\nThis is completely legal in ES6:\n\n\nmodule Test {\n export class Test {\n }\n}\n\nvar t = new Test.Test();\n\n\n\n",
+      "PostedDate": "2012-10-13T13:33:08.02-07:00",
+      "Id": 79688
+    },
+    {
+      "Message": "Syntactically it is correct and valid to have a class inside a module with the same name however the implementation is clearly not correct.  The inner B should be renamed to avoid shadowing in order to work:\n\nvar A;\n(function (A) {\n    (function (B) {\n        var _B = (function () {\n            function _B() { }\n            return _B;\n        })();\n        B.B = _B;\n    })(A.B || (A.B = {}));\n    var B = A.B;\n\n})(A || (A = {}));",
+      "PostedDate": "2012-10-15T09:25:23.643-07:00",
+      "Id": 79770
+    },
+    {
+      "Message": "Got it, thanks for the clarification. ",
+      "PostedDate": "2012-10-15T10:28:26.457-07:00",
+      "Id": 79792
+    },
+    {
+      "Message": "Just to clarify, essentially what should happen is if the module and class names are the same, one is given a new temporary name. So, in the compiled example from pstj, the output would look something like:\n\nvar A;\n(function (A) {\n(function (_B) {\n// Shadowing B\nvar B = (function () {\nfunction B() { }\nreturn B;\n})();\n// Does not make sense\n_B.B = B; \n})(A.B || (A.B = {}));\nvar B = A.B;\n})(A || (A = {}));\n\nvar b = new A.B.B(); // Object of type A.B.B\n\nYou can change the name of the module or the name of the class. Changing the module requires fewer changes.",
+      "PostedDate": "2012-10-20T13:32:11.687-07:00",
+      "Id": 80562
+    },
+    {
+      "Message": "Has there been any progress on this? It's a pretty substantial bug, and the real danger of it is that it is a logical error as it compiles just fine.",
+      "PostedDate": "2012-12-05T13:10:41.937-08:00",
+      "Id": 83633
+    },
+    {
+      "Message": "For me this is a major Bug. It reduces the usability of static methods on exported classes that are living inside modules a lot. Especially when trying to build a package/class-structure.\n\nHere another example, maybe it helps to get rid of this problem a little faster :)\n\nThis input:\n\n\tmodule request {\n\t\texport class RequestHelper {\n\t\t\tstatic sendRequest( request:RequestClass ) {\n\t\t\t}\n\t\t}\n\t}\n\n\tmodule request {\n\t\texport class RequestClass {\n\t\t\tstatic send() {\n\t\t\t\tvar request = new RequestClass();\n\t\t\t\tRequestHelper.sendRequest( request );\n\t\t\t}\n\t\t}\n\t}\n\nproduces this:\n\n\tvar request;\n\t(function (request) {\n\t\tvar RequestHelper = (function () {\n\t\t\tfunction RequestHelper() { }\n\t\t\tRequestHelper.sendRequest = function sendRequest(request) {\n\t\t\t}\n\t\t\treturn RequestHelper;\n\t\t})();\n\t\trequest.RequestHelper = RequestHelper;    \n\t})(request || (request = {}));\n\tvar request;\n\t(function (request) {\n\t\tvar RequestClass = (function () {\n\t\t\tfunction RequestClass() { }\n\t\t\tRequestClass.send = function send() {\n\t\t\t\tvar request = new RequestClass();\n\t\t\t\trequest.RequestHelper.sendRequest(request);\n\t\t\t}\n\t\t\treturn RequestClass;\n\t\t})();\n\t\trequest.RequestClass = RequestClass;    \n\t})(request || (request = {}));\n\nThe problematic part is\n\n\t\t\t\tvar request = new RequestClass();\n\t\t\t\trequest.RequestHelper.sendRequest(request);\n\nThe static access to RequestHelper conflicts with the locally defined variable because it's realized with the module call.\n\nI hope this can be fixed soon. At least a compiler warning would be helpful to have an idea why the browser throws an exception.\n",
+      "PostedDate": "2013-01-15T08:53:41.257-08:00",
+      "Id": 86171
+    },
+    {
+      "Message": "I'd like to what mplacke said. This is a major bug for me. Local variables are shadowing modules and I am getting runtime exceptions for errors which are caused by the compiler! Say I write the following:\n\n    export module state { export function createState() {}; }\n\n    var state = state.createState();\n\nThis results in a runtime error! How is this only a low priority issue? Please, please fix it.",
+      "PostedDate": "2014-03-13T08:08:41.07-07:00",
+      "Id": 136750
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:09.627-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "See full description [at the discussion](https://typescript.codeplex.com/discussions/474856).\r\nThis work item is created for voting purposes.\r\n### Quick summary\r\nNow the inheritance of classes applies inheritance for static fields too. So any derived class have same static fields as base class.\r\nWhen we extend some class we copy all the static fields of base class to derived. \r\nTo keep type checking valid it produce the constraint that static fields of base classes can't change the type in derived class. So this code is invalid:\r\n```ts\r\ndeclare class B {\r\n  static create(): B;\r\n}\r\ndeclare class D extends B {\r\n  static create(a: number): D;\r\n}\r\n```\r\n*Class 'D' cannot extend class 'B': Types of static property 'create' of class 'D' and class 'B' are incompatible: Call signatures of types '(a: number) => D' and '() => B' are incompatible: Call signature expects 0 or fewer parameters.*\r\n\r\nBut this use case used for many JS libraries/frameworks. \r\nC# also allow to create overloads for static methods in derived classes. \r\n\r\nI think TS should not copy static fields of base class object into derived class object.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-24T01:35:48.753-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Proposal to remove inheritance of static properties",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 7,
+    "Id": 2047
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The semantics today of statics being inherited in derived classes matches the semantics of ES6 (I'd also note some other compile-to-JavaScript languages - such as CoffeeScript - also copy the static members from base to derived classes).\n\nWe recognize this is a challenge in modeling existing libraries (e.g. I hit this myself with the \"Utils\" members on some of the THREE.js classes). We have floated and experimented with a couple of ideas internally, and started down the road of implementing one, but ultimately they all introduced holes or complexity that was on balance worse that the problem they were trying to solve.  As such, we have no plans to add further language changes to address this in v1, and will revisit this problem for a subsequent release.\n\nFor now, in order to model hierarchies where derived types have incompatible static members with base types, the best solution I have found to date is to model these as derived interfaces for the instance types, and anonymous types for the constructors/static side.  See below example.\n\nI'll assign this issue to Jonathan for tracking for post v1.\n\n```typescript\ninterface Base {\n    draw(): void;\n}\n\ninterface Mezza extends Base {\n    lift(a: number): boolean;\n}\n\ninterface Derived extends Mezza {\n    anotherFunc(): string;\n}\n\ndeclare var Base: { // Base class\n    new (): Base;\n    Utils: {\n        bananas(): void;\n    }\n}\n\ndeclare var Mezza: { // Intermediate class with no Utils member\n    new (): Mezza;\n}\n\ndeclare var Derived: { // Derived class Utils member not a subtype of Base Utils\n    new (): Derived;\n    Utils: {\n        sausages: string;\n    }\n}\n```",
+      "PostedDate": "2013-12-30T14:46:38.39-08:00",
+      "Id": 128722
+    },
+    {
+      "Message": "\nThis is a design bug, the __extends implementation collides with the design of private static properties.\nIf a static property can be private then __extends shouldn't copy private static properties.\n\nThis can be done simply by adding a `_` prefix to private static properties and changing extends not to copy those properties.\n\nAlso, static properties belong to the type. There's no pro for copying them and this kind of issues is the con you get for doing it.\n\nThere is absolutely not reason what so ever to copy statics to derived types except to answer the cries of whiny clueless kids that write shitty code regardless of what features you give them.\n\nPlease add a pragma or compile switch for disabling the statics copy feature.\n\nhttp://en.wikipedia.org/wiki/Object-oriented_programming",
+      "PostedDate": "2014-05-16T09:15:15.437-07:00",
+      "Id": 146888
+    },
+    {
+      "Message": "I think this behaviour is dictated by the ES6 standards, which TS tries to stick with (\"class side inheritance\").  Though, I'm not sure yet if it applies to private static properties. I hate any static inheritance myself - just a pain.  What if I want to have {AType}.create()?  Well, for derived types with special parameters, it fails because the signature must match. :/ Derived type constructors are not bound by the same rules!",
+      "PostedDate": "2014-05-16T21:04:26.493-07:00",
+      "Id": 146923
+    },
+    {
+      "Message": "We are doing some Java API mapping and the following fails for the same nested Java classes:\n\n```\ndeclare class OuterBase {\n}\n\ndeclare module OuterBase {\n    export class Inner {\n        public work1();\n    }\n}\n\ndeclare class OuterDerived extends OuterBase {\n}\n\ndeclare module OuterDerived {\n    export class Inner {\n        public work2();\n    }\n}\n```\n\nFail with:\nClass 'OuterDerived' cannot extend class 'OuterBase':\nTypes of static property 'Inner' of class 'OuterDerived' and class 'OuterBase' are incompatible:\nTypes of static property 'prototype' of class 'OuterDerived.Inner' and class 'OuterBase.Inner' are incompatible:\nType 'OuterDerived.Inner' is missing property 'work1' from type 'OuterBase.Inner'\n\nWe may name the nested classes OuterBase$Inner and OuterDerived$Inner to workaround that but overall we would like to avoid name mangling.\n\nWhat about adding link here to up-vote ES6 change?",
+      "PostedDate": "2014-06-26T05:46:05.627-07:00",
+      "Id": 150773
+    }
+  ]
+}

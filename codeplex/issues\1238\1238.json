@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-25T12:41:39.71-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm trying to use typescript 0.9 and particularly string constant overloading. \r\nI'm facing an issue since the compiler does not resolve the appropriate overloaded version of my function at invocation.\r\n\r\n\r\n```\r\ninterface Window {\r\n\tdefine (moduleId: string, dependencies: string[], factory: (...modules: any[]) => any): void;\r\n\tdefine (moduleId: 'myModule', dependencies: string[], factory: (...modules: any[]) => IMyModule): void;\r\n\t\r\n\trequire (moduleId: string): any; \r\n\trequire (moduleId: 'myModule'): IMyModule;\r\n}\r\n\r\n(function () {\r\n    \"use strict\";\r\n\r\n    window.define = (id: string, deps: string[], factory: (...modules: any[]) => any) => {\r\n\t\t// implementation does not matter\r\n    };\r\n\r\n    window.require = (id: string) : any => {\r\n\t\treturn {};\r\n    };\r\n}());\r\n\r\ninterface IMyModule {\r\n\ta: string;\r\n}\r\n\r\nwindow.define('myModule', [], () => {\r\n\treturn \"plapp\"; // should not compile, since \"plapp\" does not implement IMyModule\r\n});\r\n\r\nvar a = window.require('myModule'); // compile ang hints the right type, as expected\r\n```\r\n",
+    "LastUpdatedDate": "2013-08-13T09:40:29.277-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-25T08:24:00.077-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "string constant overloading not detected as usage",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1238
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "In the language specification in section \"3.7.2.4 Specialized Signatures\" it states:\n\n_..when a function call argument matches a parameter of a string literal type in a specialized signature, the overload resolution rules (section 4.12.1) give preference to that signature over a similar signature with a regular string parameter._\n\nAs you can see, the specialized signature is 'given preference', but it doesn't rule out other signatures.  In the statement you comment 'should not compile', the lambda returns a string, as this makes it incompatible with the specialized signature, it is ruled out, and the remaining 'define' signature, which is valid here as the lambda returns 'any', is used.\n\nAs 'undefined' is a subtype of all types, if you replace \"return \"plapp\";\" with \"return undefined;\", the specialized signature then matches, and you'll see that this signature is selected for this call site.\n\nHopefully this makes sense.",
+      "PostedDate": "2013-06-25T12:41:32.003-07:00",
+      "Id": 104093
+    },
+    {
+      "Message": "great!\nSorry for the misunderstanding. \n\nThanks",
+      "PostedDate": "2013-06-26T01:00:21.247-07:00",
+      "Id": 104172
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "(see comment below)",
+    "ClosedDate": "2014-02-17T09:29:39.563-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I am using the definition for the select2 jQuery plugin [located here](https://github.com/borisyankov/DefinitelyTyped/blob/master/select2/select2.d.ts). I am not sure if this is a bug but the wrong method is being used and therefore the wrong type is being returned.\r\n\r\nFor example, after initializing the DOM element with select2, I retrieve the selected item:\r\n```ts\r\nvar data = $input.select2('data');\r\n```\r\n\r\nThe type `JQuery` is being returned instead of `any` which is expected.\r\n\r\nThe select2.d.ts source has the following:\r\n\r\n```ts\r\n    select2(): JQuery;\r\n    select2(it: IdTextPair): JQuery;\r\n    select2(options: Select2Options): JQuery;\r\n    select2(method: string): any;\r\n    select2(method: string, value: any, trigger?: boolean): any;\r\n    /**\r\n    * Get the id value of the current selection\r\n    */\r\n    select2(method: 'val'): any;\r\n    /**\r\n    * Set the id value of the current selection\r\n    * @params value Value to set the id to\r\n    * @params triggerChange Should a change event be triggered\r\n    */\r\n    select2(method: 'val', value: any, triggerChange?: boolean): any;\r\n    /**\r\n    * Get the data object of the current selection\r\n    */\r\n    select2(method: 'data'): any;\r\n```\r\n\r\nI can see that the select2 method being used is the following:\r\n```ts\r\nselect2(options: Select2Options): JQuery;\r\n```\r\ninstead of the expected method:\r\n```ts\r\nselect2(method: 'data'): any;\r\n```\r\n\r\nAm I doing something wrong or is this a bug?",
+    "LastUpdatedDate": "2014-03-31T17:51:58.7-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-14T17:16:15.867-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Overloaded methods",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2182
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We simplified the rules here recently -- the *first* declared overload that matches the call site is selected. Because the 'data' overload is after the string overload, it will not be selected, so that overload (and any other specialized signature) should be moved above the string overload.",
+      "PostedDate": "2014-02-17T09:29:28.907-08:00",
+      "Id": 133829
+    },
+    {
+      "Message": "Hi Ryan,\n\nAccording to Visual Studio's Intellisense, the Select2Options method is being used and returning the \"JQuery\" type instead of \"any\" type. This makes no sense because the input parameter is not of Select2Options type but is a string type. All the string inputs return the \"any\" type. This is why I think it is a bug.\n\nWhat is the proper order of the method definitions in this case?\n\nThanks.",
+      "PostedDate": "2014-02-18T12:59:11.98-08:00",
+      "Id": 133988
+    },
+    {
+      "Message": "The issue here is that Select2Options is incredibly permissive. Because it has no required properties _every_ object can be considered a Select2Options instance. It is essentially as permissive as 'any.' The result is that all the overloads listed after the one which takes a Select2Options will never be selected unless their required argument counts differ. ",
+      "PostedDate": "2014-03-31T17:51:58.7-07:00",
+      "Id": 140129
+    }
+  ]
+}

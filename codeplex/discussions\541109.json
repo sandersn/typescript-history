@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1230084",
+    "ThreadId": "541109",
+    "Html": "So I have a collection of algorithms that I want to turn into a library. The consumer of this library is going to be a node.js-based application. I want to do the algorithms in TypeScript for the usual reasons. Of course, I need the JavaScript output by this TypeScript to be able to be imported into node.js. To help test this, I'm using mocha in a separate node.js test app.\r<br />\n<br />\nSo I've run into a couple of problems, but at this point I have only one major issue left: It seems that in order to allow for the node.js consumer to import my code as a single module, that all of my code has to be in a single file.\r<br />\n<br />\nIs this correct? It feels as though I must be missing something as that's <em>obviously</em> not sustainable for even a medium-sized project. Or is my use case considered an edge case?\r<br />\n<br />\nAgain, I want the consumer of my code to be able to do something like:<br />\n<pre><code>var algorithm = require('algorithm.js')</code></pre>\n\nAnd access all the namespaces/classes within algorithm.\r<br />\n<br />\nThanks in advance.<br />\n",
+    "PostedDate": "2014-04-03T14:42:44.543-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231034",
+    "ThreadId": "541109",
+    "Html": "No, node js applications do not require one huge file, quite the opposite. Node is all about small commonjs modules.\r<br />\n<br />\nTypeScript supports this with the external modules (see handbook etc).\r<br />\n<br />\nYou'd write you application (or library) as external modules (eg: export's and imports'). There will be one main file (usually <code>index.ts</code>) that exports the API your users would use. This module imports the parts of your application needed to do that, and those all have their own import/exports and so on.  Anything that is not exported from your main file is not visible to users (this is quite the opposite from the internal modules, that are one big namespace pile and indeed need one huge file).\r<br />\n<br />\nYou start the compiler on just main file, and use an output directory and the commonjs module format. This creates JS version of all used TS modules.\r<br />\n<br />\nLater you publish the JS to npm, and in the <code>package.json</code> you set the <code>main</code> property to point to the JS version of your main file.<br />\n",
+    "PostedDate": "2014-04-06T15:42:32.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-04-14T11:42:53.417-07:00"
+  },
+  {
+    "Id": "1234005",
+    "ThreadId": "541109",
+    "Html": "It took forever for me to get this working for an issue I just discovered is unrelated. The sooner they can get tools for node.js unit testing that actually work within Visual Studio's IDE the better. Can't get any of them working with NTVS and it's super annoying.\r<br />\n<br />\nBut like I said, unrelated to this issue.\r<br />\n<br />\nImportantly, it seems as though this does <em>not</em> work with internal modules, <em>and</em> you have to include all of the referenced files with it.\r<br />\n<br />\nFor instance, if you have an index.ts file that references an internal module, attempting to compile on <em>just</em> the main file results in an error. I mean, as one might expect. Compiling all of them into a single external file does get you that internal module -- but putting something like <br />\n<pre><code>export var externalName = InternalModule;</code></pre>\n\nDoesn't actually work. It doesn't show up anywhere in the output file. So there's no way to &quot;export the API&quot; as you put it. I've tried all sorts of variation, but this seems closest to the one that <em>should</em> work, and just doesn't. I put a reference to the InternalModule in the index.ts. Here's the weird part - if I comment out everything in index.ts, the comments show up after the InternalModule in the output file. If I uncomment the export var, blam, it's gone. So that's weird.\r<br />\n<br />\nI kind of got it working though with several large external modules that are referenced by a single other module. Not exactly what you described, but close enough I marked it as the answer.<br />\n",
+    "PostedDate": "2014-04-14T12:09:37.033-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234007",
+    "ThreadId": "541109",
+    "Html": "As a side note, I did get it to compile on the main file and the _references file. That seemed to work. However, I ended up with the exact same results. Putting export var causes the contents of index.ts to not show up.<br />\n",
+    "PostedDate": "2014-04-14T12:15:52.43-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

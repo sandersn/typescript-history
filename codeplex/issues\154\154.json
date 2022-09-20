@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:17.1-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "If I create a class like this\r\n\r\n```TypeScript\r\nclass MyClass {\r\n    constructor {\r\n        return \"Hello\";\r\n    }\r\n}\r\n```\r\n\r\nIt says that MyClass has the signature `new() => string`. The problem with this is whenever you call a function with `new` in Javascript, it always returns an object that is an instance of that function. So, when you call the constructor and pass it to an alert\r\n\r\n```TypeScript\r\nalert(new MyClass());\r\n```\r\n\r\nthe compiler will not complain because it expects the expression `new MyClass()` to return a string, even though it doesn't. The compiler should complain here because `new MyClass()` does not return a string, like `alert` expects.\r\n\r\nOn the other hand, if I call it without `new`,\r\n\r\n```TypeScript\r\nalert(MyClass());\r\n```\r\n\r\neven though it works and calling `MyClass` like this will actually return a string, the compiler will complain that `Value of type 'new() => string' is not callable`.\r\n\r\nThe compiler should treat constructors more sensibly. It should realize that\r\n\r\n1) Calling any function with `new` will always return an object, not the value that the function returns, and 2\r\n2) Calling any function without `new` will return the value that the function returns.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T08:42:52.83-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "TypeScript doesn't understand how `new` works",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 154
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Definitely a bug, but appears to be by design. JavaScript allows functions to called (without new) or constructed (with new), arbitrarily—TypeScript aims to maintain parity with ES6 classes, which would also allow this.",
+      "PostedDate": "2012-10-07T09:09:27.483-07:00",
+      "Id": 78905
+    },
+    {
+      "Message": "\"The problem with this is whenever you call a function with `new` in Javascript, it always returns an object that is an instance of that function.\"\n\nYou're wrong. Try this:\n\nfunction C() { return { a: 5 }; }\nalert(new C instanceof C); // false",
+      "PostedDate": "2012-10-07T23:56:16.99-07:00",
+      "Id": 78955
+    },
+    {
+      "Message": "Good point, I didn't think about that one. I looked in the ECMA-262 spec about it and in section 13.2.2, the[[Construct]] method on a function object F has these last two steps:\n\n... (result is from calling F, obj is from F.prototype)\n9. If Type(result) is Object then return result\n10. Return obj\n\nEither way, a constructor function will always return an object, so the compiler should never expect it to return a string, number, boolean, or anything other than an object.",
+      "PostedDate": "2012-10-08T07:33:54.763-07:00",
+      "Id": 78993
+    }
+  ]
+}

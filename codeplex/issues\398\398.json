@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-02-26T13:42:06.293-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Perhaps there is a syntax for describing this that I have not discovered, but there seems to be missing functionality.  We need the ability to import a 'class'.\r\n\r\n```TypeScript\r\nimport C = class(\"path/to/C\");\r\nvar v = new C();\r\n```\r\nor this:\r\n```TypeScript\r\ndeclare module \"path/to/C\" {\r\n    export constructor();\r\n}\r\n```\r\n\r\nTo allow for loading AMD modules like dojo/Deferred which returns a class (similar to this):\r\n```TypeScript\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n    var C = (function () {\r\n        function C() { }\r\n        C.prototype.f = function () {\r\n        };\r\n        return C;\r\n    })();\r\n    exports.C = C;\r\n    return C; <--- added this\r\n})\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-09T14:39:16.867-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Declare a constructor in a module? Or a default class?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 398
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We definitely need this.\n\nThe constructor for the module doesn't seems not a good idea to me as it does not follow any current language idiom (this means having a real instance under each namespace). But having a default class for modules or ability to import classes like modules is a huge improvement for the language as we are here talking about namespacing our classes, what we cannot really do today.\n\nExtending that, we may have the ability to import a module and directly use any of the class it exports with the following :\n\n------------------------------------------------------------------\nimport AnyModule = module(\"path/to\");\nvar classTheModuleExports:ClassTheModuleExports = new ClassTheModuleExports();\n------------------------------------------------------------------\n\nWhen names collides the compiler have to warn the developer and in this case the solution proposed by ca0v apply :\n------------------------------------------------------------------\nimport AnyModule = module(\"path/to\");\nimport ClassTheModuleExports= class(\"path/to/ClassTheModuleExports\");\nvar classTheModuleExports:ClassTheModuleExports = new ClassTheModuleExports();\n------------------------------------------------------------------\n\nOf course most of the time we would simply write something like:\n------------------------------------------------------------------\nimport ClassAModuleExports= class(\"path/to/ClassAModuleExports\");\nvar classAModuleExports:ClassAModuleExports = new ClassAModuleExports();\n------------------------------------------------------------------\n\nNot having support for this is a real problem using external framework or utils as it forces to write each time the whole class «namespace» like :\n\n------------------------------------------------------------------\nimport AnyModule = module(\"path/to\");\nvar classTheModuleExports:AnyModule.ClassTheModuleExports = new AnyModule.ClassTheModuleExports();\n\nThis definitely quick becomes a nightmare.",
+      "PostedDate": "2012-11-11T04:33:25.077-08:00",
+      "Id": 82184
+    },
+    {
+      "Message": "Yes, this would be really great enhancement for Dojo users! But please do not limit it to classes... modules should be able to expose default functions as well. For example \"dojo/on\" module is just one function and I can easily import it with the following declaration (in dojo.d.ts file):\n\nmodule \"dojo/on\" {\n    function (target: Element, type: string, listener: (e: Event) => void);\n}\n\nBut the problem is that I cannot write such a create in TypeScript, I can only declare ambient module like this.",
+      "PostedDate": "2012-11-22T00:25:02.887-08:00",
+      "Id": 82870
+    },
+    {
+      "Message": "This is effectively the same request as http://typescript.codeplex.com/workitem/47.  We hope to address this in the near future.",
+      "PostedDate": "2013-02-26T13:41:55.67-08:00",
+      "Id": 91601
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:24.393-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I have the following TS code:\r\n/// <reference path=\"../lib/knockout.d.ts\" />\r\n\r\n//code source: https://github.com/sv01a/TypeScript-Knockoutjs/blob/master/knockout.d.ts\r\n\r\nclass Person {\r\n    public LastName;\r\n    public FirstName;\r\n    public FullName;\r\n    constructor (firstName: string, lastName: string) {\r\n        this.FirstName = ko.observable(firstName);\r\n        this.LastName = ko.observable(lastName);\r\n        this.FullName = ko.computed(() =>{\r\n            return this.FirstName() + \" \" + this.LastName();\r\n        });\r\n    }\r\n}\r\n\r\nclass ViewModel {        \r\n    public Items = ko.observableArray([]);       \r\n    addItem () {\r\n        this.Items.push(new Person(\"\", \"\"));\r\n    };\r\n    removeItem(item){\r\n        this.Items.remove(item);\r\n    };             \r\n}\r\n\r\nThe generated js for the ViewModel is the following:\r\n\r\nvar ViewMode = (function () {\r\n    function ViewModel() {\r\n        this.Items = ko.observableArray([]);\r\n    }\r\n    ViewModel.prototype.addItem = function () {\r\n        this.Items.push(new Person(\"\", \"\"));\r\n    };\r\n    ViewModel.prototype.removeItem = function (item) {\r\n        this.Items.remove(item);   // At run time, this line would break because \"this\" no longer points to the ViewModel. \r\n    };\r\n    return ViewModel;\r\n})();\r\n\r\nwindow.onload = () => {\r\n    ko.applyBindings(new ViewModel());\r\n};\r\n\r\nHTML:\r\n<body>\r\n    <h1>TypeScript HTML App</h1>\r\n\r\n    <h2>Contact List (<span data-bind=\"text: Items().length\"></span>)</h2>\r\n<table>\r\n    <thead><tr>\r\n        <th>First Name</th><th>Last Name</th><th>Full Name</th><th>Action</th><th></th>\r\n    </tr></thead>\r\n    <tbody data-bind=\"foreach: Items\">\r\n        <tr>\r\n            <td><input data-bind=\"value: FirstName\" /></td>\r\n            <td><input data-bind=\"value: LastName\" /></td> \r\n            <td><input data-bind=\"value: FullName\" disabled=\"disabled\" /></td>           \r\n            <td><a href=\"#\" data-bind=\"click: $root.removeItem\">Remove</a></td>\r\n        </tr>    \r\n    </tbody>\r\n</table>\r\n<button data-bind=\"click: addItem, enable: Items().length < 5\">Add</button>\r\n</body>\r\n\r\nWhen run this code and click the remove button, an error would occur at the removeItem function because \"this\" no longer points to the ViewModel. \r\n\r\nI have to write the ViewModel class as the following to avoid this problem:\r\n\r\nclass ViewModel {        \r\n    public Items = ko.observableArray([]);    \r\n    public addItem;\r\n    public removeItem;\r\n    constructor () {\r\n        var _self = this;\r\n        this.addItem = () => {\r\n            _self.Items.push(new Person(\"\", \"\"));\r\n        };\r\n        this.removeItem = (item) => {\r\n            _self.Items.remove(item);\r\n        };\r\n    }       \r\n}\r\n ",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-22T19:32:13.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "\"this\" keyword in class function could cause problems when the function is triggered by an event. ",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 315
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think this can be solved by declaring methods which needs fixed this variable by asigning the functions to \nclass members, and compiler must know that this is an intent for fixed variable.\nFor example:\n\nclass ViewModel { \npublic Items = ko.observableArray([]); \n\n//assign function to the class member - the intent to make this variable fixed\naddItem = function () {\n   this.Items.push(new Person(\"\", \"\"));\n};\nremoveItem = function(item){\n   this.Items.remove(item);\n}; \n}\n\nThe compiler should generate in this case this variable scoped in closure:\n\nvar ViewMode = (function () {\n\nfunction ViewModel() {\n   this.Items = ko.observableArray([]);\n   _initThis(this);\n}\n\nfunction _initThis(self)\n{\n  self.addItem = function () {\n    self.Items.push(new Person(\"\", \"\"));\n  };\n  self.removeItem = function (item) {\n    self.Items.remove(item); \n  };\n}\n\n  return ViewModel;\n\n})();\n\n",
+      "PostedDate": "2012-10-22T23:54:46.893-07:00",
+      "Id": 80725
+    },
+    {
+      "Message": "I had the same problem with knockout templates. In the constructor I just call bind on any function that has the problem. So your view model code would look like this:\n\nclass ViewModel { \n\tpublic Items = ko.observableArray([]);\n\tconstructor()\n\t{\n\t\t// reassign using the bound functions. <any> prevents compiler warnings.\n\t\tthis.addItem = <any>this.addItem.bind(this);\n\t\tthis.removeItem = <any>this.removeItem.bind(this);\n\t}\n\taddItem () {\n\t\tthis.Items.push(new Person(\"\", \"\"));\n\t}\n\tremoveItem(item){\n\t\tthis.Items.remove(item);\n\t}\n}\n\nAnother way, that is more like @bbgone's comment, is to just assign the functions in the constructor (the => will make sure you have the correct scope in the functions when the event is triggered):\n\nclass ViewModel { \n\tpublic Items = ko.observableArray([]);\n\tpublic addItem;\n\tpublic removeItem;\n\tconstructor()\n\t{\n\t\tthis.addItem = ()=>\n\t\t{\n\t\t\tthis.Items.push(new Person(\"\", \"\"));\n\t\t}\n\t\tthis.removeItem = (item)=>\n\t\t{\n\t\t\tthis.Items.remove(item);\n\t\t}\n\t}\n}\n\nBoth will work, but both feel a little dirt. So it would be nice to have this functionality built in, such as a \"bind\" or \"bound\" keyword.",
+      "PostedDate": "2012-10-23T01:03:06.103-07:00",
+      "Id": 80729
+    },
+    {
+      "Message": "PS -\nIMHO,  the knockout  library has the design flaw, because the expression\ndata-bind=\"click: addItem, enable: Items().length < 5\"\nbinds addItem function to the specific viewmodel instance by ko.applyBindings(new ViewModel());\nso the method signature should allow access to the BUTTON instance through method's arguments (as a sender argument), and leave THIS variable intact (THIS should be the viewmodel's instance).\nIt should be done so because it is declarative binding, and the users a limited in supplying the context of the function, or it should be done through the command pattern, because commands as object's instances are logicaly would be constructed in the viewmodel's constructor.",
+      "PostedDate": "2012-10-23T01:14:09.68-07:00",
+      "Id": 80730
+    },
+    {
+      "Message": "Duplicate. http://typescript.codeplex.com/workitem/248",
+      "PostedDate": "2012-10-24T11:30:59.427-07:00",
+      "Id": 80915
+    }
+  ]
+}

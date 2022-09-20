@@ -1,0 +1,101 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing since we have a work-around for now. We'll be rewriting how the project file works to have a proper msbuild task that will fix this and other issues (e.g. non-ascii characters in file paths).",
+    "ClosedDate": "2013-02-20T09:42:29.9-08:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "When compiling a large project error messages under Visual Studio 2012 on Windows 8 are generated stating that files cannot be found.  The error messages contain incorrect paths to the files.  The paths that are displayed in the error messages are missing a single character.\r\n\r\nThe error messages are one of the following:\r\n\r\nError reading file \"<< file name >> \": File not found\r\nUnknown extension for file: \"<< file name >>\". Only .ts and .d.ts extensions are allowed.\r\n\r\nI have traced this back through the compiler source code and tracked it down to a problem with the WScript host library.  It looks like this library is passing a corrupted command line to the script from the WScript.Arguments property.  It looks like a single character is being removed from the command line every 8192 characters.  This suggests some kind of buffer bug in the WScript library.  I am using version 5.8.9200.16384 of the windows script host runtime library.\r\n\r\nTo reproduce this create a set of Typescript classes, one in each file and then place them down a deep folder structure with long file names.  This will generate a long command line that will then show the problem.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "TypeScript 0.8.3",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-04T06:32:46.79-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "File not found errors when compiling large projects",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 597
+  },
+  "FileAttachments": [
+    {
+      "FileId": 617042,
+      "FileName": "Microsoft.TypeScript.targets",
+      "DownloadUrl": ".\\617042"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Very odd; marking 'active'. You can probably invoke tsc.js through node as a work-around in the meantime. Thanks for reporting this.",
+      "PostedDate": "2013-01-04T12:32:06.007-08:00",
+      "Id": 85381
+    },
+    {
+      "Message": "We are having exactly the same issue, on Windows 7.\n\nIt seems that the compiler is dropping random characters from the file name path.\n( C:\\source becomes C:\\ource), generating a FileNotFound error.\n\n\n\n\n",
+      "PostedDate": "2013-01-07T17:52:12.7-08:00",
+      "Id": 85534
+    },
+    {
+      "Message": "We see something similar, but I am not sure it is the same. See this [stack overflow question].(http://stackoverflow.com/questions/14397972/compiling-many-typescript-files-at-once)",
+      "PostedDate": "2013-01-21T00:34:38.107-08:00",
+      "Id": 86716
+    },
+    {
+      "Message": "I've added a work-around Microsoft.TypeScript.targets file that should work with projects created with 0.8.2.0 or later. Just back up your existing one (in C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript) and overwrite with the attached. Let me know if this helps. Thanks!",
+      "PostedDate": "2013-02-04T10:16:22.12-08:00",
+      "Id": 88195
+    },
+    {
+      "Message": "Updated version that supports paths with spaces in them",
+      "PostedDate": "2013-02-04T11:30:34.137-08:00",
+      "Id": 88212
+    },
+    {
+      "Message": "Ryan,\n\nYes that works.  I had to cut and paste the same build instruction changes into the \"BeforeBuild\" target at the end of my project file but then things look like they are working properly.\n\nNice way to side step the problem - by writing the build command to a file and then just passing the one file of command line to the compiler.  Good lateral thinking.\n\nWill this patch make its way into an upcoming release?\n\nThanks.",
+      "PostedDate": "2013-02-05T00:59:17.36-08:00",
+      "Id": 88258
+    },
+    {
+      "Message": "Ryan your fix did not work for me. My issue is described here. http://typescript.codeplex.com/workitem/836\n\nThanks",
+      "PostedDate": "2013-03-23T03:07:18.943-07:00",
+      "Id": 94162
+    },
+    {
+      "Message": "@Ryan Did a fix for this make it into the 0.9 beta release, or will I need to modify the targets file again?",
+      "PostedDate": "2013-06-06T16:59:44.017-07:00",
+      "Id": 102372
+    },
+    {
+      "Message": "Any update on when this will make it into the primary TypeScript build?  I'm forced to replace my TypeScript targets file on every upgrade and anyone who downloads the source of my project cannot build it because they do not have the modification.\n\nGuess for the interim i'll just have to check the typescript targets file in.\n\nBtw I'm using typescript 0.9.1",
+      "PostedDate": "2013-06-28T19:34:34.243-07:00",
+      "Id": 104635
+    },
+    {
+      "Message": "When?\n\n_Closing since we have a work-around for now. We'll be rewriting how the project file works to have a proper msbuild task that will fix this and other issues (e.g. non-ascii characters in file paths)._",
+      "PostedDate": "2013-06-28T22:28:34.993-07:00",
+      "Id": 104639
+    },
+    {
+      "Message": "This is fixed in TypeScript 0.9.1.0",
+      "PostedDate": "2013-08-13T12:10:28.783-07:00",
+      "Id": 109675
+    }
+  ]
+}

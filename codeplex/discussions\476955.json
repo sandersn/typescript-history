@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1140972",
+    "ThreadId": "476955",
+    "Html": "Spec:<br />\n<blockquote>\n<strong>7.1 Interface Declarations</strong><br />\n...<br />\nThe following constraints must be satisfied by an interface declaration or otherwise a compile-time error occurs:<br />\n...<br />\n<ul>\n<li>\nInherited properties with the same name must be identical (section 3.8.2).<br />\n</li>\n</ul>\n</blockquote>\nI found the rule very harmful in case of property is a function.\r<br />\nFor example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> A {\n    f(): <span style=\"color:Blue;\">void</span>;\n    f(a: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">void</span>;\n}\n<span style=\"color:Blue;\">interface</span> B <span style=\"color:Blue;\">extends</span> A {\n    f(b: <span style=\"color:Blue;\">boolean</span>): <span style=\"color:Blue;\">void</span>;\n}\r\n</pre></div>We've got error: &quot;<em>Interface 'B' cannot extend interface 'A': Types of property 'f' of types 'B' and 'A' are incompatible: Call signatures of types '(b: boolean) =&gt; void' and '{ (): void; (a: number): void; }' are incompatible: Call signature expects 0 or fewer parameters.</em>&quot;\r<br />\n<br />\nCan't understand why TS can't extend property <code>f</code> by new call signature provided by <code>B</code> interface. Of course it will change of the property <code>f</code>.\r<br />\nLet's imagine TS allow such inheritance. We'll get an interface identical to <code>C</code>:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> C {\n    f(): <span style=\"color:Blue;\">void</span>;\n    f(a: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">void</span>;\n    f(b: <span style=\"color:Blue;\">boolean</span>): <span style=\"color:Blue;\">void</span>;\n}\r\n</pre></div>Now we can test all the principles of inheritance:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> a: A, c: C;\na = c;      <span style=\"color:Green;\">// any C is A, ok</span>\na.f = c.f;  <span style=\"color:Green;\">// any (typeof c.f) is (typeof a.f), ok</span>\r\n</pre></div>So why such rule was defined in the language? Is it possible to allow extending function overloads in derived interfaces (and classes)?<br />\n",
+    "PostedDate": "2013-12-23T12:06:38.127-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1143454",
+    "ThreadId": "476955",
+    "Html": "The rule you reference above applies to <em>inherited</em> properties and really only comes into play in interfaces with multiple base interfaces that define properties by the same name. In your example the <code>f</code> property is redefined in <code>B</code>, and thus not inherited from <code>A</code>. Keep in mind here that the redefinition in <code>B</code> <em>replaces</em> the definition in <code>A</code>. The definitions aren't merged and that's why you're getting an error. If you define <code>f</code> in <code>B</code> the same was as you have in <code>C</code> it all works.<br />\n",
+    "PostedDate": "2013-12-27T19:21:52.823-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

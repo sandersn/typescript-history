@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1122331",
+    "ThreadId": "468245",
+    "Html": "I run into an issue, which i cannot resolve. I use knockout.js and want to declare a computed observable, which is able to read/write. Therefore you need to provide a getter and a setter, like this:<br />\n<pre><code>public class Something{\nconstructor(private data:any){ }\n\n        public amount = ko.computed&lt;number&gt;({\n            read: () =&gt; {\n                return Number(this.data);\n            },\n            write: (value) =&gt; {\n                this.data = Number(value);\n            }\n        });</code></pre>\n\nThe problem is, that &quot;this.data&quot; is always undefined. With VS debugging i realized, that &quot;this&quot; is bound to the window context.<br />\n<br />\nTherefore i tried to introduce a &quot;self&quot; variable, which result in compile error: &quot;Could not find symbol '_self'&quot;: <br />\n<pre><code>public class Something{\nconstructor(public data:any){ }\nprivate _self = this;\n\n        public amount = ko.computed&lt;number&gt;({\n            read: () =&gt; {\n                return Number(_self.data);\n            },\n            write: (value) =&gt; {\n                _self.data = Number(value);\n            }\n        });</code></pre>\n\nWhat is the correct way of resolving this issue? I know, there is one possibility to use &quot;bind&quot;, but i cannot see, if and how this will help me here...<br />\n",
+    "PostedDate": "2013-11-12T05:42:43.583-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1122429",
+    "ThreadId": "468245",
+    "Html": "When I compile what you wrote here (removing 'public' from the class declaration), I get this, which correctly captures 'this' into  _this. Maybe you can post the compiled output of the code you're working with?<br />\n<pre><code>var Something = (function () {\n    function Something(data) {\n        var _this = this;\n        this.data = data;\n        this.amount = ko.computed({\n            read: function () {\n                return Number(_this.data);\n            },\n            write: function (value) {\n                _this.data = Number(value);\n            }\n        });\n    }\n    return Something;\n})();\n</code></pre>\n\n",
+    "PostedDate": "2013-11-12T09:06:29.63-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1122494",
+    "ThreadId": "468245",
+    "Html": "We face a similar problem in our application, and there is actually a simple solution: define all computed observables inside the constructor. <br />\nSo in your case you just have to write this:<br />\n<pre><code>public class Something {\n    public amount: ko.Computed&lt;number&gt;; // or KnockoutComputed&lt;number&gt;, depending on your definition file\n\n    constructor(private data:any) { \n        this.amount = ko.computed&lt;number&gt;({\n            read: () =&gt; {\n                return Number(this.data);\n            },\n            write: (value) =&gt; {\n                this.data = Number(value);\n            }\n        });\n    }\n}</code></pre>\n\nWhen writing classes you should never use <code>this</code> outside class methods or constructors.<br />\n",
+    "PostedDate": "2013-11-12T11:28:22.747-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1122859",
+    "ThreadId": "468245",
+    "Html": "Thanks for the feedback. Probably it is not a TypeSCript issue, because i found in the documentation, that you have to declare the &quot;this&quot; context via a &quot;owner&quot; attribute:\r<br />\n<br />\n<a href=\"http://knockoutjs.com/documentation/computedObservables.html#computed_observable_reference\" rel=\"nofollow\">http://knockoutjs.com/documentation/computedObservables.html#computed_observable_reference</a>\r<br />\n<br />\nAnyway that your solution is also a valid approach. Thanks!<br />\n",
+    "PostedDate": "2013-11-13T04:12:47.17-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1122948",
+    "ThreadId": "468245",
+    "Html": "@humbrie, if you specify lambda functions for your read and write properties then the value of &quot;owner&quot; will have no impact.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// KO does this</span>\n  options.read.call(options.owner);\n\n<span style=\"color:Green;\">// The read function looks like this:</span>\nread: <span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">return</span> Number(_this.data);  <span style=\"color:Green;\">// i.e. real &quot;this&quot; is not involved</span>\n }\r\n</pre></div>I agree with @RyanCavanaugh that there is nothing wrong with your original code.\r<br />\n<br />\nHowever, I have noticed that on some rare occasions the compiler fails to write out <code>var _this = this;</code> I have not been able to repro this because usually on the next compilation the code appears to have rectified itself miraculously.\r<br />\n<br />\nWhat does your compiled JS look like?<br />\n",
+    "PostedDate": "2013-11-13T07:51:02.523-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1123357",
+    "ThreadId": "468245",
+    "Html": "well, the compiled code seems correct (similar like jpatte´s). I ended up in this solution, which now seems to work (i´ve omitted other constructor params here):<br />\n<pre><code>class ObservableAction {\n       \n        constructor(data: any = 1) {          \n            if (data) this.data(data);\n        }\n\n        public data = ko.observable();\n\n        public amount = ko.computed({\n            read: () =&gt; {\n                return Number(this.data());\n            },\n            write: (value) =&gt; {\n                this.data(value);\n            },\n            owner: this\n        });\n</code></pre>\n\nwhich compiles to: <br />\n<pre><code> var ObservableAction = (function () {\n        function ObservableAction(data) {\n            if (typeof data === &quot;undefined&quot;) { data = 1; }\n            var _this = this;\n            \n            this.data = ko.observable();\n            \n            this.amount = ko.computed({\n                read: function () {\n                    return Number(_this.data());\n                },\n                write: function (value) {\n                    _this.data(value);\n                },\n                owner: this\n            });\n\n             if (data)\n                this.data(data);</code></pre>\n\nIn the end there is no big difference... I just use another &quot;data&quot; observable (which i dont need for binding). \r<br />\nI assume, that visual studio has given me a false debug information about &quot;this&quot;. \r<br />\nI use internet explorer to debug typescript in visual studio.<br />\n",
+    "PostedDate": "2013-11-14T02:00:11.903-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

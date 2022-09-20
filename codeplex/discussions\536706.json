@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1217318",
+    "ThreadId": "536706",
+    "Html": "A nice thing in TypeScript is that you can add static members to a class by a later module definition, and you can refer to things in that module definition too, e.g. interfaces, helper functions etc. e.g. <br />\n<pre><code>// Interface for requesting a new foo object.\nclass Foo {\n  constructor (public x: Foo.Request) {\n    Foo.Helper(x);\n  }\n  //... other stuff for Foo...\n}\n\n// static module addition of\nmodule Foo {\n  export interface Request {\n    a: string;\n    b: string;\n  }\n\n  // Aux functions to help the class... can also be done as static private in\n  // the class, but problem: sometime more convenient to have in a separate file.\n  export function Helper(x: Request) {\n   // ... do helpful stuff...\n  }\n\n  // helper stuff you don't want in the public\n  // ...\n  // Export helper function, e.g.:\n  export function makeTrivialFoo(x:string) { return new Foo({a: x, b:x}); }\n}\n\nvar foo = Foo.makeTrivialFoo(&quot;a&quot;);\n</code></pre>\n\nThis lets you hide stuff you don't want to be public in an anonymous closure. Cool. \r<br />\n<br />\nHowever, it would be nicer to not have to write Foo.Request for the Foo class. Moreover, sometimes it's helpful to define some auxiliary function related to a module before the class. e.g. I'd really like to be able to write it like this: <br />\n<pre><code>// static module addition of\nmodule Foo {\n  export interface Request {\n    a: string;\n    b: string;\n  }\n  // Aux functions to help the class... can also be done as static private in\n  // the class, but problem: sometime more convenient to have in a separate file.\n  export function Helper(x: Request) {\n   // ... do helpful stuff...\n  }\n}\n\n// Interface for requesting a new foo object.\nclass Foo {\n  constructor (public x: Request) { Helper(x); }\n  //... other stuff for Foo...\n}\n\n// static module addition of\nmodule Foo {\n  // helper stuff you don't want in the public\n  // ...\n  // Export helper function, e.g.:\n  export function makeTrivialFoo(x:string) { return new Foo({a: x, b:x}); }\n}\n\nvar foo = Foo.makeTrivialFoo(&quot;a&quot;);\n</code></pre>\n\nBut I can't because typescript gives a type-error about the symbol Foo. It's strange that the order would change the symbol defined error :( \r<br />\n<br />\nIt would make code a good deal cleaner. You don't need prefixes in the class definition. An alternative thing would be allow definitions of interfaces in a class. \r<br />\n<br />\nThoughts? <br />\n",
+    "PostedDate": "2014-03-02T15:18:50.833-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1218252",
+    "ThreadId": "536706",
+    "Html": "The order of merging declarations (class + module) matters because of the underlying JavaScript generated. At that level you're creating a function named Foo (the constructor function for the class) and then adding additional properties to it (the exported module members). But there's no way to do the reverse. You can't put some properties on a var named Foo and then change Foo to a callable function type. So at the TypeScript level we need to enforce this ordering restriction between classes and modules that would merge. If you use ambient declarations then we relax this restriction since the ambient declaration will not have any code generated for it.<br />\n",
+    "PostedDate": "2014-03-03T11:51:33.88-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219096",
+    "ThreadId": "536706",
+    "Html": "Is there a way to defer generation until the class declaration?  That'd let this happen, and may provide opportunity to generate better code, with more information about Foo available.<br />\n",
+    "PostedDate": "2014-03-04T09:46:33.347-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219216",
+    "ThreadId": "536706",
+    "Html": "In theory the compiler could do some whole program analysis to alter emit but we've tried to keep the code gen fairly simple as far as your ability to look at a piece of TypeScript and understand exactly what JS will be emitted for it.<br />\n",
+    "PostedDate": "2014-03-04T13:30:13.57-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219233",
+    "ThreadId": "536706",
+    "Html": "Thanks for the explanation! <br />\n<br />\nSo to put a class definition after the module, we'd need to make typescript do a slightly different compilation... something like this... <br />\n<pre><code>// static module addition of\nvar Foo;\n(function (Foo) {\n    // Aux functions to help the class... can also be done as static private in\n    // the class, but problem: sometime more convenient to have in a separate file.\n    function Helper(x) {\n        console.log(&quot;helper&quot;);\n        // ... do helpful stuff...\n    }\n    Foo.Helper = Helper;\n})(Foo || (Foo = {}));\n\n// Interface for requesting a new foo object.\nvar Foo = (function (_module) {\n    function Foo(x) {\n        this.x = x;\n        _module.Helper(x);\n    }\n\n    // Add the previous Foo module to the new function object.\n    for(x in _module) { Foo[x] = _module[x]; }\n\n    return Foo;\n})(Foo);\n\n(function (Foo) {\n    // helper stuff you don't want in the public\n    // ...\n    // Export helper function, e.g.:\n    function makeTrivialFoo(x) {\n        return new Foo({ a: x, b: x });\n    }\n    Foo.makeTrivialFoo = makeTrivialFoo;\n})(Foo || (Foo = {}));\n\nvar foo = Foo.makeTrivialFoo(&quot;a&quot;);</code></pre>\n\nThat seems like it would work, no? <br />\n",
+    "PostedDate": "2014-03-04T14:30:46.803-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219615",
+    "ThreadId": "536706",
+    "Html": "Sorry, previous code was confused; I've updated and tested (new code in the above post). The above seems like a natural way to allow modules defined before a class, and still get all the name-space benefits... what do you think? <br />\n",
+    "PostedDate": "2014-03-05T12:04:21.313-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219617",
+    "ThreadId": "536706",
+    "Html": "Does this still require reordering the generated code, relative to the order of declarations in the input code?<br />\n",
+    "PostedDate": "2014-03-05T12:12:03.023-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219619",
+    "ThreadId": "536706",
+    "Html": "No, what's neat about the above is that it still allows 1:1 style incremental compilation, and even separating between files. e.g. the above would be generated for this TS: <br />\n<pre><code>// static module addition of\nmodule Foo {\n  export interface Request {\n    a: string;\n    b: string;\n  }\n\n  // Aux functions to help the class... can also be done as static private in\n  // the class, but problem: sometime more convenient to have in a separate file.\n  export function Helper(x: Request) {\n   // ... do helpful stuff...\n  }\n}\n\n// Interface for requesting a new foo object.\nclass Foo {\n  constructor (public x: Foo.Request) {\n    Foo.Helper(x);\n  }\n  //... other stuff for Foo...\n}\n\nmodule Foo {\n  // helper stuff you don't want in the public\n  // ...\n  // Export helper function, e.g.:\n  export function makeTrivialFoo(x:string) { return new Foo({a: x, b:x}); }\n}\n\nvar foo = Foo.makeTrivialFoo(&quot;a&quot;);</code></pre>\n\n",
+    "PostedDate": "2014-03-05T12:17:05.303-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258618",
+    "ThreadId": "536706",
+    "Html": "ping?<br />\n",
+    "PostedDate": "2014-06-21T20:23:14.367-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258638",
+    "ThreadId": "536706",
+    "Html": "You need to consider that TypeScript is trying to stick to ES6 standards, and emitting the JS in your example may not be the proper behaviour when the native class and module semantics take over in the future.  The real question is &quot;How would this look like if coding in ES6?&quot;.  In fact, TS usually only emits code to bridge the gaps where possible.<br />\n",
+    "PostedDate": "2014-06-21T23:10:52.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

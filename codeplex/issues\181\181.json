@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Correction: Fixed in 0.8.2.0",
+    "ClosedDate": "2013-01-22T14:35:03.823-08:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "I have a function defined in an object like this:\r\n\r\n    connect(callback?: (connected: bool) => void) {\r\n        $.ajax(this.url + \"/connect\", $.extend(true, {}, this.ajaxSettings, {\r\n            success: (data) => {\r\n                this.errorChecker(data, (data) => {\r\n                    if (callback != null) {\r\n                        callback(data);\r\n                    }\r\n                });\r\n            },\r\n            timeout: this.timeout,\r\n            error: () => {\r\n                if (callback != null) {\r\n                    callback(false);\r\n                }\r\n            }\r\n        }));\r\n    }\r\n\r\nWhen I compile it in Visual Studio, I get this output:\r\n\r\n        VAS.prototype.connect = function (callback) {\r\n            $.ajax(this.url + \"/connect\", $.extend(true, {\r\n            }, this.ajaxSettings, {\r\n                success: function (data) {\r\n                    _this.errorChecker(data, function (data) {\r\n                        if(callback != null) {\r\n                            callback(data);\r\n                        }\r\n                    });\r\n                },\r\n                timeout: this.timeout,\r\n                error: function () {\r\n                    if(callback != null) {\r\n                        callback(false);\r\n                    }\r\n                }\r\n            }));\r\n        };\r\n\r\nNotice the line that starts: _this.errorChecker, the compile has noticed that it needs to use _this to refer to the actual object in the callback function, but it has failed to include the line:\r\n\r\nvar _this = this;\r\n\r\nAt the start of the function. Oddly, this seems to work okay on the TypeScript playground, and in at least one simple example, it worked with the command line tsc compiler (but my more complex real system it doesn't work with the command line compiler).",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-08T10:55:34.833-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Missing _this definition",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 181
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Dupe of \n\nhttp://typescript.codeplex.com/workitem/11\nhttp://typescript.codeplex.com/workitem/43\nhttp://typescript.codeplex.com/workitem/71\nhttp://typescript.codeplex.com/workitem/131",
+      "PostedDate": "2012-10-08T12:16:46.617-07:00",
+      "Id": 79035
+    },
+    {
+      "Message": "This is not quite a dupe. All of the suggested dupes seem to be about _this getting trampled by an existing definition of _this. In this case (no pun intended), the compile fails to output the definition of _this at all.",
+      "PostedDate": "2012-10-08T12:24:56.583-07:00",
+      "Id": 79040
+    },
+    {
+      "Message": "Bug. The compiler generates a reference to \"_this\" but doesn't define \"var _this = this;\"",
+      "PostedDate": "2012-10-08T13:32:47.963-07:00",
+      "Id": 79046
+    },
+    {
+      "Message": "@wjousts No, it is the exact same bug as this: http://typescript.codeplex.com/workitem/43 and represented in all the others.\n\nThey all share the _exact_ same root issue: _this is being used without actually defining it or with any regard for the actual program code in the same scope.",
+      "PostedDate": "2012-10-08T14:31:23.193-07:00",
+      "Id": 79062
+    },
+    {
+      "Message": "Actually, this seems to be related to the variable length parameters. See here:\n\nhttp://typescript.codeplex.com/discussions/398511",
+      "PostedDate": "2012-10-09T06:40:36.6-07:00",
+      "Id": 79139
+    },
+    {
+      "Message": "Thanks for reporting this issue and narrowing down the repro, everyone. We'll definitely be fixing this.\r\n\r\nFYI, a small repro (that works in the Playground):\r\nclass foo {\r\n\tpublic bar(n: any, ...args: any[]) {}\r\n\t\r\n\tpublic go() {\r\n\t\tthis.bar(null, null, () => this);\r\n\t}\r\n}",
+      "PostedDate": "2012-10-09T11:38:00.953-07:00",
+      "Id": 79211
+    },
+    {
+      "Message": "Another easy playground repro.  _this is not defined.\n\nvar no_thisDefined = {\n    foo: () => { return this; }\n};\n\ngenerates:\n\nvar no_thisDefined = {\n    foo: function () {\n        return _this;\n    }\n};\n",
+      "PostedDate": "2012-11-03T11:54:38.533-07:00",
+      "Id": 81586
+    },
+    {
+      "Message": "Fixed in 0.8.3.0. Thanks!\n\r\n\r** Closed by RyanCavanaugh 01/22/2013 2:32PM",
+      "PostedDate": "2013-01-22T14:32:44.537-08:00",
+      "Id": 86896
+    },
+    {
+      "Message": "",
+      "PostedDate": "2013-01-22T14:34:47.527-08:00",
+      "Id": 86897
+    }
+  ]
+}

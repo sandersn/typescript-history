@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed, but there is a bug in mpc.ts\n\nyou have to change the following method:\n````\n    export function anyCharOf<T>(str : string, mapper : (number) => T) : Parser<T> {\n        var numbers = []\n\n        for (var iter = 0; iter < str.length; ++iter) {\n            numbers[iter] = str.charCodeAt(iter)\n        }\n\n       return parser((ps: ParserState) => {\n            if (ps.isEOS()) {\n                return ps.fail<T>()\n            }\n\n            var ch = ps.text.charCodeAt(ps.position)\n\n            var indexOf = numbers.indexOf(ch)\n\n            if (indexOf < 0) {\n                return ps.fail<T>()\n            }\n\n            ++ps.position\n\n            return ps.succeed(mapper(indexOf));\n        });\n    }\n````\n\nboth fail calls, should be typed as 'T' and not 'number', we can't guarantee that parseResult<T> and parseResult<number> are assignable.",
+    "ClosedDate": "2013-10-28T14:42:48.03-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi.\r\n\r\nFor fun I am writing a monadic parser combinator library in TypeScript. This means lots of generics and higher-order functions and in general it works out great however I am struggling with a couple of member definitions. There's no crisis here as I have workarounds.\r\n\r\nI have prepared a repro solution here:\r\nhttps://github.com/mrange/mpc.js/tree/mrange__repro\r\n\r\nThis fails to compile with:\r\nerror TS2012: Cannot convert 'mpc.ParseResult<T>' to 'mpc.ParseResult<TOther>':\r\nerror TS2012: Cannot convert 'mpc.ParseResult<T>' to 'mpc.ParseResult<S>':\r\n\r\nI think it's basically the same problem so I list only one of the functions:\r\n\r\n    combine<TOther>(pOther : Parser<TOther>) : Parser<{v0 : T; v1 : TOther}> {\r\n        return parser<{v0 : T; v1 : TOther}> ((ps : ParserState) => { \r\n            var snapshot = ps.snapshot()\r\n\r\n            var pResult = this.parse(ps)\r\n\r\n            if (!pResult.success) {\r\n                return ps.fail<{v0 : T; v1 : TOther}>()\r\n            }\r\n\r\n            // Bug? The compiler suprisingly reports that:\r\n            // error TS2012: Cannot convert 'mpc.ParseResult<T>' to 'mpc.ParseResult<TOther>'\r\n            // But pOther is of type Parser<TOther> and Parser is defined as:\r\n            //     export class Parser<T> {\r\n            //      parse : (ps : ParserState) => ParseResult<T>\r\n            // Non member combine works fine\r\n            var pOtherResult : ParseResult<TOther> = pOther.parse(ps)\r\n\r\n            if (!pOtherResult.success) {\r\n                ps.restore(snapshot)\r\n                return ps.fail<{v0 : T; v1 : TOther}>()\r\n            }\r\n\r\n            var result = {v0 : pResult.value, v1 : pOtherResult.value}\r\n\r\n            return ps.succeed(result)\r\n        })\r\n    }\r\n\r\nI have looked over my definitions for something obvious and I can't find it. It seems to me that the compiler infers the wrong type for pOtherResult.\r\n\r\nI have a non member function that works as expected:\r\n\r\n    export function combine<T0, T1>(p0 : Parser<T0>, p1 : Parser<T1>) : Parser<{v0 : T0; v1 : T1}> {\r\n        return parser ((ps : ParserState) => { \r\n            var snapshot = ps.snapshot()\r\n\r\n            var p0Result = p0.parse(ps)\r\n\r\n            if (!p0Result.success) {\r\n                return ps.fail<{v0 : T0; v1 : T1}>()\r\n            }\r\n\r\n            var p1Result = p1.parse(ps)\r\n\r\n            if (!p1Result.success) {\r\n                ps.restore(snapshot)\r\n                return ps.fail<{v0 : T0; v1 : T1}>()\r\n            }\r\n\r\n            var result = {v0 : p0Result.value, v1 : p1Result.value}\r\n\r\n            return ps.succeed(result)\r\n        })\r\n    }\r\n\r\n\r\nI would be very happy if it turned out that I misunderstood something.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-17T15:00:59.38-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Using higher-order member functions plus generic causes head-aches",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 1804
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, We'll take a look.",
+      "PostedDate": "2013-10-17T17:56:31.027-07:00",
+      "Id": 118792
+    }
+  ]
+}

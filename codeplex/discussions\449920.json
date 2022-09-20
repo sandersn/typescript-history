@@ -1,0 +1,186 @@
+[
+  {
+    "Id": "1067962",
+    "ThreadId": "449920",
+    "Html": "<a href=\"https://typescript.codeplex.com/workitem/395\" rel=\"nofollow\">This bug</a> asked for support for abstract classes. The bug was dismissed as not being useful or lacking appropriate justification.\r<br />\n<br />\nThis feature is important for me. Without it, it's not possible to statically type check implementations of the Template Method pattern. Most of my projects (even the plain JavaScript ones) use this pattern.\r<br />\n<br />\nHere is an example from some of my code. I have a <code>TemplateView</code> that implements the Backbone <code>render</code> method by rendering a template. <code>TemplateView</code> is abstract, and requires its subclasses to define a <code>getTemplate</code> method that returns the name of the template to use.<br />\n<pre><code>class TemplateView extends Backbone.View {\n  render() {\n    var template_name = this.getTemplate();\n    this.$el.html(_.template($(template_name).html())(this.toJSON()));\n    return this;\n  }\n\n  // the context to use for rendering the template\n  toJSON() {\n    return {};\n  }\n\n  // the name of the template to use\n  getTemplate() : string {\n    throw new Error(&quot;You must implement getTemplate&quot;);\n  }\n}\n\nclass MyView extends TemplateView {\n  getTemplate() {\n    return '#my-template';\n  }\n}\n</code></pre>\n\nI feel like the presence of the <code>getTemplate</code> method on subclasses of <code>TemplateView</code> should be statically checked.<br />\n<pre><code>abstract class TemplateView extends Backbone.View {\n  abstract getTemplate() : string;\n  // ...\n}\n\n// compile-time error\nclass MyView extends TemplateView {\n  getTempalte() { // misspelled the method name\n    return '#my-template';\n  }\n}\n\n// ok\nclass MyView extends TemplateView {\n  getTemplate() {\n    return '#my-template';\n  }\n}\n\n// also ok\nabstract class LoggingTemplateView extends TemplateView {\n  render() {\n    console.log('rendering template');\n    return super.render();\n  }\n}\n</code></pre>\n\nTypeScript is supposed to perform static type checking on JavaScript, and I think abstract classes are an important part of that. The <code>throw new Error</code> workaround defeats the purpose of type checking, by deferring a statically-detectable error to run time.<br />\n",
+    "PostedDate": "2013-07-13T18:39:33.257-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068439",
+    "ThreadId": "449920",
+    "Html": "I would very much like to see support for ABCs in TypeScript.  Various comments have been made that abstract classes are not something that is idiomatic in Javascript, but Typescript is supposed to be a more &quot;OO&quot; way to end up with Javascript and abstract classes are very useful when doing object-oriented development.  It saves us having lots of error checking done by throwing an exception when a base class method that shouldn't need defining is called (see <a href=\"https://typescript.codeplex.com/workitem/395\" rel=\"nofollow\">previous change request and discussion</a>).\r<br />\n<br />\nCould we have them, please?<br />\n",
+    "PostedDate": "2013-07-15T07:44:43.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079538",
+    "ThreadId": "449920",
+    "Html": "I'd like to add another (not so obvious) reason for supporting abstract classes: refactoring.\r<br />\n<br />\nIf you have:<br />\n<pre><code>class Abc {\n  frobnicate():void { throw &quot;Abstract method&quot;; }\n}\n\nclass Concrete extends Abc {\n  frobnicate():void { console.log (&quot;splines completely reticulated&quot;); }\n}</code></pre>\n\nand then you rename frobnicate() to reticulate() in the Concrete class, you get no compile-time error.\r<br />\n<br />\nHowever, if the Abc would be <code>abstract</code>, you could not have tripped over this.\r<br />\n<br />\nThis is also an argument for supporting <code>abstract</code> for methods as it is for supporting <code>override</code>.<br />\n",
+    "PostedDate": "2013-08-12T06:01:03.787-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079572",
+    "ThreadId": "449920",
+    "Html": "This is useful for me as well.  I have base classes that have no purpose by themselves and need to be derived from.<br />\n",
+    "PostedDate": "2013-08-12T06:45:15.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084388",
+    "ThreadId": "449920",
+    "Html": "This is just an indisputable feature as long as TypeScript goes to become true application-scale language. Along with strong support for library projects that will let us develop re-usable frameworks.<br />\n",
+    "PostedDate": "2013-08-23T19:15:13.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1109771",
+    "ThreadId": "449920",
+    "Html": "<strong>mtebenev wrote:</strong><br />\n<blockquote>\nThis is just an indisputable feature<br />\n</blockquote>\nAgree 100% - any OOP language should have this feature.\r<br />\n<br />\nAdding support for this should be fairly straight forward - all it needs to do is throw a compiler error if somebody attempts to create an instance of an abstract type.\r<br />\n<br />\nSeems kind of absurd to reject that request.<br />\n",
+    "PostedDate": "2013-10-20T17:35:33.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133645",
+    "ThreadId": "449920",
+    "Html": "I'm giving this a +1. Having abstract classes / methods are essential when building large-scale applications. I'm now using the &quot;throw&quot; approach, and that works quite well, but it's messy. \r<br />\n<br />\nAre there any good reasons why abstract classes / methods are <em>NOT</em> implemented?<br />\n",
+    "PostedDate": "2013-12-10T08:13:20.42-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135406",
+    "ThreadId": "449920",
+    "Html": "I must agree, unless this is really, really hard to do it should be part of the language - most important for me was the argument for refactoring.<br />\n",
+    "PostedDate": "2013-12-13T01:37:26.7-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135477",
+    "ThreadId": "449920",
+    "Html": "One reason abstract classes are not implemented may be because abstract classes can be considered an anti-pattern.<br />\nAn abstract class is both an interface and a partial implementation. You should separate this into a dependency and an interface.<br />\nYou can solve this by having good dependency injection.<br />\n<br />\nRather than:<br />\n<pre><code>abstract class A {\n  abstract function implementMe() {}\n  function foo() {\n     this.implementMe();\n  }\n}\nclass B extends A {\n  function implementMe() { console.log(&quot;o hai&quot;); }\n}\nvar b = new B();\nb.foo();</code></pre>\n\nYou could instead have:<br />\n<pre><code>interface implementMe {\n  function bar();\n}\nclass A {\n  private im;\n  constructor(implementMe im) { this.im = im }\n  function foo() { this.im.bar() }\n}\nclass B implements implementMe {\n  function implementMe() { console.log(&quot;o hai&quot;); }\n}\nvar a = new A(new B());\na.foo();</code></pre>\n\nClass A is still an abstract class in the sense that it needs an <code>implementMe</code> to do its work but now the dependency is clear.<br />\n<br />\n<strong>edit</strong>: in gavinwahl's example you can have a similar construction where <code>TemplateView</code> has a <code>TemplateSupplier</code> dependency which can be used in <code>getTemplate</code>.<br />\n",
+    "PostedDate": "2013-12-13T05:39:16.103-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135570",
+    "ThreadId": "449920",
+    "Html": "I think &quot;function implementMe()...&quot; should be &quot;function bar()...&quot; in your example...?<br />\n",
+    "PostedDate": "2013-12-13T08:42:54.833-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135579",
+    "ThreadId": "449920",
+    "Html": "I'm not sure I'd call it an &quot;anti-pattern&quot; either, though, really.  That is an alternative way to implement the functionality, but if you are not careful you end up implementing multiple hierarchies using your technique, one for each type of behaviour you want to inject.  These all add considerably to the complexity of the code (just compare the complexity of your two examples).  [Note: I appreciate that dependency injection is a very powerful technique but it is often overkill for many straightforward hierarchies unless it is needed for some other purpose, such as testing, run-time config, etc.]<br />\n<br />\nI find that a regular occurrence in code is a hierarchy of types, for whatever purpose, with a common interface, but which also often share some implementation between closely-related types.  An abstract class, placed in-between the interface and the derived classes is often a very simple solution that avoids duplicated code between classes, or the alternative of lots of helper classes with delegating functions all over the place.  C++, C#, Java, etc., all have (differing) support for abstract classes and they are widely used.<br />\n<br />\nAnd the implementation of this feature is also not complex: a keyword to mark a class as abstract and a check on instantiation that the class is not abstract.<br />\n",
+    "PostedDate": "2013-12-13T08:54:53.323-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135580",
+    "ThreadId": "449920",
+    "Html": "Creating another object to use from another object doubles the number of objects - and it was the TypeScript team itself that frowned upon this for the private variables discussion,<br />\n",
+    "PostedDate": "2013-12-13T08:56:15.527-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135581",
+    "ThreadId": "449920",
+    "Html": "<strong>rb126 wrote:</strong><br />\n<blockquote>\n&quot;solution that avoids duplicated code between classes, or the alternative of lots of helper classes with delegating functions all over the place...<br />\n...<br />\nAnd the implementation of this feature is also not complex: a keyword to mark a class as abstract and a check on instantiation that the class is not abstract.&quot;<br />\n</blockquote>\nI totally agree.  As an API developer myself, I routinely create &quot;helper methods/functions&quot; so users can just call the inherited method/function as needed.  It makes it easier on end users since they don't have to implement EVERY method/function - only what they need, if any at all.\r<br />\n<br />\nI also agree, this should be very simple to implement - a simple compiler error on implementing an abstract type on its own.<br />\n",
+    "PostedDate": "2013-12-13T09:03:58.007-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1207789",
+    "ThreadId": "449920",
+    "Html": "+1<br />\n",
+    "PostedDate": "2014-02-13T02:14:54.783-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1249214",
+    "ThreadId": "449920",
+    "Html": "This is also usually solved with mixins in JS land. Instead of increasing the depth of your inheritance hierarchy, you use the fact that prototypes are mutable and inject them the desired functionality. This is similar to dependency injection. It'd be nice to see a JS-style approach in TypeScript.\r<br />\n<br />\nFor similar ideas see Traits: <a href=\"http://wiki.ecmascript.org/doku.php?id=strawman:trait_composition_for_classes\" rel=\"nofollow\">http://wiki.ecmascript.org/doku.php?id=strawman:trait_composition_for_classes</a> and <a href=\"http://soft.vub.ac.be/~tvcutsem/traitsjs/\" rel=\"nofollow\">http://soft.vub.ac.be/~tvcutsem/traitsjs/</a>.<br />\n",
+    "PostedDate": "2014-05-24T09:38:08.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1257279",
+    "ThreadId": "449920",
+    "Html": "<strong>FritsvanCampen wrote:</strong><br />\n<blockquote>\nOne reason abstract classes are not implemented may be because abstract classes can be considered an anti-pattern.<br />\n</blockquote>\nI think calling an abstract class an anti-pattern is a bit extreme. Sure, you can use interfaces, but they do not allow implementation of behavior. I now either have to have duplicated behavior in child classes, or have a base class with this behavior which, by pure use case, <em>should not</em> be instantiated but can be. Both of those seem worse to me. <br />\n",
+    "PostedDate": "2014-06-17T17:56:08.713-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1257338",
+    "ThreadId": "449920",
+    "Html": "<blockquote>\nOne reason abstract classes are not implemented may be because abstract classes can be considered an anti-pattern.<br />\n</blockquote>\nWhat @FritsvanCampen demonstrated <em>is</em> an anti-pattern - but, as others pointed out, that's not the intended (or only) use case for abstract classes.<br />\n<br />\nActually, you can think of abstract classes as being classes just like any other class:<br />\n<br />\nThink of &quot;abstract class&quot; as a class just like any other, but flagged with a restriction that says, &quot;this is a base class for other classes, and you should not create an instance of this&quot;.<br />\n<br />\nThink of abstract methods as being simply methods with empty implementations, but flagged with a restriction that says, &quot;this method has not been implemented, a subclass needs to override the implementation&quot;.<br />\n<br />\nAs such, the &quot;abstract&quot; modifiers are mere flags - metadata that the developer can add to instruct the compiler to make some simple extra assertions. Don't overthink it.<br />\n",
+    "PostedDate": "2014-06-18T00:28:53.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1257858",
+    "ThreadId": "449920",
+    "Html": "@mindplay, Well put.<br />\n",
+    "PostedDate": "2014-06-19T05:37:07.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258615",
+    "ThreadId": "449920",
+    "Html": "Dependency injection is great and all, but: 1. No way is type-abstraction an anti-pattern. 2. when a type-system is not strong enough to express distinctions, abstract types help. e.g. I may have some set of strings that are indexes one table, but not for another. Abstract types let you distinguish these different kinds of indexes and gives you compile-time errors if you mix them up by mistake. All strongly-typed languages support them, and having the option to use them would hugely valuable. I have a team of 10 engineers and it would be very valuable to us. <br />\n",
+    "PostedDate": "2014-06-21T20:06:13.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260718",
+    "ThreadId": "449920",
+    "Html": "I think it's a pretty compelling argument, given all the discussion here. Perhaps someone up top doesn't agree? \r<br />\n<br />\n@MindPlay, while the given example may have been an anti-pattern, that cannot be means for ruling it out completely. Regex is abused on a daily basis (..&quot;how can I build a complete HTML parser using regex?&quot;) on a daily basis. Anyhow, good to discussion! Great knowing that all this can help shape the future of TS :)<br />\n",
+    "PostedDate": "2014-06-28T03:10:06.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263895",
+    "ThreadId": "449920",
+    "Html": "+1 from me too.<br />\n",
+    "PostedDate": "2014-07-09T01:53:15.55-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264764",
+    "ThreadId": "449920",
+    "Html": "Abstract classes will contain abstract methods. What if I wanted not to <em>not</em> require overriding and provide fall-back behaviour? Would I use <code>virtual</code>? Given that allowing overrides is the current behaviour, a <code>sealed</code> keyword to disallow overriding on particular methods would be more useful.\r<br />\n<br />\nI like the idea of including an <code>overrides</code> keyword, to allow refactoring of overridden base-class methods. (Mentioned above by b100dian). Also, currently, Visual Studio intellisense doesn't show base-class prototype methods when writing new ones (/overriding) -- you kind of just hope you spelt it right (a JavaScript feature TypeScript was meant to eliminate)\r<br />\n<br />\nAnd to throw a curveball into the mix, I'd like to express my preference for the Visual Basic keywords in this field - they are much more descriptive:\r<br />\n<br />\nC#: <code>abstract</code>\r<br />\nVB Class: <code>MustInherit</code>\r<br />\nVB Method: <code>MustOverride</code>\r<br />\n<br />\nC#: <code>virtual</code>\r<br />\nVB: <code>Overridable</code>\r<br />\n<br />\nC#: <code>sealed</code>\r<br />\nVB Class: <code>NotInheritable</code>\r<br />\nVB Method: <code>NotOverridable</code>\r<br />\n<br />\nAnd just to be picky:\r<br />\nC#: <code>override</code>\r<br />\nVB: <code>Overrides</code>\r<br />\n<br />\nObviously, camelcase would look odd, so they would need to be lowercased like <code>instanceof</code> and <code>typeof</code>.<br />\n",
+    "PostedDate": "2014-07-11T04:17:15.86-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1278909",
+    "ThreadId": "449920",
+    "Html": "This issue is moved to new GitHub repository <a href=\"https://github.com/Microsoft/TypeScript/issues/6\" rel=\"nofollow\">https://github.com/Microsoft/TypeScript/issues/6</a>. Lets discuss it there.<br />\n",
+    "PostedDate": "2014-07-29T14:18:45.633-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

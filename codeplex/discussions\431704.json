@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "995287",
+    "ThreadId": "431704",
+    "Html": "When an object literal is used to specify the type of a variable or parameter, TypeScript permits any object containing a superset of the requisite properties to be passed in its stead.\r<br />\n<br />\nFor example:<br />\n<pre><code>var foo : { id: number; };\n\nfoo = { id:10, name:&quot;foo&quot;}; // Okay</code></pre>\n\nThis creates a subtle problem in the real world. Consider the following:<br />\n<pre><code>// Iteration One\nclass Animate{\n    fadeOut(options: {opacity:number; duration: number;}){}\n}\n\n// Somewhere else in code\nvar animate = new Animate();\nanimate.fadeOut({ opacity: 0.7, duration: 200}); // Great! everything works\n</code></pre>\n\nSometime later:<br />\n<pre><code>// Iteration Two\nclass Animate{\n       setDuration(duration:number){}\n    fadeOut(options: {opacity:number;}){}\n}</code></pre>\n\nThe author makes this change, compiles all projects in order to discover any errors, and takes the rest of the day off because there were no compilation errors.\r<br />\n<br />\nBut <br />\n<pre><code>// Somewhere else in code\nvar animate = new Animate();\nanimate.fadeOut({ opacity: 0.7, duration: 200}); // WTF? Why isn't this working?\n</code></pre>\n\nClearly this behaviour of TypeScript appears to have been put in place in order to permit cases such as the following:<br />\n<pre><code>class RandomOptions{\n    width = 10;\n    height = 20;\n    colour = &quot;blue&quot;;\n    padding = 20;\n    opacity = 0.5;\n}\n\nvar animate = new Animate();\nanimate.fadeOut(new RandomOptions()); // Okay\n</code></pre>\n\nI am not sure I agree that this is right. The last example is not good code. It's difficult to comprehend because we are not sure which of the options are being manipulated in the &quot;fadeOut&quot;.\r<br />\n<br />\nIt's far better to require the caller to do the following:<br />\n<pre><code>var animate = new Animate();\nvar options = new RandomOptions();\nanimate.fadeOut({ opacity: options.opacity});</code></pre>\n\nAre we encouraging a bad practice here?\r<br />\n<br />\nNoel\r<br />\n<br />\n(NB: This discussion is not about strongly-typed classes, which work as expected)<br />\n",
+    "PostedDate": "2013-02-01T08:55:19.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995327",
+    "ThreadId": "431704",
+    "Html": "This is a good opportunity for lint-type tools.\r<br />\n<br />\nIt's really hard to imagine a change to the type system that would preserve sane structural typing, but still catch this error. Imagine this code:<br />\n<pre><code>function printName(namedObject: { name: string; }) {\n    console.log(namedObject.name);\n}\n\nfunction printWeight(weighableObject: { weight: number; }) {\n    console.log(weighableObject.weight.toString());\n}\n\nvar me = { name: 'Bob', weight: 150 };\nprintName(me); // should work, obviously\nprintWeight(me); // same\nprintName({ name: 'Bob', weight: 150 }); // ... shouldn't work??</code></pre>\n\nThe principle of least surprise needs to be in effect here - passing 'me' in place of the object literal that initialized it should have the exact same behavior.\r<br />\n<br />\nWhat do you think about this example?<br />\n",
+    "PostedDate": "2013-02-01T10:00:34.937-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995378",
+    "ThreadId": "431704",
+    "Html": "@ryancavenaugh,\r<br />\n<br />\nThe point is the line <code>printName({ name: 'Bob', weight: 150 });</code> is not very good code, because it isn't clear of the purpose of the &quot;weight&quot; property in a function named &quot;printName&quot;.\r<br />\n<br />\nSo, what I suggest is the following for your example:<br />\n<pre><code>var me = { name: 'Bob', weight: 150 };\nprintName(me); // Shouldn't work\nprintWeight(me); // Shouldn't work\nprintName({ name: 'Bob', weight: 150 }); // Shouldn't work\nprintName({ name: 'Bob'}); // Should work</code></pre>\n\nA better way to write this code is<br />\n<pre><code>// Alternative 1\nfunction printPerson(person: {name: string; weight: number;}){}\nvar me = { name: 'Bob', weight: 150 };\nprintPerson(me); // Should work</code></pre>\n\nOr, if the author wishes to support legacy code they could do the following:<br />\n<pre><code>// Alternative 2\ninterface INamed {\n    name: string;\n}\ninterface IWeighable {\n    weight: number;\n}\nfunction printName(namedObject: INamed) {\n    console.log(namedObject.name);\n}\nfunction printWeight(weighableObject: IWeighable) {\n    console.log(weighableObject.weight.toString());\n}\nvar me  = { name: 'Bob', weight: 150 };\nprintName(me); // Should work\nprintWeight(me); // Should work\nprintName({ name: 'Bob', weight: 150 }); // Should work</code></pre>\n\nThis alternative, while again not being &quot;good code&quot;, is acceptable IMO because we are familiar with the notion of objects implementing multiple interfaces to describe  behaviour.\r<br />\n<br />\nInterfaces should be the only exception to this rule.\r<br />\n<br />\nI hope that makes sense.<br />\n",
+    "PostedDate": "2013-02-01T12:29:45.19-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995427",
+    "ThreadId": "431704",
+    "Html": "<strong>ryancavanaugh wrote:</strong><br />\n<blockquote>\nThis is a good opportunity for lint-type tools.<br />\n<br />\nIt's really hard to imagine a change to the type system that would preserve sane structural typing, but still catch this error. Imagine this code:<br />\n</blockquote>\nIf a proper type system can't handle it, what chance do linters have? (*)\r<br />\n<br />\nI'm not sure how well this integrates with TS, but in statically typed functional languages this topic has received a lot of attention.\r<br />\nThe usual approach to typing <strong>&quot;extensible records&quot;</strong> is to introduce some form of row type (giving names and types\r<br />\nto those properties that have not been listed explicitly), and to be explicit about whether a given record (parameter) \r<br />\nis meant to be extensible (there can be fields other than those listed explicitly) or not.\r<br />\n<br />\nInventing a random notation for extensible TS objects by borrowing array spread syntax, one would type<br />\n<pre><code>function f_extensible( { name : string; ... } ) { return name }   // parameter has at least a name property\nfunction f_nonextensible( { name : string; } ) { return name }  // parameter has exactly a name property\nf_extensible( { name: &quot;joe&quot;; height: 200 } ); // returns &quot;joe&quot;\nf_nonextensible( { name: &quot;input_field&quot;; comment: &quot;please enter data&quot; } ); // type error, extraneous property</code></pre>\n\nThose type systems even allow for polymorphism in rows<br />\n<pre><code>// same unknown properties in and out, at least name\nfunction update( { name: string; ...rest } ) { return { name: name.toUpper(); ...rest } }</code></pre>\n\nOne notational difficulty is that JS and TS objects are extensible by default, until <code>Object.preventExtensions</code> is called on them. \r<br />\nSo <code>{}</code> would be extensible and one would need a notation for non-extensible objects types.\r<br />\n<br />\nAdditional semantic difficulties come from <code>Object.preventExtensions</code>  working by side-effect and not affecting the\r<br />\nprototype chain. So one would probably need to decouple structural typing with extensible and non-extensible \r<br />\nobject types from use of <code>Object.preventExtensions</code>.\r<br />\n<br />\n(*) a linter with access to TypeScript type information would be a useful project..<br />\n",
+    "PostedDate": "2013-02-01T14:03:41.797-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995436",
+    "ThreadId": "431704",
+    "Html": "Making a separate lint tool would require rebuilding some of the infrastructure the TypeScript compiler already has in place, no? Maybe the compiler itself should have a &quot;lint&quot; mode of compilation, where it presents such issues as warnings/messages. <br />\n",
+    "PostedDate": "2013-02-01T14:56:36.913-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995511",
+    "ThreadId": "431704",
+    "Html": "<strong>MgSam wrote:</strong><br />\n<blockquote>\nMaking a separate lint tool would require rebuilding some of the infrastructure the TypeScript compiler already has in place, no? Maybe the compiler itself should have a &quot;lint&quot; mode of compilation, where it presents such issues as warnings/messages.<br />\n</blockquote>\nThe TypeScript project exposes most of that infrastructure as <code>typeScriptServices.ts</code> (would be good if that could be used as an external module, though).\r<br />\nSo you could reuse that, just as TS IDE plugins do, and issue warnings instead of JS code. Linting needs tend to be highly personal/project-specific, and\r<br />\nwith all that configurability and building up a pool of useful rules, it might well a separate project (just as JSHint is far from done when you have a JS parser).<br />\n",
+    "PostedDate": "2013-02-02T01:37:13.413-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995763",
+    "ThreadId": "431704",
+    "Html": "I like this notation:<br />\n<pre><code>function f_extensible( { name : string; ... } ) { return name }   // parameter has at least a name property\nfunction f_nonextensible( { name : string; } ) { return name }  // parameter has exactly a name property\n</code></pre>\n\nbecause the default usage favours non-extensible objects, which (I'm guessing) accounts for the larger proportion of all code that is written.\r<br />\n<br />\nAlthough instead of having a new notation for extensible objects one can always declare the parameter as an interface - a bit more work but for the corner case.\r<br />\n<br />\nI don't think the empty object &quot;{}&quot; behaves as an extensible object in TypeScript, which further strengthens the case for making object-literal typing non-extensible:<br />\n<pre><code>var foo: {} = {};\nfoo.name = &quot;Bob&quot;; // Error: The property 'name' does not exist...\n\n// But\nfunction bar(arg: {}){\n}\n\nvar baz = {baz:&quot;baz&quot;};\nbar(baz); // Eh?! Why is this compiling?</code></pre>\n\n",
+    "PostedDate": "2013-02-03T06:09:04.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996151",
+    "ThreadId": "431704",
+    "Html": "@nablog I like that notation for anonymous objects. \r<br />\n<br />\nI think this class of problem would also be helped by adding a <code>sealed</code>/<code>final</code> keyword for interfaces/classes. <br />\n",
+    "PostedDate": "2013-02-04T07:24:47.807-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "925266",
+    "ThreadId": "398976",
+    "Html": "\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> helloWorld(){\r\n\t<span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;hello&quot;</span>;\r\n}\r\n\r\nhelloWorld.message = <span style=\"color:#a31515\">&quot;Greetings&quot;</span>;\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>What is the equivalent of above valid JavaScript statement in TypeScript. Angular.js uses function object characteristics for specifying dependency injection (<a href=\"http://docs.angularjs.org/guide/dev_guide.services.injecting_controllers\">http://docs.angularjs.org/guide/dev_guide.services.injecting_controllers</a>)</p>\r\n",
+    "PostedDate": "2012-10-11T07:37:47.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925474",
+    "ThreadId": "398976",
+    "Html": "\r\n<p>How about this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> IHasMessageToo {\n\tmessage : string;\n\t() : string;\n}\n\ndeclare <span style=\"color:blue\">var</span> helloWorld : IHasMessageToo;\n\n<span style=\"color:blue\">var</span> helloWorld = <span style=\"color:blue\">function</span> () {\n\t<span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;hello&quot;</span>;\n}\n\n\nhelloWorld.message = <span style=\"color:#a31515\">&quot;Greetings&quot;</span>;\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>I don't know if that's the shortest code to achieve it, but it generates the same output without a warning. &nbsp;I couldn't find it in the spec or tutorials, but I pieced it together with the jQuery.d.ts example which must do this for the jQuery function.</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-11T12:37:37.02-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925561",
+    "ThreadId": "398976",
+    "Html": "\r\n<p>I use this pattern for AngularJS controllers:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> HelloScope <span style=\"color:blue\">extends</span> Scope {\n    greeting: string;\n}\n\n<span style=\"color:blue\">class</span> helloController {\n    <span style=\"color:blue\">static</span> $inject = [<span style=\"color:#a31515\">&quot;$scope&quot;</span>, <span style=\"color:#a31515\">&quot;$location&quot;</span>];\n    constructor($scope: HelloScope, $location: Location) {\n        $scope.greeting = <span style=\"color:#a31515\">&quot;Hello&quot;</span>;\n    }\n}\n</pre>\r\n<p>Also, take a look at <a href=\"https://gist.github.com/3865662\">https://gist.github.com/3865662</a> for type declarations for AngularJS.</p>\r\n</div>\r\n",
+    "PostedDate": "2012-10-11T15:54:01.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987442",
+    "ThreadId": "398976",
+    "Html": "\r\n<p>Quite often the controllers are simple so everything is setup in a constructor. That means that there is one level of nesting that is not needed. That's why I often make controller only as a function. Then of course it is harder to specify dependencies,\r\n but this works now:</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module UserSession {\r\n    export <span style=\"color:blue\">interface</span> Scope extends ng.Scope {\r\n        logout();\r\n    }\r\n\r\n    export function Controller($scope: Scope,\r\n                                          $log : ng.Log) {\r\n\r\n        $log.info(<span style=\"color:#a31515\">'UserSessionCtrl'</span>);\r\n        \r\n        $scope.logout = function () {\r\n         ...\r\n        };\r\n    }\r\n\r\n    (&lt;any&gt;Controller).$inject = [<span style=\"color:#a31515\">'$scope'</span>, <span style=\"color:#a31515\">'$log'</span>];\r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2013-01-16T00:53:12.03-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

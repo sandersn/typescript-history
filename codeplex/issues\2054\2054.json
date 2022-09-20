@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-31T09:12:27.717-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have the function below in JavaScript, which works perfectly:\r\n```js\r\nfunction hexToRgb(hex) {\r\n    // Expand shorthand form (e.g. \"03F\") to full form (e.g. \"0033FF\")\r\n    var shorthandRegex = /^#?([a-f\\d])([a-f\\d])([a-f\\d])$/i;\r\n    hex = hex.replace(shorthandRegex, function(m, r, g, b) {\r\n        return r + r + g + g + b + b;\r\n    });\r\n\r\n    var result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);\r\n    return result ? {\r\n        r: parseInt(result[1], 16),\r\n        g: parseInt(result[2], 16),\r\n        b: parseInt(result[3], 16)\r\n    } : null;\r\n}\r\n```\r\n\r\nNow in VS2013 with TypeScript 0.9.5 installed, the IDE complains about \"replace\" saying that\r\n```\r\nSupplied parameters do not match any signature of call target:\r\n  Could not apply type 'string' to argument 1 which is of type 'RegExp'.\r\n\r\nCould not select overload for 'call' expression.\r\n```\r\n\r\nThen I checked the signature for \"replace\":\r\n```ts\r\nreplace(searchValue: RegExp, replaceValue: (substring: string, ...args: any[]) => string): string;\r\n```\r\n\r\nIf I change my function to \r\n```ts\r\nhex = hex.replace(shorthandRegex, function(m, ...args) {\r\n    return \"\";  // I suppose should be something like: args[0] + args[0] + ...\r\n});\r\n```\r\nit works, but I may have to use `args` instead of more meaningful `r` `g` `b`.\r\n\r\nI suppose this is an unexpected behavior of the type system? btw I didn't find anything related to \"...x: T[]\" in the language spec.",
+    "LastUpdatedDate": "2014-03-31T16:22:05.743-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-30T22:50:15.023-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "string replace with function replaceValue",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2054
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You'll notice on the \"replace\" method the use of a rest parameter (...args).  This is explained in the spec as expanding to \"an infinite list of optional parameters\".  In order to be compatible, the function you provide must match in optionality, i.e. if you change the replace call to the below:\n\n```typescript\nhex.replace(shorthandRegex, function (m, r?, g?, b?)\n```\n\nThen the code will work fine.  This isn't particularly intuitive, and the error isn't very helpful, so we are looking at ways to make this more \"user-friendly\" without making the language rules too much more complex or opening any more holes in the type system.  It is currently 'by design' however, and only used to work previously due to a bug we fixed in 0.9.5.\n\nThis is discussed at http://stackoverflow.com/questions/20504670/typescript-variable-number-of-parameters-in-function-interface-definition-0-9-5/20506533#20506533 also.",
+      "PostedDate": "2013-12-31T09:12:22.867-08:00",
+      "Id": 128775
+    },
+    {
+      "Message": "Thanks, it works now.\n\nI wonder if it would better to state explicitly about the subtyping of arrow/function types.  I guess Spec 3.8 \"Type Relationships\" doesn't say anything about arrow types.",
+      "PostedDate": "2013-12-31T16:27:32.987-08:00",
+      "Id": 128795
+    }
+  ]
+}

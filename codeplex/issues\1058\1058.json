@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "the declare syntax is the following...\n````\ndeclare module 'express' {\n    function someName() : number;\n\n    export = someName;\n}\n````",
+    "ClosedDate": "2013-05-24T10:08:38.237-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "This is valid code in TS0.8: \r\n```\r\ndeclare module \"express\" {\r\n    export function (): number;\r\n}\r\n\r\nimport x = module(\"express\");\r\nx();\r\n```\r\nWhich does not work in TS0.9 probably as a module no longer creates a type. \r\n\r\nThis is required by a number of nodeJS modules. e.g. [express](https://github.com/borisyankov/DefinitelyTyped/blob/master/express/express.d.ts#L1315)\r\n\r\n[Usage:](https://github.com/tanaka-takayoshi/hello-typescript-nodejs/blob/master/app.ts#L6-L7) \r\n```\r\nimport express = module('express')\r\nvar app = <express.ServerApplication> express()\r\n```\r\n\r\nThe new design covered at https://typescript.codeplex.com/discussions/444444 caters for creating callable modules however the syntax for __declaring__ a callable modules that can also be loaded via __import__ is still open. ",
+    "LastUpdatedDate": "2014-03-31T16:11:04.893-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-21T19:45:41.863-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Callable modules not working in TS 0.9",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1058
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "+1, also required for jQuery\n\ndeclare module \"jquery\" {\n   export function (selector: string, context?: any): JQuery;\n}\n\nand accoding to require spec, it is possible to export functions\nhttp://requirejs.org/docs/api.html#deffunc\n\nalso commonjs talks about factory as a function \nhttp://wiki.commonjs.org/wiki/Modules/AsynchronousDefinition",
+      "PostedDate": "2013-05-22T05:07:31.297-07:00",
+      "Id": 100852
+    },
+    {
+      "Message": "workaround:\n\n```\nimport jq = module(\"jquery\");\n$=<jQueryStatic>jq.noConflict();\n```\n\nor \n\n```\nimport jq = module(\"jquery\");\njq.noop()\n$=<jQueryStatic>jq;\n```\n\nnoop() or noConflict() call required for workitem https://typescript.codeplex.com/workitem/1029\n\n",
+      "PostedDate": "2013-05-22T05:26:09.223-07:00",
+      "Id": 100853
+    },
+    {
+      "Message": "This is by design see the discussion here:\n\nhttps://typescript.codeplex.com/discussions/444444\n\nfor the new design.\n\r\n\r** Closed by paulb 05/22/2013 10:43AM",
+      "PostedDate": "2013-05-22T10:43:38.703-07:00",
+      "Id": 101056
+    },
+    {
+      "Message": "Hi @paulb,\n\nJust tried out the latest 0.9-release (typescript-aeda9c0df4d45816f1ce0026ef81a514dbd6cf8a).\n\nStill gets \"error TS1063: Export assignments cannot be used in internal modules.\" on the line with \"export =\".\n",
+      "PostedDate": "2013-05-25T21:26:24.42-07:00",
+      "Id": 101206
+    },
+    {
+      "Message": "Sorry.  Problem SOLVED.  It errors out if the module name is not put in quotes.  It works if the module name is in quotes.\n",
+      "PostedDate": "2013-05-27T07:29:43.397-07:00",
+      "Id": 101290
+    },
+    {
+      "Message": "I'm not sure this should be so hastily closed. Regarding jQuery and callable modules (and express and others as well...) I see that you can export the function, but what if there are many overrides of the function which all need to be exported? That is the case with jQuery and I would bet with many Node.js modules as well. What is the syntax for that?",
+      "PostedDate": "2013-07-02T18:01:36.317-07:00",
+      "Id": 104944
+    },
+    {
+      "Message": "Other problem is that you can not export other symbols that way.\nSo your exported function can not return \"internal\" JQuery object.",
+      "PostedDate": "2013-07-03T03:46:22.797-07:00",
+      "Id": 104969
+    },
+    {
+      "Message": "For anyone who finds this in the future and just wants to know how to create a callable module, it really helped me to look at the express type definitions [here](https://github.com/borisyankov/DefinitelyTyped/blob/master/express/express.d.ts).",
+      "PostedDate": "2014-02-11T09:56:43.86-08:00",
+      "Id": 133276
+    }
+  ]
+}

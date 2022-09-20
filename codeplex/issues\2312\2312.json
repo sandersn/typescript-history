@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:18:23.78-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "There are some cases where JSDoc comments are not transferred on the generated JavaScript which makes documenting code using JSDoc hard to use most notably when using tools like JSDoc3 to generate HTML files.\r\n\r\nCase I've found out but there might be others:\r\n- Static constants of a class\r\n- Private fields/members of a class\r\n- General @module JSDoc block based on where that block is:\r\n  - Before references or import\r\n  - Before an interface (as interface are not generated in javascript)\r\n\r\nThe context is TypeScript latest version (1.0 RC), using module=\"AMD\".\r\n\r\nExamples of each:\r\n__- Static__ (example here is for a private constant, but the issue is also happening for public constants):\r\n```\r\n/**\r\n * A comment\r\n * \r\n * @member {RegExp} Object.CONSTANT\r\n * @private\r\n */\r\nprivate static CONSTANT : RegExp = new RegExp(\"{\\\\d+}\", \"g\");\r\n```\r\n\r\n__- Private fields:__\r\n```\r\n/**\r\n * A comment \r\n * \r\n * @member {string} Object#member\r\n * @private\r\n */\r\nprivate member: string;\r\n\r\npublic constructor() {        \r\n    this.member = \"Test\";    \r\n}\r\n```\r\n\r\n__- @module:__\r\n_Reference:_ \r\n```\r\n/**\r\n * @module mymodule\r\n * @author Me\r\n * @version 1.0.0\r\n */\r\n/// <reference path=\"some/reference.d.ts\" />\r\n```\r\n\r\n_Import:_\r\n```\r\n/**\r\n * @module mymodule\r\n * @author Me\r\n * @version 1.0.0\r\n */\r\nimport othermodule = require('other/module');\r\n```\r\n\r\n_Interface:_\r\n```\r\n/**\r\n * @module mymodule\r\n * @author Me\r\n * @version 1.0.0\r\n */\r\n\r\n/**\r\n * @class\r\n * @classdesc Some description for this interface even if not there in Javascript\r\n * @memberof module:mymodule\r\n */\r\ninterface Test {\r\n}\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-14T06:44:37.863-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "JSDoc inconsistent output on generated JavaScript files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2312
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the detailed examples. We made some targeted fixes to common cases with the intention for some more fundamental future work to fix this in the general case. We'll make sure these cases get looked at.",
+      "PostedDate": "2014-03-14T17:58:43.113-07:00",
+      "Id": 136910
+    }
+  ]
+}

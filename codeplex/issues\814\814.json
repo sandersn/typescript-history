@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks, we're aware of some issues here that will be resolved in the future. See here for some more information and workarounds: http://typescript.codeplex.com/workitem/597",
+    "ClosedDate": "2013-03-14T17:16:16.8-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I added a type definition for the underscore lib to my project from definitelyTyped at github (attached).\r\nWith this file I am getting in the Output window\r\n\r\n```\r\nError reading file \"C:\\Project\\Features\\5334\\Solutions\\Modules\\Project.Core\\Scripts\\underscore.d.ts\": File not found\r\n```\r\n\r\nThere is nothing wrong with the file if you ask me.\r\nCompiling with tsc.exe works too.\r\nIt's some annoying weird glitch in VS. ",
+    "LastUpdatedDate": "2013-03-14T17:16:16.8-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-14T04:08:45.907-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "File not found in Visual Studio 2012",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 814
+  },
+  "FileAttachments": [
+    {
+      "FileId": 637904,
+      "FileName": "underscore.d.ts",
+      "DownloadUrl": ".\\637904"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "removing that file from the solution helped",
+      "PostedDate": "2013-03-14T04:12:59.877-07:00",
+      "Id": 93235
+    },
+    {
+      "Message": "it seems like it has something to do with the length of the list of *.ts file that is specified in the command line of the compiler command, now I have the same problem with another file which was completely fine before. It is a stopper. I cannot work like this.",
+      "PostedDate": "2013-03-14T05:52:11.403-07:00",
+      "Id": 93238
+    },
+    {
+      "Message": "I cannot redirect the output to file because I am getting \"The command line is too long\"",
+      "PostedDate": "2013-03-14T06:06:13.037-07:00",
+      "Id": 93242
+    },
+    {
+      "Message": "Solved!\nI had to modify the Microsoft.TypeScript.targets file:\n\nBefore (didn't work)\n\n```\n<!--\n***********************************************************************************************\nMicrosoft.TypeScript.targets\n\nWARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have\n          created a backup copy.  Incorrect changes to this file will make it\n          impossible to load or build your web deploy projects from the command-line or the IDE.\n\nThis file defines the steps in the standard build process for TypeScript files.\n\nCopyright (C) Microsoft Corporation. All rights reserved.\n***********************************************************************************************\n-->\n<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\n  <PropertyGroup>\n    <CompileDependsOn>\n      $(CompileDependsOn);\n      CompileTypeScript;\n    </CompileDependsOn>\n  </PropertyGroup>\n  \n  <PropertyGroup>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptIncludeComments)' == 'true'\">$(TypeScriptBuildConfigurations) --comments</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptGeneratesDeclarations)' == 'true'\">$(TypeScriptBuildConfigurations) --declaration</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptModuleKind)' != ''\">$(TypeScriptBuildConfigurations) --module $(TypeScriptModuleKind)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptIncludeDefaultLib)' == 'false'\">$(TypeScriptBuildConfigurations) --nolib</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptOutFile)' != ''\">$(TypeScriptBuildConfigurations) --out $(TypeScriptOutFile)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptSourceMap)' == 'true'\">$(TypeScriptBuildConfigurations) --sourcemap</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptTarget)' != ''\">$(TypeScriptBuildConfigurations) --target $(TypeScriptTarget)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptAdditionalFlags)' != ''\">$(TypeScriptBuildConfigurations) $(TypeScriptAdditionalFlags)</TypeScriptBuildConfigurations>\n    <TypeScriptCompileOnSaveEnabled Condition=\"'$(TypeScriptEnableCompileOnSave)' != 'false' and '$(TypeScriptOutFile)' == ''\">true</TypeScriptCompileOnSaveEnabled>\n  </PropertyGroup>\n  \n  <Target Name=\"CompileTypeScript\">\n    <Message Text=\"Compiling TypeScript files\" />\n    <Message Text=\"Executing tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n    <Exec Command=\"tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n  </Target>\n  \n</Project>\n\n```\n\n\nAfter (works!)\n\n```\n<!--\n***********************************************************************************************\nMicrosoft.TypeScript.targets\n\nWARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have\n          created a backup copy.  Incorrect changes to this file will make it\n          impossible to load or build your web deploy projects from the command-line or the IDE.\n\nThis file defines the steps in the standard build process for TypeScript files.\n\nCopyright (C) Microsoft Corporation. All rights reserved.\n***********************************************************************************************\n-->\n<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\n  <PropertyGroup>\n    <CompileDependsOn>\n      $(CompileDependsOn);\n      CompileTypeScript;\n    </CompileDependsOn>\n  </PropertyGroup>\n  \n  <PropertyGroup>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptIncludeComments)' == 'true'\">$(TypeScriptBuildConfigurations) --comments</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptGeneratesDeclarations)' == 'true'\">$(TypeScriptBuildConfigurations) --declaration</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptModuleKind)' != ''\">$(TypeScriptBuildConfigurations) --module $(TypeScriptModuleKind)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptIncludeDefaultLib)' == 'false'\">$(TypeScriptBuildConfigurations) --nolib</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptOutFile)' != ''\">$(TypeScriptBuildConfigurations) --out $(TypeScriptOutFile)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptSourceMap)' == 'true'\">$(TypeScriptBuildConfigurations) --sourcemap</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptTarget)' != ''\">$(TypeScriptBuildConfigurations) --target $(TypeScriptTarget)</TypeScriptBuildConfigurations>\n    <TypeScriptBuildConfigurations Condition=\"'$(TypeScriptAdditionalFlags)' != ''\">$(TypeScriptBuildConfigurations) $(TypeScriptAdditionalFlags)</TypeScriptBuildConfigurations>\n    <TypeScriptCompileOnSaveEnabled Condition=\"'$(TypeScriptEnableCompileOnSave)' != 'false' and '$(TypeScriptOutFile)' == ''\">true</TypeScriptCompileOnSaveEnabled>\n  </PropertyGroup>\n  \n  <Target Name=\"CompileTypeScript\">\n    <Message Text=\"Compiling TypeScript files\" />\n    <Message Text=\"Executing tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n    <Exec WorkingDirectory=\"$(ProjectDir)\" Command=\"tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(Identity)&quot;', ' ')\" />\n  </Target>\n  \n</Project>\n\n```",
+      "PostedDate": "2013-03-14T06:23:30.363-07:00",
+      "Id": 93243
+    },
+    {
+      "Message": "Basically the solution is a workaround. I am safe as long as the new limit isn't reached next time. So the issue remains open.",
+      "PostedDate": "2013-03-14T10:50:23.66-07:00",
+      "Id": 93276
+    }
+  ]
+}

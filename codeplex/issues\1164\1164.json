@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You have an error in your signature for forEach. Your function parameters are named T and number, of type any, which clearly is not what you wanted. This signature:\n\nfunction forEach<T>(a: Array<T>, f: (x:T, y:number) => any);\n\ncauses errors to be reported in all the places you expected. I have made this same mistake too many times :)",
+    "ClosedDate": "2013-06-18T16:58:38.88-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Playing around, I've spotted a few opportunities for further type inference.\r\n\r\n```typescript\r\nvar arr = ['a','b','c'];\r\n\r\n// Dummy functions for testing type inference.\r\nfunction stringOnly(s:string) {}\r\nfunction numberOnly(i:number) {}\r\n\r\narr.forEach(function(v, i) {\r\n  // These correctly produce type errors. Awesome!\r\n  stringOnly(i);\r\n  numberOnly(v);\r\n});\r\n\r\nfunction forEach<T>(a:Array<T>, f:(T, number)=>any) {\r\n\tfor (var i = 0; i < a.length; i++) {\r\n\t\tf(a[i], i);\r\n\t}\r\n}\r\n\r\nforEach<string>(arr, function(v, i) {\r\n  // These could be type errors too, as T has \r\n  // been bound explicitly.\r\n  stringOnly(i);\r\n  numberOnly(v);\r\n});\r\n\r\nforEach(arr, function(v, i) {\r\n  // These could be type errors as well, as T is\r\n  // inferrable.\r\n  stringOnly(i);\r\n  numberOnly(v);\r\n});\r\n```",
+    "LastUpdatedDate": "2013-06-18T16:58:38.88-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-18T16:19:54.417-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "function expressions' types are sometimes not inferred",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1164
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

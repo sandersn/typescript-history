@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-06-25T13:49:34.227-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "On VS2013 SP2, I have a project file that includes typescript which builds when I right-click the project file and select \"Build\", or when I Build the solution containing the project.\r\n\r\nHowever, when I try to package the file, the TypeScript compiler gives an error.\r\n\r\n     CompileTypeScript:\r\n             C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\1.0\\tsc.exe  --sourcemap --target ES5 ... a whole bunch of typescript files...\r\n\r\nThen this error:\r\n\r\n         2>(project root)\\Scripts\\typings\\knockout\\knockout.d.ts(71,11): error TS2143: Build: Interface 'KnockoutComputed<T>' cannot extend interface 'KnockoutObservable<T>': [C:\\(Path to my web project)]\r\n             \r\n             \tTypes of property 'extend' of types 'KnockoutComputed<T>' and 'KnockoutObservable<T>' are incompatible:\r\n             \r\n             \t\tCall signatures of types '(requestedExtenders: { [key: string]: any; }) => KnockoutComputed<T>' and '(requestedExtenders: { [key: string]: any; }) => KnockoutObservable<T>' are incompatible:\r\n             \r\n             \t\t\tType 'KnockoutObservable<T>' requires a call signature, but type 'KnockoutComputed<T>' lacks one.\r\n         \r\n     2>Done Building Project \"(Project root)\\(Web root)\\MyWebProject.csproj\" (Package target(s)) -- FAILED.\r\n     1>Done Building Project \"(Project root)\\my.targets\" (WebPackage target(s)) -- FAILED.\r\n\r\n    Build FAILED.\r\n\r\n       \"(Project root)\\my.targets\" (WebPackage target) (1) ->\r\n       \"(Project root)\\(Web root)\\MyWebProject.csproj\" (Package target) (2) ->\r\n       (CompileTypeScript target) -> \r\n         C:(Web root)\\Scripts\\typings\\knockout\\knockout.d.ts(71,11): error TS2143: Build: Interface 'KnockoutComputed<T>' cannot extend interface 'KnockoutObservable<T>': [C:\\dev\\Cdis\\CDIS\\src\\CdisWeb\\CdisWeb.csproj]\r\n\r\n    0 Warning(s)\r\n    1 Error(s)\r\n\r\nI didn't write this type file. This is just the DefinitelyTyped package for Knockout. That combined with the fact that it successfully builds all of my TypeScript when I just build it, leads me to believe that the problem isn't actually in my TypeScript. I think the TypeScript compiler used to have a bug which caused this behavior before 0.9.5. But the path of tsc.exe indicates that the compiler is version 1.0.\r\n\r\nHere's some information about the MSBuild target that's failing. The actual target I'm building is defined like this:\r\n\r\n      <Target Name=\"WebPackage\" DependsOnTargets=\"CalculateWebApps\">\r\n        <!-- Add steps to delete the \\dist directory and re-create it just in case. -->\r\n        <RemoveDir Directories=\"%(WebApp.ProjectPath)dist\" Condition=\"Exists('%(WebApp.ProjectPath)dist')\" />\r\n        <MakeDir   Directories=\"%(WebApp.ProjectPath)dist\"/>\r\n        <MSBuild  Projects=\"%(WebApp.ProjectFile)\" Targets=\"Package\" />\r\n      </Target>\r\n\r\nThe WebApp project imports the Microsoft.WebApplication.targets, from Microsoft\r\n\r\n      // Somewhere in %(WebApp.ProjectFile)\r\n      <Import Project=\"$(VSToolsPath)\\WebApplications\\Microsoft.WebApplication.targets\" Condition=\"'$(VSToolsPath)' != ''\" />\r\n\r\nWhich in turn imports publishing targets, including Package.\r\n\r\n    // Somewhere in Microsoft.WebApplication.targets\r\n    <Import Project=\"..\\Web\\Microsoft.Web.Publishing.targets\" Condition=\"Exists('..\\Web\\Microsoft.Web.Publishing.targets')\" />\r\n",
+    "LastUpdatedDate": "2014-06-25T13:49:34.227-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-25T08:48:05.99-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Can build, but not package, my TypeScript - with tsc error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2582
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I figured it out.\n\nFirst of all, CompileTypeScript was never called in my build script. This was due to a faulty import of my TypeScript targets. Essentially, I needed to import the targets at the bottom of my project file, after declaring all of my TypeScriptCompile arguments.\n\nAfter I did that, I found that my build target started breaking in the same way as my package target, and tracked it down to an extension to KnockoutComputed interface which was getting compiled first, and which caused the subsequent DefinitelyTyped file to be invalid.\n\nSo, it was just a bug in my project's TypeScript.\n\n",
+      "PostedDate": "2014-06-25T10:05:09.843-07:00",
+      "Id": 150703
+    }
+  ]
+}

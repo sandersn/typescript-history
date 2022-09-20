@@ -1,0 +1,111 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.05-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "When i try to execute the code:\r\n```\r\nenum DATA_TYPE {\r\n    None = 0\r\n}\r\ninterface IFieldInfo {\r\n    dataType: DATA_TYPE;\r\n    //range: string;\r\n    //test: string;\r\n}\r\nvar fieldInfos: IFieldInfo[];\r\nfieldInfos = [{ \"dataType\": 0, \"range\": \"\"}];\r\n\r\n```\r\nit produces an error :\r\n```\r\nError\t1\tCannot convert '{}[]' to 'IFieldInfo[]':\r\n\tTypes of property 'pop' of types '{}[]' and 'IFieldInfo[]' are incompatible:\r\n\t\tCall signatures of types '() => {}' and '() => IFieldInfo' are incompatible:\r\n\t\t\tType '{}' is missing property 'dataType' from type 'IFieldInfo'.\r\n```\r\n\r\nWhen i uncomment range property in the IFieldInfo interface then it compiles successfully\r\n\r\nP.S. - I attached the __domainModel.ts__  file which contains a reduced version to reproduce the error.\r\nIt is compiled in 0.9.5 version, but does not in 0.9.7. The reason is the treatment of enum types in the current compiler version.\r\nI managed to create a workaraund for my project's code (like @RyanCavanaugh suggested) by enveloping an array in parentheses. But it is really a quirk in the language because nobody is aware about it.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-27T00:36:06.687-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compute best common type with and without contextual types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2233
+  },
+  "FileAttachments": [
+    {
+      "FileId": 808481,
+      "FileName": "spaAMD.zip",
+      "DownloadUrl": ".\\808481"
+    },
+    {
+      "FileId": 808515,
+      "FileName": "domainModel.ts",
+      "DownloadUrl": ".\\808515"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Also, when i change dataType type to number\n```\ninterface IFieldInfo {\n    dataType: number; //it was before of DATA_TYPE enum type\n    //range: string;\n    //test: string;\n}\nvar fieldInfos: IFieldInfo[];\nfieldInfos = [{ \"dataType\": 0, \"range\": \"\" }];\n```\n\nThen all is compiled successfuly",
+      "PostedDate": "2014-02-27T00:47:31.127-08:00",
+      "Id": 135248
+    },
+    {
+      "Message": "Forgot to mention, this bug had broken the code in my project https://github.com/BBGONE/jRIAppTS\nYou can try to compile spaAMD VS 2012 project included in the download.\nIt will produce a bunch of errors of the same type. \nOnly the above code which i submitted is in a reduced form.",
+      "PostedDate": "2014-02-27T08:06:01.673-08:00",
+      "Id": 135285
+    },
+    {
+      "Message": "This is currently by design due to some unfortunate interaction between contextual typing and the best common type algorithm. You can work around it by putting parentheses around the array literal:\n```\nfieldInfos = ([{ \"dataType\": 0, \"range\": \"\"}]);\n```\n\nI'm raising this with the design team to see if there's anything we can do before 1.0 goes out.\n\nThe example here also fails on 0.9.5 - were you upgrading directly from 0.9.1.1?",
+      "PostedDate": "2014-02-27T09:46:52.147-08:00",
+      "Id": 135301
+    },
+    {
+      "Message": "It worked perfectly in 0.9.5.\nSeems you missed the point of the bug.",
+      "PostedDate": "2014-02-27T17:47:29.75-08:00",
+      "Id": 135352
+    },
+    {
+      "Message": "Mentioned above the spaAMD typescript project in VS 2012 and 0.9.5 compiler compiles successfully.\n(you can download it from here https://github.com/BBGONE/jRIAppTS)\nAfter installing 1.0 RC compiler version it stopped to compile due to that error.",
+      "PostedDate": "2014-02-27T17:54:21.577-08:00",
+      "Id": 135354
+    },
+    {
+      "Message": "P.S. also why when i change enum type to number type in interface declaration (for example in  IFieldInfo) all is compiled OK?",
+      "PostedDate": "2014-02-27T18:09:12.543-08:00",
+      "Id": 135355
+    },
+    {
+      "Message": "I have to get the right information from you on this. The repro steps you provided *do* trigger an error on 0.9.5, so I need to understand why you're saying this code worked on the previous version so we can be sure we're looking at the right thing.\n\n```\n> npm install typescript@0.9.5\n(snip)\n\n> node tsc.js\nVersion 0.9.5.0\n(snip)\n\n> type file.ts\nenum DATA_TYPE {\n    None = 0\n}\ninterface IFieldInfo {\n    dataType: DATA_TYPE;\n    //range: string;\n    //test: string;\n}\nvar fieldInfos: IFieldInfo[];\nfieldInfos = [{ \"dataType\": 0, \"range\": \"\"}];\n\n> node tsc.js file.ts\nfile.ts(10,1): error TS2012: Cannot convert '{}[]' to 'IFieldInfo[]':\n\tType '{}' is missing property 'dataType' from type 'IFieldInfo'.\n\tTypes of property 'concat' of types '{}[]' and 'IFieldInfo[]' are incompatible:\n\t\tCall signatures of types '{ <U extends T[]>(...items: U[]): {}[]; (...items: {}[]): {}[]; }' and '{ <U extends T[]>(...items: U[]): IFieldInfo[]; (...items: IFieldInfo[]): IFieldInfo[]; }' are incompatible:\n\t\t\tType '{}' is missing property 'dataType' from type 'IFieldInfo'.\n\t\t\tTypes of property 'pop' of types '{}[]' and 'IFieldInfo[]' are incompatible:\n\t\t\t\tCall signatures of types '() => {}' and '() => IFieldInfo' are incompatible:\n\t\t\t\t\tType '{}' is missing property 'dataType' from type 'IFieldInfo'.\n\n```",
+      "PostedDate": "2014-02-27T19:16:53.573-08:00",
+      "Id": 135356
+    },
+    {
+      "Message": "That means the compiler has the real bug. Try to compile spaAMD project which i attached. In 0.95 compiler version it compiles succesfully, in 0.9.7 version it does not compile with a bunch of errors of the same type.\r\nThose errors will point you to the lines of code.\r\nI just tried to reduce the code to reproduce the error. But it seems my real code has something more subtle.\r\nI tried to check field names. They all correspond to the IFieldInfo field names. But my guess that the problem is with enum types. When i remove them the code compiles ok.",
+      "PostedDate": "2014-02-27T20:30:58.11-08:00",
+      "Id": 135363
+    },
+    {
+      "Message": "I attached reduced code in the file domainModel.ts\r\nit compiles in 0.9.5 version, but does not do it in 0.9.7\r\n\r\nP.S. - Also in the same file there's a version of IFieldInfo interface which is compiled. In that version i replaced all enum types with number types.",
+      "PostedDate": "2014-02-27T22:39:53.433-08:00",
+      "Id": 135366
+    },
+    {
+      "Message": "__And besides the above comments:__\nCould you make a fix for this bug, because i can not enclose the array in parentheses due to this code is generated by using a whole C# structure serialization (and this structure contains the array) with a NewtonSoft serializer. It just outputs a correct javascript, and it does not know anything about such qwerks in typescript compiler.\n",
+      "PostedDate": "2014-02-27T22:50:18.733-08:00",
+      "Id": 135368
+    },
+    {
+      "Message": "Marking this as a suggestion for the future. This isn't something we'll be able to fix for 1.0 since it requires some language design changes. I've updated the bug title to make it more searchable and reflect a potential option for a change here that would allow this code to work.",
+      "PostedDate": "2014-03-03T17:19:44.153-08:00",
+      "Id": 135722
+    },
+    {
+      "Message": "Interesting what is changed in the compiler that in 0.9.5 version the enums did not not break compilation, but in 0.9.7 enum types in the interfaces produce errors?",
+      "PostedDate": "2014-03-03T19:08:07.04-08:00",
+      "Id": 135729
+    }
+  ]
+}

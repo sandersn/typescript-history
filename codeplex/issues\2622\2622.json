@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-07-15T13:02:15.853-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "\r\nAccording to the interface, the class property should only accept numbers but this code compiles just fine!?\r\n\r\n```\r\ninterface I {\r\n    p: number;\r\n}\r\n\r\nclass C implements I {\r\n    constructor(public p) {\r\n    }\r\n}\r\n\r\nvar o: C = new C('S');\r\n```",
+    "LastUpdatedDate": "2014-07-15T22:36:34.463-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-15T03:31:21.333-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type checking problem.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2622
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "*p* here is not a number type parameter but an *any* type one.\n\n    constructor(public p: number) { ... }\n\n... would work as you want.",
+      "PostedDate": "2014-07-15T05:12:54.45-07:00",
+      "Id": 152436
+    },
+    {
+      "Message": "\tinterface I {\n\t\tp: number;\n\t}\n\tinterface G extends I {\n\t\tp: any;\n\t}\n\nHmm, this anyway works...\n",
+      "PostedDate": "2014-07-15T05:16:05.597-07:00",
+      "Id": 152438
+    },
+    {
+      "Message": "I have to admit that I misunderstood this post, and I think this really is strange.\n\n\tinterface I {\n\t\tp: number;\n\t}\n\tinterface G extends I {\n\t\tp: any;\n\t}\n\t\n\tvar i1: I = {p: 3};\n\tvar i2: I = {p: '3'};\n\tvar i3: I = <G>{p: '3'};\n\ni1 works well here, i2 does not as expected, and... i3 works! \n\nSorry for three notification emails.",
+      "PostedDate": "2014-07-15T05:27:15.397-07:00",
+      "Id": 152440
+    },
+    {
+      "Message": "Well, what's the point of extending an interface if I have to explicitly write\n```\nconstructor(public p:number)\n```\ninstead of \n```\nconstructor(public p)\n```\n\nIf I have to do this manually then what's the effect of\n```\nclass C implements I\n```\n\nIn fact the class constructor must infer the type according to the interface or at least throw an error and force me to do it manually. I'm creating a class that says it conforms to some interface rules but I can assign a string to number field. That's not acceptable.",
+      "PostedDate": "2014-07-15T05:47:06.477-07:00",
+      "Id": 152444
+    },
+    {
+      "Message": "Sorry that I confused you, please just ignore my first and second comment. (I really want CodePlex to add comment deleting feature.)\n\nIt seems that current TypeScript implementation decided not to show any error when assigning an *any* type value to non-*any* type variables:\n\n\tinterface I {\n\t\tp: number;\n\t}\n\tinterface G extends I {\n\t\tp: any; // Works\n\t}\n\tvar i: I = {p: <any>'3'}; // Works\n\tvar p: number = <any>'not a number'; // Works\n\nThese all just works. I agree that this is confusing... (as just a user). Maybe your case is the same one, as *p* property in class C would be first defined as *any* type and then type-checked.",
+      "PostedDate": "2014-07-15T06:07:04.503-07:00",
+      "Id": 152445
+    },
+    {
+      "Message": "Well I hope it gets fixed. In my opinion this is not a feature, it's a serious bug and if we have to deal with things like this what's the point of using TypeScript anyways?",
+      "PostedDate": "2014-07-15T11:51:49.627-07:00",
+      "Id": 152483
+    },
+    {
+      "Message": "The point is to allow TypeScript to model existing JavaScript patterns, interoperate with existing JavaScript code, and provide strong typing where appropriate. Without an 'any' type and these assignability rules there would be no way to migrate JS to TS or interoperate the two without making enormous changes to your JS code.\n\n_I'm creating a class that says it conforms to some interface rules but I can assign a string to number field. That's not acceptable._\n\nWhat you are doing by saying 'implements' is telling the compiler to check whether your class definition conforms to the interface. It does not have the effect of pulling all the types from the interface into the class implicitly. \n\nIf the original code used the --noImplicitAny flag during compilation they would've gotten an error for the declaration of C's constructor introducing a variable of type 'any' without an explicit type annotation to that effect.",
+      "PostedDate": "2014-07-15T13:00:57.9-07:00",
+      "Id": 152494
+    },
+    {
+      "Message": "OK, I understand that existing JavaScript should work by itself in TypeScript. However, interface is not a JavaScript thing.\n\n\tinterface Parent {\n\t\tfoo: number;\n\t}\n\tinterface Child extends Parent {\n\t\tfoo: string;\n\t}\n\nThis would not work because *foo* property is incompatible. \n\n\tinterface Parent {\n\t\tfoo: Event;\n\t}\n\tinterface Child extends Parent {\n\t\tfoo: UIEvent;\n\t}\n\nThis will work because UIEvent extends Event. They are compatible.\n\n\tinterface Parent {\n\t\tfoo: UIEvent;\n\t}\n\tinterface Child extends Parent {\n\t\tfoo: Event;\n\t}\n\nOf course, this should not work because Event interface is more loose than UIEvent interface. *foo* in Child should have more strict compatible type.\n\n\tinterface Parent {\n\t\tfoo: UIEvent;\n\t}\n\tinterface Child extends Parent {\n\t\tfoo: any;\n\t}\n\nNow, intuitively, this should not work, isn't it? Because *any* type is the most loose type in TypeScript. It works, however. Even with --noImplicitAny flag. This results in:\n\n\tvar p1: Parent = { foo: new UIEvent() }; // Good\n\tvar p2: Parent = { foo: 3 }; // Bad\n\tvar p3: Parent = <Child>{ foo: 3 }; // Good?\n\nReally? I think at least interfaces should treat *any* type more strictly.\n",
+      "PostedDate": "2014-07-15T22:32:35.83-07:00",
+      "Id": 152533
+    },
+    {
+      "Message": "\tinterface Child extends Parent {\n\t\tfoo: {};\n\t}\n\nWell, anyway we can use {} instead of *any* to prevent this problem...",
+      "PostedDate": "2014-07-15T22:36:34.463-07:00",
+      "Id": 152534
+    }
+  ]
+}

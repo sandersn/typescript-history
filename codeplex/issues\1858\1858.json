@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.19-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Would it be possible to add `int` and `float` as supertypes of `number`?\r\n\r\nSince JavaScript supports numbers with only one class `Number`, these would probably be compile-time only type-synonyms for `number`, but with `int` automatically casting itself to `float` as needed, and with both `int` and `float` automatically getting cast to `number` when needed, since these are effectively all `Number` and there is no actual work involved in making these compile-time only casts.\r\n\r\nThe `Math` class would need some updated type-declarations, with certain functions like `round()`, `floor()` and `ceil()` returning `int`, and most other functions returning either `float`.\r\n\r\nThe `String` and `Array` types (and other indexed types) would need updated index-types using `int` rather than `number`, and `length` would return `int`, and so forth.\r\n\r\nNumbers are not just numbers, and in a project I'm currently working on, I have to manually deal with specific number-types, e.g. \"casting\" them to integers with `Math.floor()`, and/or performing \"type checks\" by testing if the number has decimals.\r\n\r\nSometimes you really don't care if a number if integer or floating point, so I'm not suggesting `number` go away, but rather introducing two more specific supertypes, so that developers can more accurately indicate the type of number required by a function or property.\r\n\r\nWith functions like `String.charCodeAt()` requiring an `int` rather than `number` (or `float` obviously) when performing arithmetic operations on a string index, the programmer would be forced to make decisions by adding assertions like \"yes, the result is an integer\" by using a type-cast, or \"the result is a float and I'm discarding the decimals\" by using e.g. `Math.floor()` or `Number.toFixed(0)`.\r\n\r\nI haven't thought through the impact on arithmetic expressions, and clearly this would introduce some bigger questions, but I figured I would post this first and see how it's received...",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-03T06:54:18.397-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "feature: int and float types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 13,
+    "Id": 1858
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Having watched a very nice video done by someone at MS (sorry can't remember the guys name) that works on the new IE js engine.\n\nI can tell you in complete certainty that internally (good) js engines treat some Number variables as ints and some as floats. using ints is faster and in js to cast to an int, do this...\n\nvar a = Math.sqrt(9)|0;\n\nbut \n\nvar a = 1; will just be an int to start with.\n\nTrying to keep things as an int is faster, making arrays using only ints is faster than mixing ints with floats, JS actually has typed arrays for ints and floats which supports what im saying.",
+      "PostedDate": "2013-11-03T10:08:56.187-08:00",
+      "Id": 121626
+    },
+    {
+      "Message": "Interesting suggestion!",
+      "PostedDate": "2013-11-04T09:04:52.66-08:00",
+      "Id": 121709
+    },
+    {
+      "Message": "> I can tell you in complete certainty that internally (good) js engines treat some Number variables as ints and some as floats\n\nNo doubt most modern JS engines do this internally for performance reasons - that's not really my concern. \n\nI'd like to be able to write TypeScript code that specifies whether an int or float is expected, because sometimes that is important - a string index or array position, for example, can't just be a \"number\", it really has to be an integer.\n\nIt would be nice if we could be more explicit about that in our code, so that when you're programming against an API that requires integers, you can assert that, for example, after doing arithmetic on a integer, that the result is still an integer; in this example, it would give you more type-safety, since the programmer would minimally be required to cast the result of an arithmetic operation to `<int>` thus explicitly explaining in their code, \"I know the result of this is always going to be an integer\"; or otherwise, using `Math.round()` etc to guarantee an integer result.\n\nIt prompts the developer to think and make assertions, or perform additional operations to get a value of the required type.\n\nTo me, that's a large part of what makes typing useful in TypeScript, since it's not actually doing type-checks in the generated code - typecasts are merely assertions made by the programmer to communicate to the compiler (and to other team members!) \"I know what I'm doing here\".\n",
+      "PostedDate": "2013-11-07T09:39:53.86-08:00",
+      "Id": 122145
+    }
+  ]
+}

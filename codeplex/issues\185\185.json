@@ -1,0 +1,135 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is available in TypeScript 0.9.",
+    "ClosedDate": "2013-06-17T08:41:03.86-07:00",
+    "CommentCount": 19,
+    "Custom": null,
+    "Description": "I know you guys have this on your backlog already, but I just wanted to create an actual issue here on CodePlex for the community to track its progress. If there's already a mechanism for tracking progress on that, please let me know.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 0.9.0",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-08T12:26:18.7-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Support for Generics in TypeScript",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 129,
+    "Id": 185
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "It would also be great if you publish draft of specification section on generics.",
+      "PostedDate": "2012-10-08T13:26:54.237-07:00",
+      "Id": 79045
+    },
+    {
+      "Message": "Any update on when we can expect generics in TypeScript? This is one of the main things keeping my team from moving to TypeScript.",
+      "PostedDate": "2012-11-05T10:13:49.893-08:00",
+      "Id": 81685
+    },
+    {
+      "Message": "Excited for this! Love where you are headed. Throwing in some keywords so I would have found this issue: \"Type Variables\"",
+      "PostedDate": "2012-11-12T08:28:56.373-08:00",
+      "Id": 82246
+    },
+    {
+      "Message": "I've started working on something like \"generics\":\n\n```\nfunction mapFunc(elm: _A[], foo: _A): _A {\n  return elm[0];\n}\n\n// -------------------------------------------------\n// Tests!\n\n// Basic test\nvar a:number[] = [1,2];\nvar b:number[] = null;\nvar c:number = null;\n```\n\nThis example is working for me. Is this in the scope of \"Generics\" (sorry my weak background in type-theory)?",
+      "PostedDate": "2012-12-26T13:18:54.503-08:00",
+      "Id": 84928
+    },
+    {
+      "Message": "Sorry, missed the important part\n\n```\nfunction mapFunc(elm: _A[], foo: _A): _A {\nreturn elm[0];\n}\n\n// Basic test\nvar a:number[] = [1,2];\nvar c:number = null;\n\nc = mapFunc(a, 1);\n```",
+      "PostedDate": "2012-12-26T13:20:31.63-08:00",
+      "Id": 84930
+    },
+    {
+      "Message": "Yeah, that's the idea. Although ideally, the syntax for generics should match that of generics in other languages like Java and C#. The example you posted would look somewhat like this if written using that flavor of generics:\n\nfunction mapFunc<TSomeType>(elm: TSomeType[], foo: TSomeType): TSomeType {\nreturn elm[0];\n}\n\n// Basic test\nvar a:number[] = [1,2];\nvar c:Number = null;\n\nc = mapFunc<Number>(a, 1);\n\nAlso, not an absolute requirement, but in C# the compiler infers generic type parameters when it has enough information on how your method is being used. Given the level of type inference that TypeScript is using, it doesn't seem that far fetched that TypeScript generics would do the same type inference.",
+      "PostedDate": "2012-12-27T06:50:20.133-08:00",
+      "Id": 84958
+    },
+    {
+      "Message": "Update: I've created a PR here: http://typescript.codeplex.com/SourceControl/network/forks/jviereck/TypeScript/contribution/3856\n\n> function mapFunc<TSomeType>(elm: TSomeType[], foo: TSomeType): TSomeType {\n\nFrom this example it looks to me that \"_A\" === \"TSomeType\". How should the generic type be named for a second type \"_B\" like in a map function:\n\n> function map(arr: _A[], fn: (entry: _A, arr?: _A[], scope?: any) => _B, scope?: any): _B[] {\n\n?\n\n> Also, not an absolute requirement, but in C# the compiler infers generic type parameters when it has enough information on how your method is being used. Given the level of type inference that TypeScript is using, it doesn't seem that far fetched that TypeScript generics would do the same type inference.\n\nThe submitted PR infers the types when the function is called. In the example of `mapFunc` it knows that the function has a return type of `number` if the function call pattern is of the type `mapFunc(number[], number).",
+      "PostedDate": "2012-12-28T01:34:13.59-08:00",
+      "Id": 84986
+    },
+    {
+      "Message": "With C#/Java-style generics, the type parameters do not have to have any specific name or naming convention. Basically, the part in between the angle brackets declares one or more type parameters and then they are used inside of the function. Here's an example with multiple type parameters with arbitrary names. \n\nfunction doSomethingGeneric<MyType1, AnotherType>(arrayToSearch: MyType1[], key: string) : AnotherType\n{\n     for(var i = 0; i < arrayToSearch.length; i++)\n     {\n          var element: MyType1 = arrayToSearch[i];\n          var value: AnotherType = element[key];\n          if (value)\n               return value;\n     }\n}\n\nNotice here that regardless of the names of the type parameters, after declaring them in between the angle brackets, they can now be used to specify the types within the method and signature. Another thing to consider is generic type constraints. These are restrictions on the types that can be passed as part of the method signature such as requiring that a type parameter inherit from a certain class or interface. I would imagine since the TypeScript team already mentioned that TypeScript's implementation of generics would be through type erasure, they would probably take Java's generic type constraint model as well. Also, keep in mind that you can make generics for both functions and classes (which in JavaScript also happen to be functions).\n\nThere's more details on C# generics here: http://en.wikipedia.org/wiki/Generic_programming#Genericity_in_.NET\nAnd Java Generics via type erasure here: http://en.wikipedia.org/wiki/Generics_in_Java",
+      "PostedDate": "2013-01-07T08:57:23.63-08:00",
+      "Id": 85497
+    },
+    {
+      "Message": "We hope to publish a draft of the spec for broader user comment soon.  Our current thoughts on generics follow a couple principles:\n\n* We want the types to be erasable, just like the rest of TypeScript's type system\n* We want to be able to describe generic function signatures, interfaces, and classes with the same fidelity that non-generic types allow now\n\nAn example:\n```TypeScript\ninterface Array<T> {\n  map<U>(callbackfn: (value: T, index: number, array: T[]) => U): U[];\n}\n```\n\nThe type parameters can be added to type definitions, like interfaces, as well as signatures.  \n\nAdditionally, we're strongly considering allowing \"constraints\" on types, so that you can describe the basic shape of the type parameters a generic type requires.  Changing the above example a bit:\n\n```TypeScript\ninterface Message {\n  target:any;\n  source:any;\n  data:any;\n}\n\ninterface MessageArray<T extend Message> {\n  // T now has Message structure, without extends it's assumed to be {}\n}\n```\n\nNow T will have be know to have at least the members listed in the Message array when it's used inside of the MessageArray interface.\n\nWe're also looking into type parameter inference, so that for many cases you won't have to explicitly give the type arguments to generic functions.",
+      "PostedDate": "2013-02-27T08:59:39.233-08:00",
+      "Id": 91686
+    },
+    {
+      "Message": "@jonturner: Yes, please PLEASE add those two features. Type inference on generics is *super* important, and the fact that you can't specify real generic type constraints C# is my #1 biggest complaint with C# generics.",
+      "PostedDate": "2013-03-01T11:02:01.937-08:00",
+      "Id": 91983
+    },
+    {
+      "Message": "@Wolverine_: C# DOES allow you to specify generic type constraints. http://msdn.microsoft.com/en-us/library/bb384067.aspx",
+      "PostedDate": "2013-03-01T11:45:23.26-08:00",
+      "Id": 91993
+    },
+    {
+      "Message": "@jonturner: having browsed the updated TS specs in the develop-0.9.x branch's doc folder for Generics, I've got two notes/questions:\n\n\n1. Why the limitation to linear type parameter lists (3.4.1)? Unification of repeated type parameters is a powerful standard tool in type systems. Why not for TS?\n\n2. \"G equivalent to G<any,any>\" (example in 3.5.2.1). This is not very helpful but it is going to be a major obstacle to introducing type constructor parameters later (TS 0.9.x already has type constructors and type parameters, so type constructor parameters are a natural next step, eg., to abstract over different types of container). I suggest not to introduce this forward-incompatible abbreviation.",
+      "PostedDate": "2013-03-01T14:47:21.597-08:00",
+      "Id": 92013
+    },
+    {
+      "Message": "@clausreinke\n\n1. I'm not clear on your point.  Are you saying that it's powerful tool to say this: GenericType<A, A, A>?  I'm not familiar with this usage pattern, generally I'm used to each type parameter being listed only once.\n\n2. Can you give an example of a \"type constructor parameter\"?  ",
+      "PostedDate": "2013-03-12T14:49:15.19-07:00",
+      "Id": 93079
+    },
+    {
+      "Message": "@jonturner: \n\n> I'm not clear on your point. Are you saying that it's powerful tool to say this: GenericType<A, A, A>? I'm not familiar with this usage pattern, generally I'm used to each type parameter being listed only once.\n\nAssuming that repeated *formal* parameters (`interface Gen<A,A> ...`) imply type unification, instantiating such a generic interface with two types from two different sources (`Gen<X,Y>`) asserts that those actual type parameters (`X` and `Y`) are equal (unifiable, really).\n\nThis pattern of lifting unification of formal and actual parameters to unification of two actual parameters  goes back all the way to Prolog but has been adopted in advanced type systems. How useful the pattern is depends on what other features are available in the type system. It is common, for instance, in Haskell, where the type equality assertion can even be extended to various type equality predicates.\n\n>\n> Can you give an example of a \"type constructor parameter\"? \n>\n\nTS already has `Array<T>`, where `Array` is a type-level constructor. Applying a (first-order) type-level constructor to a type gives a type, eg `Array<String>`. With ES6, there will come things like `Set<T>` or `Map<IndexT,ValueT>`. If we want to declare a type that makes sense for several different type-level constructors, then we'll need to abstract over the concrete constructors. So we need to go from first-order type constructors to higher-order type constructors (type-level constructors that take type-level constructors as parameters). Just as JS has higher-order functions at the value level. Something like\n\n```\ninterface Select<Constructor,Index,Element> {\n  select: Constructor<Index,Element> => Index => Element\n}\n\nvar IntArraySelect : Select<Array,Int> = {  select : ( arr, ind ) => arr[ ind ] };\n```\n\nHere `Constructor` is a type constructor parameter, and `Select` is a (higher-order) type constructor.\n\nThe canonical example for type constructor parameters in generic type systems is `map`, which can be provided on all container types:\n\n    A system of constructor classes: overloading and implicit \n    higher-order polymorphism\n    Mark P. Jones, \n    In FPCA '93: Conference on Functional Programming Languages \n    and Computer Architecture, Copenhagen, Denmark,  June 1993.\n    http://web.cecs.pdx.edu/~mpj/pubs/fpca93.html\n\nThis text uses Haskell, but you can translate the ideas using a simple dictionary, roughly like\n\n    EcmaScript/TypeScript     |  Haskell\n    --------------------------------------------\n    object/class             |  value/type\n    interface                |  type class\n    interface implementation |  type class instance\n    generic                  |  polymorphic\n",
+      "PostedDate": "2013-03-13T08:23:56.903-07:00",
+      "Id": 93146
+    },
+    {
+      "Message": "@clausreinke\n\nThanks for the in-depth reply.  There's definitely some good food for thought here.\n\nI agree that unification has some definite advantages, and duplicating the type variables allows you to drive to a known single type.  However, in TypeScript we actually don't enforce strict type equality anywhere (to my knowledge), and instead use assignment compatibility rules which allow for additional polymorphic and situational flexibility.  For example, under substitution:\n\n```TypeScript\ninterface Gen<A> { \n  myfunc(x:A, y:A): bool;\n}\n\nvar myvar : Gen<{x: number}>;\n// substitution of Gen<{x: number}> specializes to:\ninterface Gen<{x: number}> { \n  myfunc(fst: {x: number}, snd: {x: number}): bool;\n}\n\n// now assignment compatibility kicks in and the following is valid:\nmyvar.myfunc({x: 3}, {x: 4, y: 5});\n```\n\nKnowing the rules that kick in after substitution, we can express the equivalent using the constraint typing that has been proposed:\n\n```TypeScript\ninterface Gen<A, B extends A> { ... }\n```\n\nWhile this isn't strict type equality checking, it gives you the ability to take multiple types to a known structure, which is in practice what TypeScript supports checking.\n\nTo your point about higher-order type construction, I agree that as generic programming becomes more sophisticated there will be a temptation to enable describing higher-order, more general abstractions.\n\nThe general philosophy in TypeScript is to resist this in favor of supporting:\n*   Easy to read types and easy to understand type errors\n*   Easy to tool and automate common patterns\n*   Expressive types for typing existing JavaScript\n\nAs types become more sophisticated, they may favor the last bullet but possibly at the expense of the first two.  In designing TypeScript, we try to balance all three.",
+      "PostedDate": "2013-03-20T09:27:06.693-07:00",
+      "Id": 93779
+    },
+    {
+      "Message": "Just posted a blog on the 0.9 release, including [some details of what we are thinking for Generics in TypeScript](http://blogs.msdn.com/b/typescript/archive/2013/03/25/working-on-typescript-0-9-generics-overload-on-constants-and-compiler-performance.aspx).  Greater detail is also now in the draft specs in the 'develop' branch under the 'doc' folder.",
+      "PostedDate": "2013-03-25T16:58:29.83-07:00",
+      "Id": 94354
+    },
+    {
+      "Message": "What about type auto-resolving?, like:\n\n```\nT map<T>(T value){\n    return Value;\n}\n\nmap(new Date()).get| // getDate, getDay, getFullYear, ...\n```\n",
+      "PostedDate": "2013-04-01T07:57:52.34-07:00",
+      "Id": 95480
+    },
+    {
+      "Message": "Please support generics with constraints. That would be incredibly valuable to the community.",
+      "PostedDate": "2013-05-06T20:03:44.19-07:00",
+      "Id": 99537
+    },
+    {
+      "Message": "@vamp - Yes, this example, rewritten to TypeScript syntax, works as you expect in the current develop branch of 0.9.0.\n\n```TypeScript\nfunction map<T>(value: T) {\n    return value;\n}\nmap(new Date()).get| // getDate, getDay, getFullYear, ...\n```\n\n@DRubino - TypeScript 0.9 does include support for constraints on generic parameters.  For example:\n\n```TypeScript\nfunction cloneElement<T extends HTMLElement>(element: T): T {\n    return <T>element.cloneNode();\n}\n```",
+      "PostedDate": "2013-05-07T09:10:51.923-07:00",
+      "Id": 99593
+    }
+  ]
+}

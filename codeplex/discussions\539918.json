@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1225840",
+    "ThreadId": "539918",
+    "Html": "Is there a good reason why functions of classes do not keep their names in the exported JS?  I don't understand why the constructor can have its name there, but the members cannot, which is a pain.  It's not uncommon to pull a function name given the string representation of a function. This would, in a way, add runtime name information.<br />\n",
+    "PostedDate": "2014-03-23T22:04:27.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226091",
+    "ThreadId": "539918",
+    "Html": "Not sure I understand.  Do you have a code example of what you mean?<br />\n",
+    "PostedDate": "2014-03-24T10:03:31.69-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226122",
+    "ThreadId": "539918",
+    "Html": "If you try looking at the produced JS of a class with methods you'd see what I mean:<br />\n<br />\nClass A { func(){} }<br />\n<br />\nThe resulting JS shows <br />\n<br />\nA.prototype.func = function(){};<br />\n<br />\nAnd it should be<br />\n<br />\nA.prototype.func = function func(){};<br />\n",
+    "PostedDate": "2014-03-24T10:52:39.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226486",
+    "ThreadId": "539918",
+    "Html": "Ah, I see.  Though, I'm not clear in your example what added information it gives you in this situation.  You are accessing &quot;func&quot; off the prototype, so you already know the name of the function.<br />\n\r<br />\nThat said, something we've been thinking about is enabling things like annotations/decorators to add more information to the objects you create and enable better ways of doing reflection.  <br />\n",
+    "PostedDate": "2014-03-25T08:49:19.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226609",
+    "ThreadId": "539918",
+    "Html": "Currently when I get a function reference, I can use regex to pull the function name from the string.  This just helps my API to build function names for things like serialization of handlers (given only an object and function reference), and error reporting when traversing the stack on exceptions (otherwise each function name in the stack is unknown, and I have to show function snipits [as a string] - this was originally my biggest issue with TS). <br />\n<br />\nConsider this:<br />\n<pre><code>var d = new Delegate(object, &quot;handler&quot;);</code></pre>\n\n-vs-<br />\n<pre><code>var d = new Delegate(object, object.handler);</code></pre>\n\nWhich is better? The last of course.  Why? Because of refactoring, type checking, etc.  But...how would I even know the function's name?  I need names in order to be able to serialize the delegates [objects have ID numbers], but currently I have to add the function names myself, but if the name existed as part of the function, that's more detail on the handler that makes all the difference.<br />\n<br />\nI think reflection details are more important, and fits in line with attributes.  That said, there would need to be options: function names only, function names and parameter types, class info, etc., so developers don't get what they don't need.  Just keep in mind that annotations and decorations won't help my situation for the end user API at runtime (and forcing them to do it would not be good).<br />\n",
+    "PostedDate": "2014-03-25T12:50:55.693-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

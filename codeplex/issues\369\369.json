@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "It's legal JavaScript to have a property getter with no corresponding setter - it's simply a no-op. The type system is just playing along with JavaScript's behavior here (albeit somewhat unfortunate); we can't enforce that you wrote the property setter and wrote it correctly. The only thing we can validate when you say 'Y implements X' is that Y's shape is a superset of X, which it does even if there's no setter implemented.\n\nvar q = {\n    get y() {\n        return 4;\n    }\n};\nq.y = 15;\nconsole.log(q.y); // 4...",
+    "ClosedDate": "2012-11-06T10:11:06.797-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Using Interfaces and getters/setters together can lead to bad code generation\r\nWhen a property (rather than a method) is part of an interface, the Interface inherently suggests that the property can be both written and read.  However, you can implement the interface with only a getter for the property and the compiler won’t complain.  This seems to break the interface contract, because the interface is only half implemented.  I would  expect a compiler error (or at least a warning), but TypeScipt does not generate an error or warning. This is a problem, because it allows the generated code to be misused in a way that leads to unexpected behavior  at runtime that is very difficult to debug (probably because it is so counter-intuitive)\r\n\r\nFor instance, the code below defines an Interface for a point.  It has x and y properties and a move function.  The desire here is that x and y are read-only.  The way to change them is with the move() method.  However, it is not possible to define a read-only property (using a getter) in an Interface.  So, the code below only implements a getter and no setter, which seems like it should generate at least a compiler warning, but it does not  The code unexpectedly compiles without warnings or errors;\r\ninterface WorldPoint {\r\n x:number; // (1)\r\n y:number; // (2)\r\n move(x:number, y:number);\r\n}\r\n\r\nclass WorldPointTemplate implements WorldPoint { //(3)\r\n private _x;\r\n private _y;\r\n \r\n constructor(theX:number, theY:number) {\r\n  this._x = theX;\r\n  this._y = theY;\r\n }\r\n \r\n public get x():number { //(4)\r\n  return this._x;\r\n }\r\n\r\n \r\n public get y():number { //(5)\r\n  return this._y;\r\n }\r\n \r\n public move(theX:number, theY:number) {\r\n  this._x = theX;\r\n  this._y = theY;\r\n }\r\n}\r\n\r\nvar thePoint:WorldPoint = new WorldPointTemplate(0,0);\r\n\r\nthePoint.x = 1; //(6)\r\nthePoint.y = 2; //(7)\r\n\r\n.\r\n(1) & (2) define public read/write properties x and y.\r\n(3) class implements the interface\r\n(4) & (5) only getters are defined for the properties.\r\n(5) & (6) BAD -  the compiler allows code to write  to x and y even though there is no setter!!!\r\n\r\nThe compiler generates this code.\r\nvar WorldPointTemplate = (function () {\r\n    function WorldPointTemplate(theX, theY) {\r\n        this._x = theX;\r\n        this._y = theY;\r\n    }\r\n    Object.defineProperty(WorldPointTemplate.prototype, \"x\", {\r\n        get: function () {\r\n            return this._x;\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n    Object.defineProperty(WorldPointTemplate.prototype, \"y\", {\r\n        get: function () {\r\n            return this._y;\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n    WorldPointTemplate.prototype.move = function (theX, theY) {\r\n        this._x = theX;\r\n        this._y = theY;\r\n    };\r\n    return WorldPointTemplate;\r\n})();\r\nvar thePoint = new WorldPointTemplate(0, 0);\r\nthePoint.x = 1; //(1)\r\nthePoint.y = 2; //(2)\r\nthePoint.move(thePoint.x, thePoint.y); //(3)\r\n\r\n\r\n(1) & (2) This will generate bogus code.  It does NOT even generate a runtime error which is REALLY, REALLY BAD.  Instead, it fails to set the _x and _y. so they remain zero after these two lines of code.\r\n(3) thePoint.x and thePoint.y return zero rather than 1 and 2 as you would think, given that they were set in (1) and (2) and neither the compiler or the runtime complained!!!\r\n\r\nThis is really bad.  There are no compiler errors, which I would expect in this case.  Worse, it generates code that is wrong.  Even worse,there is no runtime error; the program will just act wrong.  This will be hard to find.",
+    "LastUpdatedDate": "2012-11-06T10:11:06.797-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-04T10:28:12.317-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Using Interfaces and getters/setters together can lead to bad code generation ",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 369
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

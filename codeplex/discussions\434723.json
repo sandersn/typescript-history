@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1007714",
+    "ThreadId": "434723",
+    "Html": "I know that TypeScript is designed to be a superset of JavaScript. However I do think there's a big demand for a JavaScript-like language that's considerably safer than what TypeScript currently offers. <br />\n<br />\nI've made a list of some troubling things that TypeScript doesn't hide (I know it's intentional). The following code is valid TypeScript (no compiler errors):<br />\n<pre><code>b = 3; // var hoisting\nvar a = 'a';\nvar b = +a; // implicit conversion to string\nvar c = !a; // implicit conversion to bool\ndelete a;   // delete works on anything, not just object properties\nvar d = void a; // why do we need void?\nvar e = this.foo; // 'this'' has same horrible behavior as in javascript (and is always in context)\n</code></pre>\n\nAs a minimum, since JavaScript has &quot;use strict&quot;, it's a pity that the tsc compiler can't optionally enforce the strict rules. It would be nice if tsc would even enforce stricter rules than &quot;use strict&quot;, taking advantage of the type information.<br />\n<br />\n(Note: JSLint can catch all of the above problems)<br />\n<br />\nThis may not have been an original TypeScript goal, but:<br />\n<ol>\n<li>It's relatively easy to add to the spec and implementation (the compiler should already have all the information needed to enforce safer code)</li>\n<li>\nThis will give TypeScript a huge advantage over any other option currently available (and bring it on par with GWT, Fay, Elm, in terms of safety but with the key advantage of being easily used with regular JavaScript)<br />\n</li>\n</ol>\nIt's ridiculous that using &quot;use strict&quot; + JSLint alone is in a sense safer than TypeScript!<br />\n<br />\nSo, I'm suggesting to add an optional mode with every possible safety check, and where every violation results in a compiler error.<br />\n<br />\n-- Noam Lewis<br />\n",
+    "PostedDate": "2013-02-27T09:08:24.523-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1007784",
+    "ThreadId": "434723",
+    "Html": "I have a recommendation for you or any others that want to take on a new project.\r<br />\n<br />\nThe TypeScript compiler's parser and type checker are incredibly easy to use programmatically. You can easilybuild some type of checkstyle/PMD-like plugin system that looks at the AST nodes (w/ all the awesome symbol/type information in there too after type check) and do any checks you want. This would not be a hard project to develop (I have done it in a different way...heck I even overwrote the error emitter to avoid some bugs), but would take some smart architecting to get it right and keep it simple.\r<br />\n<br />\nThen you can just write your own plugins. For example, here might be a plugin for forcing both sides of a concatenation to be a string if one side is:<br />\n<pre><code>class ImplicitStringOnConcatenation extends Plugin {\n    onBinaryExpression(ast: TypeScript.BinaryExpression) {\n        if (ast.nodeType != TypeScript.NodeType.Add) return;\n        var isString = (check: TypeScript.AST) =&gt; { return check.type != null &amp;&amp; check.type.isString(); };\n        if (isString(ast.operand1) &amp;&amp; !isString(ast.operand2)) this.violation(ast.operand2, &quot;Implicit string conversion&quot;);\n        else if (isString(ast.operand2) &amp;&amp; !isString(ast.operand1)) this.violation(ast.operand1, &quot;Implicit string conversion&quot;);\n    }\n}</code></pre>\n\nNow, now sure how practical this specific plugin would be, but it shows how easy the TypeScript AST is to use. I don't have a need for the project, so I will not be taking it on myself.<br />\n",
+    "PostedDate": "2013-02-27T11:03:47.273-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1008194",
+    "ThreadId": "434723",
+    "Html": "I fully agree with ncryptor.\r<br />\n<br />\n&quot;there's a big demand for a JavaScript-like language that's considerably safer than what TypeScript currently offers.&quot;\r<br />\n<br />\nIt is not just a demand, it is an absolute need. After all the years of progress made in language technology, we are condemned to use JavaScript!\r<br />\n<br />\nThe term SafeMode would be perfect, especially from a marketing stand point. Microsoft could have a free version of TypeScript for geeks and hobbyists and a paying one with SafeMode, generics and async for professionals who are on the clock. I bet most would be happy to pay. Imaging, delivering code without the fear of those insidious JavaScript bugs.\r<br />\n<br />\nThe need to accommodate pure JavaScript within a TypeScript's source code could be handled with an &quot;Unsafe Region&quot;. \r<br />\n<br />\nIn answer to Cretz, TypeScript is like a potential lifesaver which may at very long last allow us to do our jobs efficiently without having to refashion our brains around a fully inadequate language. We do not want to write plugins. Microsoft has the best language people on the planet. We should let them do their thing.\r<br />\n<br />\n<br />\nPhilippe Moransais<br />\n",
+    "PostedDate": "2013-02-28T06:29:01.637-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1008420",
+    "ThreadId": "434723",
+    "Html": "<strong>cretz wrote:</strong><br />\n<blockquote>\nI have a recommendation for you or any others that want to take on a new project.<br />\n<br />\nThe TypeScript compiler's parser and type checker are incredibly easy to use programmatically. You can easilybuild some type of checkstyle/PMD-like plugin system that looks at the AST nodes (w/ all the awesome symbol/type information in there too after type check) and do any checks you want. This would not be a hard project to develop (I have done it in a different way...heck I even overwrote the error emitter to avoid some bugs), but would take some smart architecting to get it right and keep it simple.<br />\n</blockquote>\nAlthough a plugin system can be useful, if a &quot;safe mode&quot; is not endorsed by the core TypeScript team the validations may totally break with every new version of the compiler. \r<br />\n<br />\nBesides, safety checking is <strong>THE core feature</strong> missing for JavaScript development, not something that's &quot;extra&quot;. It would be great if TypeScript offered a solution to this giant headache. It's not something that belongs in a plugin.<br />\n",
+    "PostedDate": "2013-02-28T12:16:22.883-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1008789",
+    "ThreadId": "434723",
+    "Html": "Well question is if this is the job of TypeScript or the various plugins out there.\r<br />\n<br />\nYou can still use 'use strict' and you will catch the errors at the same place as before, so what tool chain you apply will be the one deciding when you catch it.\r<br />\nAlso your implicit conversions won't fail under strict... You can get TypeScript to fail on them though...<br />\n<pre><code>var a = 'text';\n\nvar b = !a; //OK -&gt; a=false\nvar c: string = !a; //ERROR\nvar d: bool = !a; //OK -&gt; a=false\n\nvar x = +a; //OK -&gt; x=NaN\nvar y: string = +a; //ERROR\nvar z: number = +a; //OK -&gt; z=NaN</code></pre>\n\nThe most common problems with &quot;this&quot; also remains. That doesn't have much to do with &quot;use strict&quot; either.\r<br />\nTypeScript can help you a little bit though.<br />\n<pre><code>var div1 = document.createElement('div');\nvar div2 = document.createElement('div');\ndocument.body.appendChild(div1);\ndocument.body.appendChild(div2);\ndiv1.innerText = &quot;div1&quot;;\ndiv2.innerText = &quot;div2&quot;;\n\nclass t {\n    private message = &quot;Hello t&quot;;\n    public hook(){\n        window.onmousewheel = function(e) {\n            div1.innerText = this.message;\n        }\n        \n        window.onmousemove = (e: Event)=&gt;{\n            div2.innerText = this.message;\n        };\n    }\n}\nnew t().hook();</code></pre>\n\nSo to me TypeScript isn't the right place to add these checks, instead it's a tooling thing. (Not sure how much of the above tools like JSLint etc captures?)\r<br />\n<br />\nSo at best the TypeScript compiler may adhere to 'use strict' and fail on things that will actually generate ReferenceErrors, SyntaxErrors etc under strict mode\r<br />\n<br />\nThere is a list at page 235: <a href=\"http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf\" rel=\"nofollow\">http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf</a>\r<br />\n<br />\nAnyways that is my thoughts.<br />\n",
+    "PostedDate": "2013-03-01T05:09:04.663-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042783",
+    "ThreadId": "434723",
+    "Html": "Agree with PMoransais and ncryptor. <br />\n<br />\nProductivity boosted:<br />\n<ol>\n<li>Safer codes though efficient means.</li>\n<li>Less test cases of covering non-deterministic behaviors of javascript</li>\n<li>\nEasier to do continuous integration.<br />\n</li>\n</ol>\nSo we have more reasons to stay with Visual Studio.<br />\n<br />\nAnd apparently the roadmap at <a href=\"https://typescript.codeplex.com/wikipage?title=Roadmap&amp;referringTitle=Home\" rel=\"nofollow\">https://typescript.codeplex.com/wikipage?title=Roadmap&referringTitle=Home</a> had cover most of what concerned PMoransais and ncryptor, say 0.9x to 1.x onward.<br />\n<br />\nKeep the fingers crossed.<br />\n",
+    "PostedDate": "2013-05-13T05:28:44.883-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042958",
+    "ThreadId": "434723",
+    "Html": "This kind of request has been made before by me and others. For now, it seems the TypeScript team is focusing on getting the language specification to 1.0 and freezing the specs, which is a good goal. All of these checks can be enforced by the compiler later.\r<br />\n<br />\nI agree with ncryptor for some of the complaints, and the thing about &quot;use strict&quot; is completely true! If you are compiling to ES5, that should just be there. But I think stuff like implicit bool conversion (!a) is something that is very useful once you get used to it. From here we see that it will be quite hard to get to a common ground on what should be allowed and what shoudn't, and this is why jslint/jshint have 200 options and no one agrees on what should be the standard.\r<br />\n<br />\nFor the &quot;implicit/explicit this&quot;, I believe people have solved this for decades and its quite simple to just do implicit this, most successfull languages have it and its a proven concept with its proven workarounds, but I think that since TypeScript tries to keep old javascript compiling, this will be a dream for some time. I really like cofeescript @ sintax though, and there could be something similar for TypeScript at some point.\r<br />\n<br />\nNow, as much as I'd love to get these features ASAP from the official TypeScript build, this is a free and open source project, and anyone can fork it anytime, add these features and get it out for testing.\r<br />\n<br />\nI just hope that TypeScript start evolving to &quot;something more&quot; after 1.0, and not just keep following ES6. ES6 is planned for spec release in December this year, so at least there shouldn't be much more to catch up with. <br />\n",
+    "PostedDate": "2013-05-13T10:27:33.79-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

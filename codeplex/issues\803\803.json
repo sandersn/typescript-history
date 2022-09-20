@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reopen the issue when you reply back so it's pops back up on our radar immediately.  Thanks!",
+    "ClosedDate": "2013-03-12T09:06:52.683-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "After upgrade the TypeScript from 0.8.2 to 0.8.3, visual studio 2012 failed to load it with following message:\r\n\r\nThe 'TypeScriptLanguageService.VsPackage.LanguageServicePackages, TypeScriptLanguageService, Version=0.8.3.0, Culture=neutral' package did not load correctly. (Refer to attached image: TypeScriptLoadError.png)\r\n\r\nIn VisualStudio\\11.0\\ActivityLog.xml, shows following errors:\r\n\r\n    <entry>\r\n        <record>748</record>\r\n        <time>2013/03/08 23:25:24.864</time>\r\n        <type>Information</type>\r\n        <source>VisualStudio</source>\r\n        <description>Entering function CVsPackageInfo::HrInstantiatePackage</description>\r\n        <guid>{2FFE45C4-5C73-493C-B187-F2E955FF875E}</guid>\r\n    </entry>\r\n    <entry>\r\n        <record>749</record>\r\n        <time>2013/03/08 23:25:24.864</time>\r\n        <type>Information</type>\r\n        <source>VisualStudio</source>\r\n        <description>Begin package load [TypeScriptLanguageService.VsPackage.LanguageServicePackage, TypeScriptLanguageService, Version=0.8.3.0, Culture=neutral]</description>\r\n        <guid>{2FFE45C4-5C73-493C-B187-F2E955FF875E}</guid>\r\n    </entry>\r\n    <entry>\r\n        <record>750</record>\r\n        <time>2013/03/08 23:25:24.865</time>\r\n        <type>Error</type>\r\n        <source>VisualStudio</source>\r\n        <description>SetSite failed for package [TypeScriptLanguageService.VsPackage.LanguageServicePackage, TypeScriptLanguageService, Version=0.8.3.0, Culture=neutral]</description>\r\n        <guid>{2FFE45C4-5C73-493C-B187-F2E955FF875E}</guid>\r\n        <hr>80131500</hr>\r\n        <errorinfo>Cannot cast the underlying exported value of type 'TypeScriptLanguageService.ExperimentalFeatures.MemoryInfo.MemoryInfoCommandHandler (ContractName=\"TypeScriptLanguageService.VsPackage.IGlobalCommandHandler\")' to type 'TypeScriptLanguageService.VsPackage.IGlobalCommandHandler'.</errorinfo>\r\n    </entry>\r\n    <entry>\r\n        <record>751</record>\r\n        <time>2013/03/08 23:25:24.865</time>\r\n        <type>Error</type>\r\n        <source>VisualStudio</source>\r\n        <description>End package load [TypeScriptLanguageService.VsPackage.LanguageServicePackage, TypeScriptLanguageService, Version=0.8.3.0, Culture=neutral]</description>\r\n        <guid>{2FFE45C4-5C73-493C-B187-F2E955FF875E}</guid>\r\n        <hr>80131500</hr>\r\n        <errorinfo>Cannot cast the underlying exported value of type 'TypeScriptLanguageService.ExperimentalFeatures.MemoryInfo.MemoryInfoCommandHandler (ContractName=\"TypeScriptLanguageService.VsPackage.IGlobalCommandHandler\")' to type 'TypeScriptLanguageService.VsPackage.IGlobalCommandHandler'.</errorinfo>\r\n    </entry>",
+    "LastUpdatedDate": "2013-08-13T09:52:35.567-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-09T05:57:21.963-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Visual Studio 2012 failed to load 0.8.3",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 803
+  },
+  "FileAttachments": [
+    {
+      "FileId": 635961,
+      "FileName": "TypeScriptLoadError.png",
+      "DownloadUrl": ".\\635961"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Also Intellisense doesen't work if you happen to have VS2012 Update 2 CTP 4 installed",
+      "PostedDate": "2013-03-11T04:08:42.037-07:00",
+      "Id": 92916
+    },
+    {
+      "Message": "Thanks for reporting. Sorry you are hitting issues.\n\nThe problem you outline isn't one we're familiar with.  The only slightly similar error message we've seen is on systems where an older install didn't uninstall properly, and a combination of new & old versions were getting loaded.\n\nBoth types its stating are not compatible are actually in the same DLL - TypeScriptLanguageService.dll, so the only way this seems possible is if it's loading 2 different releases from 2 different locations and trying to call between them.\n\nThe cleanest/safest approach to fix this would be something like:\n - Use Add/Remove programs to remove any copies of TypeScript that appear in the list of installed programs.\n - From within Visual Studio, go to Tools / Extension Manager to see if any other installs of TypeScript are still showing here.  If so, remove them.\n - Search your \"program files\" (\"Program Files (x86)\" if a 64-bit machine) folder for any remaining copies of this DLL (i.e. from within the program files folder, run \"dir /s TypeScriptLanguageService.*\").\n - If any folders remain containing the TypeScript files, make a note of the location and move them elsewhere (or just delete them if feeling brave, but wouldn't hurt to keep a backup).\n - Reinstall TypeScript 0.8.3 (if super cautious, a reboot before this step wouldn't hurt).\n\nHopefully this should resolve the issue for you.  Please reply back and let us know.\n\nThanks!\n\n - Bill\n",
+      "PostedDate": "2013-03-12T08:56:09.83-07:00",
+      "Id": 93040
+    },
+    {
+      "Message": "I have the same issue as engineforce, when installing 0.8.3 from scratch it seems as though the DLL didn't install properly. When starting Visual Studio it throws a bunch of errormessages at me saying the file didn't load.",
+      "PostedDate": "2013-03-21T00:22:11.55-07:00",
+      "Id": 93861
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1093055",
+    "ThreadId": "457030",
+    "Html": "I'm playing around with the Jasmine definition file trying to get the 'createSpy' method to return something more strongly typed to the class it is mocking.<br />\n<pre><code>// Current prototype\nfunction createSpy(name: string, originalFn?: Function): Spy;\n\n// Strongly typed prototype\nfunction createSpy&lt;T&gt;(name: string, originalFn?: T): TypedSpy&lt;T&gt;; </code></pre>\n\nHere's my attempt at creating a strongly typed 'Spy' interface:<br />\n<pre><code>interface TypedSpy&lt;T&gt; extends T, Spy {} \n// error TS2075: An interface may only extend another class or interface.</code></pre>\n\nIs there any way to make this work?<br />\n<br />\nAlternatively is there some way for me to define the return type as 'T extended with Spy'?<br />\n",
+    "PostedDate": "2013-09-16T04:16:24.72-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093072",
+    "ThreadId": "457030",
+    "Html": "Fixed this issue once I realised I needed to be using 'jasmine.createSpyObj' and updated the definition file to be: <br />\n<pre><code>function createSpyObj&lt;T&gt;(baseName: string, methodNames: any[]): T;</code></pre>\n\nHowever it has left me wondering how I'd specify the return type of a function extending an object with Underscore.js:<br />\n<pre><code>function ExtendObject&lt;T&gt;(object: T): ??? {\n  return _(object).extend(objectToExtendWith);\n}</code></pre>\n\n",
+    "PostedDate": "2013-09-16T05:17:31.723-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093354",
+    "ThreadId": "457030",
+    "Html": "Perhaps this does what you want?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> ExtendObject&lt;T, U <span style=\"color:Blue;\">extends</span> T&gt;(object: T): U {\n    <span style=\"color:Blue;\">return</span> _(object).extend(objectToExtendWith);\n}\r\n</pre></div>",
+    "PostedDate": "2013-09-16T18:15:13.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093436",
+    "ThreadId": "457030",
+    "Html": "Thanks Dan. <br />\n<br />\nThat would work but (unless I'm misunderstanding) it has the limitation that you'd have to specify an interface explicitly that defined U?<br />\n<pre><code>function ExtendObject&lt;T&gt;(object1: T, object2: Class2): U extends T, Class2 {\n    return _(object1).extend(object2);\n}\n\n\nvar extendedObj = ExtendObject&lt;Class1&gt;(object1, object2);</code></pre>\n\nIdeally I'd like to be able to do something like the above leaving extendedObj with the methods / properties of both Class1 and Class2. There's probably some pitfalls to this that prevent this kind of dynamic typing but it would be very useful to do without having to explicitly define an interface (especially when dealing with unit testing and mocks).<br />\n",
+    "PostedDate": "2013-09-17T02:54:54.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

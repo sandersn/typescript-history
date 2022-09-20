@@ -1,0 +1,110 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:32:45.227-07:00",
+    "CommentCount": 14,
+    "Custom": null,
+    "Description": "I'm getting a quite mysterious error when trying to compile my camljs library in VS2012 after installing the new 0.9.5 plugin:\r\n\r\nVSTSC : tsc.js(950, 17) Microsoft JScript runtime error : Debug Failure. False expression: Provided ast is not the expected AST, Expected: ObjectLiteralExpression Given: FunctionPropertyAssignment  \r\n\r\nIt points somewhere to the guts of tcs.js, thus I can't even think of how to start investigation and I have no idea which particular line of code produces this error.\r\n\r\n\r\n__Update:__\r\n\r\nIt turned out that the error was caused by the following fragment of code (thanks jamesnw and RyanCavanaugh for helping finding this place):\r\n\r\n```\r\n        constructor(builder: Builder, name: string) {\r\n            var self = this;\r\n            this.builder = builder;\r\n            this.name = name;\r\n            this.startIndex = builder.tree.length;\r\n            this.Membership = {\r\n                /** DEPRECATED. Please use UserField(...).IsInCurrentUserGroups() instead */\r\n                CurrentUserGroups(): IExpression {\r\n                    return self.IsInCurrentUserGroups();\r\n                },\r\n                /** DEPRECATED. Please use UserField(...).IsInSPGroup() instead */\r\n                SPGroup(groupId: number): IExpression {\r\n                    return self.IsInSPGroup(groupId);\r\n                },\r\n                /** DEPRECATED. Please use UserField(...).IsInSPWeb* methods instead */\r\n                SPWeb: {\r\n                    /** DEPRECATED. Please use UserField(...).IsInSPWebAllUsers() instead */\r\n                    AllUsers(): IExpression {\r\n                        return self.IsInSPWebAllUsers();\r\n                    },\r\n                    /** DEPRECATED. Please use UserField(...).IsInSPWebUsers() instead */\r\n                    Users(): IExpression {\r\n                        return self.IsInSPWebUsers();\r\n                    },\r\n                    /** DEPRECATED. Please use UserField(...).IsInSPWebGroups() instead */\r\n                    Groups(): IExpression {\r\n                        return self.IsInSPWebGroups();\r\n                    }\r\n                }\r\n            };\r\n        }\r\n\r\n```\r\n\r\nThe ad-hoc fix for me was to change functions format within literal assignment to the correct syntax. E.g.\r\n\r\n```\r\n                CurrentUserGroups(): IExpression {\r\n                    return self.IsInCurrentUserGroups();\r\n                },\r\n```\r\n\r\nis to be changed to\r\n\r\n```\r\n                CurrentUserGroups: (): IExpression => {\r\n                    return self.IsInCurrentUserGroups();\r\n                },\r\n```\r\n\r\nAlthough the matter is resolved for my particular case now, the issue is still relevant: compiler doesn't point to the place of the bug, thus it is extremely hard to find the place where the error hides.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-06T13:03:46.013-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Error \"... Expected: ObjectLiteralExpression Given: FunctionPropertyAssignment \"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 10,
+    "Id": 1980
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a bug with source map processing for \"function property assignments\", which is to say functions in object literals of the form:\n\n```\nvar x = { n() { return false; } }\n```\n\nAs a workaround, the alternate syntax is unaffected:\n```\nvar x = { n: function() { return false; } }\n```\n\nMarking this one active since we don't have a CodePlex issue on it yet.",
+      "PostedDate": "2013-12-06T13:12:03.463-08:00",
+      "Id": 126393
+    },
+    {
+      "Message": "Is there a way to track down which line of code this is on?  The workaround is great...if you know where to apply it.",
+      "PostedDate": "2013-12-06T15:24:15.757-08:00",
+      "Id": 126410
+    },
+    {
+      "Message": "Yes, I already started a discussion on this a few days ago (seems it's deleted now), and Ryan was going to enter it into the issue log.",
+      "PostedDate": "2013-12-06T19:27:20.253-08:00",
+      "Id": 126419
+    },
+    {
+      "Message": "Yes, a way to track it down would be nice.  I have a very large project and the issue could be anywhere.",
+      "PostedDate": "2013-12-06T19:34:54.98-08:00",
+      "Id": 126420
+    },
+    {
+      "Message": "Found the original discussion (via a google search ;/): https://typescript.codeplex.com/discussions/472080",
+      "PostedDate": "2013-12-06T19:37:14.367-08:00",
+      "Id": 126421
+    },
+    {
+      "Message": "Well, I found it by commenting out chunks of code at a time from multiple files in areas where I suspected it. ;)\n\nI had this...\n    ... = {\n         ... other functions ...,\n        createElement(tagName: string): HTMLElement { ... }\n    };\n\n...which was a mistake, because it should have really been this:\n\n    ... = {\n         ... other functions ...,\n        createElement: (tagName: string): HTMLElement => { ... }\n    };\n\n...which was the format of the other functions; so, the TS bug actually exposed another bug. LOL ;)\n",
+      "PostedDate": "2013-12-06T19:55:40.773-08:00",
+      "Id": 126422
+    },
+    {
+      "Message": "_(well, not really a bug, but a mistype)_",
+      "PostedDate": "2013-12-06T19:56:56.323-08:00",
+      "Id": 126423
+    },
+    {
+      "Message": "Hi guys,\n\nI was able to track down the issue!! Special thanks to __jamesnw__, after reading your example I realized that there is one place in code where I have similar stuff, so I found it and fixed it and now it works, woo-hoo :)\n\nSo for me it is resolved now, but it was really hard to track down the issue, so it would be very nice if the compiler at least pointed to the line of code that causes it.",
+      "PostedDate": "2013-12-07T01:06:19.167-08:00",
+      "Id": 126433
+    },
+    {
+      "Message": "I found a great way to find my issue.  Hopefully others find this helpful...\n\nSome bookkeeping.\n- You will need node.js.\n- Find the tsc.js (for me it was at C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9)\n- http://nodejs.org/api/debugger.html (has a list of debug commands)\n\n1. Compile your files using the following\nnode debug \"<insert tsc.js filepath>\" --sourcemap <insert other modifiers> @<insert typescript files list file>\n\n2. Type 'c' and press enter. (This will continue execution)\n\n3. You will get a stack trace leading up to the thrown Error.\n\n4. The first line on the stack trace will be \"Debug.assert...\".  Go to the next line of the stack trace and find that line of code in tsc.js. Example: \n```\n#0 Debug.assert tsc.js:949:17\n#1 SourceMapper.decreaseMappingLevel tsc.js:29245:30\n...\n```\n5. For me I went to line 29245.  On that line, the first input to Debug.assert is the expression.  For me it was \"ast === expectedAst\".  On the previous line, I added the following code: \n```\nif (ast !== expectedAst) { debugger; }\n```\n6. Now run your compilation again. (Type 'c' when it starts and press enter to continue execution)\n\n7. This time the debugger will stop before the violating Debug.assert.\n\n8. Type watch(\"ast\") and press enter.\n\n9. Type watchers and press enter.\n\n10. Node.js dumped the json for ast.  Hidden in that tree, I was able to find the file and line number of the issue.\n\nGood luck!\n",
+      "PostedDate": "2013-12-07T06:31:28.167-08:00",
+      "Id": 126449
+    },
+    {
+      "Message": "An additional note: Make sure you restore your tsc.js file when you're done!",
+      "PostedDate": "2013-12-07T06:33:23.39-08:00",
+      "Id": 126450
+    },
+    {
+      "Message": "I am getting this same error and I cannot figure out what is wrong.  I have a relatively complex project created in Visual Studio is C# and typescript.  I have gone through every single line of every typescript file in my project and there is not a single line defined in the way the examples above mention.\n\nI have tried compiling with node js without much success.  Maybe it's because my project is c# and typescript, but I don't have a 'main' TS file to point the compilation at and I can't find any documentation about the format a files list file (as mentioned in the instructions above) would need to be.\n\nAny help on this matter would be much appreciated as I'm tearing my hair out here!\n\nThanks in advance.",
+      "PostedDate": "2014-01-06T06:10:27.16-08:00",
+      "Id": 129205
+    },
+    {
+      "Message": "Just like to confirm that this difficult to resolve for large projects.  Failure is here in my case:\nFunction.Debug.assert (tsc.js:950:23)",
+      "PostedDate": "2014-01-06T15:02:24.747-08:00",
+      "Id": 129268
+    },
+    {
+      "Message": "I just encountered this as well",
+      "PostedDate": "2014-02-19T15:49:06.14-08:00",
+      "Id": 134126
+    },
+    {
+      "Message": "Had same error.\nIt is a huge project, but they I fixed it.\nI did a simple search \" : { \" and quickly skimmed through all and bingo! found it ",
+      "PostedDate": "2014-09-17T09:29:22.283-07:00",
+      "Id": 160015
+    }
+  ]
+}

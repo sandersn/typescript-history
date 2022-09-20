@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.47-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "var millis = new Date() - new Date(1970, 0, 1);\r\n\r\ngenerates the following error:\r\n\r\nOperator '-' cannot be applied to types 'Date' and 'Date'\r\n\r\nI'm not sure the ES specs allow it but the JS engines I've used support this (may be a consequence of Date having a valueOf method).\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T11:03:47.803-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Does not allow subtraction between Dates",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 156
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "From http://ecma-international.org/ecma-262/5.1/#sec-11.6.2 and http://ecma-international.org/ecma-262/5.1/#sec-15.9.5.8 subtraction should work on Dates (and on any object with a valueOf method that returns a number).",
+      "PostedDate": "2012-10-07T13:41:01.313-07:00",
+      "Id": 78926
+    },
+    {
+      "Message": "Unfortunately, the reason subtraction works on Dates in JavaScript is the exact thing that TypeScript exists to prevent. In short, you can't have your cake and coerce it, too. JavaScript allows math operations on Date objects because the operator itself coerces the LHS and RHS values into types it can work with—in this case numbers.\n\nA work around:\n\nDate.now() - +(new Date(1970, 0, 1));\n\nWhich will amusing compile to...\n\nDate.now() - +(new Date(1970, 0, 1));\n\n\n",
+      "PostedDate": "2012-10-07T13:53:55.153-07:00",
+      "Id": 78927
+    },
+    {
+      "Message": "@rwaldron \nValid point. \n\nThis a rather minor annoyance anyway and the + prefix workaround is good enough for me (I had fixed it with .getTime() on both operands, which I found a bit heavy).\n\nThanks.",
+      "PostedDate": "2012-10-08T14:01:52.967-07:00",
+      "Id": 79050
+    },
+    {
+      "Message": "TypeScript doesn't support these kind of coercions because we don't know generally where all the coercions should be applied.\n\r\n\r** Closed by jonturner 10/08/2012 2:06PM",
+      "PostedDate": "2012-10-08T14:06:33.55-07:00",
+      "Id": 79313
+    },
+    {
+      "Message": "Reopening for further comment",
+      "PostedDate": "2012-10-10T08:21:51.207-07:00",
+      "Id": 79314
+    },
+    {
+      "Message": "For anyone starting to convert existing JavaScript into a TypeSript project this will be one that others might often bump into.\n\nIt would make it easier on the conversion if the compiler could support it directly. But if the decision is to not, then I think at minimum a WIKI page of common conversion issues and work-arounds would be ideal to put together (and this one on there).\n",
+      "PostedDate": "2013-08-30T22:01:34.407-07:00",
+      "Id": 111766
+    },
+    {
+      "Message": "I agree, this is fine to leave out. Requiring +date is fine.",
+      "PostedDate": "2014-05-03T16:17:19.21-07:00",
+      "Id": 145493
+    },
+    {
+      "Message": "A solution could be to create another type that CAN be coerced, because it relies on a normalized date / dateTime object, and abstract from that. Take for example XMLSchema xs:date / xs:dateTime & friends, where it's absolutely legal to subtract dates. I'm not saying the W3C has all the answers (oh wait, it does). Running into exceptions makes me regret using TS, because it really hurts productivity.",
+      "PostedDate": "2017-01-17T08:41:34.867-08:00",
+      "Id": 206071
+    }
+  ]
+}

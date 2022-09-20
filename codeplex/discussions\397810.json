@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "920995",
+    "ThreadId": "397810",
+    "Html": "\r\n<p>Is there any way to call the compiler from .NET other than running as an external process?</p>\r\n",
+    "PostedDate": "2012-10-02T19:19:52.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920996",
+    "ThreadId": "397810",
+    "Html": "<p>BTW, I have tried referencing the DLL and EXE files that come with the VS package, the reference dialog complained none of them was .NET or COM.</p>\r\n<p>Also, tried opening the visual studio extension as a zip file and checking the language service DLL, but didn't know what to call in that DLL.</p>\r\n<p>Any other suggestions?</p>",
+    "PostedDate": "2012-10-02T19:33:43.607-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921044",
+    "ThreadId": "397810",
+    "Html": "<p>I was wondering about this too.. My rather hacky method is to copy the tsc.exe, tsc.js and tschost.dll to a directory and call them. But of course I'd prefer a clean way too.</p>",
+    "PostedDate": "2012-10-02T23:37:23.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921113",
+    "ThreadId": "397810",
+    "Html": "<p>typescript is written in typescript (javascript). Why not use Jurassic ....</p>",
+    "PostedDate": "2012-10-03T02:06:16.567-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921428",
+    "ThreadId": "397810",
+    "Html": "<p>If you want an fully integrated execution in your .net app you will have to use Jurassic or JavaScript.net from codeplex.&nbsp;JavaScript.net is faster.<br />I planning to use cscript.exe and start a new process</p>",
+    "PostedDate": "2012-10-03T11:59:48.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921459",
+    "ThreadId": "397810",
+    "Html": "<p>I tried using JavaScript.NET,</p>\r\n<p>Got the following error when running the compiler with no files:</p>\r\n<p><span style=\"white-space: pre;\"> </span>TypeError: Cannot read property 'watchFiles' of null</p>\r\n<p>The code was quite simple, just a Console app:</p>\r\n<pre class=\"code\"><span>namespace </span><span>SampleTs\r\n{\r\n   </span><span>class </span><span>Program\r\n    </span><span>{\r\n        </span><span>static void </span><span>Main(</span><span>string</span><span>[] args)\r\n        {\r\n            </span><span>var </span><span>compiler = </span><span>File</span><span>.ReadAllText(</span><span>\"tsc.js\"</span><span>);\r\n            </span><span>using</span><span>(</span><span>var </span><span>context = </span><span>new </span><span>JavascriptContext</span><span>())\r\n            {\r\n                context.Run(compiler);\r\n            }\r\n        }\r\n    }\r\n}</span></pre>\r\n<p>The property mentioned was already in some IO related thing.</p>\r\n<p>Any ideas what I may be missing? &nbsp;I'll check&nbsp;<span>Jurassic &nbsp;anyway.</span></p>",
+    "PostedDate": "2012-10-03T12:32:35.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921474",
+    "ThreadId": "397810",
+    "Html": "\r\n<p>I tried with no luck as well.</p>\r\n<p>I think I'm getting the same error with different message:</p>\r\n<p>TypeError: null cannot be converted to an object</p>\r\n<p>The code is still very simple, the same Console app (which has tsc.js and typescript.js included as content files that are copied to output dir if newer, and I conirmed by debugging the tsc.js is written correctly):</p>\r\n<pre><span>namespace </span><span>SampleTs\n{\n   </span><span>class </span><span>Program\n    </span><span>{\n        </span><span>static void </span><span>Main(</span><span>string</span><span>[] args)\n        {\n            </span><span>var </span><span>javaScript = </span><span>new </span><span>Jurassic.</span><span>ScriptEngine</span><span>();\n            javaScript.ExecuteFile(</span><span>&quot;tsc.js&quot;</span><span>);\n        }\n    }\n}</span></pre>\r\n<p>Sounds like I need to set some environment thing, but I'm not sure what it may be.</p>\r\n<p>Just installing via node, running Visual Studio plugin, or cscript, are all working. I'm just hoping to get something a bit quicker that's all .NET.</p>\r\n",
+    "PostedDate": "2012-10-03T12:48:12.127-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921561",
+    "ThreadId": "397810",
+    "Html": "<p>So, the JavaScript.NET thing is more promising, although it's obvious some property \"ioHost\" is always null and that's why the first use of one of its properties fail.</p>\r\n<p>Is there anything I can do using&nbsp;context.SetParameter() to give that a proper value? Am I on the right path to get it running at all?</p>\r\n<p>I also tried processing both the \"typescript.js\" and \"tsc.js\" in one go (having text from \"tsc.js\" last), and got the same error. Running just \"typescript.js\" doesn't give errors, but doesn't print any compiler messages either.</p>",
+    "PostedDate": "2012-10-03T15:36:37.457-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921654",
+    "ThreadId": "397810",
+    "Html": "<p>I managed to get it working with JavaScript.NET.</p>\r\n<p>I needed the typescript.js file, not tsc.js, looking at the play page source code, I could put the following together and get it working:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">static</span> <span style=\"color: blue;\">void</span> Main(<span style=\"color: blue;\">string</span>[] args)\r\n{\r\n    <span style=\"color: blue;\">var</span> tscFile = File.ReadAllText(<span style=\"color: #a31515;\">\"tsc.js\"</span>);\r\n    <span style=\"color: blue;\">var</span> typeScriptFile = File.ReadAllText(<span style=\"color: #a31515;\">\"typescript.js\"</span>);\r\n\r\n    <span style=\"color: blue;\">var</span> source = <span style=\"color: blue;\">new</span> StringBuilder();\r\n\r\n    <span style=\"color: blue;\">const</span> <span style=\"color: blue;\">string</span> createCompiler = <span style=\"color: #a31515;\">@\"(function(typeScriptSource) {\r\n    var outfile = { \r\n            source: '', Write: function (s) { this.source += s; }, \r\n            WriteLine: function (s) { this.source += s + '\\n'; }, \r\n            Close: function () { } };\r\n    var outerr = { Write: function (s) { }, WriteLine: function (s) { }, Close: function () { } };\r\n    var parseErrors = [];\r\n    // var Tools = require('typescript');\r\n    compiler = new TypeScript.TypeScriptCompiler(outfile, outerr);\r\n    compiler.setErrorCallback(function (start, len, message) \r\n        { parseErrors.push({ start: start, len: len, message: message }); }\r\n    );\r\n    compiler.parser.errorRecovery = true;\r\n    // compiler.addUnit(libStr, 'lib.ts', true);\r\n    compiler.addUnit(typeScriptSource, '');\r\n    compiler.typeCheck();\r\n    compiler.emit(false, function createFile(fileName) { return outfile; });\r\n    return outfile.source;\r\n    })(typeScriptSource);\"</span>;\r\n\r\n    source.AppendLine(typeScriptFile);\r\n    source.Append(createCompiler);\r\n\r\n    <span style=\"color: blue;\">using</span> (<span style=\"color: blue;\">var</span> context = <span style=\"color: blue;\">new</span> Noesis.Javascript.JavascriptContext())\r\n    {\r\n        context.SetParameter(<span style=\"color: #a31515;\">\"typeScriptSource\"</span>, <span style=\"color: #a31515;\">\"function(x:string){return x;}\"</span>);  \r\n        <span style=\"color: blue;\">var</span> result = context.Run(source.ToString());\r\n        Console.WriteLine(result);\r\n    }\r\n}\r\n\r\n</pre>\r\n</div>\r\nThis is very dirty still, and very simple, requireJS stuff doesn't work, there is a whole lot of stuff about path resolution and referencing multiple files with base folder path and more that needs to be done. I'll make it a bit cleaner and blog it,but posting the quick and dirty version now for anyone else interested in the same.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-03T22:08:36.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921909",
+    "ThreadId": "397810",
+    "Html": "<p>Another way would be to use the MS Script Control to host the J(ava)Script engine in C#, throw TypeScript at it and then use some dynamic magic to get back the output and errors. So just for kicks, here's my crack at Mohamad's version using JavaScript.NET doing exactly that&nbsp;(<a href=\"https://gist.github.com/3833679\">also posted as a gist</a>):</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">using</span> System;\r\n<span style=\"color: blue;\">using</span> System.Collections;\r\n<span style=\"color: blue;\">using</span> System.Collections.Generic;\r\n<span style=\"color: blue;\">using</span> System.Globalization;\r\n<span style=\"color: blue;\">using</span> System.IO;\r\n<span style=\"color: blue;\">using</span> System.Linq;\r\n<span style=\"color: blue;\">using</span> System.Text;\r\n\r\n<span style=\"color: blue;\">static</span> <span style=\"color: blue;\">class</span> Program\r\n{\r\n    <span style=\"color: blue;\">static</span> <span style=\"color: blue;\">int</span> Run(IEnumerable&lt;<span style=\"color: blue;\">string</span>&gt; args)\r\n    {\r\n        <span style=\"color: blue;\">var</span> appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);\r\n        <span style=\"color: blue;\">var</span> npmModulesPath = Path.Combine(appDataPath, <span style=\"color: #a31515;\">\"npm\"</span>, <span style=\"color: #a31515;\">\"node_modules\"</span>);\r\n        <span style=\"color: blue;\">var</span> tsBinPath = Path.Combine(npmModulesPath, <span style=\"color: #a31515;\">\"typescript\"</span>, <span style=\"color: #a31515;\">\"bin\"</span>);\r\n\r\n        <span style=\"color: blue;\">var</span> sourceFilePath = args.FirstOrDefault(a =&gt; !<span style=\"color: blue;\">string</span>.IsNullOrWhiteSpace(a));\r\n        <span style=\"color: blue;\">var</span> ts = sourceFilePath == <span style=\"color: blue;\">null</span> || sourceFilePath == <span style=\"color: #a31515;\">\"-\"</span> \r\n               ? Console.In.ReadToEnd() \r\n               : File.ReadAllText(sourceFilePath);\r\n        \r\n        <span style=\"color: blue;\">var</span> scType = Type.GetTypeFromProgID(<span style=\"color: #a31515;\">\"MSScriptControl.ScriptControl.1\"</span>);\r\n        <span style=\"color: blue;\">dynamic</span> sc = Activator.CreateInstance(scType);\r\n        sc.Language = <span style=\"color: #a31515;\">\"JavaScript\"</span>;\r\n\r\n        <span style=\"color: blue;\">var</span> tsPath = Path.Combine(tsBinPath, <span style=\"color: #a31515;\">\"typescript.js\"</span>);\r\n        <span style=\"color: blue;\">if</span> (!File.Exists(tsPath))\r\n            <span style=\"color: blue;\">throw</span> <span style=\"color: blue;\">new</span> FileNotFoundException(<span style=\"color: #a31515;\">@\"TypeScript does not appear to be installed as an NPM global package. See http://www.typescriptlang.org/ for more information.\"</span>, tsBinPath);\r\n\r\n        <span style=\"color: blue;\">var</span> compiler = File.ReadAllText(tsPath);\r\n        sc.AddCode(compiler);\r\n        \r\n        <span style=\"color: blue;\">var</span> resultObject = sc.Eval(<span style=\"color: #a31515;\">@\"\r\n            (function(source) {\r\n                var nop = function() {};\r\n                var outfile = { \r\n                    source: [],\r\n                    Write: function (s) { this.source.push(s); }, \r\n                    WriteLine: function (s) { this.Write(s + '\\n'); }, \r\n                    Close: nop\r\n                };\r\n                var outerr = { Write: nop, WriteLine: nop, Close: nop };\r\n                var errors = [];\r\n                var compiler = new TypeScript.TypeScriptCompiler(outfile, outerr);\r\n                compiler.setErrorCallback(function (start, len, msg) { \r\n                    errors.push({ start: start, len: len, message: msg }); });\r\n                compiler.parser.errorRecovery = true;\r\n                compiler.addUnit(source, '');\r\n                compiler.typeCheck();\r\n                compiler.emit(false, function() { return outfile; });\r\n                return {\r\n                    output: outfile.source.join(''), \r\n                    errors: errors\r\n                };\r\n            })(\"</span> + ts.ToJson() + <span style=\"color: #a31515;\">@\");\"</span>);\r\n        \r\n        <span style=\"color: blue;\">var</span> errors = \r\n            <span style=\"color: blue;\">from</span> <span style=\"color: blue;\">dynamic</span> error <span style=\"color: blue;\">in</span> (IEnumerable) resultObject.errors\r\n            <span style=\"color: blue;\">select</span> <span style=\"color: blue;\">new</span>\r\n            {\r\n                Start = (<span style=\"color: blue;\">int</span>) error.start, \r\n                Length = (<span style=\"color: blue;\">int</span>) error.len, \r\n                Message = (<span style=\"color: blue;\">string</span>) error.message,\r\n            } \r\n            <span style=\"color: blue;\">into</span> error\r\n            <span style=\"color: blue;\">where</span> error.Start &gt;= 0\r\n            <span style=\"color: blue;\">select</span> <span style=\"color: blue;\">string</span>.Format(<span style=\"color: #a31515;\">@\"({0},{1}): {2}\"</span>, \r\n                                 error.Start, error.Length, error.Message);\r\n\r\n        errors = errors.ToArray();\r\n        Array.ForEach((<span style=\"color: blue;\">string</span>[]) errors, Console.Error.WriteLine);\r\n\r\n        Console.WriteLine((<span style=\"color: blue;\">string</span>) resultObject.output);\r\n\r\n        <span style=\"color: blue;\">return</span> !errors.Any() ? 0 : 1;\r\n    }\r\n\r\n    [STAThread]\r\n    <span style=\"color: blue;\">static</span> <span style=\"color: blue;\">int</span> Main(<span style=\"color: blue;\">string</span>[] args)\r\n    {\r\n        <span style=\"color: blue;\">try</span>\r\n        {\r\n            <span style=\"color: blue;\">return</span> Run(args);\r\n        }\r\n        <span style=\"color: blue;\">catch</span> (Exception e)\r\n        {\r\n            Console.Error.WriteLine(e.ToString());\r\n            <span style=\"color: blue;\">return</span> 0xbad;\r\n        }\r\n    }\r\n    \r\n    <span style=\"color: blue;\">static</span> <span style=\"color: blue;\">string</span> ToJson(<span style=\"color: blue;\">this</span> <span style=\"color: blue;\">string</span> s)\r\n    {\r\n        <span style=\"color: blue;\">var</span> length = (s = s ?? <span style=\"color: blue;\">string</span>.Empty).Length;\r\n        <span style=\"color: blue;\">var</span> sb = <span style=\"color: blue;\">new</span> StringBuilder().Append(<span style=\"color: #a31515;\">'\"'</span>);\r\n        <span style=\"color: blue;\">for</span> (<span style=\"color: blue;\">var</span> index = 0; index &lt; length; index++)\r\n        {\r\n            <span style=\"color: blue;\">var</span> ch = s[index];\r\n            <span style=\"color: blue;\">switch</span> (ch)\r\n            {\r\n                <span style=\"color: blue;\">case</span> '\\\\':\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\"'</span>:\r\n                {\r\n                    sb.Append('\\\\');\r\n                    sb.Append(ch);\r\n                    <span style=\"color: blue;\">break</span>;\r\n                }\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\\b'</span>: sb.Append(<span style=\"color: #a31515;\">\"\\\\b\"</span>); <span style=\"color: blue;\">break</span>;\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\\t'</span>: sb.Append(<span style=\"color: #a31515;\">\"\\\\t\"</span>); <span style=\"color: blue;\">break</span>;\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\\n'</span>: sb.Append(<span style=\"color: #a31515;\">\"\\\\n\"</span>); <span style=\"color: blue;\">break</span>;\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\\f'</span>: sb.Append(<span style=\"color: #a31515;\">\"\\\\f\"</span>); <span style=\"color: blue;\">break</span>;\r\n                <span style=\"color: blue;\">case</span> <span style=\"color: #a31515;\">'\\r'</span>: sb.Append(<span style=\"color: #a31515;\">\"\\\\r\"</span>); <span style=\"color: blue;\">break</span>;\r\n                <span style=\"color: blue;\">default</span>:\r\n                {\r\n                    <span style=\"color: blue;\">if</span> (ch &lt; <span style=\"color: #a31515;\">' '</span>)\r\n                    {\r\n                        sb.Append(<span style=\"color: #a31515;\">\"\\\\u\"</span>);\r\n                        sb.Append(((<span style=\"color: blue;\">int</span>)ch).ToString(<span style=\"color: #a31515;\">\"x4\"</span>, NumberFormatInfo.InvariantInfo));\r\n                    }\r\n                    <span style=\"color: blue;\">else</span>\r\n                    {\r\n                        sb.Append(ch);\r\n                    }\r\n                    <span style=\"color: blue;\">break</span>;\r\n                }\r\n            }\r\n        }\r\n        <span style=\"color: blue;\">return</span> sb.Append(<span style=\"color: #a31515;\">'\"'</span>).ToString();\r\n    }\r\n}\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-04T07:47:46.66-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922092",
+    "ThreadId": "397810",
+    "Html": "<p>tsc.exe is creating a COM instance of the IE Chakra engine and the ProcessDebugger7 COM object, wiring it together and executing the tsc.js script. Thats' all, nothing fancy there.</p>\r\n<p>The proper construction and execution of the Chakra engine can be found here in Sass and Coffee's code:</p>\r\n<p><a href=\"https://github.com/xpaulbettsx/SassAndCoffee/tree/master/SassAndCoffee.JavaScript\">https://github.com/xpaulbettsx/SassAndCoffee/tree/master/SassAndCoffee.JavaScript</a></p>\r\n<p>Hope this helps you to write a proper solution here.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-04T12:41:06.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922217",
+    "ThreadId": "397810",
+    "Html": "<p>One side effect of using the current tsc is that it requires outputing to a file. If you are interested in running it in process, you are probably interested in getting the output back in-memory (or else, you wouldn't be bothered by running it as external process).</p>",
+    "PostedDate": "2012-10-04T17:13:47.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

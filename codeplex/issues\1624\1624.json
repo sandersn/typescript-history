@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I'm unable to repro this in our current bits. Your original code example compiles without error. I have seen bugs where the compiler spuriously reported generic types as not having the correct number of type parameters when in fact they did, but whatever was causing this issue here appears to have been fixed.",
+    "ClosedDate": "2013-09-04T17:27:53.603-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm hitting my head against what I imagine is a compiler bug, but I just can't pin-point it.\r\n\r\nI have code which returns the error:\r\nerror TS2173: Generic type references must include all type arguments.\r\n\r\nThe code has the metadata structure below:\r\n\r\n```\r\n\r\ninterface IA {\r\n    e(o: any): boolean;\r\n    g(): number;\r\n}\r\n\r\ninterface IB extends IA {\r\n    i(t: Function): boolean;\r\n    gt(): string;\r\n}\r\n\r\nclass A implements IB {\r\n    e(o: any): boolean { return true; }\r\n    g(): number { return 0; }\r\n    i(type: Function): boolean { return true; }\r\n    gt(): string { return ''; }\r\n\r\n}\r\n\r\ninterface IC<T, U> extends IB {\r\n    s(r: (t?: T, u?: U) => void): IC<T, U>;\r\n    u(registration: (t?: T, u?: U) => void): IC<T, U>;\r\n    en(u: U): void;\r\n    c(): void;\r\n    co(): number;\r\n}\r\n\r\nmodule Module.Name {\r\n    export class C<T, U>\r\n        extends A\r\n        implements IC<T, U> {\r\n\r\n        constructor(t: T) { super(); }\r\n        s(r: (t?: T, u?: U) => void): IC<T, U> { return this; }\r\n        u(r: (t?: T, u?: U) => void): IC<T, U> { return this; }\r\n        en(u?: U): void { }\r\n        c(): void { }\r\n        co(): number { return 0; }\r\n    }\r\n}\r\n```\r\n\r\nBut I cannot reproduce it on the playground, or by extracting the code to another project. It seems like it is a subtle bug. \r\n\r\nTo further complicate matters, visual studio reports the errors, but the code compiles fine. Unfortunately, code in another file that depends on it does not compile, stating the \"generic arguments...\" error that was previously only reported in visual studio.\r\n\r\nRenaming classes and interfaces does not help in the project where the errors are thrown.\r\n\r\nI'm at a complete loss for what to do, but I wanted to give you a heads up on this analysis. It is completely preventing me from making progress on my project.",
+    "LastUpdatedDate": "2013-09-04T17:27:53.603-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-30T21:45:34.66-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "error TS2173: Generic type references must include all type arguments.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1624
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "What does the line look like that doesn't compile?\n\nAll calls to instantiate C must include 2 Type Parameters, like:\n````\nvar c = new Module.Name.C<string, number>(\"aa\")\n````\n\n\n\n\n",
+      "PostedDate": "2013-08-31T08:37:42.16-07:00",
+      "Id": 111781
+    },
+    {
+      "Message": "Thanks for your response.\n\nThe error is being thrown in the code above. The first generic parameter is underlined in each reference to the IC<T, U> interface, which includes the one is the class declaration, as well as the two method return parameters. \n\nAll instantiations of the class use both type parameters.\n\nOddly enough, right next to it, I have a class with three generic parameters and basically the same pattern of code, which doesn't give me any problems:\n\n```\ninterface ID<T, U, V> extends IB {\n    s(r: (t?: T, u?: U) => V): ID<T, U, V>;\n    u(registration: (t?: T, u?: U) => V): IC<T, U, V>;\n    en(u: U): void;\n    c(): void;\n    co(): number;\n}\n\nmodule Module.Name {\n    export class D<T, U>\n        extends A\n        implements ID<T, U, V> {\n\n        constructor(t: T) { super(); }\n        s(r: (t?: T, u?: U) => V): IC<T, U> { return this; }\n        u(r: (t?: T, u?: U) => V): IC<T, U> { return this; }\n        en(u?: U): void { }\n        c(): void { }\n        co(): number { return 0; }\n    }\n}\n```\n\nWhat I ended up doing was removing all references to IC<T,U> - the method return parameters were for chaining, so they were a luxury, and I removed the explicit implementation of the interface, instead relying on structural interface inference. \n\nBut that's a pretty bad solution. Does this problem have a code smell that sounds familiar? Because I can't even find the correct subset of my code that repro's the issue.\n\nThanks for your help.",
+      "PostedDate": "2013-08-31T09:04:53.323-07:00",
+      "Id": 111783
+    }
+  ]
+}

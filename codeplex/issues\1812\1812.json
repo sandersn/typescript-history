@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-08T09:31:24.533-08:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "May be a systematic problem, but here is one instance:\r\n\r\n```\r\n$ node bin/tsc.js replace.ts\r\nc:/javascript/typescript/0.9/typescript/replace.ts(1,24): error TS2082: Supplied parameters do not match any signature of call target:\r\n        Could not apply type 'string' to argument 1 which is of type 'RegExp'.\r\nc:/javascript/typescript/0.9/typescript/replace.ts(1,24): error TS2087: Could not select overload for 'call' expression.\r\n\r\n$ git describe\r\nv0.9.1-1152-g85c74d7\r\n\r\n$ cat replace.ts\r\nconsole.log( \"C:/path\".replace(/^(.:)/,function(_,drive){return drive.toLowerCase()}) );\r\n```",
+    "LastUpdatedDate": "2014-03-31T16:14:57.443-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-20T02:03:31.13-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "regression: overload resolution .replace",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 9,
+    "Id": 1812
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Regression from ga7d1d8f",
+      "PostedDate": "2013-10-21T10:54:07.307-07:00",
+      "Id": 119090
+    },
+    {
+      "Message": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.\n\r\n\r** Closed by RyanCavanaugh 11/19/2013 1:36PM",
+      "PostedDate": "2013-11-19T13:36:51.783-08:00",
+      "Id": 123751
+    },
+    {
+      "Message": "Not fixed. The error message is still the same.\r\n\r\nOne might argue that there is an error in the code, in that TS can't determine the number of callback parameters from the RegExp, but the error message is completely bogus/misleading.",
+      "PostedDate": "2013-11-21T03:41:13.393-08:00",
+      "Id": 123752
+    },
+    {
+      "Message": "Just installed 0.9,5 and get the same error:\n\n    $ tsc --version\n    Version 0.9.5.0\n     :\n\n    $ cat t.ts\n    console.log( \"C:/path\".replace(/^(.:)/,function(_,drive){return drive.toLowerCase()}) );\n\n    $ tsc t.ts\n    /home/srackham/projects/rimu/t.ts(1,24): error TS2082: Supplied parameters do not match any signature of call target:\n        Could not apply type 'string' to argument 1 which is of type 'RegExp'.\n    /home/srackham/projects/rimu/t.ts(1,24): error TS2087: Could not select overload for 'call' expression.\n",
+      "PostedDate": "2013-12-08T15:01:13.047-08:00",
+      "Id": 126549
+    },
+    {
+      "Message": "The weird thing is that, although there are error messages and the tsc exit code is 1, the compiler generates the correct JavaScript output file which runs fine (my platform is Ubuntu 12.04 running Typescript 0.9.5.0 installed using `npm install -g typescript`).",
+      "PostedDate": "2013-12-09T11:57:42.46-08:00",
+      "Id": 126652
+    },
+    {
+      "Message": "I'm also seeing this in 0.9.5. Please fix this! replace says there is 3 overloads but only (string, string) is resolved.\n\n```\n        // http://stackoverflow.com/questions/1038746/equivalent-of-string-format-in-jquery\n        // format(\"i can speak {language} since i was {age}\", { language:'JavaScript', age:10 });\n        // format(\"i can speak {0} since i was {1}\", 'JavaScript', 10);\n        public static format(value: string, col: any) {\n            col = typeof (col) === 'object' ? col : Array.prototype.slice.call(arguments, 1);\n            return value.replace(/\\{\\{|\\}\\}|\\{(\\w+)\\}/g, function (m, n) {\n                if (m === \"{{\") { return \"{\"; }\n                if (m === \"}}\") { return \"}\"; }\n\n                return col[n] ? col[n] : '';\n            });\n        }\n```\n",
+      "PostedDate": "2013-12-10T16:01:21.113-08:00",
+      "Id": 126914
+    },
+    {
+      "Message": "```\n error TS2082: Supplied parameters do not match any signature of call target:\n\tCould not apply type 'string' to argument 1 which is of type 'RegExp'\n\n```\n\nPlease, please please Fix it and release a TS 0.9.5.1 \n\nPLEASE  : _ (",
+      "PostedDate": "2013-12-29T05:15:39.803-08:00",
+      "Id": 128606
+    },
+    {
+      "Message": "This was in 0.9.5 \"by design\".  As rest params are defined as \"infinitely expanding optional parameters\", thus any function you provided (such as the callback to string.replace) needing to indicate the params were optional also (by placing a '?' on the parameter). (It only used to not error prior to 0.9.5 due to a bug.\n\nThis requirement however, aside from giving a very confusing error message, is unintuitive and of little value.  As such, we're removed the requirement with the check-in at http://typescript.codeplex.com/SourceControl/changeset/f3d3c8dab83cde2739ea37a1a5e0757a94a59780 .  If you pull on these bits, the above errors should go away.\n\nThanks.",
+      "PostedDate": "2014-01-08T09:31:16.767-08:00",
+      "Id": 129806
+    },
+    {
+      "Message": "So how do you make this compile without errors?\n\nconsole.log( \"C:/path\".replace(/^(.:)/,function(_,drive){return drive.toLowerCase()}) );\n\n",
+      "PostedDate": "2014-01-09T23:53:55.85-08:00",
+      "Id": 130050
+    },
+    {
+      "Message": "This issue is very frustrating. Is there any workaround we can use until the next stable version is released?\nThank you.",
+      "PostedDate": "2014-01-17T00:10:56.487-08:00",
+      "Id": 130653
+    },
+    {
+      "Message": "This compiles without error:\n\nconsole.log( \"C:/path\".replace(/^(.:)/, function(substring, ...args){return args[0].toLowerCase()}) );",
+      "PostedDate": "2014-01-24T15:45:53.23-08:00",
+      "Id": 131539
+    }
+  ]
+}

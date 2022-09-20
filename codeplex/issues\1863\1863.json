@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, all taken care of in develop now.",
+    "ClosedDate": "2013-11-15T12:17:53.52-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Please check out the attached repro files.  I have a BiMap<K, V> class that looks like this:\r\n```\r\nclass BiMap<K, V> {\r\n\r\n    private forwardMap: LinkedMap<K, V>;\r\n    private inverseMap: LinkedMap<V, K>;\r\n\r\n    private inverseBiMap: BiMap<V, K>;\r\n\r\n    constructor(forwardMap = new LinkedMap<K, V>(), inverseMap = new LinkedMap<V, K>()) {\r\n        this.forwardMap = forwardMap;\r\n        this.inverseMap = inverseMap;\r\n    }\r\n\r\n    public inverse(): BiMap<V, K> {\r\n        if (this.inverseBiMap == null) {\r\n            this.inverseBiMap = new BiMap<V, K>(this.inverseMap, this.forwardMap);\r\n        }\r\n\r\n        return this.inverseBiMap;\r\n    }\r\n...\r\n```\r\n\r\nAnd a test that looks like this:\r\n```\r\n        var biMap = new BiMap<string, number>();\r\n        var key = \"key\";\r\n        var value = 100;\r\n\r\n        // set a value\r\n        biMap.set(key, value);\r\n        assert.equal(biMap.get(key), value);\r\n        assert.equal(biMap.inverse().get(value), key);\r\n        assert.isTrue(biMap.has(key));\r\n        assert.isTrue(biMap.inverse().has(value));\r\n```\r\n\r\nBut I get these errors:\r\n```\r\nMultiple markers at this line\r\n- Could not select overload for 'call' expression.\r\n- Supplied parameters do not match any signature of call target:\r\n\tCould not apply type 'string' to argument 1 which is of type 'number'.\r\n```\r\n\r\nIt seems like something is going wrong with the generics for the inverse() method.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-04T14:01:43.813-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Develop: BiMap-like generics not working",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1863
+  },
+  "FileAttachments": [
+    {
+      "FileId": 754279,
+      "FileName": "repro.zip",
+      "DownloadUrl": ".\\754279"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for the easy repro. Definitely something very wrong going on here, marked as active.",
+      "PostedDate": "2013-11-07T14:19:37.22-08:00",
+      "Id": 122210
+    },
+    {
+      "Message": "Looks like you just pushed the fix 10 mins ago - thanks for the quick fix!",
+      "PostedDate": "2013-11-07T17:12:22.22-08:00",
+      "Id": 122246
+    }
+  ]
+}

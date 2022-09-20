@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces",
+    "ClosedDate": "2014-07-21T12:16:12.46-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "This code snippet:\r\n\r\n```\r\ndeclare module m.SuperClass {\r\n    function moduleFunction();\r\n}\r\n\r\ndeclare module m {\r\n    class SuperClass {\r\n        constructor();\r\n    }\r\n}\r\n\r\ndeclare module m {\r\n    class SubClass extends m.SuperClass {\r\n        constructor();\r\n    }\r\n}\r\n```\r\n\r\nthrows the error:\r\n\r\n```\r\ntest.ts(13,28): error TS2186: Type name 'm.SuperClass' in extends clause does not reference constructor function for 'SuperClass'.\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-02T13:47:57.203-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Can't extend ambient class when merged with module",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2485
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Note that this basically equivalent code is OK:\n\n```\ndeclare module SuperClass {\n    function moduleFunction();\n}\n\ndeclare class SuperClass {\n    constructor();\n}\n\ndeclare class SubClass extends SuperClass {\n    constructor();\n}\n```",
+      "PostedDate": "2014-05-02T15:41:09.337-07:00",
+      "Id": 145437
+    },
+    {
+      "Message": "Thanks for the report. Does look like that should work.",
+      "PostedDate": "2014-05-02T17:23:40.807-07:00",
+      "Id": 145447
+    },
+    {
+      "Message": "There's a yucky workaround:\n\n```\ndeclare module m.SuperClass {\n    function moduleFunction();\n}\n\ndeclare module m {\n    class FakeSuperClass {\n        constructor();\n    }\n\n    class SuperClass extends FakeSuperClass { }\n}\n\ndeclare module m {\n    class SubClass extends m.FakeSuperClass {\n        constructor();\n    }\n}\n```",
+      "PostedDate": "2014-05-02T17:51:25.887-07:00",
+      "Id": 145449
+    },
+    {
+      "Message": "Hi George. Your arrangement is wrong.  You cannot merge a class after the module, it doesn't work that way.  The module definition must come after the class.",
+      "PostedDate": "2014-05-03T10:53:58.877-07:00",
+      "Id": 145477
+    },
+    {
+      "Message": "I guess I didn't read the docs closely enough. That is an extremely surprising restriction, and it is not consistently enforced (see comment #2), and it could definitely use a more descriptive error message.",
+      "PostedDate": "2014-05-03T12:01:33.687-07:00",
+      "Id": 145481
+    },
+    {
+      "Message": "Personally, I think classes should be combined like modules myself, so I'm not sure why it is the way it is.",
+      "PostedDate": "2014-05-03T16:27:35.377-07:00",
+      "Id": 145494
+    },
+    {
+      "Message": "(Classes created they way they do in output code would potentially replace the module object with a function and you'd lose module properties.)",
+      "PostedDate": "2014-05-03T16:30:03.063-07:00",
+      "Id": 145495
+    }
+  ]
+}

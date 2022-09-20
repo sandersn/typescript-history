@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.08-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Here is a pattern I use in my unit tests all the time:\r\n\r\n```\r\nimport MyModule = module(\"../../../../Web/Scripts/SubComponent/MyModule\");\r\ndeclare module 'app/SubComponent/MyModule' { };\r\nimport _m = module('app/SubComponent/MyModule');\r\nvar m = <MyModule>_m;\r\n\r\ndescribe( \"MyModule\", () => {\r\n    it( \"should be awesome\", () => {\r\n        m.someFunc();\r\n    });\r\n});\r\n```\r\n\r\nNote how I'm using one module import to get type information and another module import to get the compiler to generate the appropriate __define__ call, and then I tie the two together with a typecast.\r\n\r\nThis happens because RequireJS running in the browser disagrees with the TypeScript compiler on where the module is located. For RequireJS, the module's location gets remapped first through IIS and then through RequireJS's own config, while the compiler sees bare file system.\r\n\r\nContrary to the first obvious objection some people would have, this situation is not always avoidable. I've been able to dance around it within the actual project (so far), but with unit tests there is no luck: I can't put both \"test\" and \"app\" modules in the same location on the file system, but they have to appear so to the browser that is running the tests.\r\n\r\nSo wouldn't it be wonderful if the compiler allowed me to specify these two values (type info vs. module ID) separately?\r\nSomething like:\r\n\r\n```\r\nimport MyModule = module('app/SubComponent/MyModule') from('../../../../Web/Scripts/SubComponent/MyModule.ts')\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-22T12:33:36.723-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Separate Module ID from type information location",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 6,
+    "Id": 934
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@fsoikin - \n\nInteresting work around, I don't think I realized that would have worked.  \n\nI suspect the most likely approach we would take to addressing this is do something more similar to what requires and other loaders do at runtime - provide a way to configure how paths get (re)routed at compilation time, so that you can match this up with what's happening at runtime, or use a different file system structure at compile time vs runtime.  I suspect we would keep this configuration information outside of the source files themselves, and have it be something separate passed to the compiler.   We haven't thought deeply about what this would need to look like yet though.  If you have thoughts on what this should look like, feel free to share in comments here.",
+      "PostedDate": "2013-04-23T11:00:54.243-07:00",
+      "Id": 97854
+    },
+    {
+      "Message": "@LukeH -\n\nThank you for the reply. Glad I could interest you with my hacking practices :-)\n\nI am slightly concerned with the \"separate config\" approach, because it would require passing parameters to the compiler.\nI work in Visual Studio using your plugin for Intellisense support and [WebEssentials](http://visualstudiogallery.msdn.microsoft.com/07d54d12-7133-4e15-becb-6f451ea3bea6) for compile-on-save functionality. Both of these will need to get the location of the config from somewhere. I guess a custom project property page should work... Right?\n\nAs far as the format of the config itself, I personally think JSON is the only sane answer.\nAnd then the most popular AMD loader out there already has [a pretty well-defined and widely used format](http://requirejs.org/docs/api.html#config), so why reinvent the wheel?\n\nI'm not sure about Node (not much of a node developer), but it would appear to me that Node doesn't have a config at all, does it? It just assumes this directory structure with node_modules/[module]/package.json and goes from there. Right?",
+      "PostedDate": "2013-04-23T14:22:50.043-07:00",
+      "Id": 98249
+    },
+    {
+      "Message": "Ah, forgot one point on the \"separate config\" approach.\n\nWhile I personally would be totally happy with it, it seems to me that it would upset those relying on that cool feature called \"inferred project\", which have no project file, so there is nowhere to store the settings.",
+      "PostedDate": "2013-04-23T14:24:57.167-07:00",
+      "Id": 98250
+    },
+    {
+      "Message": "Hi again!\n\nAre there any news on this one?\nSince TS 0.9.0 [doesn't let me treat modules as interfaces](http://typescript.codeplex.com/workitem/1101) anymore, this clever trick no longer works and I'm stuck with broken tests.\n\nOr are there any other workarounds I can use?\nI mean, I can't be the only person out there who uses in-browser tests, can I?",
+      "PostedDate": "2013-06-21T07:02:43.26-07:00",
+      "Id": 103778
+    },
+    {
+      "Message": "We have a large SPA application which heavily relies on lazy-loading AMD modules. These are built with Portable Areas and routed at runtime so that they have different paths mapping to their \"friendly\" module names. A runtime component compiles the RequireJS configuration file to map the module names to file names.\n\nCurrently, there seems to be no way of using TypeScript in a sensible way with this setup. Generating an appropriate configuration file at build time (through MSBUILD) would not be a problem, and it would also be OK if new files were only \"seen\" by the TS Intellisense provider after triggering a build step.\n\nSo the missing piece seems to be a way of mapping module names to file paths, so that TS knows how the different script files/modules will relate to each other at runtime. Therefore I'd be all for the separate config file approach, at least as an option, to cover scenarios like this where files cannot be located by a common pattern or convention.",
+      "PostedDate": "2013-11-17T06:46:02.833-08:00",
+      "Id": 123311
+    },
+    {
+      "Message": "Looks like it's a duplicate of https://typescript.codeplex.com/workitem/911",
+      "PostedDate": "2014-04-19T16:06:30.68-07:00",
+      "Id": 142421
+    }
+  ]
+}

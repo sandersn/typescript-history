@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1202208",
+    "ThreadId": "528804",
+    "Html": "Ok this is out first project we truly started using typescript for production and development process. we are about to use Durandal to build our SPA application but some things are not obvious for us. for example if a have a Typescript file\r<br />\n<br />\nMain.ts content of which is as following<br />\n<pre><code>import _app = require('Config')\n\nexport module App {\n   export class Shell {\n\n       public search = () =&gt; {\n           var data = new _app.AppData.AppConfig();\n        }\n       public activate = () =&gt; {\n       }\n    }\n}</code></pre>\n\nthis compiles to <br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, 'Config'], function(require, exports, _app) {\n    (function (App) {\n        var Shell = (function () {\n            function Shell() {\n                this.search = function () {\n                    var data = new _app.AppData.AppConfig();\n                };\n                this.activate = function () {\n                };\n            }\n            return Shell;\n        })();\n        App.Shell = Shell;\n    })(exports.App || (exports.App = {}));\n    var App = exports.App;\n});</code></pre>\n\nhow ever according to new typescript specifications I do not need modules and I can have class per file and create exports in this way.<br />\n<pre><code>import _app = require('Config')\nclass Shell {\n     public search = () =&gt; {\n         var data = new _app.AppData.AppConfig();\n     }\n     public activate = () =&gt; {\n\n     }\n}\nexport = Shell;</code></pre>\n\nit compiles to<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, 'Config'], function(require, exports, _app) {\n    var Shell = (function () {\n        function Shell() {\n            this.search = function () {\n                var data = new _app.AppData.AppConfig();\n            };\n            this.activate = function () {\n            };\n        }\n        return Shell;\n    })();\n\n    \n    return Shell;\n});</code></pre>\n\nwhat is the different here when using module keyword and end export? what if I really want to organize my DomainObjets in namespaces and use Modules for that and what it there <strong>exports</strong> keyword in every generated js file with define function?\r<br />\n<br />\nI think typescript is really enterprise level way of developing apps but all those unknown code generations makes me thing there is something more we do not understand at the moment.<br />\n",
+    "PostedDate": "2014-02-03T12:15:29.58-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202649",
+    "ThreadId": "528804",
+    "Html": "I don't think that you need internal modules inside external modules.\r<br />\nJust use the directory structure to namespace the AMD modules.\r<br />\n<br />\nI have written a little introduction to TypeScript's module system. Maybe it can clarify some things for you.\r<br />\n<a href=\"http://blog.oio.de/2014/01/31/an-introduction-to-typescript-module-system/\" rel=\"nofollow\">http://blog.oio.de/2014/01/31/an-introduction-to-typescript-module-system/</a><br />\n",
+    "PostedDate": "2014-02-04T12:31:02.053-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202679",
+    "ThreadId": "528804",
+    "Html": "ok thats a very good starting point but can u explain what is that exports keyword define([&quot;require&quot;, &quot;<strong>exports</strong>&quot;]) I do not need this at all is it some typescript compiler bug I am using AMD why do I need <strong>exports</strong> at all?<br />\n",
+    "PostedDate": "2014-02-04T13:57:08.363-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202986",
+    "ThreadId": "528804",
+    "Html": "@taicodev You don't need to worry about require and exports.\r<br />\n<br />\nThey're automatically added by tsc and they're used by require.js (there are three special/magic dependencies). exports is used if your file contains &quot;export function&quot; or &quot;export class&quot; statements (not export = ).\r<br />\n<br />\nSee details here: <a href=\"https://github.com/jrburke/requirejs/wiki/Differences-between-the-simplified-CommonJS-wrapper-and-standard-AMD-define#wiki-magic\" rel=\"nofollow\">https://github.com/jrburke/requirejs/wiki/Differences-between-the-simplified-CommonJS-wrapper-and-standard-AMD-define#wiki-magic</a>\r<br />\n<br />\nPromDoe is right - it's better to use file/folder hierarchy for organizing dependencies when you're using external modules.<br />\n",
+    "PostedDate": "2014-02-05T06:44:08.817-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-02-05T11:35:17.643-08:00"
+  },
+  {
+    "Id": "1203159",
+    "ThreadId": "528804",
+    "Html": "ok this is what I was looking for but is there any way I could disable that <strong>export</strong> keyword when modules are generated? any way this is really good answer and exactly what I was looking for. thank u very much.<br />\n",
+    "PostedDate": "2014-02-05T11:36:50.043-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1203470",
+    "ThreadId": "528804",
+    "Html": "@taicodev You don't need to worry about exports.\r<br />\n<br />\nYou do <strong>not</strong> need to disable it.\r<br />\n<br />\nJust stop looking at the generated source because it will work just fine - trust me.\r<br />\n<br />\nTypeScript compiler could omit exports when it's not needed (just like in your case). But it doesn't do that because the extra <strong>exports</strong> do not make any difference for require.js.\r<br />\n<br />\nSo once again - stop worrying about extra exports! It is perfectly fine and OK.<br />\n",
+    "PostedDate": "2014-02-06T07:32:48.49-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

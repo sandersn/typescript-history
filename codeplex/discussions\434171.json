@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1005431",
+    "ThreadId": "434171",
+    "Html": "Hi, why is this producing error and how can you define a variable that can accept arrays and JQuery objects?<br />\n<pre><code>    interface List {\n        [index: number]: any;\n        length: number;\n    }\n\n    var jQueryObject = $(document);\n    var arrayObject = [1, 2, 3];\n    var a: List = jQueryObject; // OK\n    var b: List = arrayObject;  // Error: Cannot convert 'number[]' to 'List'</code></pre>\n\n",
+    "PostedDate": "2013-02-22T13:28:54.8-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005487",
+    "ThreadId": "434171",
+    "Html": "I can't tell what you are trying to do, but my best guess is this.<br />\n<pre><code>interface List {\n        index: any[];\n        length: number;\n    }\n\n    var jQueryObject = $(document);\n    var arrayObject = {index: [1, 2, 3],length: 3};\n    var a: List = jQueryObject; // OK\n    var b: List = arrayObject;  // Error: Cannot convert 'number[]' to 'List'</code></pre>\n\n",
+    "PostedDate": "2013-02-22T16:36:28.09-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005673",
+    "ThreadId": "434171",
+    "Html": "I think the OP is trying to create an interface that is 'implemented' by the pre-existing typed arrays. Unfortunately OP, it's a bug still waiting to be fixed. You'll have to come up with a workaround until then.\r<br />\n<br />\n<a href=\"http://stackoverflow.com/questions/13074851/possible-to-define-indexer-interface-for-number\" rel=\"nofollow\">http://stackoverflow.com/questions/13074851/possible-to-define-indexer-interface-for-number</a>\r<br />\n<a href=\"http://typescript.codeplex.com/workitem/331\" rel=\"nofollow\">http://typescript.codeplex.com/workitem/331</a><br />\n",
+    "PostedDate": "2013-02-23T08:41:02.773-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1010331",
+    "ThreadId": "434171",
+    "Html": "Yes, like GJK said, I'm trying to create an interface that is common between arrays and jQuery objects, so that we can use that interface as type of method parameters in <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/underscore/underscore.d.ts\" rel=\"nofollow\">Underscore definitions</a>. The current workaround is to just overload the methods, but it creates a lot of duplication:<br />\n<pre><code>// Common interface between Arrays and jQuery objects (not?)\ninterface List {\n    [index: number]: any;\n    length: number;\n}\n\ninterface UnderscoreStatic {\n    //...\n\n    forEach(list: List, iterator: ObjectIterator, context?: any): any[];\n    forEach(object: any, iterator: ListIterator, context?: any): any[];\n\n    //...\n}</code></pre>\n\n",
+    "PostedDate": "2013-03-04T20:06:33.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

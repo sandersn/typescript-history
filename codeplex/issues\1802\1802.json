@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "The following is a fairly minimal example that confuses 0.9.1.1:\r\n\r\n```\r\nclass Pair<a, b> {\r\n   fst: a;\r\n   snd: b;\r\n}\r\n\r\ninterface Parser<T> {\r\n   (state: ParseState): T;\r\n}\r\n\r\nclass ParseState {\r\n   f (): string {\r\n      return null\r\n   }\r\n}\r\n\r\nfunction g (): Parser<string> {\r\n   return null\r\n}\r\n\r\nfunction lexeme (p: Parser<string>): void {\r\n   withAction(\r\n      then(p, repeat(choice([p]))),\r\n      pair => pair.fst\r\n   )\r\n}\r\n\r\nfunction withAction<T, U> (p: Parser<T>, f: (t: T) => U): void {\r\n}\r\n\r\nfunction then <T,U> (p1: Parser<T>, p2: Parser<U>): Parser<Pair<T,U>> {\r\n   return null\r\n}\r\n\r\nfunction choice<T> (ps: Parser<T>[]): Parser<T> {\r\n   return null\r\n}\r\n\r\nfunction repeat<T> (p: Parser<T>): Parser<T[]> {\r\n   return null\r\n}\r\n```\r\n\r\nSimplifying much from here makes the problem go away.\r\n\r\nAny timeline for the next bug-fix release? I'm spending a lot of time isolating and working around compiler problems at the moment...",
+    "LastUpdatedDate": "2013-11-19T16:04:50.523-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-17T12:29:18.777-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Spurious error: \"Function [...] declared a non-void return type, but has no return expression\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1802
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This appears to be fixed in the latest bits in the develop branch, I get no errors compiling your code there.\n\nSo as far as your question about the future goes, one option is to use the develop branch if that unblocks you. As far as full on releases go you can see what we're planning here http://blogs.msdn.com/b/typescript/archive/2013/10/17/typescript-and-the-road-to-1-0.aspx\n\r\n\r** Closed by danquirk 10/17/2013 12:34PM",
+      "PostedDate": "2013-10-17T12:34:38.807-07:00",
+      "Id": 118759
+    },
+    {
+      "Message": "Found a workaround: extract an intermediate variable. In this case, change the definition of \"lexeme\" as follows:\r\n\r\n```\r\nfunction lexeme (p: Parser<string>): void {\r\n   var q = repeat(choice([p]))\r\n   withAction(\r\n      then(p, q),\r\n      pair => pair.fst\r\n   )\r\n}\r\n\r\n```\r\n\r\nNote that q (thankfully) doesn't need to be given an explicit type for this to work.",
+      "PostedDate": "2013-10-17T12:38:05.603-07:00",
+      "Id": 118760
+    },
+    {
+      "Message": "Thanks. A bug-fix release between 0.9.1 and 0.9.5 would be helpful. For now I'll use the workaround.",
+      "PostedDate": "2013-10-17T12:39:54.273-07:00",
+      "Id": 118761
+    }
+  ]
+}

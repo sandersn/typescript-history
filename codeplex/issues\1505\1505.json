@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-14T14:52:50.63-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Getting the following error when trying to compile a project in 0.9.1:  \"Microsoft JScript runtime error : Unable to get value of the property 'flags': object is null or undefined\".\r\n\r\nThe code that seems to cause this is listed below.  I could not figure out which line was the offending one as the error was inconsistent.  It would only go away if I commented out all the content of the function.\r\n\r\n\r\n```\r\nthis.handleResponse = (responseData, responseStatus) => {\r\n    if (responseStatus == 400) {\r\n        var o = {};\r\n        for (var prop in responseData) {\r\n            var newProp = prop === \"\" ? \"form\" : prop;\r\n            var sections = newProp.split(\".\");\r\n            angular.forEach(sections, (section, key) => {\r\n                sections[key] = section.toCamelCase();\r\n            });\r\n            newProp = sections.join(\".\");\r\n            o[newProp] = responseData[prop].join(\"\\n\");\r\n        }\r\n\r\n        this.$scope.validation = o;\r\n\r\n        var alertMsg = o[\"form\"] || loc.msg_formerror;\r\n        this.$rootScope.alert(eAlertType.error, alertMsg);\r\n    }\r\n}\r\n```",
+    "LastUpdatedDate": "2013-08-14T14:52:50.63-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-13T10:42:33.683-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Microsoft JScript runtime error : Unable to get value of the property 'flags': object is null or undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1505
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. I'm not able to repro this in the latest bits in the develop branch; however, I don't have all the necessary dependencies for your code so it's possible the error you're seeing is caused by the specific types involved. It's also possible the bug has just already been fixed though. I checked this:\n\n```Typescript\ndeclare var angular: any;\ndeclare var loc: any;\ndeclare var eAlertType: any;\n\nthis.handleResponse = (responseData, responseStatus) => {\n    if (responseStatus == 400) {\n        var o = {};\n        for (var prop in responseData) {\n            var newProp = prop === \"\" ? \"form\" : prop;\n            var sections = newProp.split(\".\");\n            angular.forEach(sections, (section, key) => {\n                sections[key] = section.toCamelCase();\n            });\n            newProp = sections.join(\".\");\n            o[newProp] = responseData[prop].join(\"\\n\");\n        }\n\n        this.$scope.validation = o;\n\n        var alertMsg = o[\"form\"] || loc.msg_formerror;\n        this.$rootScope.alert(eAlertType.error, alertMsg);\n    }\n}\n```\n\nand saw no errors. If you can fill in what the actual types are for those 3 variables I made ambient declarations for we can check more precisely. Please re-open this issue with that info or if you happen to try your full code on the latest bits in the develop branch and still see this error.",
+      "PostedDate": "2013-08-14T14:52:45.793-07:00",
+      "Id": 109944
+    }
+  ]
+}

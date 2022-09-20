@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.597-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Passing types as parameters is something needed in a lot of javascript library, but actually, parameters are considered to be objects, not types. Example, if i have this class:\r\n\r\nclass MyClass {\r\n    constructor (private name: string) {\r\n    }\r\n}\r\n\r\nTo pass that class as a type that i can then instantiate in a function, i actually have to duplicate the class constructor signature like this:\r\n\r\nfunction sample(MyClass: new (name: string) => MyClass) {\r\n    var obj = new MyClass(\"hello\");\r\n}\r\n\r\nDuplicate the signature each time i need to pass a type as parameter is not ok. It will be better if we can do something like this with a new \"typeof\" keyword:\r\n\r\nfunction sample(MyClass: typeof(MyClass)) {\r\n    var obj = new MyClass(\"hello\");\r\n}\r\n\r\nThanks for the great work!",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-13T02:44:38.98-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Passing class type as parameter",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 16,
+    "Id": 246
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think this is supposed to be solved with interfaces. For example:\n\n```\nclass MyClass {\n    constructor (private name: string) {\n    }\n}\n\ninterface MyClassStatic {\n    new (name: string): MyClass;\n}\n\nfunction sample(cls: MyClassStatic) {\n    return new cls(\"hello\");\n}\n```",
+      "PostedDate": "2012-10-13T13:33:51.24-07:00",
+      "Id": 79689
+    },
+    {
+      "Message": "@bmuon you are right it does work and it's better than my current workaround. Anyway it still requires to duplicate the constructor. I think a \"typeof\" keyword still make sense for this scenario and others probably.",
+      "PostedDate": "2012-10-14T02:05:41.693-07:00",
+      "Id": 79700
+    },
+    {
+      "Message": "Assigning to Jonathan who is managing our suggestions - thanks!",
+      "PostedDate": "2012-10-15T10:03:51.7-07:00",
+      "Id": 79782
+    },
+    {
+      "Message": "This is specially messy when dealing with deep hierarchies and lots of static members (e.g., AST graphs).\n\nTypescript already \"keeps track\" of the hidden static interfaces (the ones you see when hovering classes names on the ide) for classes- after all, they are merely interfaces for the generated constructor functions. We just need a way to reference them.",
+      "PostedDate": "2012-10-17T14:57:14.983-07:00",
+      "Id": 80283
+    },
+    {
+      "Message": "+1, I had also the same idea except that the type is expressed with \"Class<Name>\" and that interfaces can also be used!\n\nI've opened a discusson: http://typescript.codeplex.com/discussions/403602\n\nSample code:\n\n// using MyClass from above\nfunction sample(classType: Class<MyClass>) {\n}\n\ninterface IHandler {\n}\nclass SpecialHandler implements IHandler {\n}\n\n// function only takes classes which implement IHandler\nfunction sample(classType: Class<IHandler>) {\n}\n",
+      "PostedDate": "2012-11-18T05:02:17.92-08:00",
+      "Id": 82664
+    },
+    {
+      "Message": "Agreed, currently we would love to be able to create namespaces from modules:\nvar NS ={\n    ClassType:Class<ClassType>,\n    OtherClass:Class<ClassType>\n};\n\nnew NS.ClassType();",
+      "PostedDate": "2013-10-02T13:34:01.533-07:00",
+      "Id": 117232
+    },
+    {
+      "Message": "Note: It is possible to use \"someParameter: typeof {sometype}\" to pass types, but this context doesn't allow for inheritance.  If you pass a derived type, it will error out, unless you strong type it to the expected parameter type.  This should be fixed.",
+      "PostedDate": "2013-10-04T20:17:21.853-07:00",
+      "Id": 117532
+    }
+  ]
+}

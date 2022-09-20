@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, yay JavaScript variable hoisting",
+    "ClosedDate": "2014-07-01T11:48:44-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I noticed that if I do the following code snippet; \r\n\r\nvar b: number;\r\nswitch ( b )\r\n{\r\ncase 1:\r\n     a = 10;\r\n     break;\r\n\r\ncase 2:\r\n     var a: number = 0;\r\n     break;\r\n}\r\n\r\nit works.... which is really weird. why does the case 1 code section have var a inside its scope? Even if i update case 2 to force var a focus to be within it via brackets, like the below\r\n\r\ncase 2:\r\n{\r\n    var a:number =0 ;\r\n}\r\nbreak ;\r\n\r\nit still works. is this a bug or a by design aspect of Typescript? \r\n\r\nThanks ",
+    "LastUpdatedDate": "2014-07-01T11:48:44-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-01T00:57:34.99-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "var definitions inside switch statments",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2595
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is actually how JavaScript works and is (somewhat unfortunately it seems) by design:\n\nhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var\n\nAs per the above documentation, variable declarations are processed first before any code execution begins, therefore you can (and it is quite valid to) have the following:\n\nmyTest = \"123\";\nvar myTest;\n\nas long as the declaration of myTest exists within the _same lexical scope_, otherwise if no var is declared, a search is then performed to find the variable upon which the assignment is being performed.\n\nIt's generally best practice, to ensure there is no confusion, to declare any variables before the code using those variables, often some go so far as making sure all their vars are always declared at the beginning of the containing scope (generally functions).\n\nIt would be nice if we could maybe with a compiler flag enable/disable emitting errors for usage of variables before declaration.\n",
+      "PostedDate": "2014-07-01T06:00:02.2-07:00",
+      "Id": 151237
+    }
+  ]
+}

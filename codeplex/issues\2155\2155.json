@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-05T12:32:56.183-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Given the following TypeScript code:\r\n\r\n```\r\nclass Foo {\r\n\tmethod() {\r\n\t\tconsole.log('Hello, World!')\r\n\t}\r\n}\r\nclass Bar extends Foo {\r\n}\r\n```\r\n\r\nThe following JavaScript is generated (excluding `__extends` implementation):\r\n\r\n```\r\nvar Foo = (function () {\r\n    function Foo() {\r\n    }\r\n    Foo.prototype.method = function () {\r\n        console.log('Hello, World!');\r\n    };\r\n    return Foo;\r\n})();\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function Bar() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    return Bar;\r\n})(Foo);\r\n```\r\n\r\nThat is all expected. However, if I try to extend something from lib.d.ts OR that will generate the same code, compilation will fail. For instance:\r\n\r\n```\r\nclass Foo extends Date {\r\n}\r\n```\r\n\r\nTechnically, this *should* work, and, given the implementation of `__extends`, would work with `Array`, `Date`, `RegExp`, etc. but it is disallowed in TypeScript for seemingly arbitrary reasons. Similarly, the following code will not compile:\r\n\r\n```\r\ninterface Foo {\r\n\tnew ():Foo;\r\n\tmethod():void;\r\n\tprototype:Foo;\r\n}\r\nvar Foo:Foo = (() => {\r\n\tfunction Foo() {\r\n\t}\r\n\tFoo.prototype.method = function () {\r\n\t\tconsole.log('Hello, World!');\r\n\t};\r\n\treturn <any>Foo;\r\n})();\r\n\r\nclass Bar extends Foo {\r\n}\r\n```\r\n\r\nThe code generated in the playground for the `Foo` implementation here is the same as what is generated for the first code sample here (and, in reality is functionally equivalent because there is an interface + constructor function which is what a class is), however since it is not a \"class\" it cannot be extended from by a class. Again, this seems very arbitrary since the interface + constructor is exactly what a class is and the code generated is functionally equivalent.",
+    "LastUpdatedDate": "2014-02-05T12:32:56.183-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-05T12:12:28.6-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Inheritance from constructors",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2155
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design currently. We'll likely be visiting these restrictions in the future (especially as ES6 will allow inheriting from arbitrary expressions) but for the moment the TypeScript compiler requires that the target of your extends clause be a class. While it's possible to construct examples like yours where it would be safe, in the general case it would take more validation than the compiler does currently to ensure extending an arbitrary var works safely (ex as you note, checking that the interface has a construct signature that's appropriate).",
+      "PostedDate": "2014-02-05T12:32:52.267-08:00",
+      "Id": 132755
+    }
+  ]
+}

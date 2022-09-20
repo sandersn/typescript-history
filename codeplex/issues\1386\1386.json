@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-25T15:14:16.317-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I have an interface in file \"A\", and a class in file \"B\" that implements it; then I create another class in file \"C\" that further extends class \"B\" .  In file \"C\" I also decided to put an interface to \"add features\" to interface A\"; however, the compiler now reports that the class in file \"B\" suddenly needs to implement the new added methods also ... what gives!? Seems like an issue to me. I'm using the latest TypeScript release in VS2012.",
+    "LastUpdatedDate": "2013-08-13T12:30:50.237-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-23T20:45:58.657-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Additional Interface Properties Causes Errors in Previous TS Classes That Use It",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1386
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Really? It should be obvious - what \"features\" can you add to a class or interface other than properties? There are a few files involved, I can't post them all, and I think the description is clear, but let me try to lay it out ...\n\nFile A.ts: interface A\nFile B.ts: class B which implements A\nFile C.ts: interface A {with additional properties}, and class C which extends B\n\nIf I don't include file C.ts in my project, all is well, but if I include C.ts, \"class B\" is no longer valid.  I get an error that the additional properties added to interface A in file C.ts don't exist in \"class B\" - but it should not be aware of the addition properties added to the interface in file \"C.ts\".  The compiler should not cause file B.ts to fail when new properties are added in later files.\n",
+      "PostedDate": "2013-07-25T13:37:08.203-07:00",
+      "Id": 107446
+    },
+    {
+      "Message": "Can you post the exact code you're using that exhibits this issue? I'm not entirely sure what 'add features' means in this context.\n\r\n\r** Closed by danquirk 07/25/2013 12:25PM",
+      "PostedDate": "2013-07-25T12:25:57.83-07:00",
+      "Id": 107447
+    },
+    {
+      "Message": "All files are part of the same global scope (since you're not using modules).\n\nThis is by design, you can have a second interface in file C, which extends the interface in A and adds additional methods/properties.\n\n````\n//File A\ninterface A{\n\tname:string;\n}\n\n// File B\nclass B implements A{\n\tname:string;\n}\n\n// File C\ninterface A2 extends A{\n\tid:number;\n}\n\nclass C implements A2\n{\n\tname:string;\n\tid:number;\n}\n````",
+      "PostedDate": "2013-07-25T15:14:06.787-07:00",
+      "Id": 107477
+    },
+    {
+      "Message": "Oh, you mean like partial classes in C#? I guess I was thinking in terms of the fact that normally the scripts are loaded in proper sequence, not as one file, so having all .ts files behave like C# seems a little dumb when dealing with JavaScript.",
+      "PostedDate": "2013-07-25T21:33:41.227-07:00",
+      "Id": 107508
+    },
+    {
+      "Message": "The 'proper sequence' is unknown to the Typescript compiler. It depends on your command line invocation, the ordering of your script tags, whether you concat things post-compilation, etc. Within the same scope interfaces and internal modules merge in the fashion described above, the exact details are covered in the language spec. ",
+      "PostedDate": "2013-08-13T12:30:50.237-07:00",
+      "Id": 109685
+    }
+  ]
+}

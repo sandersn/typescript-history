@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.363-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "In .NET generics can have variable number of type parameters as you can see here for instance:\r\nhttp://msdn.microsoft.com/en-us/library/system.reactive.joins(v=vs.103).aspx \r\n\r\nI'm trying to write defenition file for rx.js:\r\n```\r\ndeclare module Rx {\r\n\r\n    interface Pattern<T1, T2> {\r\n        and<T3>(other: IObservable<T3>): Pattern<T1, T2, T3>;  // error here\r\n        then<V>(selector: (t: T1, u: T2) => V): Plan<V>;\r\n    }\r\n\r\n    interface Pattern<T1, T2, T3> {\r\n        and<T4>(other: IObservable<T4>): Pattern<T1, T2, T3, T4>;\r\n    }\r\n\r\n    interface Pattern<T1, T2, T3, T4> {\r\n    }\r\n}\r\n```\r\nand I get compile error:\r\nGeneric type 'Rx.Pattern<T1, T2, T3, T4>' requires 4 type argument(s).\t\r\n\r\nIt would be very handy to have such feature.\r\nThanks.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-12T06:36:55.01-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generics with variable number of type parameters",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 1,
+    "Id": 1333
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion, assigning to Jon who handles suggestions.\r\n",
+      "PostedDate": "2013-07-12T09:10:07.023-07:00",
+      "Id": 105855
+    },
+    {
+      "Message": "A workaround for this is to define multiple interfaces like so:\n\n```ts\ndeclare module Rx {\n\n    interface PatternA<T1, T2> {\n        and<T3>(other: IObservable<T3>): PatternB<T1, T2, T3>; \n        then<V>(selector: (t: T1, u: T2) => V): Plan<V>;\n    }\n\n    interface PatternB<T1, T2, T3> extends PatternA<T1, T2> {\n        and<T4>(other: IObservable<T4>): PatternC<T1, T2, T3, T4>;\n    }\n\n    interface PatternC<T1, T2, T3, T4> extends PatternB<T1, T2, T3> {\n    }\n}\n```\n\nThis only works for interfaces and not classes (since the classes would be emitted to JS). ",
+      "PostedDate": "2013-07-12T10:51:06.727-07:00",
+      "Id": 105869
+    }
+  ]
+}

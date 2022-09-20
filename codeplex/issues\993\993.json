@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.237-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Hi, consider this bit of code:\r\n\r\n```\r\nclass Bar {\r\n    public bar: string;\r\n}\r\ninterface IFoo {\r\n    doFoo(type: any, bar: any): void;\r\n    doFoo(type: \"Quux\", bar: Bar): string;\r\n}\r\n```\r\n\r\nWe use it like this:\r\n```\r\nvar foo: IFoo;\r\nvar result:string = foo.doFoo(\"Quux\", new Bar()); // fine\r\n```\r\n\r\nHowever, while still specifying \"Quux\", if we pass any type other than new Bar() for the second argument, the compiler falls back to the non-overloaded method:\r\n```\r\n// Error TS2011: Cannot convert 'void' to 'string'.\r\nvar result2: string = foo.doFoo(\"Quux\", \"bar\");\r\n```\r\n\r\nI think this is a bit unfortunate. We are missing an opportunity to verify that the additional arguments also match the overloaded signature.\r\n\r\nIdeally the following\r\n```\r\nfoo.doFoo(\"Quux\", \"bar\");\r\n```\r\nshould generate error TS2082: Supplied parameters do not match any signature of call target",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-03T10:48:37.43-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Overload on constants: type checking additional parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 993
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@paulb, thanks for the feedback.\n\n```\nvar quux = \"Quux\";\nfoo.deFoo(quux, new Bar());\n```\nOkay with that selecting the any, any overload, because this is after all overload on \"constants\", so we'd expect a variable argument to simply default to the base case.\n\nIf we redefine the interface to:\n```\ninterface IFoo{\n    doFoo(type:string, bar:any): void;\n    doFoo(type:'Quux', bar:any): string;\n    doFoo(type:'Quux2', bar:any): string;\n    doFoo(type:'Quux3', bar:any): string;\n    doFoo(type:'Quux4', bar:any): string;\n}\n```\n\nWhen we pass \"Quux\" we want the second overload to be checked, \"Quux2\" the third and so on.\n\nThe following:\n\n```\nfoo.doFoo(\"Quux\", \"bar\");\nfoo.doFoo(\"Quux\",  new Bar());\n```\n\nshould select the second overload, because \"bar\" qualifies for `bar:any` and the first (constant) parameter matches.\n\nI don't quite follow which common cases fail to work when taking into account the additional parameters in order to select the correct overload.\n\nCan you please provide further justification? We have a strong use-case for wanting strongly typed (not \"any\") additional parameters to be taken into account and an exception raised if they do not match (rather than defaulting to the any, any overload.\n",
+      "PostedDate": "2013-05-05T13:41:41.79-07:00",
+      "Id": 99436
+    },
+    {
+      "Message": "Ideally yes, but that would make the code analysis too complex and still not work in common cases.\n\nConsider for example:\n````\nvar quux = \"Quux\";\nfoo.deFoo(quux, new Bar());\n````\n\nsince we don't do flow analyses on the contents of the variable this would also resolve to the any, any overload.\n\n\nfurther consider if the interface is defined as follows, which is the more common case:\n````\ninterface IFoo{\n    doFoo(type:string, bar:any): void;\n    doFoo(type:'Quux', bar:any): string;\n}\n````\n\nwould you still be suprised by this behavior?\n\nIn general the guidance is to have the non-specialized overload return a basetype of the type returned by the specialized overloads.\n\r\n\r** Closed by paulb 05/03/2013 2:54PM",
+      "PostedDate": "2013-05-03T14:54:33.91-07:00",
+      "Id": 99437
+    },
+    {
+      "Message": "Optionally omitting the default any overload would be great.\n\nConsider a node.js-like event emitter:\n```\ninterface ResizeEmitter {\n\ton(event: string, listener: () => void);\n\ton(event: 'resize', listener: (size: number) => void);\n}\n\nclass Resizer implements ResizeEmitter {\n\ton(event: string, listener: Function) {\t}\n}\n```\nused with:\n```\nvar e = new Resizer();\ne.on('resize', function(size) { });\n```\nhere in the anonymous function, size is resolved as any, why can't number be inferred?\nIf we could omit the default override and get a compiler error, that would be a huge help to check that events are emitted with the right parameters and only matching handlers are attached.\n",
+      "PostedDate": "2013-10-23T08:39:09.697-07:00",
+      "Id": 119348
+    },
+    {
+      "Message": "Perhaps it would make sense to allow using `private` on default overload, i.e.:\n\n```typescript\ninterface ResizeEmitter {\n    private on(event: string, listener: () => void);\n    on(event: 'resize', listener: (size: number) => void);\n}\n```\n\nPrivate interface method would be treated in the same way as implementation overload in classes.\nMaybe it should be called `protected` though since it should be possible to overload it in derived types.",
+      "PostedDate": "2013-11-14T07:25:29.68-08:00",
+      "Id": 123025
+    },
+    {
+      "Message": "Moved to https://github.com/Microsoft/TypeScript/issues/191",
+      "PostedDate": "2014-07-22T03:08:20.307-07:00",
+      "Id": 153140
+    }
+  ]
+}

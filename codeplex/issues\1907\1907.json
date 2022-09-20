@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-18T15:10:48.163-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "\r\nIf you paste the following into the [Playground](http://www.typescriptlang.org/playground/)\r\n\r\n```TypeScript\r\nclass Sample {\r\n    errorHandler: (error) => void;\r\n    constructor(options: any) {\r\n        this.errorHandler = options.errorHandler || (error) => { };\r\n    }\r\n}\r\n```\r\nIt seems to work fine (presumably because it's not up to TypeScript 0.9.5 beta)\r\n\r\nBut when I build in visual studio I get the following errors\r\n\r\n![Image](http://i.imgur.com/nG82koI.png)\r\n\r\n```\r\nError\t4\tCould not find symbol 'error'.\tC:\\Code\\ToTypeScriptD\\src\\ToTypeScriptD.Tests.JavascriptTests\\TestInfrastructure\\specRunner.ts\t29\t58\tToTypeScriptD.Tests.JavascriptTests\r\nError\t1\t';' expected.\tC:\\Code\\ToTypeScriptD\\ToTypeScriptD\\src\\ToTypeScriptD.Tests.JavascriptTests\\TestInfrastructure\\specRunner.ts\t8\t61\tToTypeScriptD.Tests.JavascriptTests\r\n\r\n```\r\n\r\nNow if I change it to use `function` instead of the lambda\r\n\r\n```TypeScript\r\nclass Sample {\r\n    errorHandler: (error) => void;\r\n    constructor(options: any) {\r\n        this.errorHandler = options.errorHandler || function(error){ };\r\n    }\r\n}\r\n```\r\n\r\nI don't get any compiler errors when I build, but the errors don't go away in the errors screen. I had to close/re-open visual studio before I saw the list of errors in the Errors List panel go away.\r\n\r\nThoughts?",
+    "LastUpdatedDate": "2013-11-19T15:45:51.397-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-18T14:47:44.123-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "0.9.5 beta optional function lambda (not sure what to call this pattern :))",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1907
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is actually by design, and is more conformant with ES6.\n\nThe arrow expression operator ( => ) is very low on the precedence list, which introduces some potential issues.  For this to parse correctly as a component of a broader expression, enclose the arrow function in parens.  i.e. the below should work fine.\n\n```\nthis.errorHandler = options.errorHandler || ((error) => {});\n```",
+      "PostedDate": "2013-11-18T15:06:19.623-08:00",
+      "Id": 123442
+    },
+    {
+      "Message": "Thanks!",
+      "PostedDate": "2013-11-18T15:39:05.23-08:00",
+      "Id": 123447
+    }
+  ]
+}

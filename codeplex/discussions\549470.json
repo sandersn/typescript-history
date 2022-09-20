@@ -1,0 +1,138 @@
+[
+  {
+    "Id": "1259071",
+    "ThreadId": "549470",
+    "Html": "The subject of being able to override the default emitters or add/replace emitters came up a while back, in the context of being able to generate Sencha Ext JS/Touch classes from TypeScript. Since then, there have been several other threads asking for variations on this. As far as I know, none of these threads have been addressed by the TypeScript team.\r<br />\n<br />\nAllowing customization of the generated code seems like an obvious and desirable next step. The default emitters clearly don't cover all the scenarios people are looking to address. I also don't think allowing custom emitters would be very difficult to implement. For example, they could be set via command line args, or using a configuration file. \r<br />\n<br />\nCan someone from the team comment on this possible enhancement?\r<br />\n<br />\nThanks,\r<br />\n<br />\nBrian<br />\n",
+    "PostedDate": "2014-06-23T18:07:54.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260127",
+    "ThreadId": "549470",
+    "Html": "It seems odd that each time this idea is brought up, no one on the TypeScript team seems to have any input. Is talking about this taboo or something?<br />\n",
+    "PostedDate": "2014-06-26T10:26:05.863-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260183",
+    "ThreadId": "549470",
+    "Html": "Are you asking specifically about official support for new emitters?  I'm not sure if we'll do that, thought it's possible.  You're of course more than welcome to take the source and change it to have specific emit rules.  A few other projects already do this for their proprietary uses of TS.<br />\n",
+    "PostedDate": "2014-06-26T13:24:53.653-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260254",
+    "ThreadId": "549470",
+    "Html": "Thanks for the response! \r<br />\n<br />\nThe problem is that doing this right now requires forking the whole project, overriding or replacing the emitters, and then having to keep merging in official updates to stay current. Maintaining a fork just to alter the structure of the generated JavaScript is an option, but it's got to be about the worst option I can think of. It would seem to make much more sense to have the compiler itself be extensible, and have emitter customization (either overriding sets of functions or substituting totally different emitters) be officially supported. \r<br />\n<br />\nWhat the TypeScript developers have done so far is great, and covers the most common needs. But there are so many use cases that there's no way a single, pre-defined, and static format for the generated JavaScript can possibly cover it all. Since the TS compiler is simply JavaScript, there are many relatively straightforward ways to support emitter customization. Many JS libraries already allow this sort of thing with &quot;mixins&quot;, &quot;intents&quot;, and &quot;test spies&quot;, via function replacement/binding, interceptors, and so on. Supporting something like this in the TS compiler itself would mean that virtually anyone could use TypeScript, regardless of their use cases or the final JS code structure they need.\r<br />\n<br />\nThoughts?\r<br />\n<br />\nThanks,\r<br />\n<br />\nBrian<br />\n",
+    "PostedDate": "2014-06-26T19:21:45.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260460",
+    "ThreadId": "549470",
+    "Html": "Like I mentioned, I don't know of any short term plans to create a plugin infrastructure, but it's something we've talked about.  Extension points increase the maintenance cost of the codebase, so we have to balance that against other features we want to develop.\r<br />\n<br />\nIf you do end up hacking on the codebase, maintaining a separate branch where you can show the value of a plugin architecture that's flexible enough to support extension points like that is one way to help point the way for how the mainline architecture could change in the future to better support the type of capability you're talking about.  <br />\n",
+    "PostedDate": "2014-06-27T08:17:53.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263549",
+    "ThreadId": "549470",
+    "Html": "I agree with Brian ... I think there is a good case for this.<br />\n",
+    "PostedDate": "2014-07-08T00:04:53.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263654",
+    "ThreadId": "549470",
+    "Html": "Thanks, Jon. I may try to take a look, but I'm involved with a number of other open source projects and taking the time to go through the TS source and digest it enough to attempt adding pluggable custom emitters is a stretch. \r<br />\n<br />\nI guess it just seems odd to me that no one on the TS team ever considered that having a single, &quot;hardcoded&quot; format for the generated JavaScript was a pretty serious limitation? Especially given the vast range of things people are using JavaScript for. If the goal is to get TS adopted by as many people as possible, then allowing flexibility in what it generates should be a high priority feature. As I said earlier, there's simply no possible way that a single pre-mandated format for the generated JS is going to cover everyone's needs.<br />\n",
+    "PostedDate": "2014-07-08T07:13:45.467-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264666",
+    "ThreadId": "549470",
+    "Html": "Without this feature, I think Typescript is excluding a very large number of potential Javascript developers who use frameworks based on alternative classes models. <br />\nAlthough I'm an advocate for TS, I recently evaluated using TS for my next project and ruled it out on this basis.<br />\n<br />\nI personally use the Sencha Touch and Sencha ExtJS Javascript frameworks. Sencha have developed a very clever <a href=\"http://www.sencha.com/learn/sencha-class-system\" rel=\"nofollow\">class model</a> that significantly reduces the amout of code that you write. Unfortunately without this extension feature it is unsupported by Typescript.<br />\n<br />\nA large percentage of Sencha developers traditionally use Visual Studio and Sencha have also been working closely with Microsoft's Windows Phone and Azure teams to build in specific support for these.  However, without good TS support in Visual Studio for this framework's class model, coding Sencha Touch in Visual Studio is a bit <strong>crippled</strong>.  Currently, Sencha is used by 50% of Fortune 100's, has 5M downloads, 2M Sencha devs and 10,000 corporate customers so just in this community alone you're excluding support for a large number of potential Typescript / Visual Studio developers. Rinse and repeat the figures for each other JS framework community that a fixed class model excludes and I think you'll get the idea.  This isn't so much an issue of the number of JS frameworks supported, but rather the number of developers you're excluding if you don't.  From where Brian and I stand this is a must do no brainer.  <br />\n",
+    "PostedDate": "2014-07-10T22:04:16.13-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264690",
+    "ThreadId": "549470",
+    "Html": "If we talk about extensions point a cool one would be to be able to do ast-transformation alike <a href=\"https://github.com/benjamn/recast\" rel=\"nofollow\">https://github.com/benjamn/recast</a> <br />\n",
+    "PostedDate": "2014-07-11T00:08:28.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264716",
+    "ThreadId": "549470",
+    "Html": "@tohagan,\r<br />\n<br />\nWhile not disputing the suggestion that TypeScript should provide extension points, I have an issue with the claim that &quot;Sencha have developed a very clever class model&quot;. In my view their class model would have looked clever back in 2008, but there is a significant problem with it in the modern JavaScript world. Namely, the Sencha system appears to specify classes and modules (or namespaces) where one passes in methods, properties and the constructor as options to a factory function. This now looks rather comical given the ES6 specification.\r<br />\n<br />\nTypeScript provides an elegant solution: Write your code in a future-compatible way today. One shouldn't really care about what the generated JavaScript looks like.\r<br />\n<br />\nIf the output needs to work with other libraries provided by Sencha then I would approach <strong><em>them</em></strong> with that problem.<br />\n",
+    "PostedDate": "2014-07-11T01:22:31.277-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1264836",
+    "ThreadId": "549470",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\n@tohagan,<br />\n<br />\nWhile not disputing the suggestion that TypeScript should provide extension points, I have an issue with the claim that &quot;Sencha have developed a very clever class model&quot;. In my view their class model would have looked clever back in 2008, but there is a significant problem with it in the modern JavaScript world. Namely, the Sencha system appears to specify classes and modules (or namespaces) where one passes in methods, properties and the constructor as options to a factory function. This now looks rather comical given the ES6 specification.<br />\n</blockquote>\nYes, Sencha's class model uses a function to define a class (Ext.define()). It uses this to apply a vast range of capabilities, such as inheritance, generating getters and setters, mixins, plugins, overrides, dynamically loading required dependencies, IoC, and class pre- and post-processors. Without some intermediary generation (such as what TypeScript provides), how else can you apply additional processing onto the class definition? You can't.\r<br />\n&nbsp;<br />\n<blockquote>\nTypeScript provides an elegant solution: Write your code in a future-compatible way today. One shouldn't really care about what the generated JavaScript looks like.<br />\n</blockquote>\nYes, TS does provide an elegant solution...<em>on the TypeScript side</em>. But saying &quot;One shouldn't really care about what the generated JavaScript looks like&quot; is really the root of the problem here. Ideally, you're right, one shouldn't care. But in the real world, some people <strong>have to care</strong>. I would argue that what you should be saying is: &quot;TypeScript shouldn't care what the generated JavaScript looks like, and should give developers the ability to structure it however they want it to.&quot;\r<br />\n&nbsp;<br />\n<blockquote>\nIf the output needs to work with other libraries provided by Sencha then I would approach <strong><em>them</em></strong> with that problem.<br />\n</blockquote>\nFirst, this isn't a Sencha-only problem. TS is currently excluding <strong>anybody</strong> using a custom JS class system. Actually, it's excluding anyone who needs their JavaScript structured in a specific way, regardless of the reason. \r<br />\n<br />\nSecond, Sencha isn't the one creating a replacement language for JavaScript and trying to get it adopted by the world. No one is saying &quot;TypeScript should specifically support Sencha's class system&quot;. We're saying &quot;TypeScript should support <em>anything</em> by allowing developers to tailor the generated output however they want to&quot;.\r<br />\n<br />\nAll that said, I admit that I'm still baffled by the apparent resistance to the idea of allowing customization of the generated code. Again, if getting TypeScript adopted by as many people as possible is the goal, then this is really a mandatory capability. \r<br />\n<br />\nThanks,\r<br />\n<br />\nBrian<br />\n",
+    "PostedDate": "2014-07-11T07:25:28.907-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265022",
+    "ThreadId": "549470",
+    "Html": "I think we all agree that ES6 is the way forward but the currently reality is that we work in the here and now.  Sencha's ExtJS library has been developed over an 8 year period and Sench Touch over the last 5 years and this investment is not about to get rewritten in ES6 or any other class model just to please Typescript. The same applies to any other framework that uses a non ES6 model. In this space I don't think you can't impose your favourites even if they are &quot;better&quot;.<br />\n<br />\nSo my main point is not about advocating Sencha's class model but rather asking you to consider how Typescript and Visual Studio can support the widest number of existing JS developers across all the JS frameworks.  IMHO, from this persective TS needs to be able to override the default emitters or add/replace emitters.<br />\n<br />\nWho knows, This might also open the door for future R &amp; D beyond ES6. For example ... I once worked on an SAP funded research project to extend the Java language to support a new event driven workflow execution model in a language I called Evie that was an extension to Java. This was implemented by transforming ...  Evie source =&gt; Evie AST =&gt; Java AST =&gt; Java source.  This was possible because we were able to implement extension points in a Java parser/unparser.  So my point is that extension points of the kind we're proposing can also open up TS to other exciting worlds of possibilities.<br />\n",
+    "PostedDate": "2014-07-11T19:46:20.6-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265819",
+    "ThreadId": "549470",
+    "Html": "ES6 class is a standard, Sencha class model is a trick to transform JS in some kind of Java.<br />\nYou could even say than ExtJS force you to write your code with some kind of DSL language, that can not really be considered as JavaScript, so It's pretty clear that integrating TypeScript and Sencha will create some problems.<br />\nHowever the emitter code is pretty much encapsulated in a single point so it should be quite easy to just fork ts and bring whatever you want.<br />\n",
+    "PostedDate": "2014-07-15T03:17:30.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265868",
+    "ThreadId": "549470",
+    "Html": "<strong>fdecampredon wrote:</strong><br />\n<blockquote>\nES6 class is a standard, Sencha class model is a trick to transform JS in some kind of Java.<br />\n</blockquote>\nES6 is indeed a standard. A welcome standard. But a standard that won't even be finalized for another year and won't be adopted widely enough to target directly in the browser for many years. Which is the whole reason the Sencha class model (and TypeScript, for that matter) exist at all. Sencha's approach isn't a &quot;trick&quot;, it's just the only viable way to provide the many features that it does at the current time.\r<br />\n&nbsp;<br />\n<blockquote>\nYou could even say than ExtJS force you to write your with some kind of DSL language, that can not really be considered as JavaScript<br />\n</blockquote>\nI really don't understand what you're saying here, but I promise you, it's JavaScript. Trust me, I build Ext JS apps all day. \r<br />\n&nbsp;<br />\n<blockquote>\nIt's pretty clear that integrating TypeScript and Sencha will create some problems. However the emitter code is pretty much encapsulated in a single point so it should be quite easy to just fork ts and bring whatever you want.<br />\n</blockquote>\nIt actually won't create any problems at all. I'm still not clear why folks keep talking as if we're asking for TypeScript to add specific support <strong>just</strong> for the Sencha class model. I only mentioned it because this demonstrates the big limitation I'm personally running into. If Sencha is such a sore spot for everyone, forget I brought it up, and let's start over: \r<br />\n<br />\n<em>TypeScript should offer the ability to tailor the generated JavaScript however a developer needs to. It currently doesn't, and this is excluding anyone who needs their JavaScript structured in a specific way.</em>\r<br />\n<br />\nYes, I can fork the code and try to build this in myself. But I'd rather not go this route because:<br />\n<ol>\n<li>I have a job and already contribute to or manage multiple open source projects. I really can't take on another one.</li>\n<li>It would probably be quite straighforward for the TypeScript team to allow this. After all, they're the experts and are far more familiar with its inner workings than I am. They'd certainly be able to do it far more quickly and efficiently than I can.</li>\n<li>If gaining widespread adoption of TypeScript is a goal of the project, then this capability desperately needs to be included. It's as crucial as extension points are to Java or C#. Should people care about the resulting bytecode? No. But do they? Absolutely. These languages wouldn't be anywhere near as popular as they are without the compiler extension points that enabled things like Spring, Hibernate/JPA, and many other enhancements.</li>\n</ol>\n",
+    "PostedDate": "2014-07-15T05:32:16.367-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265941",
+    "ThreadId": "549470",
+    "Html": "I wrote a custom ExtJS emitter and I agree with @brian428: we need some kind of plugin system where its possible to customize js output.\r<br />\nWhen Typescript release a new version I have to download source code, modify, compile and tell everyone in my team to change tsc.js files.\r<br />\n<br />\nExtJS is very strict in terms of how we extend extjs classes. The default typescript emitted code doesnt work with ExtJS.\r<br />\n<br />\nA simple ExtJS class looks like this:<br />\n<pre><code>Ext.define('Ext.ux.panel.CustomerPanel', {\n    extend   : 'Ext.Panel', \n    requires : ['Ext.DataView']\n});</code></pre>\n\nAll dependencies are specified as string ('Ext.Panel') and are load on demand in dev mode.\r<br />\nIn prod mode a tool called sencha.cmd will analyse and create a optmized version of all your code.\r<br />\n<br />\nSo, again, the default typescript js output cannot work with all frameworks. \r<br />\n<br />\nCheckout my outdated emitter: <a href=\"https://github.com/fabioparra/TypeScriptExtJSEmitter\" rel=\"nofollow\">https://github.com/fabioparra/TypeScriptExtJSEmitter</a><br />\n",
+    "PostedDate": "2014-07-15T09:27:30.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1266212",
+    "ThreadId": "549470",
+    "Html": "<strong>brian428 wrote:</strong>\r<br />\n `<br />\n<blockquote>\nYes, Sencha's class model uses a function to define a class (Ext.define()). It uses this to apply a vast range of capabilities, such as inheritance, generating getters and setters, mixins, plugins, overrides, dynamically loading required dependencies, IoC, and class pre- and post-processors. Without some intermediary generation (such as what TypeScript provides), how else can you apply additional processing onto the class definition? You can't.<br />\n</blockquote>\nAll you need is TypeScript + RequireJS.\r<br />\n<code></code><br />\n<blockquote>\nES6 is indeed a standard. A welcome standard. But a standard that won't even be finalized for another year and won't be adopted widely enough to target directly in the browser for many years<br />\n</blockquote>\nWell, yes, write ES6 classes and modules today in TypeScript, just set the output to ES5.\r<br />\n<br />\nThis is just a slight digression on why the Sencha class system is indefensible. In two years time if I had developed a massive code-base using Sencha or similar I would be worried.<br />\n",
+    "PostedDate": "2014-07-16T04:57:54.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1266321",
+    "ThreadId": "549470",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\nAll you need is TypeScript + RequireJS.<br />\n</blockquote>\nAll I can say here is if you think TypeScript and RequireJS can provide what the Sencha class system does, then you don't understand what the Sencha class system does.<br />\n<br />\nTypeScript <strong>could</strong> allow for similar features, but it would necessitate being able to customize the generated JavaScript to insert additional capabilities. Just like Spring, Hibernate, and a host of other libraries do that rely on compiler extension points to modify the final output.<br />\n<br />\nI get it, you don't like the Sencha class model. I could debate you all day on this. Can we stop now and get back to the original topic? We're digressing completely from what is actually being asked for. <br />\n<br />\nTypeScript's current implementation is excluding literally millions of people from being able to use it. I would think that's a problem worth addressing. As Java and many other compilers have shown, having extension points provides a nearly limitless range of possibilities. The fact that it would address my specific problem is really irrelevant. There's a deep well of untapped potential that TypeScript compiler extensions would open up. <br />\n",
+    "PostedDate": "2014-07-16T09:57:15.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I can not reproduce this using the latest version from the develop branch.",
+    "ClosedDate": "2013-04-26T12:16:42.63-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Not 100% sure if this is a bug or by design, but type inference does not work for uniform arrays of objects. Given the following definition:\r\n```\r\ndeclare module ko {\r\n    interface ObservableArray<T> extends Observable<T[]> {\r\n        ...\r\n    }\r\n \r\n    function observableArray<T>(initialValues?: T[]): ObservableArray<T>;\r\n}\r\n```\r\n\r\nAnd the following usage:\r\n```\r\nvar anotherObservableArray = ko.observableArray([\r\n        { name: \"Bungle\", type: \"Bear\" },\r\n        { name: \"George\", type: \"Hippo\" },\r\n        { name: \"Zippy\", type: \"Unknown\" }\r\n    ]);\r\n```\r\n\r\nThe type inference system infers type ObservableArray<any> for the variable anotherObservableArray. The only reason I think this may be a bug is that if I mouse-over on the ko.observableArray part, it shows that the type of that invocation is (correctly) ObservableArray<{name: string; type: string; }>. However, when I mouse-over on \"var anotherObservableArray\", it says ObservableArray<any>.\r\n\r\nI did find a work around for this. If I manually specify the type constraint, it behaves as expected:\r\n```\r\nvar anotherObservableArray = ko.observableArray <{ name: string; type: string; }>([\r\n        { name: \"Bungle\", type: \"Bear\" },\r\n        { name: \"George\", type: \"Hippo\" },\r\n        { name: \"Zippy\", type: \"Unknown\" }\r\n    ]);\r\n```",
+    "LastUpdatedDate": "2013-08-13T09:57:13.917-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-26T12:10:22.7-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Generic arrays of uniform types incorrectly inferred",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 964
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Fair enough, probably fixed already =)",
+      "PostedDate": "2013-04-26T12:18:38.78-07:00",
+      "Id": 98631
+    }
+  ]
+}

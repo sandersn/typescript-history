@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-09T13:33:11.447-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Our CI server calls MSBuild directly on our azure cloud application project to package our cloud service web role.  a powershell script is then used to upload and deploy the package. this works correctly.\r\n\r\nIn my development environment, i right-click on this same project to publish (or package) my web role.  the resulting output does not contain the .js files that are normally the compiled output of the typescript files.  I can not for the life of me figure out why it is any different to run the packaging tool from visual studio vs msbuild.\r\n\r\nany help would be appreciated.",
+    "LastUpdatedDate": "2013-11-19T16:25:25.05-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-06T15:31:32.717-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Azure Cloud service deployment From Visual Studio 2012 skips .js files compiled from my .ts files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1654
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We believe this is fixed in our internal bits. To unblock yourself for now could you try these two steps:\n\n1) It is the placement of the Microsoft.TypeScript.targets that appears to be the issue.\nIn your web role .csproj if you move the Microsoft.TypeScript.targets import to be before Microsoft.WebApplication.targets this resolves the issue:\n\n<Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" Condition=\"'$(BuildingInsideVisualStudio)' == 'true'\" />\n<Import Project=\"$(VSToolsPath)\\WebApplications\\Microsoft.WebApplication.targets\" Condition=\"'$(VSToolsPath)' != ''\" />\n\n2) In the Microsoft.TypeScript.targets file (located here on my machine: C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript).\n\nChange the following line @87\n\n<Target Name=\"TypeScriptCollectPublishFiles\">\n\nTo\n\n<Target Name=\"TypeScriptCollectPublishFiles\" DependsOnTargets=\"CompileTypeScript\">\n\nAnd that should add the js files to the package.\n\nDoes that make sense? If you're still seeing this issue after trying the above please re-open this issue and if possible attach the relevant project file(s) (no need for the full project itself) and we can dig deeper.",
+      "PostedDate": "2013-09-09T13:33:07.313-07:00",
+      "Id": 112902
+    },
+    {
+      "Message": "danquirk,\n\nThanks for the response.  I was able to get my .js files to show up using your fix.\n\nIn my case: \n\nstep 1 was already in the desired order.\nIn step 2 the line I modified was on line 84, not 87. Otherwise everything appears to be good now.\n\n",
+      "PostedDate": "2013-09-09T15:35:40.517-07:00",
+      "Id": 112916
+    },
+    {
+      "Message": "I believe this action break the usage of the debug/Breakpoint in typescript.\n\nDoint that, on my case, the *.map files are deleted from the folder\n\nIs there a way to have the breakpoint/debugging and plubish working together?\n\nThank",
+      "PostedDate": "2013-11-09T06:36:05.187-08:00",
+      "Id": 122515
+    }
+  ]
+}

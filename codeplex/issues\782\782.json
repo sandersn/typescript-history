@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-03-05T09:44:20.567-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "After upgrading from 0.8.2.0 to 0.8.3.0, all typescripts in our solution fail to compile. \r\nThe error messages indicate that types from \"lib.d.ts\" file are unknown to the compiler, and that the compiler no longer automatically includes \"lib.d.ts\" when compiling.\r\n\r\nPS! I am not using the --nolib switch.\r\n\r\nI don't understand this difference in behavior since 0.8.2.0.\r\nI had to downgrade again to 0.8.2.0 to make it work.\r\n\r\nAm I missing something or is this a bug?\r\nCan anyone enlighten me?",
+    "LastUpdatedDate": "2013-03-05T09:44:20.567-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-04T14:20:44.273-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "tsc 0.8.3.0 does not include lib.d.ts when compiling",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 782
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I found the reason for my problem.\n\nOur solution compiles TypeScripts compile when MSBuild builds the Web Application project file. This is accomplished by importing \"$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets\" (\"C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\Microsoft.TypeScript.targets\") into the project file and then defining property groups in the project file for the different configurations (Debug/Release) to ensure that tsc is run with the appropriate switches.\n\nThe reason for my problem was a change of a default value in the Microsoft.TypeScript.targets file from version 0.8.2.0 and 0.8.3.0.\n\nThe following line:\n<TypeScriptBuildConfigurations Condition=\"'$(TypeScriptIncludeDefaultLib)' == 'false'\">$(TypeScriptBuildConfigurations) --nolib</TypeScriptBuildConfigurations>\n\n..used to have a default value of \"true\" in 0.8.2.0, but was changed to \"false\" in 0.8.3.0.\n\nFor this reason the --nolib switch was actually passed to tsc when compiling typescripts as part of the solution MSBuild execution, and thereby failing.\n\nI found it difficult to do this manual editing of the project file to make typescripts build as part of project build in the first place, and the documentation was not easy to find. \n\nHoping that you will streamline the configuration of typescript compilation in web projects in coming versions. It should get its own tab in the Project Properties window in my opinion.",
+      "PostedDate": "2013-03-05T01:44:33.203-08:00",
+      "Id": 92287
+    },
+    {
+      "Message": "I can't reproduce this behavior. Can you upload a file + tsc invocation where you're seeing this and re-open this issue? Thanks\n\r\n\r** Closed by RyanCavanaugh 03/04/2013 4:11PM",
+      "PostedDate": "2013-03-04T16:11:16.373-08:00",
+      "Id": 92288
+    },
+    {
+      "Message": "Thanks.  We did indeed fix an issue with this property in 0.8.3, as it was set back-to-front previously (i.e. you had to set the \"TypeScriptIncludeDefaultLib\" property to true to ___not___ include it).  Sorry for any issues this caused.\n\nWe are aware of the need to make managing project configuration easier and integrating better into the Visual Studio Project Properties.  This work is on our backlog.",
+      "PostedDate": "2013-03-05T09:43:49.93-08:00",
+      "Id": 92325
+    }
+  ]
+}

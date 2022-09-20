@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1032526",
+    "ThreadId": "440790",
+    "Html": "I think I've discovered a bug in the compiler where classes compiled into a single output file aren't listed in the correct order when circular references including inheritance is involved.   (Think A references B, B references C, C extends A.)  <a href=\"https://typescript.codeplex.com/workitem/913\" rel=\"nofollow\">The bug report</a> hasn't been acknowledged yet so I'm wondering if that wasn't the right way to report it, or if it's a known issue I didn't find in the search.\r<br />\n<br />\nIf it is a known issue does anybody have a workaround more satisfying than breaking the chain of reference by treating something as an &quot;any&quot;?\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-04-18T08:33:42.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1045194",
+    "ThreadId": "440790",
+    "Html": "I have the same issue.<br />\n<br />\nAs a preface, there are 2 types of dependencies: Javascript (hard) and TypeScript(soft).  TypeScript dependencies are dependencies that are needed to understand the definition during compile.  Javascript dependencies are dependencies that are needed when trying to parse the document.  Especially when using inheritance, it is imperative that Class A come sequentially before Class B if Class B extends Class A.<br />\n<br />\nBefore Typescript came about, I was dealing with similar issues when trying to ensure Visual Studio Intellisense had all the information it could get.  I built a tool that merges all files into one in the correct order so that these dependencies resolved properly.  The tool parses the header of the file and smashes them all together into 1 *.ts file.  Here is how it works...<br />\n<br />\nAll hard dependency references are listed first. I then have a separator comment line.  Then all soft references are listed.  Time for an example.<br />\n<br />\nFile: A.ts<br />\n<pre><code>class A {\n   static DoSomething() { }\n}</code></pre>\n\nFile C.ts<br />\n<pre><code>/// CODE\n/// &lt;reference path=&quot;A.ts&quot; /&gt;\n\nclass C {\n   constructor() {\n      A.DoSomething();\n   }\n}</code></pre>\n\nFile: B.ts<br />\n<pre><code>/// &lt;reference path=&quot;A.ts&quot; /&gt;\n/// CODE\n/// &lt;reference path=&quot;C.ts&quot; /&gt;\n\nclass B extends A {\n}</code></pre>\n\nTypeScript can handle circular references by just stopping any circular paths and it reads all reference paths as if the &quot;CODE&quot; comment line didn't exist.  The tool uses it for its own ordering.  I then just run tsc on the final output.<br />\n",
+    "PostedDate": "2013-05-17T09:46:15.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1045358",
+    "ThreadId": "440790",
+    "Html": "@BSick7\r<br />\n<br />\n<br />\nI'm not sure whether you're reporting a bug or not, but when I try your sample the TypeScript compiles (and combines using the -out parameters) the files as expected.<br />\n<pre><code>class A{}\nclass C{}\nclass B{}</code></pre>\n\nIs that not what you're seeing?<br />\n",
+    "PostedDate": "2013-05-17T16:25:27.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1046832",
+    "ThreadId": "440790",
+    "Html": "My example doesn't correctly illustrate the issues I have had.  As I took a different approach, let me try to reproduce.  Ultimately, I'm seeing cases where the typescript compiler compiles successfully; however, when run in the browser, the javascript engine crashes in the _extends method because _ is undefined in the following code.<br />\n<pre><code>var __extends = this.__extends || function (d, b) {\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};</code></pre>\n\nStay tuned for an example.<br />\n",
+    "PostedDate": "2013-05-21T18:59:41.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047837",
+    "ThreadId": "440790",
+    "Html": "I am having a tough time reproducing in a small example.  My project consists of a large amount of files.  So many that if I use the built-in visual studio build mechanism, the compiler errors out because the command is so long and gets truncated.  Instead, I have to spit out the list of files to a file that I can then run tsc on.  In doing so, I inevitably get the error above.  If I change the ordering the list of files to correctly match dependencies, all is well.<br />\n",
+    "PostedDate": "2013-05-23T09:48:44.973-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068681",
+    "ThreadId": "440790",
+    "Html": "We have the same problem and it seems to be a compiler bug in TypeScript - this became apparent when we starting to test the classes we have converted to typescript. <br />\n<br />\nA lot of the classes in our partition and entities modules have this bug:<br />\n<a href=\"https://github.com/away3d/away3d-core-ts\" rel=\"nofollow\">https://github.com/away3d/away3d-core-ts</a><br />\n<a href=\"https://github.com/away3d/away3d-core-ts/blob/master/tests/ManagersTest.ts\" rel=\"nofollow\">https://github.com/away3d/away3d-core-ts/blob/master/tests/ManagersTest.ts</a><br />\n<br />\nWe have also created a <strong>simple test case</strong> to isolate the bug:<br />\n<a href=\"http://kurst.co.uk/samples/awayts/CyclicDependenciesError/\" rel=\"nofollow\">http://kurst.co.uk/samples/awayts/CyclicDependenciesError/</a><br />\n<a href=\"http://kurst.co.uk/samples/awayts/CyclicDependenciesError/CyclicDependenciesError.zip\" rel=\"nofollow\">http://kurst.co.uk/samples/awayts/CyclicDependenciesError/CyclicDependenciesError.zip</a><br />\n<br />\nThese classes in question all have dependant resources the compiler cannot resolve, the resulting / exported JavaScript will fail. Reason being the compiler __extends and references an undefined prototype chain for an object that has not yet been defined. Which is what this little helper does : <br />\n<pre><code>var __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype; //Uncaught TypeError: Cannot read property 'prototype' of undefined &lt;----- Error Occurs here.\n    d.prototype = new __();\n};\n</code></pre>\n\nSo, for example, if class FooA extends Base… and FooC extends FooA - whichever code block gets placed first in the JS will cause an extend error - this is because JS injects the proto chain to extend and that object is not yet defined. <br />\n<br />\nHope this help... ( and gets resolved at somepoint ). We are actively looking at solutions and will report back if we find anything. At the moment it looks like AMD might be our best candidate - which is something we had hoped to avoid for a 3D lib. <br />\n",
+    "PostedDate": "2013-07-15T14:49:28.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068733",
+    "ThreadId": "440790",
+    "Html": "There is an existing work item for this bug <a href=\"https://typescript.codeplex.com/workitem/913\" rel=\"nofollow\">here</a>.\r<br />\n<br />\nNTaylorMullen has helpfully shared a powershell script you can use in your build process to work around this issue in the meanwhile.<br />\n",
+    "PostedDate": "2013-07-15T16:55:33.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068868",
+    "ThreadId": "440790",
+    "Html": "Thank you for the reply - have added a comment to the other thread. It seems this bug is slightly different as no matter which code block gets places first it will fail. <br />\n",
+    "PostedDate": "2013-07-16T01:13:10.583-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

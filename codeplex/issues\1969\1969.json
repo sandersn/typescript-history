@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks!",
+    "ClosedDate": "2013-12-05T15:17:07.113-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The following will not throw an error:\r\n\r\n```\r\nvar f: () => void = function () {\r\n    return true; // Ok\r\n};\r\n```\r\n\r\nHowever, using something other than `void` does throw it:\r\n\r\n```\r\nvar f: () => string = function () {\r\n    return true; // Error\r\n};\r\n```\r\n\r\nI understand that `void` is a subtype of `Any`, but the spec says it's unrelated to any of the primtive types (i.e. `boolean`), so from that I can't derive that this should be allowed. I also went through the definition of assignability to see whether `boolean` is assignable to `void`, but imho it's not.",
+    "LastUpdatedDate": "2013-12-05T15:17:07.113-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-05T11:33:26.623-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Compiler ignores incorrect return type when declared as void",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1969
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Possibly related to https://typescript.codeplex.com/workitem/988\n\nSee Ryan's answer to that issue.\n\n\n",
+      "PostedDate": "2013-12-05T13:22:40.18-08:00",
+      "Id": 126256
+    },
+    {
+      "Message": "Thanks for the link. I'm not sure how much I agree with Ryan. The second call certainly shouldn't be rejected, but instead of not enforcing `void` return types I'd rather tend to declare the callback as `(T) => any` in his example. It just feels odd and wrong to me that `void` is not enforced.\n\nHowever, this certainly is an interesting point for my discussion on chaining: https://typescript.codeplex.com/discussions/471987",
+      "PostedDate": "2013-12-05T13:31:59.643-08:00",
+      "Id": 126258
+    },
+    {
+      "Message": "Never mind about that last part on my discussion. :)",
+      "PostedDate": "2013-12-05T13:42:29.82-08:00",
+      "Id": 126261
+    },
+    {
+      "Message": "`void` is enforced. The easiest way to understand assignment compat between function type is that **you are allowed to ignore information**. This is true on the parameter side (a function that takes fewer parameters is a subtype of a function with more parameters) and on the return value side (a function returns more information is a subtype of a function that returns less). \n\nIn section 3.8.3, the spec defines that when `M is a non-specialized call or construct signature and S’ contains a call or construct signature N where`, then the containing type of M is a subtype of N if `the result type of M is Void, or the result type of the instantiation of N is a subtype of that of M.`\n\nThis is the sort of rule that you might think you want, but in practice would be a gigantic pain.",
+      "PostedDate": "2013-12-05T13:47:09.027-08:00",
+      "Id": 126262
+    },
+    {
+      "Message": "And once again, thank you Ryan. Simply looking at this as what it is (a matter of sub-/supertype), it becomes a lot clearer and actually explains quite well why this is indeed not a bug.",
+      "PostedDate": "2013-12-05T13:57:59.003-08:00",
+      "Id": 126265
+    }
+  ]
+}

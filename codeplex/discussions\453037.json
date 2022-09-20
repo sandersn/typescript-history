@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1079034",
+    "ThreadId": "453037",
+    "Html": "Ok this might be a silly question but I've been using TypeScript declarations, for example the Bing Maps one (<a href=\"https://bingmapsts.codeplex.com/\" rel=\"nofollow\">https://bingmapsts.codeplex.com/</a>) and I can't figure out how to hook to events.\r<br />\n<br />\nOn the Map class (in Microsoft.Maps.d.ts) there are a couple of events declared:<br />\n<pre><code>viewchange: () =&gt; any;\nviewchangeend: () =&gt; any;\nviewchangestart: () =&gt; any;</code></pre>\n\nAnd I've tried hooking a function like the following inside a typescript file without success:<br />\n<pre><code>///&lt;reference path=&quot;Bing/Microsoft.Maps.All.d.ts&quot; /&gt;\n\nwindow.onload = function()\n{\n    var map = new Microsoft.Maps.Map(document.getElementById('map'),\n        {\n            backgroundColor: 0,\n            click: () =&gt; alert('click'),\n            viewchangestart: () =&gt; alert('viewchangestart'),                    \n        });\n}</code></pre>\n\nHopefully someone can tell me what I'm doing wrong here.\r<br />\n<br />\nThanks\r<br />\nGuy<br />\n",
+    "PostedDate": "2013-08-10T04:37:35.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080555",
+    "ThreadId": "453037",
+    "Html": "Looks like your syntax maybe slightly out.\r<br />\n<br />\nthe format for a function in TypeScript is like this:<br />\n<pre><code>() =&gt; { alert('test') }</code></pre>\n\nSo possibly your code should read :<br />\n<pre><code>///&lt;reference path=&quot;Bing/Microsoft.Maps.All.d.ts&quot; /&gt;\n\nwindow.onload = function () \n{\n    var map = new Microsoft.Maps.Map(document.getElementById('map'),\n        {\n            backgroundColor: 0,\n            click: () =&gt;  { alert('click'); },\n            viewchangestart: () =&gt; { alert('viewchangestart'); }                    \n        });\n}</code></pre>\n\n",
+    "PostedDate": "2013-08-14T07:19:11.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080699",
+    "ThreadId": "453037",
+    "Html": "Lambdas can be expressed with or without brackets: both ways produce the same valid javascript output FYI.\r<br />\n<br />\nTurns out the declaration is wrong and shouldn't have those events declared in the Map class. The proper way to register event handlers with Bing Maps is to use the Microsoft.Maps.Event.addHandler function. Adding the following declaration file is the proper way to do it:<br />\n<pre><code>declare module Microsoft.Maps.Events\n{\n    function addHandler(map: Microsoft.Maps.Map, event: string, func: Function);\n}</code></pre>\n\nAnd using it this way:<br />\n<pre><code>Microsoft.Maps.Events.addHandler(map, 'viewchangestart', () =&gt; alert('viewchangestart'));</code></pre>\n\n",
+    "PostedDate": "2013-08-14T12:52:40.973-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

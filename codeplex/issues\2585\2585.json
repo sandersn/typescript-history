@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.333-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I would like to be able to express properties that can be not defined in a more explicit way so that I can I operate on them and get more predictable results, like we can with Scala's and F#'s Option and Haskell Maybe types.\r\n\r\nhttp://fsharpforfunandprofit.com/posts/the-option-type/\r\nhttp://james-iry.blogspot.com.br/2010/08/why-scalas-and-haskells-types-will-save.html\r\n\r\nThe advantage of this approach is that if it has enough coverage for the built-in functions, then you can stop checking for null or undefined inside functions and defer that to the caller. This helps a lot when composing functions.\r\n\r\nHere is a working draft of how it could be done:\r\n\r\n```\r\ninterface Maybe<T> {\r\n  map <U>( fn: (a:T) => U): Maybe<U>;\r\n  isDefined: boolean;\r\n  get() :T;\r\n}\r\n\r\nclass Just<T> implements Maybe<T>{\r\n  private value: T;\r\n\r\n  constructor(v:T) {\r\n    this.value = v;\r\n  }\r\n  map <U>( fn: (a:T) => U): Maybe<U> { return new Just(fn(this.value))}\r\n\r\n  isDefined: boolean = true;\r\n\r\n  get(): T {return this.value}\r\n\r\n  toString(): string {\r\n    return \"Just \" + this.value;\r\n  }\r\n}\r\n\r\nclass Nothing<T> implements Maybe<T>{\r\n  constructor() {\r\n  }\r\n  map <U>( fn: (a:T) => U): Maybe<U> {\r\n    var b = new Nothing();\r\n    return <Maybe<U>>b;\r\n  }\r\n\r\n  isDefined: boolean = false;\r\n\r\n  get(): T {throw \"Nothing.get\"}\r\n\r\n  public toString(): string {\r\n    return \"Nothing\";\r\n  }\r\n}\r\n\r\ninterface Array<T> {\r\n  //flatMap<U>(callbackfn: (value: T, index: number, array: T[]) => U, thisArg?: any): U[];\r\n  flatMap <U>( fn: (a:any) => Maybe<U>): Array<U>;\r\n  flatten (): Array<any>;\r\n}\r\n\r\nArray.prototype.flatMap =\r\n  function <U>(fn: (a:any) => Maybe<U>):Array<U> {\r\n    var res:Array<U> = [];\r\n    var curr:Array<Maybe<any>> = this;\r\n    var len = curr.length;\r\n    for (var i = 0; i < len; i++){\r\n      var item = fn(curr[i]);\r\n      if(item.isDefined){\r\n        res.push(item.get());\r\n      }\r\n    }\r\n    return res;\r\n  };\r\n\r\nArray.prototype.flatten = function(){\r\n  var curr = this;\r\n return curr.flatMap(x => x)\r\n};\r\n\r\nvar a = new Just(\"name\");\r\nvar b:Maybe<string> = new Nothing<string>();\r\n\r\nvar getSize:(string) => number = (str: string) => str.length;\r\n\r\nvar c: Maybe<number> = a.map(getSize);\r\n// returns Just \"name\"\r\nvar d: Maybe<number> = b.map(getSize);\r\n// returns Nothing\r\nvar definedValues = [c,d].flatten();\r\n// returns [Just 4]\r\n\r\nvar typerArr: Array<number> = [10,5,0];\r\n// divides 100 by the number provided. Returns Nothing if denon == 0\r\nvar divideBy: (number) => Maybe<number> = function (denon) {\r\n  if(denon == 0){\r\n    var b = new Nothing();\r\n    return <Maybe<number>>b;\r\n  } else {\r\n    return new Just(100/denon);\r\n  }\r\n};\r\n\r\nvar divisions = typerArr.flatMap(divideBy);\r\n// returns: [10, 20]\r\n\r\n```\r\n",
+    "LastUpdatedDate": "2014-07-28T15:20:16.333-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-28T22:29:46.573-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Add Option/Maybe type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2585
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Updated gist.\nhttps://gist.github.com/khronnuz/1ccec8bea924fe98220e",
+      "PostedDate": "2014-06-29T09:02:53.28-07:00",
+      "Id": 151083
+    },
+    {
+      "Message": "I'd love a good version of Maybe types. \n\nBecause JS programmers often override values of any type with `null`,  it might make sense to distinguish between objects that can be null and those that cannot. Maybe tests could then use null value as the none-type, and when non-null is would be the some instance. \n\nMore generally this is a characteristic of TypeScript lacking union types, so this is also a vote for union types :) ",
+      "PostedDate": "2014-06-29T13:17:23.713-07:00",
+      "Id": 151102
+    },
+    {
+      "Message": "Then make sure you actually vote: https://typescript.codeplex.com/workitem/1364\n\n;)",
+      "PostedDate": "2014-06-29T23:44:57.073-07:00",
+      "Id": 151116
+    },
+    {
+      "Message": "While union types are indeed useful ( I already voted for it), I don't think this necessarily need to be done with union types. It is in fact just a generic class Option<T>. The updated gist have a version that is close enough to be usable. The only reason I created the issue was the hoping for some small changes on the compiler to get better support for extending things like Array.flatten and hopefully the json encoder/decoder. ",
+      "PostedDate": "2014-06-30T04:18:28.423-07:00",
+      "Id": 151125
+    }
+  ]
+}

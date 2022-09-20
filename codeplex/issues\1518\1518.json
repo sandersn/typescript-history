@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.737-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I have been working on an ambicious ASP.NET Single Page App project using TypeScript since the early 0.8.x versions of TypeScript, and we are getting close to release.\r\n\r\nTo ensure that our TypeScript codebase compile when building the web project with MSBuild, we have manually edited the Web project csproj file to import the Microsoft.TypeScript.targets build target (%ProgramFiles(x86)%\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\Microsoft.TypeScript.targets) and configured the build target settings in the project file appropriately to set the correct compiler flags (--sourcemap --target ES5 --module AMD [...]), and ensured that all our TypeScript files has the \"TypeScriptCompile\" property. \r\n\r\nWhen migrating to new releases of TypeScript, we always check whether Microsoft.TypeScript.targets has changes, and update our csproj file accordingly whenever there are changes.\r\n\r\nOur first challenge was making the build work on the build server.\r\nTo ensure that Web projects using Microsoft.TypeScript.targets will build successfully on a build server, you have two options:\r\n\r\n1. Install TypeScript on the build server \r\n2. Copy the required files for Microsoft.TypeScript.targets to a different source-controlled folder (in Git repository in our case) and change the path references in the csproj file to this folder.\r\n\r\nOption 1 cons:\r\n- This requires that you have admin privileges on the build server and have permission to install software.\r\n- Only one version of TypeScript can be installed on the build server since the TypeScript installer cannot install multiple versions of TypeScript (.targets+compiler) side-by-side.\r\n\r\nOption 2 cons:\r\n- You also need to copy the TypeScript compiler files (normally located under %ProgramFiles(x86)%\\Microsoft SDKs\\TypeScript) to a source controlled folder, and update the paths to the Compiler in the Microsoft.TypeScript.targets file.\r\n- When upgrading to newer versions of TypeScript, we need to manually ensure that the source controlled copy of Microsoft.Build.targets + required files and the TypeScript Compiler files are updated.\r\n\r\nWe opted for option 2, since we cannot install software on the build server.\r\nWe are actually building the project on Windows Azure, using a Windows Azure Web Site with continous deployment from our Git Repository.\r\n\r\nThis has all been working fine up till the 0.9.1 release of TypeScript. \r\nWith Version 0.9.1, the .targets file changed, but we have aligned with these changes in our source controlled copies of required TypeScript .targets and compiler files, and TypeScripts are compiling just fine when building locally from Visual Studio on our developer workstations. \r\n\r\nBut when building the Project on Windows Azure it does not work: The build fails and reports that it was failing on line 54732 in tsc.js, the ActiveX(\"Scripting.FileSystemObject\") being unknown; \r\nThis was not a problem in 0.9.0.1 and earlier versions.\r\n\r\nI am therefore begging for some help about how to solve this.\r\nCurrently we have entirely commented out the TypeScript.targets part in the Project file, and we rather use grunt/nodejs triggered as a post-build event to compile our TypeScript code. \r\nBut without the TypeScript.targets, we don't get Compile-On-Save inside Visual Studio. \r\nWe are currently getting Compile-On-Save using the Visual Studio Web Essentials plugin, but the latest Version of this plugin cannot compile with the correct compiler arguments, and the plugin is about to retire the whole TypeScript support. I feel we are getting pushed further and further into a corner on these matters.\r\n\r\nI have to mention that I think the documentation published about TypeScript from the TypeScript team has generally been minimal, and I specifically find it hard to find any good information around:\r\n\r\n- Working with TypeScript in Visual Studio projects \r\n- Compile-On-Save in Visual Studio\r\n- Using Microsoft.TypeScript.targets in the project file. \r\n- Building your solution on a build server.\r\n\r\nI think TypeScript is awesome, and I hope its popularity will not be diminished because of lacking documentation and difficulties like the ones I am experiencing. I think all the great work that has been put into the TypeScript design and compiler implementation deserves that someone writes and publishes some information about the practical sides of working with TypeScript from a development project lifecycle perscpective.\r\n\r\nSuggestions: \r\n- It would probably be a good idea to make it possible to install multiple versions of TypeScript .targets + compiler side-by-side. I would also bet that the VM images for Azure Web Site servers would be updated with multiple versions installed so that the build process for projects with TypeScript files would run seamlessly regardless of version. It would also be possible to work on different projects with TypeScript code of different versions on the same machine.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-16T01:44:37.17-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "TypeScript build target, Build Servers and support for multiple TypeScript versions",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 13,
+    "Id": 1518
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "thanks for the suggestion, assigned to Jon who handles our suggestions.\r\n\r\nThe problem you're seeing: \r\n\r\n\"it was failing on line 54732 in tsc.js, the ActiveX(\"Scripting.FileSystemObject\") being unknown;\" is probably due to an incompatible version of tschost.dll with the OS on your build server, reverting that to a previous version should solve this.",
+      "PostedDate": "2013-08-16T12:59:38.713-07:00",
+      "Id": 110193
+    },
+    {
+      "Message": "Thanks for the tip about tschost.dll\nI reverted to an earlier version which really saved my day!\n\nStill hoping for some evaluation of my other thoughts in the report...",
+      "PostedDate": "2013-08-29T13:51:50.99-07:00",
+      "Id": 111594
+    },
+    {
+      "Message": "Agreed that TS needs to have a better story with regard to build servers. This may not be entirely TypeScript's fault, but it doesn't seem to play well with many CI servers as of yet. For instance, if you want to use the (very handy) git-deploy on Azure, you have to go through all sorts of unpleasant workarounds (https://github.com/projectkudu/kudu/issues/556), and even after you do all those, you still need to check your .js and .js.map files into source control. It would be great if the TS team could work with some of these CI servers to ensure that TS has a solid CI story.",
+      "PostedDate": "2013-08-30T14:22:33.117-07:00",
+      "Id": 111742
+    }
+  ]
+}

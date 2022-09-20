@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is one of the reasons we've introduced the fat-arrow functions. \n\nIf we rewrite all functions for you, how do will you be able to call the function using the original 'this'.",
+    "ClosedDate": "2014-01-23T16:46:13.663-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Currently, the this keyword can get out of context when passing a method back as an argument.\r\n\r\nGiven the following code:\r\n\r\n```\r\n        public openReport(reportID: number): void {\r\n            this._reportRepo.open(reportID)\r\n                .then(this._setCurrentReportOpen)\r\n        }\r\n```\r\nthe this keyword in setCurrentReportOpen becomes scoped to the window. A way around this would be:\r\n\r\n```\r\n        public openReport(reportID: number): void {\r\n            this._reportRepo.open(reportID)\r\n                .then((report) => {\r\n                    this._setCurrentReportOpen(report);\r\n                })\r\n        }\r\n```\r\n\r\nor:\r\n\r\n```\r\n        public openReport(reportID: number): void {\r\n            this._reportRepo.open(reportID)\r\n                .then(this._setCurrentReportOpen.bind(this))\r\n        }\r\n```\r\n\r\nWhilst this is what should be expected following the spec, it would be beneficial if TS automatically did either of these for the writer. The .bind method would probably suffice, but assumes an IE8 shim.\r\n",
+    "LastUpdatedDate": "2014-01-23T16:46:13.663-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-23T08:09:36.99-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Bind methods to 'this' when passed as callback argument",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2123
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

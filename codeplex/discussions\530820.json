@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1205772",
+    "ThreadId": "530820",
+    "Html": "I like much typescript. and I use it my code. but I have the following situation:\r<br />\n<br />\nIs it possible add to typescript the possibility to have the typescript files in a independent project (in the same solution where they are used) like a normal C# dll?\r<br />\nI tested it and it is possible (I used the configuration proposed by <a href=\"http://joeriks.com/2013/08/21/setting-up-a-typescript-project-structure-to-make-the-compiler-happy/\" rel=\"nofollow\">Jonas Eriksson</a> ) works very well, but I have only a big problem I can not debug the ts files and can only be able to debug the js files. I had passed the map files, but also was not possible.\r<br />\nI think that should be very usefull, the possibility of have the  typescript project in a independent project, that generate only one js and the possibility to debug directly each typescript file, this give typescript a perfectly similarity with a C# normal project.\r<br />\nMaybe it is possible, if it please send me how I should configure the project, if not maybe it is a nice feature that you can incorporate in Typescript\r<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2014-02-09T08:53:03.75-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1206430",
+    "ThreadId": "530820",
+    "Html": "You should be able to use the --out FILE commandline option and still debug using the .map files.  The .map files should be able to work across multiple .ts files.<br />\n\r<br />\nIf you're having an issue getting this to work, you might want to file an issue on the issue tracker and include a small version of the project that you're trying to do it with.<br />\n\r<br />\nSomething else to look into: if you're also moving the .ts files or .map file after compilation, you may need to mess with the --sourceRoot and --mapRoot, which let you set the paths in the .map and .js file so that the original source can be found.<br />\n",
+    "PostedDate": "2014-02-10T09:32:56.26-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1206624",
+    "ThreadId": "530820",
+    "Html": "Thanks for your answer\r<br />\nYes I moved the .js and .map files after compilation, because I am trying to  use the typescript as a library project. I played with the source root without be successful to get the .ts files on debug. \r<br />\n<br />\nOne question, I try to access the files with complete path, maybe that is the error, Should always considerate the typescript project as a web project with web.config file?\r<br />\n<br />\nI try to reproduce the problem in a small project.\r<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2014-02-10T19:02:48.233-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1206881",
+    "ThreadId": "530820",
+    "Html": "I believe both complete paths and relative paths should work, but it may be tricky to use the relative ones.  You may also be able to use URLs, but I haven't tried.<br />\n",
+    "PostedDate": "2014-02-11T09:04:08.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208192",
+    "ThreadId": "530820",
+    "Html": "Thanks for your answers !\r<br />\n<br />\nI made a small test project, and I can put to word the debug using urls. I was not able to work with specific path or relative path. \r<br />\nbasically that happen is the application always point to the web site and forgot the fixed path if you use relative or absolute path. Maybe I make some wrong.\r<br />\n<br />\nThe example has a manual modification of the map file, for that I do not xcopy the map and js file to the main project. Basically I put the following in the root directory of the map file:\r<br />\n<br />\n{&quot;version&quot;:3,&quot;file&quot;:&quot;Library1.js&quot;,&quot;sourceRoot&quot;:&quot;<a href=\"http://localhost:37938/&quot;,&quot;sources&quot;:[&quot;Library1.ts&quot;],&quot;names&quot;:[&quot;Tester&quot;,&quot;Tester.CreateTextBox&quot;],&quot;mappings&quot;:\" rel=\"nofollow\">http://localhost:37938/\",\"sources\":[\"Library1.ts\"],\"names\":[\"Tester\",\"Tester.CreateTextBox\"],\"mappings\":</a>.....\r<br />\n<br />\nplease I have some doubts about how to use this in a project that is hosted in IIS (this small example is hosted in IIS Express)\r<br />\n Is it a good practice maintain this projects in IIS Express and the rest of the project in IIS? \r<br />\nor is better to integrate the typescript project in the IIS?\r<br />\n<br />\nThe other thing that if the relative path works, then maybe is possible create a typescript library project without using web server. Can you give a example about to work with relative path? If you give me a link I can send you the example.\r<br />\n<br />\nThanks again for your attention<br />\n",
+    "PostedDate": "2014-02-13T19:36:36.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220449",
+    "ThreadId": "530820",
+    "Html": "Hello,\r<br />\n<br />\nI have a related question. I have created a CommonTypeScript project that I want to share between multiple projects in a solution and to reuse on some future projects. \r<br />\n<br />\nI have this configuration working where I am accessing the common TS code from two different projects, but there is a problem with debugging. If I put a breakpoint on a node in the TS file and run a portion of the code that accesses the breakpoint, a blank TS file is displayed. It is labeled dynamic + the name of the original page that I set the breakpoint on. If I hit F5, one or more times, the code continues to execute normally. The problem is that I cannot debug any issues with this configuration.\r<br />\n<br />\nIf you want, I can try to generate a small test project that demonstrates the issue.\r<br />\n<br />\nAny ideas?\r<br />\n<br />\nThanks...<br />\n",
+    "PostedDate": "2014-03-07T13:42:24.113-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220585",
+    "ThreadId": "530820",
+    "Html": "Hello,\r<br />\n<br />\nAfter some additional testing/experimentation I found the problem. The CommonTypeScript project was not configured to run on the IIS website associated with the other project(s). It was running on IIS Express. When the Visual Studio project websites are configured to the same domains (e.g.,  <a href=\"http://www.mydomain.com\" rel=\"nofollow\">http://www.mydomain.com</a>) then the debug works properly with the shared code.\r<br />\n<br />\nThere is one glitch in my case. Since I have a secure domain and a unsecure domain in the same solution (i.e. two website domains), this means that I must switch the domains of the CommonTypeScript project to the domain that I want to debug. However, this is something I can deal with.\r<br />\n<br />\nRegards...<br />\n",
+    "PostedDate": "2014-03-08T05:29:05.123-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the current develop branch.",
+    "ClosedDate": "2013-12-16T11:01:54.37-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I have two TypeScript files: __App.ts__ and __Table.ts__. \r\n\r\nMost of my application class/interfaces defined in __App.ts__ which are referenced by __Table.ts__. The code of App.ts is\r\n```\r\nexport module App {\r\n    export module Services {\r\n        export class UserServices {\r\n            public getUserName (): string {\r\n                return \"Bill Gates\";\r\n            }\r\n        }\r\n    }\r\n\r\n    export module Model {\r\n        //....\r\n    }\r\n\r\n    export module Eventing {\r\n        export class EventBus {\r\n            //...\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThe Table.ts is\r\n```\r\nimport appJs = require(\"App\");\r\n\r\nimport Services = appJs.App.Services;\r\nimport Model = appJs.App.Model;\r\nimport Eventing = appJs.App.Eventing;\r\n\r\nexport module App {\r\n    export module Widgets {\r\n        export class Table {\r\n            public getUserName() : string {\r\n\r\n                return new Services.UserServices().getUserName();\r\n            }\r\n        }\r\n    }\r\n}\r\n```\r\nI'm doing this mainly because i'm annoyed that everytime i use UserServices (defined in __App.ts__), I have to code it in a long name (i.e. appJs.App.Services.UserServices). So i end up to create alias to make my life easier. The problem is, although Table.ts get compiled successfully, but the output js cannot get executed. Is my alias creation correct? Here is compiled Table.js\r\n```\r\n define([\"require\", \"exports\"], function(require, exports) {\r\n    \r\n\r\n    var Services = appJs.App.Services;\r\n    \r\n    var Eventing = appJs.App.Eventing;\r\n\r\n    (function (App) {\r\n        (function (Widgets) {\r\n            var Table = (function () {\r\n                function Table() {\r\n                }\r\n                Table.prototype.getUserName = function () {\r\n                    return new Services.UserServices().getUserName();\r\n                };\r\n                return Table;\r\n            })();\r\n            Widgets.Table = Table;\r\n        })(App.Widgets || (App.Widgets = {}));\r\n        var Widgets = App.Widgets;\r\n    })(exports.App || (exports.App = {}));\r\n    var App = exports.App;\r\n});\r\n```\r\n\r\nWhen the code get executed, it will stop at \"appJs\" which apparently is an undefined object.\r\n\r\nDid i get anything wrong? Or is there any problem with the compiler?\r\n\r\nBTW, my code is on the latest Typescript compiler with Visual Studio 2012.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-21T15:22:14.477-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Import external module is incorrectly compiled.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1936
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The compiler version is Version 0.9.1.1, BTW.",
+      "PostedDate": "2013-11-21T15:38:05.9-08:00",
+      "Id": 123815
+    },
+    {
+      "Message": "This is fixed in 0.9.5. \n\nA work around is to add the following near the top of table.ts\n\n````\nvar x = appJs;\n````\n\r\n\r** Closed by paulb 11/22/2013 10:25AM",
+      "PostedDate": "2013-11-22T10:25:27.86-08:00",
+      "Id": 123916
+    },
+    {
+      "Message": "Too quick closing this.. we're taking a look.",
+      "PostedDate": "2013-11-22T10:32:52.553-08:00",
+      "Id": 123917
+    },
+    {
+      "Message": "Thanks, paulb.\n\nAny work around for now?",
+      "PostedDate": "2013-11-25T14:10:24.853-08:00",
+      "Id": 124223
+    },
+    {
+      "Message": "I get a workaround by adding a unused variable declaration. see below code.\n\n```\nimport appJs = require(\"App\");\n\nimport Services = appJs.App.Services;\nimport Model = appJs.App.Model;\nimport Eventing = appJs.App.Eventing;\n\nexport module App {\n    /* a work around to undefined appJs problem */\n    var s = appJs.App.Eventing.EventBus;\n\n    export module Widgets {\n        export class Table {\n            public getUserName() : string {\n\n                return new Services.UserServices().getUserName();\n            }\n        }\n    }\n}\n```\n\nOnce after that, the compiled code will be\n```\ndefine([\"require\", \"exports\", \"App\"], function(require, exports, __appJs__) {\n    var appJs = __appJs__;\n\n    var Services = appJs.App.Services;\n    \n    var Eventing = appJs.App.Eventing;\n\n    (function (App) {\n        /* a work around to undefined appJs problem */\n        var s = appJs.App.Eventing.EventBus;\n\n        (function (Widgets) {\n            var Table = (function () {\n                function Table() {\n                }\n                Table.prototype.getUserName = function () {\n                    return new Services.UserServices().getUserName();\n                };\n                return Table;\n            })();\n            Widgets.Table = Table;\n        })(App.Widgets || (App.Widgets = {}));\n        var Widgets = App.Widgets;\n    })(exports.App || (exports.App = {}));\n    var App = exports.App;\n});\n```\nBy doing this, compiler will pass in an object and init appJs properly.",
+      "PostedDate": "2013-11-25T14:25:07.743-08:00",
+      "Id": 124228
+    }
+  ]
+}

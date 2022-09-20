@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.487-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Circular dependencies are a nightmare in modular Javascript and somehow, the situation is worse with Typescript... which is too bad for a great language rightfully targeting large projects. This post details the reasons and proposes a generic fix.\r\n\r\n[This post is not about discussing why circular dependencies happen and code design]\r\n\r\nA code example is provided below that should be compiled using `--module commonjs` and run (to failure) on node.js from `Lower.test.ts`. What this simply tries to achieve is loading a word into Lower which keeps it in lower case, then using the inherited toUpper() method from the Base class, transforms it in upper case using the Upper class (which also inherits Base)\r\n\r\nLower.test.ts\r\n\r\n```\r\nimport Lower = require('./Lower')\r\nconsole.log(new Lower('smallcaps').toUpper())\r\n```\r\nBase.ts\r\n\r\n```\r\nimport Upper = require('./Upper')\r\n\r\nclass Base {\r\n    word: string\r\n    toUpper(): string {\r\n        return new Upper(this.word).word\r\n    }\r\n}\r\n\r\nexport = Base\r\n```\r\nUpper.ts\r\n\r\n```\r\nimport Base = require('./Base')\r\n\r\nclass Upper extends Base {\r\n    constructor(word:string) {\r\n        super()\r\n        this.word = word.toUpperCase()\r\n    }\r\n}\r\n\r\nexport = Upper\r\n```\r\nLower.ts\r\n\r\n```\r\nimport Base = require('./Base')\r\n\r\nclass Lower extends Base {\r\n    constructor(word:string) {\r\n        super()\r\n        this.word = word.toLowerCase()\r\n    }\r\n}\r\n\r\nexport = Lower\r\n```\r\n\r\nBasically what happens is that Lower imports Base, which imports Upper, which imports Base but Base is not totally initialised yet and the require statement returns an empty object {}\r\n\r\nThis problem is well known (and somewhat unique to modular Javascript). There are various solutions -  workarounds rather - to improve the situation in Javascript:\r\n1. Exporting the current module before requiring other modules: [documented here](https://coderwall.com/p/myzvmg)\r\n2. Delaying the call to require or using injection (of the prototypes): [here](http://tomkit.wordpress.com/2013/02/05/circular-dependencies-dependency-injection-in-node-js/)\r\n3. Shuffling statements around or using export properties: [various solutions here] (http://stackoverflow.com/questions/10869276/nodejs-module-dependency-issue)\r\n\r\nUnfortunately, most of these workarounds cannot be implemented in Typescript because the location of the import...require and export statements are \"fixed\". This leaves us with injection, which works but is very verbose (a rewritten Base.ts is available upon request)\r\n\r\nThe Typescript transpiler should try to fix this. This would be a HUGE benefit of using Typescript and would encourage breaking the Classes in multiple files, the way most Object Oriented Programs are written.\r\n\r\n__To fix this, I propose to delay the import of a class/module when the class is not the super class.__ \r\n\r\nIn the example above, the 1.0.1 transpiler generates this code for Base.ts\r\n\r\n```\r\nvar Upper = require('./Upper');\r\n\r\nvar Base = (function () {\r\n    function Base() {\r\n    }\r\n    Base.prototype.toUpper = function () {\r\n        return new Upper(this.word).word;\r\n    };\r\n    return Base;\r\n})();\r\n\r\nmodule.exports = Base;\r\n```\r\n\r\nHere Upper is not the parent/super class of Base: the transpiler should generate code delaying the import of Upper into the Base constructor\r\n\r\n```\r\nvar Base = (function () {\r\n    var Upper;\r\n    function Base() {\r\n        Upper = require('./Upper');\r\n    }\r\n    Base.prototype.toUpper = function () {\r\n        return new Upper(this.word).word;\r\n    };\r\n    return Base;\r\n})();\r\n\r\nmodule.exports = Base;\r\n```\r\n\r\nThat is it ! No other fix to any other class is required.\r\n\r\nComments welcome",
+    "LastUpdatedDate": "2014-07-28T15:17:23.487-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-09T04:37:53.23-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Circular dependencies: worse with TypeScript - Fix proposed",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2613
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The problem with that is: how do you figure out _where_ to delay it to? In your example you initialized Upper in the Base constructor, but on what basis did you do it there?\n\nSay, you had another Base.toUpper2() function that was identical to Base.toUpper, and a Base2 class that was identical to Base. Where would you initialize Upper? In both constructors?\n\nThe lazy / easy approach would be to scope Upper to every scope it's defined in and initialize it everywhere.\n\n```\nvar Base = (function () {\n    function Base() {\n    }\n    Base.prototype.toUpper = function () {\n        var Upper = require('./Upper');   // <--\n        return new Upper(this.word).word;\n    };\n    Base.prototype.toUpper2 = function () {\n        var Upper = require('./Upper');   // <--\n        return new Upper(this.word).word;\n    };\n    return Base;\n})();\n\nvar Base2 = (function () {\n    function Base2() {\n    }\n    Base2.prototype.toUpper = function () {\n        var Upper = require('./Upper');   // <--\n        return new Upper(this.word).word;\n    };\n    return Base2;\n})();\n```\n\nThis relies on the fact that repeated calls to require() load and initialize the module only once, and return the same object for subsequent calls.\n\nThe downside is that this looks ugly and forces even those imports which would be perfectly fine at the top of the file to be moved into multiple scopes.\n\nThe other, bigger downside is that this doesn't work at all with AMD.",
+      "PostedDate": "2014-07-09T11:19:12.133-07:00",
+      "Id": 151929
+    },
+    {
+      "Message": ">The problem with that is: how do you figure out where to delay it to? In your example you initialized Upper in the Base constructor, but on what basis did you do it there?\n\n1. There is / can always be a constructor\n2. It is initialized and available for use right after instantiation (but after exports which is what matters)\n3. It is initialized only once and available for all class methods to use\n\n>Say, you had another Base.toUpper2() function that was identical to Base.toUpper, and a Base2 class that was identical to Base. Where would you initialize Upper? In both constructors?\n\nYes. In both constructors. For the reasons explained just above.\n\n>This relies on the fact that repeated calls to require() load and initialize the module only once, and return the same object for subsequent calls.\n\nYes. That is a given and part of the specifications; it is not a side-effect or some unreliable funky behaviour\n\n>The downside is that this looks ugly...\n\nThat is a matter of opinion, not facts. I do not find it ugly. However, i do find ugly that I have less solutions to tackle this issue with TypeScript than Javascript (where these 'ugly' solutions are commonly implemented)\nIn addition my fix does not imply *any* change to the TypeScript code, only the generated javascript code.\n\n>...and forces even those imports which would be perfectly fine at the top of the file to be moved into multiple scopes.\n\nNot multiple: one per constructor per class. If Base and Base2 where in two separate files (which is what most OO Programmers would do), you would have two `import...require` statements, hence two require calls just like in the constructor case.\n\n>The other, bigger downside is that this doesn't work at all with AMD.\nI do not intend to fix AMD. This post concerns CommonJS code generated with the `--module commonjs` switch as clearly explained at the top of this post.\nFixing CommonJS code is not 'a bigger downside to AMD'\n\n",
+      "PostedDate": "2014-07-09T12:04:41.823-07:00",
+      "Id": 151939
+    }
+  ]
+}

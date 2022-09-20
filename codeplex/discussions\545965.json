@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1247456",
+    "ThreadId": "545965",
+    "Html": "I'm sorry to insist on that point but it seems that bug: <a href=\"https://typescript.codeplex.com/workitem/1312\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1312</a> has still not make it to the typescript team triage process, and I feel that is an important matter.<br />\n<br />\nIn my point of view the impossibility of exporting an object with a signature that involves private type is a serious limitation that prevent us from using a lot of natural javascript patterns/constructions.<br />\nIn the best cases it forces you to use fundule/clodule where it does not feel very natural :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> myFunction(): myFunction.MyInterface {\n  <span style=\"color:Green;\">//...</span>\n}\n<span style=\"color:Blue;\">module</span> myFunction {\n  <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> MyInterface {\n    <span style=\"color:Green;\">//...</span>\n  }\n}\n<span style=\"color:Blue;\">export</span> = myFunction;\r\n</pre></div>And in the worst scenario it completely prevents you from modeling your module like you would do it in javascript :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> myFactory&lt;T&gt;(): T;\n\n<span style=\"color:Blue;\">interface</span> MyInterface {\n  <span style=\"color:Green;\">//...</span>\n}\n\n<span style=\"color:Blue;\">var</span> myObject = myFactory&lt;MyInterface&gt;();\n<span style=\"color:Blue;\">export</span> = myObject; <span style=\"color:Green;\">//there is no way to model that correctly</span>\r\n</pre></div>This bug is, for example, responsible of making the usage of Facebook React framework and typescript a painful experience.<br />\n<br />\nAnother time I'm sorry to insist where there is already an issue filled, but could we have the point of view of the TypeScript team on that one ?<br />\n<br />\nRegards,<br />\nFrançois de Campredon<br />\n",
+    "PostedDate": "2014-05-20T08:09:51.347-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262033",
+    "ThreadId": "545965",
+    "Html": "bumps ? :p<br />\n",
+    "PostedDate": "2014-07-02T09:40:10.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262109",
+    "ThreadId": "545965",
+    "Html": "Your issues are being seen, don't worry :) We're still in the process of evaluating what new features we'll be doing for the next version, a lot of our bandwidth is going to be used up on ES6 features but these kinds of things are on our radar, especially as people upvote them.\r<br />\n<br />\nThat said, for this specific issue I see a lot of people noting the problems they have which I definitely understand for certain patterns. On the other hand, what is the actual proposed change? To do away with this type of error entirely? That would cause a great deal of bugs to go uncaught. Certainly open to suggestions if people have a particular design in mind.<br />\n",
+    "PostedDate": "2014-07-02T12:32:47.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262119",
+    "ThreadId": "545965",
+    "Html": "thank you to reassure me :p.<br />\n<br />\nHonestly I don't really understand why that would be an issue to let exported value use internal type in their type definition, especially for interface, from what I understand :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> myFactory&lt;T&gt;(): T;\n\n<span style=\"color:Blue;\">interface</span> MyInterface {\n  prop: <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">var</span> myObject = myFactory&lt;MyInterface&gt;();\n<span style=\"color:Blue;\">export</span> = myObject;\r\n</pre></div>and <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> myFactory&lt;T&gt;(): T;\n\n<span style=\"color:Blue;\">interface</span> MyInterface {\n  prop: <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">var</span> myObject = myFactory&lt;{ prop: <span style=\"color:Blue;\">string</span>; }&gt;();\n<span style=\"color:Blue;\">export</span> = myObject;\r\n</pre></div>is absolutely equivalent, but in the first case the compiler will rise an error.<br />\n<br />\nEven in the case of class :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> MyClass {\n ...\n}\n\n\n<span style=\"color:Blue;\">var</span> myObject = <span style=\"color:Blue;\">new</span> MyClass();\n<span style=\"color:Blue;\">export</span> = myObject;\r\n</pre></div>Why would it be harmful ? <code>myObject</code> would be of type <code>MyClass</code>, he would have properties/method of MyClass, why would the fact that MyClass is not directly consumable by an other module would lead to bug ?<br />\n",
+    "PostedDate": "2014-07-02T13:03:13.673-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262127",
+    "ThreadId": "545965",
+    "Html": "Seconded. The need to export all accessible classes and types seems completely unnecessary. <br />\n<br />\nIt leads to awkward module-interface-var combos to get the proper declaration merging when the module is intended to have a single export.<br />\n",
+    "PostedDate": "2014-07-02T13:13:54.003-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262133",
+    "ThreadId": "545965",
+    "Html": "One issue is that non-anonymous types might be infinitely recursive, and we can't represent those anonymously. For example:<br />\n<pre><code>/**** Foo.ts ****/\ninterface SomeType {\n    self: SomeType;\n}\n\nfunction fn(n: number): SomeType {\n    /* ... */\n}\n\nexport = fn;\n\n/**** Bar.ts ****/\nimport foo = require(&quot;./Foo&quot;);\n\nexport var x = foo();</code></pre>\n\nIf you run this and want a generated declaration file for <code>Bar.ts</code>, what is the content of <code>Bar.d.ts</code> ?<br />\n<pre><code>/**** Bar.d.ts ****/\nimport foo = require(&quot;./Foo&quot;);\n\nexport var x: { self: { self: { self: { self: { self: { self: { self: { /*... forever ... */ };</code></pre>\n\nThis is just the simple case; there are much more complicated cases that are harder to detect.<br />\n",
+    "PostedDate": "2014-07-02T13:29:55.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262146",
+    "ThreadId": "545965",
+    "Html": "Yeah I guess there is case where that make things harder however that kind of case could be solved by :<br />\n<ul>\n<li>throwing an error for these specific case</li>\n<li>use <code>typeof</code>:</li>\n</ul>\n<div style=\"color:Black;background-color:White;\"><pre>\r\n <span style=\"color:Blue;\">import</span> bar = require(<span style=\"color:#A31515;\">&quot;./Bar&quot;</span>);\n <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> x: { self: <span style=\"color:Blue;\">typeof</span> bar.x}\r\n</pre></div><ul>\n<li>introduction a keyword that would mark a type as internal for definition file, and allow to reference those internal type only in type annotation something alike :</li>\n</ul>\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/**** Foo.d.ts ****/</span>\ninternal <span style=\"color:Blue;\">interface</span> SomeType {\n self: SomeType\n}\n\n<span style=\"color:Blue;\">function</span> fn(n: <span style=\"color:Blue;\">number</span>): SomeType;\n\n<span style=\"color:Blue;\">export</span> = fn;\n\n\n<span style=\"color:Green;\">/**** Bar.d.ts ****/</span>\n<span style=\"color:Blue;\">import</span> foo = require(<span style=\"color:#A31515;\">&quot;./Foo&quot;</span>);\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> x:  Foo.internal::SomeType;\n\r\n</pre></div><ul>\n<li>recreate a named type in declaration file where that type is used</li>\n</ul>\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/**** Foo.d.ts ****/</span>\n<span style=\"color:Blue;\">interface</span> SomeType {\n self: SomeType\n}\n\n<span style=\"color:Blue;\">function</span> fn(n: <span style=\"color:Blue;\">number</span>): SomeType;\n\n<span style=\"color:Blue;\">export</span> = fn;\n\n\n<span style=\"color:Green;\">/**** Bar.d.ts ****/</span>\n<span style=\"color:Blue;\">interface</span> SomeType {\n self: SomeType\n}\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> x:  SomeType;\n\r\n</pre></div>",
+    "PostedDate": "2014-07-02T13:47:41.697-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

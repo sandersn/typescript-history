@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-13T09:39:33.673-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hello,\r\n\r\nI've just started using 0.9.0 and I have discovered that overload-on-constant does not work in a class, example:\r\n\r\n```\r\nclass Testerer {\r\n\r\n\tcall(person: string): string {\r\n\t\treturn \"Hey there!\";\r\n\t}\r\n\tcall(person: \"string\"): string; //<-- Error\r\n}\r\n```\r\n\r\n```\r\ninterface Tester {\r\n\tcall(person: string): string;\r\n\tcall(person: \"string\"): string;\r\n}\r\n```\r\n\r\nEither the compiler should support this, or the documentation should be updated to show that this is not supported.\r\n\r\nThe documentation says: \r\n```\r\n3.2.8 String Literal Types\r\nSpecialized signatures (section 3.7.2.4) permit string literals to be used as types in parameter type annotations. String literal types are permitted only in that context and nowhere else.\r\n\r\nAll string literal types are subtypes of the String primitive type.\r\n```\r\n\r\nSection 3.7.2.4 also doesn't say anything about classes not being able to use this feature (unless I'm blind - it's been a long day).\r\n\r\nThanks in advance!\r\n\r\nGriffork.",
+    "LastUpdatedDate": "2013-08-13T09:15:09.873-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-12T21:49:24.087-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Overload-on-Constants does not work in a Class definition.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1026
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The class implementation should simply deal with the various cases:\n\n```\nclass Testerer {\n    call(person: string): string {\n      if(person === \"string\"){\n           return \"foo\";\n      }\n     else {\n             return \"Hey there!\";\n      }\n    }\n}\n```",
+      "PostedDate": "2013-05-13T07:03:01.27-07:00",
+      "Id": 100059
+    },
+    {
+      "Message": "Remember that the signature used in the implementation is not in the list of actual signatures available to the callers. To have a specialized (literal) string signature, you need to have a non-specialized signature as well:\n\n```\nclass Testerer {\n    call(person: \"etcetc\"): string;\n    call(person: string): string;\n    call(person: string): string {\n        return \"Hey there!\";\n    }\n}\n```",
+      "PostedDate": "2013-05-13T09:39:27.853-07:00",
+      "Id": 100070
+    },
+    {
+      "Message": "Ahh, that's what I was doing wrong, thank you!",
+      "PostedDate": "2013-05-13T20:50:01.25-07:00",
+      "Id": 100126
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This looks more like a question than an issue -- can you post this on the forums or Stack Overflow if you have other questions? All the behavior you've described here is by design.",
+    "ClosedDate": "2013-09-16T16:45:48.253-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hello! I'm trying to start a node.js application in TypeScript. I like to keep my classes in seperate files, so I thought it should work fine with TypeScript, too. \r\n\r\nI'm using TypeScript 0.9.1.1 and Web Essentials 3.0 in Visual Studio 2012.\r\n\r\nFirst let's start with the main question: what is the difference between these two?\r\n```\r\nimport util = require(\"util\");\r\n```\r\n```\r\nvar util = require(\"util\");\r\n```\r\n\r\nWhich should I use to be able to import node.js modules? Because they act quite differently, but none of them work fine. The node.js samples use the import statement, but I'm having a problem with that.\r\n\r\nHere is a little test code:\r\n\r\nmyclass.ts:\r\n```\r\n/// <reference path=\"node.d.ts\" />\r\n\r\nimport util = require(\"util\");\r\n\r\nclass MyClass {\t\r\n\thello() {\r\n\t\tutil.log(\"Hello World!\");\r\n\t}\t\t\r\n}\r\n```\r\n\r\nmain.ts:\r\n```\r\n/// <reference path=\"myclass.ts\" />\r\n\r\nvar my = new MyClass();\r\nmy.hello();\r\n```\r\n\r\nIf I try to compile this in command line I get:\r\n> tsc main.ts --out main.js\r\n> main.ts(3,14): error TS2095: Could not find symbol 'MyClass'.\r\n> error TS5037: Cannot compile external modules unless the '--module' flag is provided.\r\n\r\nOk let's try with --module CommonJs:\r\n> tsc main.ts --module CommonJs --out main.js\r\n> main.ts(3,14): error TS2095: Could not find symbol 'MyClass'.\r\n\r\nIt's the same. Somehow main.ts cannot access MyClass when there is an import statement in myclass.ts.\r\n\r\nLet's look at the other option. If I use var instead of import in myclass.ts.\r\nmyclass.ts:\r\n```\r\n/// <reference path=\"node.d.ts\" />\r\n\r\nvar util = require(\"util\");\r\n\r\nclass MyClass {\t\r\n\thello() {\r\n\t\tutil.log(\"Hello World!\");\r\n\t}\r\n}\r\n```\r\nNow the project compiles and works fine, but I don't have intellisense in Visual Studio on the imported module 'util'. So I guess this isn't the way it should be used. When I used the import statement the intellisense worked fine.\r\n\r\nSo what's going on here? What's the difference between var ... require and import ... require? Which should I use? Why can't I compile the import statement version? Why don't I get intellisense on the imported module when I use var ... require?\r\n\r\nI've attached a Visual Studio project, so you can test it.\r\n\r\nThank you. \r\n\r\nUpdate: I've simplified the test case so myclass.ts contains only one class definition without a module. See test2.zip.",
+    "LastUpdatedDate": "2013-09-16T16:45:48.253-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-16T06:31:26.283-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Referencing node.js files containing import require",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1690
+  },
+  "FileAttachments": [
+    {
+      "FileId": 729868,
+      "FileName": "test.zip",
+      "DownloadUrl": ".\\729868"
+    },
+    {
+      "FileId": 729911,
+      "FileName": "test2.zip",
+      "DownloadUrl": ".\\729911"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I think I have found the reason of the compile error in the TypeScript Language Specification: \n\nSection 11.2:\n> External modules are written as separate source files that contain at least one import or export declaration. Specifically, if a source file contains at least one ExternalImportDeclaration or ExportAssignment, or at least one top-level VariableDeclaration, FunctionDeclaration, ClassDeclaration, InterfaceDeclaration, EnumDeclaration, ModuleDeclaration, ImportDeclaration, or AmbientDeclaration that specifies an export modifier, that source file is considered an external module; otherwise, the source file is considered part of the global module.\n\nThis means that I cannot access MyClass in main.ts because myclass.ts automatically becomes an external module. Which means that I cannot just use reference comments to get it in scope. So I have to use an import ... require statement in the main.ts to load myclass.ts as an external module. \n\nI guess this is so because in node.js you can only write the require statements at the beginning of the file, so in this case typescript cannot just concatenate the referenced files. Am I right?\n\nSo I have two options here: write every class in one big file or to use lots of complicated external module imports and I cannot have a single output file. This is quite unpleasent.",
+      "PostedDate": "2013-09-16T11:52:20.38-07:00",
+      "Id": 113717
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I believe this is fixed now. --out shouldn't have allowed you to specify a single file when having external modules present",
+    "ClosedDate": "2013-02-19T15:55:55.02-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hello,\r\n\r\nI am trying to use the --out option with the typescript compiler so that I can get just one output file with all the dependent files concatenated. Unfortunately, it does not seem to work. Firstly, according to the documentation:\r\n\r\nSyntax:   tsc [options] [file ..]\r\n\r\nExamples: tsc hello.ts\r\n          tsc --out foo.js foo.ts\r\n          tsc @args.txt\r\nI should be able to use it like: tsc --out foo.js foo.ts, but doing that gives the following error: module emit collides with emitted script: \r\n\r\nSo you cannot use the same filename for output as input. Now, I have two files: animal.ts and fox.ts:\r\n\r\nanimal.ts\r\n\r\n\r\nexport class Animal{\r\n  legs : number;\r\n  color : string;\r\n  process(){\r\n    console.log(\"Processing an animal...\")\r\n  }\r\n}\r\n\r\nand fox.ts\r\n\r\nimport AnimalModule = module(\"./animal\");\r\n\r\nexport class Fox extends AnimalModule.Animal {\r\n  legs = 4;\r\n  bar : string;\r\n  process(){\r\n    console.log(\"Processing Fox\");\r\n  }\r\n}\r\nNow if I run tsc --out result.js fox.ts I get the following in result.js:\r\n\r\nvar __extends = this.__extends || function (d, b) {\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n}\r\nwhereas fox.js and animal.js have been generated correctly (although I would expect no other outputs than result.js):\r\n\r\nfox.js:\r\n\r\nvar AnimalModule = require(\"./animal\")\r\nvar Fox = (function (_super) {\r\n    __extends(Fox, _super);\r\n    function Fox() {\r\n        _super.apply(this, arguments);\r\n\r\n        this.legs = 4;\r\n    }\r\n    Fox.prototype.process = function () {\r\n        console.log(\"Processing Fox\");\r\n    };\r\n    return Fox;\r\n})(AnimalModule.Animal);\r\nexports.Fox = Fox;\r\n\r\nanimal.js:\r\n\r\nvar Animal = (function () {\r\n    function Animal() { }\r\n    Animal.prototype.process = function () {\r\n        console.log(\"Processing an animal...\");\r\n    };\r\n    return Animal;\r\n})();\r\nexports.Animal = Animal;\r\nSo what is going in?\r\n\r\nThanks in advance,\r\n\r\nManuel Astudillo.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-19T09:43:12.66-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "tsc --out does not seem to work properly",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 294
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure what the issue would be. It looks like to me something like:\n\ntsc animal.ts fox.ts --out animal.js \n\nshould work just fine. That's what I do for compiling my rather hefty libraries in to single files.",
+      "PostedDate": "2012-12-11T18:52:40.927-08:00",
+      "Id": 84008
+    }
+  ]
+}

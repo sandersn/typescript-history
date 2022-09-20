@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:18:41.683-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,  here is the repro:\r\n\r\n* Add two TypeScript projects to a new Visual Studio solution.\r\n\r\n* Ensure **Project A** has the old-style build step:\r\n```\r\n<PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\r\n  <TypeScriptSourceMap> --sourcemap</TypeScriptSourceMap>\r\n  </PropertyGroup>\r\n  <Target Name=\"BeforeBuild\">\r\n  <Message Text=\"Compiling TypeScript files\" />\r\n  <Message Text=\"Executing tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'\"%(fullpath)\"', ' ')\" />\r\n >       <Exec Command=\"tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'\"%(fullpath)\"', ' ')\" />\r\n >   </Target>\r\n```\r\n* Ensure **Project B** has the new-style build step:\r\n\r\n```\r\n<PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\r\n  <TypeScriptTarget>ES5</TypeScriptTarget>\r\n  <TypeScriptIncludeComments>true</TypeScriptIncludeComments>\r\n  <TypeScriptSourceMap>true</TypeScriptSourceMap>\r\n  <TypeScriptGeneratesDeclarations>true</TypeScriptGeneratesDeclarations>\r\n </PropertyGroup>\r\n <Import Project=\"$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets\" />\r\n```\r\n\r\n* Right-click on Project A and select \"Rebuild\":\r\n\r\n> 1>------ Rebuild All started: Project: TypeScriptHTMLApp2, Configuration: Debug Any CPU ------\r\n> 1>  TypeScriptHTMLApp2 -> C:\\n\\TypeScriptHTMLApp2.dll\r\n> ========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========\r\n\r\n* Right-click on Project A and select **\"Build\"**:\r\n\r\n> ========== Build: 0 succeeded, 0 failed, 1 up-to-date, 0 skipped ==========\r\n\r\n* Right-click on Project B and select \"Rebuild\":\r\n\r\n> 1>------ Rebuild All started: Project: ProjB, Configuration: Debug Any CPU ------\r\n> 1>  ProjB -> C:\\ProjB.dll\r\n> ========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========\r\n\r\n* Right-click on Project B and select **\"Build\"**:\r\n\r\n> 1>------ Build started: Project: ProjB, Configuration: Debug Any CPU ------\r\n> 1>  ProjB -> C:\\ProjB.dll\r\n> ========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========\r\n\r\n\r\n\r\nThe interesting statement is\r\n\r\n========== Build: 1 succeeded, 0 failed, **0 up-to-date**, 0 skipped ==========\r\n\r\n\r\nNoel\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-23T08:49:04.433-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "New build step fails to remember built projects",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 640
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Marking 'active'",
+      "PostedDate": "2013-01-23T10:34:11.24-08:00",
+      "Id": 86969
+    }
+  ]
+}

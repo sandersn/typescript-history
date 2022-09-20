@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, order is up to you to manage.",
+    "ClosedDate": "2014-07-21T17:24:22.093-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm learning some typescript but I'm not entirely sure what the problem in my code is.  \r\n\r\nI'm trying to implement an event system to make my domain observable (similar to what C# has with events) in a generic way and it compiles without a hitch. It even shows the correct type inference in intellisense (for sender?) when I register a handler.\r\n\r\nBut when I try to run it I keep getting a \"Uncaught TypeError: Cannot read property 'prototype' of undefined \" in the __extends helper function.\r\n\r\n\r\nThis is my code:\r\n\r\n    module Pathing.Domain {\r\n\r\n    export interface IEventArgs {\r\n\r\n    }\r\n\r\n    export interface EventHandler<S,T extends IEventArgs> {\r\n        (sender?: S, e?: T): void\r\n    }\r\n\r\n    export class StdEvent<S> extends EventDelegate<S, IEventArgs> {\r\n\r\n    }\r\n\r\n    export class EventDelegate<S, T> {\r\n        private handlers: EventHandler<S,T>[] = [];\r\n\r\n        public add(handler: EventHandler<S, T>): void {\r\n            this.handlers.push(handler);\r\n        }\r\n\r\n        public remove(handler: EventHandler<S, T>): void {\r\n            this.handlers = this.handlers.filter(h => h != handler);\r\n        }\r\n\r\n        public raise(...args: any[]): void {\r\n            for (var i = 0; i < this.handlers.length; i++)\r\n                this.handlers[i].call(this, args);\r\n        }\r\n    }\r\n\r\n\r\n    }\r\n\r\n\r\nI can also simulate it on the playground: http://www.typescriptlang.org/Playground#src=%20module%20Pathing.Domain%20%7B%0A%0A%20%20%20%20export%20interface%20IEventArgs%20%7B%0A%0A%20%20%20%20%7D%0A%0A%20%20%20%20export%20interface%20EventHandler%3CS%2CT%20extends%20IEventArgs%3E%20%7B%0A%20%20%20%20%20%20%20%20(sender%3F%3A%20S%2C%20e%3F%3A%20T)%3A%20void%0A%20%20%20%20%7D%0A%0A%20%20%20%20export%20class%20StdEvent%3CS%3E%20extends%20EventDelegate%3CS%2C%20IEventArgs%3E%20%7B%0A%0A%20%20%20%20%7D%0A%0A%20%20%20%20export%20class%20EventDelegate%3CS%2C%20T%3E%20%7B%0A%20%20%20%20%20%20%20%20private%20handlers%3A%20EventHandler%3CS%2CT%3E%5B%5D%20%3D%20%5B%5D%3B%0A%0A%20%20%20%20%20%20%20%20public%20add(handler%3A%20EventHandler%3CS%2C%20T%3E)%3A%20void%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20this.handlers.push(handler)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20public%20remove(handler%3A%20EventHandler%3CS%2C%20T%3E)%3A%20void%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20this.handlers%20%3D%20this.handlers.filter(h%20%3D%3E%20h%20!%3D%20handler)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20public%20raise(...args%3A%20any%5B%5D)%3A%20void%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20for%20(var%20i%20%3D%200%3B%20i%20%3C%20this.handlers.length%3B%20i%2B%2B)%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20this.handlers%5Bi%5D.call(this%2C%20args)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20%7D%0A\r\n\r\nI've got the same problem in Internet explorer (which I used for debugging in vs2013) and chrome.\r\nHas anyone got a clue what might be wrong?\r\n\r\nEdit: It looks like the culprit is `export class StdEvent<S> extends EventDelegate<S, IEventArgs> {`\r\nCan anyone shed some light as why this results in a runtime error yet the compiler happily agrees with it?\r\n\r\nOriginally from http://stackoverflow.com/questions/24550753/issue-in-typescript-with-generics-cannot-read-property-prototype-of-undefined but I'm posting this here because this might be a compiler bug.",
+    "LastUpdatedDate": "2014-07-21T17:24:22.093-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-03T03:29:03.607-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Issue with generics: Cannot read property 'prototype' of undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2602
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "At present you are responsible for ordering the base class\n\nThis will work:\n```TypeScript\n    export class EventDelegate<S, T> {\n        private handlers: EventHandler<S,T>[] = [];\n\n        public add(handler: EventHandler<S, T>): void {\n            this.handlers.push(handler);\n        }\n\n        public remove(handler: EventHandler<S, T>): void {\n            this.handlers = this.handlers.filter(h => h != handler);\n        }\n\n        public raise(...args: any[]): void {\n            for (var i = 0; i < this.handlers.length; i++)\n                this.handlers[i].call(this, args);\n        }\n    }\n\n\n    export class StdEvent<S> extends EventDelegate<S, IEventArgs> {\n\n    }\n\n```",
+      "PostedDate": "2014-07-03T03:33:15.97-07:00",
+      "Id": 151489
+    },
+    {
+      "Message": "Ah, I didn't know that. It works fine like that. \n\nThanks :)",
+      "PostedDate": "2014-07-03T07:12:07.213-07:00",
+      "Id": 151507
+    }
+  ]
+}

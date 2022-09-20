@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:31:11.987-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Copied from [this QA](http://stackoverflow.com/questions/18117823/typescript-generics-shows-in-intellisense-but-does-not-compile/).\r\n\r\nI'm trying to use generics in backbone typescript definition. Why does the following code not work?! Try it in the [playground](http://www.typescriptlang.org/Playground/).\r\n\r\n```typescript\r\n\tdeclare module Backbone {\r\n\t    class Model{}\r\n\t\r\n\t    interface ViewOptions<TModel extends Model> {\r\n\t        model?: TModel;\r\n\t    }\r\n\t\r\n\t    class View<TModel extends Model> {\r\n\t        constructor(options?: ViewOptions<TModel>);\r\n\t        model: TModel;\r\n\t    }\r\n\t}\r\n\t\r\n\tclass MyModel extends Backbone.Model {\r\n\t}\r\n\t\r\n\tclass MyView extends Backbone.View<MyModel> {\r\n\t}\r\n\t\r\n\t// Error: Could not select overload for 'new'' expression.\r\n\tvar myView = new MyView({ model: new MyModel(), num: 1 });\r\n\t\r\n\t// In typescript playground when you hover on 'model' in\r\n\t// previous line it correctly shows its type as 'MyModel'\r\n\r\n\tvar model = myView.model; // expected to be of type MyModel\r\n```\r\n\r\n### Update:\r\nI figured the compiler will pass if I explicitly set the constructor for `MyView`:\r\n\r\n```typescript\r\nclass MyView extends Backbone.View<MyModel> {\r\n    constructor(options?: Backbone.ViewOptions<MyModel>) {\r\n        super(options);\r\n    }\r\n}\r\n```\r\n\r\nBut then what is the use of generics?! Is this a defect in the compiler?!\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T09:39:54.543-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Generics type flows through intellisense but compiler fails",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1461
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, looks like a bug, marked as active.",
+      "PostedDate": "2013-08-08T11:24:28.133-07:00",
+      "Id": 109065
+    },
+    {
+      "Message": "I think [this issue](https://github.com/borisyankov/DefinitelyTyped/issues/821#issuecomment-22209108) is related.\n\n```typescript\nclass Model {}\nclass View<TModel extends Model> {\n    model: typeof TModel; // Error: Could not find symbol 'TModel'.\n}\n```\n",
+      "PostedDate": "2013-08-08T14:16:31.353-07:00",
+      "Id": 109103
+    }
+  ]
+}

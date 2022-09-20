@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1058680",
+    "ThreadId": "447552",
+    "Html": "I remember when generics was being defined for TypeScript, that it would implicitly use &quot;any&quot; if no type was defined. Now I'm seeing that it is always required.\r<br />\n<br />\nI probably missed the discussion somewhere, but why was this changed?<br />\n",
+    "PostedDate": "2013-06-19T07:23:06.697-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058962",
+    "ThreadId": "447552",
+    "Html": "The way type inference and type parameter inference works has changed a bit over time as we try to strike the right balance of correctness and usability with various other features. Currently the type parameter is explicitly required for generics used in a type position, it shouldn't be required in expressions (except perhaps in some cases where an explicit type parameter is necessary to disambiguate a function call for example). Some of the reasoning for this is that it's a fairly easy mistake to make (omitting a type parameter) which combined with the assignment compatibility rules for 'any' and type inference leads to some unfortunate circumstances. Consider:<br />\n<pre><code>class C&lt;T&gt; { foo(x: T) { } }\n\nvar x: C = new C&lt;number&gt;();\nx = new C&lt;string&gt;();</code></pre>\n\nIf this definition of x were allowed then it becomes unfortunately easy to make a mistake like above or otherwise have 'any' start leaking into later calls due to type inference. Since this doesn't impact existing JavaScript code and you have explicitly opted in to using generics in your Typescript we felt that requiring the type parameters in these type positions was better for preventing common errors without being onerous syntactically. Note that type inference still works in such a way that you will not be required to write type annotations in many cases. For example:<br />\n<pre><code>class C&lt;T&gt; { foo(x: T) { } }\nclass D&lt;T&gt; {\n    constructor(x: T) { }\n    foo(x: T) { }\n}\n\nvar x = new C(); // C&lt;any&gt; is inferred\nvar x2 = new D('hi'); // D&lt;string&gt; is inferred\nx2 = new D(123); // error, D&lt;number&gt; is not compatible with D&lt;string&gt;</code></pre>\n\nDoes that match your expectations?<br />\n",
+    "PostedDate": "2013-06-19T20:28:59.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059066",
+    "ThreadId": "447552",
+    "Html": "Hi Dan,\r<br />\n<br />\nThis makes perfect sense, thank you for this explanation!\r<br />\n<br />\nNatan<br />\n",
+    "PostedDate": "2013-06-20T02:43:14.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.61-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "What is the proper way to declare this:\r\n\r\n```\r\ndeclare module \"foo/bar\"\r\n{\r\n    interface _Options { ... }\r\n\r\n    var bar = {\r\n        (params: _Options): string;\r\n    };\r\n\r\n    export = bar;\r\n}\r\n\r\n```\r\nCurrently it doesn't compile because the interface \"_Options\" is not exported.  However, if I export it, then the \"export =\" statement is not allowed.\r\n\r\nI believe the restriction should be relaxed to allow exported interfaces together with the \"export =\" statement since an interface doesn't compile to anything in the output JavaScript.  Only var's, functions and classes shouldn't be allowed when there is an \"export =\" statement.\r\n\r\nSIDE ISSUE\r\n=======\r\n\r\nHowever, for some reason, the interface does not need to be exported (which it probably should) if I do something like this and it still compiles:\r\n\r\n```\r\ndeclare module \"foo/bar\"\r\n{\r\n    interface _Options { ... }\r\n\r\n    export function bar(params: _Options): string;\r\n}\r\n\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-06T02:33:33.117-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Export interface in external modules when using \"export =\" statement",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1117
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. The second case you note should be an error. \r\n\r\nFor your initial sample, you might want to look at this thread for some relevant discussions https://typescript.codeplex.com/discussions/446134 ",
+      "PostedDate": "2013-06-10T17:31:21.783-07:00",
+      "Id": 102742
+    },
+    {
+      "Message": "My mistake, I forgot our changes to the rules for ambient declarations. From the spec:\r\n\r\nAn AmbientModuleElement always declares an exported entity regardless of whether the optional export modifier is included.\r\n\r\nThat's why there's no error in this case. Changing to a suggestion for the export vs export = comment.",
+      "PostedDate": "2013-06-11T17:01:26.633-07:00",
+      "Id": 102812
+    },
+    {
+      "Message": "I totally agree - it should be possible to export interfaces along with whatever is exported using \"export =\".\n\nIt is currently a pain for node.js modules, where you want to define an interface for function parameters or return types:\n\n```\nexport interface IOptions {\n  option1?: boolean;\n  option2?: string;\n}\n\nexport interface IResult {\n  foo: string;\n  bar: number;\n}\n\nvar Exported = {\n  someFunc: someFunc(param: IOptions) : IResult {\n    return {\n       foo: \"value\",\n       bar: 12323\n    };\n  }\n}\n\nexport = Exported;\n```\n\nThe only alternative currently is to put the interfaces into a different file or use the complete type everywhere the interface would be used.\n\nIt would be great, if this could be fixed! Thanks a lot. A great language, otherwise.",
+      "PostedDate": "2013-12-13T09:13:37.703-08:00",
+      "Id": 127360
+    },
+    {
+      "Message": "This is also issue 2130",
+      "PostedDate": "2014-07-17T01:34:14.65-07:00",
+      "Id": 152670
+    },
+    {
+      "Message": "Wow, it's only 2014, and there's already a 2130!  Must be a truly advanced IDE.  ;)",
+      "PostedDate": "2014-07-17T11:14:26.107-07:00",
+      "Id": 152730
+    },
+    {
+      "Message": "You can do it like this:\n\n```\nfunction foo(options: foo.Options) {\n    alert(options.bar);\n}\n\nmodule foo {\n    export interface Options {\n        bar: string;\n    }\n}\n\nexport = foo;\n```",
+      "PostedDate": "2014-12-04T19:14:54.853-08:00",
+      "Id": 167327
+    }
+  ]
+}

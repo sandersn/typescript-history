@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.127-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Is type coercion deliberately unsupported in TypeScript?\r\n\r\nThe following simple example doesn't work:\r\n\r\n```\r\nvar x = 123;\r\nvar y = '123';\r\n\r\nif (x == y) {\r\n\t// true\r\n} else if (x === y) {\r\n\t// false\r\n}\r\n```\r\n\r\nIn JavaScript, you can compare strings to numbers, because JavaScript performs type coercion. It seems TypeScript either ignores or deliberately removes this feature?\r\n\r\nSimilarly, you can pass certain types of arguments to functions that expect certain different types - for example, passing a string to a function that expects a number is allowed in JavaScript:\r\n\r\n```\r\nvar x = '123';\r\n\r\nvar y = Math.floor(x);\r\n```\r\n\r\nI realize we can't simply permit this sort of thing, since type-checking is probably the key reason most people are using TypeScript in the first place.\r\n\r\nBut to remove the type-coercion feature of JavaScript entirely seems like a pretty big change in language semantics, which you've worked hard to preserve - and causes bug reports like [this one](https://typescript.codeplex.com/workitem/630) since valid JavaScript is supposedly valid TypeScript; except when it's not, and this appears to be the key reason why that isn't always true.\r\n\r\nA couple of ways to model this feature comes to mind:\r\n\r\n1. An error-suppression operator, a'la PHP's `@` operator, for those rare situations when you know what you're doing and you're willing to accept the risk.\r\n\r\n2. A new type `scalar` or `variant` which could be used in place of a `number`, `string` or `boolean` in certain situations where you don't care what scalar type you're dealing with, because you're counting on type-coercion in JavaScript.\r\n\r\nIn either case, requirements could be somewhat relaxed in *.js files, e.g. implicit error-suppression in cases like those demonstrated above, and/or simplified type-inference in *.js files, where literal expressions like `true`, `123` and `'123'` could be inferred as e.g. `variant` or `scalar` rather than (lower-case) `boolean`, `number` and `string`, which are TypeScript-only types.\r\n\r\nIn other words, it seems the reason you get errors in some JavaScript code, is that it's being parsed/interpreted as TypeScript, which isn't quite the case, since TypeScript is really only strictly a *syntactic* superset of JavaScript, and does have to make certain sacrifices/assumptions about semantics, in order to provide a (beautiful, elegant!) working type-system.\r\n\r\nOf course, nobody's forcing you to pass your JavaScript files through the TypeScript compiler :-)\r\n\r\nAnd you could also argue that people who copy/paste JavaScript code into TypeScript solutions, *should* be required to harden \"dodgy\" JavaScript code that relies on \"not the good parts\" features such as type-coercion and improve \r\n\r\nThat said, the .js file extension *does* impart something to programmers, and *could* be made to impart something to the TypeScript compiler, which currently treats everything as TypeScript, regardless of what the programmer may know. For some JavaScript code, that's a good thing - for a lot of code, you're making false assumptions about things like type-coercion, which does happen in JavaScript, as is after all a JavaScript feature.\r\n\r\n(A compiler-switch could toggle strict type-checking in .js files, or I could simply rename my .js files to .ts to opt into full-on TypeScript type-checking - the latter might be preferable in many situations, as it enables you to gradually ease a large codebase from JavaScript into TypeScript one file at a time.)\r\n\r\nI know this discussion has happened at length in the past, but I thought I would post this just the same, as I don't think anyone has really offered a proposed solution to these issues, and lots of developers are running into them, which suggest that there may be something missing.\r\n\r\nI would be perfectly comfortable if these issues were not addressed in 1.0, but I think it would be wise to keep them on the radar and consider possible solutions for a future version.\r\n\r\nThe bottom line:\r\n\r\nBeing able to import and use native JavaScript libraries with *some* degree of type-checking to me would be better than watching the compiler throw errors about things that are perfectly valid and work in JavaScript.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-17T06:57:40.78-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Type coercion unsupported?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1902
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think you hit the nail on the head with \"*TypeScript is really only strictly a syntactic superset of JavaScript, and does have to make certain sacrifices/assumptions about semantics, in order to provide a (beautiful, elegant!) working type-system. *\" and \"*people who copy/paste JavaScript code into TypeScript solutions, should be required to harden \"dodgy\" JavaScript code that relies on \"not the good parts\" features*\".\n\nThe key principle we've been working from is \"Did the user mean to write that, or did they screw up?\". Certainly there are *some* cases where you want to coerce '123' to 123, but a great majority of the time it's a mistake and you really meant to explicitly convert one side or the other, or you accidently typed the wrong variable name and are comparing two completely unrelated things. It's just very difficult from a language design perspective to distinguish those cases, and many people have argued that the ideal number of implicit coercions in a program is zero.\n\n`<any>` is sufficient to silence 90%+ of type warnings, so in a sense that's already implemented as an \"error suppression\" operator.\n\nI would be interested to hear a more concrete proposal for what you think a \"non-strict\" solution for typechecking looks like. Marking as a suggestion for now.",
+      "PostedDate": "2013-11-18T12:07:53.943-08:00",
+      "Id": 123423
+    }
+  ]
+}

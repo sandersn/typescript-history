@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "921919",
+    "ThreadId": "398054",
+    "Html": "\r\n<ol>\r\n<li>No generics makes it very hard to implement things like promises or create declaration files for libraries like knockout. I know it's planned...but I'm just emphasizing it's importance for the real world. When you do get around to it...it's going to be\r\n really important the type inference works for determining generic types too. </li><li>No way to designate that the type is the caller. Observe this code:&nbsp; </li></ol>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>declare module ko { \n    <span style=\"color:blue\">interface</span> ObservableItem { \n        ():any;\n        (value: any):caller;\n        subscribe();\n    }\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> observable(val:any) : ObservableItem;\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>See caller? That should be typed based on whatever the function was invoked from. To represent ko.oberservable I think we would have to combine caller this with generics and type inference for something like this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>declare module ko { \n    <span style=\"color:blue\">interface</span> ObservableItem&lt;T&gt; { \n        ():&lt;T&gt;;\n        (value: &lt;T&gt;):caller;\n        subscribe();\n    }\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> observable(val:&lt;T&gt;) : ObservableItem&lt;T&gt;;\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> observableArray(val: &lt;T&gt;[]) : ObservableItem&lt;T[]&gt;;\n}\n\n<span style=\"color:blue\">var</span> myObj = {\n   firstsName:ko.observable(<span style=\"color:#a31515\">&quot;Rob&quot;</span>),\n   lastName:ko.observable(<span style=\"color:#a31515\">&quot;Eisenberg&quot;</span>)\n}\n\n\nmyObj.firstName(<span style=\"color:#a31515\">&quot;something else&quot;</span>).lastName(<span style=\"color:#a31515\">&quot;another one&quot;</span>);\n</pre>\r\n</div>\r\n<p>Otherwise, things can get unusable fast. Please correct me if I'm wrong.</p>\r\n",
+    "PostedDate": "2012-10-04T08:15:00.423-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921954",
+    "ThreadId": "398054",
+    "Html": "<p>Agreed.</p>\r\n<p>1) We're looking into generics.&nbsp; There is active discussion about them.&nbsp; We're currently working out what people need there by asking for motivating examples that will help drive the design.</p>\r\n<p>2) This reminds me of selfType, a way of getting a handle on the type that's implementing the interface from inside the interface.&nbsp; This is related to generics, but is useful even without full generics.&nbsp; You may want to add a feature request to the issue tracker about this one specifically, as I can see it getting used for describing objects that do factory-like things, for example.</p>",
+    "PostedDate": "2012-10-04T09:26:48.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922081",
+    "ThreadId": "398054",
+    "Html": "<p>The second point looks like an interesting way to implement a fluent interface.</p>\r\n<p>Couldn't this be done by a second type parameter? You'd have to be able to reference that type somehow.</p>",
+    "PostedDate": "2012-10-04T12:29:55.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922524",
+    "ThreadId": "398054",
+    "Html": "<p>In general, this kind of facility requires some level of support for generics in the type system.&nbsp;</p>",
+    "PostedDate": "2012-10-05T09:31:33.153-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

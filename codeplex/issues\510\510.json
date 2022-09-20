@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "{ } is a valid type literal.",
+    "ClosedDate": "2012-11-29T10:05:13.317-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Here is the repro:\r\n\r\nclass Tartuffe {\r\n\t\r\n\tprivate scheme : () => true; // Error: \"expected type name\"\r\n\tprivate beGood : () => {}; // No error. Correct declaration \"() => any\"\r\n}   \r\n\r\n\r\n",
+    "LastUpdatedDate": "2013-08-13T12:01:56.167-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-29T05:59:08.017-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Function type declaration permits object",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 510
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi, Ryan, I see my mistake: we should be able to specify literal types. \n\nI just experimented a bit further and came with what, I believe, looks like inconsistent behaviour. Please confirm these are not bugs:\n\nclass TartuffeTwo {\n\tblas: () => { a: string; };\n\tblas2: () => {};\n\t\n\tconstructor(){\n\t\n\t\tthis.blas = () => 2; // Call signatures of type number and {a:string} are incompatible\n\t\tthis.blas = () => {b: \"d\"}; // No error\t\t\n\t\tthis.blas = () => {}; // No error\n\t\tthis.blas2 = () => 2; // No error\t\n\t}\n}",
+      "PostedDate": "2012-11-30T02:57:38.17-08:00",
+      "Id": 83331
+    },
+    {
+      "Message": "Again I think I didn't realise that while\n\nthis.blas = () => 2;  // means this.blas = () => { return 2; } };\n\nthis.blas = () => {b: \"d\"}; // does not mean  this.blas = () =>{ return {b: \"d\"};  }\n\n",
+      "PostedDate": "2012-11-30T14:12:51.103-08:00",
+      "Id": 83377
+    }
+  ]
+}

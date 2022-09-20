@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:34:53.007-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I am trying to extend interface like KnockoutObservable<T>\r\n\r\n```\r\ninterface KnockoutValidableObservable<T> extends KnockoutObservable<T> {\r\n  isValid(): boolean;\r\n}\r\n```\r\nBut for some reason, when trying to declare a property like i.e. KnockoutValidableObservable<number> I am getting the following error:\r\n\r\n> error TS2143: Interface 'KnockoutValidableObservable<T>' cannot extend interface 'KnockoutObservable<T>':\r\n        Types of property 'isValid' of types 'KnockoutValidableObservable<T>' and 'KnockoutObservable<\r\nT>' are incompatible:\r\nType '() => boolean' is missing property 'subscribe' from type 'KnockoutComputed<boolean>'.\r\n\r\nI am bit confused why this error. KnockoutObservalbe<T> and super interfaces don't declare isValid() at all. And if I change my isValid() to something else, i.e. isValidX() it works.\r\nKnockout.d.ts is the latest from definitely typed.\r\n\r\nAny idea why this error?",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-13T08:17:25.68-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Getting odd error TS2413",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1338
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hm, my error description was funny formatted. Here it is again\n__\nerror TS2143: Interface 'KnockoutValidableObservable<T>' cannot extend interface 'KnockoutObservable<T>':\n        Types of property 'isValid' of types 'KnockoutValidableObservable<T>' and 'KnockoutObservable<\nT>' are incompatible:\nType '() => boolean' is missing property 'subscribe' from type 'KnockoutComputed<boolean>'.__",
+      "PostedDate": "2013-07-13T08:23:22.25-07:00",
+      "Id": 105959
+    },
+    {
+      "Message": "Here I go once more. The third time is good time.\n\nerror TS2143: Interface 'KnockoutValidableObservable&lt;T&gt;' cannot extend interface 'KnockoutObservable&lt;T&gt;':\nTypes of property 'isValid' of types 'KnockoutValidableObservable&lt;T&gt;' and 'KnockoutObservable&lt;T&gt;' are incompatible:\nType '() => boolean' is missing property 'subscribe' from type 'KnockoutComputed<boolean>'.",
+      "PostedDate": "2013-07-13T08:24:38.08-07:00",
+      "Id": 105960
+    },
+    {
+      "Message": "This shouldn't happen. Marking active.",
+      "PostedDate": "2013-07-15T09:42:15.523-07:00",
+      "Id": 106061
+    },
+    {
+      "Message": "I am also getting a similar error. I was able to repro on the TypeScript playground using the following:\n\n```\nclass GreeterBase<T> {\n    constructor() {}\n\tprivate _test: number; // Note this is private.\n\tfoo: T;\n}\n\nclass CustomGreeter extends GreeterBase<string> {\n\tconstructor() { super(); }\n\tbar: string;\n}\n\nvar greeterArray = Array<GreeterBase<string>>([\n\tnew CustomGreeter(),\n\tnew CustomGreeter()\n]); // This line throws a tsc compiler error: Could not select overload for 'call' expression. Supplied parameters do not match any signature of call target: Type 'CustomGreeter[]' is missing property '_test' from type 'GreeterBase<string>'\n```",
+      "PostedDate": "2013-08-27T18:10:52.643-07:00",
+      "Id": 111357
+    }
+  ]
+}

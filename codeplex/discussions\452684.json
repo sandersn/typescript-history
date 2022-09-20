@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1077697",
+    "ThreadId": "452684",
+    "Html": "After migrating from 0.8.3.1 to 0.9.1 and resolving all the breaking changes I get a compiler crash:\r<br />\n<br />\nVSTSC : tsc.js(29052, 13) Microsoft JScript runtime error : Unable to get value of the property 'flags': object is null or undefined\r<br />\n<br />\nLooking at line 29052 in tsc.js I see it has something to do with Ambient. Anybody has any advise on how I go about debugging this?<br />\n",
+    "PostedDate": "2013-08-07T05:23:36.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077784",
+    "ThreadId": "452684",
+    "Html": "Issue has been raised <a href=\"https://typescript.codeplex.com/workitem/1442\" rel=\"nofollow\">here</a><br />\n",
+    "PostedDate": "2013-08-07T08:12:11.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077787",
+    "ThreadId": "452684",
+    "Html": "Try the following:<br />\n<ul>\n<li>In Visual Studio expand the project that is failing to build.</li>\n<li>Expand all folders containing TypeScript files.</li>\n<li>Select a group of files by clicking on the first file, holding down shift then clicking on the last file.</li>\n<li>Right click on the selected files and select &quot;Properties&quot;.</li>\n<li>Change the &quot;Build Action&quot; from &quot;TypeScriptCompile&quot; to &quot;None&quot;.</li>\n<li>Build the project to see if you are still getting the error.</li>\n<li>Keep repeating this process until you have identified the offending file.</li>\n<li>\nDrill down into the offending file in order to determine the exact circumstances under which the compiler crashes.<br />\n</li>\n</ul>\n",
+    "PostedDate": "2013-08-07T08:17:18.59-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077813",
+    "ThreadId": "452684",
+    "Html": "Thanks nabog, I managed to find the culprit using your advise.<br />\nThe compiler crashed on the following function:<br />\n<pre><code>\nexport function requestUpdate(model: IData, selector?: (model: IData) =&gt; IData) {\n    var deferred = $.Deferred&lt;{ d: IData; }&gt;(),\n        selector = selector || (model: IData) =&gt; {\n            var result = &lt;IData&gt;$.extend({}, model);\n            delete result.__metadata;\n            return result;\n        };\n    OData.request({\n        requestUri: model.__metadata.uri,\n        method: &quot;POST&quot;,\n        data: selector(model),\n        headers: {\n            &quot;If-Match&quot;: model.__metadata.etag,\n            &quot;X-HTTP-Method&quot;: &quot;MERGE&quot;\n        }\n    }, (data, response) =&gt; {\n            model.__metadata.etag = response.headers.ETag;\n            deferred.resolve({ d: model });\n        }, deferred.reject);\n    return deferred.promise();\n}</code></pre>\n\nI remember promoting the selector variable to a parameter some time ago, but forgot to remove the variable declaration for it in the function body. This was no problem with TypeScript 0.8.3.1, but it crashes the TypeScript 0.9.1 compiler.<br />\nThe fix is:<br />\n<pre><code>\nexport function requestUpdate(model: IData, selector?: (model: IData) =&gt; IData) {\n    var deferred = $.Deferred&lt;{ d: IData; }&gt;();\n    selector = selector || (model: IData) =&gt; {\n        var result = &lt;IData&gt;$.extend({}, model);\n        delete result.__metadata;\n        return result;\n    };\n    OData.request({\n        requestUri: model.__metadata.uri,\n        method: &quot;POST&quot;,\n        data: selector(model),\n        headers: {\n            &quot;If-Match&quot;: model.__metadata.etag,\n            &quot;X-HTTP-Method&quot;: &quot;MERGE&quot;\n        }\n    }, (data, response) =&gt; {\n            model.__metadata.etag = response.headers.ETag;\n            deferred.resolve({ d: model });\n        }, deferred.reject);\n    return deferred.promise();\n}\n</code></pre>\n\n",
+    "PostedDate": "2013-08-07T09:15:58.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077951",
+    "ThreadId": "452684",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/1451\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-08-07T13:43:17.31-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "921176",
+    "ThreadId": "397862",
+    "Html": "\r\n<p>What exactly is the difference between&nbsp;reference comments and import declarations, e.g.:</p>\r\n<p><span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:gray\">///</span><span style=\"color:green\">&lt;reference path='./myclass.ts' /&gt;</span>\r\n</pre>\r\n</div>\r\n</span>\r\n<p></p>\r\n<p><span>vs.</span></p>\r\n<p><span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>import MyClass= module(<span style=\"color:#a31515\">&quot;./myclass&quot;</span>);\r\n</pre>\r\n</div>\r\n</span>\r\n<p></p>\r\n<p><span>I can see that the compiler output differs, but I'm not really sure whether one solution is to be preferred over the other.</span></p>\r\n<p>Thank you!</p>\r\n",
+    "PostedDate": "2012-10-03T04:39:51.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921585",
+    "ThreadId": "397862",
+    "Html": "<p>When you do an import, you are implying that you will be using a module system (such as require.js for AMD&nbsp;modules,&nbsp;or node for CommonJS modules) to load separate files containing the code you are importing (typically, e.g. myclass.js above).&nbsp; TypeScript also injects the code to do this based on the module system (e.g. var MyClass = require(...)).</p>\r\n<p>When you use the &lt;reference...&gt; syntax, you are effectively including another TypeScript file into your current file that you know will be available at runtime (e.g. already included by another script tag, or because you will compile with the --out switch to concatenate the files at compile time).</p>\r\n<p>Effectively in both cases you're saying \"this other code will be available at runtime\", but in the import case you are use a module loader to load it (and TypeScript generates code to do so), and in the &lt;reference&gt; case, you control how the other file is going to be present.</p>",
+    "PostedDate": "2012-10-03T16:59:51.607-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923173",
+    "ThreadId": "397862",
+    "Html": "<p>Hi - could you please describe how you add the --out switch to the compile time?</p>\r\n<p>I unloaded the project, edited the csproj file to add --out like so:</p>\r\n<p>&lt;Target Name=\"BeforeBuild\"&gt;<br />&lt;Exec Command=\"&amp;quot;$(PROGRAMFILES)\\Microsoft SDKs\\TypeScript\\0.8.0.0\\tsc --out&amp;quot; @(TypeScriptCompile -&gt;'&amp;quot;%(fullpath)&amp;quot;', ' ')\" /&gt;<br />&lt;/Target&gt;</p>\r\n<p>But it errors with a Build Failure code 9009.</p>",
+    "PostedDate": "2012-10-07T15:39:56.47-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923177",
+    "ThreadId": "397862",
+    "Html": "<p>Sorry my stupidity, after some more trial and error it should look like this:</p>\r\n<p>&lt;Exec Command=\"&amp;quot;$(PROGRAMFILES)\\Microsoft SDKs\\TypeScript\\0.8.0.0\\tsc&amp;quot; --out <strong>single.js</strong> @(TypeScriptCompile -&gt;'&amp;quot;%(fullpath)&amp;quot;', ' ')\" /&gt;</p>\r\n<p>Where single.js is whatever filename you want to give the final single output.</p>",
+    "PostedDate": "2012-10-07T16:14:59.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

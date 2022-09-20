@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:18:05.98-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "RC1.0 in VS 2013.1 has stopped referencing .d.ts files for external libs like knockout, Durandal, Q, etc..  It had been working fine for weeks but is now broken - _for some but not all .ts files_.  \r\n\r\nI've attached a couple screenshots.  Imports of modules defined in .ts files still work correctly.  In _some_ .ts files, imports of modules defined in .d.ts files fail in VS with a red squiggle.  In those .ts files, references to 'ambient' types defined in .d.ts files but not explicitly imported also 'fail' with a red squiggle.\r\n\r\nIn other files, the same import statements _that fail in other .ts files continue to work just fine_.\r\n\r\nAccording to my source control, no changes were made to the solution or project settings or the .ts files or .d.ts files in question between the time they were working fine and then no longer compiled.\r\n\r\nI've tried:\r\n- restarting VS\r\n- restarting the machine\r\n- disabling Web Essentials\r\n- disabling ReSharper 8.2\r\n- uninstalling/reinstalling TypeScript\r\n\r\nIs there some way to completely destroy whatever secret (and presumably corrupt) references cache the TypeScript tooling is possibly holding on to?\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-26T09:53:31.25-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "RC1.0 in VS2013.1 stops 'seeing' type definition files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2357
+  },
+  "FileAttachments": [
+    {
+      "FileId": 818908,
+      "FileName": "TSRC1.0.bug.png",
+      "DownloadUrl": ".\\818908"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I was able to get things working again by\n\n- deleting the index.ts (see the attached screenshots) from the project (the adding of which was the only change to the project between working and not working).\n\n- adding a new index.ts and paste the exact contents of the original index.ts file into the new one\n\nNow things are working again.\n\nHow could some kind of corruption in a single .ts file that could break the VS TypeScript tooling? \n\nHope this helps anyone who may have encountered a similar issue.",
+      "PostedDate": "2014-03-26T10:47:06.73-07:00",
+      "Id": 138901
+    },
+    {
+      "Message": "Very strange. Hard to tell what could've happened. Please re-open if you find a consistent repro or can share the project for us to try ourselves.",
+      "PostedDate": "2014-03-26T17:20:09.803-07:00",
+      "Id": 138955
+    },
+    {
+      "Message": "I've figured out how to reproduce this issue.  I encountered it while porting an existing JavaScript app to TypeScript.  Converting existing JS files to TS triggers to problem.\n\nTo reproduce:\n- change the extension on an existing .js file in a Visual Studio project to .ts\n- change the build action for the file to TypeScriptCompile\n- convert JS code to TS (change AMD define to import statements, etc..)\n- the TS tooling in Visual Studio will now be partially broken (exhibit the behaviors in the screenshots posted previously)\n- copy the contents of the TS file to the clipboard\n- delete the TS file\n- create a new TS file via VS 'add new item' dialog\n- paste the contents of the old TS file into the new\n- everything is fine\n\nSorry I don't have a test project to send at this time, but hopefully this will still help anyone who runs into this issue.",
+      "PostedDate": "2014-03-27T06:44:00.353-07:00",
+      "Id": 138997
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 03/26/2014 5:20PM",
+      "PostedDate": "2014-03-26T17:20:15.717-07:00",
+      "Id": 139844
+    },
+    {
+      "Message": "Reopening this issue. I believe the issue here is that the language service is not tracking changes to build action. So changing the build action to \"TypeScriptCompile\" will not take effect until the project is unloaded and reloaded. ",
+      "PostedDate": "2014-03-27T17:48:40.56-07:00",
+      "Id": 139846
+    }
+  ]
+}

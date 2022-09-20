@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the follow-up. We're definitely looking into how the project experience works.",
+    "ClosedDate": "2013-11-04T09:41:59.67-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "> In Visual Studio, all TypeScript files in a project are considered to be referencing each other\r\n> \r\n> Description: Previously, all TypeScript files in a project had to reference each other explicitly. With 0.9.1, they now implicitly reference all other TypeScript files in the project. For existing projects that fit multiple projects into a single projects, these will now have to be separate projects.\r\n> \r\n> Reason: This greatly simplifies using TypeScript in the project context. \r\n\r\nOff the back of discussions ( https://typescript.codeplex.com/workitem/1471 ) I've been experimenting with removing the ```/// <reference``` comments from my TypeScript files.\r\n\r\nI'm getting an unusual experience.  In some files I've been able to pull out most of the ```/// <reference``` comments and I'm still blessed with intellisense and a project that builds.  With others, as I pull out the comments the intellisense breaks and the project ceases to compile.  \r\n\r\nIn the end I removed all reference comments from all files and attempted to compile.  The project failed to compile with \"could not find symbol\" errors across multiple files.  To remedy this I started adding the following references back to 1 file: (these are generally used across all my TypeScript files)\r\n\r\n```cs\r\n/// <reference path=\"../../../../typings/jquery/jquery.d.ts\" />\r\n/// <reference path=\"../../../../typings/globalize/globalize.d.ts\" />\r\n/// <reference path=\"../../../../typings/validationUtils.d.ts\" />\r\n/// <reference path=\"../../../../typings/underscore/underscore.d.ts\" />\r\n/// <reference path=\"../../../../typings/toastr/toastr.d.ts\" />\r\n```\r\n\r\nAdding these references to 1 file gets me back to having a compiling project once again!  The \"could not find symbol\" errors from other files are resolved from this action.  I even experimented by moving the reference comments from one TS file to a different one.  It still compiled as long as the the references were *somewhere* used.\r\n\r\nIt's very strange indeed and I can't explain it.\r\n\r\nWhat's even more peculiar is that some files *are* being implicitly detected.  The Knockout typings for instance.  \r\n\r\nI didn't see this issue reported so I thought I'd post.  It's not been a fun Friday afternoon...\r\n",
+    "LastUpdatedDate": "2013-11-04T09:41:59.67-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-01T10:36:08.02-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Visual Studio 2012 tooling not detecting files it should be implicitly referencing",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1855
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you post your project file?\n\nOr post what the elements for a normal .ts file and a d.ts file which doesn't work look like? Both should be wrapped in the <TypeScriptCompile /> element",
+      "PostedDate": "2013-11-01T23:30:34.437-07:00",
+      "Id": 121569
+    },
+    {
+      "Message": "Hi paulb,\n\nI seem to have resolved the issue.  When you mentioned <TypeScriptCompile />and the project file a lightbulb went off for me.\n\nWhen I looked through my typing files I found that pretty much without exception all had a Build Action of \"Content\" and not \"TypeScriptCompile\".  I went through the project and switched the files over to being \"TypeScriptCompile\".  This resolved the issue and I've been able to pull out the remaining ```/// <reference``` comments from the codebase.\n\nI had to restart Visual Studio to get the intellisense working but other than that everything is looking okay now.\n\nI'll re-open the issue just so that you see this but essentially it's resolved.  Couple of final points:\n\n1.  Most, if not all, of the typing files had been pulled in from NuGet and are part of the https://github.com/borisyankov/DefinitelyTyped project on GitHub.  I was going to post an issue there and ask if it's possible for NuGet packages to pull in typings files as \"TypeScriptCompile\" from the off - fortunately @nvivo already has: https://github.com/borisyankov/DefinitelyTyped/issues/1138  Hopefully they'll take a look at this...\n\n2.  I wonder if it might be worth documenting this somewhere?  A common \"TypeScript gotchas\" wiki on the site might be a good idea?  If I get a moment I'll try and write a blog post about this to get the word out in the meantime.\n\nBest,\nJohn\n\n",
+      "PostedDate": "2013-11-04T02:40:13.593-08:00",
+      "Id": 121685
+    },
+    {
+      "Message": "Closing for more info tracking, please re-open using the button on top.\n\r\n\r** Closed by paulb 11/01/2013 11:30PM",
+      "PostedDate": "2013-11-01T23:30:59.913-07:00",
+      "Id": 121686
+    }
+  ]
+}

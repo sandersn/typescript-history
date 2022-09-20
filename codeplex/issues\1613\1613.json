@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the report and minimal repro. It looks like you're right that this is the same issue as 1522 so I'll close this one as a duplicate. We'll update that issue when a fix is available in the develop branch.",
+    "ClosedDate": "2013-08-29T15:05:22.17-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I get the following compiler crash from the code below in 0.9.1-1.  This is a new problem in 0.9, I discovered it when porting this code from 0.8.  The offending function is \"tableFromUrlParameters\";  if I comment that function out, the error goes away.  (Unfortunately it's also a huge function.)\r\n\r\n/usr/local/bin/tsc --sourcemap BugReport.ts\r\n\r\n/usr/local/lib/node_modules/typescript/bin/tsc.js:41570\r\nis.resolveAST(assertionExpression.operand, true, enclosingDecl, context).type;\r\n                                                                        ^\r\nTypeError: Cannot read property 'type' of null\r\n    at PullTypeResolver.resolveTypeAssertionExpression (/usr/local/lib/node_modules/typescript/bin/tsc.js:41570:106)\r\n    at PullTypeResolver.resolveAST (/usr/local/lib/node_modules/typescript/bin/tsc.js:39259:33)\r\n    at PullTypeResolver.resolveVariableDeclaration (/usr/local/lib/node_modules/typescript/bin/tsc.js:37758:39)\r\n    at PullTypeResolver.resolveAST (/usr/local/lib/node_modules/typescript/bin/tsc.js:39151:33)\r\n    at PullTypeResolver.resolveList (/usr/local/lib/node_modules/typescript/bin/tsc.js:38618:26)\r\n    at PullTypeResolver.resolveAST (/usr/local/lib/node_modules/typescript/bin/tsc.js:39132:33)\r\n    at PullTypeResolver.resolveVariableDeclarationList (/usr/local/lib/node_modules/typescript/bin/tsc.js:38923:22)\r\n    at PullTypeResolver.resolveAST (/usr/local/lib/node_modules/typescript/bin/tsc.js:39147:33)\r\n    at PullTypeResolver.resolveVariableStatement (/usr/local/lib/node_modules/typescript/bin/tsc.js:38915:22)\r\n    at PullTypeResolver.resolveAST (/usr/local/lib/node_modules/typescript/bin/tsc.js:39388:33)\r\n",
+    "LastUpdatedDate": "2013-08-29T15:05:22.17-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-28T08:12:57.383-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Compiler crash: TypeError: Cannot read property 'type' of null",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1613
+  },
+  "FileAttachments": [
+    {
+      "FileId": 722566,
+      "FileName": "BugReport.ts",
+      "DownloadUrl": ".\\722566"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "The problem appears to be with accessing a value from an associative array where the key is an empty string (\"\").  The inner function extractField can be commented out and the crash goes away.  Here's what the function looked like in TypeScript 0.8:\n\n```\n        var fieldID = info[\"\"];\n        return (fieldID === null || typeof(fieldID) === \"undefined\" ) ? null\n            : new FieldName(fieldID, fieldNames[fieldID]);\n```\n\nUnder 0.9, that produces the error:\n\n```\nerror TS2078: Unable to resolve type of 'fieldID'.\n```\n\nBut changing that line to:\n\n```\nvar fieldID = <string> info[\"\"];\n```\n\nproduces the error.  Changing info[\"\"] to info[\"x\"] makes the error go away.  Unfortunately it also means the code doesn't do what I want it to. :-(",
+      "PostedDate": "2013-08-28T08:33:36.2-07:00",
+      "Id": 111410
+    },
+    {
+      "Message": "This looks related to issue #1522.",
+      "PostedDate": "2013-08-29T08:04:02.533-07:00",
+      "Id": 111532
+    }
+  ]
+}

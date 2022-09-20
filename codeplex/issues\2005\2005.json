@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "In mod a you failed to specify where the \"ambient module\" jquery can be found; since the compiler considers everything to be in the same compilation context this will go unnoticed when you compile both module a and b.\n\nIf you require module a in a different module, you import a reference into that other module, since module a explicitly claims it depends on jquery.\n\nWhat's your suggestion to make this better?\n\nI think this is better served as a discussion on the discussions form.\n\n",
+    "ClosedDate": "2014-02-21T11:18:49.137-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Consider the following situation:\r\n\r\next.d.ts:\r\n```\r\ninterface Test {\r\n\tx: number;\r\n}\r\n\r\ndeclare var GlobalVar: Test;\r\n```\r\n\r\nmodA.ts:\r\n```\r\nexport function test() {\r\n\talert(GlobalVar.x);\r\n}\r\n```\r\n\r\nmodB.ts:\r\n```\r\n/// <reference path=\"ext.d.ts\"/>\r\nimport modA = require(\"modA\");\r\nmodA.test();\r\n```\r\n\r\nAs you can see, modA.ts is using the global variable GlobalVar, but is not including the ext.d.ts.\r\nWhen compiling modB.ts however, this gives no error message, since ext.d.ts in included in modB.ts. \r\n\r\nThat's unfortunate for a various reasons:\r\n- If someone removes the reference in modA.ts, it breaks the build. Changing something in your local module and suddenly breaking someone others code === maintenance nightmare ;-) \r\n- If you do incremental compiling and just compile modA.ts it is not working. \r\n- If some other module modC just requires modA and not modB, it's not working anymore. Trying to include a already working module and it gives you compile errors in that module === another nightmare \r\n\r\nRegards,\r\nSamuel",
+    "LastUpdatedDate": "2014-02-21T11:18:49.137-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-11T00:59:33.78-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Reference comments are valid over more than one module",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2005
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This isn't really because the /// is spanning modules. This does look awkward but I'm not sure what the better alternative is for the compiler to do here. \n\nThe root of the issue is that modA has a dependency on another file which modA has not stated explicitly. Because that dependency is an internal module whose declarations contribute to the global module this unstated dependency is fine as long as ext.d.ts is processed by the compiler before modA.ts is. This can happen in one of two ways: you can explicitly pass ext.d.ts and then modA.ts to tsc in the appropriate order, or ext.d.ts could be loaded via another module's explicit reference before modA.ts is processed (this is what happens when you say tsc modB.ts). But when modA.ts is compiled without either of these two conditions met then the compilation fails because the compiler has no idea where else to look for an otherwise unknown identifier like GlobalVar. This is why your incremental scenario fails (tsc modA.ts) and why modC.ts can't just import/require modA.ts and succeed.\n\nThis is the kind of stuff that happens when you mix internal modules (ext.d.ts) and external modules (modA and modB). It's generally not what you want to be doing. If you have a /// reference and an import/require in the same file that's usually a warning that something in your design is awry (with some exceptions). If ext.d.ts were also an external module then modA would've had to explicitly declare its dependency on it and you wouldn't have this issue. Alternatively if modA and modB were internal modules then you would explicitly /// reference dependencies to enable incremental scenarios and/or always pass a full command line set of files.\n\nIf you have a suggestion for a more desirable behavior here feel free to re-open this issue with comments or start a discussion thread where other users are more likely to chime in.\n",
+      "PostedDate": "2013-12-12T13:39:44.73-08:00",
+      "Id": 127208
+    },
+    {
+      "Message": "When using only references and the global module, the behaviour of references is best explained as includes. Even then, I sometimes think it would be good to have a warning for implicit dependencies (e.g., the compiler would note if a symbol in file A comes from a file that is not referenced from A). \n\nOn the other hand, such an implicit-dependencies warning would need to be optional (like implicit-any), as some programmers rely on implicit dependencies (apparently, that is even standard in VS?).\n\nHowever, the situation in this workitem seems different: when using external modules, one expects isolated code with explicit dependencies, and if the modules are never concatenated, the includes model doesn't work, either. Is there any reason not to switch on an implicit-dependencies warning when in external module code?",
+      "PostedDate": "2013-12-13T03:24:22.597-08:00",
+      "Id": 127330
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 12/12/2013 1:39PM",
+      "PostedDate": "2013-12-12T13:39:49.72-08:00",
+      "Id": 134181
+    },
+    {
+      "Message": "Sorry, I have to reopen this since this problem happens all the time in our project and really bothers us.\n\nWe are currently only using external modules and still have this problem.\nThis happens for example when using jQuery.\nSince jquery defines itself by name, the only way to load it is simply by doing\n\nrequire jquery = import(\"jquery\");\n\nThis, however, wont work if you do not put jquery in your root directory (e.g. under libs). \nThen of course, you have to tell TypeScript where it can find the .d.ts with a require directive:\n/// <reference path=\"lib/jquery.d.ts\"/>\n\nSo far so good.\nIf you have now two modules, mod a:\n```\nrequire jquery = import(\"jquery\");\n```\nand mod b:\n```\n/// <reference path=\"lib/jquery.d.ts\"/>\nrequire jquery = import(\"jquery\");\nrequire moda = import(\"moda\");\n```\n\nthis will perfectly compile, since the reference directive spans over the two files mod b and mod a.\nUnless of course, one of the following things :\n* You remove the import of jquery from mod b\n* you just want to compile mod a\n* you require mod a in a different module, where you do not require jquery.\n\nThis is all very confusing and irritating, because the errors show up at places where no changes where made.\n\nRegards,\nSamuel",
+      "PostedDate": "2014-02-20T02:31:55.577-08:00",
+      "Id": 134185
+    }
+  ]
+}

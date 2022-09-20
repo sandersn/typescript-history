@@ -1,0 +1,402 @@
+[
+  {
+    "Id": "1104715",
+    "ThreadId": "461449",
+    "Html": "I've written up the README for a proposed tool that would simplify managing dependencies on a Typescript project. \r<br />\n<br />\n<a href=\"http://github.com/seanhess/TPM\" rel=\"nofollow\">http://github.com/seanhess/TPM</a>\r<br />\n<br />\nI find it very difficult to use external dependencies on Typescript projects, especially on the client-side. I'm not alone in this: <a href=\"http://typescript.codeplex.com/discussions/399504\" rel=\"nofollow\">http://typescript.codeplex.com/discussions/399504</a>. Specifically:<br />\n<ol>\n<li>It's hard to keep the JS code and the definitions in sync</li>\n<li>\nThere are no conventions for browser-side, making using other code a big headache<br />\n</li>\n</ol>\nPlease review the above proposal and let me know what you would change. I would like to make using dependencies on Typescript projects super easy. \r<br />\n<br />\nThe proposal currently only talks about client-side dependencies, but it could be extended to install things with npm instead. \r<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-10-07T12:19:52.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104904",
+    "ThreadId": "461449",
+    "Html": "I started an organisation on GitHub a few months back to host DT files for Bower: <a href=\"https://github.com/dt-bower\" rel=\"nofollow\">https://github.com/dt-bower</a>\r<br />\n<br />\nThe intention was/is (time problems) to write some kind of script to automatically maintain that organisation with repositories for anything in the DT repo.\r<br />\n<br />\nIf each dt-xyz project were to take a dependency on the relevant Bower package for its JS library, you could just install, say, dt-jquery and it would install both packages?<br />\n",
+    "PostedDate": "2013-10-08T01:34:39.903-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105018",
+    "ThreadId": "461449",
+    "Html": "From <a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/428\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/issues/428</a>:<br />\n<blockquote>\nDifferent versions of the type definitions can be linked to specific released version of the component.<br />\n</blockquote>\nMark, how were you going to solve this issue?<br />\n",
+    "PostedDate": "2013-10-08T07:28:45.45-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105055",
+    "ThreadId": "461449",
+    "Html": "I see, so you are making separate bower packages for each project, yes? That seems like it would work nicely, once complete. \r<br />\n<br />\nThe thing that makes the package managers fly is making it easy to get up and going, both for people using them and for authors adding their packages. I agree that whatever we do, it needs to use bower and npm. \r<br />\n<br />\nI commented on the DefinitelyTyped issue you referenced thorn0<br />\n",
+    "PostedDate": "2013-10-08T09:15:41.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105099",
+    "ThreadId": "461449",
+    "Html": "I'm actually pretty far in rewriting TSD 0.5.x to work directly from DefinitelyTyped using the Github API (with @Diullei's blessing).<br />\n<br />\nAs DefinitelyTyped is the de-facto repos for TS definitions (they also push to NuGet) this seemed the thing to do to keep the content 100% fresh (unlike TSD's current 0.3.x which was flawed).<br />\n<br />\nCompared to your proposals (like TPM or <a href=\"https://github.com/dt-bower\" rel=\"nofollow\">https://github.com/dt-bower</a>) this has the benefit of requiring ZERO maintenance in keeping it's content up-2-date with DefinitelyTyped (as it pulls data directly from the Github API) and works even with ZERO cooperation from all JavaScript library maintainers. (many don't care to support TypeScript or bower).<br />\n<br />\nAlso it can access the full Git commit history for each file (and link/show pretty diffs and many other fancy things).<br />\n<br />\nIt has no dependency on bower/npm/component.io/whatever which makes it more flexible, but we could talk about adding a feature to parse a bower.json (etc) and grab a reference to definitions on DT from it (this could be relatively easy).<br />\n<br />\nSee my more extensive comment on the github issue: <a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/428#issuecomment-25910664\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/issues/428#issuecomment-25910664</a><br />\n",
+    "PostedDate": "2013-10-08T10:55:09.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105127",
+    "ThreadId": "461449",
+    "Html": "As I original suggested in that issue (<a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/428\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/issues/428</a>) bower and npm would be much prefered over a custom package manager.  Each typed declaration file will have a dependency on the actual component, which will be in npm or bower.  If you pull in the .d.ts file it will automatically pull in the version of the component that it's declaring.\r<br />\n<br />\nIf people are really stuck on using the &quot;DefinitelyTyped&quot; repo you can always replace the directory with a submodule pointing to the repo in dt_bower. You wouldn't really know the difference (if you checkout recursively).<br />\n\r<br />\nOne comment on dt_bower: - we need a standard naming guideline for the bower and npm packages.  I used &quot;&lt;package-name&gt;-ts&quot; - but whatever, it's something that we should standardize on.  Also, is &quot;dt_bower&quot; the right name?  Just personal preference I guess, but I would have thought &quot;bower-ts&quot; would have been more descriptive.<br />\n",
+    "PostedDate": "2013-10-08T12:10:03.433-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105168",
+    "ThreadId": "461449",
+    "Html": "The thing with DefinitelyTyped is that it is less then ideal but already quite popular and could be very hard to get enough momentum to change everything to the split repos. Keep in mind that DefinitelyTyped is also being pushed to NuGet (which is very big in the VisualStudio community).<br />\n<blockquote>\nEach typed declaration file will have a dependency on the actual component, which will be in npm or bower.<br />\n</blockquote>\nI think this is a false assumption. There is also component.io, and many others (I never use bower, I prefer component.io: it is stricter and more dependable in content). Some code may not even be in a package manager at all.<br />\n<blockquote>\nIf you pull in the .d.ts file it will automatically pull in the version of the component that it's declaring. <br />\n</blockquote>\nDoes that mean that you'd install components by pulling their definitions? Doesn't that mean users are locked to just bower and npm? I wouldn't agree with that notion. How does that work for npm? It'd mean you get your definitions in node_modules, and then have your actual code a node_modules level deeper.<br />\n<br />\nI have to admit the split repos can be nice as you can use bowers dependency version resolution, based on the git tags. <br />\n<br />\nAlthough it'd be a lot less practical as expected, as many definitions are imperfect or duplicated or update a lot with many small changes. It'd be a lot of trouble keeping versions properly tagged: how to you match the semver of modules with the definitions and do you bump all tags when a module updates? How to match non-synced npm and bower versions (some projects have separate versions ranges for node vs web), and do you expect to do manual work to keep it updated? What guarantees can you make about the versioning?<br />\n<br />\nThe solution we went for with TSD for now is to not try to solve all that, and effectively just be a CLI that does what you do when you browse DT on Github.com with your normal webbrowser an manually pick your files (but with a little automation of course). It can still solve dependencies, we can parse &lt;reference&gt;s from the code and could even get the exact commit-tree version of the referred file.<br />\n",
+    "PostedDate": "2013-10-08T13:10:05.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105177",
+    "ThreadId": "461449",
+    "Html": "Trying to answer each point:<br />\n<ul>\n<li><strong>It would be hard to move people off DefinitelyTyped</strong> - we can set-up submodules in DefinitelyTyped so the files are automatically updated.  So I don't see this as an issue.  I'm not aware of the Nuget work - so I can't comment there.  Bower and npm are far more popular for JavaScript development than Nuget.</li>\n<li><strong>Users would be locked to using bower and bpm</strong> - if you're using node.js, you're using npm. There would be a bower dependency, but other package managers could also be used (as long as they support git URLs).  Just like you can use npm and bower in parallel.</li>\n<li><strong>issues with nested <code>node_modules</code></strong> - I don't understand this point.  npm flattens the dependencies (like any other package manager), there's no nesting.  The .d.ts would be in its own dir in <code>node_modules</code>, along with the packages themselves as peers.</li>\n<li>\n<strong>it would be a lot of trouble keeping versions tagged</strong> - I think that's the point. We <em>can</em> keep the versions tagged and we can raise issues on each package at the repo level.  We can even use branches to match the parallel versions in the environment.  If there's a problem with a version dependency then raise an issue.  if you want to fix the issue yourself, fork the code and send a pull request... <br />\n</li>\n</ul>\nI realize some time has been invested in TSD, but I think the separate repo solution will be much more scalable.  We don't need to put all the .d.ts files in the same account on github, they can go anywhere. It leverages the existing infrastructure out there rather than creating anything new just for TypeScript.<br />\n",
+    "PostedDate": "2013-10-08T13:35:29.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105198",
+    "ThreadId": "461449",
+    "Html": "Joe, what does the maintainer of DefinitelyTyped think about moving to submodules? I think that approach could make sense, but what matters is whether he is willing to do it right? I think your solution could work, but only if he is behind it. \r<br />\n<br />\nMaybe baby steps is the way to go. We have what we have, and we can't change anybody's opinion on the matter necessarily. I feel like client-side dependencies are already unbearably annoying to use, and adding Typescript to that just pushes it over the top. I guess the reason why is that nobody agrees on the right approach to client-side dependencies in the first place. If we made it really easy though, it would get momentum. DefinitelyTyped is the standard because it's the easiest thing to use right now. \r<br />\n<br />\nI really don't think we should ask the user to maintain a separate list of definition dependencies. We've got to figure out how to reduce it to one step. \r<br />\n<br />\nWhat if we went with my idea of downloading the dependencies by reading the package manager's config, but just added support for more of them? That's not the complicated part of the problem. If we had the system working with bower, it would be easy to add support for component.io, or anything that has a semi-stable dependency syntax with versions, right? I would be happy to right such a feature if we agreed to support it and make it first class in the final tool. \r<br />\n<br />\nI do think that we should make TSD/TPM/Whatever be able to <em>optionally</em> use more than just DefinitelyTyped (falling back to DefinitelyTyped without any maintenance, etc), so that the community can move on some day. \r<br />\n<br />\nOr... hmm... what if we added support to bower and npm themselves? If you set &quot;typescript&quot;: true in your config then it downloads the definition files when you install to bower? I wonder if they'd be open to that. <br />\n",
+    "PostedDate": "2013-10-08T14:17:18.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105199",
+    "ThreadId": "461449",
+    "Html": "<ul>\n<li>\nNuGet is like THE package manager integrated in VisualStudio: Microsoft started this whole TypeScript thing to stay relevant for JS, and the best support for it is still found in VisualStudio. Did you know that the new Windows system API's (both PC and mobile) are fully JavaScript enabled? All (many) of those VB / C# folks who now roll over into JS development now use TS, and they use VS with embedded NuGet. It is a big deal.<br />\n</li>\n<li>\nNPM uses nested dependencies by default, not flattened. You can define peerDependencies of course, which are flat. But what this would mean is that you would lock the module version into de definition database. I think this will get complicated when new releases for modules are published (you'd have to be smart with semver solving) and it'd create another step deeper into dependency hell (peerDependencies can bite you really fast, which is past of why npm by default nests them). <br />\n</li>\n<li>\nI personally don't think it'd be a good idea to let definitions float around everywhere: you'd get a lot of fragmentation and duplicate work (old TSD supported that, it complicated everything internally but only a few handful of entries actually used it). Things have to be centralised in some way or the community disintegrates.<br />\n</li>\n<li>\nVersion tagging will be messy: if you look at how things go in the DT repo you'll see versioning is not that exact or strict at all (it is a huge mess really). We can of course sequentially version each definitions, try to stick semver to it, try to parse the headers of the files, but reliably mapping definition versions to module versions and making guarantees about that? As they say: I'm not touching that with a stick (tried it before.. but no, not going to happen with the mixed quality of the contributions :)<br />\n</li>\n</ul>\nI've been wrestling with this for some time, I even had burned a few months on a DT importer for the old TSD data structure (tsd-deftools on github), but I discarded all of it because it was not practical. This is why we went with the current TSD Github API route: it will work good enough for most cases with zero extra maintenance or big changes in the wider community. \r<br />\n<br />\nOf course you are free to pursue your idea if you can get enough community traction. But in the interest of the wider community it'd be nice if we could do things without breaking up the community TS typing effort.<br />\n",
+    "PostedDate": "2013-10-08T14:20:05.85-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105200",
+    "ThreadId": "461449",
+    "Html": "Would it be useful if I just wrote a tool that reads the json files, and downloads the definitions? If nobody wants to merge it, it could remain a separate tool, but if you did want to make it 1st level in TSD you could just copy the code over? (I'm hoping TSD is written in Typescript/Node?)<br />\n",
+    "PostedDate": "2013-10-08T14:24:03.067-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105205",
+    "ThreadId": "461449",
+    "Html": "@seanhess: we've actually played with the idea of having TSD be able to scan your project folder for bower.json (or package.json or whatever) and propose definitions for the top-level dependencies it recognises. \r<br />\n<br />\nIt is still on the list for 0.5, but do note it is not trivial to do with good UIX (what to do with version overwites, mismatching names on DT, referred files etc).<br />\n",
+    "PostedDate": "2013-10-08T14:29:55.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105207",
+    "ThreadId": "461449",
+    "Html": "Bartvds: It sounds like you are responding to Joe, not me? Correct? I still think we should collaborate on TSD/whatever. \r<br />\n<br />\nI think part of the problem is that Typescript has a foot in both the MS and open source worlds. I know of no other programming environment quite like that. My experience has been that .NET and other MS-stack developers and the people in my OSX/linux/open source worlds rarely collaborate or even talk to each other. Some of the disconnect is that most of the users of Typescript are already satisfied. They have Visual Studio, and the workflow with NuGet is probably good enough for them. \r<br />\n<br />\nTypescript is fantastic, but the interest level in my world, the open sourcey world, is still really marginal. That's in large part because it's still too annoying to use. I've been working with others on a sublime text plugin, I'd like to make some kind of sweet AngularJS+Typescript framework mashup, and this is the 3rd piece of the puzzle. So, I know things are fragmented, but in order to increase adoption, we have to make things easy, at least for the &quot;fully supported&quot; path. <br />\n",
+    "PostedDate": "2013-10-08T14:30:28.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105209",
+    "ThreadId": "461449",
+    "Html": "@Bartvds\r<br />\n<br />\nWhat do you mean by version overwrites and referred files?\r<br />\n<br />\nMismatching names: this is why I think your source of truth for the dependencies should be a database, not the github repo. I think the github repo should be imported into the database every day or so, and serve as the lowest priority source of information for where to find the definitions. Then you could insert a few &quot;corrections&quot; into the database to match names up, or to add packages that don't exist in DT, etc. \r<br />\n<br />\nThe service could then resolve where to find the definition file by:<br />\n<ol>\n<li>Looking up to see if there is a manual database entry</li>\n<li>Checking for name corrections</li>\n<li>\nIf it still doesn't find anything, return the correct DT file. <br />\n</li>\n</ol>\nThis would allow us to use DT without any manual maintenance (aside from one-time corrections to match things up, and then only rarely), let's us keep up to date with it, and let's us outgrow it as necessary. \r<br />\n<br />\nWhat wouldn't work with this idea?<br />\n",
+    "PostedDate": "2013-10-08T14:35:17.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105211",
+    "ThreadId": "461449",
+    "Html": "@seanhess We're doing a nice mixed-up parallel discussion (realtime forum fun :)\r<br />\n<br />\nBut yes, it is a split community. It works reasonably well though: DefinitelyTyped exists on it own as repo and gets contributions from both parts of the community (which is great). It also pushes directly to NuGet for the MS folks (I'd think the maintainers use that themselves). TSD is supposed to work for the Open Source people (like you and me also).<br />\n",
+    "PostedDate": "2013-10-08T14:37:50.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105214",
+    "ThreadId": "461449",
+    "Html": "I just asked the bower people about adding 1st class support to typescript installation and they predictably declined, but they mentioned that they have postinstall support, and I know NPM does too. \r<br />\n<br />\nBasically, if we had a tool that could install dependencies by reading whatever.json, you could easily get it to run after &quot;whatever install&quot; by referencing the tool in postinstall: &quot;tsd install&quot;.<br />\n",
+    "PostedDate": "2013-10-08T14:42:43.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105215",
+    "ThreadId": "461449",
+    "Html": "@seanhess - agreed.  Making TS a Microsoft only technology would do it a huge diservice.  On top of that, the single repo approach is just unmanagable - especially when we have different active versions of libraries active in the community (e.g. jqeury etc).<br />\n",
+    "PostedDate": "2013-10-08T14:43:06.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105219",
+    "ThreadId": "461449",
+    "Html": "Single Repo approach: that's why I think instead of trying to get the DefinitelyTyped people to change course, we should make our tool able to point to an arbitrary repo+filepath+commit. Then we could start by pointing everything at DefinitelyTyped, and as the tool became widely adopted it would naturally outgrow DT when the single repo became unmanageable. @Bartvds, thoughts? (Same thing I asked above, basically)<br />\n",
+    "PostedDate": "2013-10-08T14:49:35.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105221",
+    "ThreadId": "461449",
+    "Html": "@seanhess TSD used to do something like that. But in practice it meant only the Open source users would send in changes, and people who use NuGet or manually grab files don't make the changes. \r<br />\n<br />\nWe don't go that way for now, the Github API version I'm working on is complicated enough even without serverside components. \r<br />\n<br />\nOverwrites and referred files is what happens if you have module A already installed, and then next install module B that depends on module A, but could depend on another version (or you have local changes made to module A that you want to keep).\r<br />\n<br />\nIt is tricky to automate resolving that: you need user intervention and decision (as you cannot nested dependencies like with npm modules: as in TS it is one big scope.\r<br />\n<br />\n@joewood: it is true about the different active versions, but looking at the imperfect way users maintain the definitions it is impossible to reliable match this to DT definitions (unless big changes are made in the way things work, for which you need to have traction)<br />\n",
+    "PostedDate": "2013-10-08T14:52:17.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105226",
+    "ThreadId": "461449",
+    "Html": "Oh, I see, so you think outgrowing DefinitelyTyped at all is a bad idea, because it would alienate the MS side? I have no problem encouraging people who aren't using a package manager to start using one. If it was just the complication of it, I wouldn't mind helping. I have experience with complicated data resolution like that. \r<br />\n<br />\nNested dependencies: Ah yes, that's one of the reasons why NPM is so awesome. It's not just Typescript that is one big scope, it's Javascript. It would be crazy to include two versions of jQuery in a single web application. So, the user must resolve the conflict by deciding which version of jQuery to include. Wouldn't you just assume that whatever version of jQuery they specify in their config is the one to use? Are you saying that maybe B won't compile with your local version of A? \r<br />\n<br />\nThe other issue might be that B depends on A, and C depends on A, but your application does not depend on A, and they are different versions. Either way, in a front-end application, if B depends on A, your application directly depends on A. You have to include it. So you already have to specify a version of A that works. \r<br />\n<br />\nWhat if we didn't resolve any dependencies, but installed only what they specify. Then if they forget to include a dependency (like jQuery), we could warn them? In other words, the &quot;user intervention&quot; is just whatever they specify in the config file. <br />\n",
+    "PostedDate": "2013-10-08T15:02:38.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105227",
+    "ThreadId": "461449",
+    "Html": "@both Ultimately it would be better to split DT up in separate repos in one organisation, like Joe's idea. \r<br />\n<br />\nBut in practice.. I don't see it happen (soon), and most of the potential benefits are not likely to come to fruition with the way people use DT currently. I'd support the effort though if it came to it though.\r<br />\n<br />\nFor now I personally first get TSD 0.5 released with the basic features as planned (still lots of stuff to do), and I'll see what happens next.<br />\n",
+    "PostedDate": "2013-10-08T15:03:42.797-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105229",
+    "ThreadId": "461449",
+    "Html": "@Bartvds How can I help? Is 0.5 stable enough to fork yet? If I created a feature that interacted with bower/npm/etc to resolve dependencies would you accept it and let it be 1st class, or would it be out in the weeds? Do you think it would be better to make such a tool be standalone or in tsd core?\r<br />\n<br />\nMy goal isn't to support every workflow. It's to make at least one workflow that is actually easy. \r<br />\n<br />\n@joewood I agree with @Bartvds, I support your idea, but it seems like it will be hard to convince the maintainers of DefinitelyTyped. Let me know if you want me to chime in with support on a github issue or something, or if you need some other kind of help. <br />\n",
+    "PostedDate": "2013-10-08T15:10:59.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105230",
+    "ThreadId": "461449",
+    "Html": "@seanhess I regard DefinitelyTyped (either as one single repos, or split or whatever) as a given and won't assume to outgrow it. \r<br />\n<br />\nRegarding versions: we choose to stay away for that as much as possible: it is more trouble then it is worth. Again: the data source is imperfect and not dependable, making promises about it is going to burn you or eat up all your spare time handling Issues.\r<br />\n<br />\nWe go low-tech in this: I have a flag planned for TSD 0.5 that lets you opt to parse and co-install &lt;references&gt; (it works already hardcoded), and add plenty of information retrieval options to get insight in what is what but the ultimate decision will be the users.<br />\n",
+    "PostedDate": "2013-10-08T15:15:41.66-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105234",
+    "ThreadId": "461449",
+    "Html": "I'm only asking about versions because I thought you brought it up as a concern about reading dependencies from bower.json or whatever. If it's not a problem for you, it's not a problem for me. I would be fine ignoring versions all together at first (since the community ignores them). \r<br />\n<br />\nI agree: don't even bother installing dependencies at all, it's just what you explicitly decide to include. Is there any reason why this approach would conflict with the idea of reading the config file of an existing package manager?<br />\n",
+    "PostedDate": "2013-10-08T15:19:04.633-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105237",
+    "ThreadId": "461449",
+    "Html": "@seanhess: version are indeed not a problem if you ignore them and make no promises the users :)<br />\n<br />\nIf you keep the reader as purely name based and we communicate to the user that it is just a best guess then it'd be fine I think (maybe do a nice interactive CLI mode).<br />\n<br />\nTSD 0.5 is very close but not fully ready for forking: I finally got a handle on the tests recently but I need to do a few bigger changes (some lingering TS 0.9 update stuff, and sadly I have to rip out the github module I used and roll my own as it is flawed (long story about http features). <br />\n<br />\nStill the main classes are decent, the project setup/structure seems to work well enough (grunt, mocha, Q/promises etc), so if you <em>must</em> you can browse it to get an idea and see if you actually would want to get involved at all :D<br />\n<br />\nBut once it is stable you are very welcome to contribute. <br />\n<br />\nNow I know there is strong interest in this I will try to get this in a forkable state ASAP. It might be a few weeks or more though (TDD is killing my productivity) but I would merge the feature you proposed. I might even have some other things to do for you.<br />\n<br />\nAlso @Diullei (original author) is going to transfer ownership of the project to me soon (incidentally we just discussed that this week) as he has no time to maintain it. We still have to find out how that is going to work or what URL it gets.<br />\n",
+    "PostedDate": "2013-10-08T15:32:18.383-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105240",
+    "ThreadId": "461449",
+    "Html": "Ok, cool. \r<br />\n<br />\nI think I might get started writing a tool that just uses existing tools (TSD included), then merge stuff in later when you're ready. \r<br />\n<br />\nDrop your TDD man: I was a big advocate of TDD until I discovered Typescript. Type first, test later :)\r<br />\n<br />\nI vote going for an organization. Personally, I have to fight against my ego to contribute to open-source. I want to get famous or something. I think an organization would make it easier to contribute without being jealous. \r<br />\n<br />\nKeep up the good work, let me know here or email me at seanhess gmail when you are ready for contributions.<br />\n",
+    "PostedDate": "2013-10-08T15:37:28.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105245",
+    "ThreadId": "461449",
+    "Html": "Nice, I'm curious what you come up with.\r<br />\n<br />\nI personally don't care for ownership for ego reasons (not very zen :) \r<br />\n<br />\nBut I'm all for openness though: give credit where it is due, add contributor note to README and authors etc to the package.json (so it shows on NPM) and such things.\r<br />\n<br />\nAnd TDD, well, just have to do it. I learned my lessons, not doing it has bitten me before. I cannot let people depend on my stuff without being able to prove it works (to a certain degree). And I love travis-ci so much, it is excellent, saves tons of issues.\r<br />\n<br />\nI'll add a item to my ./docs/TODO.md for this auto install thing with your github name on it.\r<br />\n<br />\nSide note: I also use Q promises, so that will be nicely compatible. Tip: also use <a href=\"http://documentup.com/kriskowal/q-io\" rel=\"nofollow\">q-io</a> (nice http and fs wrappers for Q)\r<br />\n<br />\nAnd of course I use grunt (see also grunt-typescript and grunt-tslint)<br />\n",
+    "PostedDate": "2013-10-08T15:57:00.913-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105251",
+    "ThreadId": "461449",
+    "Html": "Cool. I think it will fit nicely. It will be good to start on my own and merge later I think, instead of starting with a fork.\r<br />\n<br />\nWhat I meant to say was that I'm trying to be introspective and fight my own ego, not that I want credit. I'm just predicting that I will be more naturally motivated if the ownership is flat :)\r<br />\n<br />\nQ-io looks nice, thanks for the tip! Definitely using grunt. I'll use those in my project to make it easier to port over<br />\n",
+    "PostedDate": "2013-10-08T16:22:15.307-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105750",
+    "ThreadId": "461449",
+    "Html": "Alright, please review this and give me feedback. The Readme is totally out of date, but the code is there. Basically what I made is an API/service that can return information about the corresponding DefinitelyTyped file <em>given the name of an npm module</em>. Right now there's just a static map of names, like &quot;angular-browserify&quot; =&gt; &quot;angular&quot;, but it could easily get more fancy. \r<br />\n<br />\nThe idea would be to then add a node library that calls this API, and a command-line tool to do some fancier stuff with it. \r<br />\n<br />\nCode: <a href=\"http://github.com/seanhess/tpm\" rel=\"nofollow\">http://github.com/seanhess/tpm</a>\r<br />\n<br />\nAPI: <a href=\"http://tpm.orbit.al\" rel=\"nofollow\">http://tpm.orbit.al</a><br />\n",
+    "PostedDate": "2013-10-09T15:59:53.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106005",
+    "ThreadId": "461449",
+    "Html": "I thought about it and like this idea of having a translation table to map modules names as they are registered in package managers to the DefinitelyTyped folder+file. \r<br />\n<br />\nIt would be a manual work to set up but we can do nifty things when you have that information (regardless of how it is generated; I see some options there).\r<br />\n<br />\nIt might even be a nice to integrate into TSD: as that is now based on a 'selector' (to glob for a folder+file) I could easily plug in an switch-able lookup to a table like that. It would filter some of the messy names from the big list and allow some extra flexibility.\r<br />\n<br />\nSome possible benefits (depending on how it is implemented):<br />\n<ul>\n<li>Support many module package manager namespaces while still pulling the actual content from the central repo</li>\n<li>Have a few different tables, one for each package manager (or module source): maybe add a master map (as many names are the same), and allow sub lists to inherit/overwrite from that. </li>\n<li>Enable mapping to odd namespaces like in component.io (which uses <code>owner/module</code> as identifiers)</li>\n<li>\nSupport different definitions for different modules versions (not sure if this is actually a real thing).<br />\n</li>\n</ul>\nFor TSD specifically:<br />\n<ul>\n<li>Stricter search results (less confusion about what is what, or have false/mutiple glob matches)</li>\n<li>TSD can 'know' (and filter etc) modules based on package manager (eg: only query for definitions for node.js hosted modules).</li>\n<li>\nBe fully optional and allow fallback to manual searching<br />\n</li>\n</ul>\nOne thing to consider is where you would hosts such lists (or your lookup service). Would you really want the responsibility to host that service and have it reliably up 24/7 (and indefinitely spend money on hosting and bandwidth)? \r<br />\n<br />\nSince it is a static list why not just put it on github as well and use the same infrastructure as for the definitions (and leverage their excellent global CDN)? \r<br />\n<br />\nIf TSD would consume these lists that would be a requirement for me (their server are leagues ahead of anything we can roll ourselves). Also I would like to get/cache that list in one big chuck and not do small mapping http requests: nobody likes waiting and even small hits get annoying UIX.\r<br />\n<br />\nIf it is proven to work we could at some point even try to fold the info into the DefinitelyTyped repo and allow the typing community to add mappings. <br />\n",
+    "PostedDate": "2013-10-10T07:22:04.023-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106035",
+    "ThreadId": "461449",
+    "Html": "Cool. I thought it might make more sense if I began implementing it a little. I agree about moving away from an API/server. I would like to make sure you can pull this into TSD. \r<br />\n<br />\nSo you are suggesting that we:<br />\n<ol>\n<li>Put any overrides/mapping on github. We would edit these through pull requests, etc</li>\n<li>\nPut the whole static &quot;list&quot; on github too. What do you mean? Do you mean generate and commit it to the repo, and download through the github API, on github-pages, or something different? <br />\n</li>\n</ol>\nIt sounds like it would be most useful to download all the information in one big chunk, right? I am planning on having a programatic node API that would make that easy. This means that the data returned has to be easy to consume: without an API/server all the mapping has to be pre-processed. I'll come back with a proposal of something. <br />\n",
+    "PostedDate": "2013-10-10T08:21:04.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106063",
+    "ThreadId": "461449",
+    "Html": "The way I thought about it the information could be exported in a few beefy JSON files (one listing for bower, one for npm, one for component.io etc). \r<br />\n<br />\nThen push those few JSONs to a public github repo, and download it over the Github RAW. It could also be Github pages and be a plain HTTP request instead of the more fancy API+RAW calls, but that's just a detail choice (and I'm not sure if Github agrees to that.. who knows?).\r<br />\n<br />\nThen any tool can consume that info as it likes. \r<br />\n<br />\nFor TSD I'm mostly interested in being able to translate exact module names (as published on bower or npm or whatever) to the actual folder + file names as used on DT.\r<br />\n<br />\nAlso for TSD I did have a raw idea to be able to work with some very <em>basic</em> alternate versions of module versions: if your look at the <a href=\"https://github.com/borisyankov/DefinitelyTyped/tree/master/node\" rel=\"nofollow\">node.js definitions</a> you see that it has a second file with a semver postfix. After the fist TSD re-release is out I would like to be able to parse these.\r<br />\n<br />\nBut as discussed earlier: I think the state of the DT repo content is not exact enough to guarantee a lot of truths about definition-vs-module <em>versions</em> (long story about user-contributed imperfect data).\r<br />\n<br />\nSo regarding your bullets:<br />\n<ol>\n<li>I'm not 100% sure what you mean here. Would these 'overrides' be changed definition files? If so then I think it would be best to put these on DT also. If you would keep customised definitions floating around in other repos the community would be vulnerable to fragmentation (as theywould send PR there and not to DT and it would be duplicate work. Maybe we could consider something like I mentioned about the node.js semvers. Also there are some projects in DT that do something similar like <a href=\"https://github.com/borisyankov/DefinitelyTyped/tree/master/chai\" rel=\"nofollow\">chai</a> (it has seperate defs for BDD and TDD style assertions).</li>\n<li>Yes, these would be the beefy JSON files I mentioned above. </li>\n</ol>\n",
+    "PostedDate": "2013-10-10T09:05:52.19-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106066",
+    "ThreadId": "461449",
+    "Html": "Please review the updated plan in the Readme of my repo: <a href=\"https://github.com/seanhess/tpm\" rel=\"nofollow\">https://github.com/seanhess/tpm</a>. Any thoughts?<br />\n",
+    "PostedDate": "2013-10-10T09:11:36.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106082",
+    "ThreadId": "461449",
+    "Html": "Is it possible that an npm/bower/component package might need more than one definition file? I don't want to do any dependency resolution, but do they ever split definitions into multiple files in DT?<br />\n",
+    "PostedDate": "2013-10-10T09:44:46.05-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106089",
+    "ThreadId": "461449",
+    "Html": "Did this take into account my last message?<br />\n<br />\nAnyway: why are there two lists? Isn't that duplicating information?<br />\n<br />\nIf I look at the big one (I guess this would be a single element in a beefy JSON?)<br />\n<br />\nThere is too much information:<br />\n<pre><code>{\n    &quot;names&quot;: &quot;angular&quot;,\n    &quot;aliases&quot;: [&quot;angularjs&quot;, &quot;angular-browserify&quot;],\n    &quot;repo&quot;: &quot;borisyankov/DefinitelyTyped&quot;,\n    &quot;path&quot;: &quot;angularjs/angular.d.ts&quot;,\n    &quot;sha&quot;: &quot;master&quot;,\n    &quot;url&quot;: &quot;https://github.com/borisyankov/DefinitelyTyped/angularjs/angular.d.ts/raw/master&quot;,\n    &quot;version&quot;: &quot;*&quot;,\n}</code></pre>\n\n<ul>\n<li>If you consider DT to be the root source (re: points about typing effort fragmentation), then you don't need repo. TSD used to have that, it never got used and only made things more complicated (aka created useless technical debt).</li>\n<li>The url is implied by path + repo. Note: TSD will always retrieve RAW <em>per commit</em> so would not use this anyway (as using HEAD is not reliable as it can suffer race-conditions with concurrent merges)</li>\n<li>What do you want with that sha? Is it a commit? blob? tree? Anyway, they all change a lot so it'd be hell to maintain. Don't pin versioning against git sha hashes.</li>\n<li>\nThe alias json looks more like it, but still, what sha?<br />\n</li>\n</ul>\nIf these static JSONs do refer to DT by file paths then the JSONs might contain the version mappings that could point to different <em>file-names</em> on DT. Maybe it is possible to devise a scheme (using semver selectors) that has this information. (see my earlier note about the node.js defs on DT)<br />\n<br />\nCondense it to something like:<br />\n<pre><code>&quot;jquery&quot;: {\n    &quot;aliases&quot;: [&quot;jquery&quot;, &quot;jquery-browserify&quot;],\n    &quot;versions&quot;: {\n        &quot;lastest&quot;: &quot;jquery/jquery.d.ts&quot;,\n        &quot;&lt; 2.0.0&quot;: &quot;jquery/jquery-2.d.ts&quot;\n        &quot;&lt; 1.0.0&quot;: &quot;jquery/jquery-0.0.1.d.ts&quot;\n    }\n}</code></pre>\n\nWhile the exact versioning specification is tricky to guarantee (as said earlier), these selectors could elevate <em>some</em> of @Joewoods concerns about being able to find definitions for older versions (if the consumers would support that). <br />\n<br />\nWhat is missing there is:<br />\n<ul>\n<li>How to specify a DT branch? They are used for TypeScript versions: master is now 0.9, and there is a branch for 0.8 (and later 1.0 becomes master, and the current master likely becomes 0.9 (if there are breaking changes in format)</li>\n<li>\nHow would the big file look? Maybe it has some sort of header element with some core info, and then the big list.<br />\n</li>\n</ul>\nSmall notes:<br />\n<ul>\n<li>meta-data on DT is stored in folders starting with an _underscore (so would be <code>./_data</code> instead of <code>./data</code>)</li>\n</ul>\n",
+    "PostedDate": "2013-10-10T09:53:22.187-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106096",
+    "ThreadId": "461449",
+    "Html": "<blockquote>\nIs it possible that an npm/bower/component package might need more than one definition file? I don't want to do any dependency resolution, but do they ever split definitions into multiple files in DT?<br />\n</blockquote>\nYes, certainly. <br />\n<ul>\n<li>Sometimes this is done for sanity reasons: I do it for the new generic-enabled Q-io defs I'm writing for TSD, I split them by submodule (Q-io is wierd there)</li>\n<li>Some even have alternate versions (see earlier note about chai's BDD vs TDD). </li>\n<li>\nSome even have (or had) <em>conflicting</em> versions (not compatible).<br />\n</li>\n</ul>\nTSD can parse the content and resolve &lt;reference&gt; tags for this. \r<br />\n<br />\nAgain, DT has some rough edges (there are so may people of some many skill and dedication levels contributing).<br />\n",
+    "PostedDate": "2013-10-10T10:01:43.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106100",
+    "ThreadId": "461449",
+    "Html": "For illustration: maybe have a quick look at the old TSD data structure (which we dropped because of the many flaws)\r<br />\n<br />\n<a href=\"https://github.com/Diullei/tsd/tree/master/repo_data\" rel=\"nofollow\">https://github.com/Diullei/tsd/tree/master/repo_data</a><br />\n",
+    "PostedDate": "2013-10-10T10:04:20.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106119",
+    "ThreadId": "461449",
+    "Html": "Yes, it was supposed to take into account your last message. I don't know what you mean by two lists. The idea would be that the aliases can be specified in a certain format, but that doesn't necessarily match the output format. <br />\n<blockquote>\nHow would the big file look? Maybe it has some sort of header element with some core info, and then the big list.<br />\n</blockquote>\nI was thinking of not exposing the format of the beefy JSON directly, but asking clients to use the library to get information out of it, that way we can send less information down over the wire if we want, but be explicit with the defaults when it is returned at the end. Aliases and the beefy JSON wouldn't necessarily look the same as what <code>findDefinition</code> returns. <br />\n<blockquote>\nThere is too much information:<br />\n</blockquote>\nI was still just making the DT dependency explicit. Let's take the extra information out. <br />\n<blockquote>\nWhat do you want with that sha? Is it a commit? blob? tree? Anyway, they all change a lot so it'd be hell to maintain. Don't pin versioning against git sha hashes.<br />\n</blockquote>\nIt was so we could use older versions on DT. Like you were saying about the Typescript versions. Git treats branches/commits/tags all the same, so it could be any of them, but the idea would be that you don't specify it at all unless you're targeting something old. It would default to master. Should I change it to &quot;branch&quot; or &quot;commit&quot; instead?<br />\n<br />\nLooking through the list, I don't see any examples of needing to install multiple files for a given package, only the ones you mention for q-io. It would complicate things significantly to return multiple files per package, so I say we just stick to one for now. <br />\n<br />\nOk, so what if we do this: You can call <code>findDefinitions</code>, and get an array of versions back (usually will just be one). If there are multiple versions, you'll get multiple back. Don't worry about the duplicated data, remember this isn't necessarily how it's stored, just how the library returns it. <br />\n<pre><code>[\n    {\n        &quot;name&quot;: &quot;angular&quot;,\n        &quot;aliases&quot;: [&quot;angularjs&quot;, &quot;angular-browserify&quot;],\n        &quot;path&quot;: &quot;angularjs/angular.d.ts&quot;,\n        &quot;commit&quot;: &quot;master&quot;, // or &quot;branch?&quot;\n        &quot;version&quot;: &quot;latest&quot;, // or &quot;*&quot;?\n    }\n]</code></pre>\n\nIt seems like for a particular version we need: path, commit, and version. Adding name and aliases to each one seems ok. The &quot;definitions&quot; are then versions of a definition. What do you think?<br />\n",
+    "PostedDate": "2013-10-10T10:37:39.463-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106149",
+    "ThreadId": "461449",
+    "Html": "The main thing about a big file is that it could limit the amount of http traffic a lot. If a user would have to resolve many mappings (at once or in short interval) they don't want to do a http request for every single mapping. \r<br />\n<br />\nOf course it depends on what is going on inside the mapping module. I assume it still has its data source from Github somewhere and not rely on a external service?\r<br />\n<br />\nPulling one big JSON is no problem bandwidth-wise (it'd be less then a high-res website background image), and Github's CDN is pretty zippy and has all the http caching features to leverage.\r<br />\n<br />\nFor TSD I pull the initial index from branches only (their HEAD), and not do tags or commits. It could work with all of them as you say, but what use is having the index of a certain tag or commit? Those are just a fixed points in the history of <em>everything</em>, but that has no useful meaning for uses. So I use commits hashes only for individual files. \r<br />\n<br />\nSide-note: it annoys me that TS 0.9 is handled in the DT master branch, and not a branch named 0.9, as it will get funky if TS 1.0 requires another rename like with the 0.8 -&gt; 0.9 changes), But commits and blobs hashes are global per repo, so it only breaks forward in time; old commit references etc would still be valid).<br />\n<h4>Meta note:</h4>\nI must admit that I'm still wrestling a bit with what exact problems we both try to solve. \r<br />\n<br />\nWe exchanged a lot of good ideas (which I enjoy a lot too) but maybe we should do a recap since things shifted during this rapid-fire exchange :)\r<br />\n<br />\nGive me a moment to update an analysis document I wrote for @Diullei earlier on the considerations and goals of TSD, it'll help me get my ideas straight (especially since you are now covering some concerns I had earlier)\r<br />\n<br />\nOnce I done that you can look at it, and maybe do a similar one for TPM. I'm pretty sure there is a meshing possible, and a good separation of concerns. Then we can take new look at implementation details.\r<br />\n<br />\nIt's 20:38 here now, so it'll be either tonight or maybe tomorrow.<br />\n",
+    "PostedDate": "2013-10-10T11:59:06.467-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106186",
+    "ThreadId": "461449",
+    "Html": "Ok, I'll probably catch you tomorrow. It sounds like we are on the same page, and when we're not, it's just miscommunication. \r<br />\n<br />\nFor example, there would BE a big JSON, I just wouldn't expose the internals of it. The <code>findDefinitions</code> call will only work if you've already downloaded the index (the big JSON). So there will only ever be 1 HTTP request if you cache it. \r<br />\n<br />\nJust ignore the commit/tags thing for now. It'll probably make sense after it is working. \r<br />\n<br />\nCool, I'll fix my readme and see how much I can get working before you wake up. <br />\n",
+    "PostedDate": "2013-10-10T13:34:44.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106213",
+    "ThreadId": "461449",
+    "Html": "Yea, I think so too.\r<br />\n<br />\nI pushed my updated docs here:\r<br />\n<br />\n<a href=\"https://github.com/Diullei/tsd/tree/develop-0.5.x/docs\" rel=\"nofollow\">https://github.com/Diullei/tsd/tree/develop-0.5.x/docs</a><br />\n<ul>\n<li>For this discussion SCOPE.md is most relevant. </li>\n<li>\nINFO.md has the details about the technical decisions made for TSD up until now. <br />\n</li>\n</ul>\nPlease take a look and maybe you can also write a short blurp about what problem TPM is trying to solve and what it (initial) scope it has etc. It helps focussing your thoughts and gives a good anchor for the implementation details.<br />\n<hr />\nI'm pretty pleased with myself for coming up with the following line (yea, it's late :)<br />\n<blockquote>\nEffectively this makes TSD a read-only, domain specific Github client.<br />\n</blockquote>\nTPM seems to aim at JS module package-manager related features (working with mappings, versions, scanning package/bower json files etc) and will have content that is manually edited, enhanced and verified. \r<br />\n<br />\nThis would be a nice because this means I can limit TSD's scope to just do super reliable access to pure DT. \r<br />\n<br />\nTPM could focus on meta data to enhance (a subset of) DT for use with any package manager you might want to support (as all the other stuff can be pulled through TSD's more generic search).\r<br />\n<br />\nIt would also leave you free to do build the enhancement service as you like it (as far as it is sane :) since it nice abstracts away the resolution, as long as it comes up with some branch + commit-sha + paths to install then TSD can support it. You could even revert back to the idea just supporting only bower (maybe with some advanced version features to make @Joewood happy :) \r<br />\n<br />\nThis also fits well as I build TSD in a deliberate heavy style (full node.js api, full data model, all testable, heavy caching etc), so I hope it'll make it a good library.\r<br />\n<br />\nWe then meet somewhere in the middle and blend things up (I see many options here, depending on your scope)<br />\n",
+    "PostedDate": "2013-10-10T15:21:18.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106480",
+    "ThreadId": "461449",
+    "Html": "I haven't finished reading your document, but I've gotten TPM close to where I want it to be. \r<br />\n<br />\n<a href=\"http://github.com/seanhess/tpm\" rel=\"nofollow\">http://github.com/seanhess/tpm</a>\r<br />\n<br />\nNote that there is probably significant overlap at this point. I'm ok removing the overlapping parts from either repository once we finish meeting in the middle. So some of the stuff in TPM is just how I expect the Typescript Definition toolchain to behave. We can decide which repo it belongs in. \r<br />\n<br />\nIt all works! <code>tpm install</code> and <code>tpm index</code> both do their thing, and there is a module in case you want to use any of the features. \r<br />\n<br />\nFeedback?<br />\n",
+    "PostedDate": "2013-10-11T09:37:51.98-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106572",
+    "ThreadId": "461449",
+    "Html": "(sorry for my late reply but I had a lot of stuff going on)\r<br />\n<br />\nYou make quick progress ;)\r<br />\n<br />\nI think I could use the alias info to boost the globbing selection we have in TSD. \r<br />\n<br />\nBut I see are you using all the plain filenames from the definitions in your master list? We looked at that before (in my failed tsd-detools from earlier this year) but it is <em>very</em> dirty data: lots of bad casings, weird prefixes etc. I think if you want to map data against the names in a specific package manager you should have a cleaned list that only has items that actually exixts in the managers (and not stuff like that monstrous AzureClient or the node.js api defs).\r<br />\n<br />\nIf you just dump all the existing names in the list then you are vulnerable to collisions, and worse: it'd be effectively <em>less</em> useful then the TSD globs: they already can glob every file but also the folder names.\r<br />\n<br />\nYou could provide real unique value if you can provide a lookup (per package manager) that is clean and checked for correct names. (automate a little using their apis? could be cool to build). Make it nice modular so you (or a contributor!) can add and update mappings for package managers. Eg: tmp/bower, tpm/npm, tmp/jam etc etc). <br />\n",
+    "PostedDate": "2013-10-11T12:53:22.633-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106577",
+    "ThreadId": "461449",
+    "Html": "And another message!\r<br />\n<br />\nSome recent development on this end that you might like (a big text again.. sorry, but I have to transfer this info somehow)\r<br />\n<br />\nYour project and ambition made us realise we need to get a improved TSD out there ASAP:\r<br />\n<br />\n@Diullei (from original TSD and an admin of DefinitelyTyped) has just transferred ownership of the TSD repo and the npm package to me today (he has not time to maintain it actively). \r<br />\n<br />\nWe decided to not put it on my personal profile, but instead move it into the DefinitelyTyped organisation and make it a little more official. That fits well with how bower, npm etc do things. So it now lives here: <a href=\"https://github.com/DefinitelyTyped/tsd\" rel=\"nofollow\">https://github.com/DefinitelyTyped/tsd</a>\r<br />\n<br />\nWe also made a new plan to the re-release: instead of going big we go for a minimal viable preview first: semver major-dev: so 1.0.0-dev, not 0.5.0.  For that I need to add a little more tests, tune the CLI UI and fix some technical stuff (rip out the shitty github module and roll my own with proper http-caching headers etc).\r<br />\n<br />\nThen once that is pushed to npm we implement the sweet stuff (well, lots of it exists in the code already but is not covered by tests or tuned for CLI use).\r<br />\n<br />\nAnd this is where your contribution and specific solutions could be very welcome (depending on how you define them and implement it oc). \r<br />\n<br />\nThey would be nice as dependency modules (like how npm etc are also split up in submodules) and enable the useful mapping and the json analysis, then we'll find a way to blend the alias filter in the CLI api.\r<br />\n<br />\nOf course if we're to bring TPM (functionality) into TSD and give it the DT label that'll mean you'll have to go for maximum quality: make the project nice-and-clean and do stuff like lint the code and have tests to <em>prove</em> everything actually works... yes, it sucks and drains a lot of time but it is essential (and of course it feels good every time you run them -&gt; either you rock for not breaking, or you rock for finding bugs.\r<br />\n<br />\nIf that doesn't work out the reverse is also possible: you could opt to use the TSD API in your custom tools. Or go your own way but that would suck for the community (like how bower vs component.io vs jam vs microjs etc etc etc make a huge mess of the JS package manager landscape... lets try to not do that :).\r<br />\n<br />\nSide notes:\r<br />\n<br />\nIf you like to help the TypeScript community moving ahead then the TSLint project also could use a hand. I assume you use JSHint sometimes? If not.. shame on you! :D \r<br />\n<br />\nTSLint is just that, but for TypeScript. The owner is a great guy, and it is interesting tech (syntax tree walkers) but they need more momentum.\r<br />\n<br />\nOther thing:\r<br />\n<br />\nI see you use my Q-io definitions. I recently pushed an update for 0.9 generics: <a href=\"https://github.com/DefinitelyTyped/tsd/tree/develop-0.5.x/typings/q\" rel=\"nofollow\">https://github.com/DefinitelyTyped/tsd/tree/develop-0.5.x/typings/q</a> and I merged then into one file as you suggested. It is not pushed to DT yet: feel free to edit, improve and add your name to it and push it to DT if you like.<br />\n",
+    "PostedDate": "2013-10-11T13:22:15.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106578",
+    "ThreadId": "461449",
+    "Html": "I published it to NPM and added grunt tasks before reading this. I'm pretty much done and it's useful to me right now. <br />\n<h2>Scope</h2>\nSo, the idea is that I have some ideas about how a useful Typescript definition manager should work, and hopefully I can use TPM to create a library that provides those features for the &quot;correct&quot; manager, whatever that ends up being. If some of the scope overlaps TSD, that's only because TSD can't do everything I want to do yet. \r<br />\n<br />\nThe only thing I really care about is making sure the eventual tool has these features. Whether TPM remains a separate library, or is merged in is not important to me. \r<br />\n<br />\nRight now, it also provides things that are completely redundant with TSD, but this is just so I can use it right away. \r<br />\n<br />\nDo you have any questions? What is unclear? What does it need before you can <code>require</code> the library and use it?<br />\n<h2>Filenames and collisions</h2>\nI don't really understand what you mean. Can you provide some specific examples of where it might fail? I know node-0.8.8.d.ts, but how will it fail with the AzureClient one? The default names seem to match up pretty well to me. I'm lowercasing everything so case won't matter. Which other ones have prefixes? \r<br />\n<br />\nI want to avoid having to do any manual work if I can, and it seems like DefinitelyTyped almost always uses the correct package name. \r<br />\n<br />\n&quot;If you just dump all the existing names in the list then you are vulnerable to collisions&quot; - I guess I've never really understand what you're doing with globs and the fancier thigns you're doing with github. \r<br />\n<br />\nWhy does it need to be separate per package manager? The names are almost always the same again?<br />\n",
+    "PostedDate": "2013-10-11T13:23:34.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106583",
+    "ThreadId": "461449",
+    "Html": "I posted my last message before reading your last. Reading it now. <br />\n",
+    "PostedDate": "2013-10-11T13:31:48.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106592",
+    "ThreadId": "461449",
+    "Html": "Codeplex was down for a while or something.\r<br />\n<br />\nCool. My only real goal is to improve the tooling for Typescript. If the only thing I end up accomplishing is spurring you guys on to make better things that's fine by me :) \r<br />\n<br />\nThat's great that you're rolling TSD into DefinitelyTyped, and that you're moving ahead quickly! That's perfect. I think TS definitely needs an &quot;official&quot; definition manager. \r<br />\n<br />\nNote: I'm not against testing at all. I'm against TDD during the prototype phase. So, I'd have no problem writing tests, etc, if you decide to require TPM. You're also welcome to just rip off any of the code and pull it in (MIT license after all, of course). \r<br />\n<br />\nSo here's what I think the plan is:<br />\n<ol>\n<li>You guys work to get TSD usable and on NPM quickly</li>\n<li>You start adding your goodies</li>\n<li>\nWe decide whether to merge or require my goodies, and do whatever needs doing. <br />\n</li>\n</ol>\nWhile I am waiting for us to finish the plan, TPM is currently useful to me, so I'll just use it until we're ready. \r<br />\n<br />\nHere are the features from TPM I would love to see included in the &quot;official&quot; package manager<br />\n<ol>\n<li>Reading dependencies from *.json files</li>\n<li>Knowing which definition file to install by dependency name</li>\n<li>The &quot;tpm index&quot; command I made</li>\n<li>\nAdding grunt files<br />\n</li>\n</ol>\nIf you do not want to include any of those, I can publish them separately, but I think they would be better as part of the official manager (except maybe the grunt files). Whether they end up merged in or required in doesn't matter to me. \r<br />\n<br />\nThe big questions we should answer right away are:<br />\n<ol>\n<li>Which of the features I listed would you be willing to include in TSD? All of them? (I could code them if you got it stable)</li>\n<li>\nShould we require or merge in these features?<br />\n</li>\n</ol>\n",
+    "PostedDate": "2013-10-11T14:11:58.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106604",
+    "ThreadId": "461449",
+    "Html": "Nice, that is all very good to hear! \r<br />\n<br />\nWe're really glad to see we're not splitting up and wasting effort, and that you can still have something useful right now (and not push ahead parallel regardless.. which is an awesome decision, thanks for that!)\r<br />\n<br />\nYou idea for a plan matches what we had in mind.\r<br />\n<br />\nRegarding the features: I definitely see the usefulness of all of them.<br />\n<ul>\n<li>I assume tpm index is a simple index listing? Of course we'll cover that in TSD core (so basic :)</li>\n<li>The grunt task reminds me I am 'squatting' the name <code>grunt-tsd</code> on github.. totally forgot. If we reach a point where we would implement a grunt task I'd be willing to donate it to someone else (and maybe bring it into DT as well, if it is implemented in high-quality manner)</li>\n<li>\nIf we use the .json parse and dependency do the name lookup they need to be dependencies, and not be merged in the core. (modular is a best practice for many reasons). Again, they should be done top-notch to be pulled into DT.<br />\n</li>\n</ul>\nSo we're good I think? I power ahead, keep you in the loop maybe for later?\r<br />\n<br />\nSome detail:\r<br />\n<br />\nThe thing I'm getting at with my remarks about quality, that &quot;vulnerable to collisions&quot; remark and other things like that, is mostly regarding project style and way of thinking about the problem (this is also why I pushed for a scope blurp). \r<br />\n<br />\nIf you want to build something right and have random users all over he internet depend on what you offer to them then you take a certain responsibility and you are morally obliged deliver on that. \r<br />\n<br />\nIf we want to do this right we can't legally (professionally) claim features towards users but implement them based on assumptions like &quot;almost always&quot; or &quot;should work&quot;. That are not terms that many developers like to hear (if you hear the word 'assumption' used in development something is going very wrong).\r<br />\n<br />\nOf course this totally depends on the thing you release, the bigger the audience and more centralised your module, the heavier you need to build. Simple fun module for personal use or fixing a minimal solution for an acute problem? Do whatever you want! (freeeedom! :) But a big community service? Then it must be hardened.\r<br />\n<br />\nWhat this means for us, for example, is that an alias map cannot be just a flattened lowercase copy of the all the names in the repo content... that is just a trick, not the <em>actual</em> alias information the label suggests it to be. It is just lucky that it works <em>usually</em> (think about the difference). And if you don't have a test, you have no idea if it is actually true what it claims.\r<br />\n<br />\nSame with the collision of definition filenames. Sure, likely it will not happen (another bad word, likely). But there is no actual <em>guarantee</em>. Who knows what somebody pushes to DT tomorrow? Maybe the angularjs teams decides to include a customized jquery, and the guy making the typings thinks &quot;oh, if it is put in the 'angularjs' folder then I might as well name just it jquery.d.ts&quot;. There is no rule in DT that prohibits this (only advice). Then you are in trouble if you blindly flatten the paths like in your script. Which jquery will it return? \r<br />\n<br />\nSee what I mean? \r<br />\n<br />\nIt explains a lot of the detailed problems and swathes of text I've been throwing at you this week: while you solved an acute observed problem (while 10.000 others did nothing, so props for that) we were already trying to go for the heavy correct solution (after Diullei and me both had crashed on some of our own assumptions and simplifications over past months).\r<br />\n<br />\nMy hand hurt from typing now :P\r<br />\n<br />\nWe'll get in touch when we got something nice and we can do some cooperation.\r<br />\n<br />\nAgain, thanks for playing ball on this and getting us into gear again (and let me exercise my technical English (I'm a Dutch native)). <br />\n",
+    "PostedDate": "2013-10-11T15:53:58.257-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106687",
+    "ThreadId": "461449",
+    "Html": "Ok, great. We're on the same page then. \r<br />\n<br />\nI will avoid promoting TPM for now. Please get to something stable quickly, then I can figure out what to do about the .json parse and alias mapping. I may or may not have time to do a version to the quality you are expecting at that point, but we'll work something out. After using the tool with the .json parsing I definitely feel like a tool should operate that way (it's a really nice workflow).\r<br />\n<br />\nYour English is really good! It's been a pleasure collaborating with you. <br />\n",
+    "PostedDate": "2013-10-12T06:35:55.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106691",
+    "ThreadId": "461449",
+    "Html": "Excellent!\r<br />\n<br />\nWe got a plan and new energy :)\r<br />\n<br />\nSide note: do you Watch the DT repo Issues? Did you see <a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/115\" rel=\"nofollow\">this ticket</a> coming up from months ago? No idea why it was still open (was before my time) but some guy found it and bumped it.\r<br />\n<br />\n(if you agree please do a +1 to motivate everybody to make it happen :)<br />\n",
+    "PostedDate": "2013-10-12T06:58:24.49-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

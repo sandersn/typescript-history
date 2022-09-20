@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-27T12:58:06.737-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "This used to work in 0.9.1.1, but with 0.9.5 it no longer works and I don't know any other work around.  please let me know if there's some other way of doing this!\r\n\r\nI have callback functions with a number of fixed parameters, and a number of variable-length parameters.\r\n```\r\n//DI api example\r\nfunction run(name:string, callback : (name:string, ...customArgs:any[]):string[]{\r\n///does some magic \r\n//dependency-injection \r\n//with callback here, \r\n//like what angular.js does\r\n}\r\n```\r\n\r\nin 0.9.1.1 i could invoke that and typing worked for the first (fixed) parameter, and the return value.\r\n```\r\n//usage example\r\nvar myOutputArray : string[] = run(\"myName\", (name,some,arbitrary,params,here)=>{\r\nreturn [];\r\n} );\r\n```\r\nbut in 0.9.5 i get typing errors when doing this, because my usage does not take a \"...customArgs\" as does the callback function signature in .run()\r\n\r\n__so how can I support this workflow in 0.9.5?__     optional parameters without dumping them to a ...args[] array,  and still get typeflow for explicit parameters? \r\n\r\nPS: this is a follow up to:  https://typescript.codeplex.com/workitem/1934 which was rejected",
+    "LastUpdatedDate": "2013-11-27T12:58:06.737-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-21T17:32:28.307-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Feature Regression: Support partial type-flow for functions with dependency injection of parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1937
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "more analysis of the regression:\n\nusing an interface instead of a function type works:\n```\n//this has proper typeflow:\n\ninterface Func1<T1, TResult> extends Function {\n\t(arg1: T1, ...args: any[]): TResult;\n}\nfunction run(name:string, callback : Func1<string,string[]>){\n///does some magic like angular.js\n}\n```\n\nbut only if I don't provide types for the optional parameters\n```\n// proper typeflow:\nrun(\"name\",(name,other,optional,args)=>{\nreturn [name,\"array\"];\n});\n\n//no typeflow\nrun(\"name\",(name,other:string,optional,args)=>{\nreturn [name,\"array\"];\n});\n\n\n```\n\n",
+      "PostedDate": "2013-11-21T21:15:48.333-08:00",
+      "Id": 123848
+    },
+    {
+      "Message": "You probably need to mark the optional callback parameters as optional (`other?`). \n\nThe type system complains that it cannot guarantee that those non-optional parameters will be provided, although the error message usually gives no hint that this is the problem.\n\nThe error messages should be clarified.",
+      "PostedDate": "2013-11-22T04:07:16.267-08:00",
+      "Id": 123867
+    },
+    {
+      "Message": "This is by design. The original example will work as expected when you do the following:\n\n````\nrun(\"myName\", (name, some?, arbitrary?, params?, here?) => {\n    return [name, \"\"];\n});\n````\n\r\n\r** Closed by paulb 11/22/2013 10:09AM",
+      "PostedDate": "2013-11-22T10:09:11.567-08:00",
+      "Id": 125408
+    },
+    {
+      "Message": "hi paul, but the original example doesn't work when you try to cast those arbitrary parameters:\r\n\r\n```\r\nrun(\"myName\", (name, some?:any, arbitrary?, params?, here?) => {\r\n    return [name, \"\"];\r\n});\r\n```\r\n\r\ncasting \"some\" to type any (even if that was what the type-flow detected) will cause intellisence/type safety to break.\r\n\r\nit sucks to have to do this:\r\n```\r\nrun(\"myName\", (name, some?:, arbitrary?, params?, here?) => {\r\nvar someCast:string = <any>some;\r\n    return [name, someCast];\r\n});\r\n```\r\n\r\n\r\n\r\n",
+      "PostedDate": "2013-11-26T21:53:48.93-08:00",
+      "Id": 125411
+    },
+    {
+      "Message": "As far as I can tell things are working as designed. There're two issues tripping you up:\n\n1) Contextual typing does not apply to function types when those functions types have any type annotations. This is what you're seeing above when you add the 'any' annotation to 'some' (note: not a cast), name (and all the other parameters) are now treated as an 'any' rather than string because it does not use the contextual type from the parameter types in run's definition. You'll need to either explicitly annotate all the parameters or else annotate none to rely on contextual typing.\n\n2. Optional parameters in callbacks are more restrictive than non-optional parameters. This is what Paul was initially fixing in your code. See https://typescript.codeplex.com/discussions/428458 You may be better off overloading run with a few different callback arguments with differing numbers of required parameters. ",
+      "PostedDate": "2013-11-27T12:56:06.46-08:00",
+      "Id": 125496
+    },
+    {
+      "Message": "Not sure how that second point ended up a sub bullet of the first...",
+      "PostedDate": "2013-11-27T12:56:25.727-08:00",
+      "Id": 125497
+    }
+  ]
+}

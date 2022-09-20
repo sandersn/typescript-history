@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fairly well covered already. This is by design.",
+    "ClosedDate": "2014-04-15T19:07:25.133-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Please see comments below. I think compiler should allow this, only because property `defaults` is declared as `any`...\r\n\r\n```typescript\r\ndeclare module Backbone {\r\n    interface OptionalDefaults {\r\n        defaults?: any;\r\n    }\r\n\r\n    class Model implements OptionalDefaults {\r\n\t\t// Backbone `defaults` property accepts either an object\r\n\t\t// literal or a function returning an object literal.\r\n\t\tdefaults: any;\r\n    }\r\n}\r\n\r\nclass MyModel extends Backbone.Model {\r\n    \r\n\tinitialize() {\r\n\t\tthis.defaults = { // object literal, OK\r\n\t\t\tid: 1,\r\n\t\t\tname: 'Ben'\r\n\t\t}\r\n\t\t\r\n\t\tthis.defaults = () => { // function, OK\r\n\t\t\treturn {\r\n\t\t\t\tid: 1,\r\n\t\t\t\tname: 'Ben'\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\t// Unwanted Error, compiler should allow this because\r\n\t// `defaults` is of type `any` even though it is not\r\n\t// declared as instance member function. However,\r\n\t// after this explicit function declaration it should only\r\n\t// accept functions and give error on assignments of\r\n\t// other types such as first assignment inside `initialize()`\r\n\t// This way the implementing class can decide whether\r\n\t// it wants to extend it as a function or property.\r\n\tdefaults() {\r\n\t\treturn {\r\n\t\t\tid: 1,\r\n\t\t\tname: 'Ben'\r\n\t\t}\r\n\t}\r\n\r\n}\r\n```",
+    "LastUpdatedDate": "2014-04-15T19:30:32.407-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-15T13:37:59.863-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Properties of type 'any' that can get values or functions",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2441
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Funny thing, I ran into that this week when I was trying to see if I could declare (but not initialize) member properties in attempts to create pseudo-virtual methods (undefined) in the base types ... but as the compiler error states, you cannot define a function (which ends up on the PROTOTYPE) when you also have declared an INSTANCE property with the same name.  In fact, in most cases, I agree it doesn't even make sense (if viewed this way).  What is needed is a \"virtual\" modifier.\n(https://typescript.codeplex.com/workitem/1413)\n\n",
+      "PostedDate": "2014-04-15T14:26:21.663-07:00",
+      "Id": 142009
+    },
+    {
+      "Message": "For now, you could also do it this way (or similar):\n\n```\n...\n    class Model implements OptionalDefaults {\n        // Backbone `defaults` property accepts either an object\n        // literal or a function returning an object literal.\n        defaults(): any;\n    }\n...\n        this.defaults = <any>{ // object literal, OK\n            id: 1,\n            name: 'Ben'\n        };\n...\n```\n\n...then just test \"if (typeof this.defaults == 'function') { /*...*/ }\" where needed.",
+      "PostedDate": "2014-04-15T14:35:32.767-07:00",
+      "Id": 142010
+    },
+    {
+      "Message": "I like your workaround @jamesnw. Thanks!",
+      "PostedDate": "2014-04-15T15:40:33.253-07:00",
+      "Id": 142018
+    },
+    {
+      "Message": "Np, glad I could help. ;)",
+      "PostedDate": "2014-04-15T19:30:32.407-07:00",
+      "Id": 142030
+    }
+  ]
+}

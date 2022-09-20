@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-11T22:10:05.4-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "tsc v9.1.1\r\n```\r\nmodule test{\r\n  export var publicFoo = 1;\r\n  export function seeFoo(someParameter){\r\n    var someParameter= publicFoo; // transpiles to publicFoo\r\n    var f            = publicFoo; // transpiles to test.publicFoo\r\n  }\r\n}\r\n```\r\nThe outputted javascript declares publicFoo as:\r\n```\r\ntest.PublicFoo=1;\r\n```\r\nbut tries to access it as just publicFoo in line 4. Which fails at runtime.\r\n",
+    "LastUpdatedDate": "2013-10-04T11:57:30.593-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-11T05:22:35.747-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Compiler incorrectly omits module name when referencing exported var",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1672
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "something very similar to  workitem 1614",
+      "PostedDate": "2013-09-11T09:17:45.007-07:00",
+      "Id": 113184
+    },
+    {
+      "Message": "Why does the compilation of the RHS depend on the type of the LHS?",
+      "PostedDate": "2013-09-11T17:00:34.627-07:00",
+      "Id": 113292
+    },
+    {
+      "Message": "On develop ( v0.9.1-486-g70f1d00 ), this compiles correctly.\n\n```javascript\nvar test;\n(function (test) {\n    test.publicFoo = 1;\n    function seeFoo(someParameter) {\n        var f = test.publicFoo;\n        var someParameter = test.publicFoo;\n    }\n})(test || (test = {}));\n```\n",
+      "PostedDate": "2013-09-11T17:03:12.92-07:00",
+      "Id": 113293
+    },
+    {
+      "Message": "(aside)\n\nShould it be an error to redeclare with a function parameter with var in the same block?\n\n... If you drop the var in front of someParameter it compiles correctly in the playground.",
+      "PostedDate": "2013-09-11T17:06:27.403-07:00",
+      "Id": 113295
+    },
+    {
+      "Message": "As per Adam, this appears to be resolved in 'develop'.\n\nRegarding the redeclaring a var with the same name as a parameter:  Currently we allow you to redeclare a variable, as long as it's the same type.  Turns out this is quite common in JavaScript (especially with things like variable initializers in for loops), and indeed the code we emit redeclares variables quite a lot too.  We did discuss internally if a redeclaring a parameter with a var of the same name (and type) should be legal, and decided not to change the current behavior (i.e. it is treated similar to redeclaring a var, and is allowed).",
+      "PostedDate": "2013-09-11T22:09:57.413-07:00",
+      "Id": 113310
+    },
+    {
+      "Message": "@billti\nI just debugged an issue where I had declared a variable and then redeclared it again in a for loop, same name, same type but assigned to a different instance.\nGot burned by the fact that typescript doesn't warn about defining a variable again.\n\nI think it should be a warning (coming from a C# background) because I don't think it's ever sensible to want to redeclare a variable and wherever it happens, it would seem suspiciously like the developer didn't realise it was already declared.",
+      "PostedDate": "2013-09-28T05:20:24.053-07:00",
+      "Id": 115895
+    }
+  ]
+}

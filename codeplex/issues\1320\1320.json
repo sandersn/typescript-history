@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting, this is fixed in the develop-branch and should be in the next release of typescript.\r\n\r\nFor your questions about exporting classes in namespace, I'm not 100% sure what you mean, but this works for me...\r\n\r\n````\r\ndeclare module \"hello\"\r\n{\r\n    module world {\r\n        export class foo { }\r\n    }\r\n\r\n    export = world;\r\n}\r\n````",
+    "ClosedDate": "2013-07-12T10:22:44.23-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "test2.ts:\r\n\r\n\tdeclare class foo { }\r\n\r\n\tdeclare module \"hello\"\r\n\t{\r\n\t\t// This trick is necessary if \"foo\" is actually namespaced.\r\n\t\tvar xyz: foo;\r\n\t\texport = xyz;\r\n\t}\r\n\r\ntest.ts:\r\n\r\n\t/// <reference path=\"test2.ts\" />\r\n\r\n\timport hello = module(\"hello\");\r\n\r\n\tclass world extends hello { \r\n\t\tbar() {}\r\n\t}\r\n\r\nCompiler error: tsc.js(3228, 17) Microsoft JScript runtime error: Argument out of range: position.\r\n\r\nNow I understand that the \"var\" trick technically returns an object of the foo class instead of the foo class itself for the module, but still the compiler should flag it out as an error instead of crashing.\r\n\r\nAlso, there is currently no way to \"export\" a class which is under a namespace.  Assigning a var to the class is not allowed in the context where there is an \"export =\" statement.\r\n\r\nModify test2.ts to:\r\n\r\n\tdeclare class foo { }\r\n\r\n\tdeclare module \"hello\"\r\n\t{\r\n\t\texport = foo;\r\n\t}\r\n\r\nworks fine.\r\n",
+    "LastUpdatedDate": "2013-08-13T13:24:14.897-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-09T02:12:03.783-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Compiler error when extending class returned in modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1320
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi,\n\nThanks for fixing the fault.\n\nAs for using \"export =\" with namespace, I mean:\n\n    declare module hello\n    {\n        module foo\n        {\n            module bar\n            {\n                class something {}\n            }\n        }\n    }\n\n    declare module \"kitty\"\n    {\n        export = hello.foo.bar.something;\n    }\n\nOf course, if I remove the namespace and change ``hello.foo.bar.something`` into ``hello_foo_bar_something``, then the ``export = hello_foo_bar_something;`` statement no longer gives a compiler error.  However, namespaces is invented for a reason -- and that is to create structure to make code cleaner and easier to maintain.\n",
+      "PostedDate": "2013-07-14T06:47:27.187-07:00",
+      "Id": 105991
+    },
+    {
+      "Message": "In this case we need to remember that modules are not strictly namespaces (in the C# sense), as they also can contain values, which complicates these scenarios. That said, we have been considering whether to allow the target of an export= to be an identifier that was not defined in that module itself. I believe there are some existing suggestions logged for this which you can upvote.",
+      "PostedDate": "2013-08-13T13:24:14.897-07:00",
+      "Id": 109703
+    }
+  ]
+}

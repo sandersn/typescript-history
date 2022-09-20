@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This issue is the same as http://typescript.codeplex.com/workitem/468, so closing this and moving further discussion to that thread.",
+    "ClosedDate": "2013-02-26T14:37:12.14-08:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "Please consider the following enhancement request. When \"this\" keyword is used to point to a class member method, preserve the \"this\" object. Take for example this simple class:\r\n\r\n```TypeScript\r\nclass Class1 {\r\n    constructor () {\r\n        document.onmousemove = this.handler;\r\n    }\r\n    handler(e: MouseEvent) {\r\n        //wrong \"this\" here!\r\n    }\r\n}\r\n```\r\n\r\nIt would be great if TypeScript compiler handled such cases and generated an additional call to compiler-injected function that would preserve the context. In other languages like C# this works out of the box.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-21T23:36:45.363-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Fix \"wrong this\" issue inside a class",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 10,
+    "Id": 477
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Just a simple extra step:   this.handler.bind(this);.\n\nI'm not really sure whether binding every single method by default is a good idea.\n\nSee also: http://typescript.codeplex.com/workitem/468",
+      "PostedDate": "2012-11-22T06:21:40.563-08:00",
+      "Id": 82875
+    },
+    {
+      "Message": "I realize that there are at least two analogous suggestions posted here. So, just to be clear, I’m not suggesting to actually use “bind” to resolve this issue, instead I suggest to emit the following JavaScript for this example:\n\nvar Class1 = (function () {\n    function Class1() {\n        document.onmousemove = __bind(this, this.handler);\n    }\n    Class1.prototype.handler = function (e) {\n    };\n    return Class1;\n})();    \n\nWhere __bind function would be injected by compiler similar to how you inject \"__extends\" function:\n\nfunction __bind(thisObj, method) {\n    method.apply(thisObj, arguments);\n}\n\nThis is what many JavaScript developers do to work around this issue.",
+      "PostedDate": "2012-11-22T06:29:44.213-08:00",
+      "Id": 82877
+    },
+    {
+      "Message": "Oops... sorry, I meant like this:\n\nfunction __bind(thisObj, method) {\n    return function () { method.apply(thisObj, arguments); }\n}",
+      "PostedDate": "2012-11-22T06:33:13.717-08:00",
+      "Id": 82879
+    },
+    {
+      "Message": "nadog,\n\nWill your suggestion about bind even work? Member methods are added to prototypes and therefor shared by all instances of this class. So, if you place this \"simple extra step\" to constructor, you bind it to last-created instance... which is incorrect.",
+      "PostedDate": "2012-11-22T06:46:25.57-08:00",
+      "Id": 82881
+    },
+    {
+      "Message": "I don't know the best way to fix this, but I agree that it does need to be fixed. The current semantics - a weird mix of JavaScript and C# - are confusing. Unlike JS, you can normally be assured that \"this\" refers to the current class, not to the owner of the method - but not quite always, because if you assign the method to an event, suddenly the \"this\" changes. There are lots of ways to work around it, but the current way of handling it seems very inconsistent. And given that \"this\" is one of the most confusing parts about JS to begin with, and one of the easiest to get wrong, I'd recommend moving entirely over to C#-style semantics, where \"this\" inside a class method just means \"this instance of this class\", period, end of story, you don't have to worry about it.",
+      "PostedDate": "2012-11-22T08:12:59.643-08:00",
+      "Id": 82886
+    },
+    {
+      "Message": "Free-standing method selections (obj.method) are always a danger point in JS - one needs to be sure that the method doesn't use 'this'.\n\nA fairly readable ES6 workaround (and shorthand for the apply answer) is to expand the parameters, using spreads ( (...args)=>obj.methods(...args) ). Spreads don't seem to be fully implemented yet, but the single-parameter case does not need them:\n\ndocument.onmousemove = e => this.handler(e);\n\nI'm not so sure that registering external event handlers in a constructor is a good idea, though.",
+      "PostedDate": "2012-11-22T08:35:10.26-08:00",
+      "Id": 82887
+    },
+    {
+      "Message": "@AnatolyBakirov, yes of course \"this.handler.bind(this);\" would work, and so would @clausreinke suggestion of \"document.onmousemove = e => this.handler(e);\".\n\nBut since you are doing it in the constructor it is rather wasteful. The correct approach would be:\n\nvar class1 = new Class1();\ndocument.onmousemove = class1.handler.bind(class1); // you will get the correct \"this\" context every time\n\nIdeally you wouldn't want to do this - and for JavaScript to use the correct \"this\" context, but as I said it is not too much extra work.",
+      "PostedDate": "2012-11-22T11:34:15.357-08:00",
+      "Id": 82893
+    },
+    {
+      "Message": "Thanks for these workarounds, they all would work. But won't you agree that since TypeScript introduces the concept of \"class\" it should also resolve the problem of \"this\" when it is used inside of a class?",
+      "PostedDate": "2012-11-22T20:33:29.48-08:00",
+      "Id": 82901
+    },
+    {
+      "Message": "Even though typescript has to live in a javascript world, and try to play nicely, I think that there is still an elegant solution to this problem.\n\nGiven this class:\n\n    class Person\n    {\n      constructor(public name:string){}\n      shout(message){ alert(this.name + \" says: \" + message + \"!\"); }\n    }\n\nI think that the compiler could emit an error when trying to reference a class method:\n\n    var joe = new Person(\"Joe\");\n    \n    //compiler warning here. \n    //  Warning, referencing a class method without binding can cause issues\n    //  when invoking a method as a function, try using 'joe::shout' instead of 'joe.shout'.\"\n    var shout = joe.shout;\n    shout(\"Hello World\");\n\n\nThe warning could be avoided by casting the instance to \"any\":\n\n    var joe:any = new Person(\"Joe\")\n    var shout = joe.shout; //no warning\n    shout(\"Hello World\");\n\nAnd I also think that some new syntax to facilitate method binding would provide a simple solution (the actual example syntax here is unimportant):\n\n    var joe = new Person(\"Joe\");\n    //no warning, the code is transformed to joe.shout.bind(joe)\n    var shout = joe::shout; \n    shout(\"Hello World\");",
+      "PostedDate": "2012-11-29T10:06:59.003-08:00",
+      "Id": 83252
+    },
+    {
+      "Message": "I understand the desire to see TypeScript offer further help here.  However, we consider it very important to maintain JavaScript runtime semantics and to allow interoperation with existing JavaScript coding/usage patterns.  ES6 classes will not do any bind-on-extract, and so TypeScript cannot do this implicitly either.  \n\nWe may be able to add warnings/errors on attempts to extract a method off a class instance.  This would at least bring attention to cases where this bug might occur.  \n\nI'm also supportive of the \"bind operator\" proposal from Dave Herman, though I think it could be modified to offer even simpler syntax for bind that fits the most common use case of method extraction:\n\nhttp://wiki.ecmascript.org/doku.php?id=strawman:bind_operator\n\nI expect we will look at both the warning and the bind operator as options for TypeScript.",
+      "PostedDate": "2012-12-04T18:28:41.007-08:00",
+      "Id": 83567
+    },
+    {
+      "Message": "When needed I use this way:\n\n    class Class1 {\n        private message: string;\n\n        constructor() {\n            this.message = \"Hello World! \";\n            document.onmousedown = (ev) => this.handler.call(this, ev);\n        }\n        handler(e: MouseEvent) {\n            // right \"this\" here\n            alert(this.message + e.button);\n        }\n    }\n",
+      "PostedDate": "2013-01-06T07:55:52.053-08:00",
+      "Id": 85438
+    }
+  ]
+}

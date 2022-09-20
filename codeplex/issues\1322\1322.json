@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Everything you've listed here, as far as I can tell, is the result of something else in scope being named \"_this\". If you find a different issue that results from some other cause, please open a separate bug. Having one bug representing a bunch of different problems is confusing and is not how we keep track of issues.",
+    "ClosedDate": "2013-07-12T14:23:20.917-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Code generation for arrow functions is still broken - this issue is meant to consolidate the various discussions, with simple test cases, eg, consider\r\n```\r\n// wrong arguments\r\nvar x = function() { return ()=>(this,arguments)};\r\n\r\n// this captured by wrong _this\r\nvar y = function() { return (_this)=>this };\r\n\r\n// _this wrongly captured\r\nvar _this = \"_this\";\r\nfunction f() {\r\n\treturn [_this, ()=>this]\r\n}\r\n```\r\nwhich generates\r\n```\r\n// wrong arguments\r\nvar x = function () {\r\n    var _this = this;\r\n    return function () {\r\n        return (_this, arguments);\r\n    };\r\n};\r\n\r\n// this captured by wrong _this\r\nvar y = function () {\r\n    var _this = this;\r\n    return function (_this) {\r\n        return _this;\r\n    };\r\n};\r\n\r\n// _this wrongly captured\r\nvar _this = \"_this\";\r\nfunction f() {\r\n    var _this = this;\r\n    return [_this, function () {\r\n            return _this;\r\n        }];\r\n}\r\n```\r\n\r\nPrevious reports have tended to be confused with arrow function semantics questions, or have gone to sleep after reaching the conclusion that something should be done, so I'm opening this dedicated issue. \r\n\r\nUnless you want to implement a complete and correct scoping/rename operation for `this`, I suggest moving from `_this = this` to `.bind(this)` (with polyfill for `bind` on ancient engines).",
+    "LastUpdatedDate": "2013-08-13T11:46:47.233-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-09T09:52:46.077-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "please fix arrow functions",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1322
+  },
+  "FileAttachments": [
+    {
+      "FileId": 702700,
+      "FileName": "bind-for-arrows.html",
+      "DownloadUrl": ".\\702700"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "@clausreinke, another consideration (apart from the need for a polyfill) is that bind is slower than an inline function http://jsperf.com/function-bind-vs-callback-wrapper\n",
+      "PostedDate": "2013-07-09T10:27:24.117-07:00",
+      "Id": 105548
+    },
+    {
+      "Message": "@nabog if it isn't correct, I don't care how fast it is. The more complex the necessary analysis, the less likely it is to be correct.\r\n\r\nStart from a safe, simple, known-to-be-correct fallback. Optimize only where necessary, and only when it is clear that correctness is preserved. Prefer to badger engine hackers for optimizations of such common operations over working around engine slow paths.\r\n\r\nLocal experimentation seems to show that v8, at least, can already handle an `.apply`-based polyfill, even though other engines are still slow. jsperf results differ from my local results, so I attach code here instead. Timings, for me here:\r\n```\r\n$ node bind-for-arrows.html\r\n_this: 4ms\r\n.bind: 26ms\r\nbind: 3ms\r\n_this, calls only: 0ms\r\n.bind, calls only: 4ms\r\nbind, calls only: 1ms\r\n.bind, inline: 24ms\r\n.call, inline: 1ms\r\n.apply, inline: 3ms\r\n20000 20000 20000 30000\r\n```",
+      "PostedDate": "2013-07-09T12:54:33.927-07:00",
+      "Id": 105574
+    },
+    {
+      "Message": "Sure, let's have it fixed by all means, but not with `bind`",
+      "PostedDate": "2013-07-10T08:16:32.117-07:00",
+      "Id": 105637
+    },
+    {
+      "Message": "thanks for reporting, this is actually a duplicate of:\n\nhttps://typescript.codeplex.com/workitem/11\n\r\n\r** Closed by paulb 07/12/2013 10:42AM",
+      "PostedDate": "2013-07-12T10:42:59.11-07:00",
+      "Id": 105899
+    },
+    {
+      "Message": "I'm aware that there have been many discussion and issues related to arrow functions (another live one is https://typescript.codeplex.com/workitem/323 ). This is not a duplicate but an attempt to consolidate the various thread into one, with short test cases, hopefully prompting a fix. \r\n\r\nI've added a third test case to the description (that makes two which haven't been mentioned before).",
+      "PostedDate": "2013-07-12T13:27:49.027-07:00",
+      "Id": 105901
+    },
+    {
+      "Message": "@RyanCavanaugh `arguments` isn't `this` - arrow functions have no `arguments`. Also, there is a huge difference between TypeScript introducing a new binding that captures an existing variable and TypeScript renaming an existing variable so that it is captured by an existing binding. All of those are bugs, of course, but if you don't track the different kinds of bugs, how are you going to fix them? Your current way of tracking bugs has not led to a solution, only to a proliferation of open and close issues and discussions.\n\nMeanwhile, I raised the issue of `.bind` performance on es-discuss, and the best guesses there were that (a) engines would focus on improving that if there was interest raised (the TypeScript team could weigh in with practical application needs) and (b) the slow performance could be a case of accidental de-optimisation.",
+      "PostedDate": "2013-07-13T01:32:48.673-07:00",
+      "Id": 105951
+    },
+    {
+      "Message": ">Meanwhile, I raised the issue of .bind performance on es-discuss,\n\nforgot to link to the thread: \n\nWhy is .bind so slow?\nhttps://mail.mozilla.org/pipermail/es-discuss/2013-July/031803.html",
+      "PostedDate": "2013-07-13T13:12:19.027-07:00",
+      "Id": 105967
+    }
+  ]
+}

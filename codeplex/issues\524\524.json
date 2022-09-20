@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, we mismerged master/develop, but it should be fixed now. Please reactivate if you see other issues. Thanks!",
+    "ClosedDate": "2012-12-03T09:50:53.777-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The issue was a mystery, but now I got it. The develop branch does indeed have this problem. But there is a stray commit on master branch that fixes it. For some reason (perhaps an overlook) that single stray commit wasn't merged back into develop branch.\r\n\r\nHere's a diff of the fix on the master branch:\r\nhttp://typescript.codeplex.com/SourceControl/diff/file/view/2bee84410e02?fileId=src%2fcompiler%2fpathUtils.ts\r\n\r\nThe fix doesn't appear to be marked with an issue tracker, so I'll leave mine here below as is.\r\n\r\n\r\n\r\nTypeScript compiler puts absolute paths (meaning on Windows starting with drive letter) instead of relative paths when the originating '*.ts' file was located up in directory hierarchy.\r\n\r\nThat results in browsers supporting 'sourcemap' not being able to view/debug the source.\r\n\r\nHere's a reproduction:\r\n\r\n/Apple.ts\r\n    class Apple { }\r\n\r\n/src/main.ts\r\n    /// <reference path=\"../Apple.ts\" />\r\n    var s = new Apple();\r\n\r\n-----compiling-----\r\ntsc main.ts --out main.js\r\n\r\nThe resulting sourcemap file will contain absolute paths for code generated out of Apple.ts.\r\n\r\nThe tested browsers where absolute paths fail to work are current versions of Chrome (23) and Chrome Canary (25).\r\n\r\nIt appears sensible for browsers not to allow absolute paths for security concerns. Absolute paths would allow cross-site access triggered by the originating web site but executed out of Developer Tools context.",
+    "LastUpdatedDate": "2013-08-13T09:46:34.567-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-02T23:59:44.593-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Absolute paths in sourcemap instead of '..'",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 524
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Absolutely, I've seen the fix coming up on the develop branch a couple of days ago. Thanks a lot! ",
+      "PostedDate": "2012-12-15T05:18:38.73-08:00",
+      "Id": 84219
+    }
+  ]
+}

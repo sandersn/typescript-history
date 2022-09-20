@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in 0.9.x.",
+    "ClosedDate": "2013-03-22T15:05:00.287-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Hi, here is a snippet that illustrates the issue:\r\n\r\n```\r\ninterface IFoo {\r\n\tgetFoo(): string;\r\n}\r\n\r\n// Error:\r\n// Class 'Foo' declares interface 'IFoo' but does not implement it: \r\n// Types of property 'getFoo' of types 'Foo' and 'IFoo' are incompatible: \r\n// Call signatures of types '() => any' and '() => string' are incompatible\r\nclass Foo implements IFoo {\r\n\r\n  public getFoo() {\r\n\r\n      return <any>{ name:\"foo\"};\r\n  }\r\n}\r\n\t\r\n// Okay: no error\r\nclass Bar implements IFoo {\r\n\r\n   public getFoo() : string {\r\n\r\n      return <any>{ name:\"foo\"};\r\n   }\r\n}\r\n```\r\n\r\nHere we have two classes that are defined exactly the same. The only difference is that we annotate the method `getFoo` in the second class in order to declare the return type. This action ensures the class compiles while the first class fails to compile because it does not have that annotation.\r\n\r\nWhile there's nothing terribly wrong with this it leads to an unfortunate recommendation: \"Do not annotate method return values if a stricter (more correct) compilation is required\".\r\n\r\nThe suggestion here is that the compiler should also fail class Bar, so that the behaviour is more consistent.\r\n\r\nFor those desperate to bring down their applications the following should suffice:\r\n\r\n```\r\n  // Compiles without error\r\n  public getFoo() {\r\n\r\n      return <string><any>{ name:\"foo\"};\r\n  }\r\n```",
+    "LastUpdatedDate": "2013-03-22T15:05:00.287-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-22T09:56:22.36-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Check return value rather than signature",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 839
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

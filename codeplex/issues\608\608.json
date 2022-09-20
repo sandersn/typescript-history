@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:16:53.06-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Take a look on the following snippet:\r\n\r\nvar lang: Language[];\r\nlang = [\r\n    { identifier: 'he', title: 'Hebrew', isRightToLeft: true },\r\n    { identifier: 'en', title: 'English', isRightToLeft: false, canSetNonExistPropertyWithoutAnyError: true },\r\n];\r\nalert(lang[0].direction());\r\n\r\nThere is two problem with it:\r\n1. I can incorrectly set a field that is not part of the Language class in the Language[] collection and get no error from the compiler.\r\n2. It's not really use the class but just an object. So it may looks like a can ask for the direction() but this is not true.\r\n\r\nInstead of that, what I really like to have is something like this (which is like c#):\r\n\r\nvar lang: Language[];\r\nlang = [\r\n    new Language() { identifier: 'he', title: 'Hebrew', isRightToLeft: true },\r\n    new Language() { identifier: 'en', title: 'English', isRightToLeft: false, canSetNonExistPropertyWithoutAnyError: true },\r\n];\r\nalert(lang[0].direction());\r\n\r\nNow, 1: The compile will warn me about the use of not existent property. \r\n2. the direction() will return the right result.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-12T14:05:28.947-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Add a way to initialize strongly typed arrays",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 608
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Two things going on here\n\n1) There is a compiler bug where empties in array literals cause the type checker to stop type checking array literals. If you remove that trailing comma (which I expect is not intentional -- if it is, just replace with \", undefined\" which is equivalent and more likely to work cross-browser anyway), you'll see the expected type errors\n\n2) You'll always be able to write canSetNonExistPropertyWithoutAnyError in an object literal without error. In the case where the type of your array is a structural type instead of a class type, it's just basic array covariance to allow a \"derived\" type that has extra members.\n\nMarking 'active' because of the bug in 1)",
+      "PostedDate": "2013-01-14T10:16:38.763-08:00",
+      "Id": 86112
+    },
+    {
+      "Message": "Actually the comma is intentional, and I liked that TypeScript actually omitted it (if I remember correctly) from the output. This is how I'm coding in C#.\n\nDoes the C# way of creating new items will be available in TypeScript? Like:\n\nvar lang: Language[]; \nlang = [ \nnew Language() { identifier: 'he', title: 'Hebrew', isRightToLeft: true }, \nnew Language() { identifier: 'en', title: 'English', isRightToLeft: false }, \n]; ",
+      "PostedDate": "2013-01-14T11:41:25.58-08:00",
+      "Id": 86117
+    }
+  ]
+}

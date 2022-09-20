@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1255101",
+    "ThreadId": "548271",
+    "Html": "Hi, guys,\r<br />\n<br />\nThis discussion is with reference to the component that provides autocomplete, syntax highlighting, and inline error highlighting (red squiggly) in Visual Studio.\r<br />\n<br />\nThis component has been rather sickly since (I believe) the 1.0RC. I am somewhat worried about this because there has been no official acknowledgement of this problem, in spite of <a href=\"https://typescript.codeplex.com/discussions/535688\" rel=\"nofollow\">some noise on the forum</a> and <a href=\"https://typescript.codeplex.com/releases/view/122175#ReviewsAnchor\" rel=\"nofollow\">a couple of one star reviews</a> that specifically mention this issue.\r<br />\n<br />\nThe basic problem (with some extrapolation by me) seems to be the following:<br />\n<ul>\n<li>Something fundamentally changed in 1.0RC that was probably dreamt up as an optimisation for how the plugin builds up its database of information.</li>\n<li>This wonderful optimisation has pretty much destroyed all the joy of working with TypeScript in large projects.</li>\n<li>This optimisation probably improves working with smaller projects, which is why there hasn't been more noise around this.</li>\n<li>If one has a setup where there is a single declarations file that is referenced by 200-odd typescript code files, and an edit is made to the declarations file then the old man exhibits the following symptoms:\r<br />\n** The IDE hangs when a new file, with errors from the breaking change, is opened.\r<br />\n** The busy icon shows up and disappears some four or five times, during which time the IDE is uneditable.</li>\n<li>\nIn other situations, even when there was no breaking-change edit made we experience the following all too often:\r<br />\n** When a file is opened &quot;refreshing&quot; shows up for much longer than it used to (say 5 - 10 seconds)\r<br />\n** It takes an age for the red squiggly to appear soon after a file is opened, after a change has been made in a related file.\r<br />\n** It takes an age for the red squiggly to disappear after the error is corrected.\r<br />\n** Vertically scrolling up and down on the file is sticky.\r<br />\n** Renaming a file is slow.<br />\n</li>\n</ul>\nGiven the symptoms it's not too difficult to guess that the mechanism that is responsible for providing the intellisense and error highlighting is not able to deal with the size of the code-base that we have.\r<br />\n<br />\nI would like to know:<br />\n<ul>\n<li>Is this acknowledged as a problem?</li>\n<li>Is it recommended that the set-up of a single declarations file referenced across the code-base is no longer a good idea?</li>\n<li>\nThe idea that &quot;TypeScript supports tools for large-scale JavaScript applications&quot; is sadly no longer the case? (Of course I'm joking)<br />\n</li>\n</ul>\nLooking forward to some feedback.\r<br />\n<br />\nThanks!\r<br />\n<br />\nSystem Information<br />\n<ul>\n<li>Visual Studio 2013 Ultimate.</li>\n<li>TS 1.0.1</li>\n<li>Other extensions: Node Tools for VS, Ankhsvn (No resharper or web essentials)</li>\n</ul>\n",
+    "PostedDate": "2014-06-11T02:21:03.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255185",
+    "ThreadId": "548271",
+    "Html": "Nabog, if you disable AnkhSVN does it get any better? It appears in other discussions I've seen on the issue (and within our team that also recently upgraded to TS 1.0) that if you disable the source code provider the IDE then becomes at least usable. It still is a dog, and all to often it sits for an age 'Generating outputs...' but at least it doesn't seem to bog down the IDE in its entirety.\r<br />\n<br />\nThis definitely needs to get sorted out, the current architecture appears to be struggling to keep up with some of the larger code bases out there. I am having doubts whether the decision to host the compiler within JS was ever a good idea vs. having a native compiler. Obviously I get that having it hostable in node or in another IDE will drive adoption, but it appears that not everything is right in the TS world.<br />\n",
+    "PostedDate": "2014-06-11T05:50:33.86-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255246",
+    "ThreadId": "548271",
+    "Html": "@Tharaxis, I did see the reference to Ankhsvn in the review and it does seem to improve the performance slightly.\r<br />\n<br />\nI'd like to point out the following (as you probably will agree):<br />\n<ul>\n<li>We have been using Ankhsvn for ages, well before TypeScript without any problems.</li>\n<li>It's just not feasible to work without the source control plugin.</li>\n<li>\nUnfortunately, all too often this discussion seems to end with &quot;it's the problem of some extension or the other&quot;.<br />\n</li>\n</ul>\nI kind of see this as a 100% TypeScript issue.\r<br />\n<br />\nHaving ported a large amount of C# code over to TS, I rather agree with the view that &quot;the current architecture appears to be struggling to keep up...&quot;\r<br />\n<br />\nIt's just painful to have to put with this after the performance we were used to with C#. Too often it's turning into a nightmare having to refactor code (renaming types, adding methods to interfaces, changing method signatures etc.) because that inevitably leads to the IDE slowing to a crawl.<br />\n",
+    "PostedDate": "2014-06-11T08:35:18.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255320",
+    "ThreadId": "548271",
+    "Html": "I'm working on a med-size project, and as well, I noticed that after using VS (2012 and 2013 - both of which behave the same) for a long time (I usually just hibernate and start up again later [never shutting down, because, frankly, it;s just faster]) the system hangs for seconds on literally every key stroke.  Closing VS and reopening always fixes it for another few hours.  I wonder if this is related to a resource leak somewhere ... ?<br />\n",
+    "PostedDate": "2014-06-11T11:16:15.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255351",
+    "ThreadId": "548271",
+    "Html": "@jamesnw, I've noticed that as well. Keystroke stickiness is also a common symptom since 1.0RC in the contexts I mentioned above.<br />\n",
+    "PostedDate": "2014-06-11T12:50:54.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255382",
+    "ThreadId": "548271",
+    "Html": "re: the source control plugin issue, that was 100% a TypeScript issue that will be fixed. There are other issues sometimes reported which are things that an extension is doing which we can't protect against, but this is not one of those cases.\r<br />\n<br />\n@nabog We have also been making some fixes in areas that sound similar to the scenario you're describing. If anyone has a project affected by this behavior that they can share we would be happy to investigate. So I would say that we are aware of some specific issues here which we are prioritizing fixing, along with a continued focus on the general goal of continuing to improve performance for large projects (batch compile and language service operations), but it's possible that the specific circumstances involved in your issue are not captured in one of our bugs. We do have a variety of large projects we use for performance testing on a daily basis but obviously there are many different patterns and circumstances to try to account for.\r<br />\n<br />\nThere is definitely no guidance of &quot;don't reference the same file from x other files or else performance will degrade,&quot; that should just work and be fast.<br />\n",
+    "PostedDate": "2014-06-11T14:48:27.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1255513",
+    "ThreadId": "548271",
+    "Html": "@danquirk, thanks for the response. I appreciate that the nature of the problem is not very simple.\r<br />\n<br />\nThere are two issues here (both probably related)<br />\n<ul>\n<li>Freezing up of the IDE when a large breaking change is introduced.</li>\n<li>\nGeneral sluggishness of the IDE when small breaking changes are made.<br />\n</li>\n</ul>\nThe following steps may help reproduce the first case:<br />\n<ul>\n<li>Create a TypeScript project called &quot;Interfaces&quot; and add a large number of interface definitions to the project. There should be both standard interfaces as well as interfaces that act to describe object literals used in method arguments.</li>\n<li>Ensure the project is compiled into a single output file, say &quot;Interfaces.d.ts&quot;.</li>\n<li>Create perhaps another 5 projects (we have more) with a number of TypeScript classes that implement the interfaces.</li>\n<li>Each of these projects should reference the output file &quot;Interfaces.d.ts&quot;.</li>\n<li>\nIntroduce a large breaking change by say deleting two thirds of the interface declarations in &quot;Interfaces.d.ts&quot;\r<br />\n  (In our case this turn of events came about because of <a href=\"https://typescript.codeplex.com/workitem/2523\" rel=\"nofollow\">issue #2523</a>)<br />\n</li>\n</ul>\nThis may reproduce the case of the IDE freezing up. (Perhaps it might be possible to write a program that can generate the interfaces and the classes that implement them, in which case it should be easy to see the effects as the number of types are scaled up).<br />\n",
+    "PostedDate": "2014-06-12T02:56:16.52-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1257088",
+    "ThreadId": "548271",
+    "Html": "Hi, I can confirm that I have similar problems. If I open some files, make some changes to source code my VS2013 process usage goes to 100% and stays there for 20sec or more. This makes VS totally unresponsive and editor is so sticky that it is unusable.\r<br />\n<br />\nIf I set “Options/Current source control plug-in” to none (I use git provider) everything works much better. So the solution for me is to switch source control on and off or to use command line for git.\r<br />\n<br />\n@danquirk: are there any plans when source control issue will be resolved. I can also send you privately my source code if it helps.\r<br />\n<br />\nBest regards<br />\n",
+    "PostedDate": "2014-06-17T07:56:09.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259756",
+    "ThreadId": "548271",
+    "Html": "Please also see @jpscott's description of the problem in a <a href=\"https://typescript.codeplex.com/workitem/2576\" rel=\"nofollow\">recently opened work item</a>.<br />\n",
+    "PostedDate": "2014-06-25T09:48:49.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259988",
+    "ThreadId": "548271",
+    "Html": "Thanks nabog!  Let's shout as loud as we can so MS can hear us!  I love TypeScript, but it was supposed to be &quot;made for big projects&quot;... My project isn't 1/4 of the way finished and VS performance is already putting me behind schedule...\r<br />\n<br />\nHopefully some of these fixes get through soon...\r<br />\n<br />\nI'll continue experimenting with different VS settings and see if I discover anything too!\r<br />\n<br />\nJames<br />\n",
+    "PostedDate": "2014-06-26T04:14:39.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260005",
+    "ThreadId": "548271",
+    "Html": "@jpscott, if you are able to zip up your project and send it to @danquirk by private email then they would appreciate that. (I'm not able to do that with mine, unfortunately.)\r<br />\n<br />\nThis is definitely putting me behind schedule as well.<br />\n",
+    "PostedDate": "2014-06-26T05:10:40.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

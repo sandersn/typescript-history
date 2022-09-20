@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:31:19.117-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I get this error when compiling the following code:\r\n\r\n```\r\ninterface I<T> {\r\n  x: T;\r\n}\r\n\r\nfunction f<T>( y: I<T>[] ): I<T> { return null; }\r\n\r\nfunction g<T>( z: I<T> ) { return null; }\r\n\r\ng( f( [0].map( s => ({ x: s})) ) );\r\n```\r\n\r\nIt happens while trying to resolve the `s` symbol in the `{ x: s }` expression\r\nHere is the full call stack:\r\n\r\n```\r\nC:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:950\r\n                throw new Error(\"Debug Failure. False expression: \" + message\r\n                      ^\r\nError: Debug Failure. False expression:\r\n    at Function.Debug.assert (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:950:23)\r\n    at PullTypeResolver.resolveDeclaredSymbolWorker (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:39472:38)\r\n    at PullTypeResolver.resolveDeclaredSymbol (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:39432:25)\r\n    at PullTypeResolver.resolveNameExpression (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43772:18)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43340:37)\r\n    at PullTypeResolver.resolveSimplePropertyAssignment (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:44777:25)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43331:33)\r\n    at PullTypeResolver.resolveDeclaredSymbolWorker (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:39473:47)\r\n    at PullTypeResolver.resolveDeclaredSymbol (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:39432:25)\r\n    at PullTypeResolver.sourcePropertyIsRelatableToTargetProperty (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47018:18)\r\n    at PullTypeResolver.sourceMembersAreRelatableToTargetMembers (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:46874:27)\r\n    at PullTypeResolver.sourceIsRelatableToTarget (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:46811:46)\r\n    at PullTypeResolver.sourceIsRelatableToTarget (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:46766:39)\r\n    at PullTypeResolver.sourceIsSubtypeOfTarget (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:46594:25)\r\n    at PullTypeResolver.overloadIsApplicableForArgumentHelper (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47505:57)\r\n    at PullTypeResolver.overloadIsApplicableForOtherArgument (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47499:25)\r\n    at PullTypeResolver.overloadIsApplicableForArgument (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47440:29)\r\n    at PullTypeResolver.overloadIsApplicable (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47407:52)\r\n    at PullTypeResolver.resolveOverloads (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47340:42)\r\n    at PullTypeResolver.computeInvocationExpressionSymbol (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:45667:34)\r\n    at PullTypeResolver.resolveInvocationExpression (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:45415:31)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43396:33)\r\n    at ArgumentInferenceContext.getArgumentTypeSymbolAtIndex (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:38439:38)\r\n    at PullTypeResolver.inferArgumentTypesForSignature (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47561:64)\r\n    at PullTypeResolver.computeInvocationExpressionSymbol (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:45552:49)\r\n    at PullTypeResolver.resolveInvocationExpression (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:45415:31)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43396:33)\r\n    at PullTypeResolver.resolveExpressionStatement (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:45402:22)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43507:33)\r\n    at PullTypeResolver.resolveList (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:42414:26)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43274:33)\r\n    at PullTypeResolver.resolveSourceUnit (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:39510:18)\r\n    at PullTypeResolver.resolveAST (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:43280:33)\r\n    at Function.PullTypeResolver.typeCheck (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:47818:26)\r\n    at TypeScriptCompiler.getSemanticDiagnostics (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:53685:41)\r\n    at CompilerIterator.moveNextSemanticsPhase (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:54258:45)\r\n    at CompilerIterator.moveNextInternal (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:54208:33)\r\n    at CompilerIterator.moveNext (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:54183:25)\r\n    at BatchCompiler.compile (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:60401:20)\r\n    at BatchCompiler.batchCompile (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:60280:22)\r\n    at TypeScript (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:60909:11)\r\n    at Object.<anonymous> (C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.js:60910:3)\r\n    at Module._compile (module.js:456:26)\r\n    at Object.Module._extensions..js (module.js:474:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Function.Module.runMain (module.js:497:10)\r\n    at startup (node.js:119:16)\r\n    at node.js:901:3\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-18T21:27:59.797-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.5b - Debug Failure. False expression:",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1908
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report!",
+      "PostedDate": "2013-11-19T09:12:49.58-08:00",
+      "Id": 123521
+    },
+    {
+      "Message": "\nI don't understand this error (that I'm getting too).  Seems from Ryan's comment that it might be a bug, but how can I work around it for now?  Is this caused by one of my thousands of lines of code?  What should I look for?\n\nThanks!",
+      "PostedDate": "2013-12-06T07:17:04.837-08:00",
+      "Id": 126336
+    },
+    {
+      "Message": "@fsoikin, You say \"It happens while trying to resolve the s symbol in the { x: s } expression\".  \n\nHow do you know that so specifically?  I'm getting the same error in 0.9.5 now but I don't know how to find where mine is choking.\n\nhttps://typescript.codeplex.com/discussions/472131\n\nThanks!",
+      "PostedDate": "2013-12-06T09:21:33.127-08:00",
+      "Id": 126347
+    },
+    {
+      "Message": "I know that by running the thing under debugger and looking at the local variables.",
+      "PostedDate": "2013-12-06T09:49:09.807-08:00",
+      "Id": 126353
+    },
+    {
+      "Message": "__NOTE__: this still exists in the __release-0.9.5__ branch, and I have figured out that it always fails on lambdas of the form `x => ( { a: x.i, b: x.j } )`",
+      "PostedDate": "2013-12-09T09:41:54.323-08:00",
+      "Id": 126627
+    },
+    {
+      "Message": "A workaround is to replace the lambda with `function(x) { return { a: x.i, b: x.j }; }`",
+      "PostedDate": "2013-12-09T09:42:43.607-08:00",
+      "Id": 126628
+    },
+    {
+      "Message": "I have similar error. Here is code that demonstrate this error in my code:\n```\n\ninterface IFooListInterface {\n    fooList: { bar: string }[];\n}\n\nfunction testGenericFun<T>(\n    resultMapFunction: (result: IFooListInterface) => T,\n    successCallback: (result: T) => void) {\n}\n\n//this fails with \"Debug Failure. False expression\" error\ntestGenericFun(\n    result => {\n        var list = result.fooList.map(movie => ({\n            title: movie.bar\n        }));\n\n        return {\n            list: list\n        };\n    },\n    x => { console.log(x.list); });\n\n//this work fine (difference: \"(movie) => \" instead of \"movie => {\"\ntestGenericFun(\n    result => {\n        var list = result.fooList.map((movie) => ({\n            title: movie.bar\n        }));\n\n        return {\n            list: list\n        };\n    },\n    x => { console.log(x.list); });\n\n//this works too (difference: \"var list: any =\" instead of \"var list =\")\ntestGenericFun(\n    result => {\n        var list: any = result.fooList.map(movie => ({\n            title: movie.bar\n        }));\n\n        return {\n            list: list\n        };\n    },\n    x => { console.log(x.list); });\n```",
+      "PostedDate": "2014-01-23T12:33:00.473-08:00",
+      "Id": 131349
+    },
+    {
+      "Message": "so the best workaround is to try write lamda in this form: \"(x) => \" instead of \"x => \"\nTharaxis found it [here](https://typescript.codeplex.com/discussions/472131)",
+      "PostedDate": "2014-01-23T12:35:14.917-08:00",
+      "Id": 131351
+    }
+  ]
+}

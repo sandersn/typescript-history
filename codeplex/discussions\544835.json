@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1243548",
+    "ThreadId": "544835",
+    "Html": "I think this is mostly an issue with my misunderstanding with how AMD modules are used by TS, so hopefully someone can fill the gaps quickly.<br />\n<br />\nI've just introduced RequireJS into our project in an effort to simplify our script loading.  I have the following TS class:<br />\n<pre><code>declare module MyApp {\n    export class Builder {\n        constructor() {\n        }\n    }\n}</code></pre>\n\nI can obviously reference this class from elsewhere by calling <em>new MyApp.Builder()</em> directly.<br />\n<br />\nI then decided to introduce an external module dependency as follows:<br />\n<pre><code>import myDep = require('myDep');\n\nmodule MyApp {\n    export class Builder {\n        constructor() {\n            myDep.doStuff();\n        }\n    }\n}</code></pre>\n\nHowever, the issue now is that any existing calls to <em>new MyApp.Builder()</em> don't work - the compiler complains that <em>Builder doesn't exist on MyApp</em>.  Presumably because my class is now defined as an AMD module in the resulting JS?<br />\n<br />\nThis seems to be telling me that use of RequireJS is an all-or-nothing proposition with TS - that is, if I stick with v2 above, I'd need to export MyApp.Builder and import it using require into any classes needing to reference it.  Is this the case?  <br />\n",
+    "PostedDate": "2014-05-09T09:21:42.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1244288",
+    "ThreadId": "544835",
+    "Html": "Why have you written the <code>declare</code> keyword in front of <code>module</code>? Declarations can't contain implementation.<br />\n",
+    "PostedDate": "2014-05-12T03:36:35.853-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1244718",
+    "ThreadId": "544835",
+    "Html": "Ignore that, was a just a typo in my example.  Have corrected.<br />\n",
+    "PostedDate": "2014-05-13T02:17:51.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1244898",
+    "ThreadId": "544835",
+    "Html": "I'll let others opine on the technical reasons, but yes - in my experience moving to external modules is a big &quot;all or nothing&quot; production that has many ripple effects with TypeScript 1.0.  I've heard that the team is thinking about how to make this easier, but today it's quite hard and you really have to be sure that you'll be get benefits from it versus internal modules which are quite easy to code with.<br />\n",
+    "PostedDate": "2014-05-13T09:30:25.65-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-14T01:27:43.08-07:00"
+  },
+  {
+    "Id": "1244973",
+    "ThreadId": "544835",
+    "Html": "<strong>MarcusWhit wrote:</strong><br />\n<blockquote>\nThis seems to be telling me that use of RequireJS is an all-or-nothing proposition with TS - that is, if I stick with v2 above, I'd need to export MyApp.Builder and import it using require into any classes needing to reference it.  Is this the case?<br />\n</blockquote>\nIn short, yes. Mixing internal and external modules is not really going to work. The reasons for that are a little more obvious when you look at the JS codegen.<br />\n",
+    "PostedDate": "2014-05-13T12:50:57.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-14T01:27:45.777-07:00"
+  }
+]

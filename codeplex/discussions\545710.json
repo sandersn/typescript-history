@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1246630",
+    "ThreadId": "545710",
+    "Html": "Hello Community,\r<br />\n<br />\nI've created a new TypeScript HTML Application in Visual Studio 2013.  I configure this project to be CommonJS, and to &quot;Combine JavaScript output into file&quot; in the Project Settings.\r<br />\n<br />\nI add a new TypeScript File to the project, which creates the IPoint interface (which seems to conflict/contradict the guidance provided with interface naming in the TypeScript documentation) and the Shapes module and Point class.\r<br />\n<br />\nIf I place an export in front of the interface/module like so:<br />\n<pre><code>export interface IPoint {\n    getDist(): number;\n}\n\n// Module\nexport module Shapes {\n\n    // Class\n    export class Point implements IPoint {\n        // Constructor\n        constructor (public x: number, public y: number) { }\n\n        // Instance member\n        getDist() { return Math.sqrt(this.x * this.x + this.y * this.y); }\n\n        // Static member\n        static origin = new Point(0, 0);\n    }\n\n}</code></pre>\n\nAnd then compile my project, the code does not get output into the single file that I configured in Project Properties.  Instead, it gets output into a separate file which is not what I configured.\r<br />\n<br />\nIs this a known issue/bug?  Any guidance/explanation would be greatly appreciated.\r<br />\n<br />\nThank you,\r<br />\nMichael<br />\n",
+    "PostedDate": "2014-05-18T05:15:38.427-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246648",
+    "ThreadId": "545710",
+    "Html": "One may not combine external modules into a single output file. \r<br />\n<br />\nThat doesn't make sense because external modules are meant to be loaded each individual file at a time.\r<br />\n<br />\nSee the last section &quot;Trade-offs for External Modules&quot; in the <a href=\"https://typescript.codeplex.com/wikipage?title=Modules%20in%20TypeScript\" rel=\"nofollow\">official docs</a>.<br />\n",
+    "PostedDate": "2014-05-18T07:33:26.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-18T07:50:27.6-07:00"
+  },
+  {
+    "Id": "1246656",
+    "ThreadId": "545710",
+    "Html": "Thanks again for your assistance, nabog.  I will read that document thoroughly.  I guess what I was looking for was a &quot;packaging&quot; mechanism for TypeScript projects, something like what requirejs uses, but it looks like that (requirejs packaging) is exactly what I would have to use to get what I am aiming for here.<br />\n<br />\nI suppose a motivating factor here is that I absolutely despise having to use a string to identify my modules.  This seems like an obvious contradistinction to static-type checking and type safety that TypeScript is supposed to provide.  That is:<br />\n<br />\nvar instance = new NameSpace.Type();<br />\n<br />\n... seems so much more natural, intuitive, and congruent than having to do:<br />\n<br />\nimport NameSpace = require( &quot;NameSpace&quot; );<br />\nvar instance = new NameSpace.Type();<br />\n<br />\nAesthetics aside, I have to use two lines of code for something I should be able to do in one.<br />\n<br />\nIt just seems like there should be some compiler sugar that can be applied here to make this work more like a static type-based IDE.  I might be missing something obvious here, so if that is the case, please feel free to enlighten me.<br />\n",
+    "PostedDate": "2014-05-18T08:02:06.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246715",
+    "ThreadId": "545710",
+    "Html": "<strong>MichaelDBang wrote:</strong><br />\n<blockquote>\nI absolutely despise having to use a string to identify my modules.  This seems like an obvious contradistinction to static-type checking and type safety that TypeScript is supposed to provide.<br />\nIt just seems like there should be some compiler sugar that can be applied here to make this work more like a static type-based IDE.<br />\n</blockquote>\n<code></code>\r<br />\n<br />\n@MichaelDBang, this is a natural way of thinking when first encountering TypeScript, i.e. why doesn't TypeScript correct certain obvious problems with JavaScript, or do other things a bit more elegantly?\r<br />\n<br />\nThere are two reasons for this<br />\n<ul>\n<li>TypeScript attempts to be minimally intrusive when it comes to converting the actual code that is composed by the developer into the corresponding JavaScript.</li>\n<li>\nTypeScript attempts to align itself with upcoming iterations of the EcmaScript standard for JavaScript.<br />\n</li>\n</ul>\nThat may explain why certain constructs in the language are the way it is.\r<br />\n<br />\nRegarding the static type checking, that isn't really an issue here, because TypeScript checks the string path for the <code>require</code> and produces a compile time error. See <a href=\"http://blogs.msdn.com/b/typescript/archive/2013/03/25/working-on-typescript-0-9-generics-overload-on-constants-and-compiler-performance.aspx\" rel=\"nofollow\">overload on constants</a> for another case where strings are checked at compile time.<br />\n",
+    "PostedDate": "2014-05-18T11:35:36.287-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246738",
+    "ThreadId": "545710",
+    "Html": "I understand that strings are checked at compile time, but that doesn't make it any less uglier. :P  Everyone might be used to typing &quot;createElement( 'canvas' )&quot; ... but under the covers, there is a &quot;new Some.Namespace.Canvas()&quot; expression being executed somewhere in the host browser's DOM API.\r<br />\n<br />\nI am just saying that JavaScript has an opportunity to grow up here, and TypeScript is the catalyst that should enable exactly that.  I say this as a developer with over a decade of experience in C#/.Net, who is frustrated of not being able to run client code ubiquitously (MSFT still hasn't &quot;got it&quot; since Siverlight/Mix'11), and is inspired by what TypeScript is capable of doing in future versions.<br />\n",
+    "PostedDate": "2014-05-18T12:47:30.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246750",
+    "ThreadId": "545710",
+    "Html": "After reading that wiki page, I am a bit confused around the &quot;Needless Namespacing&quot; section.  It seems as if the article is suggesting to not use <br />\n<pre><code>export Module ModuleName {}</code></pre>\n\n... at all.  If that is the case, why provide the capability to do this in the first place?<br />\n",
+    "PostedDate": "2014-05-18T14:35:16.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247089",
+    "ThreadId": "545710",
+    "Html": "There are many situations you might want to export a module. The guidance there is simply to not use an exported module if its only purpose is to wrap the entire contents of the file in a name, as the filename already does that for you. For example, you may want to write this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> M {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">module</span> N {\n        <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> y = 1;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> x = M.N.y;\r\n</pre></div>or<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> C {\n    foo() { }\n}\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">module</span> C {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> aStatic = 1;\n}\n\n<span style=\"color:Green;\">// create a &#39;clodule&#39; C that is both a class and a module, and export it along with an instance of that type</span>\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> c = <span style=\"color:Blue;\">new</span> C(); \r\n</pre></div>",
+    "PostedDate": "2014-05-19T11:38:51.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247218",
+    "ThreadId": "545710",
+    "Html": "Hmmm... alright.  This is obviously going to take some getting used to.  It would be great if there were some sample solutions out there that highlighted some of this functionality.  In any case, I appreciate the assistance!<br />\n",
+    "PostedDate": "2014-05-19T17:59:50.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247311",
+    "ThreadId": "545710",
+    "Html": "Unfortunately, JavaScript growing up is something that requires the engagement and agreement of the entire TC39 committee, and the last catalyst that was powerful enough to enable something that unlikely was the Big Bang.<br>\r\n<br>\r\n",
+    "PostedDate": "2014-05-20T02:46:25.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247373",
+    "ThreadId": "545710",
+    "Html": "but, TypeScript isn't ruled by committee is it?  When I say &quot;grow up,&quot; I am talking about the compiler sugar and tooling that TypeScript can provide around JavaScript to make it behave more like a type-safe language (C#, Java) while still being conformant to any prevailing standards (and yes, even committees) out there.<br />\n",
+    "PostedDate": "2014-05-20T05:46:12.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We believe this to be fixed now. Please reactivate if you're still seeing it in the latest release. Thanks!",
+    "ClosedDate": "2013-02-19T15:58:14.723-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Hi, after converting a bunch of JavaScript projects to TypeScript we have run into a significant problem.\r\n\r\nWhile every project builds successfully when built individually, we get build errors like those below when multiple projects (e.g. under a solution folder) are built in parallel:\r\n\r\n------ Rebuild All started: Project: MyProject, Configuration: Release Any CPU ------\r\n\r\n16>  Couldn't write to file 'MyFile.js'16>EXEC : tsc.js(21005, 21) Microsoft JScript runtime error :Permission denied\r\n\r\n16> MyProject.csproj(68,5): error MSB3073: The command \"\"C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.8.0.0\\tsc\" --module amd \"File1.ts\" \"File2.ts\"\" exited with code 1.\r\n\r\n \r\n\r\nIt is not difficult to see that two or more projects, which have common <reference> includes to a shared component, are failing when attempting to compile that shared component, because the output file for that component is locked up.\r\n\r\nHow do we circumvent this problem?\r\n\r\nThanks.\r\n\r\nNoel",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-05T09:38:01.283-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Permission denied error when building multiple projects",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 371
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm hitting this issue as well when compiling a single typescript file while some referenced files are checked into TFS. The files referenced are read-only, and thus the compiler fails to access them (though, it shouldn't need to have write access to those files!), and thus the whole compilation fails.\n\nError (with TS 0.8.1.0):\ntsc.js(23778, 29) Microsoft JScript runtime error: Write to file failed.\n\nError (with TS 0.8.1.1):\ntsc.js(23862, 29) Microsoft JScript runtime error: Write to file failed.",
+      "PostedDate": "2012-12-06T12:53:07.66-08:00",
+      "Id": 83714
+    },
+    {
+      "Message": "Same issue here. If our team has a core set of files that are referenced, each team member needs to checkout the referenced files from TFS in order to make the build of a single file work (even when no changes are needed for the core files).  This bug should be marked as critical IMO.",
+      "PostedDate": "2012-12-12T06:38:23.17-08:00",
+      "Id": 84022
+    },
+    {
+      "Message": "I originally highlighted this for TS 0.8.0.0. The initial error was \"Permission denied\".\n\nAs stated by olegbl from 0.8.1.0 the error now is \"Write to file failed\".\n\nWe don't use TFS and we still get this when building multiple projects.\n",
+      "PostedDate": "2012-12-19T08:29:09.66-08:00",
+      "Id": 84611
+    },
+    {
+      "Message": "Make sure the compiled *JS* files are not being added to TFS or are otherwise read-only. I had a couple of JS files checked in to TFS (visible via TFS Explorer, but not Solution Explorer) which I had to remove before I could recompile a project. It's funny that I didn't explicitly add the JS files to TFS and they aren't being added to my solution file and I've long turned off the WebEssentials feature to auto-add JS to my project. \n\nAt any rate, the issue doesn't seem to be about TS files being read-only, as they are not modified by TSC, the JS files, however, must be modifiable. ",
+      "PostedDate": "2012-12-25T23:28:45.22-08:00",
+      "Id": 84895
+    }
+  ]
+}

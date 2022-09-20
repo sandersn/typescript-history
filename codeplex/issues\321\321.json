@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I think rwaldron nailed it - there doesn't seem to be any TypeScript-specific problem here.",
+    "ClosedDate": "2012-11-06T11:07:30.52-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The following code crashes 0.8.0.0 and Playground\r\n\r\nfunction echo(s:string) {\r\n  document.body.innerHTML +=\r\n    \"<div style='font-size: 3em'>\" + s + \"</div>\"\r\n}\r\n\r\nvar fruits = ['pears', 'oranges', 'bananas']\r\nvar callbacks = fruits.map((fruit) => () => echo(fruit))\r\n\r\ncallbacks.forEach((f) => f())",
+    "LastUpdatedDate": "2013-08-13T14:00:24.377-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-23T16:27:33.807-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "crash for nested lambda",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 321
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Just tried it out and it looks like it just breaks the intellisense in the playground. The generated code looks correct and runs.\n\nIn visual studio it gives the following error for both 'echo' and 'fruit':\n\"The name 'echo' does not exist in the current scope.\"",
+      "PostedDate": "2012-10-23T21:03:23.96-07:00",
+      "Id": 80857
+    },
+    {
+      "Message": "This is not a bug.\n\nThe .map() call is executing echo(), which returns |undefined| and since ArrowFunction has implicit return, it is then returning |undefined| as the value of that item in the |callbacks| array. The forEach is then trying to execute |undefined|.\n\n\n",
+      "PostedDate": "2012-10-24T11:39:38.69-07:00",
+      "Id": 80916
+    },
+    {
+      "Message": "Corrected code...\n\nfunction echo(s:string) {\n  document.body.innerHTML +=\n\"<div style='font-size: 3em'>\" + s + \"</div>\"\n}\n\nvar fruits = ['pears', 'oranges', 'bananas']\nvar callbacks = fruits.map(fruit => { return () => echo(fruit) })\n\ncallbacks.forEach(function(f) { f() });\n\n\nWhich compiles to...\n\n\nfunction echo(s) {\n    document.body.innerHTML += \"<div style='font-size: 3em'>\" + s + \"</div>\";\n}\nvar fruits = [\n    'pears', \n    'oranges', \n    'bananas'\n];\nvar callbacks = fruits.map(function (fruit) {\n    return function () {\n        return echo(fruit);\n    }\n});\ncallbacks.forEach(function (f) {\n    f();\n});\n",
+      "PostedDate": "2012-10-24T11:42:04.46-07:00",
+      "Id": 80917
+    },
+    {
+      "Message": "Allow me to correct myself... This _should_ work correctly (ie. how you expect it to work):\n\nfunction echo(s:string) {\ndocument.body.innerHTML += \"<div style='font-size: 3em'>\" + s + \"</div>\"\n}\n \nvar fruits = ['pears', 'oranges', 'bananas'];\nvar callbacks = fruits.map(fruit => () => echo(fruit))\n \ncallbacks.forEach(f => f());\n\n\n\nAnd this _should_ compile to something like....\n\n\nfunction echo(s) { \n  document.body.innerHTML += \"<div style='font-size: 3em'>\" + s + \"</div>\"; \n} \nvar fruits =['pears', 'oranges', 'bananas']; \nvar callbacks = fruits.map(function(fruit) { \n  return function() { \n    return echo(fruit); \n  }; \n}); \ncallbacks.forEach(function(f) { \n  return f(); \n});\n\n\n\nApologies for any confusion in my original response\n\n\n",
+      "PostedDate": "2012-10-24T11:47:09.527-07:00",
+      "Id": 80920
+    },
+    {
+      "Message": "The example triggers a bug in the TypeScript playground, as can be observed by having the debugger open when pasting the code. Since there is no separate tracker for the playground, I do not understand how the bug is going to be fixed if this ticket is closed here?",
+      "PostedDate": "2012-11-07T02:00:34.21-08:00",
+      "Id": 81862
+    }
+  ]
+}

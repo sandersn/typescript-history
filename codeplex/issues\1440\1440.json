@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Here's an example in backbone.d.ts:\r\n\r\n```typescript\r\n    class View<TModel extends Backbone.Model> extends Backbone.Events {\r\n\r\n        constructor(options?: ViewOptions<TModel>);\r\n        model: TModel;\r\n        collection: Collection<TModel>;\r\n    }\r\n\r\n    class View extends View<Backbone.Model>;\r\n```\r\n\r\nThis should be valid, but the compiler doesn't like it. The second declaration of `View` simply means that when an object/class is of type View without specifying the generic argument then assume `Backbone.Model` for its generic argument. Of course the second declaration of `View` cannot have any implementation and should not be outputted in javascript.\r\n\r\nAnd if this is supported, it allows people to introduce generics in their library declarations without breaking large amounts of existing code.",
+    "LastUpdatedDate": "2013-08-13T12:30:46.393-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T07:19:43.62-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Non-generic types that inherit from generic types of the same name",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1440
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I know it is not allowed, but please take this as feature suggestion. This is allowed in C# and could be allowed in TypeScript too as it does not make any changes in the javascript output. Like I said supporting this in this form or other forms can help a lot in introducing generics in type definitions without breaking large amounts of code.\n\nOther forms that I can think of are:\n```typescript\n    declare class View extends View<Backbone.Model>;\n```\nand\n```typescript\n    // set Model as default generic parameter if it is not specified\n    class View<TModel extends Model = Model> extends Events {\n        //...\n    }\n```\nBut I like the first form much better.\n\nThanks!",
+      "PostedDate": "2013-08-07T11:21:24.42-07:00",
+      "Id": 108892
+    },
+    {
+      "Message": "This is not allowed.\n\r\n\r** Closed by RyanCavanaugh 08/07/2013 9:53AM",
+      "PostedDate": "2013-08-07T09:53:07.55-07:00",
+      "Id": 108894
+    },
+    {
+      "Message": "My suggested syntax is very similar to design choice for method overloading in TypeScript. I think it works even more naturally on generic parameter overloads because \n\n```typescript\ndeclare module Backbone {\n\tclass Model{}\n\tclass Events{}\n\tclass ViewOptions<TModel extends Model> {}\n\tclass Collection<TModel extends Model> {}\n\t\n\tclass View<TModel extends Model> extends Events {\n\t    constructor(options?: ViewOptions<TModel>);\n\t    model: TModel;\n\t    collection: Collection<TModel>;\n\t}\n\t\n\t// Bypass duplicate identifier error in this case\n\tclass View extends View<Backbone.Model>;\n}\n\n// Consumer code works as before\n// They can gradually add generic parameters to their views\nclass MyView extends Backbone.View {\n}\n\nvar myView = new MyView();\nvar model = myView.model; // model is of type Backbone.Model\n```",
+      "PostedDate": "2013-08-07T12:39:44.417-07:00",
+      "Id": 108906
+    },
+    {
+      "Message": "Ah can't modify a comment? I wanted to say I think it works even more naturally on generic parameter overloads because is doesn't need any changes in the implementation of the class.",
+      "PostedDate": "2013-08-07T12:47:28.033-07:00",
+      "Id": 108907
+    }
+  ]
+}

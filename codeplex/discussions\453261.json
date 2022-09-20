@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1080047",
+    "ThreadId": "453261",
+    "Html": "Hi,\r<br />\n<br />\nWhen compiling I came across something rather strange. When I compile using the <strong>--out</strong> option to output a single file, each referenced module is redeclared, resulting in the following:<br />\n<pre><code>var Wf;\n(function (Wf) {\n    (function (Model) {\n        var User = (function () {\n            function User(name) {\n                this.name = name;\n            }\n            return User;\n        })();\n        Model.User = User;\n    })(Wf.Model || (Wf.Model = {}));\n    var Model = Wf.Model;\n})(Wf || (Wf = {}));\nvar Wf;\n(function (Wf) {\n    (function (Model) {\n        var Message = (function () {\n            function Message(message) {\n                this.message = message;\n            }\n            return Message;\n        })();\n        Model.Message = Message;\n    })(Wf.Model || (Wf.Model = {}));\n    var Model = Wf.Model;\n})(Wf || (Wf = {}));\nvar Wf;\n(function (Wf) {\n    var App = (function () {\n        function App() {\n            this.User = new Wf.Model.User(&quot;Chris&quot;);\n            this.User.Message = new Wf.Model.Message(&quot;This is my message!&quot;);\n        }\n        App.prototype.log = function () {\n            console.log(this.User.name + ' says ' + this.User.Message.message);\n        };\n        return App;\n    })();\n    Wf.App = App;\n})(Wf || (Wf = {}));</code></pre>\n\nIs there a way to make the compiler recognise the module declarations that are the same and just create a single var for that particular module?\r<br />\n<br />\nBelow is the typescript code:\r<br />\n<strong>app.ts</strong><br />\n<pre><code>///&lt;reference path='Models/User.ts' /&gt;\n///&lt;reference path='Models/Message.ts' /&gt;\nmodule Wf {\n    export class App {\n        \n        User: Wf.Model.User;\n\n        constructor(){\n            this.User = new Wf.Model.User(&quot;Chris&quot;);\n            this.User.Message = new Wf.Model.Message(&quot;This is my message!&quot;);\n        }\n\n        public log() {\n            console.log(this.User.name + ' says ' + this.User.Message.message);\n        }\n    }\n}</code></pre>\n\n<strong>models/user.ts</strong><br />\n<pre><code>module Wf {\n    export module Model {\n        export class User {\n            name: string;\n            Message: Message;\n            constructor(name: string) {\n                this.name = name;\n            }\n        }\n    }\n}</code></pre>\n\n<strong>models/message.ts</strong><br />\n<pre><code>module Wf {\n    export module Model {\n        export class Message {\n            message: string;\n            constructor(message: string){\n                this.message = message;\n            }\n        }\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-08-13T04:43:17.543-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080309",
+    "ThreadId": "453261",
+    "Html": "As far as I understand:<br />\n<br />\nWhile it looks a bit strange, it works just fine because of how javascript deals with declarations. Multiple var declarations in the same scope are just ignored.<br />\n<br />\nThis:<br />\n<pre><code>Wf || (Wf = {}) </code></pre>\n\nis a commonly used pattern, and tells the function to use the existing Wf object if it's not undefined, otherwise it sets Wf to an empty object and uses it.<br />\n",
+    "PostedDate": "2013-08-13T19:09:53.607-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080435",
+    "ThreadId": "453261",
+    "Html": "<strong>prgjonas wrote:</strong><br />\n<blockquote>\nAs far as I understand:<br />\n<br />\nWhile it looks a bit strange, it works just fine because of how javascript deals with declarations. Multiple var declarations in the same scope are just ignored.<br />\n<br />\nThis:<br />\n<pre><code>Wf || (Wf = {}) </code></pre>\n\nis a commonly used pattern, and tells the function to use the existing Wf object if it's not undefined, otherwise it sets Wf to an empty object and uses it.<br />\n</blockquote>\nThanks for your reply. This isn't exactly what I meant though.\r<br />\n<br />\nI'm more concerned about the <strong>var Wf;</strong> declaration. When outputting to a single file it seems a bit redundant to have the variable declared three times (outside of the actual object scope) instead of just once.<br />\n",
+    "PostedDate": "2013-08-14T02:32:54.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080549",
+    "ThreadId": "453261",
+    "Html": "The current TypeScript compiler performs few, if any, optimizations.  We've been focusing on getting the language implementation in there and making sure it's correct.  In this case, I agree that it sounds like we could notice the --out during an optimization phase, and do the declaration merging before the code goes out.  Sounds like a good candidate optimization for later.<br />\n",
+    "PostedDate": "2013-08-14T07:15:24.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

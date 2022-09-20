@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There have been quite a few changes here with 0.9.5. Give it a shot (beta at https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) and let us know what you think. It looks like the core concerns have been addressed, but the changes might have other side effects. Thanks!",
+    "ClosedDate": "2013-11-19T13:44:07.877-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Issue with flow through of generic constraints:\r\n\r\nGiven the following interface definitions:\r\n\r\n```\r\ninterface MyFunction1<T extends MyInterface1, TResult> {\r\n    (param1: T): TResult;\r\n}\r\n\r\ninterface MyFunction2<T> {\r\n    (param1: T): void;\r\n}\r\n\r\n\r\ninterface MyInterface1 {\r\n    property1: any;\r\n    property2: any;\r\n}\r\n\r\ninterface MyInterface2 {\r\n    do<T extends MyInterface1, TResult>(fn1: MyFunction1<T, TResult>, fn2: MyFunction2<T>): TResult;\r\n}\r\n\r\nvar myInstance: MyInterface2;\r\n```\r\n\r\n#Example 1\r\n```\r\nmyInstance.do((param1) => {\r\n    return 1324;\r\n}, (param1) => {\r\n    // do something with result.\r\n});\r\n```\r\n\r\n__Expected:__\r\nThe type of param1 in the first function passed to myInstance.do to be constrained to be 'MyInterface1', the type of param1 in the second function passed to myInstance.do to be constrained to be 'number'.\r\n\r\n__Actual Result:__\r\nThe type of param1 in the first function passed to myInstance.do is of type 'any' instead of the constraint type MyInterface1, the type of param1 in the second function passed to myInstance.do is correctly identified as being 'number'.\r\n\r\n#Example 2\r\n```\r\nmyInstance.do<MyInterface1, number>((param1) => {\r\n    return 1324;\r\n}, (param1) => {\r\n    // do something with result.\r\n});\r\n```\r\n\r\n__Expected:__\r\nThe type of param1 in the first function passed to myInstance.do to be constrained to be 'MyInterface1', the type of param1 in the second function passed to myInstance.do to be constrained to be 'number'.\r\n\r\n__Actual Result:__\r\nBoth types are correctly identified.\r\n\r\n#Issue\r\nIt appears as if unspecified types are being automatically assumed to be 'any' when they cannot be inferred, when instead they should be assumed to be their constrained type unless no constraint specified.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-25T02:25:05.167-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Generic constraints not flowing through correctly.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 1231
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  I see similar behavior with the below reduced repro.  We'll take a look.\r\n\r\n```typescript\r\nvar v1: {\r\n    f1<T extends Date>(cb: (x: T) => string);\r\n    f2(cb: (x: Date) => string);\r\n}\r\n \r\nv1.f1(x => x.nonsense());       // 'x' typed as 'any'.  No error given.  Should be typed as 'Date' with error as below.\r\nv1.f2<Date>(x => x.nonsense()); // Error as expected: The property 'nonsense' does not exist on value of type 'Date'.\r\nv1.f3( x => x.nonsense() );     // Error as expected: The property 'nonsense' does not exist on value of type 'Date'.\r\n```",
+      "PostedDate": "2013-06-25T16:44:27.753-07:00",
+      "Id": 104146
+    },
+    {
+      "Message": "Where is `v1.f3()` defined in that reduced repo?\nShouldn't the error be:\n```\nThe property 'f3' does not exist on value of type: {f1<T extends Date>(cb: (x: T) => string);f2(cb: (x: Date) => string);}\n```",
+      "PostedDate": "2013-06-27T19:48:23.647-07:00",
+      "Id": 104469
+    },
+    {
+      "Message": "This seems to affect a lot of code in practice.",
+      "PostedDate": "2013-11-11T14:28:50.407-08:00",
+      "Id": 122686
+    }
+  ]
+}

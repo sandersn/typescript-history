@@ -1,0 +1,154 @@
+[
+  {
+    "Id": "934539",
+    "ThreadId": "401341",
+    "Html": "When I tried to extend the string class (using the prototype based way) I got a problem. The TS allows me to create interfaces but not to extend existent types. The CoffeScript does it using the following syntax: <br />\n<br />\n<code>String::startsWith = (prefix) =&gt; { ... }</code><br />\n<br />\nwich will be translated to <br />\n<br />\n<code>String.prototype.startsWith = function(prefix) { ... };</code><br />\n<br />\nIn TS I had to do this: <br />\n<pre><code>var proto: any = String.prototype; \n\nproto.startsWith = function (prefix) { \n  return this.slice(0, prefix.length) == prefix; \n};\n\nproto.endsWith = function (suffix) { \n  return this.slicde(-suffix.length) == suffix; \n}; \n\ninterface String { \n  startsWith(prefix: string): bool; \n  endsWith(suffix: string): bool; \n} </code></pre>\n\nwhich is not exactly an elegant and safe code! ;)<br />\n<br />\n== AFTER DISCUSSION ============================= <br />\n<br />\nI propose the following. We could have two kind of extensions:<br />\n<ol>\n<li>\n<strong>Extension methods</strong> (implemented like in C# way but it could have a more cool way of definition, I like the Kotlin way);<br />\n</li>\n</ol>\n<pre><code>// C# way\nfunction sum(this: Number, other: Number) {\n  return this + other;\n}\n\n// Kotlin way ( I prefer this way)\nfunction Number.sum(other: Number) {\n  return this + other;\n}\n\n// Usage in TS:\nvar a = 10;\nvar b = 20;\nvar c = a.sum(b);</code></pre>\n\nTranslated to:<br />\n<pre><code>function Number$sum(_this, other) {\n  return _this + other;\n}\n\n// Usage in JS:\nvar a = 10;\nvar b = 20;\nvar c = Number$sum(a, b);</code></pre>\n\n<ol>\n<li>\n<strong>Prototype extension methods</strong> (which is the JS way of do the things);<br />\n</li>\n</ol>\n<pre><code>function Number::sum(other: Number) { \n  return this + other;\n}\n\n// Usage in TS:\nvar a = 10;\nvar b = 20;\nvar c = a.sum(b);</code></pre>\n\nTranslated to:<br />\n<pre><code>Number.prototype.sum = function(other) {\n  return this + other;\n}\n\n// Usage in JS:\nvar a = 10;\nvar b = 20;\nvar c = a.sum(b);</code></pre>\n\n",
+    "PostedDate": "2012-10-30T21:47:04.43-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934627",
+    "ThreadId": "401341",
+    "Html": "\r\n<p>See this answer:&nbsp;<a href=\"http://stackoverflow.com/questions/12701732/typescript-augmenting-built-in-types\">http://stackoverflow.com/questions/12701732/typescript-augmenting-built-in-types</a></p>\r\n<p>looks like types are open ended anyway, so its easy to add extension methods on the fly</p>\r\n",
+    "PostedDate": "2012-10-31T02:27:29.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934812",
+    "ThreadId": "401341",
+    "Html": "<p>Additionally, there is a limitation with extending types defined in lib.d.ts which is currently being worked on (<a href=\"http://typescript.codeplex.com/workitem/176\">http://typescript.codeplex.com/workitem/176</a>).</p>",
+    "PostedDate": "2012-10-31T08:13:32.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935091",
+    "ThreadId": "401341",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>jstrachan wrote:</strong><br />\r\n<p>See this answer:&nbsp;<a href=\"http://stackoverflow.com/questions/12701732/typescript-augmenting-built-in-types\">http://stackoverflow.com/questions/12701732/typescript-augmenting-built-in-types</a></p>\r\n<p>looks like types are open ended anyway, so its easy to add extension methods on the fly</p>\r\n</blockquote>\r\n<p>Hey jstrachan,</p>\r\n<p>Yes, the types are open by using interfaces but interfaces are not traits, so it can not have implementation, they are just signature. Thats why I had to create the implementation, in my code above, the then create the interface, so the compiler will now that I had extended the String type.</p>",
+    "PostedDate": "2012-10-31T19:00:53.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987193",
+    "ThreadId": "401341",
+    "Html": "\r\n<p>In general, extending the prototype of built in types (such as String), is considered dangerous. Code beyond your control (such as 3rd party libraries) may also add a method with the same name to the prototype, causing the behavior to depend on which JS\r\n file was loaded last, and inevitably causing lots of hard to diagnose bugs.</p>\r\n<p>I think extension methods should be implemented as they are in C#, as <em>static functions</em> that are called via an instance call syntax sugar, but ultimately transformed back into static calls by the compiler. This also enables you to &quot;plug in&quot; your\r\n extension methods only in the scope in which you need them, and completely prevents conflicts with 3rd party code.</p>\r\n",
+    "PostedDate": "2013-01-15T10:13:50.733-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987899",
+    "ThreadId": "401341",
+    "Html": "\r\n<p>I agree with you MgSam, but sometimes its a feature needed.</p>\r\n",
+    "PostedDate": "2013-01-16T20:02:05.447-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1000963",
+    "ThreadId": "401341",
+    "Html": "So, with your observation we could have two kind of extensions:<br />\n<ol>\n<li>\nExtension methods (implemented like in C# way but it could have a more cool way of definition, I like the Kotlin way);<br />\n</li>\n</ol>\n<pre><code>// C# way\nfunction sum(this: Number, other: Number) {\n  return this + other;\n}\n\n// Kotlin way ( I prefer this way)\nfunction Number.sum(other: Number) {\n  return this + other;\n}\n\n// the closure definition of the last could be\nvar func : Number.sum(Number) =&gt; (other) =&gt; this + other;</code></pre>\n\n<ol>\n<li>\nPrototype extension methods (which is the JS way of do the things);<br />\n</li>\n</ol>\n<pre><code>function Number::sum(other: Number) { \n  return this + other;\n}</code></pre>\n\n",
+    "PostedDate": "2013-02-13T22:44:29.68-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1001171",
+    "ThreadId": "401341",
+    "Html": "I should add another benefit to having extension methods really be syntax sugar for calling static methods. They can be added to <em>interfaces</em>. This would be especially useful in TypeScript, because interfaces are the only place you can define indexers (not classes). So if you want a type that has both an indexer and some methods associated with it, interface + extension methods would be the perfect solution.<br />\n",
+    "PostedDate": "2013-02-14T05:48:03.653-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021378",
+    "ThreadId": "401341",
+    "Html": "One of the big issues with having extension methods that are implemented as static methods is the fact that typescript falls back to &quot;any&quot; when a type can't be inferred, and it also supports sub typing.\r<br />\n<br />\nThis could make interactions of the above features and extension methods non-obvious in many cases.\r<br />\n<br />\n<strong>Type inference gotcha:</strong>\r<br />\nThe dispatch to a static method would only work based on the static type information available, but if a variable holding a number were typed as &quot;any&quot; it would suddenly &quot;lose&quot; the sum method.\r<br />\n<br />\n<strong>Sub-typing gotcha:</strong>\r<br />\nIf &quot;MethodA&quot; accepted a base class &quot;ClassA&quot; which had an extension method &quot;Extension&quot;, but there were also a sub class of &quot;ClassA&quot; named &quot;ClassB&quot; with a new, overridden extension method &quot;Extension&quot;.  If &quot;MethodA&quot; uses the &quot;Extension&quot; method, and you call it with an instance of &quot;ClassB&quot; the overridden version of &quot;Extension&quot; isn't called.\r<br />\n<br />\n<strong>Generics:</strong>\r<br />\nThe above issues also come in to play for any generic type parameters in new versions of typescript.  Type erasure and sub typing could make dispatching extension methods confusing on generic types.\r<br />\n<br />\nI'm not saying it wouldn't be great to have these features, but there are a lot of subtle implications that could confuse people if they aren't thought through carefully.\r<br />\n<br />\nAs much as I don't like using syntax to solve a problem, a new dispatch for extension methods would at least give the compiler a fighting chance of notifying us of potential issues. Something like:\r<br />\nvar n = (10)::sum(20);<br />\n",
+    "PostedDate": "2013-03-26T12:00:04.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1040679",
+    "ThreadId": "401341",
+    "Html": "C# style extension methods, which would entail that the prototype of the extended object remain unchanged, would be of huge value to developers. Even given the implementation difficulties concerning type inference, I still that this solves a very real problem in the JavaScript developer community.<br />\n",
+    "PostedDate": "2013-05-07T20:18:15.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042377",
+    "ThreadId": "401341",
+    "Html": "<strong>MgSam wrote:</strong><br />\n<blockquote>\nIn general, extending the prototype of built in types (such as String), is considered dangerous. Code beyond your control (such as 3rd party libraries) may also add a method with the same name to the prototype, causing the behavior to depend on which JS file was loaded last, and inevitably causing lots of hard to diagnose bugs.<br />\n</blockquote>\nI think this does not apply to Typescript. If you mix javascript and typescript, yes you are correct, but strictly in typescript this cannot happen, since the compiler will detect when such a overwrite of the same prototype name happens and give a proper error.<br />\n",
+    "PostedDate": "2013-05-12T00:57:18.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1048553",
+    "ThreadId": "401341",
+    "Html": "@manast, I definitely see your point. TypeScript is adding type annotations, not extending the languages. In general when the langauge is extended, it is based on the EcmaScript 6 specification, if I am not mistaken.\r<br />\n<br />\nBut seeing as how TypeScript is a superset of JavaScript, it is definitely possible to assign members to existing prototpes. For instance:<br />\n<pre><code>var ArrayPrototype: any = Array.prototype;\nArrayPrototype.shuffle = function() {\n    throw 'not implemented';\n}\n</code></pre>\n\nStill the value of having a tool which would allow us not to extend build in types, but would allow us to code as if we had, would be a wonderful thing. \r<br />\n<br />\nBest,\r<br />\nDoug Rubino<br />\n",
+    "PostedDate": "2013-05-24T23:50:20.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050898",
+    "ThreadId": "401341",
+    "Html": "I think we all want extension methods.\r<br />\n<br />\nWhy not vote up the issue: <a href=\"https://typescript.codeplex.com/workitem/100\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/100</a><br />\n",
+    "PostedDate": "2013-05-30T15:37:48.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051288",
+    "ThreadId": "401341",
+    "Html": "I really don't want extension methods and would vote down the workitem if I could.\r<br />\n<br />\nHaving the compiler examine the type name to decide what static extension method to call runs counter to structural typing.  It also causes some of the troubling issues dlshryock raised.\r<br />\n<br />\nDefining an interface and then added to the prototype is only slightly awkward, which is fine considering how little you should be doing it anyways.<br />\n<blockquote>\nI think this does not apply to Typescript. If you mix javascript and typescript, yes you are correct, but strictly in typescript this cannot happen, since the compiler will detect when such a overwrite of the same prototype name happens and give a proper error.<br />\n</blockquote>\nIt's not an error to replace a function in the prototype with another of the same signature.<br />\n",
+    "PostedDate": "2013-05-31T10:06:05.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1052330",
+    "ThreadId": "401341",
+    "Html": "-post deleted by author-<br />\n",
+    "PostedDate": "2013-06-03T13:18:44.283-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1052336",
+    "ThreadId": "401341",
+    "Html": "@robfe Extension methods are useful precisely for the (extremely common) scenario of having 3rd party .js files present. It isn't safe in these scenarios to modify the prototype, so a syntax sugar for calling static methods would be the safest way of &quot;adding&quot; to existing types.\r<br />\n<br />\n@dlshryock raises some good points, but these seem relatively minor issues to me vs the benefit achieved. Good IDE support whereby the completion list clearly indicates extension methods differently from &quot;normal&quot; methods eliminates most confusion here. Variants of these same issues already exist in C#, and it hasn't proven to be much of a problem there.\r<br />\n<br />\nTypeScript is principally about providing static, compile-time features and checking. It makes sense they would only be expected to work when the static type information is actually available to the compiler.<br />\n",
+    "PostedDate": "2013-06-03T13:34:56.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1052341",
+    "ThreadId": "401341",
+    "Html": "@MgSam\r<br />\n<br />\nDon't get me wrong, I like the idea of adding extension methods.\r<br />\nWhat bugs me is that when a type falls back to 'any', and you try to call an extension method, it won't be a compile time error, you'll have to wait until runtime to find out that the method doesn't exist.  Your IDE can't help you here, because every method appears valid on an 'any' reference.<br />\n",
+    "PostedDate": "2013-06-03T13:43:17.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1052343",
+    "ThreadId": "401341",
+    "Html": "Hopefully, with generics and the future typing of the <code>this</code> pointer, there will be very few instances where you'd need to use <code>any</code>. Either way, if you're using <code>any</code>, you're deferring the type checking until runtime, so you'd expect that's when you'll find your errors. <br />\n",
+    "PostedDate": "2013-06-03T13:47:48.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1052376",
+    "ThreadId": "401341",
+    "Html": "I don't think adding extension methods to TypeScript amounts to &quot;adding C# to TypeScript&quot;. That's a silly way of looking at things anyway. We should have nice language features if we can have them.\r<br />\n<br />\nAlso, I reject the notion that we will have any compiler problems from extension methods. The compiler and the code completion facility already works perfectly when basic prototypes are extended. Why would it not work with actual implementations of those methods as well?\r<br />\n<br />\nLastly, modifying a prototype is probably one way of achieving extension methods in TypeScript, but why pretend that this is the actual method that will be chosen if extension methods are added to TypeScript? I would think that a good way will be chosen, not some bad way someone comes up with and then attacks. Give the language implementers <em>some</em> credit... (and the idea that &quot;all the benefits of namespaces will be lost&quot; falls under this same point too).<br />\n",
+    "PostedDate": "2013-06-03T15:17:34.653-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

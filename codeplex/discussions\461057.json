@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1103219",
+    "ThreadId": "461057",
+    "Html": "Is it possible to specify that a property on an interface can be one of two different types? For example, I have code that understands how to work with X if it is either a number or a boolean. Is there any way to specify that? I know I can use the any type, but it's technically not quite right, so I wanted to see if there was a better way.<br />\n",
+    "PostedDate": "2013-10-03T08:13:27.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103437",
+    "ThreadId": "461057",
+    "Html": "No that isn't possible, TypeScript does not have any concept of union types at present.<br />\n",
+    "PostedDate": "2013-10-03T17:39:44.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104296",
+    "ThreadId": "461057",
+    "Html": "While TypeScript doesn't have union types, you can help the type system by modeling the problem as tagged unions/sums. Somewhat like:<br />\n<pre><code>// two functions to map an L or an R to a T\ninterface Case&lt;L,R,T&gt; {\n    left : (l:L)=&gt;T;\n    right: (r:R)=&gt;T\n}\n// one function to tag L as left and R as right\ninterface Inject&lt;L,R&gt; {\n    (l:L):Sum&lt;L,R&gt;;\n    (r:R):Sum&lt;L,R&gt;\n}\n// tagged sum type: either an L, tagged left, or an R, tagged right\n// (can't model &quot;exactly one&quot; - that is only enforced by construction)\ninterface Sum&lt;L,R&gt; {\n    left?: L;\n    right?: R\n}\n// inject boolean or number into Sum&lt;boolean,number&gt;\nvar BNin: Inject&lt;boolean,number&gt; = \n    ((bn)=&gt;{\n        if (typeof bn==&quot;boolean&quot;)\n            return &lt;Sum&lt;boolean,number&gt;&gt;{left:bn};\n        else if (typeof bn==&quot;number&quot;)\n            return &lt;Sum&lt;boolean,number&gt;&gt;{right:bn};\n        else\n            throw (&quot;BNin &quot;+typeof bn)});\n// combine Case with Sum to get result\nfunction out&lt;L,R,T&gt;(caseof:Case&lt;L,R,T&gt;) {\n    return (bn:Sum&lt;L,R&gt;) =&gt;\n            bn.hasOwnProperty(&quot;left&quot;)\n            ? caseof.left(bn.left)\n            : caseof.right(bn.right)\n}\n// convert boolean or number to string\nvar BNtoString : Case&lt;boolean,number,string&gt; = \n    {left: b=&gt;b.toString()\n    ,right: n=&gt;n.toString()};\n\nvar BN : Sum&lt;boolean,number&gt; = BNin(true);\n\nconsole.log( out(BNtoString)(BN) );\n[BNin(false),BNin(42)]\n    .map(out(BNtoString))\n    .forEach( el=&gt;console.log(el) )</code></pre>\n\nSadly, this duplicates JS' internal runtime type tagging, but by doing this, it makes the types available to the TypeScript type system.<br />\n",
+    "PostedDate": "2013-10-06T14:04:34.67-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105880",
+    "ThreadId": "461057",
+    "Html": "Actually, we can do better than that, for the specific case of boolean or number, by using an encoding of type Dynamic and type case that makes use of JS runtime type information (avoiding the extra level of tagging). Then we drop all the cases that don't deal with boolean or number.<br />\n<pre><code>// -------------------- start encoding of union type as restricted Dynamic/any\n\n// a function for every dynamic type\ninterface TypeCase&lt;T&gt; {\n    number : (n:number)=&gt;T;\n    boolean: (b:boolean)=&gt;T;\n}\n\n// tell the TS type system which types can go into any\ninterface ToDynamic {\n    (n:number):any;\n    (b:boolean):any;\n}\nvar toDynamic : ToDynamic = (t=&gt;t);\n\n// combine TypeCase&lt;T&gt; with any to get result T\nfunction fromDynamic&lt;T&gt;(caseof:TypeCase&lt;T&gt;) {\n    return (t:any) =&gt; {\n        switch (typeof t) {\n            case &quot;number&quot;: return caseof.number(&lt;number&gt;t);\n            case &quot;boolean&quot;: return caseof.boolean(&lt;boolean&gt;t);\n            default: throw (&quot;out &quot;+typeof t);\n    }\n    }\n}\n// -------------------- end encoding of union type as restricted Dynamic/any\n\n// application code example:\n\n// convert any value to string, via type case\n// (omitting a case here is a static error)\nvar typeCaseAnyToString : TypeCase&lt;string&gt; = \n    {number: n=&gt;&quot;a number: &quot; + n.toString()\n    ,boolean: b=&gt;&quot;a boolean: &quot; + b.toString()\n    };\n\n// apply typeCaseAnyToString to some dynamically typed values\n// (injecting a type excluded in ToDynamic is a static error\n//  here, provided that Object is also excluded there)\n[toDynamic(undefined)   // can't rule out undefined\n,toDynamic(null)        // can't rule out null, either:-(\n,toDynamic(false)\n,toDynamic(42)\n// ,toDynamic(&quot;hi&quot;) // type error\n// ,toDynamic(x=&gt;x) // type error\n// ,toDynamic({})   // type error\n].map(fromDynamic(typeCaseAnyToString))\n .forEach( el=&gt;console.log(el) );</code></pre>\n\nIn case the concepts are unfamiliar: a value of type <code>Dynamic</code> is a value paired with a runtime representation of its static type, so <code>toDynamic</code> marks a transition from static to dynamic typing, and <code>fromDynamic</code> marks a transition from dynamic to static typing. We use <code>any</code> as our <code>Dynamic</code>, because JS already has runtime type information (that info is a lot less precise than TS static types, but for boolean and number that makes no difference).\r<br />\n<br />\n<code>toDynamic</code> uses overloads to list the types we want to allow in our <code>Dynamic</code> type, <code>fromDynamic</code> uses an object with optional fields to list types we expect to find in our <code>Dynamic</code> type (providing a statically typed handler for each dynamically possible type - a typecase construct).\r<br />\n<br />\nThat seems to be fairly close to a union type for boolean an number, with one exeption: TS' type system does not allow us to rule out <code>null</code> and <code>undefined</code>. For <code>undefined</code> (no value), that is expected, but for <code>null</code> (no <em>object</em>), that is unexpected and sad.\r<br />\n<br />\nI would be interested in comments from the TypeScript team on the permissive typing wrt <code>null</code> here.<br />\n",
+    "PostedDate": "2013-10-10T01:39:50.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105902",
+    "ThreadId": "461057",
+    "Html": "In a couple of d.ts files I've ended up declaring a base interface, then deriving versions with the alternative types, and declaring methods with an overload for each derived type.\r<br />\n<br />\nFor example, I was working with a method with an options object where either <code>template</code> or <code>templateUrl</code> are required, so:<br />\n<pre><code>interface ModalOptionsBase { controller?: string; }\ninterface ModalOptionsTemplate extends ModalOptionsBase { template: string; }\ninterface ModalOptionsTemplateUrl extends ModalOptionsBase { templateUrl: string; }\n\ninterface ModalService { open(options: ModalOptionsTemplate): Modal; open(options: ModalOptionsTemplateUrl): Modal; }\n</code></pre>\n\nWould something like that work for your use case?<br />\n",
+    "PostedDate": "2013-10-10T02:50:04.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106449",
+    "ThreadId": "461057",
+    "Html": "Since we're all throwing in ways of doing this, let me throw in my 2 cents.\r<br />\n<br />\nOne straightforward way of modeling this is not on the type but on the contract using overloads.  For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> takeNumberOrString(x: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">number</span>;\n<span style=\"color:Blue;\">function</span> takeNumberOrString(x: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">string</span>;\n<span style=\"color:Blue;\">function</span> takeNumberOrString(x: <span style=\"color:Blue;\">any</span>) { <span style=\"color:Blue;\">return</span> x; }\r\n</pre></div>Now you have a function which when called with something that isn't a number or string will error.  It doesn't give you union types in the type system, but it does give you some flexibility on the callee side.<br />\n",
+    "PostedDate": "2013-10-11T08:35:55.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128099",
+    "ThreadId": "461057",
+    "Html": "I think that sort of misses the point though.\r<br />\nIn JavaScript, a property can be assigned a number of different values, and it's difficult right now to relate that in TypeScript.\r<br />\nThis is particularly problematic when you are creating definition files for existing JS libraries.\r<br />\n<br />\nFor example, let's say that an existing JS library allows the following:<br />\n<pre><code>interface Ellipse {\n    radius: &lt;some type&gt;;\n    ... other members here ...\n}</code></pre>\n\nIf you look at the JS docs for Ellipse, it accepts<br />\n<ul>\n<li>a single number ...  var x = &lt;Ellipse&gt;{ radius: 10 };  // x and y are both 10</li>\n<li>a numerical array (with 2 entries) ... var x = &lt;Ellipse&gt;{ radius: [10, 5] };  // x = 10, y = 5</li>\n<li>\nan object with x and y properties... var x= &lt;Ellipse&gt;{ radius: {x:10, y:5} }<br />\n</li>\n</ul>\nUsing &quot;any&quot; as the type is lame because it really can't be &quot;any&quot; type. It can only be a single number, a numerical array, or an object with x and y properties.\r<br />\nI can't change the signature of the JS library because it's not mine (and also, why would should I even if it was? it's perfectly valid the way it is), but i somehow need to represent this in the TS file, but can't.\r<br />\n<br />\nIn C++, sure, this would be a union, but in JS it's a simpler concept - it's a named bucket that accepts one value of three possible types - not ANY type. I just need a simple way to relate that in TS. I think creating unions in TS is overkill, but having a way to specify &quot;one of x possible types&quot; should be doable.<br />\n",
+    "PostedDate": "2013-11-22T16:06:43.017-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128669",
+    "ThreadId": "461057",
+    "Html": "@RobTeixeira, that's not a bad example. There is nothing in common between number, number[] and { x: number; y: number; }, so we can't model via inheritance a la @markrendle above.\r<br />\n<br />\nYou could try generics:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Ellipse&lt;T&gt; {\n    radius: T;\n}\n\n<span style=\"color:Blue;\">function</span> foo&lt;T&gt;(ellipse: Ellipse&lt;T&gt;) {\n}\n\n<span style=\"color:Blue;\">var</span> ellipse1: Ellipse&lt;<span style=\"color:Blue;\">number</span>&gt; = { radius: 10 }\n<span style=\"color:Blue;\">var</span> ellipse2: Ellipse&lt;<span style=\"color:Blue;\">number</span>[]&gt; = { radius: [10, 11] }\n<span style=\"color:Blue;\">var</span> ellipse3: Ellipse&lt;{ x: <span style=\"color:Blue;\">number</span>; y: <span style=\"color:Blue;\">number</span> }&gt; = { radius: { x: 10, y: 11 } }\n\nfoo(ellipse1);\nfoo(ellipse2);\nfoo(ellipse3);\r\n</pre></div>This permits a more explicit declaration than using <code>any</code> for radius, but since we can't define a generic constraint it's also possible to write<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> ellipse4: Ellipse&lt;<span style=\"color:Blue;\">string</span>&gt; = { radius: <span style=\"color:#A31515;\">&quot;10&quot;</span> }\r\n</pre></div>Perhaps all we need is <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Ellipse&lt;T <span style=\"color:Blue;\">extends</span> <span style=\"color:Blue;\">number</span>|<span style=\"color:Blue;\">number</span>[]|{x:<span style=\"color:Blue;\">number</span>; y:<span style=\"color:Blue;\">number</span>}&gt; {\n    radius: T;\n}\r\n</pre></div>",
+    "PostedDate": "2013-11-25T05:30:16.373-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128805",
+    "ThreadId": "461057",
+    "Html": "Your last example with the generic type constraints is a lot closer to what I think we need, except that's also not quite there.\r<br />\n<br />\nThe reason is that I might assign a value of one type to the radius property, call a bunch of methods, and then re-assign a new value (of a different type) to the radius property. Also, the return of the property might not be the same as what I initially set. A generic type constraint assumes that the value will always be the same type for the life of the instance, which in this case is clearly not true. This is all perfectly legal in JS, but is nearly impossible to describe in a TS definition file without opening it up to &quot;any&quot;.\r<br />\n<br />\nI don't know what it would break or what difficulties there would be for the compiler, but it would be nice if i can specify a set of legal types directly on the property itself (at least in ambient space inside a definition file).<br />\n",
+    "PostedDate": "2013-11-25T09:41:56.68-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1227427",
+    "ThreadId": "461057",
+    "Html": "Hi,\r<br />\nI wanted to hijack this thread a little, in the direction of &quot;creating definition files for existing JS libraries&quot; that Rob referred to.\r<br />\n<br />\nI am facing this with many .d.ts files I am trying to use - always having to change from one type to another (or any - which is lame). Many existing javascript libraries allow multiple value types on a field. Most commonly, it can be both string reference to variable and object reference - many mvc frameworks can only watch a variable by name, not by reference.\r<br />\n<br />\nI came here to look for a way to map properly, instead of just changing existing mapping. So far, the only suggestion that I see is creating base interface and then overriding it as needed with different types. Problem is, if you have multiple fields allowing multiple types, it explodes the number of interfaces, you almost have single-use interfaces, which defeats the purpose.\r<br />\n<br />\nWhat i would love to have (if we can't have union types), is ability to map multiple TS fields to same js variable, like so:\r<br />\nfieldByRef: IFieldType\r<br />\nfieldByName: string\r<br />\n<br />\nin the compiled JS both would assign to same JS variable, but in TS I would like to have them separate. Current implementation of interfaces has no mapping logic whatsoever, and this would add some without breaking TS type system.<br />\n",
+    "PostedDate": "2014-03-27T09:02:38.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

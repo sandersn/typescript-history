@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "927345",
+    "ThreadId": "399576",
+    "Html": "\r\n<p>In <a href=\"http://expressjs.com/api.html#express\">expressjs</a> 3.x the nodejs module\r\n<a href=\"https://github.com/visionmedia/express/blob/master/lib/express.js\">express.js</a> exports a function\r\n<strong><em>as</em></strong> the module like this:</p>\r\n<pre>exports = module.exports = createApplication;</pre>\r\n<p>which means in nodejs you do the following:</p>\r\n<pre>  var express = require(&quot;express&quot;);\n  var app = express();</pre>\r\n<p>How does one:<br>\r\na) <strong>declare</strong> this in a TypeScript express.d.ts file and<br>\r\nb) <strong>use</strong> it in a TypeScript app.ts file.</p>\r\n<p>Please note that from what I can determine the express.d.js used in the MS examples is for an earlier version of express (2.x) since it uses the deprecated\r\n<strong>createServer</strong> function.</p>\r\n",
+    "PostedDate": "2012-10-16T06:14:25.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "927401",
+    "ThreadId": "399576",
+    "Html": "<p>Underscore.js do the <a title=\"same\" href=\"https://github.com/alvivi/typescript-underscore/blob/master/underscore.d.ts\">same</a>:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>declare module <span style=\"color: #a31515;\">\"underscore\"</span> {\r\n    <span style=\"color: green;\">// OO-style</span>\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> (arg : any) : UnderscoreOOStatic;\r\n\r\n    <span style=\"color: green;\">// Collection Functions (Arrays or Objects)</span>\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> each (list : any[], iterator : UnderscoreVoidListIterator, context? : any) : <span style=\"color: blue;\">void</span>;\r\n.\r\n.\r\n.\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-16T07:13:35.583-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "927871",
+    "ThreadId": "399576",
+    "Html": "\r\n<p>Thank you @alvivi,</p>\r\n<p>I couldn't get that to work because the <a href=\"http://typescript.codeplex.com/SourceControl/changeset/view/fe3bc0bfce1f#samples%2fimageboard%2fexpress.d.ts\">\r\nexpress.d.ts</a> is declared as a module. &nbsp;<span style=\"font-size:10pt\">Exporting function '()' as type ExpressServer caused an error:\r\n</span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">declare module</span> <span style=\"color:#a31515\">&quot;express&quot;</span> {\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> (): ExpressServer; <span style=\"color:green\">// Error: The name 'ExpressServer' does not exist in the current scope.</span>\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> createServer(): ExpressServer; <span style=\"color:green\">// This works...</span>\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> <span style=\"color:blue\">static</span>(path: string): any;\n    <span style=\"color:blue\">import</span> http = module(<span style=\"color:#a31515\">&quot;http&quot;</span>);\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">var</span> listen;\n</pre>\r\n</div>\r\n<p>Not sure if this is a bug... so I ended up going like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">declare module</span> <span style=\"color:#a31515\">&quot;express&quot;</span> {\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> (): any;\n...</pre>\r\n</div>\r\n<p>and using it like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">import</span> express = <span style=\"color:blue\">module</span>(<span style=\"color:#a31515\">'express'</span>);\n<span style=\"color:blue\">var</span> app = &lt;express.ExpressServer&gt;express();\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-10-17T00:44:02.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928027",
+    "ThreadId": "399576",
+    "Html": "<p>Yes, I have the same problem. I think it is a bug, you cannot use a interface declared in a module in the definition of () function of that module.&nbsp;I had to move out the interface declarations from their module to implement this in <a href=\"https://github.com/alvivi/typescript-underscore\">underscore.js</a>.</p>",
+    "PostedDate": "2012-10-17T06:38:35.27-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928041",
+    "ThreadId": "399576",
+    "Html": "<p>This will work if you qualify the type with the module name:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>declare module express {\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> (): express.ExpressServer;\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">interface</span> ExpressServer {listen():string;}\r\n}\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-17T06:57:23.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928090",
+    "ThreadId": "399576",
+    "Html": "<p>@markrendle When I try your example, using this files:</p>\r\n<p>express.d.ts</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>declare module express {\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> (): express.ExpressServer;\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">interface</span> ExpressServer {listen():string;}\r\n}\r\n</pre>\r\n</div>\r\n<p>test.ts</p>\r\n<p>\r\n<pre>/// &lt;reference path=\"express.d.ts\" /&gt;\r\n\r\nimport express = module express;\r\n</pre>\r\n</p>\r\n<p>&nbsp;</p>\r\n<p>\"tsc test.ts\" gives me an \"cannot read property 'nodeType' of null\" error.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-17T08:34:06.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928550",
+    "ThreadId": "399576",
+    "Html": "<p>@<span>markrendle, I have the same problem that @alvivi is having.</span></p>\r\n<p>The difference is in how the module name is specified. i.e.&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: #0000ff;\">declare module</span> <span style=\"color: #a31515;\">\"express\"</span> { ... } <span style=\"color: green;\">// quoted</span>\r\n<span style=\"color: green;\">// or</span>\r\n<span style=\"color: #0000ff;\">declare module</span> express { ... }   <span style=\"color: green;\">// not quoted</span><span style=\"color: green; font-size: 1em;\">&nbsp;</span></pre>\r\n</div>\r\n<p>As per chapter 10 of the TypeScript spec, \"An AmbientModuleIdentification with a StringLiteral declares an external module.\" &nbsp;So the first declaration is the one that should be used. &nbsp;When using an external (literal) declaration the reference to express.ExpressServer does not work.</p>\r\n<p>I still wonder if the error from an unqualified reference to ExpressServer is a bug or a 'feature'!?</p>",
+    "PostedDate": "2012-10-17T23:19:46.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931523",
+    "ThreadId": "399576",
+    "Html": "<p>Ok -- i'm not understanding what the actual fix is</p>\r\n<pre>/// reference path='Definitions/node-0.8.d.ts'\r\n/// reference path='Definitions/express-2.d.ts'\r\nimport express = module(\"express\");\r\nvar app = express();\r\n\r\napp.get('/', function(req, res){\r\n  res.send('Hello World');\r\n});\r\n</pre>\r\n<pre>VS highlights the express in module(\"express\":</pre>\r\n<pre>and says:</pre>\r\n<pre>Error&nbsp;1&nbsp;The name '\"express\"' does not exist in the current scope&nbsp;X\\app.ts&nbsp;3&nbsp;25&nbsp;app.ts<br />Error&nbsp;2&nbsp;A module cannot be aliased to a non-module type&nbsp;Xapp.ts&nbsp;3&nbsp;25&nbsp;app.ts</pre>\r\n<pre>I don't see what the problem is and the error is pretty non-descriptive.<br /></pre>",
+    "PostedDate": "2012-10-24T01:47:58.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932118",
+    "ThreadId": "399576",
+    "Html": "\r\n<p>Yes, this is a real pain...</p>\r\n<p>It would be great if the issue was just a once off, but in NodeJs this is a common pattern for initialising modules! &nbsp;I would be interested in some clarity on, whether this is by&nbsp;intention or 'design', whether this can be changed or whether this\r\n is a bug.</p>\r\n",
+    "PostedDate": "2012-10-24T22:24:39.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098872",
+    "ThreadId": "399576",
+    "Html": "I think I managed to make this work recently.\r<br />\n<br />\nThe pattern is &quot;Callable module&quot;, I made this name up myself.\r<br />\n<br />\nIt can be implemented using &quot;Declaration Merging&quot; (spec 7.2) and &quot;Export Assignments&quot; (spec 11.2.4)<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//express.d.ts</span>\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;express&quot;</span> {\n  <span style=\"color:Blue;\">function</span> e(): e.Application;\n\n  <span style=\"color:Blue;\">module</span> e {\n    <span style=\"color:Blue;\">interface</span> Application {\n      <span style=\"color:Green;\">//omitted</span>\n    }\n    <span style=\"color:Green;\">// omitted rest of members</span>\n  }\n\n  <span style=\"color:Blue;\">export</span> = e;\n}\r\n</pre></div>I tried to make a pull request <a href=\"https://github.com/borisyankov/DefinitelyTyped/pull/1077\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/pull/1077</a> for DefinitelyTyped's express.d.ts file but it hasn't been reject/accepted yet. I also made some other improvements like putting the interfaces inside of the express namespace instead of having them in the global namespace with ExpressServer as a prefix.<br />\n",
+    "PostedDate": "2013-09-24T23:07:56.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

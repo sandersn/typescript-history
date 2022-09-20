@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As others have covered fairly well, there're good reasons the compiler needs to be giving type errors on code like your original sample if TypeScript is to be useful for providing static analysis around types. The compiler is specifically designed to emit JavaScript in the presence of type errors for reasons like yours though. We do hope to find a happy medium of warnings vs errors in the future (with the appropriate flags/toggles), everything is in the same bucket at the moment which is less than ideal. It would also be nice to maybe find a better method of supporting 'expando' type objects in a future version, although as you noticed the index expression provides a workaround for now.",
+    "ClosedDate": "2013-09-09T11:59:03.657-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "For example:\r\n\r\n```ts\r\nvar o = {};\r\no.foo = 'bar';\r\n```\r\n\r\nGives the error \"The property 'foo' does not exist on value of type '{}'\".\r\n\r\nHow does this make any sense? I don't think this should be an error. I realize you can do `o['foo'] = 'bar'` but that's besides the point.\r\n\r\n[Playground here](http://www.typescriptlang.org/Playground/#src=var%20o%20%3D%20%7B%7D%3B%0Ao.foo%20%3D%20'bar'%3B%0A)\r\n\r\n[StackOverflow Discussion here](http://stackoverflow.com/questions/12710905/how-do-i-dynamically-assign-properties-to-an-object-in-typescript)",
+    "LastUpdatedDate": "2013-09-09T11:59:03.657-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-06T22:59:41.453-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Support dynamic property/method assignment",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1657
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "When we write:\n\n```TypeScript\nvar o = {};\no.foo = 'bar';\n```\n\nthis is shorthand for\n\n```TypeScript\nvar o: {} = {};\no.foo = 'bar';\n```\n\nThis is because the compiler infers the type from the assignment.\n\nIf you don't want this to be a compiler error then what about the following?\n\n```TypeScript\n\nvar user: { name: string; age: number} = <any>{};\n \nuser.name = \"Joe Bloggs\";\nuser.age = 50;\n\nuser.foo = \"bar\"; // You don't want this to be an error?\n\n```",
+      "PostedDate": "2013-09-08T06:10:45.83-07:00",
+      "Id": 112787
+    },
+    {
+      "Message": "@nabog, thanks for your response.\n\n As I understand it, TypeScript is supposed to compile plain ol' JavaScript, right? My example is plain ol' JavaScript w/o any types declared, so I think it should compile safely.\n\nThe issue really presents itself in situations like the following. Say I'm using the Ember.js framework and my code looks like this:\n\n```ts\n/// <reference path=\"ember.d.ts\" />\n\nvar App = Ember.Application.create();\nApp.Person = Ember.Object.extend();\nApp.reset();\n```\n\nThis throws the error, \"The property 'Person' does not exist on value of type 'EmberApplication.System.Application'.\"\n\nNow, I can fix this your way by doing the following:\n\n```ts\n/// <reference path=\"ember.d.ts\" />\n\nvar App: { Person: typeof EmberRuntime.System.Object } = <any>Ember.Application.create();\nApp.Person = Ember.Object.extend();\nApp.reset();\n```\n\nBut now I get an error for `App.reset()` because it's no longer seen as an instance of the `Ember.Application`.\n\nDo you see the problem here?",
+      "PostedDate": "2013-09-08T09:18:48.483-07:00",
+      "Id": 112795
+    },
+    {
+      "Message": "Actually, I think I found a solution...\n\n```ts\n/// <reference path=\"ember.d.ts\" />\n\ndeclare class Foo extends EmberApplication.System.Application {\n\tPerson: typeof EmberRuntime.System.Object;\n}\n\nvar App: Foo = <any>Ember.Application.create();\nApp.Person = Ember.Object.extend();\nApp.reset();\n```",
+      "PostedDate": "2013-09-08T09:27:36.607-07:00",
+      "Id": 112796
+    },
+    {
+      "Message": "Still, I think plain ol' JavaScript should compile with the first example. Isn't that one of the selling points of TypeScript, that it will compile JavaScript as it stands?",
+      "PostedDate": "2013-09-08T09:28:54.823-07:00",
+      "Id": 112797
+    },
+    {
+      "Message": "@jedhunsaker, I'm not very familiar with Ember JS, but it looks the declarations file (ember.d.ts) is not up-to-date.\n\nYou should be able to write the following, since TS now supports generics:\n\n```TypeScript\nvar App = Ember.Application.create<Foo>();\nApp.Person = Ember.Object.extend();\nApp.reset();\n```",
+      "PostedDate": "2013-09-08T12:46:52.087-07:00",
+      "Id": 112806
+    },
+    {
+      "Message": "@nabog you are correct. I'm in the process now of updating it. My ember branch is here:\n\nhttps://github.com/jedhunsaker/DefinitelyTyped/blob/ember/ember/ember.d.ts\n\nAs for generics, thank you so much for the example. I got it working like this:\n\n```ts\ndeclare module Ember {\n    class Application extends Namespace implements ClassMixin {\n        static create<T extends Application>(arguments?: ApplicationCreateArguments): T;\n    }\n    // ...\n}\n```\n\nAgain, thanks for the help, but I still feel TypeScript should compile any valid JavaScript, don't you? I would like to hear more about this philosophy. Maybe I should start a discussion for that topic.\n",
+      "PostedDate": "2013-09-08T21:53:04.713-07:00",
+      "Id": 112822
+    },
+    {
+      "Message": "@jedhunsaker TypeScript _does_ compile any JavaScript. Try it, the compiler will spit out valid JavaScript for your example. The compiler just points out type errors, of which your example is one of them (they probably should be warnings). If the compiler didn't warn you when you try to use properties that don't exist on a given type, the whole __Type__ part of TypeScript wouldn't mean very much. The whole point is to get static typing.\n\nIf you really want to write code that is not statically checked by the compiler, just set the type of your variable as `any`.\n\n``` TypeScript\nvar o: any = {};\no.foo = 'bar';\n```",
+      "PostedDate": "2013-09-09T07:51:35.11-07:00",
+      "Id": 112855
+    },
+    {
+      "Message": "@MgSam – Ah, you're right. It *does* compile, even though it throws the compiler error. Probably should be a warning, like you said.\n\nThanks.",
+      "PostedDate": "2013-09-09T08:26:36.04-07:00",
+      "Id": 112858
+    }
+  ]
+}

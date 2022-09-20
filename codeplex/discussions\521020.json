@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1191550",
+    "ThreadId": "521020",
+    "Html": "I'm not sure if this is a bug or expected behavior, but it appears that the way TypeScript is resolving overloads is almost making the feature useless. For example:<br />\n<pre><code>class Parent\n{\n    ParentMember = 1;\n}\n\nclass Child extends Parent\n{\n    ChildMember = 1;\n}\n\nfunction F(a: Parent): Parent\nfunction F(a: Child): Child\n{\n    return a;\n}\n\nvar p = new Parent();\nvar c = new Child();\n\nF(p);\nF(c).ChildMember; // Error</code></pre>\n\nI'm basically trying to make a specialization so that if you pass in a Child, an Child is returned, but if you pass in a Parent, a Parent is returned. I can't seem to make this work.<br />\n<br />\nAs it stands, <code>F(c).ChildMember</code> isn't compiling, presumably because it's resolving to the first overload and then quitting out, ignoring the fact that there is a better overload further down.<br />\n<br />\nIf I reverse the order of the overloads, it doesn't seem to work at all -- an error both on the first F() call as well as an error that &quot;Child&quot; is not a subclass of &quot;Parent&quot;.<br />\n<br />\nIf I add an &quot;any&quot; overload at the bottom, the type passes through, but I've now exposed a type safety hole because an &quot;any&quot; can be passed into the method.<br />\n<br />\nMy personal opinion is that I feel that TypeScript's overload resolution needs rethinking. I've been writing TypeScript all day for some time now, and so far, each time I've attempted to define an overload, I've had to back out due to a limitation of the language. Hopefully this is just my own misunderstanding.<br />\n",
+    "PostedDate": "2014-01-22T11:28:37.737-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1191725",
+    "ThreadId": "521020",
+    "Html": "The implementation signature does not count as an overload signature. Since at runtime there's only actually a single function implementation that generally does the necessary run time type tests you have to explicitly write out each overload signature you want to make available for callers. For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> F(a: Child): Child\n<span style=\"color:Blue;\">function</span> F(a: Parent): Parent\n<span style=\"color:Blue;\">function</span> F(a: <span style=\"color:Blue;\">any</span>): Child {\n    <span style=\"color:Blue;\">if</span> (a.ChildMember) {\n        ...\n    }\n    <span style=\"color:Blue;\">else</span> <span style=\"color:Blue;\">if</span> (a.ParentMember) {\n        ...\n    }\n    <span style=\"color:Blue;\">else</span> { <span style=\"color:Blue;\">throw</span> <span style=\"color:#A31515;\">&#39;oops&#39;</span> }\n}\r\n</pre></div>does what you were trying to achieve.<br />\n",
+    "PostedDate": "2014-01-22T12:39:57.207-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

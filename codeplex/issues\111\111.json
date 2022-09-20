@@ -1,0 +1,110 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As rictic points out, this is better handled outside of the compiler, using build scripts and/or a more JavaScript-style approach.  \n\nIn JavaScript, it's quite common to use techniques like AMD to configure projects for particular environments or feature sets.  As AMD and module loading is already supported, this is generally our preferred solution to project configuration.",
+    "ClosedDate": "2013-01-24T12:29:12.663-08:00",
+    "CommentCount": 14,
+    "Custom": null,
+    "Description": "Reading the spec, I don't see any mention of preprocessor directives. It's nice, in my experience, to be able to define additional code for debug purposes, such as console logging, or other types of runtime checks that you'd like to omit in a minified/release\r\n version.\r\n\r\nJust simple support for #if would be nice.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-05T07:51:30.037-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Conditional Compilation?",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 34,
+    "Id": 111
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "+1\n\nConditional code for console logging and debugging would be a huge help. It is far to easy for that code to slip into production right now.",
+      "PostedDate": "2012-10-05T09:53:58.63-07:00",
+      "Id": 78673
+    },
+    {
+      "Message": "For stripping debug calls? Really? One can always use another tool to strip debug calls/symbols. \n\nWhat conditionals will be great at is enabling/disabling module inclusion and targeting specific run environments (consider 'legacy browsers' build and 'modern browser' build). Much more useful than removing console.log calls!",
+      "PostedDate": "2012-10-05T11:55:33.34-07:00",
+      "Id": 78704
+    },
+    {
+      "Message": "Conditional compilation would be awesome. For code that needs extra-checking in development/debug time, it's absolutely necessary. We already use this through Ant with extended tasks before the build process, and it's just as useful as in any other language in VS, just like VB and C# have through comment directives that have access to constants for deciding which code to include in the build.\n\nWe're gonna use it, either by modifying the build steps to pre-process the source using a 3rd party tool and output them to a temporary folder and then doing the actual build task over that, or through the TSC compiler itself.\n\nThrough the TSC compiler is more clean, direct and elegant, as we don't have to resort to 3rd party tools.",
+      "PostedDate": "2012-10-11T08:00:54.78-07:00",
+      "Id": 79483
+    },
+    {
+      "Message": "+1\n\nConditional directives can be very useful for javascript environment with lack of debugging.",
+      "PostedDate": "2012-10-28T06:34:56.97-07:00",
+      "Id": 81153
+    },
+    {
+      "Message": "It would be great if all the conditional code that was previously in jsbuild.dll in the old ASP.NET project was supported in TypeScript. This would let you use preprocessor directives to include files, do conditional includes of lines, and declare variables that affect the same. The main feature I would like is an include comment that would let you chunk up your files a bit better.",
+      "PostedDate": "2012-11-29T03:25:18.527-08:00",
+      "Id": 83229
+    },
+    {
+      "Message": "This feature is something that other tools can handle. For example you can by default include noop versions of all of your debug functions and check once at runtime that you're running in development mode and swap in the slow functional versions.\n\nOr, in your build script you could include a different version of a debug.ts file when you're in dev mode vs production mode.\n\nI vote against this feature.",
+      "PostedDate": "2013-01-06T16:21:06.23-08:00",
+      "Id": 85466
+    },
+    {
+      "Message": "I disagree with the closure of this issue. It's a much bigger pain to edit build scripts than to slip in an `#if` statement. You also lose the editor and language support this way. It's _nice_ that TypeScript supports AMD, but you shouldn't be _required_ to use it in order to change what gets compiled.",
+      "PostedDate": "2013-06-12T08:39:03.563-07:00",
+      "Id": 102859
+    },
+    {
+      "Message": "I too strongly disagree with the closure of this issue. Conditional compilation based on project configuration would be a very useful feature, and should not be hard to implement in the compiler.\n\nWould you ask C/C++ programmers to give up their preprocessor?\n",
+      "PostedDate": "2013-11-20T07:16:05.51-08:00",
+      "Id": 123656
+    },
+    {
+      "Message": "I agree. It would be really helpfull if you could write \n```\n#if DEBUG  \n/* code*/ \n#endif\n```\nor somehow mark function like `[Conditional(\"DEBUG\")]` so all the calls to this functions will be removed in release builds",
+      "PostedDate": "2014-01-22T15:40:34.867-08:00",
+      "Id": 131222
+    },
+    {
+      "Message": "If you're using external modules with require.js there are two options for removing code in production builds using the require.js optimizer:\n\nFirst is pragmas:\n``` TypeScript\n// code here\nvar build = 'production';\n//>>includeStart(\"pragmaName\", pragmas.pragmaName);\n\nbuild = 'development';\n\n//>>includeEnd(\"pragmaName\");\n;\n// code there\n```\n\nOh, you need those ugly semicolons sometimes or tsc will remove comments ( https://typescript.codeplex.com/workitem/2115 ).\n\nThe region inside includeStart and includeEnd will be by default available in development but removed in production builds (because flag pragmaName is not set anywhere).\n\nSee details here: https://stackoverflow.com/questions/15193767/set-unset-a-debug-flag-during-grunt-requirejs-build#answer-15207536\n\nSecond way of removing code is has.js that contrary to the name doesn't really require any libraries.\n\nIf you have code like that:\n``` TypeScript\nif (has(\"someThing\")) {\n    //use native someThing\n} else {\n    //do some workaround\n}\n```\n\nThen you can set in your build configuration values for has(\"someThing\") and they will be replaced with true or false and then optimized away by UglifyJS.\n\nDetails here: http://requirejs.org/docs/optimization.html#hasjs",
+      "PostedDate": "2014-01-23T03:02:30.933-08:00",
+      "Id": 131283
+    },
+    {
+      "Message": "There was now 34 votes for the issue and it was closed.\nSeems, as before the developers who develop a product are not interested in what the developers using this product think. They go in separate ways.",
+      "PostedDate": "2014-01-31T01:16:22.863-08:00",
+      "Id": 132201
+    },
+    {
+      "Message": "To @rictic\nHow can anybody say that i vote against this feature if it does not impact your code if you dont use it?\nAnd how can anybody say that other tools can do this, when we are discussing this tool and its usefullness?\nLook at evry modern compile and you will see that this feature is a de facto standard. Even internet explorer supports conditional javascript compilation.\n",
+      "PostedDate": "2014-01-31T09:01:33.937-08:00",
+      "Id": 132241
+    },
+    {
+      "Message": "Even if closed, +1 for the record",
+      "PostedDate": "2014-03-23T14:34:26.54-07:00",
+      "Id": 137690
+    },
+    {
+      "Message": "Backing up.. \"Even if closed, +1 for the record\"\n\nIf you need an example... I would need it when instantiating a worker:\n\nthis.m_Worker = new Worker( \"Scripts/User/Page/Tabs/HeatMap/worker_heatmap.js\" );\t//debug...\n//this.m_Worker = new Worker( \"Scripts/worker_heatmap.js\" );\t\t\t\t\t\t//release...\n\nSo please don't say this is not needed... ifdef is an old and a lot of time needed feature.\n",
+      "PostedDate": "2014-08-08T05:54:47.92-07:00",
+      "Id": 154905
+    }
+  ]
+}

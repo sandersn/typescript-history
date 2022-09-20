@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Re-closing as duplicate. Please don't reopen this until the corresponding work item has been closed and you still see the issue.",
+    "ClosedDate": "2013-07-01T12:45:54.883-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "For the beta 0.9 version of the compiler.\r\nThe error in collection.ts module line 1303.\r\nI have two generic classes \r\n```\r\nexport class Collection<TItem extends CollectionItem> extends RIAPP.BaseObject\r\n```\r\nwhich has field  with generics parameter TItem\r\n```\r\n _itemsByKey: { [key: string]: TItem; };\r\n```\r\nThe collection class is extended by List class\r\n```\r\n export class List extends Collection<ListItem>\r\n```\r\nwhere ListItem is defined as\r\n```\r\nexport class ListItem extends CollectionItem\r\n```\r\n\r\nthe List class is closed generic class\r\nand TItem in it is actually resolved to a ListItem\r\nbut at line 1303 in List class has code\r\n\r\n```\r\nvar oldItem:ListItem = self._itemsByKey[item._key];\r\n```\r\nwhich gives error:\r\n\r\nError\t1\tCannot convert 'TItem' to 'RIAPP.MOD.collection.ListItem':\r\n\tType 'RIAPP.MOD.collection.CollectionItem' is missing property '__isNew' from type 'RIAPP.MOD.collection.ListItem'.\tC:\\DATA\\TEMP\\jriappTS\\jriappTS\\modules\\collection.ts\t1303\t33\tjriapp.ts\r\nError\t2\tCannot convert 'TItem' to 'RIAPP.MOD.collection.ListItem':\tC:/DATA/TEMP/jriappTS/jriappTS/modules/collection.ts\t1303\t33\tjriappTS\r\n\r\nWhy the compiler thinks that self._itemsByKey[item._key]; is resolved to CollectionItem and not to ListItem?\r\n\r\nExpected\r\n to propagate the right type from the generics arguments.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-07T02:14:24.007-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "error inside derived generic class assignment ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1120
+  },
+  "FileAttachments": [
+    {
+      "FileId": 690698,
+      "FileName": "jriappTSTest.zip",
+      "DownloadUrl": ".\\690698"
+    },
+    {
+      "FileId": 690699,
+      "FileName": "error.jpg",
+      "DownloadUrl": ".\\690699"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks taking a look. The code could be easily reduced to this:\r\n````\r\nexport class Collection<TItem extends CollectionItem> {\r\n    _itemsByKey: { [key: string]: TItem; };\r\n}\r\n\r\nexport class List extends Collection<ListItem>{\r\n    Bar() {\r\n        //Error\t1\tCannot convert 'TItem' to 'ListItem':\r\n        //Type 'CollectionItem' is missing property '__isNew' from type 'ListItem'.\tD:\\scratch\\file5.ts\t7\t13\tfile5.ts\r\n\r\n        var oldItem: ListItem = this._itemsByKey[\"\"];\r\n    }\r\n}\r\n\r\nexport class CollectionItem {\r\n\r\n}\r\n\r\nexport class ListItem extends CollectionItem {\r\n    __isNew: bool;\r\n}\r\n````",
+      "PostedDate": "2013-06-07T10:41:10.61-07:00",
+      "Id": 102440
+    },
+    {
+      "Message": "i also reduced it.\nThe error at: var oldItem: ListItem = this._itemsByKey[\"key\"];\n```\nmodule RIAPP {\n    export class CollectionItem {\n        _fkey: string;\n        constructor() {\n            this._fkey = null;\n        }\n        get _key() { return this._fkey; }\n        set _key(v) {\n            if (v !== null)\n                v = '' + v;\n            this._fkey = v;\n        }\n        get _collection(): Collection<CollectionItem> { return null; }\n    };\n\n\n    export class Collection<TItem extends CollectionItem> {\n        _isLoading: bool;\n        _itemsByKey: { [key: string]: TItem; };\n\n        constructor() {\n            this._isLoading = false;\n            this._itemsByKey = {};\n        }\n\n        _createNew(): TItem {\n            throw new Error('Not Implemented');\n        }\n        get isLoading() { return this._isLoading; }\n        set isLoading(v: bool) {\n            if (this._isLoading !== v) {\n                this._isLoading = v;\n            }\n        }\n    }\n\n    export class ListItem extends CollectionItem {\n        __coll: List;\n        constructor(coll: List) {\n            super();\n            this.__coll = coll;\n        }\n        get _collection() { return this.__coll; }\n    }\n\n    export class List extends Collection<ListItem> {\n        constructor() {\n            super();\n        }\n        _createNew(): ListItem {\n            var item: ListItem = new ListItem(this);\n            return item;\n        }\n        fillItems() {\n            var oldItem: ListItem = this._itemsByKey[\"key\"];\n        }\n        toString() {\n            return \"List\";\n        }\n    }\n}\n\n```",
+      "PostedDate": "2013-06-07T21:43:32.813-07:00",
+      "Id": 102526
+    },
+    {
+      "Message": "Closing as this appears a dupe of \n\nhttps://typescript.codeplex.com/workitem/1103\n\r\n\r** Closed by paulb 06/10/2013 2:33PM",
+      "PostedDate": "2013-06-10T14:33:35.133-07:00",
+      "Id": 102745
+    }
+  ]
+}

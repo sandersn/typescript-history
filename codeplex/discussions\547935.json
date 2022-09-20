@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1254143",
+    "ThreadId": "547935",
+    "Html": "Hello,<br />\n<br />\nwould it be possible to have a compiler flag that would only compile the methods that are actually called starting from a given &quot;main&quot;. I understand that solving this kind of problem in general is extremely difficult, especially in TypeScript / JavaScript. But I can imagine it would still be useful even if this feature only works for well-behaved applications. <br />\n<br />\nTo give you the background of my question. The main difficulty with huge mammoth libraries is that you carry around 300K of JavaScript code that aren't really used. The GUI libraries are especially prone to that. This means longer download &amp; start-up time. <br />\n<br />\nFor example if you compile the following code with --entry Application::run the method A::h would not be present in the final JavaScript code.<br />\n<pre><code>class Application {\n   public run() {\n      var a = new A();\n      a.f();\n   }\n}\n\nclass A {\n   public f() {\n      console.log(&quot;A::f&quot;);\n      g();\n   }\n   \n   public g() {\n      console.log(&quot;A::g&quot;);\n   }\n   \n   public h() {\n      console.log(&quot;A::h&quot;);\n   }\n}</code></pre>\n\nThank you and best regards<br />\n",
+    "PostedDate": "2014-06-08T10:02:41.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1254565",
+    "ThreadId": "547935",
+    "Html": "We've considered adding optimizations that the user could opt-in, like minification and removing unused functions/vars.<br />\n\r<br />\nOne catch here is that starting from a main and traversing from only works for a very specific to a development style.  TypeScript apps are not compiled using a closed-world, perfect knowledge approach, but instead assume having only limited knowledge of the outside world.  As JavaScript files are loaded on the page, they're working with an open, dynamic runtime.  Just to get code to compile, users are only required to 'declare' enough of the outside world symbols that the program typechecks.  There isn't a way to enforce that users do this more completely, which is unlike languages like C/C++.\r<br />\n<br />\nWe could introduce annotations to help with this, and that's a possibility.  <br />\n",
+    "PostedDate": "2014-06-09T13:09:50.677-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1261203",
+    "ThreadId": "547935",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nWe've considered adding optimizations that the user could opt-in, like minification and removing unused functions/vars.  \n<br />\n</blockquote>\nIgnore unused top-level items, e.g. classes, functions, vars at least? (I'm unsure about methods.)\r<br />\n<br />\nSimple use-case is &quot;utils.ts&quot; which contains a lot of functions and helpers, but simple application could be using only few util functions. In this case there is no good way to reference utils.ts cause typescript compiles all utils to the simple application even though I'm using only few of them. Only way at the moment is copy &amp; paste only the used helpers from utils.ts to the main application. Not convenient.<br />\n",
+    "PostedDate": "2014-06-30T08:11:01.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-25T12:51:19.95-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I recently upgraded to the latest [LinqJS](https://linqjs.codeplex.com/discussions/376207), which introduced a function to allow you to inject it's IEnumerable<T> implementation directly into the array class.\r\n\r\nNaturally, the first thing I did was call the extension and try to extend TypeScript's array definition as follows:\r\n```\r\n    Enumerable.Utils.extendTo(Array);\r\n    // Setup Array<T> implementing IEnumerable<T> via linqjs\r\n    interface Array<T> extends linqjs.IEnumerable<T> {\r\n    }\r\n```\r\n\r\nMy train of thought was that this would now allow me to make calls like the following:\r\n```\r\n    [1, 2, 3].where(x => x < 5);\r\n```\r\n\r\nHowever, much to my dismay, I immediately lost all intellisense support and both Visual Studio and TypeScript shot up to more than 2GB of memory usage and 25% CPU usage (on a quad core machine). The tsc.exe process gradually grew from 150kb of memory to more than 2GB and kept growing (probably would've eaten all my RAM if I didn't end-task it). Any idea what might be causing this?",
+    "LastUpdatedDate": "2013-06-25T12:51:19.95-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-24T17:35:18.657-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Typescript compiler jumps to large amount of memory and cpu usage when extending Array",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1227
+  },
+  "FileAttachments": [
+    {
+      "FileId": 696364,
+      "FileName": "TsMemoryUsage.PNG",
+      "DownloadUrl": ".\\696364"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "IEnumerable<T> references Array<T> so I think you get a \"wrapped type\" error -- it is extremely easy to get into this error with LINQ-type libraries.  Look into linqjs.d.ts and you'll find a few places where this error is explicitly avoided by making a type \"any\" instead of the correct type.\n\nThe compiler will run out of stack space on some such errors (I think it is already a reported issue being worked on). In Visual Studio, however, stack errors on the compiler will not stop the process and Visual Studio goes into an infinite loop waiting for the process to end.  It won't help killing the compiler process nor exiting Visual Studio itself.  The only solution is to kill the runaway Visual Studio process.\n",
+      "PostedDate": "2013-06-25T03:30:04.83-07:00",
+      "Id": 104031
+    },
+    {
+      "Message": "Can you elaborate on the wrapped type error? Are you referring to whenever you have an outer type's generic arguments passed through into an implementing/extending type?",
+      "PostedDate": "2013-06-25T06:49:23.317-07:00",
+      "Id": 104036
+    },
+    {
+      "Message": "I believe the reference is to section \"3.5.2 Recursive Generic Types\" in the language spec.  It goes into a little more detail there, but starts with:\n\n_Generic types are permitted to directly or indirectly reference themselves in a recursive fashion as long as such references do not generate an infinite series of new types. Specifically, within a generic type G < T1 , T2 , … , Tn > and the types referenced by it, it is an error to reference G with a type argument that wraps any of G’s own type parameters (i.e. a type argument that wraps any Tx). A type parameter is said to be wrapped by a particular type when it is referenced, directly or indirectly, within that type._\n\nUnfortunately there are some issues here that will cause the problem outlined.  If it appears you are not in fact breaking the above rule, then please reopen with more details and we'll take a look.  (We are already also investigating/fixing why this causes the infinite loop and stack overflow.  See https://typescript.codeplex.com/workitem/1160 ).",
+      "PostedDate": "2013-06-25T12:51:11.807-07:00",
+      "Id": 104098
+    }
+  ]
+}

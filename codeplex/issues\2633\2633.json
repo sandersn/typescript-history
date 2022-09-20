@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:52:48.213-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "So a guy on my team was having weird issues with TypeScript in IE8. \r\n\r\nA little background information: He was adding TS for the first time to an existing system we have. We have millions of lines of existing code in this system already, but are looking to start taking advantage of TS. Prior to this, we had worked on a project that was very JavaScript-heavy and wanted to use TS, but were not able to get approval since we were on VS2010 and TS was still in it's early stages, so we began using similar constructs to what TS generates to allow us to do modules, classes, inheritance, etc.\r\n\r\nWe have a lot of \"modules\" defined as such:\r\n\r\n```\r\n(function (global) {\r\n   // A bunch of class declarations\r\n   function MyClass() { ... }\r\n   MyClass.prototype = { ... };\r\n   \r\n   // Build up a module\r\n   global.Foo = global.Foo || {};\r\n   global.Foo.Bar = global.Foo.Bar || {};\r\n   global.Foo.Bar.MyClass = MyClass;\r\n})(window);\r\n```\r\n\r\nNow, fast-forward a year and a half and we are finally able to use TypeScript. We're about to check in our first TS file, but our js tests kept failing in IE8. It turns out that when we added the first TS file in the same \"module\" as something built up by our non-TS code, it would actually override the entire module!\r\n\r\nBasically, if you have something like the preceding code and you declare a TS module and include that file AFTER you include the non-TS module, it will override everything on the first.\r\n\r\n```\r\nmodule Foo.Bar {\r\n\texport class AnotherClass {\r\n\t\tconstructor(){\r\n\t\t}\r\n\t\t\r\n\t\tdoSomethingElse(): void {\r\n\t\t\talert('This breaks my non-TS modules =(');\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nI think you'll agree that this is rather annoying behavior and unfortunately we are unable to cut off support for IE8 in our product line yet.\r\n\r\nA possible solution to this can be using window attaching instead of the ambient var declaration. What the TS above generates is this: \r\n\r\n```\r\nvar Foo;\r\n(function (Foo) {\r\n    (function (Bar) {\r\n        var AnotherClass = (function () {\r\n            function AnotherClass() {\r\n            }\r\n            AnotherClass.prototype.doSomethingElse = function () {\r\n                alert('This breaks my non-TS modules =(');\r\n            };\r\n            return AnotherClass;\r\n        })();\r\n        Bar.AnotherClass = AnotherClass;\r\n    })(Foo.Bar || (Foo.Bar = {}));\r\n    var Bar = Foo.Bar;\r\n})(Foo || (Foo = {}));\r\n```\r\n\r\nIf it generated this instead, it should work across all browsers:\r\n\r\n```\r\n(function (Foo) {\r\n    (function (Bar) {\r\n        var AnotherClass = (function () {\r\n            function AnotherClass() {\r\n            }\r\n            AnotherClass.prototype.doSomethingElse = function () {\r\n                alert('This breaks my non-TS modules =(');\r\n            };\r\n            return AnotherClass;\r\n        })();\r\n        Bar.AnotherClass = AnotherClass;\r\n    })(Foo.Bar || (Foo.Bar = {}));\r\n    var Bar = Foo.Bar;\r\n})(window.Foo || (window.Foo = {}));\r\n// This is only necessary in the outer-most scope to prevent type errors.\r\n```\r\n\r\nI have attached a zip file with an arrangement of files that reproduces this issue.",
+    "LastUpdatedDate": "2014-07-21T13:52:48.213-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-18T14:35:35.15-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Typescript module syntax overrides prior-declared non-TypeScript modules in IE8",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2633
+  },
+  "FileAttachments": [
+    {
+      "FileId": 880660,
+      "FileName": "TypeScriptIE8ModuleTest.zip",
+      "DownloadUrl": ".\\880660"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Also, this seems to be what the guy that reported the following was experiencing, but was unable to reproduce: https://typescript.codeplex.com/workitem/417",
+      "PostedDate": "2014-07-18T14:36:38.423-07:00",
+      "Id": 152885
+    },
+    {
+      "Message": "Why not try something like this:\n\n```\nmodule window.Foo.Bar {\n\timport global = window; // (if you need it...)\n\texport class MyClass { }\n\talert(global['navigator'].userAgent);\n}\n```\n\nhttp://goo.gl/Ab8hkI\n\nBTW: Modules merge, but classes do not.  Expect any duplicate module properties and classes in modules to override each other.  One possible way to block duplicate module declarations is to detect a class and abort:\n\n```\nmodule window.Foo.Bar {\n\tif (Bar.MyClass) return; \n        ...\n}\n```",
+      "PostedDate": "2014-07-18T16:12:58.67-07:00",
+      "Id": 152893
+    },
+    {
+      "Message": "_(note: if all files were TypeScript, you wouldn't normally be allowed to have duplicate module properties and class names across partial modules)_",
+      "PostedDate": "2014-07-18T16:14:41.39-07:00",
+      "Id": 152894
+    }
+  ]
+}

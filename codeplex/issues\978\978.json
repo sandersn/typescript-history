@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.143-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Currently, lib.d.ts has too many things that shouldn't be there or there should be an option to include. By that I mean the sections:\r\n\r\n* IE10 ECMAScript Extensions\r\n* IE9 DOM APIs\r\n* IE10 DOM APIs\r\n* Windows Script Host APIS\r\n\r\nBasically, everything that is not \"core javascript api available to most browsers\" should not be there. I believe this causes some problems as someone developing depending on the IDE can accidentally use a method that is not generally available in other browsers.\r\n\r\nI know that the nature of javascript is dynamic and in the end this could happen to any method, not only those IE specific, but I think you get the point.\r\n\r\nAn idea to solve this would be to split the lib.d into multiple files, and allow for a special <references /> clause that would include the definitions.\r\n\r\nSo, imagine that you split the lib.d.ts into:\r\n\r\n* js.d.ts (only the core of javascript, curently most of lib.d.ts)\r\n* ie.d.ts\r\n* wsh.d.ts\r\n* etc\r\n\r\nThat brings us to the references tag. This tag would work just like today references, but instead of:\r\n\r\n/// <reference path=\"~/lib.d.ts\" />\r\n\r\ncould be something like:\r\n\r\n/// <reference def=\"@/lib.d.ts\" />\r\n\r\nThe @, just like the ~ would make a relative path to some special folder.\r\n\r\nI suggest these folders would be searched in the following order:\r\n\r\n* Project specific \"definitions folder\" (eg. ~/Scripts/Definitions, preferably customizable)\r\n* Typescript extension folder (current home of lib.d.ts)\r\n\r\nSo, creating a blank typescript file would be the same as adding a line like this at the top of the file:\r\n\r\n/// <reference path=\"@/lib.d.ts\" />\r\n\r\nwhich in turn would be a small file with a couple of <references /> tags to the other \"core, ie, wsh\", etc in the same order are they are in the file today, maintaining backward compatibility.\r\n\r\nBut if you add a references line to your file using the @ syntax, the compiler wouldn't add the default one and let the user choose the specific definitions it would include. (An alternative to this flow would be to have a specific tag like \"<reference clear='true' />\" or similar to remove any default references).\r\n\r\nThis would greatly improve the code completion for projects for node.js, browser extensions and even web pages that don't want to use the IE extensions by default, but restrict the development to general available JS, so you get build errors if you try to go out of the desired scope.\r\n\r\nAlso, as a bonus of this method, people could have their own \"lib.d.ts\" in the project's definition folder, so they could have a \"default reference\" for all project files without having to add the <references /> line to each file, as the compiler would just use the first lib.d.ts that it finds using the default reference it adds to \"@/lib.d.ts\".\r\n\r\nA lib.d.ts for a chrome extension could look like this:\r\n\r\n<references path=\"js.d.ts\" />\r\n<references path=\"chrome.d.ts\" />\r\n<references path=\"jquery2.d.ts\" />\r\n\r\nAnd all files in the current project would just have that by default.\r\n\r\nWhat do you think?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Medium",
+      "Severity": 100,
+      "Id": 2
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-29T10:05:28.923-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Split official \"lib.t.ts\" into different files / Special references clauses",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 14,
+    "Id": 978
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Here are some more thoughts on how to simplify/implement this\n\nIf lib.d.ts was just another definition file in the project, added by the template as a nuget package, there would be no need to have an extra special char like @ on the path. Of course today you can call tsc --nolib to achieve a similar goal, but the point here is to make things more streamlined. So, by doing that the compiler would need to look for a custom lib.d.ts (or any other filename) somehow.\n\nThat doesn't mean necessarily that the compiler needs to look for a magic file in the project folder, but if in addition to \"--nolib\", there could be a \"--definitions file1.d.ts,file2.d.ts,etc\", the tooling could just add lib.d.ts by default as the first definitions, unless --nolib is defined.\n\nIf breaking some compatibility is allowed, compiler could not add anything by default and just leave it to the --definitions option and VS would add by default.\n\n--definitions would allow only .d.ts files and they would need to be real definitions, only interfaces and no code whatsoever.\n\nBy having lib.d.ts and its parts as nuget packages, people would just maintain other sets of packages for nodejs, and change the default definition parameter to something else in the compiler options.",
+      "PostedDate": "2013-04-29T11:17:49.03-07:00",
+      "Id": 98815
+    },
+    {
+      "Message": "See also https://typescript.codeplex.com/workitem/2549 for splitting lib.d.ts based on ES version differences.",
+      "PostedDate": "2014-06-11T16:46:52.757-07:00",
+      "Id": 149438
+    }
+  ]
+}

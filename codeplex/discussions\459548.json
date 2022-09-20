@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1100385",
+    "ThreadId": "459548",
+    "Html": "Hello, i have a little question.\r<br />\n<br />\nMy Typescript project looks like this:\r<br />\n<br />\n-<strong>Core.ts</strong>\r<br />\n<br />\n-<strong>App1.ts</strong>\r<br />\n--App1_class_1.ts\r<br />\n--App1_class_2.ts\r<br />\n--App1_class_3.ts\r<br />\n<br />\n-<strong>App2.ts</strong>\r<br />\n--App2_class_1.ts\r<br />\n--App2_class_2.ts\r<br />\n--App2_class_3.ts\r<br />\n<br />\n<strong>How should work in the browser</strong>: The core loads the javascript files for App1 and App2 only when needed. It will also create a new instance of the App1 or the App2 after the file has been loaded and execute some of the functions on the instance. The App1 and App2 will also use some functionality of the Core.\r<br />\n<br />\nWith the tsc i managed to compile 1 big javascript file, but that's not really what i need. Is there any possible way i easely can compile a <em>seperate</em> Core.js, App1.js and App2.js without losing the type information/code hinting in the .ts files?<br />\n",
+    "PostedDate": "2013-09-28T05:39:42.213-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100466",
+    "ThreadId": "459548",
+    "Html": "When you compile each of your 3 projects, generate a declaration file for it with the &quot;-d&quot; switch.  This will generate a .d.ts which describes the types in the compiled code.  In the other projects reference this .d.ts file, not that actual implementation files from the alternate project.  I believe this should achieve what you want.<br />\n",
+    "PostedDate": "2013-09-28T15:07:22.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100557",
+    "ThreadId": "459548",
+    "Html": "I will try that, thanks!<br />\n",
+    "PostedDate": "2013-09-29T04:11:57.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103288",
+    "ThreadId": "459548",
+    "Html": "Is there any story for this with compile on save?  For example is there a good way to get save to not only generate the .js and .map files, but also the .d.ts file?<br />\n",
+    "PostedDate": "2013-10-03T11:08:47.647-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103845",
+    "ThreadId": "459548",
+    "Html": "We don't yet have the configuration settings for compile-on-save.  For now, the compile-on-save just uses the default settings.<br />\n",
+    "PostedDate": "2013-10-04T14:39:20.03-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106675",
+    "ThreadId": "459548",
+    "Html": "If anyone wants the project config:<br />\n<br />\n<br />\nCore:<br />\n<pre><code>  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Debug'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptRemoveComments&gt;false&lt;/TypeScriptRemoveComments&gt;\n    &lt;TypeScriptSourceMap&gt;true&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptModuleKind&gt;CommonJS&lt;/TypeScriptModuleKind&gt;\n    &lt;TypeScriptGeneratesDeclarations&gt;true&lt;/TypeScriptGeneratesDeclarations&gt;\n    &lt;TypeScriptOutFile&gt;bin\\main.js&lt;/TypeScriptOutFile&gt;\n  &lt;/PropertyGroup&gt;\n  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Release'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptRemoveComments&gt;true&lt;/TypeScriptRemoveComments&gt;\n    &lt;TypeScriptSourceMap&gt;false&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptModuleKind&gt;CommonJS&lt;/TypeScriptModuleKind&gt;\n    &lt;TypeScriptGeneratesDeclarations&gt;true&lt;/TypeScriptGeneratesDeclarations&gt;\n    &lt;TypeScriptOutFile&gt;bin\\main.js&lt;/TypeScriptOutFile&gt;\n  &lt;/PropertyGroup&gt;\n  &lt;Import Project=&quot;$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets&quot; /&gt;\n  \n  &lt;Target Name=&quot;AfterBuild&quot;&gt;\n     &lt;Copy SourceFiles=&quot;bin\\main.d.ts&quot; DestinationFolder=&quot;..\\App1\\&quot; ContinueOnError=&quot;false&quot; /&gt;\n  &lt;/Target&gt;</code></pre>\n\nApp1:<br />\n<pre><code>  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Debug'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptRemoveComments&gt;false&lt;/TypeScriptRemoveComments&gt;\n    &lt;TypeScriptSourceMap&gt;true&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptModuleKind&gt;CommonJS&lt;/TypeScriptModuleKind&gt;\n    &lt;TypeScriptGeneratesDeclarations&gt;true&lt;/TypeScriptGeneratesDeclarations&gt;\n    &lt;TypeScriptOutFile&gt;bin\\scripts.js&lt;/TypeScriptOutFile&gt;\n  &lt;/PropertyGroup&gt;\n  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Release'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptRemoveComments&gt;true&lt;/TypeScriptRemoveComments&gt;\n    &lt;TypeScriptSourceMap&gt;false&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptModuleKind&gt;CommonJS&lt;/TypeScriptModuleKind&gt;\n    &lt;TypeScriptGeneratesDeclarations&gt;true&lt;/TypeScriptGeneratesDeclarations&gt;\n    &lt;TypeScriptOutFile&gt;bin\\scripts.js&lt;/TypeScriptOutFile&gt;\n  &lt;/PropertyGroup&gt;\n  &lt;Import Project=&quot;$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets&quot; /&gt;\n  &lt;Target Name=&quot;BeforeBuild&quot;&gt;\n  &lt;/Target&gt;\n  &lt;Target Name=&quot;AfterBuild&quot;&gt;\n     &lt;Copy SourceFiles=&quot;bin\\scripts.js&quot; DestinationFolder=&quot;..\\Core\\&quot; ContinueOnError=&quot;false&quot; /&gt;\n     &lt;Copy SourceFiles=&quot;bin\\scripts.d.ts&quot; DestinationFolder=&quot;..\\Core\\&quot; ContinueOnError=&quot;false&quot; /&gt;\n  &lt;/Target&gt;</code></pre>\n\n",
+    "PostedDate": "2013-10-12T04:51:26.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

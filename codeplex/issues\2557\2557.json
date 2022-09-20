@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.6-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Given the following reduced test case:\r\n\r\n```ts\r\nclass A<T> {\r\n\ts():any {\r\n\t\tnew A<any>();\r\n\t}\r\n}\r\n\r\nmodule A {\r\n\texport class B {\r\n\t\tconstructor(c:any) {}\r\n\t}\r\n}\r\n\r\nvar x:A.B = new A.B('c'); // TS2081, TS2085\r\n```\r\n\r\nExpected:\r\nNo error\r\n\r\nActual:\r\n\"Supplied parameters do not match any signature of call target. Could not select overload for 'new' expression\" when attempting to instantiate A.B with any argument to its constructor.\r\n\r\nThe following five things must be true in order for this bug to occur:\r\n\r\n1. Class A must have a generic type\r\n2. Class A must instantiate itself from one of its own functions (does not matter if static or prototype)\r\n3. Class B must be a class\r\n4. Class B must be exported from module A\r\n5. Class B constructor must accept arguments (zero-argument calls currently work OK)\r\n\r\nVersion: 1.0.1 & current develop branch\r\n\r\nWorkaround (ugh!):\r\n\r\n```ts\r\nclass B {\r\n\tconstructor(c:any) {}\r\n}\r\n\r\nclass A<T> {\r\n\tstatic B:typeof B = B;\r\n\t\r\n\ts():any {\r\n\t\tnew A<any>();\r\n\t}\r\n}\r\n\r\nmodule A {\r\n\texport interface B {\r\n\t\t// duplicate interface here\r\n\t}\r\n}\r\n\r\nvar x:A.B = new A.B('h');\r\n```",
+    "LastUpdatedDate": "2014-07-28T15:20:16.6-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-14T00:56:29.717-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Signature resolution failure when exporting class from shared class/module with generic type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2557
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

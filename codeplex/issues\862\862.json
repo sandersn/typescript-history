@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.097-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "TypeScript classes should support static constructors to initialize the values of static class members.  For example, a static constructor might be needed to initialize a complex data type, as shown in the code example below.\r\n\r\nTypeScript already has an implicit static construction phase that allows for the assignment of values to class members.  The instructions of a static constructor could be placed at the bottom of the generated code for a class, after all static variables have been defined and all implicit static assignments made.\r\n\r\n\r\n```\r\n    export class Base64 {\r\n        private static base64_alphabet: string = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";\r\n        private static base64_char_to_64bit_number: { [index: string]: number; };\r\n\r\n        static constructor(){ // This line doesn't actually work, but it would sure be nice if it did.\r\n            var base64_char_to_64bit_number: { [index: string]: number; } = {};\r\n            for (var i = 0; i < 64; i++) {\r\n                var char = Base64.base64_alphabet.charAt(i);\r\n                base64_char_to_64bit_number[char] = i;\r\n            }\r\n            Base64.base64_char_to_64bit_number = base64_char_to_64bit_number;\r\n        }\r\n\r\n```\r\n\r\nIn c#, I can initialize the static members of a class via a static constructor.  See, for example, http://msdn.microsoft.com/en-us/library/k9x6w0hc(v=vs.110).aspx:\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-02T16:27:38.94-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Please add static constructors to classes",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 26,
+    "Id": 862
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion!  Assigning to Jonathan for tracking.",
+      "PostedDate": "2013-04-03T10:51:38.203-07:00",
+      "Id": 95766
+    },
+    {
+      "Message": "Nice suggestion. Till then however you can fake it with a static function and a static variable to force calling that function : http://www.basarat.com/2013/04/typescript-static-constructors-for.html",
+      "PostedDate": "2013-04-07T22:57:06.447-07:00",
+      "Id": 96315
+    },
+    {
+      "Message": "I don't think this feature isn't terribly necessary, for example:\n\n```\nclass Thing\n{\n\tprivate static Ctor = (() =>\n\t{\n\t\t// do ctor stuff\n\t\treturn null;\n\t})();\n}\n```\n\nDoes pretty much the same thing, with a syntax that is actually fairly nice to look at.",
+      "PostedDate": "2013-04-09T10:15:32.147-07:00",
+      "Id": 96501
+    },
+    {
+      "Message": "Wolverine:\n\n    If you're content with endless javascript hacks in place of endless javascript hacks instead of well-defined syntax, why use TypeScript in the first place?\n\n  Sure, you can hack static constructors.  Good luck to developers trying to debug code when they forget that order in which the static constructor appears with relation to static variable definitions may impact their code.  Good luck debugging when the static method defined below the static constructor from within the static constructor.",
+      "PostedDate": "2013-04-09T17:43:03.36-07:00",
+      "Id": 96567
+    },
+    {
+      "Message": "export module Program\n{ \n  class D\n  {   \n    static b = 12;\n  }\n\n  D.b = 34;\n}\nIt, or other soultions are not hacks at all... IMO.\nThis is ECMAScript, not a C#ey.",
+      "PostedDate": "2013-05-04T17:56:51.023-07:00",
+      "Id": 99395
+    },
+    {
+      "Message": "What's up with \"private static\"? There's no such thing.",
+      "PostedDate": "2013-07-24T08:18:24.407-07:00",
+      "Id": 107275
+    },
+    {
+      "Message": "NM: I realize now it's just syntactic sugar for the compiler as far as intellisense goes.",
+      "PostedDate": "2013-07-24T08:23:58.547-07:00",
+      "Id": 107276
+    },
+    {
+      "Message": "You can write static void function, then static field setup to that static func.\n[Typescript Playground Exaple:](http://www.typescriptlang.org/Playground#src=class%20Greeter%20%7B%0A%20%20%20%20greeting%3A%20string%3B%0A%20%20%20%20constructor(message%3A%20string)%20%7B%0A%20%20%20%20%20%20%20%20this.greeting%20%3D%20message%3B%0A%09%09console.log('new%20instance%20of%20Greeter...')%3B%0A%20%20%20%20%7D%0A%20%20%20%20greet()%20%7B%0A%20%20%20%20%20%20%20%20return%20%22Hello%2C%20%22%20%2B%20this.greeting%3B%0A%20%20%20%20%7D%0A%09%0A%09static%20init()%20%7B%0A%09%09console.log('static%20ctor%20for%20Greeter...')%3B%0A%09%7D%0A%09%0A%09static%20_init%20%3D%20Greeter.init()%3B%0A%7D%0A%0Avar%20button%20%3D%20document.createElement('button')%3B%0Abutton.textContent%20%3D%20%22Say%20Hello%22%3B%0Abutton.onclick%20%3D%20function()%20%7B%0A%09var%20greeter%20%3D%20new%20Greeter(%22world%22)%3B%0A%20%20%20%20alert(greeter.greet())%3B%0A%7D%0A%0Adocument.body.appendChild(button)%3B%0A)\n\nSource: [Typescript static constructors for classes](http://www.basarat.com/2013/04/typescript-static-constructors-for.html)",
+      "PostedDate": "2014-07-07T03:26:18.493-07:00",
+      "Id": 151717
+    },
+    {
+      "Message": "Moved suggestion to GitHub:\nhttps://github.com/Microsoft/TypeScript/issues/265",
+      "PostedDate": "2014-07-28T13:18:02.967-07:00",
+      "Id": 153761
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-30T16:27:32.693-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "When an exported variable masks a private variable, it leads to unintended errors.  This is especially problematic if multiple files extend the same module.\r\n\r\n``` TypeScript\r\n// in file x.ts\r\nmodule mymodule {\r\n  export var x = null;\r\n}\r\n\r\n// in file y.ts\r\nmodule mymodule {\r\n  var x = window;\r\n  var y = x.document;  // x refers to mymodule.x instead of 'x' declared in the previous line\r\n}\r\n```\r\n\r\n``` Javascript\r\nvar mymodule;\r\n(function (mymodule) {\r\n    mymodule.x = null;\r\n})(mymodule || (mymodule = {}));\r\nvar mymodule;\r\n(function (mymodule) {\r\n    var x = window;\r\n    var y = mymodule.x.document;\r\n})(mymodule || (mymodule = {}));\r\n```\r\n\r\nExpected: error on variable that can't be used ( var x in second 'mymodule' block)\r\nActual: refers instead to mymodule.x without indicating that 'var x' might be problematic.",
+    "LastUpdatedDate": "2013-05-30T16:27:32.693-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-28T19:09:00.64-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Unusable private module variable should trigger error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1079
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This was a bug.  Per the language spec, when you declare a local var 'x', it should shadow the module's 'x' property.  This was recently fixed, along with some extra test coverage added (see https://typescript.codeplex.com/SourceControl/changeset/74f467b302ba319064f7ea668c692360e6b231af ).  Thanks!",
+      "PostedDate": "2013-05-30T16:27:27.527-07:00",
+      "Id": 101738
+    }
+  ]
+}

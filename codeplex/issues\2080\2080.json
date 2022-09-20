@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.953-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "When using -d to generate .d.ts declarations for commonjs modules, the resulting .d.ts is designed for use by an import statement directly to the source (eg: a using an absolute or relative path) - and can not be used as an ambient external module declaration.\r\n\r\nThis makes declarations somewhat cumbersome in node.js scenarios, where you either have to duplicate dependent modules in your code base (to ensure relative paths are always correct when distributed), or you have to manually write your own .d.ts declarations in ambient external module form (which defeats the purpose of typescript being able to generate declaration files in this case...).\r\n\r\nExample library module sometype.ts:\r\n```\r\nclass SomeType\r\n{\r\n        public value = \"test\";\r\n}\r\nexport = SomeType;\r\n```\r\n\r\nExample generated sometype.d.ts:\r\n```\r\ndeclare class SomeType {\r\n    public value: string;\r\n}\r\nexport = SomeType;\r\n```\r\n\r\nIf one then deploys this compiled typescript (as .js and .d.ts) as a commonjs module for other people to use (for example, in a node_modules directory) - there's no way for dependent typescript files to simply import SomeType = require(\"sometype\"), users are forced to require(\"../../node_modules/sometype/sometype\") to reference it from it's deployed location, or duplicate the source locally and use a relative require(\"../thirdparty/sometype/sometype\").\r\n\r\nI propose one of two solutions:\r\n1. Add an additional tsc flag for generating ambient external module syntax in addition to the current flag that generates 'explicit' external module syntax (simpler, but dodges the fact typescript seems to have misleading usage of the 'module' keyword which differs between typescript source, and two different scenarios in typescript declarations - be it quoted or unquoted module declarations - where quoted declares ambient external modules - despite the fact 'export' is used for external modules everywhere else in typescript)\r\n2. Unify the definition syntax s.t. the export keyword defines an external ambient module named after the .d.ts file containing the export keyword. (eg: the current generated .d.ts tells typescript that an ambient external module named \"sometype\" (from the .d.ts filename) is exported as the type value SomeType.)\r\n\r\nNote: Sorry for creating a new workitem (I can't seem to re-open my edited version of #2076).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-08T03:28:36.51-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Add ability to generate ambient declarations for external commonjs modules",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 11,
+    "Id": 2080
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "After thinking about this a bit more (and trying to implement it), I realise this is probably a bit more intricate and complicated than I originally thought - considering multiple files can be compiled at once, and file names don't necessarily map to module names (think index.{ts,js} in node, or the 'main' file defined by a package.json - and this is just one of a dozen commonjs implementations with slightly different module resolution rules).\n\nI'd still like feedback on such a possibility though, or alternate suggestions.\n\nTo get an idea of the use case:\n\nAs it stands we have two large libraries, both distributed as node modules.  One depends on the other, but instead of being able to simply require(\"A\") inside of \"B\" we're literally shipping a private 'copy' of bits and pieces of A inside of B and using relative paths to require() the copy to use the currently generated declarations (since manually maintaining ambient declarations would be impractical, and tsc is 'supposed' to generate typings when you compile anyway..?).\n\nWhat makes this immediately worse however, is situations where end-users (in node.js) depend on both \"A\" and \"B\" - register something in a factory from \"A\" or use something \"A\" with a cache, which doesn't affect \"B\" because \"B\" doesn't use the real \"A\" from node_modules, it has it's own private copy of \"A\" from the relative require... thus singletons, factories, caches, anything with persistent state in \"A\" that should affect \"B\", does not...",
+      "PostedDate": "2014-01-08T04:55:03.573-08:00",
+      "Id": 129787
+    },
+    {
+      "Message": "The challenge in generating a ambient path, is that still doesn't really resolve the issue.  The files still need to be placed in the correct locations.  If we generate a relative path, i.e. \"../foo/test.d.ts\", then obviously this path still needs to be _relatively_ correct.  If we generate a top level path, i.e. \"foo\", then this also still needs to be correct across module systems.  This isn't so bad for Node, where it could be installed globally or in a parent node_modules folder, however we have one system for both Node and RequireJS, and RequireJS doesn't try various paths (which would be inefficient over the network), but would need to placed under the web applications \"BaseUrl\" or configured with an explicit module path in require.config.\n\nUnless I have misunderstood your issue, in which case please reopen with further details.",
+      "PostedDate": "2014-01-08T15:05:11.047-08:00",
+      "Id": 129855
+    },
+    {
+      "Message": "Of course it needs to be placed in the correct location, that's not the issue, since it would be up to the developer who creates the redistributable module to set it up s.t. it installs in an appropriate location.\n\nBut it sounds like you're saying typescript will never be able to generate ambient external declarations for commonjs modules?  And thus you can never create a redistributable typescript module automatically with typescript? (despite the fact it's entirely possible if you hand-write an ambient external declaration)",
+      "PostedDate": "2014-01-08T17:40:53.537-08:00",
+      "Id": 129878
+    },
+    {
+      "Message": "The issue here is, we should be able to say e.g.\n\n    tsc mymodule.ts -d -m commonjs --name mymodule\n\nOr perhaps\n\n    tsc <many files> -d -m commonjs --name mymodule.ts:mymodule\n\nor anything - pick whatever seems reasonable to you\n\nThen we should get mymodule.d.ts - the module and its export(s) wrapped in a \n\n    declare module  \"mymodule\" {\n    }\n\nI agree with Mittens. We should be able to specify the top-level name of a commonjs module when generating module definitions.\n\nThis is such a glaring oversight that it cannot be dismissed - it makes typescript practically unusable for node modules.\n",
+      "PostedDate": "2014-01-08T18:07:33.753-08:00",
+      "Id": 129881
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 01/08/2014 3:05PM",
+      "PostedDate": "2014-01-08T15:05:31.373-08:00",
+      "Id": 129882
+    },
+    {
+      "Message": "Note that this has absolutely nothing to do with AMD or paths and is really simple to implement -- simply wrapping all the declarations should suffice. \n\nWhy? Because this file will be referenced by full path from another location e.g. in the project \"othermodule\", _references.d.ts will contain\n\n    //<reference path=\"./node_modules/mymodule/mymodule.d.ts\">\n\nwhich will make the named (top-level) CommonJS module \"mymodule\" available in the CommonJS project/module \"othermodule\"",
+      "PostedDate": "2014-01-08T18:11:57.55-08:00",
+      "Id": 129883
+    },
+    {
+      "Message": "I think spion's comments more clearly communicate the general suggestion (#1), and would be the easiest first step toward making commonjs mildly viable in typescript.\r\n\r\nWhen generating an ambient declaration, but compiling multiple files - you typically just want 'one' ambient declaration file for a commonjs module, with a specified name (the name you intend to distribute it as) - and inside of that ambient external module, you would recursively declare typings for all exported declarations.\r\n\r\nThe only outstanding issue in this case, is when compiling multiple files - having potentially clashing typenames (eg: class SomeType in a.ts and class SomeType in b.ts - where a.ts imports b.ts, when compiling with a hypothetical tsc a.ts -d -m commonjs --name mymodule).  However simply prefixing imported types from .ts files would get around this easily enough (since those typenames won't matter until exported, at which point the export refers to the local type alias - not the source typename).\r\n\r\nLet me know if you need more clarification on what I said, or examples (I'm still working on implementing a prototype myself, since this is a hard-requirement for me before I can viably use typescript anymore).",
+      "PostedDate": "2014-01-08T18:19:50.687-08:00",
+      "Id": 129884
+    },
+    {
+      "Message": "Thanks for the suggestion. We do have some ideas and plans around modules and we'll use this as input for our discussions.",
+      "PostedDate": "2014-01-10T10:15:26.53-08:00",
+      "Id": 130082
+    },
+    {
+      "Message": "This would be great - we would love to be able to build an AMD version of our 3D TypeScript library ( https://github.com/awayjs ) - and distribute it with a .d.ts file that people can use in their projects - without having to manually create the .d.ts file with with ambient declaration. ",
+      "PostedDate": "2014-07-14T11:33:13.02-07:00",
+      "Id": 152373
+    },
+    {
+      "Message": "We've struggled with the same problem, and just when I was about to create my own 'typings converter', the following project was released:\n\nhttps://github.com/grunt-ts/dts-bundle\n\nIt takes a bunch of .d.ts files as generated by tsc (i.e. internal module declarations) and converts them into something directly useable by other CommonJS modules. It automatically follows references/requires, leaves out private types, keeps and even nicely reformats doc comments.\n\nIt would be very nice if the compiler gurus could include this in the compiler, but until then, dts-bundle is what we use.",
+      "PostedDate": "2014-07-15T00:45:12.573-07:00",
+      "Id": 152419
+    }
+  ]
+}

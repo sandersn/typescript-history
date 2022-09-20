@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I am using AngularJS with dynamic loading using RequireJS.  Even though I am declaring properties in a constructor which has property parameters using types defined in the imported files/modules, the compiler does not include the modules in the generated define function call.  I wind up having to add an extra reference to the module, even though I have declared a property that uses a type in the module, within my constructor:\r\n\r\n```\r\n/// <reference path=\"../_all.ts\" />\r\n\r\nimport app = require(\"app\");\r\nimport baseController = require('baseController');\r\nimport dataServiceModule = require('services/dataService');\r\ndataServiceModule; // ***************I should not have to include this************\r\nmodule MyApp {\r\n    'use strict';\r\n\r\n    export class SomeController extends baseController.PartialPageController {\r\n        // static $injector accommodates the fact that parameters may be renamed during minification.\r\n        static $inject = ['$scope', '$routeParams', 'globalState', '$window', 'dataService'];\r\n\r\n        // the constructor has a reference to the dataServiceModule but the compiler doesn't recognize this for import purposes.\r\n        constructor($scope: ng.IScope, $routeParams,$window, private service: dataServiceModule.someDataService) {\r\n            super($scope, $routeParams, $window);\r\n        }\r\n\r\n    }\r\n\r\n    app.controllerProvider.register('SomeController', [\"$scope\", \"$routeParams\", \"$window\", \"dataService\", SomeController]);\r\n}\r\n```",
+    "LastUpdatedDate": "2016-10-29T23:50:34.66-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-14T09:59:12.797-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TS1.0: Imported files/modules are not included in generated define even when contained types are referenced.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2436
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Maybe it is just me, but what optimization is there to be made?   If I am using a concrete type that is defined in the imported module, then the module must be physically loaded in order to use the concrete type.\n\nIn what scenario would a concrete type be referenced as I have done above, but the module would not need to be loaded?\n\nThis scenario deserves further consideration.",
+      "PostedDate": "2014-04-15T04:33:24.297-07:00",
+      "Id": 141926
+    },
+    {
+      "Message": "This is intentional - unless `dataServiceModule` is used in a value position, the compiler optimizes away the reference.\n\nIf you still want it included (say, for its side effects), you can use the amd-dependency tag. See https://typescript.codeplex.com/discussions/439314\n\r\n\r** Closed by RyanCavanaugh 04/14/2014 10:18AM",
+      "PostedDate": "2014-04-14T10:18:49.713-07:00",
+      "Id": 141928
+    },
+    {
+      "Message": "When I explicitly load the module with import it shouldn't be skipped by the compiler or at least I should have an option in \"compilerOptions\" to specify if I want to optimize in this manner or not. \nSometimes you need to load a module which does not export anything but is global and then you need to do this workaround:\n\nimport myMod from 'myMod'\n\nmyMod;\n\nWhich is just a hack. \"amd-dependency\" is deprecated now so we don't have any supported way of doing it. I just think that compiler shouldn't try to be smarter then a developer and make decisions for him (its just a tool) At least we should have a choice there.",
+      "PostedDate": "2016-10-29T23:50:34.66-07:00",
+      "Id": 204863
+    }
+  ]
+}

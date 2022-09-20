@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-24T10:21:42.32-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI see that TypeScript doesnt create properties in JS :(. I hope this feature will come soon. Why? If I create a lib or framework or whatever in TS (At the moment, I try to convert some .NET libs to JS), I dont want to change the javascript code with things that TS will not create.\r\n\r\nInterfaces, enums and Generics sure these are features which does not exists in JS but properties should created. In TS I dont have any problems with this example but in JS there is it: http://pastebin.com/uEDFnt8u.\r\n\r\nctx.Countries is undefined, sure cause the property doesnt exists in the WorldEntities of the compiled JS.\r\nAnd what I expected for the properties in PlainObjects is like Country.prototype.CountryId = 0; and for WorldEntities this: WorldEntities.prototype.Countries = new EF.DbSet(); or smth like that.\r\nWhy? I dont want to change the JS code if all of the properties are missing. These are only 3 test classes. but maybe it could be 30 classes with more that 5 properties and so on. Here is a little example what I expected: http://jsbin.com/otoxeh/3/edit. This would be very great.\r\n\r\nRegards\r\nChris",
+    "LastUpdatedDate": "2014-04-08T14:35:07.99-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-21T18:20:42.07-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Feature request: Create properties in JS code.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1208
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not entirely sure what you mean, but TypeScript does support properties when compiled to ES5 (--target ES5).\n\n````\nmodule TestModel\n{\n    export class WorldEntities {\n        public get People(): EF.DbSet<PlainObjects.Person> { return null; }\n        public set People(value: EF.DbSet<PlainObjects.Person>) { }\n\n        public get Countries(): EF.DbSet<PlainObjects.Country> { return null; }\n        public set Countries(value: EF.DbSet<PlainObjects.Country>) { }\n\n\n        public get Planets(): EF.DbSet<PlainObjects.Planet> { return null; }\n        public set Planets(value: EF.DbSet<PlainObjects.Planet>) { }\n    }\n\n````",
+      "PostedDate": "2013-06-24T10:21:32.133-07:00",
+      "Id": 103937
+    },
+    {
+      "Message": "This is ok yes, but the code for only a simple property is a little bit to much I think. Only my opinion.\n\nI think this JS:\nWorldEntities.prototype.People;\n\nis not as heavy as the other and its possible in ES < 5.\nI dont like the thing that I have to create my Property with a function and give the name as a string...\n\nWhat reason not to implement this feature?\nTS:\npublic People: EF.DbSet<PlainObjects.Person>:\n\nJS:\nWorldEntities.protoype.People;",
+      "PostedDate": "2013-06-24T12:59:49.493-07:00",
+      "Id": 103961
+    },
+    {
+      "Message": "It's not really clear what you're proposing here. Can you elaborate?",
+      "PostedDate": "2013-08-13T11:33:36.25-07:00",
+      "Id": 109656
+    },
+    {
+      "Message": "Its all about the compiled code.\n\nThis is my TypeScript example: http://pastebin.com/Z1Q0D6jK\nand this is the compiled code + the expectation at line 48: http://pastebin.com/Kdxn2gYa\n\nhope now its clearer(?). I would like to use the syntax with get and set in TS but I would like to say ok I would like to compile it that I have the ES5 feature or the old one but on the prototype that only var _myPrivateVar or the pseudo one this._myPrivateVar is inside the constructor function. to keep the code mor readable.\n\nAnd I don't know the support for ECMAScript 5 inside IDEs like Netbeans or Eclipse so I can't say that set it as a magic string \"People\" is as good for navigation to the declaration inside an ide. But a good IDE should give you the hint which properties your class have.",
+      "PostedDate": "2014-04-08T03:51:00.517-07:00",
+      "Id": 140934
+    },
+    {
+      "Message": "I think I know what he is saying.  Go ahead and type \"Array.prototype.length\" in any console and you'll get \"0\".  Why?  Because some primitive objects store properties in their PROTOTYPE, which are DEFAULTS, but when you set properties, you override the prototype version with a default instance version.  This is actually how things seem to work natively.  It's not a bad idea at all, but we do have to consider any performance hits (deep nested objects in the prototype chain may take longer to access defaulted properties on base types).\n\nhttp://jsperf.com/default-prototype-property-vs-default-instance-property",
+      "PostedDate": "2014-04-08T14:32:24.437-07:00",
+      "Id": 141015
+    },
+    {
+      "Message": "Forgot to add:  It would seem the access times are different each time you run the test, and from one browser to the next.  I can say, however, that *object creation* may be faster if instance properties don't have to be set in the constructor, which is something to consider.",
+      "PostedDate": "2014-04-08T14:35:07.99-07:00",
+      "Id": 141017
+    }
+  ]
+}

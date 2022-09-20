@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-12T11:25:25.153-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Please add some better documentation on how the workflow for ts files should be in ASP.NET MVC applications : \r\n\r\n1. I've read that typescript 0.9.1.1 does not include js files anymore (formerly below the typescript file as a related file).\r\n2. The above seems to be needed to allow typescript for better handling the typescript and javascript files\r\n3. However, when the js file is no longer part of the project, you can not get code completion inside the view when you write the src attribute for the javascript file (this might be a resharper thing, I'm not sure if vs2013 natively supports completion for script paths)\r\n4. in the script tag in the view I can put the path to the .ts file instead of the .js, this seems to work in debug mode (both ts and js file are downloaded in chrome) but not in release mode (only ts file gets downloaded)\r\n5. didn't try this, but will the js file be part of the publish?\r\n\r\nI would suggest to answer this question by writing an article on the documentation page and putting the link to this article in the answer of this issue.\r\n\r\nAlso when upgrading from an earlier version, compile on save may be broken, but I've found that excluding the ts file and then adding the ts file using Add Existing Item, seems to fix this, so maybe this might also be valuable information to put on the documentation page.",
+    "LastUpdatedDate": "2014-03-31T16:04:32.617-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-11T15:29:48.377-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Project include ts file but not js: clear up workflow",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1887
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is definitely an area we are aware work is needed.  At this point we are pre-1.0, and have been iterating on feature design regularly, which makes creating the type of 'polished' docs you typically see on MSDN a challenge (e.g. doc writer reviews, localization of content, etc...).  We have been attempting to outline new features in each release via our blog posts (e.g. http://blogs.msdn.com/b/typescript/archive/2013/08/23/new-visual-studio-2013-features-for-typescript.aspx ), but realize this is insufficient as we near 1.0.  Rest assured we are tracking this as a work-item the team needs to action.\n\nTo your specific questions:\n1 & 2) Correct.  The js file is no longer nested below the TypeScript file.  The issue here is that there is not necessarily a one-to-one mapping, as you can use the --out option to compile multiple sources into one .js file.  This also caused issues with some source control systems whereby trying to rebuild the project would constantly warn that the .js was not checked out and was read only.  Removing the nested item resolved both of these.  We also consider the JavaScript file an artifact of the build, similar to a .pdb or .dll in other projects, which also don't show up as project items in other project types.\n\n3) See above. The easiest solution here is to click the 'show all files' button in Solution Explorer (which then shows all files in the folder, and drag the emitted JS file onto the page to create the script tag.  Or if using the default of one TS -> one JS file, you can drag the .ts file and then just change the extension to .js.\n\n4) The .ts file should not be referenced in the script tag.  Use the .js file as outlined above.\n\n5) The generated .js files are added to the output files by the MSBuild task, so the .js files are part of the deployment package.\n\nRegarding 'compile on save' - yes, we have a few bugs we've fixed in this area.  The upcoming release should be much more stable, so your workaround should not be required.  If you still hit issues once we release the next update, please open a new issue with repro steps if possible.\n\nThanks.",
+      "PostedDate": "2013-11-12T11:25:08.54-08:00",
+      "Id": 122790
+    },
+    {
+      "Message": "The js file sometimes is not published...",
+      "PostedDate": "2013-11-27T07:38:04.71-08:00",
+      "Id": 125455
+    },
+    {
+      "Message": "Regarding: \n\n4) The .ts file should not be referenced in the script tag. Use the .js file as outlined above.\n\nIn VS 2013, the .js file then has a warning \"squiggle\" because VS intellisense, it would appear, only looks at what is specifically included in the solution, not at \"artifacts of the build process\".   Either I don't know the guidance for getting rid of the \"squiggle\", or it would be nice to have VS not squiggle the name, at least if it matches a .ts that's in the solution.",
+      "PostedDate": "2013-12-13T11:37:45.357-08:00",
+      "Id": 127389
+    },
+    {
+      "Message": "There is another small issue with the fact that js files are not included in the project..; when you delete a ts files, js files and map files remain in the folder.. ",
+      "PostedDate": "2013-12-13T12:39:08.64-08:00",
+      "Id": 127425
+    }
+  ]
+}

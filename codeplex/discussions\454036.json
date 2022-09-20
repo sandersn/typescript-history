@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1082985",
+    "ThreadId": "454036",
+    "Html": "I would like to add some more fuel to the 'this' discussion. Let's look at the example below<br />\n<pre><code>    /** Bind the change event of the dataSource to the reselect routine */\n    bindToDataSource(): void\n    {\n        // The =&gt; causes the 'this' keyword to point to the instance of the class.\n        this.dataSource.bind('change', () =&gt; \n        {\n            this.reselectSelected();\n        });\n    }\n\n    /** Reselect all remembered rows */\n    reselectSelected() : void\n    {\n        var toSelect = [];\n        var rows = this.getAllRows();\n        rows.each((e) =&gt;\n        {\n            var dataItem = this.dataItem(this);\n            if (dataItem != undefined)\n            {\n                var pos = $.inArray(dataItem.get('Id'), this.selected);\n                if (pos !== -1)\n                {\n                    toSelect.push(this);\n                }\n            }\n        });\n\n        this.local++;\n        try\n        {\n            this.select(toSelect);\n        }\n        finally\n        {\n            this.local--;\n        }\n    }\n</code></pre>\n\nWeb essentials is pretty misleading here. For each 'this' in the 'reselectSelected' when I hover over with the mouse it tells me it is the CttGrid object but in fact it's not. The sentence 'var dataItem = this.dataItem(this);' already show my discrepancy in thinking because the first 'this' should be the class instance and the second 'this' the object from the 'each' function. It is translated to this<br />\n<pre><code>    CttGrid.prototype.bindToDataSource = function () {\n        var _this = this;\n        this.dataSource.bind('change', function () {\n            _this.reselectSelected();\n        });\n    };\n\n    CttGrid.prototype.reselectSelected = function () {\n        var _this = this;\n        var toSelect = [];\n        var rows = this.getAllRows();\n        rows.each(function (e) {\n            var dataItem = _this.dataItem(_this);\n            if (dataItem != undefined) {\n                var pos = $.inArray(dataItem.get('Id'), _this.selected);\n                if (pos !== -1) {\n                    toSelect.push(_this);\n                }\n            }\n        });\n\n        this.local++;\n        try  {\n            this.select(toSelect);\n        } finally {\n            this.local--;\n        }\n    };\n</code></pre>\n\nAlthough it generated the '_this = this' sentence as a means to get the class object this is not the case. The 'this' in the 'reselectSelected' routine is of type 'dataSource' when the routine is entered. I had to refactor the routine to the version below.<br />\n<pre><code>    /** Bind the change event of the dataSource to the reselect routine */\n    bindToDataSource(): void\n    {\n        // The =&gt; causes the 'this' keyword to point to the instance of the class.\n        this.dataSource.bind('change', () =&gt; \n        {\n            this.reselectSelected(this);\n        });\n    }\n\n    /** Reselect all remembered rows */\n    reselectSelected(me: CttGrid) : void\n    {\n        var toSelect = [];\n        var rows = me.getAllRows();\n        rows.each((e) =&gt;\n        {\n            var dataItem = me.dataItem(this);\n            if (dataItem != undefined)\n            {\n                var pos = $.inArray(dataItem.get('Id'), me.selected);\n                if (pos !== -1)\n                {\n                    toSelect.push(this);\n                }\n            }\n        });\n\n        me.local++;\n        try\n        {\n            me.select(toSelect);\n        }\n        finally\n        {\n            me.local--;\n        }\n    }\n</code></pre>\n\nThe code is translated to a version supporting the CttGrid via the parameter 'me'.<br />\n<pre><code>    CttGrid.prototype.bindToDataSource = function () {\n        var _this = this;\n        this.dataSource.bind('change', function () {\n            _this.reselectSelected(_this);\n        });\n    };\n\n    CttGrid.prototype.reselectSelected = function (me) {\n        var _this = this;\n        var toSelect = [];\n        var rows = me.getAllRows();\n        rows.each(function (e) {\n            var dataItem = me.dataItem(_this);\n            if (dataItem != undefined) {\n                var pos = $.inArray(dataItem.get('Id'), me.selected);\n                if (pos !== -1) {\n                    toSelect.push(_this);\n                }\n            }\n        });\n\n        me.local++;\n        try  {\n            me.select(toSelect);\n        } finally {\n            me.local--;\n        }\n    };\n</code></pre>\n\nUnderstandably the first example will cause confusion (as it did with me). Especially the fact that 'Web Essentials' tells me the wrong thing.<br />\n",
+    "PostedDate": "2013-08-21T00:46:24.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084937",
+    "ThreadId": "454036",
+    "Html": "Who shares my opinion?<br />\n",
+    "PostedDate": "2013-08-26T07:17:25.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085038",
+    "ThreadId": "454036",
+    "Html": "Web Essentials is a separate plugin not maintained by the Typescript team. The Visual Studio language service provided by the Typescript plugin shows me all the 'this' uses in your first example to be the class instance, which is correct based on how arrow functions work. The compiler can't do any flow control analysis based on bind and apply calls. I'm not sure what you mean by this:\r<br />\n<br />\n&quot;The sentence 'var dataItem = this.dataItem(this);' already show my discrepancy in thinking because the first 'this' should be the class instance and the second 'this' the object from the 'each' function.&quot;\r<br />\n<br />\nThey are the same 'this' value.<br />\n",
+    "PostedDate": "2013-08-26T11:38:00.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086096",
+    "ThreadId": "454036",
+    "Html": "You hit the nail on the head. That is exactly my point. To be able to call the method the first 'this' has to be an instance of the CttGrid class while you would expect the second 'this' to contain the item from the 'each()' function. They can not be different at the same time and thus my discrepancy.<br />\n",
+    "PostedDate": "2013-08-29T04:07:00.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086430",
+    "ThreadId": "454036",
+    "Html": "The semantics of 'this' here are just the same as JavaScript. TypeScript cannot alter that. Arrow functions provide some syntactic sugar for preserving the value of 'this' from an outer scope (rather than having to manually do an assignment like 'var that = this' and then capture 'that' in a closure). \r<br />\n<br />\nI still don't understand why you think the second 'this' should be the value from the 'each' iteration. The item for the 'each' function is already explicitly named in your code, it's 'e', it would never be 'this'. <br />\n",
+    "PostedDate": "2013-08-29T18:11:19.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086489",
+    "ThreadId": "454036",
+    "Html": "The =&gt; should in all cases return the instance of the class. This can be accomplished by storing the 'this' in the '_this' as is done for functions by the TypeScript compiler but this does not work for callback scenarios. I would like to see a construction that causes the 'this' in a =&gt; construction to always be the instance of the class.<br />\n",
+    "PostedDate": "2013-08-29T23:41:48.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086631",
+    "ThreadId": "454036",
+    "Html": "I didn't understand also what you are saying. In your code, &quot;this&quot; means the same thing in both places. Perhaps your example is wrong and does not show the issue?\r<br />\n<br />\nAlso, storing this in _this won't do what you think. Consider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">public</span> <span style=\"color:Blue;\">class</span> Foo {\n    _this = <span style=\"color:Blue;\">this</span>;\n} \r\n</pre></div>Will be compiled to:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    <span style=\"color:Blue;\">this</span>._this = <span style=\"color:Blue;\">this</span>;\r\n</pre></div>When your function runs in another context, &quot;this&quot; will be another object, and this._this will not exist, so your method won't work at all even if you did what you think it should happen.\r<br />\n<br />\nThe way it works today, setting this to the context of the parent, is the best you can do with javascript.<br />\n",
+    "PostedDate": "2013-08-30T06:52:48.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1087532",
+    "ThreadId": "454036",
+    "Html": "Ok, the confusion amongst you is complete as it was with me. The example is exactly what you say it is: it is wrong. The 'this' can never have 2 different meanings in the same place, I am aware of that. That is not the point of the discussion. Forget the example for a moment. Here is  what I am suggesting.<br />\n<br />\n<strong>I would like it, if technically feasible, to see that the =&gt; contruction causes the 'this' to always be the instance of the class no matter where you put it.</strong> <br />\n<br />\nThe way it is now is that it may be the class instance but it can also be something else. When you use it directly insinde a method of a class it is the instance of the class but when you use it in f.i. a callback scenario it most probably is not.<br />\n",
+    "PostedDate": "2013-09-02T23:41:52.067-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1087606",
+    "ThreadId": "454036",
+    "Html": "It is not technically feasible. The context depends on the caller, not on the function being called. For this reason, there would be no place to store the &quot;this&quot; the way you imagine.<br />\n<br />\nOn the other hand, you could just &quot;bind&quot; all methods of the class to &quot;this&quot; in the constructor as a workaround. But then, arrow functions wouldn't be needed as &quot;this&quot; would always be the same.<br />\n<br />\nAlso, I don't believe this would be a good idea as a general case, because this would create a lot of overhead unnecessarily. It would have a proxy function of every function in each instance, and a lot of the times you wouldn't need it.<br />\n<br />\nThis is not a big issue though. your problem is actually related to how you handle the situation. If you need to setup a callback or return a function, just use an arrow function and it will be bound.<br />\n<br />\nIf you have no control of how the function is called (for example knockout events, where you just name the function that will be called), just call &quot;bind&quot; in the constructor.<br />\n",
+    "PostedDate": "2013-09-03T03:16:30.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1087634",
+    "ThreadId": "454036",
+    "Html": "Well if it is not technically feasible then this discussion ends here. It would however make TypeScript a lot easier to understand. I do agree to the need to understand how JavaScript works before you can program with TypeScript but it would solve the confusion you get using the 'this' and expect it to be the class instance.<br />\n",
+    "PostedDate": "2013-09-03T04:37:20.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1088471",
+    "ThreadId": "454036",
+    "Html": "You can use a field initializer with the fat arrow lambda syntax if you have a class member that you know is going to be used in a callback position:<br />\n<pre><code>class MyClass {\n    x = 5;\n    \n    public normalFunction() {\n        // Might have correct 'this', might not, depending on how it's called\n    }\n    \n    public boundFunction = () =&gt; {\n        console.log(this.x); // Guaranteed to be correct 'this'\n    }\n}</code></pre>\n\nTrade-offs: There is non-trivial overhead with this (1 extra closure per method per class instance) so you probably only want to use it where it's actually needed. It is also impossible to call <code>boundFunction</code> through a <code>super</code> call like you could with <code>normalFunction</code>.<br />\n",
+    "PostedDate": "2013-09-04T15:14:47.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,105 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.673-07:00",
+    "CommentCount": 13,
+    "Custom": null,
+    "Description": "In Javascript you can add functions and other types of members to objects by adding them to the prototype.\r\n\r\nThe adding of functions (even accessor properties) to objects could be simplified in TypeScript with a language extension similar to\r\nExtension methods in C#. Pro is that you don't need to write weak code to extend types.\r\n\r\nExtension methods could be stored in modules and available as they are imported.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 2.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T15:47:38.79-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Extension methods",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 85,
+    "Id": 100
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Or what about making Interface and Classes open (just like Modules are now). For example allow for something like the following:\n\ninterface String extends String {\n    endsWith(str:String) : bool;\n}\n\n",
+      "PostedDate": "2012-10-05T10:06:19.177-07:00",
+      "Id": 78676
+    },
+    {
+      "Message": "Interfaces are open ended in TypeScript, so you can do this already,",
+      "PostedDate": "2012-10-06T01:35:07.57-07:00",
+      "Id": 78782
+    },
+    {
+      "Message": "Yes I did indeed find out that interfaces are open ended. Just define the interface again and only put the additional methods in there. A very nice features indeed!!!\n",
+      "PostedDate": "2012-10-06T23:42:05.25-07:00",
+      "Id": 78882
+    },
+    {
+      "Message": "Somewhat related (and also related to http://typescript.codeplex.com/discussions/398062): what about a way to implement methods (extension methods?) for interfaces?\n\nRight now, you need to create an independent function if you want to do something with any type that implements an interface.\n\ne.g.:\n// lib1\nclass/interface Vector { x: number; y: number; }\n\n// lib2\nclass/interface Point { x: number; y: number; }\n\n// my code\ninterface point { x: number; y: number; }\n\nfunction length(p: point) { return Math.sqrt(p.x * p.x + p.y * p.y); }\n\n\nYou could add 'length' to the interface but that would force every Point implementation to have its own length method. As length is generic enough and only uses the public Point interface, making it a function allows you to use it on _any_ point. In this case, I can use both libraries' equivalent of a point in my length function.\n\nThe problem is that you've now lost the IDE support for code completion, which is a big deal for TypeScript (or I would think so, given the type system is only there for tooling/compilation). There's no way to know every function on the generic Point implicit implementation.\n\nI feel like there's incentive torwards the use of interfaces in TypeScript due to their open-endedness and structural typing. You can start with interfaces and keep building on them and independent functions until you need private state, that way all the public-state functions will work on any implementation, and the private state is obviously restricted to specific classes.\n\nBut perhaps allowing us to implement methods directly for interfaces would make them even more reusable and interoperable between libraries. Classes (brands) would be the stricter and practical (with private members and so) implementations while interfaces would still have behavior shared by all implementations.\n\nConsider something like:\n\n// lib1\nclass/interface Vector { x: number; y: number; }\n\n// lib2\nclass/interface Point { x: number; y: number; }\n\n// my code\ninterface point {\n    x: number; y: number;\n    length() { return Math.sqrt(this.x * this.x + this.y * this.y); }\n}\n\nNow every Point and Vector could get a 'length' method with code completion.\n\nThere are details to be studied such as what code should be generated and how to deal with duplicate definitions but I think there are several ways to approach them (from some restrictions to even new syntax constructs), given the idea/direction itself isn't some PL blasphemy. I'm not a PL engineer after all.\n\nAny thoughts on that?",
+      "PostedDate": "2012-10-08T12:31:51.797-07:00",
+      "Id": 79041
+    },
+    {
+      "Message": "Nub here....\n\nI'd love to extend String with IsNullOrEmpty. adding it to the interface is easy but then what does one have to do to implement the interface? I just want to implement my IsNullOrEmpty.. But I can't get that to work. I did something like this: http://stackoverflow.com/questions/12706290/typescript-define-methods-in-separate-files but it won't even compile... It also doesn't feel natural or correct...\n\ninterface String {\n    IsNullOrEmpty(value: string): bool;\n}\n\nclass StringExtensions implements String {\n    toString: () => string;\n    charAt: (pos: number) => string;\n    charCodeAt: (index: number) => number;\n    concat: (...strings: string[]) => string;\n    indexOf: (searchString: string, position?: number) => number;\n    lastIndexOf: (searchString: string, position?: number) => number;\n    localeCompare: (that: string) => number;\n    match: (regexp: string) => string[];\n    match: (regexp: RegExp) => string[];\n    replace: (searchValue: string, replaceValue: string) => string;\n    replace: (searchValue: string, replaceValue: (substring: string, ...args: any[]) => string) => string;\n    replace: (searchValue: RegExp, replaceValue: string) => string;\n    replace: (searchValue: RegExp, replaceValue: (substring: string, ...args: any[]) => string) => string;\n    search: (regexp: string) => number;\n    search: (regexp: RegExp) => number;\n    slice: (start: number, end?: number) => string;\n    split: (seperator: string, limit?: number) => string[];\n    split: (seperator: RegExp, limit?: number) => string[];\n    substring: (start: number, end?: number) => string;\n    toLowerCase: () => string;\n    toLocaleLowerCase: () => string;\n    toUpperCase: () => string;\n    toLocaleUpperCase: () => string;\n    trim: () => string;\n\n    length:() => number;\n\n    // IE extensions\n    substr: (from: number, length?: number) => string;\n\n\n    public IsNullOrEmpty(value: string) {\n        return value == null || value.length == 0;\n    }\n}\n\n",
+      "PostedDate": "2012-10-16T07:52:19.64-07:00",
+      "Id": 80097
+    },
+    {
+      "Message": "I don't think extension methods should be implemented by adding a function to the prototype. This would make them not much different than what is available in vanilla JS. \n\nIn JS, adding methods to the prototype of objects (especially built in objects), is dangerous, as it can cause 3rd party libraries to break without your knowledge.\n\nI think the value of extension methods is that they are actually *static methods* that are called via a syntactic sugar that the compiler ultimately erases. It would be far more beneficial to implement TypeScript extension methods in this way, so you can safely \"extend\" built in types, without risk of breaking code you don't own.",
+      "PostedDate": "2013-01-15T10:08:20.6-08:00",
+      "Id": 86176
+    },
+    {
+      "Message": "This issue thread has discussed a couple of related topics.  For tracking purposes, I'm going to interpret this particular issue as a suggestion to add C#-like extension methods, which would behave roughly as follows:\n\n```\n// TypeScript\nmodule StringExtensions {\n    export extension endsWith(this: string, str: string): bool { return false; }\n}\n\"hello\".endsWith(\"lo\");\n\n// Generated JavaScript\nvar StringExtensions;\n(function(StringExtensions) {\n  StringExtensions.endsWith = function(str) { return false;}\n})(StringExtensions || (StringExtensions = {}))\nStringExtensions.endsWith.call(\"hello\", \"lo\");\n```\n\nSpecifically - although the TypeScript code could be written as a property lookup on the receiver object, this could in cases where the typed property lookup fails, but there is a module in scope which exports an extension function with a 'this' parameter of the correct type, instead resolve to a call to the module exported function bound to the receiver object.\n\nThere are a few reasons this sort of feature is not very natural for TypeScript;  (1) we aim to not do expression level rewriting of code to make sure that semantics are closely aligned with JavaScript (2) this relies very heavily on type information for the semantics of the code - if the receiver was 'any', we couldn't resolve the extension method - which means subtle bugs could happen when a piece of code is loosely typed in some local piece of code.\n\nGiven these concerns, I do not currently expect this is something we would add to TypeScript in the near term, so I'll move into 2.x timeframe for now.",
+      "PostedDate": "2013-02-26T10:04:07.687-08:00",
+      "Id": 91566
+    },
+    {
+      "Message": "One thing that would be useful for me is this construction:\n\n```\nmodule AsyncblockExtensions {\n    export extension sync(this: T): T {}\n}\n```\n\nThat construction would allow me to provide strong typing for some syntax rewriting that [asyncblock](https://github.com/scriby/asyncblock) does:\n\n```\n    var contents = fs.readFile('test.txt', 'utf8').sync();\n```\n\nI understand that this use case is a bit off the beaten path and not something TypeScript would specifically try to support, but just providing some feedback.",
+      "PostedDate": "2013-04-30T01:06:30.22-07:00",
+      "Id": 98900
+    },
+    {
+      "Message": "Extension methods in C# are static methods with syntactic sugar for object-like call syntax - there is no `this` during a static method call.\n\nI believe the following would be closer to C# in terms of syntax:\n\n    // TypeScript\n    module StringExtensions {\n        export function endsWith(this value: string, ending: string): bool { ... }\n    }\n    \"hello\".endsWith(\"lo\");\n    StringExtensions.endsWith(\"hello\", \"lo\");\n\nNotice how you can now call the function and pass arguments to it, if you prefer - similar to C#.\n\nAs for the compiled output, the following might be closer to C# in terms of semantics:\n\n    // Generated JavaScript\n    var StringExtensions;\n    (function(StringExtensions) {\n      StringExtensions.endsWith = function(value, ending) { ... }\n    })(StringExtensions || (StringExtensions = {}))\n    StringExtensions.endsWith(\"hello\", \"lo\");\n    StringExtensions.endsWith(\"hello\", \"lo\");\n\nNotice the compiled output is now identical to a manual invocation.\n\nIf somebody wants to manually invoke an exported function from JavaScript, I think being able to call the function like a regular function (without forcing a calling context) is much more natural and comfortable?\n\nI know we're not just trying to copy C# for the sake of copying C#, but this approach seems simpler and more flexible - a function is just a function, and the addition of the `this` keyword to the parameter makes the object-style syntax available, but you can still call the function like any regular function, if you need or wish. The compiled output is simpler and more closely resembles something hand-written.\n",
+      "PostedDate": "2013-08-29T12:21:16.587-07:00",
+      "Id": 111583
+    },
+    {
+      "Message": "Like some of the posters above, I too have been trying to find a way to model prototype extensions for native types.  For example, I'm using a library that extends String to support String.format(...) and String.isNullOrEmpty(...) but it isn't possible to create a definition file for this because the default lib.d.ts (in 1.9.1) defines the String variable in a way that cannot be extended :\n\n          declare var String { ... }\n\nRather than modifying the Typescript compiler to handle prototypes differently, could we just change the native types declaration to inherit from an interface, a la:\n\n          interface StringStatic{ ...  }\n          declare var String : StringStatic;\n\nThat way we wouldn't have to include modified versions of the lib.d.ts file to support extending native types.\n",
+      "PostedDate": "2013-09-06T13:34:25.57-07:00",
+      "Id": 112708
+    },
+    {
+      "Message": "My recommendation \n\nI'm always looking from the perspective that one day TS and Dart will have native VMs so the loose prototype requirement isn't optimal. Minimal language impact but descriptive enough for future compile targets.\n\n``` TS\nclass MyStringExtensions extends interface String{\n\tstartsWith(str:String): boolean{\n\t\treturn (this.indexOf(str) === 0);\n\t}\n}\n\n```\ncompiles to something like this:\n\n``` TS\ninterface String {\n    startsWith(str:string): boolean;\n}\n\nString.prototype.startsWith = function(str){\n    return (this.indexOf(str) === 0);\n}\n\n```\n\nAs you can see it MyStringExtensions couldn't be constructed but allows containing the code should you later want to target C# for native execution\n\n-Craig",
+      "PostedDate": "2013-12-08T12:08:47.767-08:00",
+      "Id": 126538
+    },
+    {
+      "Message": "Direct prototype extension is [not recommended](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain) because of performance problem for native prototypes, however...",
+      "PostedDate": "2014-07-01T01:50:30.403-07:00",
+      "Id": 151218
+    },
+    {
+      "Message": "Sorry, the document seems not to be saying about prototype extension but prototype chaining. Maybe my statement is false...",
+      "PostedDate": "2014-07-01T13:55:43.223-07:00",
+      "Id": 151292
+    }
+  ]
+}

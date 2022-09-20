@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1050050",
+    "ThreadId": "445319",
+    "Html": "Currently there is an issue with the this keyword. Because of the way JavaScript works, the this keyword does not always refer to the object expected by the TypeScript code.\r<br />\n<br />\nExample of code that will not work in many situations:\r<br />\n<br />\nTS<br />\n<pre><code>class MyClass {\n    myProp: number = 0;\n    myMethod() {\n        this.myProp = 1;\n    }\n}</code></pre>\n\nJS<br />\n<pre><code>var MyClass = (function () {\n    function MyClass() {\n        this.myProp = 0;\n    }\n    MyClass.prototype.myMethod = function () {\n        this.myProp = 1;\n    };\n    return MyClass;\n})();</code></pre>\n\nA workaround is this:\r<br />\n<br />\nTS<br />\n<pre><code>class MyClass {\n    myProp: number = 0;\n    myMethod: () =&gt; void;\n\n    constructor() {\n        this.myMethod = () =&gt; {\n            this.myProp = 1;\n        }\n    }\n}</code></pre>\n\nJS<br />\n<pre><code>var MyClass = (function () {\n    function MyClass() {\n        var _this = this;\n        this.myProp = 0;\n        this.myMethod = function () {\n            _this.myProp = 1;\n        };\n    }\n    return MyOtherClass;\n})();</code></pre>\n\nThe reason the second works is because the _this will always point to the object you except from a TypeScript point-of-view.\r<br />\n<br />\nThis needs to be sorted, either by allowing the first TS syntax to generate the same JS as the second TS syntax, or we need to make another solution. Because it's not really acceptable to have to write every class method as a property if this is supposed to be a properly typed language.<br />\n",
+    "PostedDate": "2013-05-29T04:44:05.25-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050118",
+    "ThreadId": "445319",
+    "Html": "Hi lilleaasen,\r<br />\n<br />\nThe 'this' usage in classes has come up a few times on the forums (eg <a href=\"https://typescript.codeplex.com/discussions/437633\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/437633</a>).  The short answer is that we've aligned with ES6 classes for the 1.0 version.  This has the side effect that, just like in JavaScript, you have to be aware of the 'usage' of this, and need to take extra care when using a class member in, for example, callbacks.<br />\n\r<br />\nAfter 1.0, we may look into extending the classes a la CoffeeScript, to let the user opt in to either the 'this' capturing or ES6 style, but for now we're focusing on making sure we're aligning with the future JavaScript standard so that code can work between the two with ease.<br />\n",
+    "PostedDate": "2013-05-29T07:15:14.27-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050129",
+    "ThreadId": "445319",
+    "Html": "Well, what I am suggesting is a compiler-level switch. So my class methods never use any this that I don't expect, but functions outside classes can use whatever this. Wouldn't this be possible?<br />\n",
+    "PostedDate": "2013-05-29T07:28:36.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050192",
+    "ThreadId": "445319",
+    "Html": "I'm not sure I understand what you're asking.  The new JavaScript standard that is currently being developed has specific semantics for how classes work.  We wouldn't want to offer a different set of semantics via a commandline switch, because then the same code could mean different things, which would be generally confusing.<br />\n\r<br />\nHow 'this' works is something that gives JavaScript a lot of power, though admittedly it does add its own complexity.  With TypeScript, that inherit complexity is already there, and its something users who use TypeScript will need to understand and get comfortable with.<br />\n",
+    "PostedDate": "2013-05-29T09:45:17.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

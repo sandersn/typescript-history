@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the report. I believe the workaround mentioned in the StackOverflow post may have been to pass --nolib and then manually include your updated copy of lib.d.ts. See if that solves your problem? Feel free to re-open if not.\n\nAs mentioned, we have an issue already tracking the language service issues here.",
+    "ClosedDate": "2013-02-14T16:43:51.317-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hello all,\r\n\r\nrecently I've been trying to write a definitions file for a javascript file that edits the Array.prototype. Unfortunately, even though I've extended the Array interface, visual studio doesn't pick up on this and gives me some nice red squigglies in my files!\r\n\r\nAny attempt to do the following:\r\n```\r\nvar myarray = [];\r\nmyarray.removeElement(1);\r\n```\r\nresults in removeElement having red squigglies :(\r\n\r\nEDIT: The first example works in Typescript Playground, but not visual studio. I am running Typescript version 0.8.2.0.\r\n\r\nWhat I've tried:\r\n1)\r\n```\r\ninterface Array {\r\n\tremoveElement(index: number): _element[];\r\n}\r\n```\r\n2)\r\n```\r\ninterface xArray extends Array {\r\n\tremoveElement(index: number): _element[];\r\n\tnew (...items: any[]): any[];\r\n\t(...items: any[]): any[];\r\n\tisArray(arg: any): bool;\r\n}\r\n\r\ndeclare var Array: xArray;\r\n```\r\n3)\r\n```\r\ninterface Array {\r\n\tremoveElement(index: number): _element[];\r\n}\r\n\r\n//Redefine array so that it uses this new interface.\r\n\r\ndeclare var Array: {\r\n\tnew (...items: any[]): any[];\r\n\t(...items: any[]): any[];\r\n\tisArray(arg: any): bool;\r\n\tprototype: xArray;\r\n}\r\n```\r\n\r\nUnfortunately to no avail. In the lib.t.ds file I saw the comment: \r\n```\r\n////////////////\r\n/// ECMAScript Array API (specially handled by compiler)\r\n////////////////\r\n\r\ninterface Array {\r\n```\r\n\r\nWhich made me think that perhaps the handling of Array types is also specially handled by intellisense?",
+    "LastUpdatedDate": "2013-08-13T09:51:34.743-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-13T18:51:42.197-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Changes to Array interface are not reflected in VS intellisense.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 725
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Also related:\r\nhttp://stackoverflow.com/questions/12701732/typescript-augmenting-built-in-types\r\n",
+      "PostedDate": "2013-02-13T19:00:09.7-08:00",
+      "Id": 89256
+    },
+    {
+      "Message": "I'm using a web project (not a typescript project) for work (I can't change it) and webessentials, how do I go about passing --nolib into the compiler?\n\nIf this has been discussed somewhere else then I haven't been able to find it (a link would be nice if it's not too hard to do)?\n\nSorry for my bother.\nGriffork",
+      "PostedDate": "2013-02-14T17:07:22.26-08:00",
+      "Id": 90398
+    },
+    {
+      "Message": "I found it!\n\nThere is a line that you can put at the top of a file to stop visual studio's intellisense from using the default library, the code is as follows:\n\n```\n/// <reference no-default-lib=\"true\"/>\n/// <reference path=\"lib/mylib.d.ts\" />\n```\nWhere the second line points to your custom definition of the lib.d.ts file. I hope this helps other people experiencing the same issue!",
+      "PostedDate": "2013-02-17T17:43:47.89-08:00",
+      "Id": 90613
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design.\n\nSuppose c.ts uses types from 2 modules, but b.ts only uses types from one of those modules... then importing/loading both modules would not be efficient.",
+    "ClosedDate": "2013-09-06T14:48:34.6-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "I've been running into an issue with typescript where I can't return a variable of a type that I haven't imported into the current module, even if I've imported another module that imports it. Here's an example:\r\n\r\na.ts\r\n```\r\nexport class A { }\r\n```\r\n\r\nb.ts\r\n```\r\nimport c = require('./c');\r\n\r\nexport class B {\r\n    getA() { return c.a; }\r\n}\r\n```\r\n\r\nc.ts\r\n```\r\n//import A = require('./a').A; //I wish this worked. I know you can export classes directly, but ran into issues with that.\r\nimport _A = require('./a');\r\nvar A = _A.A;\r\n\r\nexport var a = new A();\r\n```\r\n\r\nHowever, this generates a compile error:\r\n\r\nb.ts(5,9): error TS2065: Return type of public method from exported class is using inaccessible module 'a.ts'.\r\n\r\nIt turns out on the project I'm working on, we do this all over the place. It would be nice if it \"just worked\" instead of having to re-import each type that we use from each module that returns it.\r\n\r\n",
+    "LastUpdatedDate": "2014-02-17T10:04:22.817-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-05T15:43:28.35-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Return type & import issue",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1647
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I don't think I understood the reasoning you gave. I'm assuming you mean it will introduce inefficiency into the typescript compiler, not the running node code, right?\n\nCan you recommend a workaround or a better way to structure the code?",
+      "PostedDate": "2013-09-06T14:54:29.093-07:00",
+      "Id": 112727
+    },
+    {
+      "Message": "No, I mean in Node\n\nImporting an unused type, will force node to load the module, parse the javascript etc...\n\nYou'll have to be explicit which modules you need to import.",
+      "PostedDate": "2013-09-06T15:20:55.677-07:00",
+      "Id": 112734
+    },
+    {
+      "Message": "I think you might be misunderstanding my problem. Typescript is actually forcing me to require more files than necessary.\n\nIn my example above, I don't want to import module \"a\" into b.ts, but the compiler is forcing me to, just because I'm returning something of type A from b. Typescript should be able to figure out the typing information without me importing \"a\" it there explicitly, right?\n\n(On a side note, node caches the result of require statements, so the heavy lifting only occurs once - but I expect you already knew this.)",
+      "PostedDate": "2013-09-06T15:56:10.037-07:00",
+      "Id": 112744
+    },
+    {
+      "Message": "You were correct that this should just work. Fixed: https://typescript.codeplex.com/SourceControl/changeset/6cf1dffa51c565e701a222cf415f6d003e35b5d9",
+      "PostedDate": "2013-10-07T12:49:17.93-07:00",
+      "Id": 117692
+    },
+    {
+      "Message": "Thanks! I'm really looking forward to this change.",
+      "PostedDate": "2013-10-08T07:29:20.413-07:00",
+      "Id": 117781
+    },
+    {
+      "Message": "I don't believe this has been fixed in 0.9.5.  I see two issues here.  I get a Return type of public method from exported class is using inaccessible module 'path/to/AnnotationTemplatePicker.ts', which causes me to do an unnecessary import which causes an unnecessary define argument:\n\n\t// this creates an unnecessary dependency..I would think if base already imports it I shouldn't have to?\n\t//import AnnotationTemplatePicker = require(\"app/AnnotationTemplatePicker\");\n\timport Base = require(\"../AnnotationTemplatePickerTest\");\n\t\n\tclass AnnotationTemplatePickerTest extends Base {\n\t\n\t    run(args: {\n\t        mapDiv?: HTMLElement;\n\t        pickerDiv?: HTMLElement;\n\t    }) {\n\t        return super.run(args); // type is AnnotationTemplatePicker\n\t    }\n\t}\n\t\n\texport = AnnotationTemplatePickerTest;\n\nPlease investigate further.\n",
+      "PostedDate": "2014-01-21T12:40:22.383-08:00",
+      "Id": 131095
+    },
+    {
+      "Message": "I can confirm I'm also experiencing this bug (exporting a variable and/or type, from an indirect module dependency results in this error).\n\nI can also confirm, the current work-around is to import the indirect module dependency (as any local name, it doesn't matter so long as it doesn't clash with something else).",
+      "PostedDate": "2014-01-23T23:22:17.88-08:00",
+      "Id": 131409
+    },
+    {
+      "Message": "At first I thought that this was a bug but now I am not so sure.\n\nIn the example from @ca0v, if you were going to provide an explicit type for the return value of the `run` function, how would you do that? The answer is: you couldn’t, without importing the `AnnotationTemplatePicker` type. This is where the error comes from.\n\nOne could argue it should be OK to have implicit return types and it should compile because the compiler knows what’s going on. One could alternatively argue that the current behaviour is correct because you haven’t actually created any reference to the type being used in the file.",
+      "PostedDate": "2014-01-27T09:05:02.4-08:00",
+      "Id": 131723
+    },
+    {
+      "Message": "As csnover points out, the root of this is always being able to have a name for the type of exported symbols and functions.  This comes into play for separate compilation where you're outputting the .d.ts file and need to be able to say what that type is.\n\nAnother subtle point here is that if you create an import and only use the type information out of it, you don't create new require statements in the output .js files.  This lets you use them as a way to get type information, and names for those types, without growing the number of dependencies injected into the .js output.",
+      "PostedDate": "2014-02-17T10:04:22.817-08:00",
+      "Id": 133839
+    }
+  ]
+}

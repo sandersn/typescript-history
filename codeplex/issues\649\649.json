@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Duplicate of http://typescript.codeplex.com/workitem/636",
+    "ClosedDate": "2013-01-28T11:07:56.38-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Upgraded to 0.8.2 today and am getting hundreds of errors across our (quite vast) code base. This one was strange though:\r\n\r\n\r\n\r\n        public set angle(angle:number) {\r\n\r\n            angle = Kiwi.Utils.FastMath.wrapAngle(angle);\r\n\r\n            if (angle !== this._angle)\r\n            {\r\n                this._angle = angle;\r\n                this.buildCSS(true);\r\n            }\r\n\r\n        }\r\n\r\n\r\n\r\nIt complains about the first line of the method, saying \"the left-hand side of an assignment expression must be a variable, property or indexer\", which is most strange as 'angle' is clearly a variable passed into the method.\r\n\r\nIt also complains about the \"if\" line, saying \"Operator !== cannot be applied to types '(angle:number) => any' and 'number'\r\n\r\nWhich is equally puzzling. Finally the line \"this._angle = angle\" errors with \"Cannot convert '(angle:number) => any' to 'number'\"\r\n\r\nIt appears that getters and setters are basically broken. Is this all related to the bug I saw filed about setters having the same name as variables? We have to roll back to 0.8.1 because of this :(",
+    "LastUpdatedDate": "2013-01-28T11:07:56.38-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-25T08:37:29.377-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "0.8.2 compiler error \"left hand side of an assignment expression must be a variable\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 649
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "It looks like it's confusing the property setter method name \"angle\" with the setter parameter \"angle.\" Clearly the fix is to rename your parameter to \"value\" or something. I'm not sure if this is a bug or a breaking change (bugfix.) TypeScript already forces us to qualify members with \"this\" so there should be no ambiguity - but frankly, it is something I would not permit in terms of code style. \n\n-Oisin",
+      "PostedDate": "2013-01-25T08:57:24.98-08:00",
+      "Id": 87324
+    }
+  ]
+}

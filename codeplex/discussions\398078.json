@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "922011",
+    "ThreadId": "398078",
+    "Html": "\r\n<p><span>I use the jQuery deferred object very often to create custom async promises in my application, ajax api calls, timers, animations, etc.&nbsp;</span></p>\r\n<p><a href=\"http://api.jquery.com/deferred.promise/\">http://api.jquery.com/deferred.promise/</a></p>\r\n<p><span><span>I'd like to emphasize the need for generic types here. I want to be able to create a Deferred object that is restricted to resolve the result with a specific type, and also a promise object that gives a known type on done.</span></span></p>\r\n<p>For example something like this:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> SomeAsyncOperation() : JQueryPromise&lt;number&gt;\r\n{\r\n\t<span style=\"color:blue\">var</span> result = $.Deferred();\r\n\t\r\n\tsetTimeout(<span style=\"color:blue\">function</span> () { \r\n\t\tresult.resolve(42); \r\n\t}, 1000);\r\n\t\r\n\t<span style=\"color:blue\">return</span> result.promise&lt;number&gt;();\r\n}\r\n\r\nSomeAsyncOperation()\r\n\t.done(<span style=\"color:blue\">function</span> (result) {  \r\n\t\t<span style=\"color:green\">// result should be a number here</span>\r\n\t});\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>What do you think? Will this be possible? It would be really useful.</p>\r\n",
+    "PostedDate": "2012-10-04T11:04:36.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922024",
+    "ThreadId": "398078",
+    "Html": "<p>Generics are an active discussion topic right now.&nbsp;We're collecting motivating examples to help the design, so having examples like yours is very helpful.&nbsp;</p>\r\n<p>Thanks for the feedback.&nbsp;</p>",
+    "PostedDate": "2012-10-04T11:20:33.327-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922093",
+    "ThreadId": "398078",
+    "Html": "<p>I thought I'd to this what I've done to strongly type promises using interfaces.&nbsp; What I did was define basic a basic Promise &amp; Deferred interface and then to strongly type things I derive a strongly typed Promise from the basic one and override the methods I need to type.&nbsp;Then you just have your code reference the strongly typed&nbsp;promises.&nbsp; It's no substitute for generics but it works (at least currently.)&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: green;\">// Define basic Promise &amp; Deferred interfaces</span>\r\n\r\n<span style=\"color: blue;\">interface</span> IPromise {\r\n\t\tdone (onDone: () =&gt; any): IPromise;\r\n\t\tfail (onFail: () =&gt; any): IPromise;\r\n\t\tprogress (onProgress: () =&gt; any): IPromise;\r\n\t\tstate (): string;\r\n\t\tthen (onDone: () =&gt; any, onFail: () =&gt; any, onProgress?: () =&gt; any): IPromise;\r\n}\r\n\r\n<span style=\"color: blue;\">interface</span> IDeferred <span style=\"color: blue;\">extends</span> IPromise {\r\n\tnotify (...args:any[]): <span style=\"color: blue;\">void</span>;\r\n\tnotifyWith (context, args?: any[]): <span style=\"color: blue;\">void</span>;\r\n\r\n\tpromise (): IPromise;\r\n\r\n\treject (...args:any[]): <span style=\"color: blue;\">void</span>;\r\n\trejectWith (context, args?: any[]): <span style=\"color: blue;\">void</span>;\r\n\r\n\tresolve (...args:any[]): <span style=\"color: blue;\">void</span>;\r\n\tresolveWith (context, args?: any[]): <span style=\"color: blue;\">void</span>;\r\n}\r\n\r\n<span style=\"color: green;\">// Strongly type the Promise</span>\r\n\r\n<span style=\"color: blue;\">interface</span> IStringResult <span style=\"color: blue;\">extends</span> IPromise {\r\n\tdone (onDone: (value:string) =&gt; any): IStringResult;\r\n\tfail (onFail: (error: string) =&gt; any): IStringResult;\r\n\tprogress (onProgress: (value:string) =&gt; any): IStringResult;\r\n\tthen (onDone: (value:string) =&gt; any, onFail: (error: string) =&gt; any, onProgress?: (value:string) =&gt; any): IStringResult;\r\n}\r\n\r\n<span style=\"color: blue;\">var</span> x:IStringResult;\r\nx.done((value) =&gt; {\r\n\t\r\n});\r\n\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-04T12:45:35.723-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049870",
+    "ThreadId": "398078",
+    "Html": "Is there a recommended way or an example of how to do this now with the generics support added to 0.9?<br />\n",
+    "PostedDate": "2013-05-28T18:42:33.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051066",
+    "ThreadId": "398078",
+    "Html": "<strong>ctaggart wrote:</strong><br />\n<blockquote>\nIs there a recommended way or an example of how to do this now with the generics support added to 0.9?<br />\n</blockquote>\nTake a look at this:\r<br />\n<a href=\"https://typescript.codeplex.com/discussions/443684\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/443684</a><br />\n",
+    "PostedDate": "2013-05-31T00:55:59.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

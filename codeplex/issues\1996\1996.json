@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "In the first example, you've written a function that takes two required parameters, then used it in a context where it could be provided as few as zero arguments. Zero is less than two, so it's an error. You can make those parameters optional, or specify that the callback provides at least two arguments, or change the callback to be of type 'Function', depending on which best represents the situation.\n\nThe second example was a compiler bug and is fixed in the develop branch.",
+    "ClosedDate": "2013-12-09T15:59:42.327-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "When given the following:\r\n\r\n```\r\nvar test = (param1, param2) => {\r\n\treturn \"test\";\r\n}\r\n\r\nfunction test2(param: (...args: any[]) => string): void {\r\n} \r\n\r\ntest2(test);\r\n```\r\n\r\nI get the following error at the test2(test) call site:\r\n\r\nCould not select overload for 'call' expression.\r\nSupplied parameters do not match any signature of call target: Call signatures of types '(param1: any, param2: any) => string' and '(...args: any[]) => string' are incompatible: Call signature expects 0 or fewer parameters.\r\n\r\nThis is reproducible in the playground.\r\n\r\nAdditionally, given the following:\r\n\r\n```\r\nfunction producer(): any {\r\n\treturn null;\r\n}\r\n\r\nfunction consumer(param: number): void {\r\n}\r\n\r\nfunction test<T>(fn1: () => T, fn2: (val: T) => void): void {\t\r\n}\r\n\r\ntest(() => producer(), (val) => { consumer(val) });\r\n```\r\n\r\nI get the following error at the consumer(val) call site:\r\n\r\nSupplied parameters do not match any signature of call target: Could not apply type 'number' to argument 1 which is of type '{}'.\r\n\r\nCould not select overload for 'call' expression.\r\n\r\n\r\nNow, while I understand that behaviour like this is marked under the breaking changes for 0.9.5, it seems incredibly odd to me that a producer that explicitly returns an 'any' result into a generic argument ends up with the input being {} instead of the 'type' that was originally returned. There are plenty of libraries out there that have a producer/consumer model (think data binding) where what the producer will produce is unknown at development time. I understand too that one could just explicitly define val to be type any and be over with it, but it seems at odds with what expected behaviour is.",
+    "LastUpdatedDate": "2013-12-23T10:48:12.117-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-09T14:11:08.943-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Unexpected error with required parameters in rest args (...) position",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1996
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

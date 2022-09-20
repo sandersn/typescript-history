@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-17T14:54:56.807-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following scenario compiles just fine, but provides no Intellisense in Visual Studio:\r\n\r\n```ts\r\n// foo.d.ts\r\ninterface FooStatic {\r\n\tbar: string;\r\n}\r\n\r\ndeclare module \"foo\" {\r\n\texport = __foo;\r\n}\r\n\r\ndeclare var __foo: FooStatic;\r\n```\r\n\r\n```ts\r\n//foo.ts\r\n///<reference path='./foo.d.ts'/>\r\nimport foo = require('foo');\r\nfoo.bar; // Expression statement is not assignment or call.\r\n```\r\n\r\nBTW, I'm hoping there's a better way to expose a module to import. I'm open to advice on the matter here.\r\n\r\nEnvironment: TypeScript 0.9.5",
+    "LastUpdatedDate": "2014-03-31T16:20:58.29-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-16T14:49:07.54-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Module Import Scenario: No Intellisense",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2023
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The potential issue I see with the above, is that there are 3 \"foo\"s to choose from, so depending on whether you've saved the file to disk yet etc... you might see different behavior.\n\nYou are declaring module \"foo\", so this should take precedence, but you also have 'foo.d.ts' on disk (which could represent module 'foo' if resolved from disk, and you are in 'foo.ts' (which could also represent module 'foo' in a circular manner - i.e. foo.ts is importing itself).\n\nGenerally the inline declaration should be considered first, then the foo.ts file, then the foo.d.ts file, when trying to resolve the module.  We fixed some bugs here, and I see the correct behavior in our 'develop' branch and get the expected intellisense - so I'll close this as \"fixed\" for now.  I'd recommend providing some distinction on the file & module names to avoid the potential for confusion as to which is the desired definition for now, and see if that resolves the issue for you.\n\nPlease reopen if I've misunderstood the problem.  Thanks!",
+      "PostedDate": "2013-12-17T14:54:52.327-08:00",
+      "Id": 127843
+    },
+    {
+      "Message": "Aha! That makes sense. Good catch! I'm glad to hear that the develop branch is ahead of this problem.",
+      "PostedDate": "2013-12-17T16:15:13.31-08:00",
+      "Id": 127860
+    }
+  ]
+}

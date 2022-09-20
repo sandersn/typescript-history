@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-07-22T12:18:06.833-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Here is a sample of this that simulates what i see in my real code. Prior to implementing generics, this code would work.\r\n\r\nwhen I use iScope, it can correctly see all the members of iScope (family, treasure) as well as all the members from iBaseScope (watch), but won't compile or have intellisense for any members of iMover even though it implements that interface\r\n\r\nmodule app {\r\n    export interface iBaseScope {\r\n        watch: () => void;\r\n    }\r\n\r\n    export interface iMover {\r\n        moveUp: () => void;\r\n        moveDown: () => void;\r\n        isDone: bool;\r\n    }\r\n\r\n    export interface iScope<TModel> extends iBaseScope, iMover {\r\n        family: TModel;\r\n        treasure: string;\r\n    }\r\n\r\n    export class me<TScope extends iScope<TModel>, TModel>{\r\n        myScope: TScope;\r\n\r\n        private doSome() {\r\n            this.myScope.treasure = \"aasa\";\r\n            this.myScope.family = null;\r\n            this.myScope.watch();\r\n            this.myScope.moveUp();         // ERROR!!  -    can't see any members of iMover\r\n        }\r\n    }\r\n}",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-26T16:22:40.927-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "VS 2012 / Typescript .9.0.0 - generic type only recognizes 1st interface in multiple implemented interfaces",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 7,
+    "Id": 1252
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, we'll need to fix this.",
+      "PostedDate": "2013-06-27T16:23:19.553-07:00",
+      "Id": 104439
+    },
+    {
+      "Message": "I have something similar\n\n```\ninterface MyInterfaceA<T> {\n    Get(): T;\n}\n\ninterface MyInterfaceB<T> {\n    Set(value: T): void;\n}\n\ninterface MyInterface<T> extends MyInterfaceA<T>, MyInterfaceB<T> {\n}\n\nclass MyClass {\n    Value: MyInterface<string>;\n    constructor(value: MyInterface<string>) {\n        this.Value = value\n        this.Value.Get();\n        this.Value.Set(\"\");  //ERROR -    can't see any members of MyInterfaceB<T>\n    }\n}\n\n\n```",
+      "PostedDate": "2013-06-28T23:04:06.653-07:00",
+      "Id": 104640
+    }
+  ]
+}

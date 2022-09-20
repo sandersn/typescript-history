@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "What other commenters said, basically - JavaScript already has object literal syntax, TypeScript classes already have auto property initializers on constructor arguments, and TypeScript has structural typing. An additional syntax here isn't providing enough value to justify its complexity.",
+    "ClosedDate": "2012-11-05T16:29:02.96-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Object initializers in C# allow for more concise and declarative code. It would be nice to have this option in TypeScript as well. Say you have the following classes:\r\n\r\nclass Name {\r\n\tpublic first: string;\r\n\tpublic last: string;\r\n}\r\n\r\nclass Person {\r\n\tpublic name: Name;\r\n\tpublic age: number;\r\n}\r\n\r\nAnd you then have the following statement:\r\n\r\nvar bob = new Person {\r\n    name = new Name {\r\n            first = \"Bob\",\r\n            last = \"Smith\"\r\n    },\r\n    age = 35\r\n}\r\n\r\nThis would generate the following javascript:\r\n\r\nvar bob = (function () {\r\n    var x = new Person();\r\n    x.name  = (function () {\r\n\tvar x = new Name();\r\n\tx.first = \"Bob\";\r\n\tx.last = \"Smith\";\r\n\treturn x;\r\n\t})();\t\r\n    x.age = 35;\r\n    return x;\r\n})();\r\n\r\nThat seems to me as the most straightforward way to generate the javascript. I don't know what kind of overhead the self executing functions introduce.\r\n\r\nAnother option to consider is to make the initialization syntax mirror the JSON syntax so as to keep it feeling more like javascript.\r\n\r\nvar bob = new Person {\r\n    name: new Name {\r\n            first:  \"Bob\",\r\n            last: \"Smith\"\r\n    },\r\n    age: 35\r\n} \r\n",
+    "LastUpdatedDate": "2013-08-21T12:43:56.24-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-26T05:29:59.913-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Support for object initializers",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 334
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "A more concise way to accomplish basically the same task would be to use interfaces instead of classes.\n\ninterface Name {\n\tfirst: string;\n\tlast: string;\n}\ninterface Person {\n\tname: Name;\n\tage: number;\n}\n\nvar bob: Person = {\n\tname: {\n\t\tfirst: \"Bob\",\n\t\tlast: \"Smith\",\n\t},\n\tage: 35,\n};",
+      "PostedDate": "2012-10-26T17:08:15.683-07:00",
+      "Id": 81107
+    },
+    {
+      "Message": "Thanks, I didn't realize you could use that syntax. That's great. However, let's assume that the classes actually have behavior associated with them - methods, etc. Then it's necessary to use classes and object initializes can be really helpful.",
+      "PostedDate": "2012-10-27T05:16:48.12-07:00",
+      "Id": 81119
+    },
+    {
+      "Message": "I would like to point out two features that may be of benefit to others as a workaround to object initializers:\n1) Interfaces (such as \"Person\" above) can have optional members. So you can declare the member \"last\" to be optional as follows: \"last?: string\".\n2) You can then pass an interface of optional arguments to you class's constructor via an interface as follows:\n```\n    interface Name {\n        first: string;\n        last: string;\n    }\n    interface Options {\n        age?: number;\n    }\n    class Person {\n        constructor (name: Name, options?: Options) {\n            // ...\n        }\n    }\n    class UsePerson {\n        someMethod() {\n            var p = new Person({ first:'Bob', last:'Smith' }, {});\n            var p2 = new Person({ first: 'John', last: 'Smith' });\n            var p3 = new Person({ first: 'Wayne', last: 'Baker' }, { age: 35 });\n        }\n    }\n```",
+      "PostedDate": "2013-04-29T06:13:10.45-07:00",
+      "Id": 98783
+    },
+    {
+      "Message": "Here's an example (from [here](http://stackoverflow.com/a/18321471/450913)):\n```typescript\nclass bar {\n    constructor (options?: {length: number; height: number;}) {\n        if (options) {\n            this.length = options.length;\n            this.height = options.height;\n        }\n    }\n    length: number;\n    height: number;\n}\n\nclass foo {\n    bars: bar[] = new Array();\n}\n\nvar ham = new foo();\nham.bars = [\n    new bar({length: 4, height: 2}),\n    new bar({length: 1, height: 3})\n];\n```",
+      "PostedDate": "2013-08-19T12:33:20.997-07:00",
+      "Id": 110349
+    }
+  ]
+}

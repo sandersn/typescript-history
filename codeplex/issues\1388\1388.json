@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the latest bits in the develop branch. ",
+    "ClosedDate": "2013-09-13T17:30:59.887-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Try this on the playground:\r\n```\r\ninterface Args<T> {\r\n\tvalue: T;\r\n\ttoString: (t:T) => string;\r\n\ttoNumber: (t:T) => number;\r\n}\r\n\r\nfunction f1<T>( value: T, toString: (t:T) => string, toNumber: (t:T) => number ) {}\r\nfunction f2<T>( args: Args<T> ) {}\r\n\r\nf1( \"abcd\", s => s.bogus, s => s.whatever );\r\nf2( { value: \"abcd\", toNumber: s => s.bogus, toString: s => s.whatever } );\r\n```\r\n\r\nIn the ```f1``` call, the compiler infers ```T``` to be ```string``` based on the first argument, and then reports an error in the second and third arguments, because string does not have properties named ```bogus``` and ```whatever```. This is completely correct.\r\n\r\nIn the ```f2``` call, however, this does not happen. When I hover on ```s```, the hint says ```any```, and so the ```bogus``` property is given a pass.\r\nBecause of this, I do not have validation on the ```toNumber``` and ```toString``` parameters, which is a huge deal given the wide spread of this pattern.\r\n\r\nInterestingly, even specifying the generic parameter explicitly doesn't help. That is, the following still does not produce any errors:\r\n\r\n```\r\nf2<string>( { value: \"abcd\", toNumber: s => s.bogus, toString: s => s.whatever } );\r\n```\r\n\r\nAnd by the way, in case anybody was wondering, you don't even have to use generics to hit this problem.\r\nTry this:\r\n\r\n```\r\ninterface ArgsString {\r\n    value: string;\r\n    toString: (t:string) => string;\r\n}\r\n\r\nfunction f2( args: ArgsString ) {}\r\n\r\nf2( { value: \"abcd\", toString: s => s.whatever } );\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-24T08:32:16.847-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Type inference does not work for the \"named arguments\" pattern",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1388
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, something is definitely wrong here. Marked as active.",
+      "PostedDate": "2013-07-25T12:02:16.37-07:00",
+      "Id": 107425
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1248321",
+    "ThreadId": "546211",
+    "Html": "Take a look at this very simple example:<br />\n<pre><code>import _path = require(&quot;path&quot;);\nvar path: typeof _path = require(&quot;path&quot;);\nconsole.log(path.basename);</code></pre>\n\nif you try to compile this with options: module set to none and combine to single js, you get error:\r<br />\n<br />\nerror TS5037: Build: Cannot compile external modules unless the '--module' flag is provided.\r<br />\n<br />\nBut there is no external modules here, because import is used only as annotation, so this should be compiled just fine.\r<br />\n<br />\nThanks\r<br />\nedvin<br />\n",
+    "PostedDate": "2014-05-22T03:31:49.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1249052",
+    "ThreadId": "546211",
+    "Html": "The 'import' is what turns it into an external module, even if it's ultimately compiled out.  We could consider changing that, but I'm not clear on what the usage scenario that's currently blocked.  What would you need to use this for?<br />\n",
+    "PostedDate": "2014-05-23T13:36:09.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1253177",
+    "ThreadId": "546211",
+    "Html": "In short, releasing this lock will allow me to compile a project to single js file and then use this file as amd/commonjs external module.\r<br />\n<br />\nCurrently there is no support to create single js file and use external modules. To achieve this you must set –module to none, compile to single js file and remove all top export directives.  After compiling you change output js file so that you manually add code to export modules. In simple case when commonjs  library has single root module, you just add something like this at the end: <br />\n<pre><code>exports.rootmodule = rootmodule;</code></pre>\n\nOn the import side you then use:<br />\n<pre><code>var __ rootmodule: typeof rootmodule = require(&quot;./rootmodule&quot;). rootmodule;</code></pre>\n\nProblem is that this statements can’t be used in all situations, for example it doesn’t work if you try to require path module in node. So you end up without type information. If you enable import as type annotation when –module is set to none you will be able to use:<br />\n<pre><code>import _path = require(&quot;path&quot;);\nvar path: typeof _path = require(&quot;path&quot;);</code></pre>\n\nFor me this will be very helpful. In big project it is really difficult to maintain all those import paths. For example just renaming/moving file to other location may require a lot of changes in your code. Also I don’t feel very comfortable if I have to deploy 1000+ files, which should be no more than  10 js libraries. Also using single file for more classes it is not an option, I have tried this and is totally unmaintainable. \r<br />\n<br />\nIt would be great if tsc will allow to compile to single file with commonjs/amd support. Of course because project(all files) will have single js module output, you can force that all import/export directive must be used inside _references.ts.\r<br />\n<br />\nthanks again<br />\n",
+    "PostedDate": "2014-06-05T00:35:16.867-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

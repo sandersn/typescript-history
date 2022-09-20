@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:37:53.777-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\ndeclare module \"browser-harness\" {\r\n    export class Browser {\r\n        constructor(args: { type: string; location?: string; args?: string[]; });\r\n\r\n        open(harnessUrl: string, serverUrl?: string);\r\n        close();\r\n    }\r\n}\r\n```\r\n\r\n```\r\nimport harness = module('browser-harness');\r\n\r\nvar b = new harness.Browser({ type: 'chrome' });\r\n```\r\n\r\nThe second line there throws an error: \"error TS2081: Supplied parameters do not match any signature of call target\". It appears to be the args?: string[] which is causing the issue - without it, it works fine.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-05T18:35:01.78-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Weirdness with optional string[] in constructor",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1426
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks.  This looks pretty bad.  It seems to be a confluence of 3 factors: It needs to be a constructor, with a parameter specified with a type literal, and that type contains an array member.  Without any of those 3 it doesn't repro.  (i.e. Use a named interface for the 'args' type and it goes away).  The minimal repro I can come with for this is below.\n\n```typescript\nclass C1 {\n     constructor(options: { member: string[]; }){\n\t }\n}\n\nvar b = new C1({member: []});\n```\n\nWe'll take a look into this.",
+      "PostedDate": "2013-08-06T15:29:35.463-07:00",
+      "Id": 108717
+    },
+    {
+      "Message": "Haha, that is an oddly specific error case. I guess I win the lottery.",
+      "PostedDate": "2013-08-06T16:01:03.94-07:00",
+      "Id": 108723
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "Id": "1053296",
+    "ThreadId": "446134",
+    "Html": "So, here we go again with the &quot;module is no longer a type&quot; change.\r<br />\n<br />\nThis code won't compile in 0.9 beta:<br />\n<pre><code>declare function Sammy();\n\ndeclare module Sammy {\n    class Application {}\n}\n\ninterface JQueryStatic {\n    sammy: Sammy;\n}</code></pre>\n\nGiving <em>error TS4022: Type reference cannot refer to container 'Sammy'.</em>\r<br />\n<br />\nif I add a <code>declare class Sammy {}</code> just to satisfy the reference to a type, it compiles.\r<br />\n<br />\nBut if I try to access the Application class through the $.sammy.Application, it throws an error:\r<br />\n<br />\n<em>error TS2094: The property 'Application' does not exist on value of type 'Sammy'.</em>\r<br />\n<br />\n<br />\nIt seems that creating the alias to a module is not working. The alias seems to reference only the class, not the function or the module.\r<br />\n<br />\nA related issue seems to be declaring a &quot;noConflict&quot; method, where the method returns the module.<br />\n<pre><code>declare module Backbone {\n    function noConflict() : Backbone;\n}\n\nBackbone.noConflict();</code></pre>\n\nGives <em>error TS4022: Type reference cannot refer to container 'Backbone'</em>\r<br />\n<br />\nAdding a <code>declare class Backbone {}</code> now gives: <em>error TS2000: Duplicate identifier 'Backbone'.</em>\r<br />\n<br />\nThe funny thing is that adding an extra line:  <code>declare function Backbone();</code> makes this error go away, but then again, the return of the noConflict points to the class &quot;Backbone&quot;, and not to the module.\r<br />\n<br />\nIs this a known issue?\r<br />\n<br />\nThis thing about modules not being types anymore seems to be causing more issues than solving them. Was this rule enforced because ES6 has this behavior?\r<br />\n<br />\nIf so, it seems to me that another way to define this would be sub classes.\r<br />\n<br />\nSomething like:<br />\n<pre><code>declare class Foo {\n    declare class Bar {\n        declare class Inner {}\n    }\n\n    static noConflict() : Foo;\n}\n\ninterface JQueryStatic {\n    foo: Foo;\n}</code></pre>\n\nThe only problem with this is that Foo shouldn't be a class, but only a container.\r<br />\n<br />\nAnd this brings us back to the issue that containers in javascript are just plain objects and you can pass them around, point to them and return them.\r<br />\n<br />\nIs there any solution to this problems that the developers didn't share yet?<br />\n",
+    "PostedDate": "2013-06-05T14:05:25.977-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053366",
+    "ThreadId": "446134",
+    "Html": "I suggest looking at section 10.5 Declaration Merging of the current language spec along with the chapter on ambient declarations.<br />\n<blockquote>\nIt seems that creating the alias to a module is not working. The alias seems to reference only the class, not the function or the module. <br />\n</blockquote>\nYou did not create an alias anywhere in your code. When you added 'declare class Sammy {}' what you did was use an ambient declaration tell the compiler that it should assume that there exists a class named Sammy with the specified shape (in this case, an empty object with no members). The spec explains in which situations you are allowed to have multiple declarations with the same name and how those declarations are merged if it is a valid combination (note that this feature was added fairly recently and there are likely to be bugs here). \r<br />\n<br />\nFor your Backbone example you want an interface to describe the shape of object that noConflict returns. For example, this works:<br />\n<pre><code>interface Backbone {\n    foo(): void;\n}\n\ndeclare module Backbone {\n    function noConflict(): Backbone;\n}\n\nvar r = Backbone.noConflict();\nr.foo();</code></pre>\n\n<blockquote>\nThis thing about modules not being types anymore seems to be causing more issues than solving them. Was this rule enforced because ES6 has this behavior? <br />\n</blockquote>\nIf modules introduce types then they cause conflicts with other declarations of the same name which also introduce types (ex functions, classes, etc). This means there are a variety of common patterns in JavaScript which cannot easily be expressed in a type safe manner with TypeScript. For example, consider a function type where you would like to add additional properties to the function. In previous versions of TypeScript the only way to do this was like so:<br />\n<pre><code>function Foo() { return 1; }\n(&lt;any&gt;Foo).x = 3;\nvar r1 = Foo.x // error\nvar r2 = (&lt;any&gt;Foo).x; // r2 is typed any, not number</code></pre>\n\nIt was an error to have a module named Foo and a function named Foo because they introduced conflicting type definitions. Today, you can use a module by the same name to augment the function Foo with additional values:<br />\n<pre><code>function Foo() { return 1; }\nmodule Foo { export var x = 2; }\nvar r1 = Foo.x; // no error, x is in the completion list for Foo and is of type number\nvar r2 = Foo();</code></pre>\n\nFor a similar real world example, consider how JQuery uses $ to represent a callable function which also has other members of its own which can be called.<br />\n<blockquote>\nAnd this brings us back to the issue that containers in javascript are just plain objects and you can pass them around, point to them and return them. <br />\n</blockquote>\nA JavaScript module only contains values, not type definitions. A TypeScript module can contain one or both. This creates meaningful differences between the two in some situations. There are other TypeScript constructs you can use to pass around only values, namely interfaces, as I did with your Backbone example. Does that make more sense?<br />\n",
+    "PostedDate": "2013-06-05T19:42:22.6-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053525",
+    "ThreadId": "446134",
+    "Html": "<blockquote>\nYou did not create an alias anywhere in your code. When you added 'declare class Sammy {}' what you did was use an ambient declaration tell the compiler that it should assume that there exists a class named Sammy...<br />\n</blockquote>\nThe alias was not the class. The alias is the $.sammy. See:<br />\n<pre><code>function Sammy() { }\n\ndeclare module Sammy {\n    class Application {}\n}\n\ninterface JQueryStatic {\n    sammy: Sammy;    &lt;--- this is the alias I referred to.\n}</code></pre>\n\nThe identifier &quot;$.sammy&quot; should be exatcly the same as the identifier &quot;Sammy&quot;. It doesn't matter if its a class, a module, a function or both. We just need the word &quot;sammy&quot; be the same as &quot;Sammy&quot;. The reason is that the code for this in javascript is quite simple: $.sammy is a reference to the Sammy object.<br />\n<pre><code>var Sammy = function() {}\nSammy.Application = function() {}\n$.sammy = Sammy;</code></pre>\n\n<blockquote>\nFor your Backbone example you want an interface to describe the shape of object that noConflict returns.<br />\n</blockquote>\nYes, it is possible to achieve this using interfaces, just like JQuery is declared. The only problem is that you need a &quot;Static&quot; version of the declarations.\r<br />\nPlease correct me if I'm overcomplicating this, but this was the only way I could make this work:<br />\n<pre><code>declare function Sammy(): Sammy.Application;\ndeclare function Sammy(a, b, c): Sammy.Application;\n\ndeclare module Sammy {\n    class Object { }\n    class Application { }\n    \n    function noConflict(): SammyStatic;\n}\n\ninterface SammyStatic {\n    (): Sammy.Application;\n    (a, b, c): Sammy.Application;\n\n    Object: Sammy.Object;\n    Application: Sammy.Application;\n    \n    noConflict(): SammyStatic;\n}\n\ninterface JQueryStatic {\n    sammy: SammyStatic;\n}\n\ndeclare var $: JQueryStatic;\n\n// sample code:\nSammy();\nSammy(1, 2, 3);\nnew Sammy.Application();\n\nnew $.sammy.Application();\n\nvar S = Sammy.noConflict();\nS();\nS(1, 2, 3);\nnew S.Application();</code></pre>\n\nIt seems relly overcomplicatedto have that interface there. All module contents and functions need to be redeclared, just because I cannot say that $.sammy is a reference to the object Sammy.\r<br />\nIf there is a way to do this without duplicating everything in the SammyStatic interface, can you please show an example that runs that sample code?<br />\n<blockquote>\nA JavaScript module only contains values, not type definitions. A TypeScript module can contain one or both. This creates meaningful differences between the two in some situations. There are other TypeScript constructs you can use to pass around only values, namely interfaces, as I did with your Backbone example. Does that make more sense?<br />\n</blockquote>\nI guess you made my point. It seems that there are ways to do this, they just make it a hell to maintain the definitions, add a lot of extra syntax and don't map to what is really happening.\r<br />\n<br />\nLooking at modules as containers for classes and functions, modules are just plain object values.<br />\n<pre><code>module Foo {}\n///compiles basically to\nvar Foo = {}</code></pre>\n\nI don't intend to discuss how the compiler should map them, if they should be types or not. But they should behave a little bit like them in some cases.\r<br />\n<br />\nAll of this complication goes back to the fact that you can't just say:<br />\n<pre><code>module M {}\ninterface Foo {\n    m: M;\n}\nfunction m() : M;</code></pre>\n\nAm I saying that modules should be types? No. I'm just stating that the above code should work because what is really happenning is this:<br />\n<pre><code>var M = {};\nvar Foo = {\n    m: M\n}\nfunction m() { return M; }</code></pre>\n\nDoes it make sense now?<br />\n",
+    "PostedDate": "2013-06-06T05:04:57.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053668",
+    "ThreadId": "446134",
+    "Html": "Here is how you'd write your example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(): Sammy.Application;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(a, b, c): Sammy.Application;\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Sammy {\n    <span style=\"color:Blue;\">class</span> Application { }\n    <span style=\"color:Blue;\">function</span> noConflict(): SammyStatic;\n}\n\n<span style=\"color:Blue;\">interface</span> SammyStatic {\n    (): Sammy.Application;\n    (a, b, c): Sammy.Application;\n    Application: <span style=\"color:Blue;\">new</span> () =&gt; Sammy.Application;\n    noConflict(): SammyStatic;\n}\n\n<span style=\"color:Blue;\">interface</span> JQueryStatic {\n    sammy: SammyStatic;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> $: JQueryStatic;\r\n</pre></div>With these declarations, all of your sample code works.\r<br />\n<br />\nThe primary reason a module can no longer be used as a type is that it would make it impossible to form module/class combos (like the module/function combos you are using here, but with a class instead). Module/class combos are particularly useful when you want to declare nested classes, a pattern we've seen in several existing JavaScript frameworks. Consider this example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Geometry {\n    distanceTo(other: Geometry): <span style=\"color:Blue;\">number</span> { ... }\n}\n<span style=\"color:Blue;\">module</span> Geometry {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Curve <span style=\"color:Blue;\">extends</span> Geometry { }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Point <span style=\"color:Blue;\">extends</span> Geometry { }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Polygon <span style=\"color:Blue;\">extends</span> Geometry { }\n}\n<span style=\"color:Blue;\">var</span> g: Geometry = <span style=\"color:Blue;\">new</span> Geometry();\n<span style=\"color:Blue;\">var</span> p: Geometry.Point = <span style=\"color:Blue;\">new</span> Geometry.Point();\r\n</pre></div>Here, Geometry has three different meanings: It is a constructor function object (with nested constructor function properties), it is a type (the instance type of the class), and it is a namespace (containing other types). The different contexts in which Geometry is used determines the meaning. In an expression it refers to the constructor function object (with its nested constructor function properties), in a type position it refers to the Geometry class instance type, and on the left hand side in a dotted type name it refers to the namespace.\r<br />\n<br />\nAnother way to think of these declarations is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Geometry {\n    distanceTo(other: Geometry): <span style=\"color:Blue;\">number</span> { ... }\n}\n<span style=\"color:Blue;\">module</span> Geometry {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> Curve <span style=\"color:Blue;\">extends</span> Geometry { }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> Point <span style=\"color:Blue;\">extends</span> Geometry { }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> Polygon <span style=\"color:Blue;\">extends</span> Geometry { }\n}\n<span style=\"color:Blue;\">var</span> Geometry: {\n    <span style=\"color:Blue;\">new</span> (): Geometry;\n    Point: { <span style=\"color:Blue;\">new</span> (): Geometry.Point; }\n    Curve: { <span style=\"color:Blue;\">new</span> (): Geometry.Curve; }\n    Polygon: { <span style=\"color:Blue;\">new</span> (): Geometry.Polygon; }\n};\r\n</pre></div>As you can see, the Geometry constructor function (the 'var Geometry' above) is of an anonymous type. Previously, a module declaration would have given the type name 'Geometry' to that type, but that would conflict with the instance type of the Geometry class and make the nested class construct impossible to express.\r<br />\n<br />\nHopefully this clears it up. The key thing to remember is that names can have as many as three different meanings in TypeScript: As a member (variable), as a type, and as a namespace (container of types) and that each of the different constructs in the language introduce combinations of these.<br />\n",
+    "PostedDate": "2013-06-06T10:20:36.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053679",
+    "ThreadId": "446134",
+    "Html": "<strong>ahejlsberg wrote:</strong><br />\n<blockquote>\nAs you can see, the Geometry constructor function (the 'var Geometry' above) is of an anonymous type. Previously, a module declaration would have given the type name 'Geometry' to that type, but that would conflict with the instance type of the Geometry class and make the nested class construct impossible to express.<br />\n<br />\nHopefully this clears it up. The key thing to remember is that names can have as many as three different meanings in TypeScript: As a member (variable), as a type, and as a namespace (container of types) and that each of the different constructs in the language introduce combinations of these.<br />\n</blockquote>\nSo there is an implicit, named interface for a class, and an implicit, unnamed interface for a module, to avoid ambiguities between implicit interfaces. Wouldn't an alternative be to allow explicit disambiguation of interfaces? Something like<br />\n<pre><code>declare var Geometry : module Geometry; // refer to the implicit module interface</code></pre>\n\nThat would allow to name the implicit module interfaces where needed.<br />\n",
+    "PostedDate": "2013-06-06T10:38:41.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053693",
+    "ThreadId": "446134",
+    "Html": "Sure, you could imagine many possible new features to name and reference the type of a module, but at the end of the day they would have to justify the additional complexity they introduce. It's not clear that it is <em>that</em> important to have a name for the type of a module--for example, we don't introduce names for the types of functions either. And interfaces already provide a perfectly fine way of introducing named types. If we can do it with one less feature, I think we're in a better place.<br />\n",
+    "PostedDate": "2013-06-06T10:51:43.153-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053719",
+    "ThreadId": "446134",
+    "Html": "English is not my primary language, so I guess I'm not being clear on the issue I'm seeing and we are talking apples and oranges here.\r<br />\n<br />\nYou both insist on showing why modules shouldn't be types, and why you made the change, and how this allows new scenarios. I really have nothing against that.\r<br />\n<br />\nI'm just pointing out that because of this change, one of the most common patterns in javascript today can only be mapped in typescript by duplicating a lot of code, and there is obviously something wrong about that.\r<br />\n<br />\nAnd it just puzzles me that this doesn't bother you at all.\r<br />\n<br />\nThere is really nothing on this problem that implies that the only way to avoid this is to transform modules into types.<br />\n",
+    "PostedDate": "2013-06-06T11:40:05.93-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054449",
+    "ThreadId": "446134",
+    "Html": "We're currently contemplating a feature that would be useful in this and several other scenarios: Allowing the <strong>typeof</strong> operator to be used in a <em>type</em> to extract the type of an expression. For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> a = { x: 10, y: 20 };\n<span style=\"color:Blue;\">var</span> b: <span style=\"color:Blue;\">typeof</span> a;\r\n</pre></div>This would declare b to have the same type as a (i.e. { x: number; y: number; }). The feature could be used to extract anonymous types that are inferred and/or generated in many different situations in TypeScript, including the type of a function, the type of the static side of a class, and the type of a module.\r<br />\n<br />\nReturning to the previous examples in this thread, with this feature you'd be able to write:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(): Sammy.Application;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(a, b, c): Sammy.Application;\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Sammy {\n    <span style=\"color:Blue;\">class</span> Application { }\n    <span style=\"color:Blue;\">function</span> noConflict(): <span style=\"color:Blue;\">typeof</span> Sammy;\n}\n\n<span style=\"color:Blue;\">interface</span> JQueryStatic {\n    sammy: <span style=\"color:Blue;\">typeof</span> Sammy;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> $: JQueryStatic;\r\n</pre></div>The kinds of expressions you'd be able to apply <strong>typeof</strong> to would likely be limited to just simple or qualified names (dotted names).<br />\n",
+    "PostedDate": "2013-06-08T17:45:41.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054979",
+    "ThreadId": "446134",
+    "Html": "Hi Anders,\r<br />\n<br />\nWouldn't this conflict with the regular use of typeof?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Foo {\n   <span style=\"color:Blue;\">function</span> noConflict() : <span style=\"color:Blue;\">typeof</span> Foo {\n       <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">typeof</span> Foo;\n   }\n}\r\n</pre></div>In this case, should this be compiled to &quot;return typeof Foo&quot; or to &quot;return Foo&quot; ?\r<br />\n<br />\nI think the idea of a different syntax to avoid ambiguity is cool, but would be nice to have something that can be used to create the actual code, not only the declaration, if that was the idea.<br />\n",
+    "PostedDate": "2013-06-10T10:25:35.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055009",
+    "ThreadId": "446134",
+    "Html": "The proposed feature is exclusively about use of <strong>typeof</strong> in a <em>type</em>. The meaning of <strong>typeof</strong> in an expression wouldn't change. So, you wouldn't actually use the operator in the return statement:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Foo {\n   <span style=\"color:Blue;\">function</span> noConflict(): <span style=\"color:Blue;\">typeof</span> Foo {\n       <span style=\"color:Blue;\">return</span> Foo;\n   }\n}\r\n</pre></div>Think of it this way: In your example there is no type 'Foo', but there <em>is</em> a variable (module) named 'Foo'. The <strong>typeof</strong> operator allows you to obtain the nameless type of that variable.<br />\n",
+    "PostedDate": "2013-06-10T11:28:46.077-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055029",
+    "ThreadId": "446134",
+    "Html": "Ok,, makes sense.\r<br />\n<br />\nBut now I got a question/proposal. Can't this be implicitly resolved at the AST level when the intention clear?\r<br />\n<br />\nWhat I mean is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Foo {\n   <span style=\"color:Blue;\">function</span> noConflict(): Foo {\n       <span style=\"color:Blue;\">return</span> Foo;\n   }\n}\r\n</pre></div>When this code gets compiled, the parser will identify the return of &quot;noConflict&quot; as Foo, and that Foo is not an actual type. If that is not a type, but there is an identifier called &quot;Foo&quot;, what we intended was the &quot;nameless type of the variable&quot;, so the AST implicitly converts Foo to &quot;typeof Foo&quot;.\r<br />\n<br />\nThis could work as well for functions and parameters, so<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> Mapper(key: <span style=\"color:Blue;\">string</span>, value: <span style=\"color:Blue;\">number</span>) {}\n\n<span style=\"color:Green;\">// and use the Mapper as a type implictly converted to typeof Mapper</span>\n<span style=\"color:Blue;\">function</span> map(fn: Mapper) { ... }\r\n</pre></div>If there is ambiguity, like an actual class called Mapper, the compiler can always choose the real type and you would be required to use &quot;typeof Mapper&quot; if that is what you intended.\r<br />\n<br />\nWouldn't this cover most cases where this is needed while making the code cleaner?<br />\n",
+    "PostedDate": "2013-06-10T12:11:08.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058653",
+    "ThreadId": "446134",
+    "Html": "Hi,\r<br />\n<br />\nWas this typeof &lt;module&gt; removed before 0.9 alpha was released or was it changed to something else?\r<br />\n<br />\nIt was working a couple days back, but it is not compiling anymore on the released 0.9 version or in develop branch, giving an error:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Foo {\n   <span style=\"color:Blue;\">function</span> noConflict(): <span style=\"color:Blue;\">typeof</span> Foo;\n}\r\n</pre></div><em>test.ts(2,27): error TS1006: Identifier expected; 'typeof' is a keyword.</em> <br />\n",
+    "PostedDate": "2013-06-19T06:37:51.49-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058749",
+    "ThreadId": "446134",
+    "Html": "We only started implementing the new use of the typeof keyword.\r<br />\n<br />\nI'm not sure what you saw a couple of days ago, but stay tuned for a complete implementation in the next couple of weeks.<br />\n",
+    "PostedDate": "2013-06-19T09:38:50.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083057",
+    "ThreadId": "446134",
+    "Html": "Hi,\r<br />\n<br />\nThe 'typeof' seems working/compiling for me for now. So when I have the following:<br />\n<pre><code>//backbone.d.ts\n declare module Backbone{\n    function noConflict: : typeof Backbone;\n}\n\n//CustomModule.ts\nvar ncBackbone = Backbone.noConflict();</code></pre>\n\nncBackbone works properly and has all the classes, functions, properties, etc.. However, when I try the following:<br />\n<pre><code>/// &lt;reference path=&quot;../backbone.d.ts&quot; /&gt;\n\nvar ncBackbone = Backbone.noConflict();\nmodule CustomModule{\n  export class CustomClass extends ncBackbone.Collection{\n     //Code\n}\n}\n</code></pre>\n\nIt gives an error, underlining ncBackbone: <em>Could not find symbol 'ncBackbone'</em>\r<br />\n<br />\nAm I missing something?\r<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2013-08-21T04:45:09.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083106",
+    "ThreadId": "446134",
+    "Html": "The problem is that 'ncBackbone' isn't itself a module, but just a regular variable, so it isn't possible to use it in a type name position like the 'extends' clause. The unhelpful error message will be more meaningful in the next release of the compiler (the fix is already in the 'develop' branch).<br />\n",
+    "PostedDate": "2013-08-21T06:58:13.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083133",
+    "ThreadId": "446134",
+    "Html": "Thanks. \r<br />\n<br />\nSo, how do we handle such situations, if the expected behavior is to be able to use the new 'ncBackbone' to extend one of it's classes? \r<br />\n<br />\nIf I use the following, that would refer to the older/other version of Backbone:<br />\n<pre><code>/// &lt;reference path=&quot;../backbone.d.ts&quot; /&gt;\n\n      var ncBackbone = Backbone.noConflict();\n      module CustomModule{\n            export class CustomClass extends Backbone.Collection{\n                //Code\n       }\n    }</code></pre>\n\nOR should I be creating another module for ncBackbone, which is a replica of the Backbone module? Then, is there a way to assign ncBackbone module to the noConflict()?\r<br />\n<br />\nI can imagine running into the same problem, in case someone wants to extend one of the Jquery classes in a similar way.\r<br />\nThanks, again.<br />\n",
+    "PostedDate": "2013-08-21T07:50:15.317-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083220",
+    "ThreadId": "446134",
+    "Html": "Ultimately it comes down to being able to use an arbitrary expression (of a constructor function type) in the 'extends' clause. This is something we'd like to allow, but that feature won't make it for 1.0.\r<br />\n<br />\nMeanwhile, for your particular scenario, I think it would all work out if you move the call to 'Backbone.noConflict()' to after your class declarations. That way, when the JavaScript generated for the class declarations executes at initialization time, it will see the most recently initialized Backbone instance and capture the constructor functions from that instance.<br />\n",
+    "PostedDate": "2013-08-21T10:44:52.93-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083643",
+    "ThreadId": "446134",
+    "Html": "Thank you. It works as you said. And wherever we want to use it as a variable, we use ncBackbone, instead.\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-08-22T07:15:07.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

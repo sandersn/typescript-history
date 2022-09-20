@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1038595",
+    "ThreadId": "442357",
+    "Html": "I just wrote my first small project using Typescript and I'm definitely impressed. I came from an Actionscript &amp; Javascript background and I think Typescript is mostly offering a best-of-breed solution, and I can't wait for 0.9 to be ready.<br />\n<br />\nOne minor thing I noticed was the proliferation of this's necessary for accessing instance variables defined in the class. Am I doing something wrong to require all the 'this' references?  Is it by design that only local variables can be accessed without this? If so what is the reason for not inferring class instance scope if no local var exists?<br />\n<br />\nExample:<br />\n<pre><code>module w.x {\n  export class y {\n\n  v1:string;\n  private v2:string;\n  \n   callMe():string { return &quot;x&quot;; }  \n\n   doSomething():void {\n     v3:string;\n     v1 = callMe();  // Wont work, but would in AS3\n     v2 = v1 // wont work, but would in AS3\n     this.v1 = this.callMe()  // works\n     this.v2 = this.v1;  // works\n     v3 = &quot;I dont need this&quot;;   // works\n}\n}}\n</code></pre>\n\nMaybe its just where I am coming from, but it seems a pain to type out all the this's all over the place when I am almost always referencing instance variables of the enclosing class.<br />\n",
+    "PostedDate": "2013-05-02T07:48:36.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038643",
+    "ThreadId": "442357",
+    "Html": "Search the forum, you'll find lots of similar threads :) Where devs moving from as3/java/etc get blind-sided by having to type &quot;this&quot;, and devs coming from JavaScript are like 'yeah? so?' :) there are several long discussions around it.<br />\n",
+    "PostedDate": "2013-05-02T09:05:27.577-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038745",
+    "ThreadId": "442357",
+    "Html": "\r\n<div dir=\"ltr\">Ultimately, to comply with the desire to be a superset of ECMAScript 6, `this` cannot be implied in classes. Just get used to using `this` whenever you want to reference instance members inside of a class. :)</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-05-02T12:55:53.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038747",
+    "ThreadId": "442357",
+    "Html": "Ah yes, that does make sense. It's not a major issue, I was just curious as to the reasoning mostly. So now I will go and harass the ECMAScript 6 folks about it. ;)<br />\n",
+    "PostedDate": "2013-05-02T13:03:45.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062164",
+    "ThreadId": "442357",
+    "Html": "CoffeeScript introduced syntax sugar around this problem:\r<br />\n<br />\n&quot;@foo&quot; is equivalent to &quot;this.foo&quot;.<br />\n",
+    "PostedDate": "2013-06-27T13:35:19.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062573",
+    "ThreadId": "442357",
+    "Html": "Yes, @foo is convenient, and so are a bunch of other things (like &quot;await&quot; support) but we should consider whether TypeScript should deviate too far from the ES6 spec. <br />\n<br />\nCoffeeScript is a <em>new language</em> that is transpiled to JavaScript. Currently, TypeScript is more of a <em>bridge to the future</em> of JavaScript. Do we want it to slowly become CoffeeScript, or something a lot like it? Nope, not in my opinion. I kinda cringe whenever people request features to make TypeScript more like C#.<br />\n",
+    "PostedDate": "2013-06-28T11:10:50.783-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070731",
+    "ThreadId": "442357",
+    "Html": "<strong>blakflag wrote:</strong><br />\n<blockquote>\nAh yes, that does make sense. It's not a major issue, I was just curious as to the reasoning mostly. So now I will go and harass the ECMAScript 6 folks about it. ;)<br />\n</blockquote>\nTalking to the ES6 folks would be pointless since it won't happen, and shouldn't.  Recall that in JavaScript, functions are just objects like anything else.  What do you expect this to do:<br />\n<pre><code>function foo() { bar = 3; }\n\nfunction myclass() { this.bar = 7;  return this; }\n\nfoo();\nconsole.log(bar); // this prints 3, yes?\n\nvar myobj = new myclass();\n\nmyobj.foo();\nbar = 5;\nconsole.log(myobj.bar); // what should this print?  7 or 3?\nconsole.log(bar); // what about this?  5 or 3?</code></pre>\n\nIn order to make functions without this would mean that the function would have to magically change semantics based on which context it was called from.  Yuck.<br />\n",
+    "PostedDate": "2013-07-19T20:14:41.307-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.503-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "__the problem: interface + manual injection__\r\nusing 3rd party frameworks, we quite often are provided object instances to store/process state with.\r\n\r\nto extend these in the typescript fashion, we currently need to create an interface with our state-object's additional metadata, then manually populate these with our new functionality.\r\n\r\n__the solution: \"extends constructor\"__\r\ni  propose adding functionality to let us cast our state-object to a new class, and invoking a class-constructor that encapsulates all the injection code.\r\n\r\nan example of proposed functionality, __which adds more functionality to the extends keyword__ :\r\n```\r\n\r\n//example definition of an extended class (add a \"extends constructor\" to any class)\r\nclass MyClass extends BaseType {\r\n   public someValue : string;\r\n   extends constructor(this, optionalParam=0)\r\n   {\r\n      this.someValue = \"extended the base object\";\r\n   }\r\n   public someMethod(){\r\n      //does stuff\r\n   }\r\n}\r\n\r\n//example usage\r\nvar state : BaseType = getStateFromSomewhere();\r\nvar myExtendedState : MyClass;\r\nmyExtendedState = extends MyClass(state);  //first parameter must be of type BaseType\r\n\r\n\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-10T21:00:00.207-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "extend (existing) object instances via \"extends constructor\" syntax",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 714
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure what problem you're trying to solve. Can you included a more complete example of the problem you're facing.\n\nOne thing I can think of is to define your external objects in a d.ts file as a class and not an interface, than extending those classes using the extends keyword should work as expected.",
+      "PostedDate": "2013-02-11T10:43:52.027-08:00",
+      "Id": 89053
+    },
+    {
+      "Message": "i'm proposing extending __existing (live) object instances__ , not extending the types themselves,  but to take an object instance (of BaseType) and extending that with the functionality found in MyClass\n\nhere is an actual example of how I currently solve the problem, where i extend angularJs $scope instance (type = ng.IScope) with functionality in my ITodoScope.    see the __ITodoScope_Extend()__ method.\n\n\n```javascript\n\n/// <reference path=\"../_all.ts\"/>\n\n\n\n/** namespace for all our app's code */\nmodule todoModule {\n    \"use strict\";\n\n    export interface ITodoItem {\n        text: string;\n        done: bool;\n    }\n    export class TodoItem implements ITodoItem {\n        constructor(public text: string, public done: bool) { }\n    }\n\n    export interface ITodoScope extends ng.IScope {\n        todos: ITodoItem[];\n        addTodo(): void;\n        todoText: string;\n        remaining(): number;\n        archive(): void;\n        controller: TodoControllerClass;\n    }\n    /** \n    extend an instance of ng.IScope with our variables/functions needed for ITodoScope\n    this method acts as a psudo-constructor, adding the needed initialization logic to make this extending of the base class occur \n    @returns the input ng.IScope, cast to our ITodoScope type\n    */\n    function ITodoScope_Extend($scope: ng.IScope,\n        /** reference to the scope's parent controller.  not needed right now, but seems like a good pattern to have \"just in case\" */\n        controller: TodoControllerClass): ITodoScope {\n        //cast the input scope to our extended type, so we can (type)safely add our extended functionality\n        var _this = <ITodoScope>$scope;\n\n        //construct our extended functionality\n        {\n            _this.todos = [{ text: \"learn angular\", done: true }, { text: \"build an angular app\", done: true }, { text: \"convert todo code to Typescript!\", done: false }]; //populate with initial (sample) values\n            _this.todoText = \"\";\n\n            _this.addTodo = () => {\n                _this.todos.push({ text: _this.todoText, done: false });\n            };\n\n            _this.remaining = () => {\n                var count = 0;\n                angular.forEach(_this.todos, (todo) => {\n                    count += todo.done ? 0 : 1;\n                });\n                return count;\n            }\n            _this.archive = () => {\n                var oldTodos = _this.todos;\n                _this.todos = [];\n                angular.forEach(oldTodos, (todo) => {\n                    if (!todo.done) {\n                        _this.todos.push(todo);\n                    }\n                });\n            }\n        }\n        //add a reference back to the controller (parent), just in case it's ever needed\n        _this.controller = controller;\n        return _this;\n    }\n\n\n\n    /** our caller, as a class instead of a simple method as shown in the tutorial \n\tthe pattern for this was taken from the angular+typescript todoMVC, the main changes are:\n\t1) inside a module (todoModule)\n\t2) use a class (TodoControllerClass)\n\t3) use an IoC injector to bind our view \n\t*/\n    export class TodoControllerClass {\n\n\n        /** IoC injection for binding our controller to the view during application load.  \n        should have same number of arguments as our controller's constructor, plus the Type of our Controller\t\t\n\t\t*/\n        public injection(): any[] {\n            return [\n                /** name of scope that our HTML injection {{$scope}} must refer to */\n                '$scope',\n                /** type of our controller, so the IoC can construct it) */\n\t\t\t\tTodoControllerClass\n            ]\n        }\n\n        constructor(\n            /** the scope of this controller (bound to the view) \n            this is a ng.IScope\n            */\n            $ngScope: ng.IScope) {\n            //we extend the ngScope, cast it to ITodoScope, and return it\n            this.$scope = ITodoScope_Extend($ngScope, this);\n        }\n        public $scope: ITodoScope;\n\n\n    }\n    /** create the application, stored as a local variable for no real reason */\n    var todoMvcApp = angular.module(\n/** the name of this application, used in the view for ng-app */\n\t\t'todoMvcAppRoot', [])\n/** specify the controller for the html-view, and set it up via IoC injection */\n\t\t\t\t.controller('todoControllerScope', TodoControllerClass.prototype.injection());\n    //other directives can be added too, see http://docs.angularjs.org/api/angular.module\n    //.directive('todoBlur', TodoBlur.prototype.injection())\n    //.directive('todoFocus', TodoFocus.prototype.injection())\n    //.service('todoStorage', TodoStorage.prototype.injection());\n}\n\n```\n",
+      "PostedDate": "2013-02-12T00:59:21.04-08:00",
+      "Id": 89081
+    },
+    {
+      "Message": "Thanks for the suggestion. Assigning to Jon who manages our suggestions.",
+      "PostedDate": "2013-02-13T11:00:40.707-08:00",
+      "Id": 89205
+    },
+    {
+      "Message": "I agree with novaleaf, this is a common JS library pattern, and definitely needed.\n\nDefining the external objects as classes in a d.ts file is not a solution, because the constructor of the extended object will never run.\n\nHere's an example from the AngularJS lib: in a controller, you get an object (called \"$scope\") that implements some interface. You're supposed to extend that object by adding properties (both methods and fields) to it, so that your view can reference them. ",
+      "PostedDate": "2013-02-26T14:09:41.53-08:00",
+      "Id": 91604
+    },
+    {
+      "Message": "This is probably not a solution for all use cases for this, but for the AngularJS $scope use case I found a pretty elegant solution using the existing features of TypeScript leveraging its special flavor of \"static duck typing\":\n```\n// Interface definition for AngularJS scope object\ninterface IScope {\n    $apply(): any;\n    // ...\n}\n\n// Interface definition for my local scope object with statically typed data model\ninterface IMyModelScope extends IScope {\n    // note the \"?\" markers to mark the data model properties optional -\n    // this allows an IScope instance to be assigned to a IMyModelScope typed \n    // varible via duck typing even when the extended properties don't exist yet\n    modelProp1?: number;\n    modelProp2?: string;\n    modelFunc1?(): string;\n}\n\nvar app = angular.module(\"myApp\");\napp.controller(\"myCtrl\", [\"$scope\", function($scope: IMyModelScope) {\n    $scope.modelProp1 = 42;\n    $scope.modelProp2 = \"foobar\";\n    $scope.modelFunc1 = () => \"Hello from modelFunc1\";\n}]);\n```\n\nThis way all you have to do to get static type checking for your data model is creating a simple interface.",
+      "PostedDate": "2014-05-27T06:09:51.773-07:00",
+      "Id": 148007
+    },
+    {
+      "Message": "I'm thinking \"extends\" may not be a good name to use though - may be confusing to some.  The object would fail an \"instanceOf\" test, though it was \"extended\".  Perhaps \"implements\" is better, or something else.",
+      "PostedDate": "2014-05-27T09:54:53.06-07:00",
+      "Id": 148035
+    },
+    {
+      "Message": "fyi, my workaround is mostly like what Aegon wrote, though the partial constructor is encapsulated for reuse:\n\n```\ninterface IMyModelScope extends IScope {\n    // note the \"?\" markers to mark the data model properties optional -\n    // this allows an IScope instance to be assigned to a IMyModelScope typed \n    // varible via duck typing even when the extended properties don't exist yet\n    modelProp1?: number;\n    modelProp2?: string;\n    modelFunc1?(): string;\n}\nfunction IMyModelScope_Constructor(baseInstance:IScope){\n    baseInstance.modelProp1 = 42;\n    baseInstance.modelProp2 = \"foobar\";\n    baseInstance.modelFunc1 = () => \"Hello from modelFunc1\";\n} \n```",
+      "PostedDate": "2014-05-27T19:26:29.79-07:00",
+      "Id": 148087
+    },
+    {
+      "Message": "oops forgot, at the end of the __IMyModelScope_Constructor()__ method, return the baseInstance cast as IMyModelScope.\n\n",
+      "PostedDate": "2014-05-27T19:27:34-07:00",
+      "Id": 148088
+    },
+    {
+      "Message": "BTW, couldn't language level support for proxies in ECMAScript 6 be leveraged to achieve something similar? ",
+      "PostedDate": "2014-06-04T02:08:56.707-07:00",
+      "Id": 148798
+    }
+  ]
+}

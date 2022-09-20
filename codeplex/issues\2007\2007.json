@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.707-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "In lib.d.ts, created ‎02 ‎December ‎2013, ‏‎11:55:48, installed in folder C:\\Program Files\\Microsoft Visual Studio 12.0\\Common7\\IDE\\CommonExtensions\\Microsoft\\TypeScript\\0.9.\r\n\r\ninterface Element extends Node, NodeSelector, ElementTraversal {\r\n...\r\n}\r\n\r\ndoes not have property id: string. Rather the id property is defined in derived classes HTMLElement and SVGElement. MDN documentation (at https://developer.mozilla.org/en/docs/Web/API/Element) says id is a property of the Element interface.\r\n\r\nThis is an issue in TS 0.9.5 because following is now flagged as an error \"property 'id' does not exist on value of type 'EventTarget'\" :\r\n```\r\nevt: JQueryEventObject;\r\nevt.target.id;\r\n```\r\n\r\nAn additional change is then required to jquery.d.ts (which I'll do thru DefinitelyTyped) so that\r\ninterface BaseJQueryEventObject does not extend Event but includes all the Event attributes explicitly so that properties: target and currentTarget can be typed as Element as per jQuery API.\r\nThis was originally raised on DefinitelyTyped by PiranhaGreg (https://github.com/borisyankov/DefinitelyTyped/issues/856).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-11T10:11:09.437-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Request for change to Element interface in lib.d.ts",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2007
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. It does look like that property should be moved around.",
+      "PostedDate": "2013-12-12T11:37:16.33-08:00",
+      "Id": 127153
+    },
+    {
+      "Message": "Assigning to Jonathan as a suggestion for now. The current typings are correct for IE11 which is how we currently generate lib.d.ts typings. Will need to think about browser discrepancies going forward.",
+      "PostedDate": "2013-12-20T16:47:19.447-08:00",
+      "Id": 128206
+    },
+    {
+      "Message": "Restricting ourselves to discussion of the definition of the Element interface in lib.d.ts here:\n\n1. Both HTMLElement and SVGElement have the property __id: string__.\n2. In lib.d.ts, both derive from the Element base class which represents the common behaviour of a DOM element.\n3. Element is, in effect, an abstract base class. As far as I can see, you can only instantiate a DOM element as a HTMLElement or SVGElement.\n4. It is useful to be able to handle the common behaviour of a DOM element (whether HTMLElement or SVGElement) in code by using as type Element.\n5. The id property is always in scope for a DOM element and should be in the common base class.\n\nThis is true in IE10 and IE11. I don't see it as a browser issue. But please enlighten me if I've missed something.",
+      "PostedDate": "2013-12-22T13:03:45.163-08:00",
+      "Id": 128273
+    }
+  ]
+}

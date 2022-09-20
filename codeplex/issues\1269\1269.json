@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Special casing the Event class is not the right solution here and breaks the type-safety on the consumer side in a very subtle way.\n\nYou can opt-out of the type-checking here by casting the result of the document.createEvent call to 'any'.\n````\nfunction fireL10nReadyEvent(lang) {\n\tvar evtObject : any = document.createEvent('Event');\n\tevtObject.initEvent('localized', true, false);\n\tevtObject.language = lang;\n\tdocument.dispatchEvent(evtObject);\n} \n````",
+    "ClosedDate": "2013-06-28T12:14:24.907-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "It is a somewhat admited practice on the web to create custom events by creating instances of Event (instead of CutomEvent which was supposed to be here for that and that very few people care about) and adding custom properties [1].\r\nThis is not accepted by the TS compiler. The following raises an error\r\n\r\n  function fireL10nReadyEvent(lang) {\r\n    var evtObject = document.createEvent('Event');\r\n    evtObject.initEvent('localized', true, false);\r\n    evtObject.language = lang;\r\n    document.dispatchEvent(evtObject);\r\n  }\r\n\r\nCould it be considered to loosen a bit the compiler here and follow the tide?\r\n\r\n[1] https://github.com/fabi1cazenave/webL10n/blob/b18c753c6fe81e733d86660d421ace7a7880e90f/l10n.js#L111-L116",
+    "LastUpdatedDate": "2013-06-28T12:14:24.907-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-28T07:16:41.773-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Tolerance for custom props on an Event object",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1269
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

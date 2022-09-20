@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1138104",
+    "ThreadId": "474856",
+    "Html": "I saw someone already asked about this in some discussion or issue but can't find it, so I start the new one.\r<br />\n<br />\nNow the inheritance of classes applies inheritance for static fields too. So any derived class have same static fields as base class. Another words, if <code>B</code> is a class with static field <code>s</code>, and <code>D</code> is a class derived from the <code>B</code> then it have static field <code>s</code> with exactly same type.\r<br />\n<br />\nIt looks reasonable but it in case of JavaScript it produce a lot of problems.\r<br />\n<br />\nLet's look at <code>__extends</code> function that is used by TS:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> __extends = <span style=\"color:Blue;\">this</span>.__extends || <span style=\"color:Blue;\">function</span> (d, b) {\n    <span style=\"color:Blue;\">for</span> (<span style=\"color:Blue;\">var</span> p <span style=\"color:Blue;\">in</span> b) <span style=\"color:Blue;\">if</span> (b.hasOwnProperty(p)) d[p] = b[p];\n    <span style=\"color:Blue;\">function</span> __() { <span style=\"color:Blue;\">this</span>.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = <span style=\"color:Blue;\">new</span> __();\n};\r\n</pre></div>So when we extend some class we copy all the static fields of base class to derived.\r<br />\nTo keep type checking valid it produce the constraint that static fields of base classes can't change the type in derived class. So this code is not valid:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> B {\n  <span style=\"color:Blue;\">static</span> create(): B;\n}\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> D <span style=\"color:Blue;\">extends</span> B {\n  <span style=\"color:Blue;\">static</span> create(a: <span style=\"color:Blue;\">number</span>): D;\n}\r\n</pre></div><em>Class 'D' cannot extend class 'B': Types of static property 'create' of class 'D' and class 'B' are incompatible: Call signatures of types '(a: number) =&gt; D' and '() =&gt; B' are incompatible: Call signature expects 0 or fewer parameters.</em>\r<br />\n<br />\nBut this use case used for many JS libraries/frameworks.\r<br />\nC# also allow to create overloads for static methods in derived classes.\r<br />\n<br />\nI think TS should not copy static fields of base class object into derived class object.\r<br />\nOf course, it will produce that <code>typeof D</code> become incompatible with <code>typeof B</code>. But it can be so anyway, because signature of <code>new</code> can be different!\r<br />\n<br />\nSo I can't see any reason why static fields should be derived from base class. Developer always know what the base class of its class and know how to call any static member by using base class name.\r<br />\n<br />\nTo designers/developers of TS: please see how many errors it produced in DefinitelyTyped. It was worked in 0.9.1 and become not working in 0.9.5. For example <a href=\"https://travis-ci.org/Igorbek/DefinitelyTyped/builds/15669835#L249\" rel=\"nofollow\">error in three.js</a>. Base class <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/switch-0.9.5/threejs/three.d.ts#L5177-L5182\" rel=\"nofollow\"><code>Curve</code> have static field <code>Utils</code></a> and its derived class <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/switch-0.9.5/threejs/three.d.ts#L5489-L5506\" rel=\"nofollow\"><code>Shape</code> also have <code>Utils</code> with different structure</a>. So how we can describe it correctly?<br />\n",
+    "PostedDate": "2013-12-18T23:59:08.513-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1138109",
+    "ThreadId": "474856",
+    "Html": "I've found <a href=\"https://typescript.codeplex.com/discussions/448658\" rel=\"nofollow\">discussion described same problem</a>.<br />\n",
+    "PostedDate": "2013-12-19T00:10:43.793-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1140920",
+    "ThreadId": "474856",
+    "Html": "Is anybody from TS team will answer to me?<br />\n",
+    "PostedDate": "2013-12-23T09:49:27.127-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1141037",
+    "ThreadId": "474856",
+    "Html": "I'm totally agree for Igorbek's proposal.\r<br />\n<br />\nDerived class inherit static member is not as common as JavaScript.\r<br />\nI had also thought of the inheritance mechanism that's as follows until you see the language specification.<br />\n<pre><code>var __extends = this.__extends || function (d, b) {\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};</code></pre>\n\nTypeScript can't access from non-static member to static member by keyword. (e.g. this.staticMember(); in non-static member\r<br />\nI used access to static member through the Base class name.<br />\n",
+    "PostedDate": "2013-12-23T18:51:58.073-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1141082",
+    "ThreadId": "474856",
+    "Html": "Thanks a lot @vvakame!\r<br />\nIn order to vote for proposal I created <a href=\"https://typescript.codeplex.com/workitem/2047\" rel=\"nofollow\">the work item</a>.\r<br />\nPlease vote if you support me.<br />\n",
+    "PostedDate": "2013-12-24T01:37:40.45-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1142375",
+    "ThreadId": "474856",
+    "Html": "I am also generally in agreement with the views on this thread.\r<br />\n<br />\nIf I understand the position correctly, with respect to inheritance there should be no difference between static and instance methods.\r<br />\n<br />\nHowever, when the base type has a property whose value is an object, the __extends copies a reference to that property, which is not the case when the property is a primitive:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n    <span style=\"color:Blue;\">class</span> Base { \n        <span style=\"color:Blue;\">static</span> obj = { val: <span style=\"color:#A31515;\">&quot;foo&quot;</span> };\n        <span style=\"color:Blue;\">static</span> val = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n        obj = { val: <span style=\"color:#A31515;\">&quot;foo&quot;</span> };\n        val = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n    }\n\n    <span style=\"color:Blue;\">class</span> Derived <span style=\"color:Blue;\">extends</span> Base { }\n\n    <span style=\"color:Blue;\">var</span> sut = <span style=\"color:Blue;\">new</span> Derived();\n\n       <span style=\"color:Green;\">// Act: Change values</span>\n        Base.obj.val = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        Base.val = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        sut.obj.val = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        sut.val = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n\n        <span style=\"color:Green;\">// Assert</span>\n       areEqual(<span style=\"color:#A31515;\">&quot;bar&quot;</span>, sut.obj.val, <span style=\"color:#A31515;\">&quot;Instance object references should refer to the base&quot;</span>);\n       areEqual(<span style=\"color:#A31515;\">&quot;bar&quot;</span>, sut.val, <span style=\"color:#A31515;\">&quot;Instance primitive values should refer to the base&quot;</span>);\n       areEqual(<span style=\"color:#A31515;\">&quot;bar&quot;</span>, Derived.obj.val, <span style=\"color:#A31515;\">&quot;Static object references should refer to the base&quot;</span>);\n       areEqual(<span style=\"color:#A31515;\">&quot;foo&quot;</span>, Derived.val, <span style=\"color:#A31515;\">&quot;Static primitive values should contain the value at declaration.&quot;</span>);\r\n</pre></div>I don't really like the fact that changing <code>Base.obj.val</code> also changes <code>Derived.obj.val</code>, but changing <code>Base.val</code> has no impact on <code>Derived.val</code><br />\n",
+    "PostedDate": "2013-12-26T09:12:21.037-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144035",
+    "ThreadId": "474856",
+    "Html": "I've updated the issue [ <a href=\"https://typescript.codeplex.com/workitem/2047\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2047</a> ] tracking this with the latest outcome of investigations into addressing this.<br />\n",
+    "PostedDate": "2013-12-30T14:48:07.2-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

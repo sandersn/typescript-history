@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-30T12:27:32.4-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I would expect the following code not to compile:\r\n\r\n```\r\nclass MyEvent {};\r\n\r\nfunction Listen<T>(c: { new (): T}, callback: (e : T) => void) {\r\n};\r\n\r\nListen(MyEvent, function () { });\r\n\r\n```\r\nThe function \"Listen\" expects to take a class (something that has a constructor returning T) and a callback that takes a T and returns void. Calling it without a function that does not take any arguments compiles fine.\r\n\r\nStrangely; if I change the return type and violate it, I do get an error:\r\n\r\n```\r\nclass MyEvent {};\r\n\r\nfunction Listen<T>(c: { new (): T}, callback: (e : T) => number) {\r\n};\r\n\r\nListen(MyEvent, function () { return \"test\"; });\r\n```\r\n\r\nThis correctly errors because \"test\" is not a number; but the compile error even seems to mention that the arguments are incorrect. However; changing the returned string to a number successfully compiles again.\r\n\r\nSo it seems that the generic type is being compared to the return type of the function; but the arguments are not correctly being checked?",
+    "LastUpdatedDate": "2014-05-31T07:10:35.913-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-30T11:22:07.1-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic type args don't correctly apply to callback arguments (but do to their return values)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2533
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This actually is not related to generics, it's just a symptom of function arguments being covariant. Note this has no errors:\n\n```TypeScript\nclass MyEvent {};\n\nfunction Listen(c: { new (): MyEvent}, callback: (e : MyEvent) => void) {};\n\nListen(MyEvent, function () { })\n```\n\nReturn types are not covariant which is why you get an error when the callback function implementation returns a type that's incompatible with the signature.",
+      "PostedDate": "2014-05-30T12:27:28.663-07:00",
+      "Id": 148414
+    },
+    {
+      "Message": "This may be closely related: https://typescript.codeplex.com/workitem/988\n\nI'm guessing this is by design.  Like Ryan said in the linked post, \"Callback typings should be read from the consumption side.\"  If you pass in a value to the parameter, your callback signature states it doesn't care about the return type, or even if the argument value is actually ever used, so its perfectly valid JS code.",
+      "PostedDate": "2014-05-30T12:28:20.133-07:00",
+      "Id": 148415
+    },
+    {
+      "Message": "I'm slightly confused still; the following code also compiles:\n\n```\nclass MyEvent { a: number };\n\nfunction Listen<T>(c: { new (): T}, callback: (e : T) => void) {};\n\nfunction a(e: string) {};\n\nListen(MyEvent, a);\n```\n\nThe callback is supposed to take the same type that was passed in as the first argument; but this compiles fine (and the a function does not take a MyEvent, it takes a string).\n\nIs there no protection against this?",
+      "PostedDate": "2014-05-31T07:10:35.913-07:00",
+      "Id": 148456
+    }
+  ]
+}

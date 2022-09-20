@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1202613",
+    "ThreadId": "528905",
+    "Html": "When I use code like this:<br />\n<pre><code>class A {\n    constructor(b: B) {\n        for (var i = 0; i &lt; 10; i++) {\n            var elem: HTMLElement = $(&quot;&lt;div&gt;&quot; + i + &quot;&lt;/div&gt;&quot;)[0];\n            var handler = b.bar.bind(b, i);\n            elem.onclick = () =&gt; handler();\n            $(&quot;body&quot;).append(elem);\n        }\n    }\n}\nclass B {\n    bar(foo:string) {\n        console.log(foo);\n    }\n}\n\nvar a = new A(new B());</code></pre>\n\nthe console always logs 9 no matter where I click. I have no clue why this is happening, how can i get a seperate value into each clickevent?<br />\n",
+    "PostedDate": "2014-02-04T11:01:25.137-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202693",
+    "ThreadId": "528905",
+    "Html": "You're assigning a handler to elem.onclick, not adding one, so it's simply overwriting the previous handler each time through the loop. You need to use something that adds multiple event handlers like addEventListener.<br />\n",
+    "PostedDate": "2014-02-04T14:55:44.737-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-02-04T15:27:44.567-08:00"
+  },
+  {
+    "Id": "1202699",
+    "ThreadId": "528905",
+    "Html": "<pre><code>class A {\n    constructor(b: B) {\n        for (var i = 0; i &lt; 10; i++) {\n            var elem: HTMLElement = $(&quot;&lt;div&gt;&quot; + i + &quot;&lt;/div&gt;&quot;)[0];\n            elem.addEventListener(&quot;click&quot;, b.bar.bind(b, i));\n            $(&quot;body&quot;).append(elem);\n        }\n    }\n}\nclass B {\n    bar(foo:string) {\n        console.log(foo);\n    }\n}\nvar a = new A(new B());</code></pre>\n\nYou were right, this works. Thanks.<br />\n",
+    "PostedDate": "2014-02-04T15:27:35.423-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

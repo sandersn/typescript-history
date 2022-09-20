@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:33:16.787-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I encountered this problem this morning and found the answer on Stack Overflow here: http://stackoverflow.com/q/20500190/761388\r\n\r\nSince the issue doesn't appear to have been raised here I thought I'd copy-paste the contents of that question for visibility (and since the answer works around an issue in TS 0.9.5 as far as I can tell).\r\n\r\nAlex Dresko said:\r\n\r\nThis very playground link used to work before TS 0.9.5 and now I can't figure out how to make it work for the life of me.\r\n\r\nhttp://www.typescriptlang.org/Playground/#src=window.onerror=%20function%28eventOrMessage%3a%20any,%20source%3a%20string,%20fileno%3a%20number%29%7B%0A%09//%20place%20your%20body%20here%20%0A%7D;\r\n\r\nEssentially:\r\n\r\n```ts\r\nwindow.onerror= function(eventOrMessage: any, source: string, fileno: number){\r\n    // place your body here \r\n};\r\n```\r\n...returns an error:\r\n\r\n```\r\nError 8 Cannot convert '(eventOrMessage: any, source: string, fileno: number) => void' to 'ErrorEventHandler': Call signatures of types '(eventOrMessage: any, source: string, fileno: number) => void' and 'ErrorEventHandler' are incompatible.\r\n```\r\n\r\n@steve_fenton shared this solution:\r\n\r\nThis looks like a bug in lib.d.ts to me (and possibly even the compiler) - because they have changed the definition of ErrorEventHandler in the latest branch.\r\n\r\nIn 0.9.5 it is:\r\n\r\n```ts\r\ninterface ErrorEventHandler {\r\n    (event: Event, source: string, fileno: number, columnNumber: number): void;\r\n    (message: any, uri: string, lineNumber: number, columnNumber?: number): boolean;\r\n}\r\n```\r\n\r\nBut in the master branch it is:\r\n\r\n```ts\r\ninterface ErrorEventHandler {\r\n    (event: Event, source: string, fileno: number, columnNumber: number): void;\r\n}\r\n```\r\n\r\nIn the meantime, you could use the following hack (or edit your lib.d.ts file to update it).\r\n\r\n```ts\r\ninterface TempErrorEventHandler {\r\n    (event: Event, source: string, fileno: number, columnNumber: number): void;\r\n}\r\n\r\nvar test1: TempErrorEventHandler =\r\n    function (event: Event, source: string, fileno: number, columnNumber: number): void {\r\n\r\n    }\r\n\r\nwindow.onerror = <ErrorEventHandler> test1;\r\n```\r\n@basarat shared this solution:\r\n\r\nAs Steve fenton mentioned. Alternatively you can use the common signature between the two functions:\r\n\r\n```ts\r\nwindow.onerror= function(eventOrMessage: any, source: string, fileno: number, colnumber?:number):any{\r\n    // place your body here \r\n};\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-02T07:29:26.947-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "window.onerror with TS 0.9.5 problem",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2062
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Is this any different from https://typescript.codeplex.com/workitem/1570\n",
+      "PostedDate": "2014-01-02T07:43:53.983-08:00",
+      "Id": 128854
+    },
+    {
+      "Message": "I believe so @nabog.  The ```ErrorEventHandler``` interface was changed with TS 0.9.5 and that's the cause of this issue.  ",
+      "PostedDate": "2014-01-02T08:14:26.807-08:00",
+      "Id": 128856
+    },
+    {
+      "Message": "thanks for reporting, we're taking a look. A simpler workaround around seems to be is to add a 'return true' statement at the end of your function body.",
+      "PostedDate": "2014-01-02T12:08:24.067-08:00",
+      "Id": 128887
+    }
+  ]
+}

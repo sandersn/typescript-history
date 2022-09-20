@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "If I am understanding correctly this is by design. By having a top level export in foo.ts you have declared that it is an external module. This means non-exported members are not visible outside the file (like IPoint) while exported members need to be used via an import statement, not a triple slash reference. If your second file says:\n\n/// <reference path='foo.ts'/>\nvar x: Foo;\n\nthen you will get that error you saw. But if you use this:\n\nimport a = require('foo');\nvar x: a.Foo;\n\nthen it will work as you expected. The difference between internal/external modules and these reference styles are common sources of confusion for folks new to the JavaScript world.",
+    "ClosedDate": "2013-08-22T12:28:19.29-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "If I have\r\n\r\nfoo.ts:\r\n\r\n```\r\ninterface IPoint {\r\n    getDist(): number;\r\n}\r\n\r\nexport interface Foo {\r\n}\r\n```\r\n\r\nI cannot use either interface from foo.ts anywhere, \"could not find symbol IPoint\". And Visual Studio does not report any error. \r\n\r\nRunning TSC manually tells me I'm doing it wrong though. \r\n\r\nAnd by removing \"export\" the interfaces are being picked up as they should.",
+    "LastUpdatedDate": "2013-08-22T12:28:19.29-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T05:45:33.72-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Declaring an interface with exports causes Visual Studio to silently miss that file.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1563
+  },
+  "FileAttachments": [
+    {
+      "FileId": 720401,
+      "FileName": "SilentErrorOnExports.zip_extension",
+      "DownloadUrl": ".\\720401"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Can you provide more details or attach a project?  Using the code you show above, I see no error accessing either interface or its members.  For example, the below works fine, I get intellisense for both interfaces, no compile errors, etc...\n\n```typescript\ninterface IPoint {\n    getDist(): number;\n}\n\nexport interface Foo {\n    x: string;\n}\n\nvar a: IPoint;\na.getDist();\n\nvar b: Foo;\nb.x;\n```\n\nPlease include more details to help us understand the issue and then reopen the issue so it shows back up in our queries.  Thanks!",
+      "PostedDate": "2013-08-22T09:27:33.74-07:00",
+      "Id": 110747
+    },
+    {
+      "Message": "forgot to mention, the code using the interfaces should be in another file",
+      "PostedDate": "2013-08-22T11:16:39.673-07:00",
+      "Id": 110773
+    },
+    {
+      "Message": "trying to attach a file ",
+      "PostedDate": "2013-08-22T11:18:20.583-07:00",
+      "Id": 110775
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 08/22/2013 9:28AM",
+      "PostedDate": "2013-08-22T09:28:01.96-07:00",
+      "Id": 110776
+    }
+  ]
+}

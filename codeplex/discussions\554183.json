@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1277804",
+    "ThreadId": "554183",
+    "Html": "First I would like to say that I don't want to overwhelm those who are diligently making TypeScript a reality. I really appreciate this project. I also believe TypeScript is the future. \r<br />\n<br />\nThe company that I work for deals with a lot of data. In order to deal with this need we built a DbContext (Entitites in C#) for javascript. We also built Queryables (Linq in C#) backed by Expressions Trees for javascript. This has been very useful, and all of our programs today are using this technology. The problem is that today our syntax for this is a bit wonky. Here is what the syntax looks like today.<br />\n<pre><code>dbContext.people.asQueryable().filter(function(e){\n    return e.property(“firstName”).isEqualTo(“Jared”);\n});</code></pre>\n\nIt gets worse with “AND”s and “OR”s.<br />\n<pre><code>dbContext.people.asQueryable().filter(function(e){\n    return e.and(e.property(“firstName”).isEqualTo(“Jared”),  e.property(“lastName”).isEqualTo(“Barnes”));\n});</code></pre>\n\nOur wish is that we could have the filter function look like we were acting on local data with Array.prototype.filter.<br />\n<pre><code>dbContext.people.asQueryable().filter(function(person: Person){\n    return person.firstName == “Jared” &amp;&amp; person.lastName == “Barnes”;\n});</code></pre>\n\nOr even better would be.<br />\n<pre><code>dbContext.people.asQueryable().filter((person: Person) =&gt; {\n    return person.firstName == “Jared” &amp;&amp; person.lastName == “Barnes”;\n});</code></pre>\n\nSo here is what I would propose to answer this problem in TypeScript. I would like feedback and open discussion about this. I don’t think that I have all the answers, so please tell me if I’m completely misguided. \r<br />\n<br />\nI like the idea that we could have a get Property on a function that would return the expression tree representing the function. If we do this, we have the function that could be used to filter local arrays as well as the expression tree (Abstract Syntax Tree) to filter remote data. Here is how it would look.<br />\n<pre><code>var fn = (person: Person) =&gt; {\n    return person.firstName == “Jared”;\n};\n\n// Now I can turn this into anything I want. Odata, SQL you name it.\nvar expressionTree = fn.expression; \n\nsomeArray.filter(fn);\ndbContext.people.asQueryable().filter(fn).toArray().then((array)=&gt;{\n    // Do somthing.\n});\n</code></pre>\n\nThe problem with this approach is that every function would be unnecessarily bloated with this Expression Tree. My thought was maybe we could create a syntax for Lamda Expressions. That way would could only have the bloat if its necessary.<br />\n\r<br />\nShould the syntax be like C#’s?<br />\n<pre><code>person:Person =&gt; person.firstName == “Jared”;</code></pre>\n\nI have already hacked the ArrowFunctionExpression to do it for or company today. But I think that it would be better if I had more feedback on how others would like it. I also don’t want to have it on the ArrowFunctionExpression because I find myself using this because its a better way to describe a function anyways. \r<br />\n<br />\nOn a deeper note this is how its compiled today for us.\r<br />\n<br />\nTypescript:<br />\n<pre><code>var fn = (person: Person) =&gt; { \n    return person.firstName == “Jared”;\n};\n</code></pre>\n\nJavascript:<br />\n<pre><code>var fn = (function(){\n\n    var _fn = function(person){\n        return person.firstName == “Jared”;\n    };\n\n    var _scopeInspector = function(variableName){\n        return eval(variableName);\n    };\n\n    // The ExpressionTree needs a way to access\n    // scoped variables found in the expression tree.\n    // This is why we are using the evil eval.\n    // expressionJSON is generated from the AST during compilation.\n    var expTree = new ExpressionTree(_scopeInspector, expressionJSON );   \n\n    Object.defineProperty(_fn, “expression”, {\n        get: function(){\n            return expTree;\n        }\n    });\n\n    return _fn;\n}());\n</code></pre>\n\nIf you made it this far, thank you for reading. \r<br />\n<br />\nAnd please share your ideas.<br />\n",
+    "PostedDate": "2014-07-25T11:03:29.23-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1277839",
+    "ThreadId": "554183",
+    "Html": "The primary issues with this off the bat are it violates a couple core principles we generally try to hold to. Namely, we try to avoid adding expression level syntax that could conflict with future versions of JavaScript and we want to emit idiomatic JavaScript that is easily understood by looking at the source TypeScript. That said, we have certainly had a lot of requests for some form of runtime type information and obviously it is valuable in many other languages. Note that we're on GitHub now and you'll get a lot more eyes on suggestions like this there.<br />\n",
+    "PostedDate": "2014-07-25T13:42:59.19-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1277843",
+    "ThreadId": "554183",
+    "Html": "Thanks<br />\n",
+    "PostedDate": "2014-07-25T13:55:54.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

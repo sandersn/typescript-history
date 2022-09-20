@@ -1,0 +1,100 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "It seems like this is more of a question than a bug - please follow up on the discussion forums if you have questions about behavior around 'this', or stackoverflow if it's more of a general JQuery problem.\n\nTypeScript will not be changing how 'this' works - it is completely constrained by existing JavaScript compat and the ES6 design proposal for =>.",
+    "ClosedDate": "2012-11-05T17:32:51.477-08:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "Okay, so in a basic scenario the compiler is grabbing a reference to this and setting _this to it and working. But how about this... I have a function/class that is a view model. It has several functions defined on it that are called with a click event. The \"this\" in those functions is not correct, thus I'd usually store this from the outer function in that and use that.vars to get to the right object. Except in TypeScript it doesn't work in a class... Case in point, take the above scenario, place a $.ajax call inside that clicked function. Put a this.whatever from your view model in the success call in the ajax method. The _this gets defined at the click function's scope level and therefore you're not operating on your view model anymore. You're operating on whatever the clicked function's this is, which is not at all what you want.\r\n\r\nPlease for the love of all that's good, fix this ASAP. TS is going to be unusable without it.",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-14T03:59:31.663-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Scoping of this, _this is completely hosed.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 248
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you add some sample code so I'm sure I know exactly what you're talking about?",
+      "PostedDate": "2012-10-14T17:15:18.98-07:00",
+      "Id": 79717
+    },
+    {
+      "Message": "Are you expecting that you should be able to take existing functions and wrap them in a TypeScript class and expect them to still work as they did outside of the class?  That's what I read from your description.  I don't think that's the promise they're making of not interfering with existing code.  They're just saying that if the code is unmodified javascript and doesn't use any TS features, then the resulting javascript should be unchanged.\n\nIt sounds to me like you're doing part of a conversion to TypeScript mechanisms, but not all the required refactoring to make it work as you expect.\n\nI do recognize the secondary issue for callbacks that a type for `this` is incorrectly assumed and, as far as I can tell, unspecifiable.",
+      "PostedDate": "2012-10-17T13:03:52.587-07:00",
+      "Id": 80268
+    },
+    {
+      "Message": "I'm just expecting to be able to grab this from the correct context and use it without worrying about it changing into something else. The issue is a nested context where we have this defined in the outer block and two blocks inside each other inside that outer block with the inner block referencing the this of the outer block. JavaScript makes this in the middle equal to the clicked object and TS is inferring the this from that instead of the outer class...\n\nSo the pseudo code looks like this... I'll send a sample if I find some time.\n\nmodule ui {\n  export class whatever {\n    myvar: string;\n    someThingClicked(evt) {\n      evt.preventDefault();\n      $.ajax({ opts }).done(function(xhr) {\n          this.myvar = someval;\n      });\n    }\n  }\n}\n\nso the this in this example is resolving to inside the someThingClicked instead of inside the class. This is the problem.",
+      "PostedDate": "2012-10-17T19:27:47.107-07:00",
+      "Id": 80302
+    },
+    {
+      "Message": "This is a fundamental aspect of the DOM API... I'm not sure it's within TS scope to mess with expected behaviour. That said, use an ArrowFunction and bind your handler...\n\nmodule ui {\n  export class whatever {\n    myvar: string;\n    someThingClicked(evt) {\n      evt.preventDefault();\n      $.ajax({ opts }).done((xhr) => {\n        this.myvar = someval;\n      });\n    }\n  }\n}\n\n\nvar whatever = new ui.whatever(), \n    thing = document.getElementById(\"thing\");\n\n\nthing.addEventListener(\"click\", whatever.someThingClicked.bind(whatever), false);\n\n\n",
+      "PostedDate": "2012-10-18T09:11:27.033-07:00",
+      "Id": 80336
+    },
+    {
+      "Message": "Okay, so if I'm using jQuery.on() to wire up my click bindings what would the syntax look like? I understand what you're doing with bind, I just haven't used it with jQuery that way because I always used to just do the old var that = this; thing.",
+      "PostedDate": "2012-11-01T02:41:37.777-07:00",
+      "Id": 81399
+    },
+    {
+      "Message": "Basically, what rwaldron said. The meaning of 'this' at runtime is entirely up to the code that's running; the semantics of the fat arrow are \"Capture the *current* value of this\" which is in line with the ECMAScript 6 proposal.\n\r\n\r** Closed by RyanCavanaugh 10/19/2012 3:01PM",
+      "PostedDate": "2012-10-19T15:01:36.52-07:00",
+      "Id": 81400
+    },
+    {
+      "Message": "I think it would be prudent to show a sample of using a delegated jQuery.on() sample for this issue as that is how a lot of people are going to do it versus your sample that is straight js...",
+      "PostedDate": "2012-11-01T02:44:42.08-07:00",
+      "Id": 81401
+    },
+    {
+      "Message": "Modifying the previous example to use jQuery is trivial: https://gist.github.com/ce2a9387fc285d1e4c78",
+      "PostedDate": "2012-11-01T09:31:10.86-07:00",
+      "Id": 81418
+    },
+    {
+      "Message": "@RyanCavanaugh It appears that the issue has been re-opened. (does @foo even work??)",
+      "PostedDate": "2012-11-01T09:32:03.597-07:00",
+      "Id": 81419
+    },
+    {
+      "Message": "I'm getting the following issue with this:\n\n```\nvar selectListWigetOptions = {\n                    click: (event, ui) => { \n                        $(this).valid(); //validate selected value\n                    }\n                };\n```\n\nthe \"this\" gets compiled to \"_this\" even though in a regular jQuery context \"this\" would reference the element clicked.\n\nIn fact, if I go into the Firefox console and type \"this\", I get what I was expecting: \n\n\"<option ... ></option>\"\n\nI can get to my class instance through the console by explicitly typing \"_this\"\n\n\nI recognize also that this can't really be specified without having to maintain extra metadata for your code, so it has to assume either or the other.\n\nBut it's that what interfaces are just extra metadata defining your code?\n\nThen I don't see why not introduce a TS keyword, something like an interface but can be used to alert the compiler of methods where you want to maintain the original \"this\" reference.\n\n\n\n\n\n\n\n",
+      "PostedDate": "2013-02-18T21:00:22.793-08:00",
+      "Id": 90731
+    },
+    {
+      "Message": "() => {\n    // \"this\" equals the class instance\n}\n\nfunction () {\n    // \"this\" equals what you are expecting my friend\n}",
+      "PostedDate": "2013-07-26T16:30:46.323-07:00",
+      "Id": 107643
+    },
+    {
+      "Message": "+1 to what GTWelsh said.\n\nPseudocode example...\n\n``` TypeScript\nprivate attachHandlers(div: HTMLDivElement): void {\n  var self = this;\n  this.shimClick = function Foo$shimClick(ev: MouseEvent): any {\n    return self.handleClick(<HTMLDivElement>this, ev);\n  };\n  div.addEventListener(\"click\", this.shimClick, false);\n}\n\n//...\n\nprivate handleClick(div: HTMLDivElement, ev: MouseEvent): void {\n  //... click handling code ...\n}\n```",
+      "PostedDate": "2014-05-13T06:15:47.537-07:00",
+      "Id": 146407
+    }
+  ]
+}

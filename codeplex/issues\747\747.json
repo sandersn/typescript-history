@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing - sounds like this is resolved (please reopen if you feel otherwise). Thanks!",
+    "ClosedDate": "2013-02-25T10:10:23.233-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I can't figure out why typescript compilation is failing when I pass multiple scripts in.\r\n\r\nNote how the first 3 commands run without error but the 4th fails. I'm using node v0.8.19 and npm v1.2.10\r\n```\r\njs>..\\..\\..\\Dependencies\\nodejs\\32\\node.exe ..\\..\\..\\Dependencies\\node_modules\\typescript\\bin\\tsc --comments --module amd --target ES3 -sourcemap controls\\encoder\\views\\searchbar.ts\r\n\r\njs>..\\..\\..\\Dependencies\\nodejs\\32\\node.exe ..\\..\\..\\Dependencies\\node_modules\\typescript\\bin\\tsc --comments --module amd --target ES3 -sourcemap controls\\encoder\\models\\searchBarViewModel.ts\r\n\r\njs>..\\..\\..\\Dependencies\\nodejs\\32\\node.exe ..\\..\\..\\Dependencies\\node_modules\\typescript\\bin\\tsc --comments --module amd --target ES3 -sourcemap controls\\encoder\\views\\searchbar.ts controls\\encoder\\models\\searchBarViewModel.ts\r\n\r\njs>..\\..\\..\\Dependencies\\nodejs\\32\\node.exe ..\\..\\..\\Dependencies\\node_modules\\typescript\\bin\\tsc --comments --module amd --target ES3 -sourcemap controls\\encoder\\models\\searchBarViewModel.ts controls\\encoder\\views\\searchbar.ts\r\nC:/Users/Ryan/Kiln/TruCode_Web_UI/Source/TruCode.Web.UI.Controls/js/controls/encoder/views/searchbar.ts(14,21): The name '\"controls/encoder/models/searchbarViewModel\"' does not exist in the current scope\r\nC:/Users/Ryan/Kiln/TruCode_Web_UI/Source/TruCode.Web.UI.Controls/js/controls/encoder/views/searchbar.ts(14,21): A module cannot be aliased to a non-module type\r\nC:/Users/Ryan/Kiln/TruCode_Web_UI/Source/TruCode.Web.UI.Controls/js/controls/encoder/views/searchbar.ts(51,21): Expected var, class, interface, or module\r\n\r\njs>cd ..\\..\\..\\Dependencies && npm list\r\n+-- jshint@0.9.1\r\n¦ +-- cli@0.4.3\r\n¦ ¦ +-- glob@3.1.14\r\n¦ ¦   +-- graceful-fs@1.1.14\r\n¦ ¦   +-- inherits@1.0.0\r\n¦ ¦   +-- minimatch@0.2.9\r\n¦ ¦     +-- lru-cache@2.0.4\r\n¦ ¦     +-- sigmund@1.0.0\r\n¦ +-- minimatch@0.0.5\r\n¦   +-- lru-cache@1.0.6\r\n+-- typescript@0.8.2\r\n```\r\n\r\n\r\nsearchBarViewModel:\r\n\r\n\r\n```\r\n///<reference path=\"../../../vendor/backbone/backbone.d.ts\"/>\r\nimport Backbone = module(\"Backbone\");\r\nimport CBC = module(\"controls/encoder/models/codebookCollection\")\r\n\r\nexport class SearchbarViewModel extends Backbone.Model {\r\n    \r\n    constructor (options?) {\r\n\r\n        this.defaults = {\r\n          codeBooks: null,\r\n          bookValue: null,\r\n          searchOption: null\r\n        };\r\n\r\n        super(options);\r\n    }\r\n}\r\n```\r\n\r\nsearchbar:\r\n\r\n```\r\ndeclare var PERF, console, DEBUG, log;\r\n///<reference path=\"../../../vendor/backbone/backbone.d.ts\"/>\r\nimport Backbone = module(\"Backbone\")\r\n///<reference path=\"../../../vendor/underscore/underscore.d.ts\"/>\r\nimport _ = module(\"underscore\")\r\n///<reference path=\"../../../vendor/jquery/jquery.d.ts\"/>\r\nimport $ = module(\"jql\")\r\n\r\n///<reference path=\"../templates/templates.d.ts\"/>\r\nimport searchbarTemplate = module(\"text!controls/encoder/templates/searchbar/searchbar.html\")\r\nimport codebooksErrorTemplate = module(\"text!controls/encoder/templates/searchbar/codebooks-error.html\")\r\n\r\nimport CBC = module(\"controls/encoder/models/codebookCollection\")\r\nimport SBVM = module(\"controls/encoder/models/searchbarViewModel\")\r\n\r\nimport api = module(\"lib/api\")\r\nimport Templates = module(\"lib/templates\")\r\nimport Net = module(\"lib/net\")\r\nimport Events = module(\"lib/events\")\r\nimport Shortcuts = module(\"lib/shortcuts\")\r\n\r\nimport SVRC = module(\"controls/encoder/models/searchViewRecordCollection\")\r\n\r\nexport class SearchbarView extends Backbone.View {\r\n\r\n  cachedTerm;\r\n  cachedBook;\r\n  currentBookValue;\r\n  bookSelector;\r\n  searchOptionSelector;\r\n  termSelector;\r\n  hub;\r\n  template;\r\n  templateCodebooksError;\r\n  codeBooks;\r\n  searchRecords;\r\n  shortcuts;\r\n  scopeName;\r\n  searchbarViewModel;\r\n\r\n  constructor(options) {\r\n\r\n    this.template = Templates.compile('searchbar', searchbarTemplate);\r\n    this.templateCodebooksError = Templates.get('searchbarError', codebooksErrorTemplate);\r\n\r\n    this.bookSelector = '.book-list option:selected';\r\n    this.searchOptionSelector = '.search-options input:visible';\r\n    this.termSelector = '.search-box';\r\n    this.codeBooks = new CBC.CodeBookCollection();\r\n    this.model = new SBVM.SearchbarViewModel({ codeBooks: this.codeBooks });\r\n    this.searchRecords = new SVRC.SearchViewRecordCollection();\r\n\r\n    this.events = {\r\n      'keypress': 'keypressHandler',\r\n      'click .search-btn': 'searchOnEvent',\r\n      'click .codebooks-retry': 'getCodebooks',\r\n    }\r\n\r\n    this.scopeName = 'encoder:searchbar';\r\n\r\n    this.shortcuts = {\r\n      'shift+s': 'setFocus'\r\n    };\r\n\r\n    super(options);\r\n  }\r\n\r\n  initialize(options) {\r\n    this.hub = Events.Get();\r\n\r\n    this.$el.addClass('form-inline');\r\n\r\n    if (api.TC.current().settings.keyboardShortcuts) {\r\n      $.extend(this, Shortcuts.Get());\r\n      this.delegateShortcuts();\r\n    }\r\n\r\n    _.bindAll(this);\r\n\r\n    this.codeBooks.on('reset', this.render);\r\n    this.model.on('change:bookValue', this.bookChanged);\r\n    this.hub.on(Events.EncoderFocusSearch, this.setFocus);\r\n    this.hub.on(Events.CodebooksSearchNoResults, this.setFocus);\r\n    this.hub.on(Events.EncoderSearch, this.clear);\r\n    this.hub.on(Events.EncoderSearch, this.search);\r\n    this.hub.on(Events.EncoderSearchResultProxy, this.processSearchResults);\r\n\r\n    this.getCodebooks();\r\n  }\r\n\r\n  getCodebooks() {  }\r\n  showCodebooksFailure(jqxhr: JQueryXHR, textStatus: string, error: any) {  }\r\n  removeCodebooksFailure() {  }\r\n  setLoading(notDone?: bool) {  }\r\n  setFocus(e?: any, keymasterEvent?: any) {  }\r\n  setCodeBooks(data) {  }\r\n  clear(event?: Events.IEncoderSearch) {  }\r\n  render() {\r\n    this.$el.html(this.template(this.codeBooks.toJSON()));\r\n    this.model.set('bookValue', this.$(this.bookSelector).val());\r\n    return this;\r\n  }\r\n  bookChanged(model, name) {  }\r\n  keypressHandler(e: JQueryEventObject) {  }\r\n  searchOnEvent(e: JQueryEventObject) {  }\r\n  blurAndSetTabularFocus() {  }\r\n  search(e: Events.IEncoderSearch) {  }\r\n  handleError(e) { }\r\n  beforeProcessSearchResults(data) {  }\r\n  processSearchResults(data, userData?) {  }\r\n}\r\n```",
+    "LastUpdatedDate": "2013-02-25T10:10:23.233-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-21T07:35:36.5-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "node typescript compilation fails depending on order of scripts",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 747
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you ensure the offending import is cased correctly according to the file trying to be imported? That is, if the file is controls\\encoder\\models\\searchBarViewModel.ts then the import should be\n\nimport SBVM = module(\"controls/encoder/models/search__B__arViewModel\")\n\nAlso, are you sure these are doing what you want?\n\nimport searchbarTemplate = module(\"text!controls/encoder/templates/searchbar/searchbar.html\");\nimport codebooksErrorTemplate = module(\"text!controls/encoder/templates/searchbar/codebooks.html\");\n\nI am surprised that is working since those would be invalid filenames in Windows.",
+      "PostedDate": "2013-02-21T15:30:36.183-08:00",
+      "Id": 91145
+    },
+    {
+      "Message": "Thanks Dan, that was exactly the problem. A changed case file didn't have its case changed in source control so local builds were working but fresh checkout builds were failing.\n\nAs for the templates, yes those are what I want. I'm using requirejs' text loader plugin. My templates.d.ts allows for the fake module paths.",
+      "PostedDate": "2013-02-22T08:21:02.143-08:00",
+      "Id": 91209
+    }
+  ]
+}

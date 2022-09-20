@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "It turns out this is actually ok. See section 8.3.2 of the spec:\n\nThe first statement in the body of a constructor must be a super call if both of the following are true:\n•\tThe containing class is a derived class.\n•\tThe constructor declares parameter properties or the containing class declares instance member variables with initializers.\nIn such a required super call, it is a compile-time error for argument expressions to reference this.\n\nSo if for example your Super class had a property with an initializer then you would get a compilation error on the use of 'this' as you expected.",
+    "ClosedDate": "2013-05-16T17:07:42.59-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "#Problem:\r\n\r\nWhile typescript disallows this to be used inside a super() constructor expression, it is easy to use this can by trivially wrapping it in a lambda.\r\n\r\n\r\nThere ought to be a test-case for this.  The following code compiles with no errors on current master [ac38ce9] and develop [b0e4da5].\r\n\r\n```\r\nclass Base {\r\n\tconstructor(public b: Base) {\r\n\t}\r\n}\r\n\r\nclass Super extends Base {\r\n\tconstructor() {\r\n\t\tsuper((() => this)());\r\n\t}\r\n}\r\n```\r\n\r\nI accidentally fixed this in a patch to master for a different issue, but the fix doesn't seem to work on develop (different type checker) or release-9.0 alpha (not sure why).\r\n\r\n#See\r\n\r\nhttps://typescript.codeplex.com/SourceControl/network/forks/AdamFreidin/typescript/contribution/4672",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-08T11:23:02.57-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "super((() => this)()) should not work",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1017
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. This should certainly be an error. Appreciate the initiative with providing a fix.",
+      "PostedDate": "2013-05-10T13:04:34.103-07:00",
+      "Id": 99941
+    },
+    {
+      "Message": "Oh, so in some cases you need to call super, but it doesn't have to be the first call... interesting.\n\nMy patch was really aimed at a different problem which is tricky to trigger and hopefully happens to be fixed in 0.9:\n\nhttps://typescript.codeplex.com/SourceControl/network/forks/AdamFreidin/typescript/contribution/4672#tests/cases/compiler/resolutionsInSuperCall.ts\n\nif you haven't already, you ought to add a test case which asserts that this example is *accepted* by the compiler.  =)",
+      "PostedDate": "2013-05-16T18:32:26.75-07:00",
+      "Id": 100417
+    }
+  ]
+}

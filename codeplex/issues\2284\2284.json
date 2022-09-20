@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is because the underscore .d.ts file doesn't list any members of `Collection<T>`; only members can be used to perform generic type inference.\n\nThe ideal fix here is for the underscore typing file to get written correctly, but this is a rather huge undertaking.",
+    "ClosedDate": "2014-03-10T09:48:28.067-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Assuming: var xx: Foo[];\r\n\r\nA call to underscore's _.find does not infer the type for the iterated item, e.g.:\r\n\r\n```\r\nfind<T>(\r\n\t\tlist: _.Collection<T>,\r\n\t\titerator: _.ListIterator<T, boolean>,\r\n\t\tcontext?: any): T;\r\n\r\n_.find(xx, x => x.y === 5)\r\n```\r\n\r\nThe compiler would infer x as 'any' type and complain that y does not exist. This is a regression from 0.9.5.\r\n\r\nBTW, this is a second regression in the same area, first introduced in 0.9.5. Provided the following signature (from underscore):\r\n\r\n```\r\nreduce<T, TResult>(\r\n\t\tlist: _.Collection<T>,\r\n\t\titerator: _.MemoIterator<T, TResult>,\r\n\t\tmemo?: TResult,\r\n\t\tcontext?: any): TResult;\r\n```\r\nIn the following invocation\r\n```\r\n_.reduce(points, (memo: number, point) => memo + point.z, 0)\r\n```\r\n\r\nmemo is not inferred as a number and should be typed explicitly - worked (inferred) correctly in 0.9.1.1",
+    "LastUpdatedDate": "2014-03-10T09:48:28.067-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-09T13:28:11.493-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Regression in 1.0RC: type inference",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2284
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

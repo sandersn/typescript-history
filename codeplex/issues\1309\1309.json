@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-05T10:39:02.57-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "(As per discussion thread https://typescript.codeplex.com/discussions/444444)\r\n\r\nI modified the DefinitelyTyped sammyjs.d.ts to work with 0.9, but I find myself being forced to violate the DRY principle when trying to use a merged declaration for a global function (Sammy) and a module. Here's what works, and I have commented what I think should also work:\r\n\r\n```TS\r\ninterface SammyFunc {\r\n    (): Sammy.Application;\r\n    (selector: string): Sammy.Application;\r\n    (handler: Function): Sammy.Application;\r\n    (selector: string, handler: Function): Sammy.Application;\r\n}\r\n\r\n// NOTE: This should work, but doesn't - we get a name conflict. \r\n// If it did work, we could avoid the duplicate declarations for interface and functions\r\n//declare var Sammy: SammyFunc;\r\n\r\n// I am forced to duplicate the interface here\r\ndeclare function Sammy(): Sammy.Application;\r\ndeclare function Sammy(selector: string): Sammy.Application;\r\ndeclare function Sammy(handler: Function): Sammy.Application;\r\ndeclare function Sammy(selector: string, handler: Function): Sammy.Application;\r\n\r\ninterface JQueryStatic {\r\n    sammy: SammyFunc; // alias to global function Sammy\r\n}\r\n\r\ndeclare module Sammy {\r\n    //export function (): Sammy.Application;\r\n    //export function (selector: string): Sammy.Application;\r\n    //export function (handler: Function): Sammy.Application;\r\n    //export function (selector: string, handler: Function): Sammy.Application;\r\n\r\n    export function Cache(app, options);\r\n    export function DataCacheProxy(initial, $element);\r\n    export function DataLocationProxy(app, data_name, href_attribute);\r\n    export function DefaultLocationProxy(app, run_interval_every);\r\n    export function EJS(app, method_alias);\r\n    ...\r\n```\r\n\r\nEverything in the module remains unchanged apart from the four commented out unnamed functions which are replaced by the interface `SammyFunc`.\r\n\r\n",
+    "LastUpdatedDate": "2013-08-13T11:42:43.467-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-05T08:35:44.787-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Allow var to participate in merged declaration with module",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1309
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design, the module introduces a variable with a specific type, so you can't declare a variable with a different type.\n\nThere may be a better solution, but that seems to be blocked by a compiler bug, for now the easiest solution seems to indeed duplicate the interface ",
+      "PostedDate": "2013-07-05T10:38:56.937-07:00",
+      "Id": 105199
+    },
+    {
+      "Message": "Any chance of a small snippet showing the better solution (despite it being current blocked by a bug)?",
+      "PostedDate": "2013-07-05T10:59:57.437-07:00",
+      "Id": 105201
+    }
+  ]
+}

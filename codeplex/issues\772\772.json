@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the developer branch and should be part of the 0.9.0 release.",
+    "ClosedDate": "2013-05-13T14:32:44.153-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "This is similar to issue #618\r\nTested in TypeScript tsc 0.8.3\r\n\r\nReproduction steps:\r\n\r\n1) Create a file called bug.ts:\r\n```\r\nmodule example {\r\n    export class Test {\r\n    }\r\n\r\n    export class Test2 {\r\n        fn() { }\r\n    }\r\n}\r\n\r\nmodule example.foo {\r\n   //...\r\n}\r\n```\r\n\r\n2) Compile the file:\r\n```\r\ntsc -sourcemap bug.ts\r\n```\r\n\r\n3) Install the source map parser:\r\n```\r\nnpm install source-map\r\n```\r\n\r\n4) Run this in node:\r\n```\r\nvar SourceMapConsumer = require('source-map').SourceMapConsumer;\r\nnew SourceMapConsumer(require('fs').readFileSync('bug.js.map', 'utf8'));\r\n```\r\n\r\nResult:\r\n```\r\n/home/ubuntu/tmp/node_modules/source-map/lib/source-map/array-set.js:93\r\n    throw new Error('No element indexed by ' + aIdx);\r\n          ^\r\nError: No element indexed by 6\r\n    at ArraySet_at [as at] (/home/ubuntu/tmp/node_modules/source-map/lib/source-\r\nmap/array-set.js:93:11)\r\n    at SourceMapConsumer_parseMappings [as _parseMappings] (/home/ubuntu/tmp/nod\r\ne_modules/source-map/lib/source-map/source-map-consumer.js:183:42)\r\n    at new SourceMapConsumer (/home/ubuntu/tmp/node_modules/source-map/lib/sourc\r\ne-map/source-map-consumer.js:93:10)\r\n    at Object.<anonymous> (/home/ubuntu/tmp/test.js:2:37)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Module.runMain (module.js:492:10)\r\n    at process.startup.processNextTick.process._tickCallback (node.js:244:9)\r\n```\r\n\r\nNote that the fix jddunlap proposed in issue #618 \r\n(http://typescript.codeplex.com/SourceControl/network/forks/jddunlap/sourcemapfix/changeset/26240961a5ad) when applied to TypeScript 0.8.2 fixed this issue.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-28T19:24:02.71-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "tsc 0.8.3 still generates invalid sourcemap files in some cases",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 772
+  },
+  "FileAttachments": [
+    {
+      "FileId": 635536,
+      "FileName": "typescript-source-map-bug.zip",
+      "DownloadUrl": ".\\635536"
+    },
+    {
+      "FileId": 665815,
+      "FileName": "server.js.map",
+      "DownloadUrl": ".\\665815"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Applying the same fix to 0.8.3 also works.\nThe key fix is the \"findNonConflictingMappingName\" part which wasn't added in 0.8.3",
+      "PostedDate": "2013-02-28T21:27:00.973-08:00",
+      "Id": 91911
+    },
+    {
+      "Message": "Thanks for reporting again. \n\nI've re-opened the bug and linked the suggested fix",
+      "PostedDate": "2013-03-01T17:35:48.933-08:00",
+      "Id": 92028
+    },
+    {
+      "Message": "Theres also a problem when generating source maps for more than one file(I'm assuming this is the problem, since when concatenating the files together no errors are thrown).\r\n\r\nSteps to reproduce:\r\n\r\n- Compile two typescript files into one file generating the source map\r\n- Invoke uglifyjs to minify the compiled file passing the generated source map as '--in-source-map' so the source map for the minified file will map back to the original source files.\r\n\r\nI have a attached a zip containing two small typescript source files and a shell script that reproduces the bug. The script requires 'tsc' and 'uglifyjs' on the PATH.\r\n",
+      "PostedDate": "2013-03-08T11:43:10.257-08:00",
+      "Id": 92745
+    },
+    {
+      "Message": "I'm also having a similar problem. I don't know the exact root cause, but I'll attach the source map incase it's useful.",
+      "PostedDate": "2013-04-19T05:53:11.14-07:00",
+      "Id": 97473
+    },
+    {
+      "Message": "@tarruda\n\ncopied your issue here; https://typescript.codeplex.com/workitem/1032",
+      "PostedDate": "2013-05-13T15:00:56.37-07:00",
+      "Id": 100110
+    }
+  ]
+}

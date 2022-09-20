@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1058593",
+    "ThreadId": "447527",
+    "Html": "Should I be getting this error from 0.9 (final) in VS on a build?\r<br />\n<br />\nEXEC : tsc.js(38161, 13) Microsoft JScript runtime error : Unable to get value of the property 'isError': object is null or undefined\r<br />\n<br />\n<br />\nRichard<br />\n",
+    "PostedDate": "2013-06-19T03:39:46.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058698",
+    "ThreadId": "447527",
+    "Html": "That looks like an internal compiler error.  Do you have the code that causes that?<br />\n",
+    "PostedDate": "2013-06-19T07:54:44.893-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058710",
+    "ThreadId": "447527",
+    "Html": "I'm upgrading a project from 0.8 to 0.9 and I'm getting the same error in tsc.js:<br />\n<pre><code>PullTypeResolver.prototype.isAnyOrEquivalent = function (type) {\n              return (type === this.semanticInfoChain.anyTypeSymbol) || type.isError();\n        };</code></pre>\n\nIt appears that <strong>type</strong> may be <strong>null</strong>, so I've &quot;fixed&quot; tsc.js by changing the above to this:<br />\n<pre><code>  PullTypeResolver.prototype.isAnyOrEquivalent = function (type) {\n              return type !== null &amp;&amp; ( (type === this.semanticInfoChain.anyTypeSymbol) || type.isError() );\n        };\n</code></pre>\n\nand then it compiled just fine, and it revealed another minor error in my code (I still had KnockoutObservableAny instead of KnockoutObservable&lt;any&gt; at one place). After fixing this, I was able to undo the change in tsc.js and my project is still compiling. <br />\n",
+    "PostedDate": "2013-06-19T08:16:53.277-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058964",
+    "ThreadId": "447527",
+    "Html": "Could you create a work item with the code you have that was causing the initial error? Even if your code had a bug we shouldn't be giving errors of this sort.<br />\n",
+    "PostedDate": "2013-06-19T20:35:11.923-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059032",
+    "ThreadId": "447527",
+    "Html": "Sure, I've managed to narrow it down to only a few lines. See <a href=\"https://typescript.codeplex.com/workitem/1189\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1189</a><br />\n",
+    "PostedDate": "2013-06-20T01:34:04.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059042",
+    "ThreadId": "447527",
+    "Html": "For me, this happened when I was moving my codebase into modules. I also noticed the VS interactive errors were out of sync with what a full build reported in the VS Output panel.\r<br />\n<br />\nI've been using 0.9 since the betas came out, so this wasn't a 0.8=&gt;0.9 thing.\r<br />\n<br />\nThe error went away when I closed and re-opened Visual Studio - so I don't have any code I can give you. It's great @DankoD does.<br />\n",
+    "PostedDate": "2013-06-20T01:44:49.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059495",
+    "ThreadId": "447527",
+    "Html": "I have the same problem. Everything worked with 090 beta and now this error. Because it is a bigger project i am still seeking for the problematic code...<br />\n",
+    "PostedDate": "2013-06-21T00:06:07.72-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:29:14.643-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Consider the following program:\r\n\r\n```\r\ninterface Foo<A> {\r\n  makeOne(): One<A>;\r\n}\r\n\r\ninterface One<A> extends Foo<A> {\r\n  toTwo(): Two<A>;\r\n\r\n  abc<B>(f: ()=>One<B>);\r\n  def(): Two<any>;\r\n  geh<C>();\r\n}\r\n\r\ninterface Two<A> extends Foo<A> {\r\n  toOne(): One<A>;\r\n  ijk<C>(): Two<C>;\r\n\r\n  map<B>(f: (a:A)=>B): Two<B>;\r\n}\r\n\r\nenum Enum { };\r\n\r\ndeclare var b: Two<Enum>;\r\n\r\nb.map((t:Enum):number => 5);\r\n```\r\n\r\n(I've tried to reduce it as much as possible, but all the pieces seem to be necessary to induce the bug.)\r\n\r\nCompiling this generates:\r\n\r\n```\r\nfoo.ts(24,3): error TS2082: Supplied parameters do not match any signature of call target:\r\n\tCall signatures of types '(t: Enum) => number' and '(a: C) => any' are incompatible.\r\nfoo.ts(24,3): error TS2087: Could not select overload for 'call' expression.\r\n```\r\n\r\nCheck the types: this type unification should not fail. This is the first bug.\r\n\r\nNow put the `map<B>(f: (a:A)=>B): Two<B>;` field at the top of the `Two<A>` interface, and recompile. It compiles without error. I do not believe the order of fields in an interface should cause different compiler behavior: an interface is a *set* of fields. As such, this is a second bug.\r\n\r\nFor a third bug, take the above and change `ijk<C>` to `ijk<B>`: you'll get a stack overflow.\r\n\r\nI'm using tsc  0.9.1.0, node v0.10.13, Ubuntu 12.04.2 LTS, on x64.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-19T14:29:21.557-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Certain order of fields in interface causes failure to unify types, and other bugs",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1534
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "For possibly related bugs; take this program:\n\n```\ninterface One<A> {\n  doAction(f: (a:A)=>void): One<A>;\n  filter(p: Two<boolean>): One<A>;\n  merge(es: One<A>): One<A>;\n}\n\ninterface Two<A> {\n  toOne(): One<A>;\n}\n\ndeclare var es: One<string>;\n\nes.merge(es);\n```\n\nCompiling this results in:\n\n```\n$ tsc foo.ts \nfoo.ts(13,4): error TS2082: Supplied parameters do not match any signature of call target:\n  Types of property 'doAction' of types 'One<string>' and 'One<boolean>' are incompatible:\n    Call signatures of types '(f: (a: string) => void) => One<string>' and '(f: (a: boolean) => void) => One<boolean>' are incompatible:\n      Call signatures of types '(a: string) => void' and '(a: boolean) => void' are incompatible.\n      Call signatures of types '(a: boolean) => void' and '(a: string) => void' are incompatible.\nfoo.ts(13,4): error TS2087: Could not select overload for 'call' expression.\n```\n\nThere's another ordering bug here: if you place the definition of `Two<A>` above that of `One<A>`, the file compiles without error, as it should.",
+      "PostedDate": "2013-08-19T15:07:37.22-07:00",
+      "Id": 110376
+    },
+    {
+      "Message": "Strange! Marking active.",
+      "PostedDate": "2013-08-21T10:05:45.85-07:00",
+      "Id": 110615
+    }
+  ]
+}

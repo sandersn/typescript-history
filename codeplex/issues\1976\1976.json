@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Don't think this was meant to be re-opened. We've also since made some changes to how interface declarations will combine so you can control this a little better.",
+    "ClosedDate": "2014-01-16T18:30:48.357-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I found very strange behavior of the overload resolution based on string literal:\r\n\r\n```ts\r\ninterface A {}\r\n\r\ninterface X {\r\n    on(s: string, cb: (a: A) => any): X;\r\n}\r\n\r\ninterface B {\r\n\tb: number;\r\n}\r\n\r\ninterface X {\r\n\ton(s: \"a\", cb: (b: B) => any): X;\r\n}\r\n\r\nvar x: X;\r\n\r\n// The property 'b' does not exist on value of type 'A'.\r\nx.on(\"a\", function (b) { b.b; });\r\n// same if we use lambda with { ... } body\r\nx.on(\"a\", b => { b.b; });\r\n// works ok! b is B here!\r\nx.on(\"a\", b => b.b);\r\n// difference is the lambda returns 'number', ok try to return it.\r\n// error again! The property 'b' does not exist on value of type 'A'.\r\nx.on(\"a\", b => { b.b; return 1; });         \r\n// same with function\r\nx.on(\"a\", function (b) { b.b; return 1; });\r\n```\r\n[Playground link](http://www.typescriptlang.org/Playground/#src=interface%20A%20%7B%7D%0A%0Ainterface%20X%20%7B%0A%20%20%20%20on(s%3A%20string%2C%20cb%3A%20(a%3A%20A)%20%3D%3E%20any)%3A%20X%3B%0A%7D%0A%0Ainterface%20B%20%7B%0A%09b%3A%20number%3B%0A%7D%0A%0Ainterface%20X%20%7B%0A%09on(s%3A%20%22a%22%2C%20cb%3A%20(b%3A%20B)%20%3D%3E%20any)%3A%20X%3B%0A%7D%0A%0Avar%20x%3A%20X%3B%0A%0A%2F%2F%20The%20property%20'b'%20does%20not%20exist%20on%20value%20of%20type%20'A'.%0Ax.on(%22a%22%2C%20function%20(b)%20%7B%20b.b%3B%20%7D)%3B%0A%2F%2F%20same%20if%20we%20use%20lambda%20with%20%7B%20...%20%7D%20body%0Ax.on(%22a%22%2C%20b%20%3D%3E%20%7B%20b.b%3B%20%7D)%3B%0A%2F%2F%20works%20ok!%20b%20is%20B%20here!%0Ax.on(%22a%22%2C%20b%20%3D%3E%20b.b)%3B%0A%2F%2F%20difference%20is%20the%20lambda%20returns%20'number'%2C%20ok%20try%20to%20return%20it.%0A%2F%2F%20error%20again!%20The%20property%20'b'%20does%20not%20exist%20on%20value%20of%20type%20'A'.%0Ax.on(%22a%22%2C%20b%20%3D%3E%20%7B%20b.b%3B%20return%201%3B%20%7D)%3B%20%20%20%20%20%20%20%20%20%0A%2F%2F%20same%20with%20function%0Ax.on(%22a%22%2C%20function%20(b)%20%7B%20b.b%3B%20return%201%3B%20%7D)%3B%0A)\r\n\r\nI use new 0.9.5 release. It was worked on 0.9.1.1",
+    "LastUpdatedDate": "2014-01-16T18:30:48.357-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-06T06:49:18.99-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Overload resolution based on string literal works right with function, and wrong with lambda [0.9.5]",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 8,
+    "Id": 1976
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, we're taking a look.\r\n\r\nIt looks like the Lambda is the one that is wrong, when doing overload resolution we select the first one that's applicable . In this case that's that's the following overload:\r\n\r\n````\r\ninterface X {\r\n    on(s: string, cb: (a: A) => any): X;\r\n}\r\n````\r\nIf you switch the two interface declarations, things will works as expected.\r\n\r\nWe are investigating why the lambda doesn't report an error.\r\n",
+      "PostedDate": "2013-12-06T12:16:53.897-08:00",
+      "Id": 126385
+    },
+    {
+      "Message": "So the lambda doesn't report an error, because of the first overload with 'a:A' would result in an error, similar to when you add a return statement to the other samples you provided.\r\n\r\nSee 4.12 in the spec.",
+      "PostedDate": "2013-12-06T12:24:45.313-08:00",
+      "Id": 126386
+    },
+    {
+      "Message": "That is very sad, that you changed the spec in this part. So now we have no any way to create separated definition with specialization. Consider we have one library definition 'A.d.ts':\n```ts\ninterface A {}\n\ninterface X {\n    on(s: string, cb: (a: A) => any): X;\n}\n```\nand we have another library definition 'B.d.ts', that extends `A`:\n```ts\n///<reference path=\"A.d.ts\">\n\ninterface B {\n    b: number;\n}\n\ninterface X {\n    on(s: \"a\", cb: (b: B) => any): X;\n}\n```\n\nIn the example no way to both refer the parent library and correct order more-specific overload.\nThis is not synthetic example, it's from real world. I'm a contributor of DefinitelyTyped and I've got the error then worked on porting 'bootstrap.datepicker' library definition to TS 0.9.5. You may see [my comment at the code](https://github.com/Igorbek/DefinitelyTyped/commit/4f3f6f58f5992adb4835237b9b6221fc75bce2c3#commitcomment-4799938).\n\nI'll create the discussion to request change to specification.",
+      "PostedDate": "2013-12-07T00:12:20.18-08:00",
+      "Id": 126430
+    },
+    {
+      "Message": "\n\r\n\r** Closed by paulb 12/06/2013 12:24PM",
+      "PostedDate": "2013-12-06T12:24:49.73-08:00",
+      "Id": 126431
+    },
+    {
+      "Message": "Also I found inconsistent behavior of VS's extension. When go to definition on the usage at design-time, it jumps to definition with string literal (what I want), but at compile-time uses the definition without string literal (what I don't want).",
+      "PostedDate": "2013-12-10T00:34:24.25-08:00",
+      "Id": 126730
+    }
+  ]
+}

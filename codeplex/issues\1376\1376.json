@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You'll need to extend the module in its own file that is also an internal module (ie doesn't contain import or export). Then you can reference/import that and whatever else you need in your last file there.",
+    "ClosedDate": "2013-07-25T13:01:56.197-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have a TypeScript external definition file (foo.d.ts):\r\n\r\n```\r\ndeclare module foo {\r\n    export class bar {\r\n    }\r\n}\r\n\r\n```\r\nThen I use it like this (in baz.ts):\r\n\r\n```\r\n/// <reference path=\"foo.d.ts\" />\r\nmodule foo {\r\n    class baz extends bar {\r\n    }\r\n}\r\n```\r\n\r\nSo far so good. But when I import some other TypeScript file compiled as an AMD module compilation breaks:\r\n\r\n```\r\nmodule foo {\r\n    class baz extends bar { // Error: could not find symbol \"bar\"\r\n    }\r\n}\r\n\r\nimport T1 = module(\"test1\"); // Removing this line resolves the compilation error\r\n```\r\n\r\nThe AMD file being imported is a simple as:\r\n\r\n```\r\nexport var NAME = \"NAME\";\r\n```\r\n\r\nWhy does import break my code in such a way? Find attached a Visual Studio project which reproduces the problem.",
+    "LastUpdatedDate": "2013-07-25T13:01:56.197-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-22T01:02:56.447-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Importing a TypeScript module prevents existing module extension",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1376
+  },
+  "FileAttachments": [
+    {
+      "FileId": 707988,
+      "FileName": "Repro.zip",
+      "DownloadUrl": ".\\707988"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Any workaround then? How can I extend the foo module after importing another module?",
+      "PostedDate": "2013-07-23T00:09:06.187-07:00",
+      "Id": 107065
+    },
+    {
+      "Message": "When you add the 'import' directive, you're indicating that your code is going to run inside a module loader. At that point, you're introducing a new name 'foo' with your module that shadows the one at the global scope.\n\r\n\r** Closed by RyanCavanaugh 07/22/2013 9:48AM",
+      "PostedDate": "2013-07-22T09:48:59.273-07:00",
+      "Id": 107066
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1242152",
+    "ThreadId": "544472",
+    "Html": "There are two identical implementations of method, merge1 and merge2 but the compiler thinks they have different types <br />\n<pre><code>class xxx&lt;X, Y&gt;{\n\n    public merge1(...targets: channel&lt;any, Y&gt;[]) {\n        var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n        var result = ch.flatMap(x =&gt; x);\n\n        return result;\n    }\n}\n\nclass channel&lt;S,Y&gt;{\n    public merge2(...targets: channel&lt;any, Y&gt;[]) {\n        var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n        var result = ch.flatMap(x =&gt; x);\n\n        return result;\n    }\n\n  public flatMap&lt;R&gt;(projector: (data: Y) =&gt; channel&lt;Y, R&gt;): channel&lt;Y,R&gt; {\n        return null;\n   }\n}</code></pre>\n\nmerge1 is OK, but merge2 has an error 'infinitely expanding type reference'\r<br />\nmerge1 has strange type - channel&lt;channel&lt;any,Y&gt;,Y&gt;\r<br />\n<br />\nAnother thing, when I change flatMap to<br />\n<pre><code>    public flatMap&lt;R extends channel&lt;Y, any&gt;&gt;(projector: (data: Y) =&gt; R): R {\n        return null;\n    }\n</code></pre>\n\nmerge1 is OK, but merge2 has the same error\r<br />\nmerge1 now has the type channel&lt;any,Y&gt; as expected\r<br />\n<br />\n<br />\n<br />\nIs it correct behavior of the compiler ?<br />\n",
+    "PostedDate": "2014-05-06T09:29:13.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1242216",
+    "ThreadId": "544472",
+    "Html": "...<br />\n<em>(edit: comment removed - was based on old knowledge, which is different now)</em><br />\n",
+    "PostedDate": "2014-05-06T11:23:35.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1242227",
+    "ThreadId": "544472",
+    "Html": "The problem I see now you are saying is with the type incompatibility. This is because of how the lambda expression works - so lets see what happens when <code>Y</code> is replaced with <code>channel&lt;void, channel&lt;any, Y&gt;&gt;();</code> and <code>R</code> with <code>Y</code> from the 'new' call ...<br />\n<pre><code>public flatMap(projector: (data: channel&lt;any,  channel&lt;any, Y&gt;&gt;) =&gt; channel&lt;channel&lt;any,  channel&lt;any, Y&gt;&gt;, Y&gt;): channel&lt;channel&lt;any, Y&gt;, Y&gt; {\n     return null;\n }</code></pre>\n\nSo, <code>x=&gt;x</code>, becomes <code>x: (data: channel&lt;any, channel&lt;any, Y&gt;&gt;) =&gt; channel&lt;any, channel&lt;any, Y&gt;&gt;</code> ... which is an error, because the idea of <code>x=&gt;x</code> is that the PARAMETER type is the same as the RETURN type, and obviously it's not what the 'flatMap' parameter signature is returning. ;)  Changing <code>(data: Y) =&gt; channel&lt;Y, R&gt;</code> to <code>(data: Y) =&gt; Y</code> fixes the error, but may not be want you want (but that is why the error is there ;) ).<br />\n",
+    "PostedDate": "2014-05-06T12:01:43.503-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243298",
+    "ThreadId": "544472",
+    "Html": "I agree, but there are 2 similar cases and, to me, both of them contain the same error. However, only one of them is compiled without any error.<br />\n",
+    "PostedDate": "2014-05-08T14:39:24.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243305",
+    "ThreadId": "544472",
+    "Html": "This should be covered by section 3.8.7 Recursive Types in the language spec. If a type is considered infinitely expanding then it does not use the normal rules for assignability and other type relations.<br />\n",
+    "PostedDate": "2014-05-08T14:56:19.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243309",
+    "ThreadId": "544472",
+    "Html": "Another example  - member of the same class can not be compiled, but the method with identical code of different class is compiled OK<br />\n<pre><code>class channel&lt;S,Y&gt; {\n\nstatic flatMapImpl&lt;R, R1&gt;\n(self: channel&lt;any, R&gt;, projector:(t:R) =&gt; channel&lt;any, R1&gt;):channel&lt;void, R1&gt; {\n    return null;\n}\n\npublic flatMap&lt;R&gt;(projector: (data: Y) =&gt; channel&lt;any, R&gt;):channel&lt;void, R&gt; {\n    return  channel.flatMapImpl(this, projector);\n}\n\npublic merge2(...targets: channel&lt;any, Y&gt;[]) {\n    var ch = new channel&lt;void, channel&lt;void, Y&gt;&gt;();\n    var r = channel.flatMapImpl(ch, x =&gt; x); // fine !\n\n    return r;\n}\n\npublic merge(...targets: channel&lt;any, Y&gt;[]) {\n    var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n    var result = ch.flatMap(x =&gt; x); // &lt;-- compilation error\n\n    return result;\n}\n}\n\nclass z&lt;S,Y&gt;\n{\n    public merge(...targets: channel&lt;any, Y&gt;[]) {\n    var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n    var result = ch.flatMap(x =&gt; x); // &lt;-- fine !\n\n    return result;\n}\n\n}</code></pre>\n\n",
+    "PostedDate": "2014-05-08T15:07:55.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

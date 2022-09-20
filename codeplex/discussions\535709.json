@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1215383",
+    "ThreadId": "535709",
+    "Html": "Given the following code<br />\n<pre><code>class Timer {\n    private onTickCallback: () =&gt; void;\n    private timerToken: number;\n    \n    constructor(onTick: () =&gt; void ){\n        this.onTickCallback = onTick;\n    }\n    \n    start(delay: number = 1000) {\n        this.timerToken = setInterval( () =&gt; this.onTickCallback(), delay)\n    }\n    \n    stop(){\n        clearTimeout(this.timerToken);\n    }\n}\n\nclass DigitalWatch extends Timer{\n    constructor(){\n        super(this.onTick)\n    }\n    \n    onTick() {\n        console.log('Beep Beep');\n    }\n    \n    TellTime(){\n        console.log('This is now lunch time');\n    }\n}\n</code></pre>\n\nThis compiles fine.<br />\n<br />\nIf the TellTime function is converted into an Arrow function<br />\n<pre><code>    TellTime = () =&gt; {\n        console.log('This is now lunch time');\n    }</code></pre>\n\nyou now get a compiler error in the constructor that &quot; 'this' cannot be referenced in current location&quot; <br />\n<br />\nGiven that &quot;onTick&quot; is on the prototype why is this now a compiler error when switching TellTime from prototype function to Arrow Function.<br />\n<br />\nEven more puzzling is the following<br />\n<pre><code>class DigitalWatch extends Timer{\n    \n    message: string;\n    \n    constructor(){\n        super(this.onTick)\n\n        this.message = 'It is now lunch time';      \n    }\n    \n    onTick() {\n        console.log('Beep Beep');\n    }\n    \n}\n\nclass DigitalWatch extends Timer{\n    \n    message: string = 'It is now lunch time';\n    \n    constructor(){\n        super(this.onTick)\n    }\n    \n    onTick() {\n        console.log('Beep Beep');\n    }\n    \n}</code></pre>\n\nThe first version works, the second version doesn't, but the compiled javascript is identical if &quot;this.onTick&quot; is replaced with &quot;() =&gt; {}&quot;<br />\n",
+    "PostedDate": "2014-02-26T16:38:19.44-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1215422",
+    "ThreadId": "535709",
+    "Html": "This is all by design. See section 8.3.2 Super Calls of the language spec. <br />\n<pre><code>The first statement in the body of a constructor must be a super call if both of the following are true:\n•   The containing class is a derived class.\n•   The constructor declares parameter properties or the containing class declares instance member variables with initializers.\nIn such a required super call, it is a compile-time error for argument expressions to reference this.\n\nInitialization of parameter properties and instance member variables with initializers takes place immediately at the beginning of the constructor body if the class has no base class, or immediately following the super call if the class is a derived class.</code></pre>\n\nThe arrow function is a red herring, the issue is that there is an instance member variable initializer of any sort in your derived class. The last sentence in the quote above there is the key thing to remember. If your initializer is not executed until after the super() call, then by passing 'this' as an argument to a super() call you are passing an object that is in some unknown, partially initialized state to your base constructor and who knows what can/will happen then. <br />\n",
+    "PostedDate": "2014-02-26T19:24:59.833-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1215477",
+    "ThreadId": "535709",
+    "Html": "I disagree with your last statement.  In my example above the onTick function will be fully initialized as it is on the prototype.  Typescript, because it is build on Javascript, is a prototypal language, the class stuff is stuff syntactic sugar.  If onTick was also declared as an arrow function or by an initializer then I would agree with your statement.<br />\n<br />\nAlso, by your same reasoning why did the compiler allow the first version where I'm still passing this.onTick. <br />\n",
+    "PostedDate": "2014-02-27T00:22:30.573-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1215613",
+    "ThreadId": "535709",
+    "Html": "@rslaney, I think that this is correct behavior. If your derived class declares members with initializers you should not use “this” in super call. Because your initializers will be initialized after super is done, so using in super call means using not initialized instance and you can run into problems. In your example it will work, but I suppose that in general is not so easy to analyze code and discover when this rule can be broken. So you must change your code to:<br />\n<pre><code>\nclass DigitalWatch extends Timer{\n    constructor(){\n        super(this.onTick)\n        this.TellTime = () =&gt; {\n            console.log('This is now lunch time');\n        }\n    }\n    \n    onTick() {\n        console.log('Beep Beep');\n    }\n    \n   TellTime:()=&gt;void;\n}\n</code></pre>\n\n",
+    "PostedDate": "2014-02-27T05:52:44.217-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1215893",
+    "ThreadId": "535709",
+    "Html": "<strong>rslaney wrote:</strong><br />\n<blockquote>\nI disagree with your last statement.  In my example above the onTick function will be fully initialized as it is on the prototype.  Typescript, because it is build on Javascript, is a prototypal language, the class stuff is stuff syntactic sugar.  If onTick was also declared as an arrow function or by an initializer then I would agree with your statement.<br />\n<br />\nAlso, by your same reasoning why did the compiler allow the first version where I'm still passing this.onTick.<br />\n</blockquote>\nThat some patterns like this are safe (for now) is not in question, but asking the compiler to do the complex analysis to prove whether it's safe (across the entire type hierarchy no less) is no small task. This rule is fairly consistent across most languages, allowing partially constructed objects to be used and passed around is fraught with peril. \r<br />\n<br />\nTo your second point, the first example you used is passing the function onTick, it is not using a variable with an initializer of a function type, these are very different things. If you look at the codegen for the two you can see how they differ. One can be safely used this way in general, the other cannot.<br />\n",
+    "PostedDate": "2014-02-27T15:23:07.08-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

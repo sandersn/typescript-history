@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-01-14T10:56:54.533-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I've found a strange bug.\r\n\r\nIf you have two classes in different files, and for example class B extends class A, and class A has a variable typed B, TypeScript compiles in wrong order with --out main.js command (when you compile whole project into one file). Wrong order results that javascript throws an error: Uncaught TypeError: Cannot read property 'prototype' of undefined This is because class B is earlier in the code than A, and it refer to class A.\r\n\r\nHere is the simpliest example:\r\n\r\nA.ts\r\n\r\n///<reference path='B.ts'/>\r\n\r\nclass A\r\n{\r\n    public b: B;\r\n\r\n    constructor()\r\n    {\r\n    }\r\n\r\n    init()\r\n    {\r\n        this.b=new B();\r\n        this.b.foo();\r\n    }\r\n}\r\n\r\n\r\nB.ts\r\n\r\n///<reference path='A.ts'/>\r\nclass B extends A\r\n{\r\n    constructor()\r\n    {\r\n        super();\r\n    }\r\n\r\n    public foo( ):void\r\n    {\r\n        console.log(\"foo log\");\r\n    }\r\n}\r\n\r\n\r\napp.ts\r\n\r\n///<reference path='A.ts'/>\r\nvar a: A=new A();\r\na.init();\r\nGenerated main.js\r\n\r\nvar __extends = this.__extends || function (d, b) {\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar B = (function (_super) {\r\n    __extends(B, _super);\r\n    function B() {\r\n        _super.call(this);\r\n    }\r\n    B.prototype.foo = function () {\r\n        console.log(\"foo log\");\r\n    };\r\n    return B;\r\n})(A);\r\nvar A = (function () {\r\n    function A() {\r\n    }\r\n    A.prototype.init = function () {\r\n        this.b = new B();\r\n        this.b.foo();\r\n    };\r\n    return A;\r\n})();\r\nvar a = new A();\r\na.init();\r\n//@ sourceMappingURL=main.js.map\r\n\r\n\r\nI've also tried it with interfacing (create interface form A and B), but when the circle closes (A interface refers to B interface, B interface refers to A interface) the order gets wrong again.\r\n\r\nAny workaround?\r\n\r\nThank you!",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-07T03:52:22.073-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Cross referencing with extended classes",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 599
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this - marking 'active'",
+      "PostedDate": "2013-01-10T10:34:56.42-08:00",
+      "Id": 85721
+    },
+    {
+      "Message": "Talked to the design team about this and we agree this is by design. The file ordering logic only looks at who referenced whom in terms of reference tags, not in terms of trying to discern which code construct should go before some other code construct.\n\nBasically, when you do have a circular dependency, it's up to you to figure out the right referencing order. The best way to do this is to simply be explicit about the ordering -- add a reference tag for \"A.ts\" and one right after it for \"B.ts\".\n\nIf you still want to have just one reference, you'll have to reference B.ts from app.ts. To understand why that's the case, you'll have to think about how the dependency resolution algorithm works.\n\nConsider a dependency graph  (-> meaning \"depends on\"): A -> [ B ]; B -> [ C ]. The correct file order is C, B, A. Whenever we see a dependency, the dependent file goes in front of the depender file. And if we see a file we've already added to the output set, we don't rearrange it (this creates more problems than it solves). So in your case, the compiler started with app.ts, saw that app.ts needed A (output is now A, app), then saw that A needed B, so prepended B to the list (now B, A, app). If you instead said app.ts needs B, the algorithm produces (A, B, app) as you'd want.\n\nHope that helps!",
+      "PostedDate": "2013-01-14T10:56:48.843-08:00",
+      "Id": 86113
+    },
+    {
+      "Message": "Thanks! It really helped!\nYou have great, usable support :)",
+      "PostedDate": "2013-01-23T03:54:37.987-08:00",
+      "Id": 86936
+    },
+    {
+      "Message": "I really think this needs to be fixed/improved.\n\nThe compiler should recognize dependencies due to class inheritance and be able to output in the correct order, without the user having to resort to manually 'fixing' the dependencies. Even more so because the 'fix' requires to state dependencies bottom-up instead of the more natural top-down. I also wonder if in larger projects there will be a point where manually fixing the order is no longer (easily) possible.\n",
+      "PostedDate": "2013-03-24T17:57:45.223-07:00",
+      "Id": 94257
+    },
+    {
+      "Message": "In our project we switched from defining individual 'class' dependencies at the header of each class to referencing a 'global' dependencies file that defines all files in the project one by one as `/// <reference path=\"path/xxx.ts\"/>` statements.\nThis was the only way we could have enough control over the loading order to avoid runtime issues due to a subclass being included in the output before its parent class. (Note: we compile several files into one output file).",
+      "PostedDate": "2013-04-25T23:55:22.39-07:00",
+      "Id": 98562
+    },
+    {
+      "Message": "Also see [item #627](https://typescript.codeplex.com/workitem/627)",
+      "PostedDate": "2013-04-25T23:55:54.027-07:00",
+      "Id": 98563
+    }
+  ]
+}

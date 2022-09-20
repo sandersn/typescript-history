@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-10-09T13:22:48.577-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Good day everyone. \r\nCan anyone explain for me why this code didn't work? I've got an error with message: \"Specialized overload signature is not subtype of any non-specialized signature\" and it's look like a bug for me.\r\nWould be appreciated for any help.\r\n\r\n```\r\nclass A {\r\n    m(): string;\r\n    m(v: string): string;\r\n    m(v: \"first\"): string;\r\n    m(v?: any): string { return \"smthng\"; }\r\n}\r\n\r\nclass B extends A {\r\n    m(v: \"second\"): string;\r\n}\r\n```",
+    "LastUpdatedDate": "2013-10-09T13:22:48.577-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-08T07:21:11.26-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Problem with method overloading by constant",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1769
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. The issue is that function overloads are just syntactic sugar, a compile time only construct, which is equivalent to a single property whose type includes multiple call signatures. So your class A is really shaped like this:\n\n```Typescript\nclass A {\n    m: {\n        (): string;\n        (v: string): string;\n        (v: \"first\"): string;\n    }\n}\n```\n\nwhich makes it clearer what's now happening with the error in B. There's only a single member named m which B would inherit from A if it is not hidden by one of B's members. And that single member is a property with a function type, where there's no capability that allows you to add new call signatures to an existing function type (which is what would need to happen if syntax like your original example were allowed). \n\nSo, to accomplish what you want you have to redeclare the overloads of A that you want in B along with any additional overloads, and then B.m will hide A.m's version of the property.",
+      "PostedDate": "2013-10-09T13:22:44.333-07:00",
+      "Id": 117975
+    }
+  ]
+}

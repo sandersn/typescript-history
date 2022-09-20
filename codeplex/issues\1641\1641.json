@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design.\n\nAll .ts files should be part of a TypeScriptCompile element and the typescript.targets should be imported, together with the PropertyGroups you mention.",
+    "ClosedDate": "2013-09-06T13:43:10.98-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I've reduced one of our projects to a minimum: remove everything except one TS file. Then I've compared the project with a new TypeScriptHTMLApp that has the same TS file.\r\n\r\nI've found these notable differences in the .csproj files:\r\n\r\nMissing:\r\n```\r\n<Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" />\r\n```\r\nAdding that to the project file enables compiling.\r\n\r\nMissing:\r\n```\r\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\r\n    <TypeScriptTarget>ES3</TypeScriptTarget>\r\n    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>\r\n    <TypeScriptSourceMap>true</TypeScriptSourceMap>\r\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\r\n  </PropertyGroup>\r\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">\r\n    <TypeScriptTarget>ES3</TypeScriptTarget>\r\n    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>\r\n    <TypeScriptSourceMap>false</TypeScriptSourceMap>\r\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\r\n  </PropertyGroup>\r\n```\r\nAdding these to (the existing PropertyGroups in) the project file do nothing by itself, but combined with the first missing line, it generates a .map file\r\n\r\nDifference:\r\nExisting project: ```<TypeScriptCompile Include=\"Product.ts\" />```\r\nNew project: ```<Content Include=\"Product.ts\" />```\r\nProbably a remnant of Web Essentials. Changing the CompileAction to Content (without doing the other changes listed above) also enables compilation.\r\n\r\nI've verified all this multiple times.\r\nIf you want, I can mail you the two projects (would rather not attach them publicly).",
+    "LastUpdatedDate": "2013-09-20T11:59:23.297-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-05T01:51:03.927-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Two causes of files not being compiled",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1641
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Are you saying that in a new project you create you're missing the reference to the Microsoft.TypeScript.targets file and the .ts files are inside a Content element and not inside a TypeScriptCompile element?\n\nWhich version of VS and the TypeScript addon are you using?\n\n",
+      "PostedDate": "2013-09-05T13:12:08.13-07:00",
+      "Id": 112612
+    },
+    {
+      "Message": "No, the other way around. The new project has those lines in the .csproj file, the existing one didn't. It's an MVC 4 app created a couple of months ago, we added TS to it later and used the Web Essentials extension.\n\nCurrently running the latest version of the TS addon, with VS 2012.\n\nSo the problem was that when we updated to the latest version of Web Essentials, which used to take care of the compiling, our files were no longer compiling, even with \"compile on save\" checked in the TS settings. When I arrive at work tomorrow morning I'll remove sensitive information and upload the project here.",
+      "PostedDate": "2013-09-05T15:22:42.49-07:00",
+      "Id": 112627
+    },
+    {
+      "Message": "My mistake, should have read the [documentation](https://typescript.codeplex.com/wikipage?title=Compile-on-save) first.",
+      "PostedDate": "2013-09-09T00:05:25.01-07:00",
+      "Id": 112827
+    }
+  ]
+}

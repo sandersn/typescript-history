@@ -1,0 +1,115 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-12T12:09:05.77-08:00",
+    "CommentCount": 15,
+    "Custom": null,
+    "Description": "After upgrade to 0.9.5 building app fails in VS 2013 or node command line detailing approx 30 errors in lib.d.ts related to SVG types:\r\n\r\nC:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\lib.d.ts(13119,11): error TS2189: Build: Interface 'SVGFEDiffuseLightingElement' cannot simultaneously extend types 'SVGElement' and 'SVGFilterPrimitiveStandardAttributes':\r\n\r\nWindows 8.1 64-Bit",
+    "LastUpdatedDate": "2014-04-25T00:26:02.433-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-06T20:06:48.463-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "lib.d.ts build errors after upgrade to 0.9.5",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 1981
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I have same environment same bug.  Still looking for solution. ",
+      "PostedDate": "2013-12-07T06:48:26.04-08:00",
+      "Id": 126453
+    },
+    {
+      "Message": "Me too.\nTS 0.9.5, VS2013, Windows 7\n\nC:\\Program Files\\Microsoft SDKs\\TypeScript\\0.9\\lib.d.ts\nCreated ‎02 ‎December ‎2013, ‏‎11:55:48\n\n\n1>C:\\Program Files\\Microsoft SDKs\\TypeScript\\0.9\\lib.d.ts(2344,11): error TS2189: Build: Interface 'SVGGElement' cannot simultaneously extend types 'SVGElement' and 'SVGStylable':\n1>  \n1>  Types of property 'className' of types 'SVGElement' and 'SVGStylable' are not identical.\n\n```\ninterface SVGGElement extends SVGElement, SVGStylable, SVGTransformable, SVGLangSpace, SVGTests, SVGExternalResourcesRequired {\n}\ndeclare var SVGGElement: {\n    prototype: SVGGElement;\n    new (): SVGGElement;\n\n```\n",
+      "PostedDate": "2013-12-07T16:27:33.543-08:00",
+      "Id": 126495
+    },
+    {
+      "Message": "Im having the same problem.",
+      "PostedDate": "2013-12-09T07:44:52.517-08:00",
+      "Id": 126607
+    },
+    {
+      "Message": "Same problem,\nTS 0.9.5, VS2012, Windows 7",
+      "PostedDate": "2013-12-09T07:55:42.317-08:00",
+      "Id": 126608
+    },
+    {
+      "Message": "I'm not seeing this (same machine configuration). What code are you compiling? Do you see this happen for a TypeScript project with no user code in it?",
+      "PostedDate": "2013-12-09T08:37:44.873-08:00",
+      "Id": 126614
+    },
+    {
+      "Message": "Just speculating here, are you trying to compile some project that includes code like this that extends Element to add className for convenience? That would cause this to happen; the only fix would be to remove that code or use a modified lib.d.ts that ran the SVG types through a different inheritance hierarchy to avoid the conflict.\n\n```\ninterface Element {\n    className: string;\n}\n```",
+      "PostedDate": "2013-12-09T08:42:10.2-08:00",
+      "Id": 126616
+    },
+    {
+      "Message": "Ryan,\nI pulled the block of code that uses SVG out into a new module in a new project. It builds fine. So it's now a matter of tracking down where, in the rest of the main project, the problem lies.\n\nI do get the same error message from the jQuery type defs too. And jQuery is included everywhere. Could one trigger a problem with the other?\n```\n1>C:\\videojet\\projects\\hub\\directory2\\directory\\jquery.d.ts(162,11): error TS2189: Build: Interface 'JQueryEventObject' cannot simultaneously extend types 'BaseJQueryEventObject' and 'JQueryInputEventObject':\n1>  \n1>  Types of property 'metaKey' of types 'BaseJQueryEventObject' and 'JQueryInputEventObject' are not identical.\n\n```",
+      "PostedDate": "2013-12-09T09:54:07.837-08:00",
+      "Id": 126632
+    },
+    {
+      "Message": "What version of jquery.d.ts (from where?) are you using? Those line numbers / names don't match the version on DefinitelyTyped or the copy from the TypeScript repository.",
+      "PostedDate": "2013-12-09T10:32:19.57-08:00",
+      "Id": 126638
+    },
+    {
+      "Message": "It was an older (a month or more) version of jquery.d.ts from DefinitelyTyped. I've just downloaded the latest and the \"types ... and ... are not identical\" message no longer appears for jquery.d.ts but now throws up a whole bunch of \"Call signatures of types ... incompatible\" around the use of JQueryEventObject in my code. And the SVG errors messages are still there too. However, none of these errors appear when I pull simplified versions out into stand-alone modules.\n\nClearly my TypeScript code has accumulated a lot of issues that I've got away with until now. Looks like it's my problem. But heh, that's what TypeScript is supposed to pick up on :) .",
+      "PostedDate": "2013-12-09T11:19:42.11-08:00",
+      "Id": 126646
+    },
+    {
+      "Message": "Hi Ryan,\n\nFor my jquery.d,ts I'm using the following (which I'm assuming is the latest 0.9.5 compatible file) :\nhttps://github.com/borisyankov/DefinitelyTyped/blob/switch-0.9.5/jquery/jquery.d.ts\n\nThe code for the app I'm building can be seen here (HTML app, not originally a typescript or VS project, now using VS 2013 with TS 0.9.5, has a custom post-build step to call Jake but doesn't get that far in the build at the moment due to TS errors):\nhttps://github.com/webprofusion-chrisc/ocm-system/tree/master/App\n\nI have no doubt that's its related to something like the jquery.d.ts, but the lib.d.ts  errors obviously throw everyone in the wrong direction when debugging.",
+      "PostedDate": "2013-12-09T18:02:48.053-08:00",
+      "Id": 126699
+    },
+    {
+      "Message": "Interfaces such as 'SVGFEMergeElement', 'SVGFEGaussianBlurElement', etc are extending both: \n'SVGFilterPrimitiveStandardAttributes' and 'SVGElement' interfaces.\n\nThe 'SVGFilterPrimitiveStandardAttributes' interface has the property 'result: SVGAnimatedString;'\n'SVGElement' extends Element which extends Node which extends EventTarget. \n\nIf you use phonegap.d.ts like I'm using it's adding this: \n```\ninterface EventTarget {\n    result: any;\n}\n```\n\nWhich results to these type of errors:\n```\nError\t17\tInterface 'SVGFEFloodElement' cannot simultaneously extend types 'SVGElement' and 'SVGFilterPrimitiveStandardAttributes':\nTypes of property 'result' of types 'SVGElement' and 'SVGFilterPrimitiveStandardAttributes' are not identical.\tlib.d.ts\t11323\t11\tRealSuite.Infrastructure.Typescript\n```\n\nThe property result is there now twice. However in my case because I'm using ProgressEvent to get file information I need target.result.\n",
+      "PostedDate": "2013-12-10T07:50:04.95-08:00",
+      "Id": 126782
+    },
+    {
+      "Message": "Ok, my problem fixed.\n\nTwo problems giving rise the the \"Interface 'SVGGElement' cannot simultaneously extend types 'SVGElement' and 'SVGStylable'\" build errors:\n1. A reference to a non-existent TS definitions file (.d.ts).\n2. A definition for an SVGElement derived class that was not present in an early version of lib.d.ts\n\nBoth were left over from the early days of my project (and TypeScript) and should have been removed. Such is the joy of copy-and-paste :)",
+      "PostedDate": "2013-12-10T12:41:51.023-08:00",
+      "Id": 126878
+    },
+    {
+      "Message": "I had the same problem with the phonegap.d.ts like warjockey.\nFixed it for now by removing it from the phonegap.d.ts and a cast to <any> when I needed the results property.\nThanks\n",
+      "PostedDate": "2013-12-11T03:19:16.663-08:00",
+      "Id": 126963
+    },
+    {
+      "Message": "I'm seeing a lot of people have resolved their original issue after some investigation and found things to be working as intended (ie the compiler correctly complaining about some incompatible extension/inheritance). I'm going to close this issue since there doesn't appear to be an actual compiler bug here (although the error message could be more helpful in some cases), anyone should feel free to re-open this or log a new issue if they thing the error they're seeing is indeed a compiler bug at this point.",
+      "PostedDate": "2013-12-12T12:08:57.893-08:00",
+      "Id": 127159
+    },
+    {
+      "Message": "Same here. After I removed phonegap, there was no compiler error.",
+      "PostedDate": "2014-04-25T00:26:02.433-07:00",
+      "Id": 142962
+    }
+  ]
+}

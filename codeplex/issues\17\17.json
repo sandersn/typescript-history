@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We've added support for Jake, which should help support building the compiler and language service on OS X and Linux.",
+    "ClosedDate": "2013-01-24T08:47:57.493-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Currently, the Makefile in the repository is an NMake file, and can only be running on Windows. We need a GNU-make-makefile or a cross-platform build tool for developers using other platforms.\n\nI've just modified the original Makefile to running on OSX. It's in the attachments. I've also tested it on cygwin. And it seems working fine.",
+    "LastUpdatedDate": "2014-06-03T07:30:26.147-07:00",
+    "PlannedForRelease": "TypeScript 0.8.2",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T18:38:01.017-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Support building on OSX and Linux",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 17
+  },
+  "FileAttachments": [
+    {
+      "FileId": 499838,
+      "FileName": "Makefile",
+      "DownloadUrl": ".\\499838"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "For people who want to try this makefile, notice that you won't be able to run \"make runtests\" successfully. It's because TypeScript compiler uses backslashes(\\) for paths everywhere. It only switch to forward-slash(/) when you're running from tsc, the command line compiler. This is another issue.",
+      "PostedDate": "2012-10-01T18:53:30.043-07:00",
+      "Id": 78240
+    },
+    {
+      "Message": "Thank you for your effort! It looks though that the build just simply copies a few files *.ts files around. Here is my output:\n\nif [ ! -e built ] ; then  mkdir built ; fi\nif [ ! -e built/local ] ; then  mkdir built/local ; fi\nif [ ! -e built/localtest ] ; then  mkdir built/localtest ; fi\ncp -f typings/lib.d.ts built/local/lib.d.ts\ncp -f typings/jquery.d.ts built/local/jquery.d.ts\ncp -f typings/winjs.d.ts built/local/winjs.d.ts\ncp -f typings/winrt.d.ts built/local/winrt.d.ts\n\nI was hoping that I would get an editor running like I have on the official playground site, I guess I have to dig in myself and see if I can make this work somehow.",
+      "PostedDate": "2012-10-01T23:19:06.733-07:00",
+      "Id": 78247
+    },
+    {
+      "Message": "@Mahlzeit\n\nMake runs the first target in the Makefile. So in this case it'll run prebuild-local, which is - like you said, just simply copy some files.\n\nYou have to run \"make local\" to compile tsc. Or, run \"make install\" with this updated Makefile, which have disabled tests on the install target.\nhttps://gist.github.com/3815802\n\nAnd you won't get the editor like the one on the website. This repository only includes TypeScript compiler and some sample codes. The source code of VS plugin is not included, too.",
+      "PostedDate": "2012-10-01T23:55:52.46-07:00",
+      "Id": 78249
+    },
+    {
+      "Message": "It's almost like we're a Windows shop :)\n\nThat's for the suggestion.  We'll look into it.",
+      "PostedDate": "2012-10-03T20:13:21.35-07:00",
+      "Id": 78509
+    },
+    {
+      "Message": "Now that all the tests use '/' as a path separator, the tests run fine under Linux and OSX.  Having a Makefile specifically for devs who want to work on those platforms would greatly help adoption.",
+      "PostedDate": "2012-11-03T04:29:08.583-07:00",
+      "Id": 81578
+    }
+  ]
+}

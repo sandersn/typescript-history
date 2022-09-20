@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-10T09:58:13.063-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Unfortunately 0.9.5 is a wash for me right now. Where in 0.9.1 I could compile one of my smaller projects very quickly (about 5 seconds if only compiling to bundle), in 0.9.5 it takes a *long* time and eventually reports an out of stack space error. Originally this seemed to revolve around some overloaded constructors that had been created (even though they were not only valid according to spec, but also ordered correctly), so I removed all overloads only to have the issue move deeper into the PullTypeResolver. \r\n\r\nUnfortunately without any indication on what could actually be causing the problem it is very difficult (if not impossible) to debug and correct possible code issues.\r\n\r\nAn attempt to compile the project via nodejs in debug mode pulls up the following:\r\n\r\n< node_modules\\typescript\\bin\\tsc.js:35153\r\n<         NormalPullDecl.prototype.semanticInfoChain = function () {\r\n<                                                               ^\r\n< RangeError: Maximum call stack size exceeded",
+    "LastUpdatedDate": "2013-12-10T09:58:13.063-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-06T02:30:57.293-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.5 - Maximum call stack size exceeded",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1973
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you share the project you see this in?\n\nPlease re-open using the button on top, when you have more info.\n\r\n\r** Closed by paulb 12/06/2013 10:56AM",
+      "PostedDate": "2013-12-06T10:56:28.623-08:00",
+      "Id": 126672
+    },
+    {
+      "Message": "I seem to have boiled it down to the following code snippet:\r\n\r\n```\r\n\t/**\r\n\t  * Defines a generic promise object.\r\n\t  */\r\n\texport interface Promise<TSuccess, TError> {\r\n\t\t// NOTE: The order of these is important to TS.\r\n\r\n\t\tthen(successFn: any): Promise<TSuccess, TError>;\r\n\r\n\t\tthen(successFn: any, errorFn: any): Promise<TSuccess, TError>;\r\n\r\n\t\t///**\r\n\t\t//\t* Specifies the success function to invoke once the promise has been completed.\r\n\t\t//\t* @param successFn The function to invoke if the promise completes successfully.\r\n\t\t//\t*/\r\n\t\t//then<TSuccessResult>(successFn: (value: TSuccess) => Promise<TSuccessResult, TError>): Promise<TSuccessResult, TError>;\r\n\r\n\t\t///**\r\n\t\t//\t* Specifies the success function to invoke once the promise has been completed.\r\n\t\t//\t* @param successFn The function to invoke if the promise completes successfully.\r\n\t\t//\t*/\r\n\t\t//then<TSuccessResult>(successFn: (value: TSuccess) => TSuccessResult): Promise<TSuccessResult, TError>;\r\n\t\t\r\n\t\t///**\r\n\t\t//\t* Specifies the success and error functions to invoke once the promise has been completed.\r\n\t\t//\t* @param successFn The function to invoke if the promise completes successfully.\r\n\t\t//\t* @param errorFn The function to invoke if the promise completes unsuccessfully.\r\n\t\t//\t*/\r\n\t\t//then<TSuccessResult, TErrorResult>(successFn: (value: TSuccess) => Promise<TSuccessResult, TError>, errorFn: (value: TError) => Promise<TSuccess, TErrorResult>): Promise<TSuccessResult, TErrorResult>;\r\n\r\n\t\t///**\r\n\t\t//\t* Specifies the success and error functions to invoke once the promise has been completed.\r\n\t\t//\t* @param successFn The function to invoke if the promise completes successfully.\r\n\t\t//\t* @param errorFn The function to invoke if the promise completes unsuccessfully.\r\n\t\t//\t*/\r\n\t\t//then<TSuccessResult, TErrorResult>(successFn: (value: TSuccess) => TSuccessResult, errorFn: (value: TError) => TErrorResult): Promise<TSuccessResult, TErrorResult>;\r\n\t}\r\n```\r\n\r\nIf I uncomment the commented out .then methods and comment the working versions out, then I get maximum call stack size exceeded. The uncommented versions work.",
+      "PostedDate": "2013-12-09T13:52:43.307-08:00",
+      "Id": 126673
+    },
+    {
+      "Message": "Cleaned up:\r\n\r\n\texport interface Promise<TSuccess, TError> {\r\n\t\tthen(successFn: any): Promise<TSuccess, TError>;\r\n\r\n\t\tthen(successFn: any, errorFn: any): Promise<TSuccess, TError>;\r\n\r\n\t\t//then<TSuccessResult>(successFn: (value: TSuccess) => Promise<TSuccessResult, TError>): Promise<TSuccessResult, TError>;\r\n\r\n\t\t//then<TSuccessResult>(successFn: (value: TSuccess) => TSuccessResult): Promise<TSuccessResult, TError>;\r\n\t\t\r\n\t\t//then<TSuccessResult, TErrorResult>(successFn: (value: TSuccess) => Promise<TSuccessResult, TError>, errorFn: (value: TError) => Promise<TSuccess, TErrorResult>): Promise<TSuccessResult, TErrorResult>;\r\n\r\n\t\t//then<TSuccessResult, TErrorResult>(successFn: (value: TSuccess) => TSuccessResult, errorFn: (value: TError) => TErrorResult): Promise<TSuccessResult, TErrorResult>;\r\n\t}",
+      "PostedDate": "2013-12-09T13:54:21.277-08:00",
+      "Id": 126676
+    },
+    {
+      "Message": "I'm not seeing any problems with the above code when building with our develop branch.  Can you trying pulling on our latest bits and verify?  Looks like we may have fixed this issue recently.\n\nPlease reopen if you still see the bug on our latest bits.\n\nThanks.",
+      "PostedDate": "2013-12-10T09:58:06.637-08:00",
+      "Id": 126816
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. TypeScript allows you to redeclare an existing variable name if and only if each redeclaration has exactly the same type as the other declarations. This is primarily to make life easier for folks using multiple declarations of same name for variables in different blocks that are actually a single scope in JavaScript, unlike some other languages (ie if/else blocks). Unfortunately a few common names for variables have been used up by the DOM APIs in the global namespace and thus exist in lib.d.ts. So you'll get an error like this any time you attempt to define a var name that isn't of type string, likewise for a var length that isn't of type number. The use of for-in is irrelevant, a simple top level variable declaration will exhibit the same behavior. It's pretty unfortunate that such common names are unavailable but the fact is that at runtime that variable has already been defined. The error experience here is also not great and should more clearly point you to the real source of the error (ie where is the conflicting declaration).",
+    "ClosedDate": "2014-03-13T12:08:11.77-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Unexpected error occurred in for-in syntax\r\n\r\nreproduction code.\r\n\r\n```\r\nvar obj = {};\r\n\r\nfor(var name in obj) {\r\n  var value = obj[name];\r\n  console.log(name + \" = \" + value);\r\n}\r\n```\r\n\r\n```\r\n$ tsc -v\r\nVersion 0.9.7.0\r\n$ tsc test.ts\r\ntest.ts(3,9): error TS2134: Subsequent variable declarations must have the same type.  Variable 'name' must be of type 'string', but here has type 'any'.\r\n```\r\n\r\nrename `var name` to `var p`.\r\n\r\n```\r\nvar obj = {};\r\n\r\nfor(var p in obj) {\r\n  var value = obj[p];\r\n  console.log(p + \" = \" + value);\r\n}\r\n```\r\n\r\n```\r\n$ tsc -v\r\nVersion 0.9.7.0\r\n$ tsc test.ts\r\n$ echo $?\r\n0\r\n```\r\n\r\nsame error occured on 506474cd34def85edcd4f3e563d1b67841b84508 's LKG.",
+    "LastUpdatedDate": "2014-03-13T12:08:11.77-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-13T07:44:46.143-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Unexpected error occurred in for-in syntax",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2308
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

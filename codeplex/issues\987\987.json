@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-02T17:01:07.093-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Due to the declaration of the Error class in TypeScript, the class can not serve as a base for other classes. We have a few specific error types that are being used in one project that inherit from the Error class. The definition right now in lib.d.ts is:\r\n```\r\ninterface Error {\r\n    name: string;\r\n    message: string;\r\n}\r\ndeclare var Error: {\r\n    new (message?: string): Error;\r\n    (message?: string): Error;\r\n    prototype: Error;\r\n}\r\n```\r\n\r\nIdeally it should be:\r\n```\r\ndeclare class Error {\r\n    name: string;\r\n    message: string;\r\n    \r\n    constructor(message?: string);\r\n}\r\n```\r\n\r\nThis would allow the following:\r\n```\r\nclass MyCustomError extends Error {\r\n\t\tconstructor(message?: string) {\r\n\t\t\tsuper(message);\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nWhich would yield the following JS code:\r\n```\r\nvar MyCustomError = (function (_super) {\r\n        __extends(MyCustomError, _super);\r\n        function MyCustomError(message) {\r\n                _super.call(this, message);\r\n        }\r\n        return MyCustomError;\r\n    })(Error);\r\n```\r\n\r\nAnd enable the following scenario:\r\n```\r\n        try {\r\n\t\tdoSomething();\r\n\t}\r\n\tcatch(e) {\r\n\t\tif (e instanceof MyCustomError) {\r\n\t\t\t// Do Something specific to this error type\r\n\t\t}\r\n\t\telse {\r\n\t\t\tthrow e;\r\n\t\t}\r\n\t}\r\n```",
+    "LastUpdatedDate": "2013-05-02T17:01:07.093-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-01T13:25:03.813-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Javascript's \"Error\" class is not extensible",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 987
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Actually... after looking at the problem a little more, I realized that it doesn't even really need to extend Error. Since you can throw anything in JS, it works fine without it. What I ended up using was the following:\n\n```\nclass PolicyEvaluationFailedError implements Error {\n    public name: string;\n    public message: string;\n\n    constructor() {\n        this.message = \"Could not evaluate policy client-side due to security restrictions\";\n    }\n}\n// Later in some method\ntry {\n    myClassInstance.evaluateUsagePolicy();\n} catch (e) {\n    if (e instanceof AbstractMethodNotImplementedError) {\n        // Do something\n    }\n    else {\n        throw e;\n    }\n}\n```\n\nThis works just fine in my scenario, so you can close this issue out.",
+      "PostedDate": "2013-05-02T06:52:10.757-07:00",
+      "Id": 99143
+    },
+    {
+      "Message": "Yeah, you've got it. Note your error class can use this more concise form if you want:\n\nclass MyCustomError implements Error {\n    constructor(public name: string, public message?: string) {        \n    }\n}",
+      "PostedDate": "2013-05-02T17:01:00.26-07:00",
+      "Id": 99250
+    }
+  ]
+}

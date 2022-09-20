@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Update from Joe is that this is a duplicate of http://typescript.codeplex.com/workitem/247 - same root cause",
+    "ClosedDate": "2013-01-30T14:08:15.17-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Loving TS and my project is getting larger and larger (Intellisense is slowing down considerably).\n\nNow getting this error from tsc:\n\nEXEC : tsc.js(14314, 13) Microsoft JScript runtime error : Unable to get value of the property 'getScopedTypeNameEx': object is null or undefined\n\nAnybody seen this and what might cause it?\n\n---bjorn",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-20T08:40:52.83-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Compiler crash: Unable to get value of the property 'getScopedTypeNameEx': object is null or undefined",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 464
+  },
+  "FileAttachments": [
+    {
+      "FileId": 561260,
+      "FileName": "ex.ts",
+      "DownloadUrl": ".\\561260"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "We haven't seen this before. Usually this results from an odd syntax error, but it could be a bug triggered by legitimate code as well. Do you have any code you could share that reproduces the issue?",
+      "PostedDate": "2012-11-26T13:13:56.287-08:00",
+      "Id": 83031
+    },
+    {
+      "Message": "I also get this error message when running tsc.exe from the console:\n\ntsc.js(14314, 13) Microsoft JScript runtime error: Unable to get value of the property 'getScopedTypeNameEx': object is null or undefined\n\nI get no other error messages from the compiler. The .ts-file is formerly a .js-file that I'm on my way to convert. I will continue to look for what could be causing this problem.",
+      "PostedDate": "2012-11-27T04:24:06.02-08:00",
+      "Id": 83095
+    },
+    {
+      "Message": "Here is some code to reproduce the error for me:\n\nvar Foo = function() { return {}; };\nvar Bar = { alpha: new Foo() };\nBar.beta = null;\n\nI tracked this down in a 1000+ js file project which I'm experimenting with moving to ts, it was fiddly to find since the equivalent to the var Foo and the var Bar lines were in different files, so Foo and Bar compiled fine apart, but compiling them together threw the getScopedTypeNameEx error.",
+      "PostedDate": "2012-12-07T08:16:51.76-08:00",
+      "Id": 83778
+    },
+    {
+      "Message": "Attached is a file which reproduces the problem when compiled with \"tsc ex.ts\"",
+      "PostedDate": "2012-12-10T01:18:46.66-08:00",
+      "Id": 83872
+    },
+    {
+      "Message": "I have encountered this problem today. It was caused by a missing static member in a class declared later in the same module - simple mistake while editing. All code is in a single file.\n\nMy code follows the pattern I've listed below but I haven't been able to reproduce the problem in a small example and the below code is handled correctly, raising the error message: \"464.ts(9,17): The property 's_v1' does not exist on value of type '{ s_v0: number; new(v: number): C; }' \".\n\nI would note that my biggest issue is that Visual Studio hangs when the error is present and I had to resort to tsc.exe at the command line to debug. [VS2012SP1, TypeScript 0.8.1.1, WebEssentials 2.0 ]\n\n------------\nmodule Test464\n{\n   class A {\n      constructor(private v:number) { }\n   }\n\n   class AA extends A {\n      constructor(private x:number) {\n         super(C.s_v1);   // typo - should be C.s_v1\n      }\n   }\n\n   class C {\n      static s_v0: number = 0;\n\n      constructor(private v:number) { }\n   }\n}",
+      "PostedDate": "2012-12-14T15:13:16.767-08:00",
+      "Id": 84190
+    }
+  ]
+}

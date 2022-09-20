@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the report and the minimal repro. This looks to be a duplicate of https://typescript.codeplex.com/workitem/1167",
+    "ClosedDate": "2013-06-28T10:30:26.37-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "My bad for the incorrect title :S.\r\n\r\nI have the following property that worked great in 0.8 but stopped working after the upgrade. I think it comes down to it generating code incorrectly for the variables defined inside of the property.\r\n\r\nI noticed it on the following property:\r\n\r\npublic get selectedPlan(): account.BillingPlan {\r\n            var plan = ko.utils.arrayFirst(App.plans(), (p: account.BillingPlan) => p.id === this.planId);\r\n            console.log(plan);\r\n            return plan ? plan : new account.BillingPlan(Constants.FREE_PLAN_ID, 'Free', 0, false, 1, 2500, 5, 1, 7);\r\n        }\r\n\r\nI noticed that the plan variable was not returning as expected.\r\n\r\nObject.defineProperty(Organization.prototype, \"selectedPlan\", {\r\n                get: function () {\r\n                    var _this = this;\r\n                    this.plan = ko.utils.arrayFirst(xx.App.plans(), function (p) {\r\n                        return p.id === _this.planId;\r\n                    });;\r\n                    console.log(plan);\r\n                    return plan ? plan : new xxx.account.BillingPlan(exceptionless.Constants.FREE_PLAN_ID, 'Free', 0, false, 1, 2500, 5, 1, 7);\r\n                },\r\n                enumerable: true,\r\n                configurable: true\r\n            });\r\n\r\nNotice that the variable (var plan) is set to this.plan, but everywhere else is using just plan. I created a smaller repro that you can run that will recreate this behavior.\r\n\r\npublic get selectedPlan(): account.BillingPlan {\r\n            var x = 2;\r\n            console.log(x);\r\n}\r\n\r\nObject.defineProperty(Organization.prototype, \"selectedPlan\", {\r\n                get: function () {\r\n                    var _this = this;\r\n                    this.x = 2;;\r\n                    console.log(x);\r\n....\r\n...\r\n..",
+    "LastUpdatedDate": "2013-06-28T10:30:26.37-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-28T10:04:42.197-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Property declarations broken after upgrading to 0.9",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1272
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

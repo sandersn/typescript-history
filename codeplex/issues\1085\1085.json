@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.877-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "Sometimes users want to add static members to builtin classes like String / Object. Since these are defined as: \r\n```\r\ndeclare var Object: {\r\n    new (value?: any): Object;\r\n    (): any;\r\n    (value: any): any;\r\n    prototype: Object;\r\n    getPrototypeOf(o: any): any;\r\n    getOwnPropertyDescriptor(o: any, p: string): PropertyDescriptor;\r\n    getOwnPropertyName\r\n   ...\r\n```\r\n\r\nAnd there is no way to extend ambients at the momemt: https://typescript.codeplex.com/workitem/917 an alternate solution would be to use an interface for static members of these classes e.g.: \r\n\r\n```\r\n//Pulled from lib.d.ts\r\n\r\ninterface Object {\r\n    toString(): string;\r\n    toLocaleString(): string;\r\n    valueOf(): Object;\r\n    hasOwnProperty(v: string): bool;\r\n    isPrototypeOf(v: Object): bool;\r\n    propertyIsEnumerable(v: string): bool;\r\n    [s: string]: any;\r\n}\r\n\r\ninterface ObjectStatic {\r\n    new (value?: any): Object;\r\n    (): any;\r\n    (value: any): any;\r\n    prototype: Object;\r\n    ...\r\n}\r\n\r\ndeclare var Object: ObjectStatic; \r\n```\r\nRef : http://basarat.github.io/TypeScriptDeepDive/#/modellingstatics\r\n\r\nThis is similar to how the team wrote jquery.d.ts ",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-29T15:08:51.207-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Use Static interfaces for ambient declarations in lib.d.ts",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 21,
+    "Id": 1085
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion. We're aware of the desire for this sort of feature, we've discussed a few possible fixes for the future. Assigning to Jonathon who handles suggestions.",
+      "PostedDate": "2013-05-30T19:31:21.75-07:00",
+      "Id": 101752
+    },
+    {
+      "Message": "Just wanted to add that this would be extremely useful if implemented anyhow.\n\nE.g. in ASP.Net Ajax library there is a very useful method _String.format_, which is equivalent to the _String.Format_ in C#. And currently there is no way of using this method with TS.\n\nIn SharePoint, ASP.Net Ajax library deployed by default everywhere, so no need to add any extra scripts to page, which makes impossibility of normally using _String.format_ especially annoying :(",
+      "PostedDate": "2013-06-22T04:42:51.693-07:00",
+      "Id": 103846
+    },
+    {
+      "Message": "I agree very much.  One of the cool things about Typescript has over Dart or Coffeescript is that it is touted as a superset of javascript.  We currently can do this in javascript and there are several libraries that extend native types.  Adding this change to the lib.d.ts file is a quick, non-invasive way of allowing Typescript to support already existing javascripts that leverage this feature of the javascript language.",
+      "PostedDate": "2013-09-07T18:05:36.31-07:00",
+      "Id": 112780
+    },
+    {
+      "Message": "Is there any way to add the _format class method_ to the String object in an ambient declaration with the latest version of Typescript?",
+      "PostedDate": "2013-11-10T03:54:10.22-08:00",
+      "Id": 122555
+    },
+    {
+      "Message": "Is this still on the map? Current state is pretty annoying.\n\nFor example just today I was working on code that uses `Uint8ClampedArray`, which is 100% API compatible with the regular `Uint8Array`, but I had to make a mess to make it working instead of just extending some interfaces.\n\nFor the project members: there is talk on DefinitelyTyped about this; many users encounter this problem and it is time to get it fixed. It has been dragging for months (year?)\n\nIf this cannot be solved soon in a official TypeScript release then we're going to schism the `lib.d.ts` into out own model, which would be a sad state because we'd be duplicating work and I think the community got better things to do then maintaining a second standard library (not to mention all the noise and confusion).",
+      "PostedDate": "2014-06-03T09:35:35.57-07:00",
+      "Id": 148698
+    },
+    {
+      "Message": "This came up again today on DefinitelyTyped, again with the Date object, and few days ago also for String.\n\nThis needs to be fixed, it is a pain-point for the typing community.\n\nhttps://github.com/borisyankov/DefinitelyTyped/pull/2340",
+      "PostedDate": "2014-06-15T17:03:56.23-07:00",
+      "Id": 149795
+    },
+    {
+      "Message": "Another one where most of the Date object was replicated to be able to extend it: https://github.com/borisyankov/DefinitelyTyped/pull/2325/files#diff-6be96271143d1c9d774e7662de1ba0a0R12",
+      "PostedDate": "2014-06-18T11:45:44.587-07:00",
+      "Id": 150056
+    },
+    {
+      "Message": "Let me understand this clearly - this ticket is opened for a year and the only action needed to solve it is changing the way native ecma types are defined in lib.d.ts? What are the consequences of this change? Benefits are ability to extend both static and instance namespaces for native objects.\n\nI've reach this place as I'm a sugar.js user, a lib which extends native types (the other notable one is rubyjs). I think you should support such kind of libraries.\n\nThanks,",
+      "PostedDate": "2014-06-24T12:29:00.45-07:00",
+      "Id": 150638
+    },
+    {
+      "Message": "I faced yet another issue today, unrelated to monkey patching or other non-straightforward ways to use JS. Another reason to have flexible definitions for builtin types is that Javascript itself evolves and there are many competing implementations with different sets of experimental features.\n\nNumber.isNaN() seems to be in future ES6 Harmony, and there are at least 2 implementations in the wild: Mozilla and v8.\n\nhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN\n\nFor my problem an ability to specify a different lib.d.ts using command line is enough",
+      "PostedDate": "2014-07-12T01:19:34.753-07:00",
+      "Id": 152157
+    },
+    {
+      "Message": "See https://github.com/borisyankov/DefinitelyTyped/issues/2498 for a cross-reference. I didn't realize I couldn't edit comments once added.",
+      "PostedDate": "2014-07-12T01:20:33.457-07:00",
+      "Id": 152158
+    }
+  ]
+}

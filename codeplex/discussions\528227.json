@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1200315",
+    "ThreadId": "528227",
+    "Html": "I use typescript to develop a RIA framework. A common thing in this kind of frameworks is an observable pattern. Also, there's a need to debug the code we write.<br />\nFor the first case now i use literal strings for property names like in the next code:<br />\n<pre><code>  set dataSource(v: collMod.BaseCollection&lt;collMod.CollectionItem&gt;) {\n                    if (this._dataSource !== v) {\n                        if (!!this._dataSource)\n                            this._tempValue = this.selectedValue;\n                        if (!!this._dataSource)\n                            this._unbindDS();\n                        this._dataSource = v;\n                        if (!!this._dataSource) {\n                            this._bindDS();\n                        }\n                        this._refresh();\n                        if (!!this._dataSource)\n                            this._tempValue = undefined;\n                        this.raisePropertyChanged('dataSource');\n                        this.raisePropertyChanged('selectedItem');\n                        this.raisePropertyChanged('selectedValue');\n                    }\n                }</code></pre>\n\nOn refactoring, i can change property names, and then i need to find everywhere i used those property names. #NAMEOF function can solve this problem.<br />\nI could write the above code like this:<br />\n<pre><code> set dataSource(v: collMod.BaseCollection&lt;collMod.CollectionItem&gt;) {\n                    if (this._dataSource !== v) {\n                        if (!!this._dataSource)\n                            this._tempValue = this.selectedValue;\n                        if (!!this._dataSource)\n                            this._unbindDS();\n                        this._dataSource = v;\n                        if (!!this._dataSource) {\n                            this._bindDS();\n                        }\n                        this._refresh();\n                        if (!!this._dataSource)\n                            this._tempValue = undefined;\n                        this.raisePropertyChanged(#NAMEOF(this.dataSource));\n                        this.raisePropertyChanged(#NAMEOF(this.selectedItem));\n                        this.raisePropertyChanged(#NAMEOF(this.selectedValue));\n                    }\n                }\n</code></pre>\n\nThe compiler on compilation will replace an expression like<br />\n<pre><code>#NAMEOF(this.dataSource)</code></pre>\n\nwith<br />\n<pre><code>'dataSource'</code></pre>\n\nAlso #NAMEOF can be used to obtain class names from expression like:<br />\n<pre><code>#NAMEOF(SomeClass)</code></pre>\n\nAnother problem is a code debugging.<br />\nIt would be good to have a preprocessor directive like #if, #elseif and etc.<br />\nUsing them a programmer could imbed debugging code into the program and it won't be in the release  version compiler's output. Instead, now we need to imbed code like this:<br />\n<pre><code> if (base_utils.isUndefined(nextObj)) {\n                                if (DebugLevel == DEBUG_LEVEL.HIGH) {\n                                    debugger;\n                                }\n                                if (DebugLevel &gt; DEBUG_LEVEL.NONE) {\n                                    global._onUnResolvedBinding(BindTo.Target, self.target, self._tgtPath.join('.'), path[0]);\n                                }</code></pre>\n\nThis code goes to the compiler output, even if it is not needed in the release version.<br />\n",
+    "PostedDate": "2014-01-29T00:20:51.037-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201042",
+    "ThreadId": "528227",
+    "Html": "Conditional compilation has been suggested several times, see my comment in the issue tracker: <a href=\"https://typescript.codeplex.com/workitem/111#CommentContainer9\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/111#CommentContainer9</a>\r<br />\n<br />\nIf you want to get the name of class as a string you can use the &quot;name&quot; property of the constructor. Unfortunately TS definitions do not export it and it's available only in non-IE browsers but it may be useful. It works like that:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Person {\n}\n\n<span style=\"color:Blue;\">var</span> cls = Person;\n<span style=\"color:Blue;\">var</span> name = cls[<span style=\"color:#A31515;\">&#39;name&#39;</span>];\nalert(name);\r\n</pre></div>See working example here: <a href=\"http://www.typescriptlang.org/Playground/#src=class%20Person%20%7B%0A%7D%0A%0Avar%20cls%20%3D%20Person%3B%0Avar%20name%20%3D%20cls%5B'name'%5D%3B%0Aalert(name)%3B\" rel=\"nofollow\">http://www.typescriptlang.org/Playground/#src=class%20Person%20%7B%0A%7D%0A%0Avar%20cls%20%3D%20Person%3B%0Avar%20name%20%3D%20cls%5B'name'%5D%3B%0Aalert(name)%3B</a>\r<br />\n<br />\nAnd the reference documentation (with a big warning) here: <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name\" rel=\"nofollow\">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name</a><br />\n",
+    "PostedDate": "2014-01-30T10:52:43.263-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201221",
+    "ThreadId": "528227",
+    "Html": "@wiktork, thanks for reply.\r<br />\nI know the issue about conditional compilation. Bu i wanted to add it also to a discussion.\r<br />\n<br />\nP.S. I also would be glad to see a method in typescript to obtain a module name from the module reference.\r<br />\nThe compiler knows this information, so there should be a way to expose this in typescript language.<br />\n",
+    "PostedDate": "2014-01-31T01:05:01.18-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201224",
+    "ThreadId": "528227",
+    "Html": "as to @johnturner reply to the issue.\r<br />\nAMD loading does not solve the problem of removing code from release version.\r<br />\nYou just need to have two modules for debug and release. It is difficult to maintain.\r<br />\nWhy always to seek for complex solutions, instead of implementing a straightforward one?\r<br />\nThe thing should be solved with one tool, not a set of different teks.<br />\n",
+    "PostedDate": "2014-01-31T01:12:38.433-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201475",
+    "ThreadId": "528227",
+    "Html": "I agree with @BBGONE and would like to see support for pre-processor directives.\r<br />\n<br />\nThere are definitely many workarounds, including the one suggested by @wiktork for RequireJS and <a href=\"https://ajaxmin.codeplex.com/wikipage?title=Preprocessor\" rel=\"nofollow\">an equivalent one for ASP.NET</a> <br />\n<pre><code>          ///#DEBUG\n              // This will be removed by the minifier in release mode\n          ///#ENDDEBUG</code></pre>\n\nI consider this a horrible blemish on the shiny codebase that is possible with TypeScript - it brings back painful memories of JSLint, and sometimes has me waking in a cold sweat in the middle of the night.\r<br />\n<br />\nHope it gets fixed!<br />\n",
+    "PostedDate": "2014-01-31T12:47:57.357-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201574",
+    "ThreadId": "528227",
+    "Html": "To @everyone\r<br />\nIt is interesting to read how many users ask the same question on the dart team.\r<br />\n<a href=\"https://groups.google.com/a/dartlang.org/forum/#!topic/misc/i81bRYO7eew\" rel=\"nofollow\">https://groups.google.com/a/dartlang.org/forum/#!topic/misc/i81bRYO7eew</a>\r<br />\n<br />\nThe Dart also have no preprocessor directives.\r<br />\nAnd some people even stupidly suggest to use a cpp precompiler to attain the goal.\r<br />\nBut the question was simple:<br />\n<pre><code>@Ladislav Thon\n&gt;&gt; You can run cpp (the C preprocessor) on any file, even a Dart source code. So you can do this\n&gt;&gt; today, without any issues.\n\nAgain you're kidding?\nPlease explain me in a maximum five steps how I can use this today without any trick.\n\n#if WEB_CLIENT\n#error Illegal use of this library in the web client\n#end\n\nLimitation to you.\nIf I can not use it after about five minutes after your answering then your answer will be not accepted.\n\nAnother restrictions.\n1. Do not offer to setup C preprocessor because this approach will not work where it (preprocessor) is not present.\n2. Do not offer to set manually directive WEB_CLIENT because many people are lazy.\n</code></pre>\n\nThe Dart team are stubborn to introduce this feature.\r<br />\nBut the dart compile has a tree shaking feature, but typescript does not have it.\r<br />\n<a href=\"http://stackoverflow.com/questions/20288002/is-there-a-compiler-preprocessor-in-dart\" rel=\"nofollow\">http://stackoverflow.com/questions/20288002/is-there-a-compiler-preprocessor-in-dart</a>\r<br />\n<br />\nI don't believe that the teams are very reluctant to introduce it into their compilers.<br />\n",
+    "PostedDate": "2014-02-01T01:59:38.66-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201594",
+    "ThreadId": "528227",
+    "Html": "@BBGONE The &quot;debugger&quot; statement can be removed during minification with UglifyJS2: <a href=\"https://github.com/mishoo/UglifyJS2#compressor-options\" rel=\"nofollow\">https://github.com/mishoo/UglifyJS2#compressor-options</a> (drop_debugger)\r<br />\nThe same can be done for console.* calls (drop_console - like console.assert(typeof nextObj !== 'undefined', 'nextObj is undefined!') ). With &quot;break on errors&quot; turned on it gives pretty nice development assertions that are disabled in production build. They're not true build directives - I know - but well... beggars can't be choosers!\r<br />\n<br />\nBy the way using cpp processor on Dart source code.... LOL! :)<br />\n",
+    "PostedDate": "2014-02-01T03:38:38.643-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202635",
+    "ThreadId": "528227",
+    "Html": "Given how easy this feature must be to implement, and how many people have requested it in the forums - I am really surprised at the resistance from the TypeScript team.<br />\n",
+    "PostedDate": "2014-02-04T11:53:04.003-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:43.067-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "It would be great if enums still acted as numbers for arithmetic and bitwise operators, but could also be toString'ed correctly.\r\n\r\nThat could be done by creating a class for an enum, and overriding valueOf and toString.\r\n\r\nAlso the name of an enum should be possible to use as a converter function from number to the enum (similar to Number(\"12\")).\r\n\r\n \r\n\r\nCreating classes for enums might sound non-performant, but actually there could only be a small number of values per enum.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-20T08:15:30.317-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Suggestion for enums",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 459
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think the concept of enums should be expanded beyond C#'s crappy implementation of them. \n\nEnums are conceptually a group of related constants. They should be able to take values of _any_ type, not just integers. This is how they work in Java and it is much nicer than the C# equivalent. \n\nIt would also be nice if they supported their own methods (as they do in Java). \n\nAlso, since they should support any type, to get the underlying value I think you'd call a .value() method or something similar (rather than a cast, which requires the user has to explicitly specify the value type)\n\nIn addition, right now, type safety is not enforced on enums. This needs to be fixed. I can do this: \n```\nenum Dog{\n    Fido,\n    Rover\n}\n\nvar a: Dog = 5;\n```\n",
+      "PostedDate": "2013-01-30T08:28:21.303-08:00",
+      "Id": 87782
+    },
+    {
+      "Message": "An enum is commonly understood to be a set of distinct values that can be assumed by a variable of that type. Conceptually, the underlying representation of the values is an internal implementation detail. The values form a sequence so one can be incremented to another and greater than another. Use to index arrays is natural and desirable. The underlying implementation as labels for a sequence of integer values is often exposed but not strictly necessary. (What you proposed is a collection, not an enum.)\n\nYou could see\n```\nenum color {red, blue, green};          // note no association with underlying value\n```\nas syntactic sugar for\n```\n#define red 0\n#define blue 1\n#define green 2\n```\nand I would be perfectly happy if TypeScript were to implement enums in this way, writing the underlying integer into the generated javascript.\nBut it would be nice if some additional compile time features and checks were added, e.g.\n```\nenum color {red, blue, green};\n\ncolor.blue=color.green;               // error\n\nvar background: color = color.blue;   // ok\nbackground = 5;                       // error\nbackground = 0;                       // ideally an error too\n\nvar b: bool = ++color.red == color.blue;     // will be true\nb = color.blue > color.red;                  // will be true\nb = color.blue > 0;                          // ideally an error but could be\n                                             // undefined behaviour\n++color.green;                               // is undefined\n\nvar pallette: string[color] = [];        // a fixed size array accepting index values\n                                         // from the color enum\npallette[color.red] = '#ff0000';         // ok\npallette[5] = 'five';                    // error\n```\n\nand the behaviour of javascript functions, toString() etc., is undefined but probably use the underlying integer",
+      "PostedDate": "2013-03-21T09:44:14.06-07:00",
+      "Id": 93894
+    }
+  ]
+}

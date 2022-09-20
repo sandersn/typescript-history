@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Sounds like this is worked out -- please open a fresh work item if you do have a bug to avoid any confusion. Thanks!",
+    "ClosedDate": "2013-01-28T11:14:45.103-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Hello,\r\n\r\nIn my project I have a lot of modules whose declarations separated by several source files. I've updated typescript to v.0.8.2 and I've got a lot of strange compiler errors. Compiler have processed correctly only third of my modules. After some investigation I concluded that there might be some problem with importing of external modules. You can find two examples that show the issue in the attached \"cases.zip\".\r\n\r\n1) In first example we have a single module with two classes A and B separated by two files: a.ts, b.ts. That example is compiled without any errors and displays \"Hello world!\" in node as expected.\r\n\r\n2) I've added import of external module \"http\" from \"node.d.ts\" (version from typescript samples) to the a.ts and added an argument with \"http.ServerRequest\" type to the constructor of A class. Try to compile the code and you'll see something like this:\r\n```\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(7,32): The name 'B' does not exist in the current scope\r\nF:/Projects/test/a.ts(13,28): The property 'B' does not exist on value of type 'Test'\r\n```",
+    "LastUpdatedDate": "2013-01-28T11:14:45.103-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-27T04:49:34.01-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "External module conflicts with internal module whose declaration is located in separate source files in 0.8.2.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 657
+  },
+  "FileAttachments": [
+    {
+      "FileId": 611122,
+      "FileName": "cases.zip",
+      "DownloadUrl": ".\\611122"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Mixing internal modules with external was possible in 0.8.1.1 though the specification says that whenever you use at least one import or export inside a source file it is considered as an external module. That means that it won't be available in the global namespace anymore. I suppose that triggers your scope error because Test.B is not available in the global scope anymore ...\n```var a = new Test.A(new Test.B(\"Hello world!\"), null);```\nIn 0.8.2 this was fixed and aligned with the specification. If you are developing with Node.js use should use external modules or if you insist on using internal modules, declare it with ambient declarations in your global module.\n\nParagraph from specification:\n> External modules (section 9.4) are separately loaded bodies of code referenced using external module \nnames. An external module is written as a separate source file that contains at least one import or export \ndeclaration. In addition, external modules can be declared using AmbientModuleDeclarations in the global \nmodule that directly specify the external module names as string literals. This is described further in \nsection 0.",
+      "PostedDate": "2013-01-27T05:34:28.27-08:00",
+      "Id": 87447
+    },
+    {
+      "Message": "Thank you!\n\nWell, I get it, but how I can pass an instance of external type to an internal module?",
+      "PostedDate": "2013-01-27T08:17:58.983-08:00",
+      "Id": 87455
+    },
+    {
+      "Message": "I actually haven't found a solution but it seems it doesn't matter. As soon as you will make your module external you won't be able to output these two files into a single file. I had the same problem, so I decided to rewrite my code and to go with external modules. \nCheck my post on stackoverflow:\nhttp://stackoverflow.com/questions/14479708/typescript-0-8-2-importing-node-js-modules-in-internal-modules",
+      "PostedDate": "2013-01-27T09:38:45.457-08:00",
+      "Id": 87459
+    },
+    {
+      "Message": "I start rewriting my code yesterday... It is very uncomfortably to manage a huge amount of classes inside single file but it seems there is no choise. Thank you again for clarification! I think issue can be closed.",
+      "PostedDate": "2013-01-28T01:24:47.27-08:00",
+      "Id": 87491
+    },
+    {
+      "Message": "So did you switch to external modules? Why are you writing everything in one file, there is no need to do that ...",
+      "PostedDate": "2013-01-28T02:35:04.973-08:00",
+      "Id": 87494
+    },
+    {
+      "Message": "Classes of my application are splitted by several application layers: core, services, data access, controllers, etc. So now instead of \"core/controllerBase.ts, core/controllersFactory.ts, core/container.ts, etc.\" I have \"core.ts, dataAccess.ts, etc.\". I tried to work with internal modules as well as with namespaces from C# and that was my mistake.",
+      "PostedDate": "2013-01-28T07:31:37.917-08:00",
+      "Id": 87507
+    },
+    {
+      "Message": "So I assume you went with external modules. There is no need to put more than one class per file. Point of external modules is to use the loader and load each file separately. For each file in core/ there would be one module containing the class. But I think you came across the same problem as me - loading modules & namespaces.\n\nSo with described above you could load your module:\n```\nimport container = module('./core/container');\nvar containerObj = new container.Container(); // its just weird to have one class per module\n```\n\nWell there is a solution to this. You could concatenate all outputted modules (js) & declarations (d.ts) to a new location for example:\nbundles/core.js\nbundles/core.d.ts\nThat is actually what you are doing by putting multiple classes in one file ...\n\nThat way you could load module in this fashion:\n```\nimport core = module('./bundles/core');\nvar container = new core.Container(); // you have your core namespace\n```\nI assume you are currently doing just that, but having multiple classes in one file is messy ...\n\nSolutions:\n* Manually concatenate declaration (d.ts) files and use e.g. UglifyJS or any other tool for JavaScript concatenation\n* Check out gruntjs (I have heard that some people are using it for doing just that)\n* Contact me for my builder solution which will be probably published at end of the week and available on github & npm (it does everything you need in this case)",
+      "PostedDate": "2013-01-28T09:08:54.823-08:00",
+      "Id": 87515
+    }
+  ]
+}

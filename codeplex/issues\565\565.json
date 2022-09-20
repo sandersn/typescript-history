@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This seems to work in Chrome.",
+    "ClosedDate": "2014-01-17T12:21:19.62-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "* goto the playground\r\n* clear the existing code\r\n* start to type 'var watch'\r\n> as soon as the 'h' gets typed things fall apart\r\n> this happens *only* in Firefox (I have latest)",
+    "LastUpdatedDate": "2014-01-17T12:21:19.62-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-18T10:56:17.37-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "typing 'var watch' in FF stops",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 565
+  },
+  "FileAttachments": [
+    {
+      "FileId": 579091,
+      "FileName": "Untitled.png",
+      "DownloadUrl": ".\\579091"
+    },
+    {
+      "FileId": 579101,
+      "FileName": "Untitled2.png",
+      "DownloadUrl": ".\\579101"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "To be more precise - I see this with FF 17.0.1 and beta 18",
+      "PostedDate": "2012-12-18T11:10:15.827-08:00",
+      "Id": 84529
+    },
+    {
+      "Message": "It seems that the problem is in the StringHashTable that doesn't check if a property is inherited or not. In Firefox objects have a function 'watch' (https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/watch). \r\n\r\nThe parser checks during 'scanIdentifier' if that identifier is a keyword. Because of the faulty hash table a lookup in LexKeywordTable returns an identifier which can't be resolved from the staticTokens map. Because of that the scan-function returns null which isn't so good ;-)",
+      "PostedDate": "2012-12-18T11:44:21.947-08:00",
+      "Id": 84540
+    },
+    {
+      "Message": "Nice find/analysis! Marking 'active'.",
+      "PostedDate": "2012-12-18T11:47:14.383-08:00",
+      "Id": 84541
+    },
+    {
+      "Message": "Similar to watch/unwatch is __proto__ which you'll find in Chrome and Firefox. Also that one can't be gotten around with using the BlockInstricts trick",
+      "PostedDate": "2012-12-21T03:57:38.057-08:00",
+      "Id": 84766
+    },
+    {
+      "Message": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!\n\r\n\r** Closed by RyanCavanaugh 08/07/2013 11:53AM",
+      "PostedDate": "2013-08-07T11:53:08.667-07:00",
+      "Id": 115009
+    },
+    {
+      "Message": "Same, same but different is the code that runs in Chrome and uses ___defineGetter__ or __defineSetter__. Somewhere along the path a table lookup will return the native function and not the expected type (e.g. an array). \r\n\r\nTo reproduce, open this link in Chrome: http://www.typescriptlang.org/Playground/#src=var%20req%20%3D%20%7B%7D%3B%0Areq.__defineGetter__('foo'%2C%20function()%20%7B%0A%09return%20'foo'%3B%0A%7D)%3B and see exceptions in the browser console: \r\n\r\nbject {stack: Array[11], message: \"TypeError: Cannot call method 'getSymbol' of undefined\"}\r\nmessage: \"TypeError: Cannot call method 'getSymbol' of undefined\"\r\nstack: Array[11]\r\n0: \"TypeError: Cannot call method 'getSymbol' of undefined\"\r\n1: \"    at n.getMemberSymbol (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:124:8970)\"\r\n2: \"    at n.computeDottedNameExpressionSymbol (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:126:14415)\"\r\n3: \"    at n.resolveDottedNameExpression (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:126:12266)\"\r\n4: \"    at n.resolveAST (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:126:5988)\"\r\n5: \"    at n.computeInvocationExpressionSymbol (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:127:7449)\"\r\n6: \"    at n.resolveInvocationExpression (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:127:6964)\"\r\n7: \"    at n.extractResolutionContextFromPath (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:133:11462)\"\r\n8: \"    at n.pullGetSymbolInformationFromPath (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:133:13971)\"\r\n9: \"    at t.getSymbolInformationFromPath (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:137:1900)\"\r\n10: \"    at t.getTypeAtPosition (http://www.typescriptlang.org/Script/vs/languages/typescript/lib/typescriptServices.js:137:24056)\"\r\nlength: 11\r\n__proto__: Array[0]\r\n__proto__: Object",
+      "PostedDate": "2013-09-19T01:00:51.453-07:00",
+      "Id": 115010
+    }
+  ]
+}

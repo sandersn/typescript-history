@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:40.863-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Suppose a function definition: f(h: () => boolean) {...}\r\n\r\nIf I call this function with f(() => {throw error}), then I got the falsy error:\r\n\r\nSupplied parameters do not match any signature of call target:\r\n\tCall signatures of types '() => void' and '() => boolean' are incompatible.\r\n\r\nBy explicitly declaring the return type f((): boolean => {throw error}) won't help, either, which got falsy error:\r\n  Function 'expression' declared a non-void return type, but has no return expression. ",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-03T12:18:51.31-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Falsy error on throwing error in a function",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 1,
+    "Id": 1961
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This does work for me:\n\n```\nfunction f(h: () => boolean) { }\nf((): boolean => { throw undefined });\n```\n\nCan you clarify on that point?",
+      "PostedDate": "2013-12-03T20:57:19.667-08:00",
+      "Id": 126034
+    },
+    {
+      "Message": "Yup, that works for me too (I asked for this issue to be filed but I didn't know that syntax was available for arrow functions). I can see how this makes sense (the lack of a return statement results in the return type being 'void'). Would it make sense for the compiler to accept code like this without the type being explicitly specified?",
+      "PostedDate": "2013-12-04T09:34:16.097-08:00",
+      "Id": 126093
+    },
+    {
+      "Message": "This is by design.  The type of the function provided is void if you do not provide any explicit return type (and one cannot be inferred via return statements).  Thus the function provided does not match the type of the function expected.\n\nAlso, the only reason the return type annotation is allowed to match the function body is due to a specific clause in the spec, namely Section 6.3 which states: \n\n  _\"An explicitly typed function returning a non-void type must have at least one return statement somewhere in its body. An exception to this rule is if the function implementation consists of a single ‘throw’ statement.\"_\n\nIf the body of the function contains any other statements, then it will also need to return a value which matches the 'boolean' type expected.",
+      "PostedDate": "2013-12-04T09:55:52.713-08:00",
+      "Id": 126099
+    },
+    {
+      "Message": "Whoa, the exception is really interesting - thanks for the details.  I'm curious - why is it so restrictive?\n\nFor example, why is this ok:\n```\n        var callback = (): boolean => {\n            throw error;\n        };\n```\n\nbut this is not:\n```\n        var callback = (): boolean => {\n            console.log(\"foobar\");\n            throw error;\n        };\n```",
+      "PostedDate": "2013-12-04T11:17:46.643-08:00",
+      "Id": 126119
+    },
+    {
+      "Message": "A typical pattern is to have a function which consists entirely of \"throw NotImplemented()\" when there is a function outline, but the body is still TODO, (or perhaps to indicate the method should never actually be called in some patterns).  In these specific cases, it's not really an error if the body doesn't match the signature.  Most other times, if you have a function with a return type, and a body that never returns that type, it is usually an error.  You could argue there are other situations where this might be valid also (such as the above with a console.log first), but this keeps the rules and implementation clear and simple, and covers the majority of cases.",
+      "PostedDate": "2013-12-04T14:53:28.76-08:00",
+      "Id": 126164
+    },
+    {
+      "Message": "Cool, makes total sense - thanks again for the info!",
+      "PostedDate": "2013-12-04T15:21:07.713-08:00",
+      "Id": 126170
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 12/04/2013 9:55AM",
+      "PostedDate": "2013-12-04T09:55:59.127-08:00",
+      "Id": 127015
+    },
+    {
+      "Message": "Marking as a proposed feature that we may want to consider allowing this in a later release.",
+      "PostedDate": "2013-12-11T10:47:50.993-08:00",
+      "Id": 127016
+    }
+  ]
+}

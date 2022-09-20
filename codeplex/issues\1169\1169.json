@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-18T22:57:32.167-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I've attached the files in question, but the error is fairly simple to reproduce. As it says in the subject, maps of generic types don't seem to be able to used as parameters. I'm not sure if it's specifically related to ambient definition files, or if it's for everything. For me it occurred and is reproducable using an ambient definition file, so that's what this example uses.\r\n\r\nApologies for the class/interface names.\r\n\r\nkitty.d.ts\r\n```\r\ndeclare module cats {\r\n\r\n    export interface IKitty {\r\n\r\n    }\r\n\r\n    export class Cat<CatType extends IKitty> {\r\n        constructor();\r\n    }\r\n\r\n    export class CatBag {\r\n        constructor(cats: { string: Cat<IKitty>; });\r\n    }\r\n\r\n}\r\n```\r\napp.ts\r\n```\r\n///<reference path=\"kitty.d.ts\"/>\r\n\r\nvar catMap = <{ string: cats.Cat<cats.IKitty>; }>{};\r\ncatMap['blackie'] = new cats.Cat<cats.IKitty>();\r\ncatMap['fluffy'] = new cats.Cat<cats.IKitty>();\r\n// compiler gives error here: Supplied parameters do not match any signature of call target\r\nvar catBag = new cats.CatBag(catMap);\r\n```\r\n\r\nIf you change the type of the map to { string: any; } in both files, then the compile error disappears. For the time being this is what I'm using as a work around, but obviously it entirely removes the type safety of the map. You can also supply multiple signatures for the same method, which seems to work and might be a bit more palatable (see below)\r\n\r\n```\r\n    export class CatBag {\r\n        constructor(cats: { string: any; });\r\n        constructor(cats: { string: Cat<IKitty>; });\r\n    }\r\n\r\n```",
+    "LastUpdatedDate": "2013-08-13T10:48:32.25-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-18T20:23:34.887-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "0.9.0 Generic Types in Maps cannot be passed as parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1169
+  },
+  "FileAttachments": [
+    {
+      "FileId": 694653,
+      "FileName": "app.ts",
+      "DownloadUrl": ".\\694653"
+    },
+    {
+      "FileId": 694659,
+      "FileName": "kitty.d.ts",
+      "DownloadUrl": ".\\694659"
+    },
+    {
+      "FileId": 694668,
+      "FileName": "app.ts",
+      "DownloadUrl": ".\\694668"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "includes this",
+      "PostedDate": "2013-06-18T20:25:16.8-07:00",
+      "Id": 103358
+    },
+    {
+      "Message": "Oops error in original code",
+      "PostedDate": "2013-06-18T20:36:23.437-07:00",
+      "Id": 103359
+    },
+    {
+      "Message": "Thanks!  I'm testing the fix for this now.  I should be able to get it checked into the develop branch by tomorrow morning.",
+      "PostedDate": "2013-06-18T22:47:53.193-07:00",
+      "Id": 103365
+    },
+    {
+      "Message": "While it seems like the compiler does have a legitimate issue compiling this code. it also looks like you misunderstand how to declare typed maps in typescript.\n\nWhat you want to use is this\n```typescript\nvar catMap: { [_:string]: cats.Cat<cats.IKitty>; } = {};\n```\nand\n```typescript\n    export class CatBag {\n        constructor(cats: { [_:string]: Cat<IKitty>; });\n    }\n```\n\nWhich, incidentally, seems to work fine in the playground.  ^_^\n",
+      "PostedDate": "2013-06-18T22:49:55.87-07:00",
+      "Id": 103366
+    },
+    {
+      "Message": "Judging by your code sample, I think you have some syntax a little off which is causing the issue.  From the code and the names 'catBag' and 'catMap' it looks like you are intending to have an object indexed by a string, where each property is a \"new cats.Cat<cats.IKitty>();\".  Is this correct?\n\nHowever when you write a type literal as \"{ string: Cat<IKitty>; }\", what this says is that my object will have a property _named_ 'string' that will have a value of 'Cat<IKitty>'.\n\nIf you want to say my object with have properties with a key of type string and a value of type 'Cat<IKitty>', then the type literal should be \"{ [index: string]: cats.Cat<cats.IKitty>; }\".  This says when I index into my object with a string value, the value returned will be of type 'cat.Cat<cats.IKitty>'.\n\nIf I change the type of 'catMap', and the constructor on 'catBag' to read as shown above, then the code works for me.\n\nPlease reopen with more info if I misunderstand the intent of the code.  Thanks!",
+      "PostedDate": "2013-06-18T22:57:24.99-07:00",
+      "Id": 103368
+    },
+    {
+      "Message": "Heh. You know, it never occurred to me that  I was actually defining an interface here, not a map, but yeah, you're right. Seems obvious now you've pointed it out. \n\nThat said, I think it's still a bug because, even though I am using an interface as a map, the code should still compile and run. ie. yes, the semantics of what I'm attempting to do are wrong, but the syntax is still valid. I've simplified the example to illustrate and tested it in the playground (doesn't work). Looking back over my Twitter convo with Joe, this appears to be what he has said he has fixed too, so I guess the bug is closed either way.\n\n```\nexport interface IKitty {\n\n    }\n\nexport class Cat<CatType extends IKitty> {\n    constructor() {\n\t\n\t}\n}\n\nexport class CatBag {\n    constructor(cats: { barry: Cat<IKitty>; }) {\n\t\t\n\t}\n}\nvar cat = new Cat<IKitty>();\nvar catThing = {\n\tbarry: cat\n};\nvar catBag = new CatBag(catThing);\n```\n\nAnyway, thanks for taking the time to let me know the folly of my ways. Unfortunately I have told a couple of other people about this great \"shorthand\" way of defining maps, so I'm just going to go off and eat my hat for a bit.\n\n",
+      "PostedDate": "2013-06-18T23:25:32.347-07:00",
+      "Id": 103370
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:22:25.873-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hi,  this looks a bit inconsistent:\r\n\r\n```\r\ninterface IFoo{\r\n\tfoo():string;\r\n}\r\n\r\n// Compilation Error:\r\n// Class 'FooClass' declares interface 'IFoo' \r\n// but does not implement it: \r\n// Types of property 'foo' of types 'FooClass' and 'IFoo' \r\n// are incompatible: Call signatures of types '() => any' \r\n// and '() => string' are incompatible\r\n\r\n    class FooClass implements IFoo {\r\n\r\n        foo = () => undefined;\r\n    }\r\n\t\r\n\tclass FooClass2 implements IFoo {\r\n\r\n        foo = () => <string> undefined; // Needs cast to suppress error\r\n    }\r\n\r\n // No cast needed here\r\n    var fooVar: IFoo = {\r\n\t\t\r\n\t\tfoo: () => undefined\r\n    }\r\n\r\n```\r\n\r\nIn the above, the foo method of IFoo requires a string return value. Hence the compiler complains when  class FooClass returns undefined. The error goes away when the return value is cast to string.\r\n\r\nBut when a similar object literal is assigned to a variable typed by the same interface no such cast is necessary.\r\n\r\nWhy is there a discrepancy between when a class implements an interface and when an object literal is annotated with the same interface?\r\n\r\nI was also under the impression that for the purpose of interface implementations the return value is not enforced. If that is the case then FooClass should compile without error.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-14T04:04:38.807-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Class vs object literal with regard to interface implementation",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 813
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, this does look like some inconsistent behavior. You're right to expect the class and object literal implementation to be checked the same way.\r\n\r\nAs far as return types in interface implementations go, they are certainly checked, otherwise you'd be able to create some very unsound type hierarchies. It wouldn't make much sense to allow something like this:\r\n\r\ninterface Point {\r\n\tx: number;\r\n\ty: number;\r\n\tgetDist(x: number, y: number): number;\r\n}\r\n\r\nclass Point3D implements Point {\r\n\tconstructor(public x: number, public y: number, public z: number) {}\r\n\tpublic getDist(x: number, y: number) {\r\n\t\treturn { foo: \"hi\" };\r\n\t}\r\n}\r\n\r\nvar p: Point = new Point3D(1,2,3);\r\nvar len: number = p.getDist(3,4);\r\n\r\nIf the interface return type is 'any' or a less derived type than the implementer then that is satisfactory even though not an exact type match. Perhaps you were confusing it with how overload resolution is performed:\r\n\r\ninterface Foo {\r\n\tbar(x: string): number;\r\n\tbar(y: string): string;\r\n}\r\n\r\nvar f: Foo;\r\nvar result = f.bar(\"hi\"); // ambiguous call",
+      "PostedDate": "2013-03-14T16:42:46.06-07:00",
+      "Id": 93330
+    },
+    {
+      "Message": "My opinion: \n* The return type of the interface should be enforced, and it is, so no change required here. \n* undefined is a valid value for string so a cast should not be required.  \n\n\n",
+      "PostedDate": "2013-03-18T16:56:46.15-07:00",
+      "Id": 93605
+    }
+  ]
+}

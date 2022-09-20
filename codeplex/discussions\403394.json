@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "942325",
+    "ThreadId": "403394",
+    "Html": "\r\n<p>Hi,</p>\r\n<p>Just downloaded the new TS version 0.8.1. My project that compiled fine with 0.8 now fails to compile with &quot;code 3&quot; and no other error messages.</p>\r\n<p>Any hints?</p>\r\n<p>---bjorn</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-15T13:27:24.413-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "942333",
+    "ThreadId": "403394",
+    "Html": "\r\n<p>Ouch, sorry, my CSPROJ was hardcoded to point to the 0.8.0 version of the compiler (the 0.8.1 MSI of course wiped&nbsp;out&nbsp;that folder).&nbsp;</p>\r\n<p>---bjorn</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-15T13:38:12.25-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "942352",
+    "ThreadId": "403394",
+    "Html": "\r\n<p>That's right - projects created with 0.8.0 will need to be manually edited to remove the hardcoded version dependency.&nbsp; We've removed this from the templates in v0.8.1 so this problem will not occur in future drops.&nbsp; You can replace the PostBuild\r\n step in the proj file with the following - borrowed from the new project templates:</p>\r\n<p><span style=\"font-size:x-small; font-family:Consolas; color:#0000ff\"><span style=\"font-size:x-small; font-family:Consolas; color:#0000ff\"><span style=\"font-size:x-small; font-family:Consolas; color:#0000ff\"><span style=\"font-size:x-small; font-family:Consolas; color:#0000ff\">&nbsp;</span></span></span></span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>&lt;PropertyGroup Condition=<span style=\"color:#a31515\">&quot;'$(Configuration)' == 'Debug'&quot;</span>&gt;\r\n  &lt;TypeScriptSourceMap&gt; --sourcemap&lt;/TypeScriptSourceMap&gt;\r\n&lt;/PropertyGroup&gt;\r\n&lt;Target Name=<span style=\"color:#a31515\">&quot;BeforeBuild&quot;</span>&gt;\r\n  &lt;Message Text=<span style=\"color:#a31515\">&quot;Compiling TypeScript files&quot;</span> /&gt;\r\n  &lt;Message Text=<span style=\"color:#a31515\">&quot;Executing tsc$(TypeScriptSourceMap) @(TypeScriptCompile -&gt;'&amp;quot;%(fullpath)&amp;quot;', ' ')&quot;</span> /&gt;\r\n  &lt;Exec Command=<span style=\"color:#a31515\">&quot;tsc$(TypeScriptSourceMap) @(TypeScriptCompile -&gt;'&amp;quot;%(fullpath)&amp;quot;', ' ')&quot;</span> /&gt;\r\n&lt;/Target&gt;\r\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-11-15T14:04:53.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "943888",
+    "ThreadId": "403394",
+    "Html": "\r\n<p>Also make sure your project has a Configuration element up at the top, or you'll lose debugging support and experience Other Weirdness™.</p>\r\n<p>Example:</p>\r\n<p><span style=\"font-size:10pt\"></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">&lt;</span><span style=\"color:#a31515\">PropertyGroup</span><span style=\"color:blue\">&gt;</span>\r\n  <span style=\"color:blue\">&lt;</span><span style=\"color:#a31515\">Configuration</span> <span style=\"color:red\">Condition</span><span style=\"color:blue\">=</span><span style=\"color:black\">&quot;</span><span style=\"color:blue\"> '$(Configuration)' == '' </span><span style=\"color:black\">&quot;</span><span style=\"color:blue\">&gt;</span>Debug<span style=\"color:blue\">&lt;/</span><span style=\"color:#a31515\">Configuration</span><span style=\"color:blue\">&gt;</span>\r\n  &lt;...&gt;\r\n<span style=\"color:blue\">&lt;/</span><span style=\"color:#a31515\">PropertyGroup</span><span style=\"color:blue\">&gt;</span>\r\n</pre>\r\n</div>\r\n</span>\r\n<p></p>\r\n",
+    "PostedDate": "2012-11-19T04:24:54.93-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

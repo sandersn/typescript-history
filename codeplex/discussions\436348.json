@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "1014053",
+    "ThreadId": "436348",
+    "Html": "So it looks like the TS team is changing enums to be of the form:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">enum</span> Dog {\n    Labrador: 1,\n    Collie: 2,\n    Poodle: 3\n}\r\n</pre></div>The current form uses equal signs (as in C#).<br />\n<br />\nSince the design of enums is clearly open to change anyway, I'd like to see what other people think about the idea of going the whole 9 yards and making enums more similar to Java enums.<br />\n<br />\nThis basically would mean that you can have an enum of any type, not just integers, and that enums can contain methods of their own. In my opinion, this is a lot more powerful and useful than C#-style enums. <br />\n<br />\nFor example, the following is possible in Java with enums (shamelessly taken from Oracle's website):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">public</span> <span style=\"color:Blue;\">enum</span> Planet {\n    MERCURY (3.303e+23, 2.4397e6),\n    VENUS   (4.869e+24, 6.0518e6),\n    EARTH   (5.976e+24, 6.37814e6),\n    MARS    (6.421e+23, 3.3972e6),\n    JUPITER (1.9e+27,   7.1492e7),\n    SATURN  (5.688e+26, 6.0268e7),\n    URANUS  (8.686e+25, 2.5559e7),\n    NEPTUNE (1.024e+26, 2.4746e7);\n\n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">final</span> <span style=\"color:Blue;\">double</span> mass;   <span style=\"color:Green;\">// in kilograms</span>\n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">final</span> <span style=\"color:Blue;\">double</span> radius; <span style=\"color:Green;\">// in meters</span>\n    Planet(<span style=\"color:Blue;\">double</span> mass, <span style=\"color:Blue;\">double</span> radius) {\n        <span style=\"color:Blue;\">this</span>.mass = mass;\n        <span style=\"color:Blue;\">this</span>.radius = radius;\n    }\n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">double</span> mass() { <span style=\"color:Blue;\">return</span> mass; }\n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">double</span> radius() { <span style=\"color:Blue;\">return</span> radius; }\n\n    <span style=\"color:Green;\">// universal gravitational constant  (m3 kg-1 s-2)</span>\n    <span style=\"color:Blue;\">public</span> <span style=\"color:Blue;\">static</span> <span style=\"color:Blue;\">final</span> <span style=\"color:Blue;\">double</span> G = 6.67300E-11;\n\n    <span style=\"color:Blue;\">double</span> surfaceGravity() {\n        <span style=\"color:Blue;\">return</span> G * mass / (radius * radius);\n    }\n}\r\n</pre></div>Despite the obvious syntax differences, I think some of the features in that example are useful examples of what an enum could/should be able to do. <br />\n<br />\nFor me, the most important feature is the ability to make enums of any type. Integers are not the only things that can be constant. (I am aware that in TS/JS it is possible to make a readonly object that behaves the same way as an enum, but this is a lot of extra code and it just isn't the same as first-class support).<br />\n<br />\nThoughts?<br />\n<br />\n<a href=\"https://typescript.codeplex.com/workitem/459\" rel=\"nofollow\">Related workitem</a><br />\n",
+    "PostedDate": "2013-03-12T09:57:59.66-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1014213",
+    "ThreadId": "436348",
+    "Html": "I would rather them represent primitives instead of maintain state or have logic personally. They need to be able to appear in switch statements and be |'d together. The only thing TypeScript should do is basically make them a subtypes of number (or maybe string too) so you can restrict yourself to a specific enumerate at compile-time only.<br />\n",
+    "PostedDate": "2013-03-12T15:22:14.693-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1018552",
+    "ThreadId": "436348",
+    "Html": "An enum should be usable as an array subscript and switch case which normally implies the equivalent of an integer. Your Planet enum would be readily implemented as a static array class member and doesn't result significantly more code (just a conventional enum and a get accessor):<br />\n<pre><code>class Planet\n{\n   static enum planets {Mercury, Venus};\n   static planetData =\n      [{mass:3.303e+23, radius: 2.4397e6},\n       {mass:4.869e+24, radius: 6.0518e6}];\n}</code></pre>\n\n",
+    "PostedDate": "2013-03-20T14:14:53.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1018560",
+    "ThreadId": "436348",
+    "Html": "@cretz I'm not sure where you got the impression they were maintaining state- they are still constant and immutable. \r<br />\n<br />\nThe ORing issue is a tricky one. I've seen others mention before that it probably was a mistake overloading enums in C# to be both a collection of constants AND a collection of flags. I think actually those two things make more sense as different structures. \r<br />\n<br />\n@stanthomas Static classes members are not equivalent to enums.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">function</span> myFunc(foo: MyEnum) {\n    \n}\n\n<span style=\"color:Green;\">//Whoops, this won&#39;t work like you expect</span>\n<span style=\"color:Blue;\">function</span> myFunc2(foo: MyEnum2) {\n\n}\n\n<span style=\"color:Blue;\">enum</span> MyEnum {\n    Uno: 1,\n    Dos: 2\n}\n\n<span style=\"color:Blue;\">class</span> MyEnum2 {\n    <span style=\"color:Blue;\">static</span> Uno = <span style=\"color:#A31515;\">&quot;One&quot;</span>;\n    <span style=\"color:Blue;\">static</span> Dos = <span style=\"color:#A31515;\">&quot;Two&quot;</span>;\n}\r\n</pre></div>See the problem?\r<br />\n<br />\nIndexing into <em>arrays</em> with enums seems like an abuse to me. It's using what should be implementation details (the underyling type of a constant). Indexing into an object with them makes more sense, which would still be possible with my suggestion, you would just need to be cognizant of what the underlying type is (and whether it overloads <code>toString()</code>).\r<br />\n<br />\nSwitching on a more robust enum type could be possible as well since the compiler has all the type information it needs to rewrite such a switch statement into <code>===</code> statements.<br />\n",
+    "PostedDate": "2013-03-20T14:36:30.663-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1018936",
+    "ThreadId": "436348",
+    "Html": "I got that impression by the way that Java enums can work (though it's basically static state since they are essentially multiple singletons of a type). This has already been solved in the 9.x branch (ref the lagnuage spec). Enums will not have methods, and they will be considered numbers by the type checking engine. Basically, they satisfy &quot;number&quot; and &quot;number&quot; satisfies the enum but enum types cannot satisfy one another. The runtime support for this is minimal and translates directly. \r<br />\n<br />\nI like it though there are a few problems. I thin the main one I see is if you want to get all enums for a type, you can't do a for-in...This is because the keys of the enum object are both the ordinal values AND the enum names. Same problem with getting the count (oh only if we had macros or access to some of the compile-time information inline).<br />\n",
+    "PostedDate": "2013-03-21T08:44:21.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1018993",
+    "ThreadId": "436348",
+    "Html": "But an enum is a type and the class Planet is a namespace, so you could write<br />\n<pre><code>function myFunc2 (p: Planet.planets)</code></pre>\n\n<h1>-------------------</h1>\nAn enum is commonly understood to be a set of distinct values that can be assumed by a variable of that type. Conceptually, the underlying representation of the values is an internal implementation detail. The values form a sequence so one can be incremented to another and greater than another. Use to index arrays is natural and desirable. The underlying implementation as labels for a sequence of integer values is often exposed but not strictly necessary. (What you proposed is a collection, not an enum.)<br />\n<br />\nYou could see<br />\n<pre><code>enum color {red, blue, green};          // note no association with underlying value</code></pre>\n\nas syntactic sugar for<br />\n<pre><code>#define red 0\n#define blue 1\n#define green 2</code></pre>\n\nand I would be perfectly happy if TypeScript were to implement enums in this way, writing the underlying integer into the generated javascript.<br />\nBut it would be nice if some additional compile time features and checks were added, e.g.<br />\n<pre><code>enum color {red, blue, green};\n\ncolor.blue=color.green;               // error\n\nvar background: color = color.blue;   // ok\nbackground = 5;                       // error\nbackground = 0;                       // ideally an error too\n\nvar b: bool = ++color.red == color.blue;     // will be true\nb = color.blue &gt; color.red;                  // will be true\nb = color.blue &gt; 0;                          // ideally an error but could be\n                                             // undefined behaviour\n++color.green;                               // is undefined\n\nvar pallette: string[color] = [];        // a fixed size array accepting index values\n                                         // from the color enum\npallette[color.red] = '#ff0000';         // ok\npallette[5] = 'five';                    // error</code></pre>\n\nand the behaviour of javascript functions, toString() etc., is undefined but probably use the underlying integer<br />\n",
+    "PostedDate": "2013-03-21T09:18:47.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1020943",
+    "ThreadId": "436348",
+    "Html": "@MgSam - Just a quick note that the syntax change you referenced in your original post was actually undone in the most recent spec updates.  Enums will continue to use '=', to avoid any confusion with the intiailization semantics, which cannot be exactly the same as object literals due to the frequent need to reference previous field values in initializer expressions.\r<br />\n<br />\nAs for the other suggestions here, definitely interested to keep getting input on what would be useful.<br />\n",
+    "PostedDate": "2013-03-25T17:19:11.573-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021259",
+    "ThreadId": "436348",
+    "Html": "@stanthomas Your first example is just using enums within a module, I don't see how that encapsulates any of the behavior I've mentioned. <br />\n<br />\nYour second example doesn't make sense to me. Why should red + 1 equal blue or blue be greater than red? If I wrote code like that I'd want the compiler to tell me I was doing something stupid and show an error. Enums are <em>constants</em>. The fact that they use integers should be an <em>implementation detail</em>, unless you explicitly type the members as <code>number</code>s indicating each constant represents that <code>number</code> value. Making them sorta constants, sorta flags, sorta integers as C# does actually makes them more error prone and less useful. <br />\n<br />\nIt sounds like maybe what you really would like is <code>#typedef</code>, which in my opinion is a <a href=\"http://typescript.codeplex.com/workitem/119\" rel=\"nofollow\">separate feature</a>.<br />\n<br />\n@LukeH Thanks for the update!<br />\n",
+    "PostedDate": "2013-03-26T07:54:29.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021267",
+    "ThreadId": "436348",
+    "Html": "Also thought I should mention what was brought up in the <a href=\"http://blogs.msdn.com/b/typescript/archive/2013/03/25/working-on-typescript-0-9-generics-overload-on-constants-and-compiler-performance.aspx\" rel=\"nofollow\">latest blog post</a>- the overload on constants. This will be super useful to model a ton of existing JS libraries out there. <br />\n<br />\nIt also immediately reminds me of doing something something similar with hypothetical string enums but getting even better intellisense and strong typing (i.e., no need to remember the exact string your call requires).<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Document {\n    createElement(TagName.Canvas): HTMLCanvasElement;\n    createElement(TagName.Div): HTMLDivElement;\n    createElement(TagName.Span): HTMLSpanElement;\n}\n\n<span style=\"color:Blue;\">enum</span> TagName{\n    Canvas = <span style=\"color:#A31515;\">&quot;canvas&quot;</span>,\n    Div = <span style=\"color:#A31515;\">&quot;div&quot;</span>,\n    Span = <span style=\"color:#A31515;\">&quot;span&quot;</span>\n}\n\n<span style=\"color:Blue;\">var</span> a = createElement(TagName.Canvas); <span style=\"color:Green;\">//a is of type HTMLCanvasElement</span>\r\n</pre></div>",
+    "PostedDate": "2013-03-26T08:09:10.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021440",
+    "ThreadId": "436348",
+    "Html": "@MgSam:<br />\n<ol>\n<li>&quot;function myFunc2 (p: Planet.planets)&quot; addresses your earlier example of a form that wouldn't work by providing one that uses an enum defined as a static member of a class which you had said would not work.</li>\n<li>You will find that I did not write red+1 but ++red which is not the same thing.</li>\n<li>&quot;Enums are constants. The fact that they use integers should be an implementation detail ...&quot;. Yes. I think you'll find that's what I said.</li>\n<li>What you want is not an enum but some sort of map of tuples.</li>\n</ol>\n",
+    "PostedDate": "2013-03-26T14:45:10.457-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024093",
+    "ThreadId": "436348",
+    "Html": "@MgSam:\r<br />\n<br />\nI agree that enums should be any type (or at least also strings) and not just integers. As I see it the problem is that the underlying value doesn't stay internal as soon \r<br />\nas you transpile the code from TS to JS.\r<br />\n<br />\nTo mention a few upsides of using for example strings:\r<br />\n<br />\n1) Many existing JS frameworks use a limited set of strings values that would be a perfect match for enums. I didn't see many\r<br />\n  use cases for enums for existing JS frameworks when using an integer as underlying implementation.\r<br />\n<br />\n2) When debugging and inspecting properties it is much easier to see a string value that makes some sense than an integer. \r<br />\n<br />\n3) Automatic generated number are very fragile when it comes to serializing and deserializing objects over the time. For example when I store some object \r<br />\n   as JSON that has enums and retrieve it at a later stage when in the mean time the code has an additional enum value, the \r<br />\n   results could be wrong based on the position of the added enum value.<br />\n",
+    "PostedDate": "2013-04-02T00:47:05.31-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058419",
+    "ThreadId": "436348",
+    "Html": "So upon playing with the 0.9 release in the Playground I immediately noticed that enums now allowed arbitrary types in their assignment without complaint from the compiler. I assumed this was intended behavior. For example, putting strings in there works exactly as you would expect, except for the fact that the compiler complains about the cast at the very end:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">enum</span> Dog {\n     Rover = <span style=\"color:#A31515;\">&#39;Bark&#39;</span>,\n     Fido = <span style=\"color:#A31515;\">&#39;Woof&#39;</span>\n}\n\nalert(&lt;<span style=\"color:Blue;\">string</span>&gt;Dog.Rover); <span style=\"color:Green;\">//The code works though, this outputs &#39;Bark&#39;</span>\r\n</pre></div>I filed a <a href=\"https://typescript.codeplex.com/workitem/1163\" rel=\"nofollow\">bug</a> about the cast error message and it was closed saying that enums still only support numbers. What is the reasoning behind this? I can understand arbitrary types introduce some additional complexity about declaration order but it seems bizarre that even strings are disallowed when they <em>already work</em> without issue. <br />\n<br />\nThe syntax I use above has two benefits over the <code>Dog[Dog.Rover]</code> syntax:<br />\na) It's a lot clearer. The indexing syntax requires knowledge of the codegen for enums to understand what the heck it means. The new syntax would only really be useful in those situations where you want an enum whose values have both string and number representations.<br />\nb) It allows strings with spaces, which is far more useful.<br />\n<br />\nIt's a shame to see this feature taking shape with the exact same limitations as the crippled C# enum. I hope you guys revisit this issue or at least provide some clarification. Thanks.<br />\n",
+    "PostedDate": "2013-06-18T14:29:40.867-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058449",
+    "ThreadId": "436348",
+    "Html": "The Playground is actually not reporting the correct errors here. In Visual Studio you will see an error on the initializers with string values. I would suggest re-opening your issue with clarifications (since as noted in there, there weren't bugs in the feature per se) or logging a new one specifically for the suggestion of non-number values.<br />\n",
+    "PostedDate": "2013-06-18T16:54:37.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

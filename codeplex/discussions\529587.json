@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1204131",
+    "ThreadId": "529587",
+    "Html": "I'd really like to have my // comments in the resulting .js and .d.ts file, but I couldn't find an option.\r<br />\n/*<em> ... </em>/ comments are in the compiled file, but I need also the // comments.\r<br />\nConverting // to  /*<em>.. </em>/ is not an option.<br />\n<pre><code>Version 0.9.5.0\nSyntax:   tsc [options] [file ..]\n\nExamples: tsc hello.ts\n      tsc --out foo.js foo.ts\n      tsc @args.txt\n\nOptions:\n  -d, --declaration             Generates corresponding .d.ts file.\n  -h, --help                    Print this message.\n  --mapRoot LOCATION            Specifies the location where debugger should locate map files instead of generated locations.\n  -m KIND, --module KIND        Specify module code generation: 'commonjs' or 'amd'\n  --noImplicitAny               Warn on expressions and declarations with an implied 'any' type.\n  --noResolve                   Skip resolution and preprocessing.\n  --out FILE                    Concatenate and emit output to single file.\n  --outDir DIRECTORY            Redirect output structure to the directory.\n  --removeComments              Do not emit comments to output.\n  --sourcemap                   Generates corresponding .map file.\n  --sourceRoot LOCATION         Specifies the location where debugger should locate TypeScript files instead of source locations.\n  -t VERSION, --target VERSION  Specify ECMAScript target version: 'ES3' (default), or 'ES5'\n  -v, --version                 Print the compiler's version: 0.9.5.0\n  -w, --watch                   Watch input files.\n  @&lt;file&gt;                       Insert command line options and files from a file.</code></pre>\n\n",
+    "PostedDate": "2014-02-07T01:45:25.56-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1204387",
+    "ThreadId": "529587",
+    "Html": "The style of comments doesn't add or remove the from the output.  Comments are preserved when they are &quot;attached&quot; to syntax elements that are output.  For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//this is a test</span>\n<span style=\"color:Blue;\">function</span> myFunc() {}\r\n</pre></div>Will output:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//this is a test</span>\n<span style=\"color:Blue;\">function</span> myFunc() {\n}\r\n</pre></div>Because the comment is &quot;attached&quot; to the function myFunc.  You could use multi-line comments with the same effect.<br />\n",
+    "PostedDate": "2014-02-07T08:12:41.127-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1204470",
+    "ThreadId": "529587",
+    "Html": "Well, not really.\r<br />\n<br />\ntest.ts:<br />\n<pre><code>module M {\n    // inline\n    export class A {}\n    /**\n     * multiline\n     */\n    export class B {}\n}\n</code></pre>\n\nCompilation command line:<br />\n<pre><code>tsc --declaration --target ES5 test.ts\n</code></pre>\n\ntest.d.ts<br />\n<pre><code>declare module M {\n    class A {\n    }\n    /**\n    * multiline\n    */\n    class B {\n    }\n}\n</code></pre>\n\ntest.js<br />\n<pre><code>var M;\n(function (M) {\n    // inline\n    var A = (function () {\n        function A() {\n        }\n        return A;\n    })();\n    M.A = A;\n\n    /**\n    * multiline\n    */\n    var B = (function () {\n        function B() {\n        }\n        return B;\n    })();\n    M.B = B;\n})(M || (M = {}));\n</code></pre>\n\nYou see, the inline comments are in the .js file, but in the .d.ts file, they are removed.<br />\n",
+    "PostedDate": "2014-02-07T10:10:51.16-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1204558",
+    "ThreadId": "529587",
+    "Html": "In a .d.ts only /// or /<em> </em>/ comments are preserved. The idea being you can still have comments in your implementation code (using //) that aren't automatically part of the public API/docs when you use --declaration. Instead you use /// and /<em> </em>/ comments to be intentional about which bits are your public documentation vs random implementation notes.<br />\n",
+    "PostedDate": "2014-02-07T12:20:17.537-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1204893",
+    "ThreadId": "529587",
+    "Html": "Well that's a good reason! /// comments are only preserved when it is a reference tag. So I'm gonna convert all // to /**/ and everything will work fine. A bit of work for me, but the thinking behind &quot;private&quot; (//) comments is good. One can definitely use that.\r<br />\nThanks for your answers!<br />\n",
+    "PostedDate": "2014-02-08T02:36:40.28-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1350847",
+    "ThreadId": "529587",
+    "Html": "I know there are a couple discussions out here regarding comment preservation but none seem to directly ask 'which comments are preserved and which are scrapped' when tsc runs?\r<br />\n<br />\nThe comment above about 'attaching' a comment to keep it preserved doesn't seem to work.  I'm using TypeScript 1.4 in VS2013 and currently not concerned with/using a <em>.d.ts file.  Just </em>.ts and <em>.js.  Here are some samples that are baffling me.  I just converted my first </em>.js file to *.ts so pardon any incorrect terminology or lack of knowledge.  Bottom line, I can't seem to spot a pattern of when tsc is going to decide to keep comments or remove them.  I like the idea of public and private comments, but I just need to know comment syntax on how to preserve comments.\r<br />\n<br />\nThanks in advance.\r<br />\n<br />\n*.ts<br />\n<pre><code>            registeredToken = data.RegisteredToken;\n\n            // $(window).focus(GetJson)\n            if (runCalculation == undefined || runCalculation == true) {\n                RunCalculation(options);\n            }\n</code></pre>\n\nResult: the *.js file preserved this comment.\r<br />\n<br />\n*.ts<br />\n<pre><code>    .fail(function (xhr, textStatus, errorThrown) {\n        debugger;  // What should we do?\n        console.log(&quot;Status: &quot; + textStatus);\n        $(&quot;.ajaxloader&quot;).css(&quot;display&quot;, &quot;none&quot;);\n</code></pre>\n\nResult: the *.js did <strong>not</strong> preserve this comment.  I tried to change it to:<br />\n<pre><code>debugger; /* What should we do? */</code></pre>\n\nthen...<br />\n<pre><code>// What should we do?\ndebugger;</code></pre>\n\nthen I pasted 'working' comment in there...<br />\n<pre><code>            // $(window).focus(GetJson)\n        debugger;  // What should we do?\n</code></pre>\n\nNone of these three attempts preserved any comments.\r<br />\n<br />\n<em>.ts - just a /</em> */ containing a comment regarding some web research<br />\n<pre><code>function SaveCalcEngine(location) {\n    saveCE = location;\n}\n/*\nSome versions of IE weren't trusting 'third party headers' - i.e. when myplanchoice posted to secure.benefittech\nand every RunCalculation used a different SessionID so we couldn't link up calls in RBL.Evolution service.  These\narticles point to work around.\n\nhttp://manishsingh.net/blogs/2011/05/31/CompactP3PSettingsWithIIS7.aspx\nhttp://www.hanselman.com/blog/TheImportanceOfP3PAndACompactPrivacyPolicy.aspx\n*/\n</code></pre>\n\nResult: *.js preserved this\r<br />\n<br />\n*.ts - Another random // comment<br />\n<pre><code>    // Always reset, one time use only...\n    saveCE = undefined;\n    traceEnabled = 0;</code></pre>\n\nResult: *.js preserved this<br />\n",
+    "PostedDate": "2015-02-10T23:55:07.997-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

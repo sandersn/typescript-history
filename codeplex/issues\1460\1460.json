@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T14:00:53.6-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "But this is exactly my point - \"a/a\" and \"./a/a\" are not the same thing for tsc. It correctly resolves the former relative to the project root. If you instead use \"./a/a\" it will complain that the file does not exists, which is also correct. What is wrong, is the generated JavaScript file, and it is inconsistent with the behavior of tsc when it resolves the requirements.\r\n\r\nFor that matter, the typescript specification also suggests that \"a/a\" and \"./a/a\" should be treated differently:\r\n\r\n* External module names may be “relative” or “top-level”. An external module name is “relative” if \r\nthe first term is “.” or “..”.\r\n* Top-level names are resolved off the conceptual module name space root.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T08:55:59.593-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Why does TypeScript compiler convert top-level CommonJS paths to relative paths?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1460
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Original issue:\n\nHi, \n\n I'm currently trying to start converting our codebase from JS to TS and there is one thing about typescript modules which makes it inconvenient. In our code we use CommonJS-style imports with top-level paths (i.e. all paths are relative to the top-level project directory). However tsc converts all top-level path to relative paths which renders them incorrect. For example consider the following listing:\n```\n# cat a/a.ts\nimport b = require(\"b/b\");\n\nexport class A {\n  public foo() : b.B {\n    return new b.B();\n  }\n}\n# cat b/b.ts\nexport class B {\n  public foo(): void {\n  }\n}\n# tsc -m commonjs a/a.ts\n# cat a/a.js\nvar b = require(\"./b/b\");\n\nvar A = (function () {\n    function A() {\n    }\n    A.prototype.foo = function () {\n        return new b.B();\n    };\n    return A;\n})();\nexports.A = A;\n```\nYou can see here that require(\"b/b\") was converted to require(\"./b/b\"). There is a snippet of code in the TypeScript compiler that specifically does that (in emitter.ts):\nmodPath = isAmbient ? modPath : (!isRelative(stripQuotes(modPath)) ? quoteStr(\"./\" + stripQuotes(modPath)) : modPath);\nthis.writeToOutput(\"require(\" + modPath + \")\");\nWhat I don't understand is why this happens? And how can I get around it? \n\n Thanks.",
+      "PostedDate": "2013-08-08T08:56:59.25-07:00",
+      "Id": 109025
+    },
+    {
+      "Message": "Marked as active.",
+      "PostedDate": "2013-08-08T11:25:16.447-07:00",
+      "Id": 109066
+    }
+  ]
+}

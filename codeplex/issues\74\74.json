@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:38:52.663-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Initialization of static members is executed immediately, while the class that contains it is still being defined and if refers to the class itself may cause some code to execute prematurely.\r\nConsider the following simple singleton implementation:\r\n\r\n```TypeScript\r\nclass MyClass {\t\t\t\r\n\tprivate static instance: MyClass = new MyClass(); \r\n\t\r\n\tconstructor() {\r\n\t\tthis.method();\r\n\t}\r\n\t\r\n\tpublic method() {\r\n\t}\r\n}\r\n```\r\n\r\nThis yields the following javascript code:\r\n\r\n```TypeScript\r\nvar MyClass = (function () {\r\n    function MyClass() {\r\n        this.method();\r\n    }\r\n    MyClass.instance = new MyClass();\r\n    MyClass.prototype.method = function () {\r\n    };\r\n    return MyClass;\r\n})();\r\n```\r\nIn this js code, when MyClass.instance is initialized, the constructor is executed and in turn invokes a method. However, the method hasn't been defined yet.\r\n\r\nThere is an easy workaround for now: just manually move the static member to the bottom of the class, but the compiler could do this automatically. Of course this isn't an issue when the static definition doesn't refer to the class in which it is defined, but singleton is a common pattern, so I expect other developers to run into this issue sooner or later.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T13:44:19.643-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Static initialization should be emitted at the bottom",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 74
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "On the one hand, the same issue exists in JavaScript and implies that developers have to be careful when writing code. We are kind of used to this peculiarity, so maybe it's OK. On the other hand, we'd love TypeScript to be cleverer, wouldn't we? :)",
+      "PostedDate": "2012-10-03T20:28:50.483-07:00",
+      "Id": 78510
+    },
+    {
+      "Message": "Thanks for the suggestion, Pavel.\n\nIn general, we're trying to track the ECMAScript 6 class proposal to keep code compatible.  I'm not sure about this particular issue, so I'm assigning to one of the designers who might know.",
+      "PostedDate": "2012-10-04T08:40:47.04-07:00",
+      "Id": 78559
+    },
+    {
+      "Message": "Javascript is in essence a list of instructions executed in sequence. A 'class' isn't really a class, it's an object that is created at runtime by executing a statement that can capture aspects of the current runtime state. That means that execution order is important. Execution order is controlled by the developer in Javascript. TypeScript should maintain that same principle. So while I understand the motivation for the request, I'd respectfully like to vote against this request for the compiler to reorder statements.\n\nParticularly I'd request that you don't make reordering decisions in a piecemeal fashion. C# works because it has a very clear two-phase compilation where types are analyzed before function bodies and the language definition and idiom support the concept of type creation being a compile-time activity. Javascript is not like this and, if TypeScript will remain true to the Javascript idiom, TypeScript can't be that way either.",
+      "PostedDate": "2012-10-04T09:35:41.797-07:00",
+      "Id": 78568
+    },
+    {
+      "Message": "@jonturner there is nothing ES6 incompatible about moving the static initialization to somewhere after the the prototype is completely defined.",
+      "PostedDate": "2012-10-04T09:45:44.547-07:00",
+      "Id": 78570
+    },
+    {
+      "Message": "@Alexjs I just wanted to point out that TypeScript already change the order of the emitted code. The one case I came across is that a constructor code is always emitted at the top, regardless where it is in the source class definition. I'm not sure if there are other cases.",
+      "PostedDate": "2012-10-04T10:26:33.867-07:00",
+      "Id": 78575
+    },
+    {
+      "Message": "Update from design team - agreed that we should move this to the bottom as suggested",
+      "PostedDate": "2013-03-01T12:00:09.47-08:00",
+      "Id": 91996
+    },
+    {
+      "Message": "Marking active",
+      "PostedDate": "2013-03-04T16:14:55.397-08:00",
+      "Id": 92254
+    },
+    {
+      "Message": "FYI: I can see this is completed as of 1.0.1.",
+      "PostedDate": "2014-06-17T10:45:50.557-07:00",
+      "Id": 149934
+    }
+  ]
+}

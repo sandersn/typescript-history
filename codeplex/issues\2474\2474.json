@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I get that this might be confusing, but I'm not sure what the suggested different behavior is.\n\nIt's sort of awkward -- we can't warn on `arr`, obviously. The implictness of `f` is given by the fact that there's no contextual type, but I don't think an error about \"Lambda expression lacks contextual type\" would improve the situation. I can't think of anything else the compiler could say here.\n\nIf you have an idea for a better error or error message please re-open. Thanks!",
+    "ClosedDate": "2014-04-28T09:41:56.427-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I use `noImplicitAny` for enhanced safety:\r\n\r\nAssume code like this:\r\n````\r\nvar arr: any;\r\n````\r\nThen this short lamda:\r\n````\r\nbars = arr.map(f => doStuff(f));\r\n````\r\nCreates this error:\r\n````\r\nerror TS7012: Parameter 'f' of lambda function implicitly has an 'any' type.\r\n````\r\n\r\nIn my application it took a while to realise this was because the `arr` is not typed.\r\n\r\nIf it is a known array then you get the detailed error:\r\n````\r\nbars = [].map(f => doStuff(f));\r\n````\r\nIt shows the problem\r\n````\r\nerror TS7015: Array Literal implicitly has an 'any' type from widening.\r\n````",
+    "LastUpdatedDate": "2014-04-29T12:01:58.527-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-26T18:21:59.683-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Less usefull error from noImplicitAny and lambda paramaters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2474
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The original report was based on incorrect observation, I edited it to reflect the confusion.",
+      "PostedDate": "2014-04-26T18:59:16.447-07:00",
+      "Id": 143592
+    },
+    {
+      "Message": "I think he means at the `arr.map` level, make an error message about invoking '.map()' on 'arr' which is of type 'any'  - but instead, the error propagates forward into the expression.\n",
+      "PostedDate": "2014-04-28T12:41:47.87-07:00",
+      "Id": 144992
+    },
+    {
+      "Message": "Indeed like jamesnw describes.",
+      "PostedDate": "2014-04-28T13:20:41.933-07:00",
+      "Id": 144995
+    },
+    {
+      "Message": "I don't see how we could make it an error to invoke a method on an expression of type `any`.",
+      "PostedDate": "2014-04-29T08:41:31.457-07:00",
+      "Id": 145093
+    },
+    {
+      "Message": "Isn't that what 'noImplicitAny' is for?  (I don't know, I never use it LOL). He is saying that \"arr\" is implicitly 'any' in the situation that prompted his post.",
+      "PostedDate": "2014-04-29T10:12:48.24-07:00",
+      "Id": 145103
+    },
+    {
+      "Message": "`arr` isn't *implicitly* any, though -- it's explicitly any.\n\nThe problem I'm having understanding here is this:\n\n```\nvar arr: any; // Has to be OK, even with --noImplicitAny\narr.someMethod(); // Has to be OK, otherwise 'any' is useless\n\narr.someMethod(foo => { }); // Proposed to be an error about 'arr', but under what rule? See below\n\n// Equivalent to the above from the compiler's perspective\nvar t = arr.someMethod; // Has to be OK, otherwise noImplicitAny is way too annoying\nt.someMethod(foo => { }); // How can we give a more useful error about 'foo'?\n\n// What about this case? Also an implicit any, but there's nothing obvious to warn about\nfunction fn(x: any) { }\nfn(foo => {});\n```\n\nBasically we have a few steps when processing this function call:\n1. Have a var `arr` of explicit type `any` (must be OK)\n2. Access a member `map` of `arr` (must be OK)\n3. `map` is of type `any` (must be OK)\n4. Invoke `map` which is of type `any` (must be OK)\n5. Parameter is a function with an implicitly-any parameter (Error here)\n\nI suppose the compiler could say \"Function expression was not provided a sufficient contextual type (`any`) to infer a parameter type for `foo`\", but that seems no more useful than the current error - presumably you already knew that there wasn't a contextual type on the function expression.",
+      "PostedDate": "2014-04-29T11:00:40.82-07:00",
+      "Id": 145105
+    },
+    {
+      "Message": "Sorry Ryan, perhaps a misunderstanding.  I was assuming by his statement \"Assume code like this:\" that he was saying that \"arr\" is implicit 'any', and the example code was there only for clarity.  Perhaps I misunderstood, and his code actually looks like that. ;)",
+      "PostedDate": "2014-04-29T12:01:03.147-07:00",
+      "Id": 145107
+    },
+    {
+      "Message": "(of course, if 'arr' is explicitly used, it must be valid! ;) )",
+      "PostedDate": "2014-04-29T12:01:58.527-07:00",
+      "Id": 145109
+    }
+  ]
+}

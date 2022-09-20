@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:37:19.207-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "This took a while to track down but it looks like the current slickgrid definition file on definitelytyped is causing a stack overflow in the resolver that looks like this:\r\n```\r\nRangeError: Maximum call stack size exceeded\r\n\tat String.replace (native)\r\n\tat Console.exports.format (util.js:35:23)\r\n\tat Console.log (console.js:53:34)\r\n\tat PullTypeResolver.resolveInterfaceDeclaration (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:40256:25)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:43019:33)\r\n\tat PullTypeResolver.resolveOtherDeclarations (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:39896:26)\r\n\tat PullTypeResolver.resolveInterfaceDeclaration (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:40257:22)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:43019:33)\r\n\tat PullTypeResolver.resolveOtherDeclarations (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:39896:26)\r\n\tat PullTypeResolver.resolveInterfaceDeclaration (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:40257:22)\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-24T14:37:32.303-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Stack overflow in PullTypeResolver",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1720
+  },
+  "FileAttachments": [
+    {
+      "FileId": 734803,
+      "FileName": "SlickGrid.d.ts",
+      "DownloadUrl": ".\\734803"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "The issue appears to be due to the two \"Column\" interfaces.",
+      "PostedDate": "2013-09-24T14:38:02.003-07:00",
+      "Id": 115546
+    },
+    {
+      "Message": "In debugging this, I saw that resolveInterfaceDeclaration would alternate between the two interfaces until the stack space is exhausted.  I'm also seeing this issue with HTMLElement in a recent lib.d.ts.\n\nAlso, this issue is from the currently unreleased develop branch (just pulled).  It's been reproducing for a few days now but it took me a while to track it down since the current version of Node.js doesn't have good reporting for stack overflows (but the current beta release does so that is how I eventually tracked it down).",
+      "PostedDate": "2013-09-24T14:45:35.81-07:00",
+      "Id": 115547
+    },
+    {
+      "Message": "Thanks for the report. You're right that the Column interfaces are the issue, we'll get this fixed.",
+      "PostedDate": "2013-09-26T10:28:33.143-07:00",
+      "Id": 115736
+    },
+    {
+      "Message": "I believe this is now fixed in the develop branch.",
+      "PostedDate": "2013-10-03T16:37:27.823-07:00",
+      "Id": 117416
+    }
+  ]
+}

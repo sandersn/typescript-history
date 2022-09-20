@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is all by design. I believe the pattern you want can be achieved like so:\n\nfunction foo(...args);\nfunction foo() {\n    // manipulate arguments yourself here\n}\n\nfoo( // Intellisense shows foo takes rest parameters",
+    "ClosedDate": "2013-05-10T14:50:08.717-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Code like this:\r\n\r\n    class MyClass\r\n    {\r\n    \tmethod(...args: any[])\r\n    \t{\r\n    \t}\r\n    }\r\n\r\ngenerates:\r\n\r\n    MyClass.prototype.method = function () {\r\n        var args = [];\r\n        for (var _i = 0; _i < (arguments.length - 0); _i++) {\r\n            args[_i] = arguments[_i + 0];\r\n        }\r\n    };\r\n\r\nwhich seems unnecessary.\r\n\r\nIt's a great feature of TypeScript that the generated code can be tightly controlled and predicted.  Would it be possible to get rid of this extra local variable and property copy (or provide some way to avoid it).",
+    "LastUpdatedDate": "2013-05-10T14:50:08.717-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-08T01:32:32.907-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "...args always generates code to copy arguments",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 1011
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Btw, I can see a case for copying 'arguments' to an array, even if there are no leading arguments, since 'arguments' doesn't always behave in the same way as an array.  What I'd ideally like is to be able to write something of the form:\n\n    method(...)\n    {\n        var myvar = arguments[2];\n        ....\n    }\n\nso the compiler knows the function can take a variable number of args, but leaves the accessing to me.  Currently (in 0.8.3 at least) this gives a type error:\n\n    '...' parameters require both a parameter name and an array type annotation to be specified\n",
+      "PostedDate": "2013-05-08T02:05:15.59-07:00",
+      "Id": 99668
+    },
+    {
+      "Message": "What about generating code like\n```javascript\n  var args = Array.prototype.slice.call(arguments, indexOfArgsInArguments);\n```\nis .slice slower than that loop in javascript?  (Or are we afraid that .slice is overridden?)",
+      "PostedDate": "2013-05-08T15:23:33.247-07:00",
+      "Id": 99736
+    },
+    {
+      "Message": "As was pointed out to me, slice may not always be the fastest on arguments\n\n  http://jsperf.com/arguments-slice-vs-for/2\n\nBut I actually that's a slightly different point.  I want to get rid of the copy altogether and just access 'arguments' myself.\n\nSince there is a case for copying out the arguments (or some subset of them), I'm suggesting that the copying code only gets generated when '...' is named.  Unnamed '...' could be a way to tell the compiler that the function can indeed take a variable number of args, but that 'argument' lookups will be done manually.",
+      "PostedDate": "2013-05-08T18:46:19.883-07:00",
+      "Id": 99753
+    }
+  ]
+}

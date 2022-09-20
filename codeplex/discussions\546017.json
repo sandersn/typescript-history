@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1247580",
+    "ThreadId": "546017",
+    "Html": "Hi.\r<br />\nI wasn't able to find a better Subject, hoping the one I choose is not that bad... I've already searched quite long for this issue in Bing, Google, StackOverflow and CodePlex but I can't find a solution, maybe because I don't know exactly which are best keywords to look for...\r<br />\nLet me explain with a sample (<a href=\"http://medialize.github.io/jQuery-contextMenu/demo/input.html\" rel=\"nofollow\">http://medialize.github.io/jQuery-contextMenu/demo/input.html</a>)\r<br />\nWe have a <br />\n<pre><code>$.contextMenu(selector)</code></pre>\n\nwhich is the &quot;standard&quot; call to attach the plugin to an html element; to perform custom actions, we need to call something like this<br />\n<pre><code>[...]\nhide: function(opt) {\n                // this is the trigger element\n                var $this = this;\n                // export states to data store\n                __$.contextMenu.getInputValues(opt, $this.data()); //PROBLEM HERE!!!\n__[...]</code></pre>\n\nThe problem is  <em>jquery.contextMenu.d.ts</em> doens't contain any definition for <em>getInputValues</em> method and VS refuses to compile the script; I've tried to solve the problem (if any) in the d.ts file and eventually post the fix, but nothing I tried seems to work.\r<br />\n$.contextMenu acts like a methos in the first code and like a property of $ in the second fragment, with its own methods (<em>getInputValues</em> in this sample).\r<br />\nIs there any solution for these situations?\r<br />\nThanks,\r<br />\nLorenzo<br />\n",
+    "PostedDate": "2014-05-20T12:58:28.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247605",
+    "ThreadId": "546017",
+    "Html": "You can use a function and a module with the same name to achieve this. The declarations will merge and the identifier can be used in either context. So:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> $ {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> contextMenu() {\n        <span style=\"color:Blue;\">return</span> 1;\n    }\n\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">module</span> contextMenu {\n        <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> getInputValues() { <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&quot;&quot;</span>; }\n    }\n}\n\n<span style=\"color:Blue;\">var</span> r: <span style=\"color:Blue;\">number</span> = $.contextMenu();\n<span style=\"color:Blue;\">var</span> r2: <span style=\"color:Blue;\">string</span> = $.contextMenu.getInputValues();\r\n</pre></div>",
+    "PostedDate": "2014-05-20T13:51:57.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247610",
+    "ThreadId": "546017",
+    "Html": "You could try this in the d.ts file:<br />\n<pre><code>interface JQueryStatic {\n    contextMenu: {\n        (options?: JQueryContextMenuOptions): JQuery;\n        getInputValues: (opt: JQueryContextMenuOptions, data: {}) =&gt; void;\n    }\n}</code></pre>\n\nThough I'm not sure what the types should be (I never used it before ;) ).<br />\n",
+    "PostedDate": "2014-05-20T14:08:22.143-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-20T15:57:30.93-07:00"
+  },
+  {
+    "Id": "1247632",
+    "ThreadId": "546017",
+    "Html": "Finally it works, many thanks both :)\r<br />\nThe first solution (from Danquirk) has a conflict with JQuery itself, as compiler warns that module$ has already been declared...<br />\n",
+    "PostedDate": "2014-05-20T16:04:24.893-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

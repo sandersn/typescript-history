@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in latest",
+    "ClosedDate": "2013-04-29T13:30:59.507-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Found in 0.9.0.alpha preview.\r\n\r\nIn mimicry of knockoutjs, if I have a readonly observable interface (which is return by ko.computed):\r\n\r\n```\r\ninterface IReadOnlyObservable<T> {\r\n    (): T;\r\n}\r\n```\r\n\r\ni.e. call it with no args to get the value, I then can extend this to get the mutable version (as returned by ko.observable):\r\n\r\n```\r\ninterface IObservable<T> extends IReadOnlyObservable<T> {\r\n    (newValue: T): void;\r\n}\r\n```\r\n\r\nBut this causes an error message:\r\n\r\n> error TS2143: Interface 'IObservable<T>' cannot extend interface 'IReadOnlyObservable<T>':\r\n>       Call signatures of types 'IObservable<T>' and 'IReadOnlyObservable<T>' are incompatible:\r\n>               Call signature expects 0 or fewer parameters.\r\n\r\nIt's as if the extending interface's call sig is \"hiding\" the base interface's call sig(s). Sure enough, this compiles fine:\r\n\r\n```\r\ninterface IObservable<T> extends IReadOnlyObservable<T> {\r\n    (newValue: T): void;\r\n    (): T;\r\n}\r\n```\r\n\r\ni.e. by redeclaring the no-args call sig. The \"stable\" language spec said:\r\n\r\n> A base interface call signature is hidden by a call signature declaration with the same number of parameters and identical parameter types in the respective positions.\r\n\r\nThe 0.9.0.alpha copy of the spec says:\r\n\r\n> A call signature declaration hides a base type call signature that is identical when return types are ignored.\r\n\r\nBut it looks like in the 0.9.0.alpha compiler, the presence of a single call sig is sufficient to hide all base interface call sigs, forcing us to redeclare them.",
+    "LastUpdatedDate": "2013-04-29T13:30:59.507-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-27T03:37:38.287-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Call signature of base interface must be re-declared in extending interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 966
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

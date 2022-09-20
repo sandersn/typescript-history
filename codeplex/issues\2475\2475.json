@@ -1,0 +1,100 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.33-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "This may be similar to [type union](https://typescript.codeplex.com/workitem/1364), but it is really not a *new* thing.  I don't think it is efficient to require developers to implement interfaces for a class that is **declared**.  For example:\r\n```\r\ninterface IBase_x { x }\r\ninterface IBase_y{ y }\r\ndeclare class A implements IBase_x, IBase_y; // <- I have to actually type out the members!?\r\n```\r\nI have a bunch of classes that are declared (constructed in a special way) and various interfaces that make up a single class.  It's not fun to have to implement every single member of every single interface into a *declared* class that ends up having all the interface members combined with the exact same signature - and then, have to update the class members when the interface updates! :(  I think this really needs to change (and I don't see any reason why it shouldn't).  In fact, I think this should also be allowed:\r\n```\r\ninterface IBase_x { x: any }\r\ninterface IBase_y{ y: number }\r\ndeclare class A implements IBase_x, IBase_y {\r\n\tx: string; // <- re-declare selected types only\r\n}\r\n```\r\nBut I realize that last one may be pushing it a bit.\r\n\r\nAnother reason is that I may wish to combine classes.  For example:\r\n```\r\ndeclare class A { x; }\r\ndeclare class B { y; }\r\ndeclare class C implements A, B;\r\ndeclare function copyProperties(a, b);\r\n// multiple inheritance behind the scenes\r\nfunction C(){\r\n\tA.call(this);\r\n\tB.call(this);\r\n}\r\ncopyProperties(C.prototype, A.prototype); \r\ncopyProperties(C.prototype, B.prototype);\r\nvar c = new C();\r\n```\r\n\r\n(yes, I am aware of the \"the diamond problem\", and that \"instanceof [A or B]\" would not work, but that's not the point)\r\n\r\nThanks.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-27T21:38:18.227-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Don't require implementing interfaces on declared classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 7,
+    "Id": 2475
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This was definitely discussed a lot at design meetings but I don't remember the exact reasoning behind making the classes declare the members.",
+      "PostedDate": "2014-04-28T09:43:54.163-07:00",
+      "Id": 144965
+    },
+    {
+      "Message": "In practice, it just adds a lot of unnecessary extra work (update an interface, then class(es) break, then have to update the classes also [which are declared themselves much like interfaces]).  IMHO it's better to save time in this case, not add to it - and would make it easier to maintain code in the long run.  I would even argue that a declared class is much the same as an interface (without code).",
+      "PostedDate": "2014-04-28T12:37:41.787-07:00",
+      "Id": 144991
+    },
+    {
+      "Message": "As a \"workaround\", you could use an interface and variable combination to represent a class (e.g., all the DOM APIs declared in lib.d.ts are declared like this).\n\n### Example\n```typescript\ninterface A { ... }\ninterface B { ... }\n\n// the following pair of declarations looks like a class\ninterface AandB extends A, B { }\ndeclare var AandB: {\n   new(): AandB;\n   prototype: AandB;\n   ... other static properties ...\n};\n```",
+      "PostedDate": "2014-04-28T18:29:18.067-07:00",
+      "Id": 145010
+    },
+    {
+      "Message": "But ... you cannot extend from it can you? ;)\n\n```\nclass NewType extends AandB { } // Error: A class may only extend another class.\n```\n\nIt works fine only for the native types (which can't truly be extended with same behaviors), but not when creating extendable objects for a framework/api.",
+      "PostedDate": "2014-04-28T18:59:37.793-07:00",
+      "Id": 145012
+    },
+    {
+      "Message": "Yah, it would be nice to extend some of those native types (like CanvasRendering2DContext) to add extra extensions that shouldn't break anything. That way we could, for example, pass around a \"GraphicsContext\" that would provide some extra properties off of canvas.",
+      "PostedDate": "2014-05-01T13:12:05.627-07:00",
+      "Id": 145356
+    },
+    {
+      "Message": "@jamesnw : no you can't extend from it as a class, but you can extend the interface!\n\n@kayub : how do you propose to instantiate an extended CanvasRendering2DContext ?\n\nWould you want to extend the dynamic properties of CanvasRendering2DContext via a module mixin?\nshould, for example, the following be allowed?\n```typescript\nmodule CanvasRendering2DContext.prototype {\n   ... // ?\n}\n```",
+      "PostedDate": "2014-05-07T21:32:19.403-07:00",
+      "Id": 145885
+    },
+    {
+      "Message": "@AdamFreidin Thanks for the comments, but sorry, that is not a work around at all.  The issue at hand was regarding _classes_, not interfaces.  I'm well aware I can compaine and extend interfaces.  The need is to have a class that end users can inherit from, not an interface they have to implement.",
+      "PostedDate": "2014-05-08T10:27:00.57-07:00",
+      "Id": 145935
+    },
+    {
+      "Message": "@kayub It's just not possible to properly extend a native type. Mainly because 1. You cannot call the native constructor and have it apply to a custom instance, and 2. many native objects have specialized functionality that would be lost in a custom instance (for example, 'length' not growing on a custom instance when extending from Array where objects are added by index [ ]). ",
+      "PostedDate": "2014-05-08T10:44:40.58-07:00",
+      "Id": 145937
+    },
+    {
+      "Message": "See also: https://typescript.codeplex.com/workitem/1125",
+      "PostedDate": "2014-06-27T12:35:53.86-07:00",
+      "Id": 150988
+    },
+    {
+      "Message": "Yes!\n\nAnd in some cases it's nearly impossible to copy & paste everything from interface. Look at the HTMLElement, it's massive! Copying it would be error prone. (Although unrelated, HTMLElement should be declared class in the first place since todays it's perfectly valid to inherit from it with HTML5 Custom Elements spec)\n\nIf there is a problem with directly doing it, then add a keyword, this just a transpiler anyway. Like:\n\ndeclare class implements concrete SomeInterface {}\n\nHow about that?",
+      "PostedDate": "2014-06-27T13:21:53.55-07:00",
+      "Id": 150996
+    },
+    {
+      "Message": "No edit button huh, of course I meant\n\ndeclare class SomeThing implements concrete SomeInterface {}",
+      "PostedDate": "2014-06-27T13:23:24.983-07:00",
+      "Id": 150998
+    },
+    {
+      "Message": "Interfaces in typescript are open-ended.\nIf I could declare that a class implements an interface, without explicitly listing all of the interface's elements, I could cheat later on, by appending something to the interface, and the declared class would magically get updated.\nThis is actually something that I wanted to do:\ndeclare module Backbone {\n  interface IModel {/*all the original declarations*/}\n  class Model extends IModel {\n  }\n}\nand then\n_.extend(Backbone.Model, myplugin);\ndeclare module Backbone {\n  interface IModel {\n    /*new features of myPlugin */\n  }\n}\nunfortunatelly this does not work.\n",
+      "PostedDate": "2014-07-22T00:46:03.77-07:00",
+      "Id": 153129
+    }
+  ]
+}

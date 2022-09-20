@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1258195",
+    "ThreadId": "549207",
+    "Html": "(I think this was discussed somewhere but I couldn't find it...)<br />\n<br />\nSometimes I want to do this: <br />\n<pre><code>enum Characters {\n    Madoka = &quot;madoka&quot;,\n    Homura = &quot;homura&quot;,\n    Sayaka = &quot;sayaka&quot;,\n    Kyouko = &quot;kyouko&quot;,\n    Mami = &quot;mami&quot;,\n    Nagisa = &quot;nagisa&quot;,\n    Kyubey = &quot;kyubey&quot;\n}\n</code></pre>\n\nWhy do I want to use strings, not just playing comfortable with number enumeration?<br />\n<pre><code>enum Characters {\n    Madoka,\n    Homura,\n    Sayaka,\n    Kyouko,\n    Mami,\n    Nagisa,\n    Kyubey\n}\n</code></pre>\n\nC# users absolutely won't bother to put strings, because there really is no difference! However, I'm in JavaScript area, and I want to allow both of these, especially when I make a general JS library:<br />\n<pre><code>class Foo {\n    static getCharacter(c: Characters) {\n        ...\n    }\n}\n\nFoo.getCharacter(Characters.Madoka); // using enum\nFoo.getCharacter(&quot;madoka&quot;); // using plain string\n</code></pre>\n\nThe first example is the traditional use of enum in typed language, and the second one is <strong>the traditional use of enum in JavaScript</strong>, which is just a plain string here. Really? Yes: <em>xhr.open(&quot;GET&quot;, &quot;<a href=\"http://typescriptlang.org/\" rel=\"nofollow\">http://typescriptlang.org/</a>&quot;, true)</em> - no XMLHttpRequestMethod.GET but just &quot;GET&quot; here.<br />\n<br />\nOkay, maybe the second one is more traditional in JS. <strong>So what would be better using plain string?</strong><br />\n<br />\n<strong>First</strong>: Simply, the second one has shorter and more compact code length. Yeah!<br />\nSomebody would say: <em>&quot;Wait, wait. What we really want here is a strong type, not stringed type! Longer code is just a tradeoff here!&quot;</em> However, what if TS actively check if the string is in the required enum type, which is Characters here?<br />\n<pre><code>Foo.getCharacter(&quot;madoka&quot;); // Correct!\nFoo.getCharacter(&quot;sasuke&quot;); // No, no... you're wrong. That's not in the list.\n</code></pre>\n\nAn automatic type checking would collaborate greatly with string type enum.<br />\n<br />\n<strong>Second</strong>: Any additional converter will not be required.<br />\nFor example, string type enum can be easily used out of JS. What? Would you ever use enum in CSS? Maybe.<br />\n<pre><code>div[data-character=madoka] {\n    background-color: #F7BBC3;\n}\ndiv[data-character=homura] {\n    background-color: #6C6B69;\n}\ndiv[data-character=sayaka] {\n    background-color: #87B1C1;\n}\ndiv[data-character=kyouko] {\n    background-color: #B05F6E;\n}\ndiv[data-character=mami] {\n    background-color: #F6DF93;\n}\ndiv[data-character=nagisa] {\n    background-color: #754A20;\n}\ndiv[data-character=kyubey] {\n    background-color: #F8F3F9;\n}\n</code></pre>\n\nI'm just giving only <em>background-color</em> property here, but one would give more in once, to switch them easily by changing <em>data-character</em>. Anyway, This would require a enum-to-string converter:<br />\n<pre><code>setCharacter(div: HTMLDivElement, c: Character) {\n    div.dataset.character = this.enumToString(c);\n\n    ...\n}\n\nprivate enumToString(c: Characters) {\n    switch (c) {\n        case Characters.Madoka:\n            return &quot;madoka&quot;;\n        case Characters.Homura:\n            return &quot;homura&quot;;\n        case Characters.Sayaka:\n            return &quot;sayaka&quot;;\n        case Characters.Kyouko:\n            return &quot;kyouko&quot;;\n        case Characters.Mami:\n            return &quot;mami&quot;;\n        case Characters.Nagisa:\n            return &quot;nagisa&quot;;\n        case Characters.Kyubey:\n            return &quot;kyubey&quot;;\n    }\n}\n</code></pre>\n\nHowever, with the string type enum, this would be much easier, without any converter.<br />\n<pre><code>setCharacter(div: HTMLDivElement, c: Character) {\n    div.dataset.character = c; // Simple!\n\n    ...\n}\n</code></pre>\n\nSo... I'd like to see this:<br />\n<ol>\n<li>Allowing string in enum</li>\n<li>\nAutomatically checking type from string for the string type enum<br />\n</li>\n</ol>\nI think this would make my life easier. What do you think? :) Well, maybe this is not an 'enum-eration' anymore.<br />\n",
+    "PostedDate": "2014-06-20T03:31:15.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258299",
+    "ThreadId": "549207",
+    "Html": "See here: <a href=\"https://typescript.codeplex.com/workitem/1217\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1217</a>\r<br />\n(There is a work around for now there also)<br />\n",
+    "PostedDate": "2014-06-20T07:57:40.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258308",
+    "ThreadId": "549207",
+    "Html": "Yeah, the compiler just compiles string type, still giving error. (I didn't know the workaround. Thank you!)\r<br />\nWhat I suggest here is to support this officially, and to fully benefit from this string type by automatically checking enum type from string. Isn't it cool? ;)\r<br />\n<br />\nThank you again for the proper reference :)<br />\n",
+    "PostedDate": "2014-06-20T08:21:46.437-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1258489",
+    "ThreadId": "549207",
+    "Html": "I read <a href=\"https://typescript.codeplex.com/workitem/1217\" rel=\"nofollow\">the post</a> and I agree that string type enum can be helpful for overloads.<br />\n<pre><code>enum Characters {\n    Madoka,\n    Homura,\n    Sayaka,\n    Kyouko,\n    Mami,\n    Nagisa,\n    Kyubey\n}\n\nclass GameCenter {\n    createCharacter(charType: &quot;madoka&quot;): MadokaObject \n    createCharacter(charType: &quot;homura&quot;): HomuraObject\n    createCharacter(charType: &quot;sayaka&quot;): SayakaObject\n    createCharacter(charType: &quot;kyouko&quot;): KyoukoObject\n    createCharacter(charType: &quot;mami&quot;): MamiObject\n    createCharacter(charType: &quot;nagisa&quot;): NagisaObject\n    createCharacter(charType: &quot;kyubey&quot;): KyubeyObject\n    createCharacter(charType: Characters): any\n    createCharacter(charType: Characters) {\n        //...\n    }\n    //...\n}\n\nvar madoka = gameCenter.createCharacter(&quot;madoka&quot;);\nmadoka.moveBy([1,1]);\n</code></pre>\n\nHere, the parameter types are still specified by string, but a string type enum will confine them to the specific list, and an IDE may provide auto-completion for convenience. Overloading here will be more clean as the strings are actually strongly typed by language.<br />\n<br />\nFurthermore, a string type enum here will not permit any other unspecified string, so the library users would feel more comfortable when they call the method.<br />\n",
+    "PostedDate": "2014-06-21T02:07:59.127-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260792",
+    "ThreadId": "549207",
+    "Html": "Let's note that WebIDL also uses string type enum ;) <a href=\"http://www.w3.org/TR/2013/WD-WebCryptoAPI-20130625/#key-interface\" rel=\"nofollow\">http://www.w3.org/TR/2013/WD-WebCryptoAPI-20130625/#key-interface</a><br />\n<pre><code>enum KeyType {\n  &quot;secret&quot;,\n  &quot;public&quot;,\n  &quot;private&quot;\n};\n\nenum KeyUsage {\n  &quot;encrypt&quot;,\n  &quot;decrypt&quot;,\n  &quot;sign&quot;,\n  &quot;verify&quot;,\n  &quot;derive&quot;,\n  &quot;wrap&quot;,\n  &quot;unwrap&quot;\n};\n\ninterface Key {\n  readonly attribute KeyType type;\n  readonly attribute bool extractable;\n  readonly attribute Algorithm algorithm;\n  readonly attribute KeyUsage[] keyUsage;\n};\n</code></pre>\n\nThe WebIDL syntax requires string value only, which seems better as one doesn't have to write similar name twice.<br />\n<br />\nMeanwhile, current TypeScript declaration uses just plain string.<br />\n<pre><code>interface Key {\n    algorithm: Algorithm;\n    type: string;\n    extractable: boolean;\n    keyUsage: string[];\n}</code></pre>\n\n",
+    "PostedDate": "2014-06-28T14:16:03.89-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1289722",
+    "ThreadId": "549207",
+    "Html": "@SaschaNaz - Interesting that this example use Web Crypto, as I was trying to do exactly this - limit KeyType to one of &quot;public&quot;, &quot;private&quot; or &quot;secret&quot;.\r<br />\n<br />\nHave you created more of the Crypto interface?  It would be great to get submitted back into <a href=\"https://github.com/borisyankov/DefinitelyTyped/tree/master/webcrypto\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/tree/master/webcrypto</a><br />\n",
+    "PostedDate": "2014-08-13T09:09:14.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This should be fixed in our new release, 0.8.2.0. Please give it a try and reactive if you're still seeing this problem. Thanks again for reporting it.",
+    "ClosedDate": "2013-01-21T18:40:11.107-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "This is the code I have:\n\n/// <reference path=\"../Category/CategoryModel.ts\" />\n/// <reference path=\"../../IValidatableObject.ts\" />\n\nmodule Product {\n    export class ProductModel implements IValidatableObject {\n        public Id: string;\n        public Name: string;\n        public Categories: Category.CategoryModel[];\n\n        public IsValid() {\n            // tsc compiler fails when checking for this.Categories.length > 0; bug...\n            return this.Name != null && this.Categories != null && this.Categories.length > 0;\n        }\n    }\n}\n\n\nmodule Category {\n    export class CategoryModel {\n        public Id: string;\n        public Name: string;\n    }\n}\n\n\nThe moment I'm adding \"this.Categories.length > 0\" in IsValid method I get this error:\n\nError\t1\tInternal error: Unable to get value of the property 'flags': object is null or undefined\t\nError\t2\tInternal error: IntelliSense features are disabled. Try making edits to source files to restore a valid compilation state.\t",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-18T03:21:14.84-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Checking for array length results in error \"Internal error: Unable to get value of the property 'flags': object is null or undefined\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 447
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Cut/pasting that code works fine for me, but obviously I get errors because I don't have the referenced files at the top of the code.  If it's something you can share, would you be able to attach a full repro?\n\nAs a workaround, I removed the references and added the below declaration, and all worked fine.  So maybe the referenced files are key here?\n\ninterface IValidatableObject{\n\tIsValid(): bool;\n}",
+      "PostedDate": "2012-11-18T10:39:15.577-08:00",
+      "Id": 82677
+    },
+    {
+      "Message": "I think we have a reduced repro internally. Marking 'active'",
+      "PostedDate": "2012-11-19T16:26:22.157-08:00",
+      "Id": 82745
+    },
+    {
+      "Message": "Getting the same when referencing another .ts file which itself contains an explicit reference to lib.d.ts as a workaround to be able to extend String.prototype. Might not be the actual reason but it's the only obvious difference I see.",
+      "PostedDate": "2012-11-21T05:10:00.61-08:00",
+      "Id": 82832
+    }
+  ]
+}

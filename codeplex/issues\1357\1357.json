@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-17T12:46:30.357-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Comments that are not followed by code get stripped out.\r\n\r\nThis is preventing us from upgrading to 0.9.0.1 because we need to used the generated Javascript code with a templating engine.\r\n\r\nFor example:\r\n\r\n    function F()\r\n    {\r\n        doSomething();\r\n\r\n        /*{% if template_var %}*/\r\n\r\n        doSomethingElse();\r\n\r\n        /*{% endif %}*/\r\n    }\r\n\r\nbecomes:\r\n\r\n    function F() {\r\n        doSomething();\r\n\r\n        /*{% if template_var %}*/\r\n        doSomethingElse();\r\n    }\r\n\r\nwhich upsets the template engine when it can't find the closing `endif`.  I can't find a workaround that doesn't involve adding actual code after the last comment.",
+    "LastUpdatedDate": "2013-07-17T12:46:30.357-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-16T02:14:17.83-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Comments removed from the end of code blocks",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1357
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We used to require that a comment be associated with a following statement that will be emitted in order to appear in the output.  This is as we have many constructs (interfaces, declarations, etc...) that emit no code, and we don't want to emit all the comments associated with those.  This explains the behavior you are seeing above.\n\nHowever we did do some special cases for certain constructs, e.g. comments in an empty function that we wanted to preserve, which as a side effect resolve the above (I just tested on the latest 'develop' and both the desired comments are emitted).  Thus with our next release this shouldn't be an issue for you.\n\nAs a workaround for this general class of issues (and possibly for 0.9.0.1 if you want to adopt it), you can put a benign, no-op statement after the comment (e.g. \"void 0\", or perhaps even just a semi-colon (i.e. empty statement)), and this benign statement & associated comment will be emitted.  Not pretty, but it should work.\n\nPost V1 we will be taking a bigger look at comment preservation and other common formats (e.g. the \"important comment\" syntax, /*! ... */, that many minifiers leave in) to see where we can improve further here.  If you have feedback you'd like considered, feel free to open up a thread in the 'discussions' area.  Thanks!",
+      "PostedDate": "2013-07-17T12:46:24.337-07:00",
+      "Id": 106325
+    }
+  ]
+}

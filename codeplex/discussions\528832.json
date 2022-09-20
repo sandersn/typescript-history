@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1202315",
+    "ThreadId": "528832",
+    "Html": "On current develop branch there seems to be a new implicit checking that, when running with <code>--noImplicitAny</code>, is doing some sort of checking that I can’t make sense of.<br />\n<br />\nGiven this function:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> applyMixins(derivedCtor:<span style=\"color:Blue;\">any</span>, baseCtors:<span style=\"color:Blue;\">any</span>[]):<span style=\"color:Blue;\">void</span> {\n    <span style=\"color:Blue;\">for</span> (<span style=\"color:Blue;\">var</span> i = 0, baseCtor:Function; (baseCtor = baseCtors[i]); ++i) {\n        <span style=\"color:Blue;\">var</span> prototype = baseCtor.prototype;\n        <span style=\"color:Blue;\">for</span> (<span style=\"color:Blue;\">var</span> k <span style=\"color:Blue;\">in</span> prototype) {\n            <span style=\"color:Blue;\">if</span> (prototype[k] !== Object.prototype[k]) { <span style=\"color:Green;\">// error TS7017</span>\n                derivedCtor.prototype[k] = prototype[k];\n            }\n        }\n    }\n}\r\n</pre></div>This warning goes away if I merge the Object interface to add back an explicit indexer:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Object {\n  [key:<span style=\"color:Blue;\">string</span>]:<span style=\"color:Blue;\">any</span>;\n}\r\n</pre></div>or, alternatively, if I coerce <code>Object.prototype</code> as <code>{ [key:string]: any; }</code> on that line.<br />\n<br />\nI don’t understand what is an implicit any in the above code that I should be told about. <code>Object.prototype</code> keys? Well, what in the world am I supposed to do consistently about that, except add back the index signature that was removed in 0.9.5?<br />\n<br />\nThanks,<br />\n",
+    "PostedDate": "2014-02-03T19:53:35.953-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1203235",
+    "ThreadId": "528832",
+    "Html": "Any time you reference an object with an indexer that the compiler can't be sure exists, you'll get an implicit any warning.<br />\n\r<br />\nFor example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">var</span> x = {};\nx[<span style=\"color:#A31515;\">&quot;magic string&quot;</span>]; \n\r\n</pre></div>The goal of the no implicit any is to help catch situations where you've accidentally typed something, or you're using objects in a way that may return undefined members and the compiler can't be sure the member exists first.  Or, more generally, any time the compiler has to infer that the result is 'any' because it can't be sure of the type.\r<br />\n<br />\nIn the above, we can't be sure that k is something in the prototype because we only check the type of the access locally, not as part of a larger context.  Here that means that 'Object.prototype[k]' would give the warning.<br />\n\r<br />\nYou've got the right idea with the work-around. If you want to use object more liberally, you can give an explicit indexer, so that the type that comes out is an explicit any (rather than an implicit any).<br />\n",
+    "PostedDate": "2014-02-05T15:06:21.773-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

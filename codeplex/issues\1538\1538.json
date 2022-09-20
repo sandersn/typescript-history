@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.83-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "In `src/compiler/typecheck/` (develop branch), `pullSemanticInfo.ts`, `SemanticInfo.getTopLevelDecls` has no return type annotation. The return type gets inferred to `any`, which leads to an error at a usage site in `pullTypeResolution.ts`:\r\n```\r\nC:/javascript/typescript/0.9/typescript/src/compiler/typecheck/pullTypeResolution.ts\r\n|601 col 37| error TS2134: Subsequent variable declarations must have the same type.  Variable 'm' must be of type 'number', but here has type 'any'.\r\n```\r\n(`m` is used repeatedly)\r\n\r\nI get to see this error every time I apply my typescript-tools to its own sources (which build on the language service sources).\r\n\r\nAdding a return type annotation fixes this. \r\n\r\nEven better would be if the type could be inferred correctly at the usage site, where `this` does have type `SemanticInfo`, so `getTopLevelDecls` should have type `():PullDecl[]`, not type `():any`.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-20T12:32:57.64-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler API documentation improvements",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1538
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure what you mean. `getTopLevelDecls` doesn't need a return type annotation because its type is inferred from `this.topLevelDecls` (line 24) which is of type `PullDecl[]`.\n\nThis matches what shows up in `typescript.d.ts` line 7891: `public getTopLevelDecls(): TypeScript.PullDecl[];`\n\nPlease re-open the issue if you have more information about what you'd like fixed here. Thanks!\n\r\n\r** Closed by RyanCavanaugh 08/21/2013 10:29AM",
+      "PostedDate": "2013-08-21T10:29:12.11-07:00",
+      "Id": 110726
+    },
+    {
+      "Message": "That is weird: the error message came directly from the language services (accessed via typescript-tools https://github.com/clausreinke/typescript-tools).\r\n\r\nFurther experimentation shows that the message depends on the root file (from which dependencies are chased): my code is a variation of `harness.ts`, with the same reference includes, but if I load my code, I get that error message T2134, whereas if I load the original `harness.ts`, inference succeeds and there is no error in the included file.\r\n\r\nTo reproduce:\r\n```\r\n$ git clone https://git01.codeplex.com/typescript\r\n$ (cd typescript;git branch;git log -1)\r\n* develop\r\ncommit 198f2c3d8d3acc6b077acc43f977858c93702185\r\nMerge: d528908 6228803\r\nAuthor: Sheetal Nandi <...>\r\nDate:   Thu Aug 8 12:12:23 2013 -0700\r\n\r\n    Merge branch 'release-0.9.1.1' into develop\r\n\r\n$ git clone git@github.com:clausreinke/typescript-tools.git\r\n$ (cd typescript-tools/;git branch;git log -1)\r\n* master\r\n  testing_v0.9\r\ncommit 5da6bddf7650e4ca2c5bcc5b8df77d940362bab7\r\nAuthor: Claus Reinke <...>\r\nDate:   Wed Aug 21 19:55:57 2013 +0200\r\n\r\n    fix #10;add test;fix async test output\r\n\r\n$ echo showErrors | node typescript-tools/bin/tss.js typescript/src/harness/harness.ts\r\n\"loaded c:/javascript/typescript/0.9/typescript/src/harness/harness.ts, TSS listening..\"\r\nshowErrors\r\n[]\r\n\r\n$ echo showErrors | node typescript-tools/bin/tss.js typescript-tools/harness.ts\r\n\"loaded c:/javascript/typescript/0.9/typescript-tools/harness.ts, TSS listening..\"\r\nshowErrors\r\n[{\"file\":\"c:/javascript/typescript/0.9/typescript/src/compiler/typecheck/pullTypeResolution.ts\",\"start\":{\"line\":601,\"character\":37},\"end\":{\"line\":601,\"character\":61},\"text\":\"error TS2134: Subsequent variable declarations must have the same type.  Variable 'm' must be of type 'number', but here has type 'any'.\"}]\r\n\r\n```",
+      "PostedDate": "2013-08-22T04:14:20.57-07:00",
+      "Id": 110727
+    },
+    {
+      "Message": "How would I use your TS test runner to print the error list for a file with external references in it, like `src/harness/harness.ts`?",
+      "PostedDate": "2013-08-26T09:04:18.727-07:00",
+      "Id": 111151
+    },
+    {
+      "Message": "Is this the same root cause as the 'setUnresolved' issue?",
+      "PostedDate": "2013-08-27T09:43:59.063-07:00",
+      "Id": 111306
+    },
+    {
+      "Message": "That would be to easy, wouldn't it?-) but who knows..\n\nI have no idea yet what causes this. Since I don't know how to construct a test case for a file with dependencies without using tss, I have nothing to compare against (apart from tsc, but that doesn't use the services, right?).\n\nAs you've explained, the error shouldn't be there if full type info was taken into account. So it is generated from an analysis that does not have full type info about its target file's dependencies. But why is it triggered in my file and not in the standard harness? It would be good to have a test runner case for this, for comparison.",
+      "PostedDate": "2013-08-27T11:00:58.22-07:00",
+      "Id": 111319
+    },
+    {
+      "Message": "Found it - on my side!\n\nI had misinterpreted the API for `ReferenceResolver`: the `IReferenceResolverHost` is only for IO abstraction, whereas I had used `getScriptSnapshot` to cache resolved files directly in the language service host.\n\nThe result was that scripts were stored in dependencies-last order during resolution, even though the `ReferenceResolutionResult` returns them in dependencies-first order later.\n\nOther phases, such as type checking depend on `for-in` iteration order of `StringHashMap` to be the same as insertion order. I think this is unspecified in EcmaScript, even though it is commonly implemented this way. And type checking, in particular, is extremely brittle against script list ordering changes - it needs to look at dependencies first.\n\nUsing a separate cache for `getScriptSnapshot`, then filling the language service host's cache from `resolvedFiles`, in order, avoids the issue.\n\nI suggest to add suitable comments to `ReferenceResolver` and `pullTypeCheck` to prevent other users falling into this trap, then to close this isse for good.",
+      "PostedDate": "2013-08-28T08:05:45.737-07:00",
+      "Id": 111406
+    },
+    {
+      "Message": "I'm not sure what you're asking from us. This works as expected as Ryan explained.\n\r\n\r** Closed by paulb 08/23/2013 10:44AM",
+      "PostedDate": "2013-08-23T10:44:39.197-07:00",
+      "Id": 111407
+    },
+    {
+      "Message": "reopened to get source documentation improved (see above).",
+      "PostedDate": "2013-08-28T08:06:39.12-07:00",
+      "Id": 111408
+    },
+    {
+      "Message": "Thanks for digging in further, glad you figured it out, it's not easy digging around in there sometimes. I've marked this as a suggestion for us to take a look at in the future. We're aware of a general need for more documentation on the compiler/language service APIs which we hope to get to at some point once the APIs have baked a little longer and we've fixed some more pressing product issues.",
+      "PostedDate": "2013-08-29T15:10:20.893-07:00",
+      "Id": 111600
+    },
+    {
+      "Message": "One further suggestion: there are now half a dozen clients depending on TypeScript service APIs, and lots more clients and users depending on those - so, if you need to update the APIs again, please, consider writing a changelog/blog post to make it easier to follow those changes.",
+      "PostedDate": "2013-08-30T01:37:09.88-07:00",
+      "Id": 111640
+    }
+  ]
+}

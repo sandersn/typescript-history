@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "921317",
+    "ThreadId": "397906",
+    "Html": "\r\n<p>It would be nice to have all the knowledge about classes/types during runtime, so that metadata driven code could work. Something like Reflection in .NET. Property and funciton metadata could be easily put on the class function as static data as an array\r\n of property/member info.</p>\r\n",
+    "PostedDate": "2012-10-03T08:50:32.317-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922599",
+    "ThreadId": "397906",
+    "Html": "<p>There's an issue tracking a similar request for xmldoc/jsdoc here: <a href=\"http://typescript.codeplex.com/workitem/16\">http://typescript.codeplex.com/workitem/16</a></p>\r\n<p>Is this related?</p>",
+    "PostedDate": "2012-10-05T11:53:15.117-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922737",
+    "ThreadId": "397906",
+    "Html": "<p>Nope. That issue is about exporting metadata to another scenario of the \"coding time\".</p>\r\n<p>This one is about exporting metadata to be used at runtime. Browsing through &nbsp;the objects fields is not sufficient, as it requires an instance and above it, field values to get some info on actual metadata (names and types of the fields, names of the methods).&nbsp;</p>\r\n<p>example:</p>\r\n<p>class abc {&nbsp;a: 'string'&nbsp;} &nbsp;=&gt;&nbsp;</p>\r\n<p>function abc() {&nbsp;}</p>\r\n<p>abc.members['member_a'] = { type: 'string', required: true}&nbsp;</p>\r\n<p>Also, some ways to have extra field attributes as in .NET would be nice to have real extendable metadata to be used by the UI.</p>",
+    "PostedDate": "2012-10-06T00:36:04.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923726",
+    "ThreadId": "397906",
+    "Html": "<p>So far, it has been intentional that we do not preserve this type information at runtime.&nbsp; It would be quite expensive in code size terms to put this all in the output, so we would likely never make it the default mode.&nbsp;&nbsp; JavaScript also provides several forms of reflective capabilities that work rather well with code authored in TypeScript, like instanceof checks against the constructor objects that define classes.&nbsp; But examples like you show are indeed information that is currently lost at runtime.&nbsp; We may in the future look into an option to emit this type information, but some concrete examples of how and why you would want to leverage this might be interesting - as there may be alternative approaches to how you could approach this (for instance, using the TypeScript compiler itself at runtime).</p>",
+    "PostedDate": "2012-10-08T15:46:52.173-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923800",
+    "ThreadId": "397906",
+    "Html": "<p>Programmers will define object hierarchies in TypeScript. Data will be passed to their programs in JSON, and stored as JSON in localStorage etc. But given that there is no type information at runtime, how will the JSON be deserialized into objects of the appropriate class, especially at deeper levels of the object hierarchy? Other JavaScript-based type systems define the types of properties in such a way as they can be inspected at runtime (for example, look at the Mongoose ORM for NodeJS / MongoDB), making automatic deserialization from the top object level down through the type hierarchy possible. The best way I can see to do this in a TypeScript system is to add an instance property to each class that is its class name (and hope no-one changes it at runtime), so that this will persist into the JSON and be a way of identifying what kind of object that data should be deserialized to. Having types that persist into the runtime class definitions would mitigate the need to do this, and make serialization and deserialization more like ActionScript &gt; AMF, Java ISerializable etc.</p>",
+    "PostedDate": "2012-10-08T22:54:56.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923896",
+    "ThreadId": "397906",
+    "Html": "<p>Personal comment: IMHO treating typeinfo as an editor time only behavior (just for intellisense) leads to a very weird situation: I can use strong type info in the&nbsp;editor&nbsp;(5% of the time) but may not let my code use this information in runtime (95% of the time). TypeScript does a huge part of the story by letting types be described --- just to let this information disappear from production code where it would provide a huge business value.</p>\r\n<p>As for&nbsp;a very simple yet average use case, imagine a data bound editor (let's say a FormView) for an arbitrary entity type. In order to be able to implement that solely based on metadata/type information one would need the following things as an ability.</p>\r\n<p>- Iterate over the fields of an instance of a&nbsp;class and get the field type even if the field does not have a value. This will allow for a UI that can reflect to field types and can render the correct input control (text, number, date, etc)</p>\r\n<p>simbolic code example:</p>\r\n<p>function displayEntityEditor( entityInstance ) {</p>\r\n<p>//this is not the best way for this but what else... an instance.getType() would be nice<br />var type = entityInstance.prototype.constructor;</p>\r\n<p>type.members.forEach( function(member) {</p>\r\n<p>switch(member.type) {<br />&nbsp;&nbsp; case 'string': renderTextEditor( entityInstance ); break;<br />&nbsp;&nbsp; case 'date': renderDateEditor( entityInstance); break;&nbsp;&nbsp;&nbsp;&nbsp; <br />}</p>\r\n<p>});</p>\r\n<p>}</p>\r\n<p>-&nbsp; Iterate over the fields of a class without an actual instance (some UI editors approache new scnearios as not data binding and editing a new instance but rahter collecting field values that makes possible to init a new entity instance).</p>\r\n<p>- place and retrieve arbitrary field metadata (beyond field type) like attributes in .NET</p>\r\n<p>&nbsp;</p>\r\n<div id=\"_mcePaste\" class=\"mcePaste\" style=\"position: absolute; width: 1px; height: 1px; overflow: hidden; top: 0px; left: -10000px;\">﻿</div>",
+    "PostedDate": "2012-10-09T02:14:14.463-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923898",
+    "ThreadId": "397906",
+    "Html": "\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; margin:0.25em 1em 0px; padding-left:0.25em; padding-right:0.25em; padding-top:0px; border:#ccc 0.1em solid\">\r\n<strong>timliveshere wrote:</strong><br>\r\n<p>Programmers will define object hierarchies in TypeScript. Data will be passed to their programs in JSON, and stored as JSON in localStorage etc. But given that there is no type information at runtime, how will the JSON be deserialized into objects of the\r\n appropriate class, especially at deeper levels of the object hierarchy? Other JavaScript-based type systems define the types of properties in such a way as they can be inspected at runtime (for example, look at the Mongoose ORM for NodeJS / MongoDB), making\r\n automatic deserialization from the top object level down through the type hierarchy possible. The best way I can see to do this in a TypeScript system is to add an instance property to each class that is its class name (and hope no-one changes it at runtime),\r\n so that this will persist into the JSON and be a way of identifying what kind of object that data should be deserialized to. Having types that persist into the runtime class definitions would mitigate the need to do this, and make serialization and deserialization\r\n more like ActionScript &gt; AMF, Java ISerializable etc.</p>\r\n</blockquote>\r\n<p><br>\r\nThis is absolutely a good extension of my original problem.</p>\r\n<p>Similar thread: <a href=\"http://typescript.codeplex.com/discussions/397586\">http://typescript.codeplex.com/discussions/397586</a></p>\r\n",
+    "PostedDate": "2012-10-09T02:15:38.293-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930506",
+    "ThreadId": "397906",
+    "Html": "<p>Another example of where this would be useful is to provide XAML support in TypeScript.</p>",
+    "PostedDate": "2012-10-22T08:18:39.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222472",
+    "ThreadId": "397906",
+    "Html": "One way to implement this feature is to create a new emitter. We have the --declarations emitter. If the same information was emitted in JSON format, reflection would be solved. You do not need to pollute the emitted javascript just emit a second file that contains all public type info.\r<br />\n<br />\nIf this feature existed we could create powerful DI frameworks with typescript. <br />\n",
+    "PostedDate": "2014-03-13T11:20:14.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226627",
+    "ThreadId": "397906",
+    "Html": "There could be a compiler option if the programmer wants the metedata to be kept.<br />\n",
+    "PostedDate": "2014-03-25T13:32:12.18-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1348886",
+    "ThreadId": "397906",
+    "Html": "Hello, \r<br />\n<br />\nYou might find this project interesting: <a href=\"https://github.com/artifacthealth/tsreflect-compiler\" rel=\"nofollow\">https://github.com/artifacthealth/tsreflect-compiler</a>.<br />\n",
+    "PostedDate": "2015-02-04T03:32:35.68-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

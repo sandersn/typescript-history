@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You should remove `T extends W` and replace `T` with `W`. The second parameter will still be allowed to be a subtype of the element type of the first parameter.",
+    "ClosedDate": "2014-03-17T08:22:32.287-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "In the type definitions lodash.d.ts we have definitions that look like\r\n\r\n        findIndex<W, T extends W>(\r\n            array: List<T>,\r\n            whereDictionary: W): number\r\n\r\nWhen 0.9.7 was released (which is the 1.0 RC I guess), this code stopped working.\r\nhttps://github.com/borisyankov/DefinitelyTyped/commit/bb9cf5d3c326267c01c1c83dc14dd9d8b35e9ee7#diff-088617c32409d52ee4033eba568fe766L324\r\n\r\nThe change in that commit screwed up the type inference of the other overloaded versions.  <W, T extends W> is exactly what I need to express the type signature because W is an object that is a subtype of T. Is there another way I can express this relationship? Can this functionality be re-enabled in a future release?",
+    "LastUpdatedDate": "2014-06-25T13:37:02.137-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-16T18:58:24.713-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "1.0 RC gives TS2229: Constraint of a type parameter cannot reference any type parameter from the same type parameter list.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2326
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the response, I guess that is supposed to be a simplification from the generic changes that were mentioned for 1.0. But although a sub-typing relationship is still implied, things are over-simplified: we no longer know which parameter is a subtype of the other.\n\nPlease re-open this issue and consider whether users should be allowed to express the direction of this sub-typing relationship.",
+      "PostedDate": "2014-03-17T10:36:34.6-07:00",
+      "Id": 137102
+    },
+    {
+      "Message": "In fact, after making the suggested changes I am seeing examples of type inference failure where {} is being inferred. If there is enough interest in the issue to re-open the ticket I can try to create an isolated case.",
+      "PostedDate": "2014-03-17T14:16:27.353-07:00",
+      "Id": 137145
+    },
+    {
+      "Message": "I'd like to second the proposal to get generics up to full strength. Generics are mentally tough but dumbing them down only makes things impossible for the library writers who take time to understand them. Library consumers are often blissfully unaware of the complexities because their code just works.\n\nHere's a sample that illustrates what I need.\n\nAwesome work on TypeScript BTW!     \n\nexport class Measure<T extends GeometricQuantity<T>> implements GeometricQuantity<Measure<T>> {\n        public quantity: T;\n        public uom: Unit;\n        constructor(quantity: T, uom: Unit) {\n            var scale;\n\n            scale = uom.scale;\n            if (scale === 1) {\n                this.quantity = quantity;\n                this.uom = uom;\n            } else {\n                this.quantity = quantity.mul(scale);\n                this.uom = new Unit(1, uom.dimensions, uom.labels);\n            }\n        }",
+      "PostedDate": "2014-06-25T13:26:18.41-07:00",
+      "Id": 150732
+    },
+    {
+      "Message": "My workaround: Relax the type of quantity:    \n\nexport class Measure<T> implements GeometricQuantity<Measure<T>> {\n        public quantity: any;\n        public uom: Unit;\n        constructor(quantity: any, uom: Unit) {\n            var scale;\n\n            scale = uom.scale;\n            if (scale === 1) {\n                this.quantity = quantity;\n                this.uom = uom;\n            } else {\n                this.quantity = quantity.mul(scale);\n                this.uom = new Unit(1, uom.dimensions, uom.labels);\n            }\n        }\n\n        add(rhs: Measure<T>): Measure<T> {\n            if (rhs instanceof Measure) {\n                return new Measure(this.quantity.add(rhs.quantity), this.uom.compatible(rhs.uom));\n            } else {\n                throw new Error(\"Measure.add(rhs): rhs must be a Measure.\");\n            }\n        }\n",
+      "PostedDate": "2014-06-25T13:37:02.137-07:00",
+      "Id": 150733
+    }
+  ]
+}

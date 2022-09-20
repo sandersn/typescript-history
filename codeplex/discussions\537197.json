@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1217957",
+    "ThreadId": "537197",
+    "Html": "Hi,<br />\nI have run in situation when I would like to assign type »path« to some variable in node project.  Normally when you import »path« you would do something like this: <br />\n<pre><code>import path = require('path');</code></pre>\n\nbut as path is defined in node.d.ts following statements is not possible (this is what I would like to achieve):<br />\n<pre><code>var path:typeof Path = require('path');</code></pre>\n\nCurrent definition in node.d.ts is:<br />\n<pre><code>declare module &quot;path&quot; {\n    export function normalize(p: string): string;\n    ....\n}</code></pre>\n\nMaybe it will be more general that it will be defined as:<br />\n<pre><code>declare module Path {\n    export function normalize(p: string): string;\n    ...\n}\n\n\ndeclare module &quot;path&quot; {\n    export = Path; \n}</code></pre>\n\nI have just given example for path module, but it is the same for all others. Maybe I’m missing something and this is also possible with current node.d.ts definition?<br />\n<br />\nAny thought...<br />\n",
+    "PostedDate": "2014-03-03T06:40:20.25-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1218292",
+    "ThreadId": "537197",
+    "Html": "You can check out the samples we ship which include a simple use of node.d.ts (<a href=\"https://typescript.codeplex.com/sourcecontrol/latest#samples/node/HttpServer.ts\" rel=\"nofollow\">https://typescript.codeplex.com/sourcecontrol/latest#samples/node/HttpServer.ts</a>). In short, what you need to do when referencing these sorts of .d.ts (ones with quoted module names in them) is use a /// reference to the .d.ts to pull in the quoted module names which you can then import/require. This is one of the only times you want to mix /// and import/require in the same file. You also should not need to use a type annotation on the import statement when this is working correctly.<br />\n",
+    "PostedDate": "2014-03-03T12:40:25.2-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1218870",
+    "ThreadId": "537197",
+    "Html": "Thanks for response, but I think that you haven't understand me correctly.  The problem is that I can't use import statements. I'm trying to split single node project (150+ ts files) to multiple node projects. Each project will produce only single js file. The only way to do this is to change module system from CommonJs to None and then after compiling each library, add exports statements in generated js file with some post-build task. I have tested on simple project and it runs perfect. Because I add exports statements at the end of js file even source maps remains unattached. The problem is, that it is not possible to compile ts file with import statements when module system is set to none. (You get: Build: Cannot compile external modules unless the '--module' flag is provided.) So this is the reason why I would like to change:<br />\n<pre><code>import path = require('path');</code></pre>\n\nto<br />\n<pre><code>var path:typeof Path = require('path');</code></pre>\n\nThe other thing is dynamic require with type annotation. Following is not possible:<br />\n<pre><code>if (true) {\n    import path = require(&quot;path&quot;);\n    console.log(path.sep);\n}</code></pre>\n\nThis works but without type info: <br />\n<pre><code>if (true) {\n    var path = require(&quot;path&quot;);\n    console.log(path.sep);\n}</code></pre>\n\nAnd you are not able to add type annotation as node.d.ts is defined.\r<br />\n<br />\nMost other public d.ts files are declared so that can be used this way. They declare module with all exported staff and then they export this module with export = Module, but this is not true for node.d.ts.<br />\n",
+    "PostedDate": "2014-03-04T01:05:25.3-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219072",
+    "ThreadId": "537197",
+    "Html": "@EdvinV, regarding your second issue &quot;dynamic require&quot; or lazy loading, I believe the following will work<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> pathTypes = require(<span style=\"color:#A31515;\">&#39;path&#39;</span>);\n\n<span style=\"color:Blue;\">class</span> Foo {\n\n  doFoo(){\n        \n     <span style=\"color:Blue;\">var</span> path: <span style=\"color:Blue;\">typeof</span> pathTypes = require(<span style=\"color:#A31515;\">&#39;path&#39;</span>);\n     path. <span style=\"color:Green;\">// intellisense</span>\n   }\n}\r\n</pre></div>Since the import is being used only for type annotation it gets optimised away.<br />\n",
+    "PostedDate": "2014-03-04T08:57:05.893-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219791",
+    "ThreadId": "537197",
+    "Html": "@nabog, thanks for info, now I remember that this is also described in documentation. But this means that following code should be compiled without CommonJs module options.<br />\n<pre><code>/// &lt;reference path=&quot;node.d.ts&quot; /&gt;\nimport pathTypes = require('path');\nvar path: typeof pathTypes = require('path');</code></pre>\n\nbut it is not and compiler gives »Cannot compile external modules unless the '--module' flag is provided.«. In documentation it is stated that modules are external if there is top level export or import directive, but IMO if import directive is only used for type annotation this is not external module and compilation should pass. So is this bug or default behavior?\r<br />\n<br />\nthanks again<br />\n",
+    "PostedDate": "2014-03-06T01:26:35.383-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

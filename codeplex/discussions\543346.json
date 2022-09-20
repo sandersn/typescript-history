@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1238078",
+    "ThreadId": "543346",
+    "Html": "<strong>Agenda</strong><br />\n<ul>\n<li>Update on ES6 module discussions</li>\n<li>Module resolution algorithm</li>\n<li>__extends and its optional inclusion</li>\n<li>\nES6 alignment: \n<ul>\n<li>Symbols and the type system improvements to support them</li>\n<li>Proxies and the type system impact (if any)</li>\n<li>ES6 classes</li>\n</ul>\n</li>\n<li>How do we want to handle 'extends' of an expression?</li>\n<li>\nShould get/set be reflected in the type system?<br />\n</li>\n</ul>\n<strong>Updates from ES6 committee</strong>\r<br />\n \r<br />\n<em>ES6 Modules</em>\r<br />\n<br />\nThere's a potential new ES6 module syntax change currently under consideration.  Rather than using the 'module' keyword for loading the default module, the committee is considering a simplification that uses import.  Example:  \r<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> $ from <span style=\"color:#A31515;\">&quot;jQuery&quot;</span>;  <span style=\"color:Green;\">// export default loader</span>\n<span style=\"color:Blue;\">import</span> {ajax} from <span style=\"color:#A31515;\">&quot;jQuery&quot;</span>; <span style=\"color:Green;\">// exported member loader</span>\r\n</pre></div>This should fit into the existing TypeScript syntax.\r<br />\n<br />\nA question came up about what is the object representation of the ES6 module.  You can get to a reflected object representation using Module.  The result has getters that can reach into the reflected module.\r<br />\n \r<br />\nQuestions that came up in discussion:<br />\n<ul>\n<li>How is the export default reflected in this object?</li>\n<li>\nIs there a readable reference for the ES6 modules? <br />\n<ul>\n<li>\nThere's an annotated implementation (<a href=\"https://people.mozilla.org/~jorendorff/js-loaders/Loader.html\" rel=\"nofollow\">https://people.mozilla.org/~jorendorff/js-loaders/Loader.html</a>)<br />\n</li>\n</ul>\n</li>\n</ul>\nSchedule-wise we could start implementing in earnest soon.  July still sounds like &quot;pencils down&quot; for the ES6 spec, which is only a couple months away.  Expect that most of the syntax is pretty settled at this point.\r<br />\n \r<br />\n<strong>Updates on ES7</strong> \r<br />\n \r<br />\nInteresting proposals coming down the pipeline that we may want to explore as they mature:<br />\n<ul>\n<li>Decorators/annotator straw man</li>\n<li>async/await</li>\n<li>\nParallelJS<br />\n</li>\n</ul>\n<strong>Module resolution algorithm</strong>\r<br />\n \r<br />\n<strong>Question:</strong> The TypeScript module resolution algorithm is shares similarity to both AMD and node, but it doesn't allow any specialization for the kind of module loading/configuration that loaders like Require, Common, and others might want to do.  This may continue to grow, with ES6 adding yet another type of loading into the mix.  One user wants to extend our process: <a href=\"https://typescript.codeplex.com/SourceControl/network/forks/kayahr/typescript/contribution/6570\" rel=\"nofollow\">https://typescript.codeplex.com/SourceControl/network/forks/kayahr/typescript/contribution/6570</a>  What is the best approach to enable growing and changing as module loaders evolve?<br />\n \r<br />\nSupporting all the module loaders natively doesn’t seem like the best approach.  A better approach would be to enable a pluggable resolver architecture that allows people to plug into the compiler a new ways of resolving module names to their associated files.  This would allow them to look into configuration files and to parse templated module names.\r<br />\n \r<br />\n<strong>Action item:</strong> Let's research this more deeply to see what a pluggable loader would work like.\r<br />\n \r<br />\n<strong><code>__extends</code></strong>\r<br />\n \r<br />\n<strong>Question:</strong> The <code>__extends</code> function is one of the only places in the compiler that we inject code into what the user provided.  Would be nice to be able to suppress this and allow the user to assume the responsibility of providing their own.  We would also suppress in the case of ES6 output, once that's added.  Do we want to enable the ability to opt-out of this codegen?  If so, how?\r<br />\n<br />\nWe already allow users to create a user-defined __extends function.  When they do so, we do not redefine it (codegen uses <code>this.__extends || function(d, b) { …. }</code> to prevent redefinition).  Do we want to go a step further?\r<br />\n \r<br />\n<strong>Proposed Solution:</strong> Check if there is <em>any</em> global symbol <code>__extends</code> in the user code, even if it's a declare symbol.  If we see it, we don't emit our own <code>__extends</code>.  We may want to check that the type of the provided <code>__extends</code> matches the shape of the one we will expect to call.\r<br />\n \r<br />\n<strong>Aligning with ES6</strong>\r<br />\n \r<br />\n<em>Symbols</em>\r<br />\n \r<br />\n<strong>Question:</strong> ES6 is adding a new basic type that allows a unique key into objects called a ‘Symbol’.  We currently don’t have a way of capturing the uniqueness of each Symbol type.  How do we want to describe symbols in the type system?\r<br />\n \r<br />\nWe need to introduce a new basic type for symbols which can be used as a new kind of key into objects.\r<br />\n \r<br />\nTake as an example <code>[Symbol.iterator]</code><br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = {  [Symbol.iterator]: value };\r\n</pre></div>Where does the Symbol.iterator get the value that's used as the key?  Is this something we track in the type system?  Are each symbol type fresh?  We could introduce a notation 'new Symbol' as annotation for creation a fresh new symbol type.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> Symbol: {\n    iterator: <span style=\"color:Blue;\">new</span> Symbol;\n}\n \n<span style=\"color:Blue;\">var</span> I = Symbol.iterator;\nmyObj[i];  \r\n</pre></div>How does this relate to existing type rules?  Is a new fresh type like creating a new enum on the spot?\r<br />\n \r<br />\nThe indexes would gain a new 'symbol' indexer.  We would use syntactic sugar to be able to reference the symbols through the common ES6 name (which we would have typed ahead of time in lib.d.ts for the common symbols):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Foo {\n   [x: <span style=\"color:Blue;\">string</span>]\n   [x: <span style=\"color:Blue;\">number</span>]\n   [x: <span style=\"color:Blue;\">typeof</span> Symbol.iterator] : FooBar  <span style=\"color:Green;\">// use of symbol indexer type</span>\n   [Symbol.Iterator]: FooBar <span style=\"color:Green;\">// short form of the previous line</span>\n}\r\n</pre></div>We need to continue investigating to better understand the implications of having symbols be unique types.<br />\n\r<br />\n<strong>Action item:</strong> explore the trade-offs of the ‘fresh type’ design and report back to next design meeting.\r<br />\n<strong>Proposed min bar for the design:</strong> for-of needs to have the item type strongly typed.<br />\n",
+    "PostedDate": "2014-04-25T08:53:27.423-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238175",
+    "ThreadId": "543346",
+    "Html": "Thanks for posting this.  It's nice to see what's current on then radar for this project.<br />\n",
+    "PostedDate": "2014-04-25T13:18:41.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238231",
+    "ThreadId": "543346",
+    "Html": "Agreed - this is great - thanks for giving insight into some upcoming changes.<br />\n",
+    "PostedDate": "2014-04-25T17:51:29.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238266",
+    "ThreadId": "543346",
+    "Html": "Great to see this - thanks for posting.<br />\n",
+    "PostedDate": "2014-04-26T00:42:29.653-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238495",
+    "ThreadId": "543346",
+    "Html": "Very glad for this insight into the design meeting.<br />\n<br />\nProviding clarity around the internal workings of TypeScript is likely to reduce the risk that people associate with adopting the new language.<br />\n<br />\nMore information on upcoming releases - especially with regard to release dates - would also be very helpful for project managers in the real world.<br />\n",
+    "PostedDate": "2014-04-27T04:26:46.863-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238526",
+    "ThreadId": "543346",
+    "Html": "I agree - nice to have insight behind the scenes.  I suddenly feel part of the team reading this. ;)<br />\n",
+    "PostedDate": "2014-04-27T09:02:29.02-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238842",
+    "ThreadId": "543346",
+    "Html": "Thanks all.  Now to see if I can keep this up.  Feel free to bug me if they drop off.\r<br />\n<br />\nPlease also feel free to jump in and comment.  We regularly talk about topics that come up in forum posts as part of the design meeting.  If we catch a design that needs some improvement early on, that's always better than after it's implemented.\r<br />\n<br />\n@nabog - I'll try to put together a roadmap and get that posted, though this is &quot;conference season&quot; for us, so it may take a little bit longer.  We don't tend to talk dates, because we might want longer bake times, or priorities may change enough that we refocus on other tasks first.  That said, I can at least give some broad strokes about where we're heading.<br />\n",
+    "PostedDate": "2014-04-28T08:32:59.167-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238898",
+    "ThreadId": "543346",
+    "Html": "@nabog - once I got started, looks like it went a little faster than I had thought.  The <a href=\"https://typescript.codeplex.com/wikipage?title=roadmap&amp;referringTitle=Documentation\" rel=\"nofollow\">roadmap</a> and <a href=\"https://typescript.codeplex.com/wikipage?title=ECMAScript%206%20Status&amp;referringTitle=Roadmap\" rel=\"nofollow\">ES6 status</a> are both in-progress, but at least you can get a rough idea of what the current focus is.<br />\n",
+    "PostedDate": "2014-04-28T10:03:57.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

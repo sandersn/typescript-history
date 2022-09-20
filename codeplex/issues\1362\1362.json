@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This feature is called arrow functions. They're covered in language spec in section 4.9.2 of the most recent version. The rewriting of 'this' emit is a primary reason the feature exists and is also planned for ECMAScript 6 which Typescript aims to align with. ",
+    "ClosedDate": "2013-07-19T11:11:23.627-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "If I write next code\r\n```\r\nfoo(){\r\n    on(\r\n        enotherObj, // binding scope\r\n        (){\r\n            this // after compile it is't a enotherObj, it is scope of \"foo\" (window)\r\n        }\r\n    );\r\n}\r\n```\r\n\r\nreal full example\r\n\r\n```\r\nclass MyClass {\r\n\r\n    constructor()\r\n    {\r\n        this.on(\r\n\t\t\twindow,\r\n\t\t\t()=>{\r\n\t\t\t\tconsole.log(this['location']);\r\n\t\t\t}\r\n\t\t);\r\n    }\r\n\t\r\n\tpublic on(scope, callback){\r\n\t\tcallback.call(scope);\r\n\t}\r\n\r\n}\r\n\r\nvar cls = new MyClass();\r\n```\r\n\r\nit compiles to\r\n\r\n```\r\nvar MyClass = (function () {\r\n    function MyClass() {\r\n        var _this = this;\r\n        this.on(window, function () {\r\n            // console.log(this['location']); // I want window.location, but real cls.location\r\n            console.log(_this['location']); // IMHO, It is a bug. In real i see \"undefined\"\r\n        });\r\n    }\r\n    MyClass.prototype.on = function (scope, callback) {\r\n        callback.call(scope);\r\n    };\r\n    return MyClass;\r\n})();\r\n\r\nvar cls = new MyClass();\r\n```",
+    "LastUpdatedDate": "2013-07-19T11:11:23.627-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-18T05:18:50.7-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Lost real function scope, because function \"this\" is replaced to \"this\" (_this) of class method",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1362
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Correct me if I'm wrong, but this is correct and expected functionality due to the use of the arrow function?\n\nWhen you use () => { }, the 'this' parameter within the function gets rewritten to be scoped to the 'this' of the outer declaring block, which is done intentionally. To ensure your function is scoped correctly, replace the arrow function:\n```\n() => { }\n```\nwith a real function:\n```\nfunction() { }\n```\nand you will find your scope issues will be gone. That said, I've also been caught a few times by the scoping of arrow functions purely because you get used to using them everywhere (probably a bad thing) and then forgetting the scope they run within, which briefly leads to confusion when things don't seem to work.",
+      "PostedDate": "2013-07-18T05:59:41.277-07:00",
+      "Id": 106437
+    },
+    {
+      "Message": "O! Thanks, I don't know this.",
+      "PostedDate": "2013-07-18T07:01:16.03-07:00",
+      "Id": 106444
+    },
+    {
+      "Message": "How can i reject this issue?",
+      "PostedDate": "2013-07-18T07:02:47.773-07:00",
+      "Id": 106445
+    },
+    {
+      "Message": "I bet not everybody reads the whole language specification. There must be a lot of people wondering why their code sometimes works and sometimes not. \n\nThis really should be documented better.",
+      "PostedDate": "2013-07-18T14:01:43.893-07:00",
+      "Id": 106527
+    },
+    {
+      "Message": "I read 0.8 specification, but didn't see it (maybe because my english is not so good).\nFor russian developers i wrote about it at [habrahabr](http://habrahabr.ru/sandbox/67106/)",
+      "PostedDate": "2013-07-18T22:39:37.153-07:00",
+      "Id": 106594
+    }
+  ]
+}

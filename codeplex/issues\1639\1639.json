@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See https://typescript.codeplex.com/workitem/1591 - this creates a function called 'constructor' rather than defining a private constructor function",
+    "ClosedDate": "2013-09-04T09:26:58.133-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Declaring a constructor as private is ignored by the compiler.\r\n\r\n```\r\nclass Test {\r\n\r\n  private constructor() {\r\n\r\n  }\r\n}\r\n\r\nnew Test();\r\n```\r\n\r\nThis produces no errors when compiled. \r\n\r\nThe compiler should do either of the following:\r\n\r\n\r\n1. An error/warning indicating that private constructors are not supported or\r\n2. An error indicating that the class cannot be instantiated because the constructor is private",
+    "LastUpdatedDate": "2013-10-07T12:43:26.303-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-04T06:12:58.247-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Private access modifier ignored on constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1639
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This behavior by the compiler is totally non-intuitive. I think private constructors (or constructors with future access modifiers as well) are useful to have. I know I've personally fallen into this trap before myself. \n\nIt doesn't make sense that the mechanism the user has to express that they _actually_ want a function called \"constructor\" is by adding an access modifier. I think quoting the word constructor as a means to convey this makes a lot more sense, and then frees up access modifiers to do what they're supposed to do- control access.\n\nExample:\n``` TypeScript\nclass Test {\n   //The \"real\" constructor\n   constructor() { }\n   //The function I decided to name constructor\n   \"constructor\"() { }\n}\n```",
+      "PostedDate": "2013-09-04T10:02:24.707-07:00",
+      "Id": 112045
+    },
+    {
+      "Message": "Agreed this seems very unintuitive. Without looking at the generated JS there's no way to know that this odd behaviour is occurring. I'm also not sure I see a legitimate reason for ever calling a non-constructor function \"constructor\"? \n\nI can see it leading to frustration for developers trying to track down weird behaviour after trying to either enforce a private constructor or have just named the constructor public out of habit.\n\nIs there a reason behind the current behaviour?",
+      "PostedDate": "2013-09-05T05:10:38.34-07:00",
+      "Id": 112573
+    },
+    {
+      "Message": "We'll be making this an error since it's clearly too confusing. If needed you'll be able to quote the name instead.",
+      "PostedDate": "2013-10-07T12:43:26.303-07:00",
+      "Id": 117691
+    }
+  ]
+}

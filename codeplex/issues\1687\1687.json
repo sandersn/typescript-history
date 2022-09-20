@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, that's the commit. Thanks for the help investigating this one.",
+    "ClosedDate": "2013-10-07T17:13:56.24-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "I'm trying out the latest develop branch code in the Eclipse plug-in and hit this exception:\r\n```\r\nTypeError: Cannot read property '0' of null\r\n\tat PullTypeResolver.typeCheckObjectCreationExpression (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:45115:95)\r\n\tat PullTypeResolver.typeCheckAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42893:33)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42577:22)\r\n\tat PullTypeResolver.resolveReturnStatement (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42418:56)\r\n\tat PullTypeResolver.typeCheckAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:43000:33)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42577:22)\r\n\tat PullTypeResolver.resolveList (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:41901:26)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42585:33)\r\n\tat PullTypeResolver.resolveBlock (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42299:22)\r\n\tat PullTypeResolver.resolveAST (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:42788:33)\r\n```\r\n\r\nThe line number corresponds to:\r\n```\r\nvar contextualType = callResolutionData.actualParametersContextTypeSymbols[i];\r\n```\r\nin:\r\n```\r\n        PullTypeResolver.prototype.typeCheckObjectCreationExpression = function (callEx, inContextuallyTypedAssignment, enclosingDecl, context) {\r\n            this.setTypeChecked(callEx, context);\r\n            this.resolveAST(callEx.target, inContextuallyTypedAssignment, enclosingDecl, context);\r\n            var callResolutionData = this.currentUnit.getCallResolutionDataForAST(callEx);\r\n            if (callEx.arguments) {\r\n                var callResolutionData = this.currentUnit.getCallResolutionDataForAST(callEx);\r\n                var len = callEx.arguments.members.length;\r\n\r\n                for (var i = 0; i < len; i++) {\r\n                    var contextualType = callResolutionData.actualParametersContextTypeSymbols[i];\r\n                    if (contextualType) {\r\n                        context.pushContextualType(contextualType, context.inProvisionalResolution(), null);\r\n                    }\r\n\r\n                    this.resolveAST(callEx.arguments.members[i], contextualType != null, enclosingDecl, context);\r\n\r\n                    if (contextualType) {\r\n                        context.popContextualType();\r\n                        contextualType = null;\r\n                    }\r\n                }\r\n            }\r\n        };\r\n```\r\n\r\nSorry I don't have more specific repro steps - this occurs when retrieving diagnostics for every TypeScript file in our workspace via the Eclipse plug-in. Hopefully the stack trace is enough to determine the issue.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-14T16:11:51.353-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Exception when getting diagnostics",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1687
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I don't think I'll be able to provide the entire code base but I could send the single file that seems to trigger this issue.  I'd prefer not to upload it publicly though - is there an email address where I could send it?",
+      "PostedDate": "2013-09-17T02:21:32.347-07:00",
+      "Id": 114770
+    },
+    {
+      "Message": "Thanks for reporting this. It's not clear how the compiler got into this state, but we have some tools we can run to try to reproduce the issue that we can run if you could upload the file(s) you were working on when you got this. We do a lot of fuzzing-type edits on the language service and have never seen this, so there may be something special in the codebase that we need to test on.\n\nAs always, please \"re-open\" the issue if you can provide more information. Thanks!\n\r\n\r** Closed by RyanCavanaugh 09/16/2013 4:05PM",
+      "PostedDate": "2013-09-16T16:05:02.453-07:00",
+      "Id": 115911
+    },
+    {
+      "Message": "Ok, I dug into this a bit more and I think I can see why this might be failing now: this is somewhat \"special\" call.  \r\n\r\nThe code causing the exception looks like this:\r\n```\r\n    public static create(renderer, xscale, yscale, renderers, datasets, intrabarPadding: any = 25) {\r\n        // A Renderer is a class that given a graphical context,\r\n        // a set of scales, and a series of data, draws nice charts\r\n        // onto a plot.\r\n        if (this.classes[renderer.type] != null) {\r\n            return new this.classes[renderer.type](renderer, xscale, yscale, renderers, datasets, intrabarPadding);\r\n        }\r\n    }\r\n```\r\n\r\nDoes this provide enough information to figure out how to fix it or do you need more context?",
+      "PostedDate": "2013-09-28T15:50:22.34-07:00",
+      "Id": 115913
+    },
+    {
+      "Message": "(the failure is from the \"return new this.classes...\" line)",
+      "PostedDate": "2013-09-28T15:54:19.117-07:00",
+      "Id": 115914
+    },
+    {
+      "Message": "classes looks like this:\n```\n    public static classes = {\n        \"LineXYRendererModel\": LineRenderer,\n        \"PointsXYRendererModel\": PointsRenderer,\n        \"BarXYRendererModel\": BarRenderer,\n        \"CustomSideBySideCategoryXYBarRendererModel\": CustomSideBySideCategoryBarRenderer,\n        \"CustomStackedSideBySideCategoryXYBarRendererModel\": CustomSideBySideCategoryBarRenderer,\n        \"AreaXYRendererModel\": AreaRenderer,\n        \"DateSetXYRendererModel\": DateSetRenderer\n    };\n```",
+      "PostedDate": "2013-09-28T15:57:24.227-07:00",
+      "Id": 115915
+    },
+    {
+      "Message": "This code successfully works around the issue:\n```\nexport function create(renderer, xscale, yscale, renderers, datasets, intrabarPadding = 25) {\n    switch (renderer.type) {\n        case \"LineXYRendererModel\":\n            return new LineRenderer(renderer, xscale, yscale, renderers, datasets);\n        case \"PointsXYRendererModel\":\n            return new PointsRenderer(renderer, xscale, yscale, renderers, datasets);\n        case \"BarXYRendererModel\":\n            return new BarRenderer(renderer, xscale, yscale, renderers, datasets);\n        case \"CustomSideBySideCategoryXYBarRendererModel\":\n            return new CustomSideBySideCategoryBarRenderer(renderer, xscale, yscale, renderers, datasets, intrabarPadding);\n        case \"CustomStackedSideBySideCategoryXYBarRendererModel\":\n            return new CustomSideBySideCategoryBarRenderer(renderer, xscale, yscale, renderers, datasets, intrabarPadding);\n        case \"AreaXYRendererModel\":\n            return new AreaRenderer(renderer, xscale, yscale, renderers, datasets);\n        case \"DateSetXYRendererModel\":\n            return new DateSetRenderer(renderer, xscale, yscale, renderers, datasets);\n    }\n}\n```",
+      "PostedDate": "2013-09-28T16:07:02.95-07:00",
+      "Id": 115917
+    },
+    {
+      "Message": "We're still trying to repro this (or come up with a theory of how it happens) without any luck. Can you send me whatever you can to ryanca@microsoft.com? Thanks!",
+      "PostedDate": "2013-09-30T10:25:49.753-07:00",
+      "Id": 116010
+    },
+    {
+      "Message": "Sent the file which causes the issue.",
+      "PostedDate": "2013-09-30T11:29:53.897-07:00",
+      "Id": 116026
+    },
+    {
+      "Message": "I'm guessing this is the fix: https://typescript.codeplex.com/SourceControl/changeset/1858145a4e293437b09467b08767305a48c5e3b1.  Can't reproduce the issue with the latest develop code.",
+      "PostedDate": "2013-10-03T19:01:36.72-07:00",
+      "Id": 117424
+    }
+  ]
+}

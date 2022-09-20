@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1091179",
+    "ThreadId": "456524",
+    "Html": "I'm having an issue where typescript won't compile to a single file if no path is specified.<br />\n<br />\nHere are my settings:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">PropertyGroup</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">Typescripttarget</span><span style=\"color:Blue;\">&gt;</span>ES5<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">Typescripttarget</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptOutFile</span><span style=\"color:Blue;\">&gt;</span>Test.js<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptOutFile</span><span style=\"color:Blue;\">&gt;</span>  \n<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">PropertyGroup</span><span style=\"color:Blue;\">&gt;</span>\n<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">PropertyGroup</span> <span style=\"color:Red;\">Condition</span><span style=\"color:Blue;\">=</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">&#39;$(Configuration)&#39; == &#39;Debug&#39;</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptIncludeComments</span><span style=\"color:Blue;\">&gt;</span>true<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptIncludeComments</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptSourceMap</span><span style=\"color:Blue;\">&gt;</span>true<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptSourceMap</span><span style=\"color:Blue;\">&gt;</span>\n<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">PropertyGroup</span><span style=\"color:Blue;\">&gt;</span>\n<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">PropertyGroup</span> <span style=\"color:Red;\">Condition</span><span style=\"color:Blue;\">=</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">&#39;$(Configuration)&#39; == &#39;Release&#39;</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptIncludeComments</span><span style=\"color:Blue;\">&gt;</span>false<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptIncludeComments</span><span style=\"color:Blue;\">&gt;</span>\n  <span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptSourceMap</span><span style=\"color:Blue;\">&gt;</span>false<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptSourceMap</span><span style=\"color:Blue;\">&gt;</span>\n<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">PropertyGroup</span><span style=\"color:Blue;\">&gt;</span>\n<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">Import</span> <span style=\"color:Red;\">Project</span><span style=\"color:Blue;\">=</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets</span><span style=\"color:Black;\">&quot;</span> <span style=\"color:Blue;\">/&gt;</span>\r\n</pre></div>This setting won't generate Test.js anywhere. Tried &quot;Scripts\\Test.js&quot; as well, no luck.<br />\nIf I change it to C:\\Test.js, it works fine. If I remove the TypeScriptOutFile property, it will compile fine as well to single files.<br />\n<br />\nI monitored with Procmon, and it seems that it is not the case of the file is being generated somewhere else, like the VS folder or System32. It seems that without an absolute path, the file is just not generated at all.<br />\n<br />\nIs this a bug or I am missing something? Do we need to specify the path using variables for this?<br />\n<br />\nNote: I'm using 0.9.1.1 with VS 2012.<br />\n<br />\nEdit: Just noted that If I specify the filename only, no file is generated anywhere, but if I specify a relative path like &quot;Scripts\\Test.js&quot;, the file is generated under &quot;C:\\Program Files (x86)\\Microsoft Visual Studio 11.0\\Common7\\IDE\\Scripts\\Test.js&quot;.<br />\n<br />\nThanks,<br />\nNatan<br />\n",
+    "PostedDate": "2013-09-11T07:05:36.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1091225",
+    "ThreadId": "456524",
+    "Html": "I found a workaround using<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">TypeScriptOutFile</span><span style=\"color:Blue;\">&gt;</span>$(WebProjectOutputDir)\\Scripts\\Test.js<span style=\"color:Blue;\">&lt;/</span><span style=\"color:#A31515;\">TypeScriptOutFile</span><span style=\"color:Blue;\">&gt;</span>\r\n</pre></div>Still I wonder if this is the recommended way, as every example out there is just specifying the file name.<br />\n",
+    "PostedDate": "2013-09-11T07:46:04.587-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105451",
+    "ThreadId": "456524",
+    "Html": "<pre><code>  &lt;PropertyGroup Condition=&quot;'$(Configuration)' == 'Debug'&quot;&gt;\n    &lt;TypeScriptTarget&gt;ES5&lt;/TypeScriptTarget&gt;\n    &lt;TypeScriptRemoveComments&gt;false&lt;/TypeScriptRemoveComments&gt;\n    &lt;TypeScriptSourceMap&gt;true&lt;/TypeScriptSourceMap&gt;\n    &lt;TypeScriptModuleKind&gt;AMD&lt;/TypeScriptModuleKind&gt;\n    &lt;TypeScriptOutFile&gt;sami.js&lt;/TypeScriptOutFile&gt;\n    &lt;TypeScriptNoImplicitAny&gt;true&lt;/TypeScriptNoImplicitAny&gt;\n  &lt;/PropertyGroup&gt;</code></pre>\n\nThis works well.<br />\n",
+    "PostedDate": "2013-10-09T06:15:00.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105485",
+    "ThreadId": "456524",
+    "Html": "If the path is a single file it works, if you add a folder to the path it saves to the wrong place.<br />\n",
+    "PostedDate": "2013-10-09T07:16:34.99-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

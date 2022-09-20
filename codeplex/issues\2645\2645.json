@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Type checking in cast is discussed [here](https://typescript.codeplex.com/workitem/1236). However, there are very practical scenarios that the type checking is too much.\r\n\r\nFor example, we need to extend DOM Node object to add a few extra properties, like this:\r\n```\r\ninterface INode extends Node {\r\n    __extension: string;\r\n}\r\n```\r\nAnd we pass the INode object around instead of Node for easy access to __extension property. Depending on the nodeType property, we may need to cast the node to more specific class:\r\n```\r\nif (inode.nodeType === Node.ELEMENT_NODE) {\r\n    (<Element>inode).setAttribute(\"data-extension\", inode.__extension);\r\n}\r\n```\r\nBut the cast will fail because of these 2 errors:\r\n```\r\nType 'INode' is missing property 'scrollTop' from type 'Element'\r\nType 'Element' is missing property '__extension' from type 'INode'\r\n```\r\n\r\nC++ provides reinterpret_cast so a reference of class A (A&) can be cast to a reference of class B (B&), even though A and B are totally different:\r\n```\r\nA& ra = a;\r\nB& rb = reinterpret_cast<B&>(ra); // Okay even when A and B are totally different\r\n```\r\nJavaScript objects are passed as references, plus the fact JavaScript objects are dynamic, a forced cast makes a lot of sense.\r\n",
+    "LastUpdatedDate": "2014-09-26T16:04:08.34-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-09-26T12:15:27.77-07:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Need a forced cast operator.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2645
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The thread your are linking to is asking for duck typing for similar objects.  You are asking for a forced cast, which can easily be done this way:\n\n    (<Element><{}>inode).setAttribute(\"data-extension\", inode.__extension);\n\nor this:\n\n    (<Element><any>inode).setAttribute(\"data-extension\", inode.__extension);\n\n(and consequently is a lot less characters to type then 'reinterpret_cast')",
+      "PostedDate": "2014-09-26T14:31:28.757-07:00",
+      "Id": 160782
+    },
+    {
+      "Message": "Just to add, usually I just put it in another variable, since that would be more descriptive anyhow:\n\n    var nodeElement = <Element><{}>inode; // (near top of function, or wherever 'inode' is defined)\n    ....\n    if (inode.nodeType === Node.ELEMENT_NODE) {\n        nodeElement.setAttribute(\"data-extension\", inode.__extension);\n    }",
+      "PostedDate": "2014-09-26T14:38:32.267-07:00",
+      "Id": 160785
+    },
+    {
+      "Message": "<AnotherClass><any> or <AnotherClass><{}> looks ugly. Since we are casting it to 'any' or '{}' first, why not just use '()' as forced cast operator, like: ((Element)inode).setAttribute.",
+      "PostedDate": "2014-09-26T16:04:08.34-07:00",
+      "Id": 160799
+    }
+  ]
+}

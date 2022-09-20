@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-16T15:36:17.27-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "If I have this ts module: \r\n```\r\nexport function say(){\r\n    console.log(\"said\");\r\n}\r\n```\r\nand I compile it with the amd option I can use it quite easily from a ts client : \r\n```\r\nimport foo = module(\"tsmodule\")\r\nfoo.say();\r\n\r\nexport var x = 123;\r\n```\r\n\r\nHowever if I have javascript equivalent to the typescript module: \r\n```\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n    function say() {\r\n        console.log(\"said\");\r\n    }\r\n    exports.say = say;\r\n})\r\n```\r\n\r\nThere is no way to use it easily.  The simplest possible solution: \r\n```\r\n// of course you can use .d.ts for requirejs but that is beside the point\r\ndeclare var require:any;\r\n\r\n// will fail with error module has not been loaded yet for context\r\n// http://requirejs.org/docs/errors.html#notloaded\r\nvar useme = require(\"jsmodule\")\r\nuseme.say();\r\n\r\nexport var x = 123;\r\nimport foo = module(\"tsmodule\")\r\nfoo.say();\r\n```\r\nfails because of error http://requirejs.org/docs/errors.html#notloaded . Since \"jsmodule\" was not passed to the define call in the generated typescript. \r\n\r\n__The solution would be to allow us to customize the define section of the generated typescript__\r\n\r\nThere was an undocumented feature : \r\n/// <amd-dependency path=\"jsmodule\" />\r\n\r\nIt works in 0.8.3 but its broken in 0.9.0 alpha",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-25T04:10:06.377-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Typescript AMD implementation bad with Javascript / RequireJS",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 948
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. We do need to do some thinking in this space, obviously the amd-dependency flag was there for a reason. We'll be pushing on the design and looking for a resolution here.",
+      "PostedDate": "2013-04-25T13:36:00.833-07:00",
+      "Id": 98507
+    },
+    {
+      "Message": "fyi, here is a workaround to the issue that I am currently using:\n\ni add a shim to require.config, so all of my entrypoint javascript files specify (for example) that they depend on jquery,angular,etc\n\nof course to do this you need to also specify jquery/angular in the require.config too,   but for my project, where the only pure-javascript files I use are vendor libraries, this works great.\n\n----------------------------\nanother option for you is to specify the AMD signature directly in your typescript file, bypassing the typescript \"import X = module(\"X\");  syntax sugar\n\n",
+      "PostedDate": "2013-04-25T20:56:48.49-07:00",
+      "Id": 98553
+    },
+    {
+      "Message": "To add a shim to require.config is a good solution @novaleaf . Thanks for the idea. \n\nThe other one , to specify the amd signature has issues because you cannot have class declarations inside a function (the define function in this case). ",
+      "PostedDate": "2013-04-25T21:17:16.077-07:00",
+      "Id": 98554
+    },
+    {
+      "Message": "Thank you so much team. ",
+      "PostedDate": "2013-05-10T18:06:17.263-07:00",
+      "Id": 99960
+    },
+    {
+      "Message": "Fixed in https://typescript.codeplex.com/SourceControl/changeset/e483a0a5323e479aeb2d53d8809d28fc229b08ff\n\r\n\r** Closed by danquirk 05/10/2013 5:25PM",
+      "PostedDate": "2013-05-10T17:25:05.253-07:00",
+      "Id": 100324
+    },
+    {
+      "Message": "I am seeing this again when using the compiler from develop at commit 17d1f7f",
+      "PostedDate": "2013-05-16T02:27:31.78-07:00",
+      "Id": 100325
+    },
+    {
+      "Message": "and is repro's with such code (the explicit dependency isn't the first thing in the file)\n\n```\n'use strict';\n/// <amd-dependency path=\"amd-explicit\" />\n\n\nimport bar = module('super');\n\nexport var foo = new bar.C();\n\n\n```",
+      "PostedDate": "2013-05-16T03:23:19.663-07:00",
+      "Id": 100333
+    },
+    {
+      "Message": "I believe the triple-slash XML comments are required to be the first lines in a file, and that has always been the intention. If you put the above lines around the other way, i.e.\n\n```\n/// <amd-dependency path=\"foo\"/>\n\"use strict\";\n```\n\nThen the directive is at the start of the file as it should be, and the \"use strict\" directive is still the first statement, as it should be.  Using this I see the below output, which is what I'd expect:\n\n```\ndefine([\"require\", \"exports\", \"foo\"], function(require, exports) {\n    \"use strict\";\n```\n\nThis is testing with the current bits.  If you are seeing different behavior, please reopen.",
+      "PostedDate": "2013-05-16T15:36:09.44-07:00",
+      "Id": 100400
+    }
+  ]
+}

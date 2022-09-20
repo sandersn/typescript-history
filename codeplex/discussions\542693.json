@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1235612",
+    "ThreadId": "542693",
+    "Html": "I'm composing an application that uses AMD modules.\r<br />\n<br />\nThe testing uses the chai assertion library and a few plugins for it (chai-jquery / sinon-chai).\r<br />\n<br />\ni want to import those as you would expect using require('chai') etc... \r<br />\nsince the js files lie in an extra &quot;libs&quot; folder i use require.config to wire those up to the correct paths.\r<br />\nto make ts happy, i reference the .d.ts files and the module declaration in them is using the concrete string name instead of an identifier i.e. &quot;chai-jquery&quot;.\r<br />\n<br />\nThose plugin libraries provide functionality to the main chai library however which means that each of their header files declares the chai module again with the added functionality.\r<br />\n<br />\nThis works fine with identifier named modules, but when i want to use the &quot;string&quot; named ones, ts just tells me those can't be reopened...\r<br />\n<br />\nSo my question is: why not?\r<br />\nAnd can we have that feature?\r<br />\n<br />\nOtherwise TS rocks ;)<br />\n",
+    "PostedDate": "2014-04-18T20:16:38.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236193",
+    "ThreadId": "542693",
+    "Html": "This is actually possible today, though you have to use a bit of a workaround to get there.\r<br />\n<br />\n[externalModule.d.ts]<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> MyModule {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> x: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> MyModule {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> y: <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;externalModule&quot;</span> {\n    <span style=\"color:Blue;\">export</span> = MyModule;\n}\r\n</pre></div>[useModule.ts]<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> Mod = require(<span style=\"color:#A31515;\">&quot;externalModule&quot;</span>);\n\nMod.y;\r\n</pre></div>",
+    "PostedDate": "2014-04-21T08:43:27.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-04-21T12:36:59.23-07:00"
+  },
+  {
+    "Id": "1239054",
+    "ThreadId": "542693",
+    "Html": "This is possible but it does add new names into the global namespace and cause random collisions with your own code.\r<br />\n<br />\nThe nice thing about the string names is that they have their own namespace.<br />\n",
+    "PostedDate": "2014-04-28T15:41:18.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

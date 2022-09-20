@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.067-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I suspect this is a omission in the language spec and implementation: for non-string-named modules, we can refer to their interface via `typeof`\r\n```\r\ndeclare module mu {\r\n\texport function f():string;\r\n}\r\ndeclare var u : typeof mu;\r\n```\r\nbut for string-named modules, that doesn't work\r\n```\r\ndeclare module \"ms\" {\r\n\texport function f():string;\r\n}\r\ndeclare var s : typeof \"ms\"; // error; how to refer to \"ms\" here? \r\n```\r\nThis is typically useful when using `require` without external modules: reference `node.d.ts`, then do a `var/require` to get node modules (instead of an `import/require`), and declare the var with interface to get type checking/tooling. The node modules are declared as string-named, to make things like `require(\"utils\")` work.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-07T10:15:26.88-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "how to use typeof with string-named modules?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1766
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This isn't really supported per se.\n\nYou could compile with --module commonjs and use an import statement just to create a name for the type (e.g. `import x = require('x'); var p: typeof x;`). If the imported identifier is only used in type positions, the compiler won't emit a require call, so you wouldn't have any extra overhead.\n\r\n\r** Closed by RyanCavanaugh 10/07/2013 10:36AM",
+      "PostedDate": "2013-10-07T10:36:32.513-07:00",
+      "Id": 117709
+    },
+    {
+      "Message": "The point is to avoid `import/require` and stay in the global module (eg, as in https://typescript.codeplex.com/SourceControl/latest#src/compiler/io.ts ). Then use `reference path` to get the interface and declare the variable holding the `require` result to be of that interface.\r\n\r\nThat it is supported for non-string-named modules but not for string-named modules is an unnecessary asymetry.",
+      "PostedDate": "2013-10-07T14:13:04.707-07:00",
+      "Id": 117711
+    },
+    {
+      "Message": "Assigning to Jonathan who will evaluate suggestions for future versions while others can upvote this. This isn't unreasonable to do but it's not something we're likely to support in the near future.",
+      "PostedDate": "2013-10-09T13:56:55.34-07:00",
+      "Id": 117977
+    }
+  ]
+}

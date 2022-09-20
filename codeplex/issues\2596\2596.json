@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is really more of a build system feature. For instance, the TypeScript compiler project itself uses the Jake NPM package to define build steps and dependencies, which then skips building things that don't need to be rebuilt.",
+    "ClosedDate": "2014-07-01T15:47:05.02-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Currently if one uses this command line to build the typescript files:\r\n\r\n```\r\ntsc --sourcemap --module amd --sourceRoot build --outDir build src/index.ts\r\n```\r\n\r\nIt compiles all ts files, each time.\r\n\r\nThis is wasteful. It should instead sync the modified time of the javascript file with typescript file, and if they match as you rerun the command it can safely skip compilation since it's unchanged.",
+    "LastUpdatedDate": "2014-07-02T14:46:31.417-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-01T12:31:50.52-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "outDir should not compile unchanged files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2596
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Huh? But it's not even possible to compile a single file using tsc, so writing own buildstep is not even possible.\n\nIf I do this:\n\n```\ntsc --module amd --out build/test.js src/index.ts\n```\n\nIt doesn't compile a single file, instead it creates JS file for all files, and to inside src directory.",
+      "PostedDate": "2014-07-01T16:12:39.093-07:00",
+      "Id": 151304
+    },
+    {
+      "Message": "--out specifies a single output file that all input files will be concatenated into, although this isn't well supported for external modules.\n\ntsc --module amd src/index.ts\n\nwould output src/index.js (and build any dependencies that index.ts requires in order to be built successfully). \n\ntsc --module amd src/index.ts --out src/foo.js\n\nwould do the same but the output file is now named foo.js\n\ntsc --module amd src/index.ts src/other.ts --out src/foo.js\n\nwould build both input files and output their concatenated results into a single foo.js file. For external modules they will still get built 1 to 1 with js files and then any global stuff in the files will end up in the concatenated --out target.\n\nIt sounds like maybe your issue is with the part where building index.ts causes its dependencies to be rebuilt?",
+      "PostedDate": "2014-07-02T12:27:03.84-07:00",
+      "Id": 151384
+    },
+    {
+      "Message": "Yes, [I opened a issue for that](https://typescript.codeplex.com/workitem/2598) also [a Discussion Thread](https://typescript.codeplex.com/discussions/550294).",
+      "PostedDate": "2014-07-02T14:46:31.417-07:00",
+      "Id": 151413
+    }
+  ]
+}

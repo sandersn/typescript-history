@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1215118",
+    "ThreadId": "535628",
+    "Html": "Hi,<br />\n\r<br />\nas of 1.0RC indexing into an object using bracket notation generates an error, when compiled with &quot;noimplicitany&quot;:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> foo = {};\nfoo[<span style=\"color:#A31515;\">&quot;bar&quot;</span>] = 10; <span style=\"color:Green;\">// Index signature of object type implicitly has an &#39;any&#39; type</span>\r\n</pre></div>This has turned out to be a massive breaking change for us, especially within the test and mock frameworks where a lot of dynamic access and other magic occurs.\r<br />\n<br />\nThe workaround is rather verbose:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> foo: { [index:<span style=\"color:Blue;\">string</span>]: <span style=\"color:Blue;\">any</span> } = {};\nfoo[<span style=\"color:#A31515;\">&quot;bar&quot;</span>] = 10;\n\n<span style=\"color:Green;\">// Or</span>\n<span style=\"color:Blue;\">var</span> foo = {};\n(&lt;<span style=\"color:Blue;\">any</span>&gt;foo).bar = 10; \r\n</pre></div>In the past when there's been a new release, and I eagerly run it over my code-base, and the compiler spots a hidden bug, I've always said to myself &quot;crumbs! well done, you typescript chappies!&quot; But unfortunately there was no such sentiment for this particular gem.\r<br />\n<br />\nWhy make something as fundamental to JavaScript as <code>foo[&quot;bar&quot;]</code> an error?\r<br />\n<br />\nThis may be mathematically 100% correct, but in practice it's a massive nuisance, and has not helped to trap a single bug.\r<br />\n<br />\nPlease tell me this is a bug - not a feature.<br />\n",
+    "PostedDate": "2014-02-26T05:15:44.527-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1215201",
+    "ThreadId": "535628",
+    "Html": "We had actually intended to warn on accessing objects like that without an explicit indexer, but the compiler hadn't been catching it until recently.  There's an easy work around to get to the old behavior.  Rather than fixing every single index operation, you can use an interface merge and give an explicit 'any' indexer to all of the objects at once:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Object {\n    [idx: <span style=\"color:Blue;\">string</span>]: <span style=\"color:Blue;\">any</span>;\n}\r\n</pre></div>",
+    "PostedDate": "2014-02-26T08:49:53.227-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-02-27T01:57:24.04-08:00"
+  },
+  {
+    "Id": "1275549",
+    "ThreadId": "535628",
+    "Html": "Is it the type of the object that's the problem or the type of the property? I find the error message a little unclear.<br />\n<br />\nIt's my understanding that when iterating over a standard Javascript object with a for loop the index is <strong>always</strong> a string(even for Arrays). Am I wrong?<br />\n<pre><code>var obj = {foo: &quot;bar&quot;};\nfor (var key in obj) {\n    var value = obj[key]; // throws &quot;error TS7017: Build: Index signature of object type implicitly has an 'any' type.&quot;\n}</code></pre>\n\n",
+    "PostedDate": "2014-07-23T09:28:56.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

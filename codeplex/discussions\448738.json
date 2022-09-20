@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1063267",
+    "ThreadId": "448738",
+    "Html": "Greetings!\r<br />\n<br />\nI am updating typings for Raphael (svg library) to work with 0.9. It has a certain property that I can't find an easy work around for. Elements keep references to the singleton module instance, so there's a need to type this accessor instance var, but as of 0.9 declaring a module no longer creates a type of the same name.<br />\n<pre><code>declare module Raphael {\n  ...\n}\n\ninterface RaphaelElement {\n  ...\n  raphael: Raphael;\n  ...\n}</code></pre>\n\nI read the spec a few times, and googled around. So far it seems that my only option is to declare RaphaelStatic as an interface, and do the pre-0.9 style declare var Raphael: RaphaelStatic. Is there really no better way?<br />\n",
+    "PostedDate": "2013-07-01T11:00:49.433-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063364",
+    "ThreadId": "448738",
+    "Html": "We're considering a 'typeof' that would let you get at the shape of a module.  For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Raphael {\n  ...\n}\n\n<span style=\"color:Blue;\">interface</span> RaphaelElement {\n  ...\n  raphael: <span style=\"color:Blue;\">typeof</span> Raphael;\n  ...\n}\r\n</pre></div>",
+    "PostedDate": "2013-07-01T14:47:54.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063365",
+    "ThreadId": "448738",
+    "Html": "Thought about this for a bit, sounds quite reasonable. Is there a timeline for this? Days, weeks, or months? Trying to decide how hacky of a workaround I will put up with until the feature is implemented.<br />\n",
+    "PostedDate": "2013-07-01T14:53:26.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064601",
+    "ThreadId": "448738",
+    "Html": "Perhaps it could be intresting to do something like this also :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Person {\n    name:<span style=\"color:Blue;\">string</span>\n}\n\n<span style=\"color:Blue;\">function</span> doSomething&lt;T&gt;(obj : T, property: propertyof T) {\n}\n\n<span style=\"color:Blue;\">var</span> p = <span style=\"color:Blue;\">new</span> Person();\n\ndoSomething(p, <span style=\"color:#A31515;\">&quot;age&quot;</span>); <span style=\"color:Green;\">// error</span>\n\r\n</pre></div>",
+    "PostedDate": "2013-07-04T08:24:24.673-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064722",
+    "ThreadId": "448738",
+    "Html": "@fdecampredon\r<br />\n<br />\nI don't understand what you're trying to illustrate. What use case is there for <code>propertyof</code>? How does <code>propertyof</code> choose which (type of) property of the class should be given to the function?\r<br />\n<br />\nE.g. what happens if person is declared as follows:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Person {\n    name: <span style=\"color:Blue;\">string</span>;\n    age: <span style=\"color:Blue;\">number</span>;\n}\r\n</pre></div>How does it choose between the name/string or age/number as a valid input?<br />\n",
+    "PostedDate": "2013-07-04T18:35:48.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065240",
+    "ThreadId": "448738",
+    "Html": "The idea is to force a string to be the name of the property of a type, that allows to prevent bug of misspelled property name.<br />\nfor example a backbone like model could be typed like this :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> Model&lt;T&gt; {\n    ...\n    set(property: propertyof T, value : <span style=\"color:Blue;\">any</span>);\n    get(property: propertyof T) : <span style=\"color:Blue;\">any</span>;\n    ....\n}\n\n...\n<span style=\"color:Blue;\">interface</span> IPerson {\n    name : <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">class</span> Person <span style=\"color:Blue;\">extends</span> BackBone.Model&lt;IPerson&gt; {\n....\n}\n\n<span style=\"color:Blue;\">var</span> person = <span style=\"color:Blue;\">new</span> Person();\n\nperson.set(<span style=\"color:#A31515;\">&quot;name&quot;</span> , <span style=\"color:#A31515;\">&quot;Jhon&quot;</span>); <span style=\"color:Green;\">// ok</span>\nperson.set(<span style=\"color:#A31515;\">&quot;age&quot;</span>, 19);  <span style=\"color:Green;\">// error age is not a property of the IPerson interface.</span>\n\r\n</pre></div>from this example i can also see that a  way to strongly type the value could be interesting, but i don't see a simple way.<br />\n",
+    "PostedDate": "2013-07-07T04:57:58.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065379",
+    "ThreadId": "448738",
+    "Html": "Ooh, I get it.\r<br />\n<br />\nThe string is how you'd access a property if you were using an array notation, e.g. person[&quot;name&quot;].\r<br />\n<br />\nYeah, I can see that being useful :).<br />\n",
+    "PostedDate": "2013-07-07T18:40:41.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

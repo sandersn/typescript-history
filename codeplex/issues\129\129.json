@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "fixed in develop - d0119d9",
+    "ClosedDate": "2012-10-11T14:58:49.54-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "callstack:\r\n\r\n(anonymous function) (app.ts:51)\r\nErrorReporter.reportError (:42245/errorReporter.ts:80)\r\nErrorReporter.unresolvedSymbol (:42245/errorReporter.ts:123)\r\nTypeChecker.resolveTypeLink (:42245/typeChecker.ts:1029)\r\nTypeFlow.addLocalsFromScope (:42245/typeFlow.ts:1703)\r\npreAssignFuncDeclScopes (:42245/scopeAssignment.ts:353)\r\npreAssignScopes (:42245/scopeAssignment.ts:409)\r\nAstWalker.walk (:42245/astWalker.ts:42)\r\nwalkListChildren (:42245/astWalker.ts:237)\r\nAstWalker.walk (:42245/astWalker.ts:50)\r\nwalkRecordChildren (:42245/astWalker.ts:456)\r\nwalkNamedTypeChildren (:42245/astWalker.ts:462)\r\nwalkClassDeclChildren (:42245/astWalker.ts:466)\r\nAstWalker.walk (:42245/astWalker.ts:50)\r\nwalkListChildren (:42245/astWalker.ts:237)\r\nAstWalker.walk (:42245/astWalker.ts:50)\r\nwalkScriptChildren (:42245/astWalker.ts:479)\r\nAstWalker.walk (:42245/astWalker.ts:50)\r\nAstWalkerFactory.walk (:42245/astWalker.ts:78)\r\nTypeFlow.assignScopes (:42245/typeFlow.ts:3497)\r\nTypeScriptCompiler.typeCheck (:42245/typescript.ts:313)\r\ntimeFunction (:42245/diagnostics.ts:99)\r\nTypeScriptCompiler.timeFunction (:42245/typescript.ts:135)\r\nTypeScriptCompiler.typeCheck (:42245/typescript.ts:277)\r\ncompileTypeScript (app.ts:57)\r\n(anonymous function) (default.htm:48)\r\njQuery.Callbacks.fire (jquery-1.8.2.js:974)\r\njQuery.Callbacks.self.fireWith (jquery-1.8.2.js:1082)\r\njQuery.extend.ready (jquery-1.8.2.js:406)\r\nDOMContentLoaded (jquery-1.8.2.js:83)\r\n\r\n\r\ntest ts:\r\n\r\nclass Decimal \r\n            {\r\n                add(d1: Decimal, d2: Decimal) : Decimal\r\n                {\r\n                    return new Decimal();\r\n                }    \r\n            }\r\n            \r\n            var d1 = new Decimal();\r\n            var d2 = new Decimal();\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-05T15:08:57.14-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Error at index: -1,len: 0, The name 'IArguments' does not exist in the current scope ",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 129
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The code you provided does not reproduce any such error on compilation.",
+      "PostedDate": "2012-10-05T16:28:30.75-07:00",
+      "Id": 78758
+    },
+    {
+      "Message": "\nI am using the latest develop branch and i am running the compiler in the browser.\n\nvar compiler = new TypeScript.TypeScriptCompiler(outfile, outerr);\n        compiler.setErrorCallback(function (start, len, message) \n            { \n                    parseErrors.push({ start: start, len: len, message: message });\n            });\n\nErrorCallback is called multiple times with the arguments presented in my first post:\n     message = The name 'IArguments' does not exist in the current scope\n     start = -1\n     len = 0\n\n",
+      "PostedDate": "2012-10-06T03:56:20.737-07:00",
+      "Id": 78796
+    },
+    {
+      "Message": "Thanks for the report.  The problem here is that lib.d.ts was not included in your compilation, so the required IArguments type was not found.  (IArguments is the type of the implicit 'arguments' property that is added to functions if no other such property is specified.)\n\nThis is a common and confusing issue, so I've pushed change d0119d9 up to develop to break our dependency on IArguments.  (If IArguments isn't found, we'll still add the 'arguments' property, but we'll set the type to 'any'.)",
+      "PostedDate": "2012-10-11T14:58:37.307-07:00",
+      "Id": 79550
+    }
+  ]
+}

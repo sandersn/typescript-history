@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "948119",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>TypeScript seems to have a strange way of initializing methods and fields. Fields are initialized in the order superclass-&gt;subclass, while methods are created in the order subclass-&gt;superclass. For instance, take a look at this code:</p>\r\n<pre class=\"csharpcode\"><span class=\"kwrd\">class</span> User {\r\n    constructor () {\r\n        console.log(<span class=\"str\">&quot;Field from: &quot;</span> &#43; <span class=\"kwrd\">this</span>.field);\r\n        console.log(<span class=\"str\">&quot;Method from: &quot;</span> &#43; <span class=\"kwrd\">this</span>.method());\r\n    }\r\n    field: <span class=\"kwrd\">string</span> = <span class=\"str\">&quot;User class&quot;</span>;\r\n    method(): <span class=\"kwrd\">string</span> { <span class=\"kwrd\">return</span> <span class=\"str\">&quot;User class&quot;</span>; }\r\n}\r\n\r\n<span class=\"kwrd\">class</span> RegisteredUser extends User {\r\n    field: <span class=\"kwrd\">string</span> = <span class=\"str\">&quot;RegisteredUser class&quot;</span>;\r\n    method(): <span class=\"kwrd\">string</span> { <span class=\"kwrd\">return</span> <span class=\"str\">&quot;RegisteredUser class&quot;</span>; }\r\n}\r\n\r\nvar registeredUser = <span class=\"kwrd\">new</span> RegisteredUser();</pre>\r\n<p>In my opinion, it would make most sense to have this output:</p>\r\n<blockquote>\r\n<p>Field from: RegisteredUser class&nbsp;<br>\r\nMethod from: RegisteredUser class</p>\r\n</blockquote>\r\n<p>Failing that, this would at least be consistent:</p>\r\n<blockquote>\r\n<p>Field from: User class&nbsp;<br>\r\nMethod from: User class</p>\r\n</blockquote>\r\n<p>But instead, this is what we get:</p>\r\n<blockquote>\r\n<p>Field from: User class&nbsp;<br>\r\nMethod from: RegisteredUser class</p>\r\n</blockquote>\r\n<p>And of course, that makes no sense at all. Is this as-designed? Or a bug? Or just part of the spec that hasn't been thought through yet?</p>\r\n",
+    "PostedDate": "2012-11-27T23:55:34.623-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "948333",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>My gut feeling is that this does not have a lot to do with typescript. This is simply an artifact of the underlying idiomatic javascript that is emitted for classes by way of prototype based inheritance. It seems people are already starting to forget that\r\n typescript is not a first class language generating bytecode or assembly. You guys&nbsp;must be doing something right :)</p>\r\n<p>If you think this behaviour&nbsp;is genuinely&nbsp;avoidable, take a look at the generated javascript and try reordering the statements to see if you can come up with the&nbsp;initialization ordering&nbsp;you want, while keeping the inheritance intact.</p>\r\n",
+    "PostedDate": "2012-11-28T06:47:34.473-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "948401",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>Oisin is correct, the initialization order is the same as happens if you took the declarations and translated them to JavaScript (which we do).&nbsp; The reason here is that the class syntax is a layer of syntactic sugar rather than the style of class declarations&nbsp;in\r\n other languages which do not have an ordering (and which may reorder for you behind the scenes).&nbsp; Because we try to be very careful not to move code around and to keep it as close to what you originally wrote, you do have to be aware of ordering in cases like\r\n this.</p>\r\n",
+    "PostedDate": "2012-11-28T07:59:41.317-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "948489",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>Agreed that TS is doing a good job of hiding these things behind the scenes, though periodically these things peak through in ways that seem very unintuitive without close study of the emitted JS. (See here for more examples:\r\n<a href=\"http://blog.wouldbetheologian.com/2012/11/various-typescript-weirdnesses.html\">\r\nhttp://blog.wouldbetheologian.com/2012/11/various-typescript-weirdnesses.htm</a>l.)&nbsp;</p>\r\n<p><span style=\"font-size:10pt\">To a user of the language - not to someone designing the language, or trying to figure out which JS constructs should map to which TS constructs - it's a bit of a minefield. There's nothing in the structure of TypeScript itself\r\n which tells me, &quot;You can depend on methods to be initialized correctly, but not on fields.&quot; M</span><span style=\"font-size:10pt\">y own opinion is that when it comes to the emitted JavaScript, it should be a secondary concern to make it look like idiomatic\r\n JavaScript (which is a badly broken language, pushed far beyond anything it was ever intended to do), and should instead try to make a nice beautiful language that behaves in reasonable ways (C# is a good model), even if that's somewhat different from what\r\n you would end up writing yourself. TS already makes you think that you're almost in C# - I think it should basically go all the way, and do more work for you behind the scenes to result in JS that behaves in intuitive ways. Think of JavaScript as MSIL or ByteCode,\r\n that needs to behave in certain ways publicly, but behind the scenes can do all sorts of unobserved private things.</span></p>\r\n<p>Beyond that, given that TS very much&nbsp;<em>does</em>&nbsp;reorder things in certain instances - for instance, it always puts the constructor at the top of the emitted JavaScript no matter where you put it in your code, and then it moves the field initializers\r\n in-between the _super() call and the rest of the constructor - it seems awkward that TS doesn't change things around in this instance.</p>\r\n<p>That said, perhaps I'm just too used to C#, and I'll get used to these weirdnesses in time. I doubt any language is without them, and JavaScript is particularly rife, but it does seem like TS also has more than its fair share at the moment.</p>\r\n",
+    "PostedDate": "2012-11-28T09:48:34.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949097",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>Here's another way to put it. Currently, TypeScript forces you to spend quite a bit of brain cycles (not to mention debugging time) on worrying about things that you shouldn't have to worry about, and that's not good. For instance, you have to worry about\r\n what &quot;this&quot; points to - because if you call a class method normally, it points to one thing, whereas if you call the same method from a callback\r\n<em>within the same class</em>, it points to something else entirely. The point of a decent language is to let you avoid wasting brain cycles thinking about stuff like that, and spend those same cycles (and debugging time) on things that actually add value\r\n to your program.</p>\r\n<p>The same is true here. If you call a method in the constructor, a field can point to one thing; but if you call the same method later on, that very same field won't just have a different value - it'll be pointing to something else entirely. That's a serious\r\n violation of the &quot;law of least astonishment&quot;, and once again, it forces you to spend time thinking about things that you shouldn't have to think about.</p>\r\n<p>Remember, the &quot;class&quot; keyword changes everything. Yes, I get that TS is a strict superset of JavaScript, and that's awesome. When you're writing valid JavaScript in TypeScript, yes, you need to keep the same behavior. But the minute someone puts in a &quot;class&quot;\r\n or an &quot;interface&quot; - everything changes. At that point, nobody expects it to behave like JavaScript, because it's not. It has all sorts of awesome constructs, like static typing, lambdas, type inference, inheritance, polymorphism and other things that you expect\r\n from a modern language. You should put a priority on making <em>everything</em> that happens within that class resemble a reasonable, modern language, and steer well clear of JavaScript's mistakes.</p>\r\n",
+    "PostedDate": "2012-11-29T08:49:34.957-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949142",
+    "ThreadId": "404836",
+    "Html": "\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; padding-top:0px; padding-left:0.25em; margin:0.25em 1em 0px; padding-right:0.25em; border:#ccc 0.1em solid\">\r\n<strong>smithkl42 wrote:</strong><br>\r\n<p>Here's another way to put it. Currently, TypeScript forces you to spend quite a bit of brain cycles (not to mention debugging time) on worrying about things that you shouldn't have to worry about, and that's not good. For instance, you have to worry about\r\n what &quot;this&quot; points to - because if you call a class method normally, it points to one thing, whereas if you call the same method from a callback\r\n<em>within the same class</em>, it points to something else entirely. The point of a decent language is to let you avoid wasting brain cycles thinking about stuff like that, and spend those same cycles (and debugging time) on things that actually add value\r\n to your program.</p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>Agreed, and there is work in progress (remember this is still an alpha release)&nbsp;to help make this easier. One of my&nbsp;suggestions concerning &quot;this&quot; pointers&nbsp;is here:\r\n<a href=\"http://typescript.codeplex.com/workitem/507\">http://typescript.codeplex.com/workitem/507</a>&nbsp;Please, vote.&nbsp;</p>\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; padding-top:0px; padding-left:0.25em; margin:0.25em 1em 0px; padding-right:0.25em; border:#ccc 0.1em solid\">\r\n<p>The same is true here. If you call a method in the constructor, a field can point to one thing; but if you call the same method later on, that very same field won't just have a different value - it'll be pointing to something else entirely. That's a serious\r\n violation of the &quot;law of least astonishment&quot;, and once again, it forces you to spend time thinking about things that you shouldn't have to think about.</p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>Yep, as above.</p>\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; padding-top:0px; padding-left:0.25em; margin:0.25em 1em 0px; padding-right:0.25em; border:#ccc 0.1em solid\">\r\n<p>Remember, the &quot;class&quot; keyword changes everything. Yes, I get that TS is a strict superset of JavaScript, and that's awesome. When you're writing valid JavaScript in TypeScript, yes, you need to keep the same behavior. But the minute someone puts in a &quot;class&quot;\r\n or an &quot;interface&quot; - everything changes. At that point, nobody expects it to behave like JavaScript, because it's not. It has all sorts of awesome constructs, like static typing, lambdas, type inference, inheritance, polymorphism and other things that you expect\r\n from a modern language. You should put a priority on making <em>everything</em> that happens within that class resemble a reasonable, modern language, and steer well clear of JavaScript's mistakes.</p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>Now here is where you're losing your way. TypeScript is all based on current plans for the upcoming&nbsp;JavaScript&nbsp;&quot;Harmony&quot; (ECMA 5.) So when the &quot;real&quot;&nbsp;JavaScript gets class, module, lambdas&nbsp;etc., are you still going to be confused?&nbsp;For\r\n all intents and purposes, TypeScript <em>is</em> JavaScript and don't forget it, literally or figuratively or you'll choke on your own brainfarts :)</p>\r\n",
+    "PostedDate": "2012-11-29T10:34:50.54-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949147",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>@Oisin - Good point about TS being a sort of preview of EcmaScript 6. But I'd say the same thing to the EcmaScript committee. Let classes behave like classes, and actually encapsulate things. Letting &quot;this&quot; change (within a class method) depending on who\r\n is doing the calling is a serious violation of encapsulation.</p>\r\n",
+    "PostedDate": "2012-11-29T10:45:56-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949153",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>@smithkl42 - I agree in principle about classes, but it's probably a bit early to say exactly how de-facto es5&nbsp;classes will differ from idiomatic ones. Right now we're at the mercy of call/apply semantics. At the same time, I am strictly against turning\r\n javascript into another boring statically typed&nbsp;language. If it wasn't for its bizarre quirks and &quot;weird&quot; syntax, we wouldn't have such a rich and delightfully wacky ecosystem. I actually like javascript - as a toy&nbsp;to play with, and for small projects&nbsp;-\r\n but like everyone else hooked on typescript, I find it a hindrance in a team scenario with large projects.</p>\r\n",
+    "PostedDate": "2012-11-29T10:53:21.437-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949177",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>I suppose what really needs to happen is for browsers to start supporting something like MSIL or ByteCode, so that we can write our programs in whatever language we want, with whatever quirks we happen to prefer - and then use them all together. I don't\r\n suppose that's going to happen anytime soon, however.</p>\r\n",
+    "PostedDate": "2012-11-29T11:26:09.23-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949561",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>&quot;I suppose what really needs to happen is for browsers to start supporting something like\r\n<span style=\"text-decoration:line-through\">MSIL or ByteCode</span> JavaScript, so that we can write our programs in whatever language we want...&quot;</p>\r\n<p>;-)</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-30T07:31:46.42-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "949762",
+    "ThreadId": "404836",
+    "Html": "\r\n<p>I'm all for TypeScript treating JavaScript as an inefficient, human-readable form of MSIL. I just think that the TS team should go all the way, and make sure that they never make a decision based on the assessment that, &quot;This will produce some weird looking\r\n JavaScript, so let's not implement this feature.&quot; Make TS work how TS should, and treat the generated JS as a black box.</p>\r\n",
+    "PostedDate": "2012-11-30T17:08:02.853-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "950034",
+    "ThreadId": "404836",
+    "Html": "\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; padding-top:0px; padding-left:0.25em; margin:0.25em 1em 0px; padding-right:0.25em; border:#ccc 0.1em solid\">\r\n<strong>smithkl42 wrote:</strong><br>\r\n<p>I'm all for TypeScript treating JavaScript as an inefficient, human-readable form of MSIL. I just think that the TS team should go all the way, and make sure that they never make a decision based on the assessment that, &quot;This will produce some weird looking\r\n JavaScript, so let's not implement this feature.&quot; Make TS work how TS should, and treat the generated JS as a black box.</p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>I (and many others) disagree with this sentiment. One of the truly great&nbsp;things that differentiates TS from other javascript generators is that the output is idiomatic and entirely readable. Right now, I am building a very large system that involves quite\r\n a lot of javascript and I will have to hand off the entire thing to my client who will maintain it. I am delighted in the knowledge that I don't have to reveal that I used TS to build their system, and&nbsp;nor do I have to go through the all too common&nbsp;rigmarole\r\n of having to justify a &quot;new&quot; technology and produce the supporting documentation to justify my need. I don't have to argue with them about the future of TS, nor its supportability. They can just take the JS and run with it, which is likely what they'll do\r\n because they are not a Microsoft house.</p>\r\n",
+    "PostedDate": "2012-12-01T13:59:26.683-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

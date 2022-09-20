@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The generated code is fine; this substitution is necessary if you have colliding identifiers like this. What runtime problems are you seeing as a result of the renaming?",
+    "ClosedDate": "2014-04-14T09:10:20.077-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "With TypeScript 0.9.7.0, and the __JavaScript output combined into a single file__, if I have a class constructor with a parameter with a name that matches any part of the module name, the module name is inexplicably prefixed with an underscore in the JavaScript output.\r\n\r\nFor example, the following TypeScript:\r\n\r\n```\r\nmodule foo {\r\n    export class Bar {\r\n        constructor(foo: string) {\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nGenerates the following JavaScript:\r\n\r\n```\r\nvar foo;\r\n(function (_foo) {\r\n    var Bar = (function () {\r\n        function Bar(foo) {\r\n        }\r\n        return Bar;\r\n    })();\r\n    _foo.Bar = Bar;\r\n})(foo || (foo = {}));\r\n\r\n```\r\nIf you change the constructor parameter name to anything else, the underscore is no longer added to the module name.\r\n\r\nAlso the problem only seems to occur when the 'Combine JavaScript output into file' TypeScript build option is enabled.\r\n\r\nOne thing that is particularly annoying about this is that any errors introduced by this silent substitution are only discovered at runtime as the references that are broken are not detected by the TypeScript compiler or IntelliSense in Visual Studio.",
+    "LastUpdatedDate": "2014-04-15T06:28:33.19-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-13T04:11:52.213-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Underscore added to module name when class constructor contains param with same name",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2429
+  },
+  "FileAttachments": [
+    {
+      "FileId": 828199,
+      "FileName": "TypeScriptHTMLApp1.7z",
+      "DownloadUrl": ".\\828199"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Hi Ryan,\r\n\r\nFirst up a quick apology. When I was testing this the other day turning off the 'Combine JavaScript output into file' option seemed to disable this behaviour but I've retested it again now and that doesn't seem to be the case.\r\n\r\nFurther testing has also revealed that the only reason this behaviour is causing runtime errors for us is that we have two separate TypeScript projects in our solution: one for the production code and one for unit tests (we do this so that we can package all the production code into one JavaScript file and all the unit tests into another). The test project includes the combined JavaScript output of the main project in the index.html file for the test runner and the TypeScript test scripts references the TypeScript declaration file for the main project in a reference tag.\r\n\r\nIt is in this scenario that certain relative module references (as shown below and in the attached test solution) fail to resolve correctly at runtime despite compiling successfully without any errors or warnings.\r\n\r\n```\r\n// production code (compiles to main.js and main.d.ts)\r\nmodule foo.baz {\r\n    export class Bar {\r\n    }\r\n}\r\n\r\n// test code (references main.js and main.d.ts)\r\n/// <reference path=\"../../TypeScriptHTMLApp1/main.d.ts\" />\r\nmodule foo {\r\n    export function barTest(foo: string) {\r\n        var bar = new baz.Bar(); // raises: “0x800a138f - JavaScript runtime error: Unable to get property 'Bar' of undefined or null reference”\r\n    }\r\n}\r\n```\r\n\r\nObviously there's a simple workaround which is to rename the 'foo' function argument to the barTest function, but I thought I’d provide the attached test project just in case it’s still of interest to you.",
+      "PostedDate": "2014-04-15T06:28:33.19-07:00",
+      "Id": 141937
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "992919",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>Hi, today we saw<a title=\"http://www.stevefenton.co.uk/Content/Blog/Date/201301/Blog/Getting-The-Right-Set-Up-For-TypeScript/ \" href=\"http://www.stevefenton.co.uk/Content/Blog/Date/201301/Blog/Getting-The-Right-Set-Up-For-TypeScript/ \" target=\"_blank\">&nbsp;http://www.stevefenton.co.uk/Content/Blog/Date/201301/Blog/Getting-The-Right-Set-Up-For-TypeScript/&nbsp;</a>&nbsp;&nbsp;with\r\n interesting idea. Still we have to reference all used files in each *.ts file. Steve (or better Mark) proposes that we should have one huge file in a project that contains paths to all *.ts modules.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:gray\">///</span><span style=\"color:green\"> &lt;reference path=&quot;modulea.ts&quot; /&gt;</span>\n<span style=\"color:gray\">///</span><span style=\"color:green\"> &lt;reference path=&quot;moduleb.ts&quot; /&gt;</span>\n<span style=\"color:gray\">///</span><span style=\"color:green\"> &lt;reference path=&quot;modulec.ts&quot; /&gt;</span>\n<span style=\"color:gray\">///</span><span style=\"color:green\"> &lt;reference path=&quot;moduled.ts&quot; /&gt;</span>\n<span style=\"color:gray\">///</span><span style=\"color:green\"> &lt;reference path=&quot;modulee.ts&quot; /</span>\n</pre>\r\n</div>\r\n<p>Then we just rerefence this file in all the other *.ts files and we don't have to manage the references individually in the *.ts files.</p>\r\n<p>My question is - does it work with --out compiler option? The ///&lt;reference is used as well for resolving dependencies. Then if everything depends on everything (with the approach above), how compile detects the dependencies? Does it take output from\r\n some lexical analysis? Will that work?</p>\r\n",
+    "PostedDate": "2013-01-28T00:03:37.57-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993128",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>To my understanding, when you use references like that a dependency graph is built.&nbsp; Nodes that refer to each other are allowed in this graph, the compiler is just going to make the definitions of both files available to each other during compilation.</p>\r\n<p>Whether or not you use the --out flag shouldn't effect the dependencies that are used.&nbsp; The compiler builds out the definitions and will output these, if you specify --out &lt;filename&gt; and are not using external modules, into a single .js output file.</p>\r\n",
+    "PostedDate": "2013-01-28T08:41:02.397-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993153",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>Hi, I'm the Mark mentioned in that blog post.</p>\r\n<p>Yes, this works with the --out compiler option. You create this one central file (references.ts) which references all your .ts files, reference that in, say, app.ts, and then build using</p>\r\n<p><span style=\"font-size:10pt\">tsc --out app.js ap.ts</span></p>\r\n<p><span style=\"font-size:10pt\">and it will automagically resolve all the dependencies.</span></p>\r\n<p><span style=\"font-size:10pt\">I'm using this approach in a reasonably complex project (with AngularJS and Bootstrap) and it makes life much easier.</span></p>\r\n",
+    "PostedDate": "2013-01-28T09:19:29.4-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993189",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>Guys, are you really sure that the dependency graph is taken into account during the code concatenation triggered by the --out option?</p>\r\n<p>As far as I understand, the references are used only to resolve types and not during subsequent building stages.</p>\r\n",
+    "PostedDate": "2013-01-28T10:36:15.503-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993247",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>I too have a single ts that contains all my references and I use --out w/ a single file and it works well, order is not an issue. The compiler parses them all first (I believe) and then performs type checking and then emits the output of non-ambient code.</p>\r\n",
+    "PostedDate": "2013-01-28T12:28:58-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993519",
+    "ThreadId": "431071",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>thorn0 wrote:</strong><br>\r\n<p>Guys, are you really sure that the dependency graph is taken into account during the code concatenation triggered by the --out option?</p>\r\n<p>As far as I understand, the references are used only to resolve types and not during subsequent building stages.</p>\r\n</blockquote>\r\n<p>Yes, we're really sure. We're doing it. It works. Jeez...</p>\r\n",
+    "PostedDate": "2013-01-29T02:45:08.503-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993541",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>Guys, thanks for replies. I'll definitelly try that as this solution is much easier than managing multiple reference directives. I also suspected that not only the ///&lt;reference is used for dependency tree, so you confirmed that.</p>\r\n<p>It is also great that the file can be in some manner generated with some simple script, so managing the file won't be PITA at all.&nbsp;<br>\r\n<br>\r\n&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-29T03:32:27.333-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993639",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>@stejcz and&nbsp;@markrendle,</p>\r\n<p>A couple of questions:</p>\r\n<ul>\r\n<li><span style=\"font-size:10pt\">What kind of project set up are we discussing here?&nbsp;</span><span style=\"font-size:10pt\">Visual Studio or command line?</span>\r\n</li><li><span style=\"font-size:10pt\">Are the referenced modules in one project or in separate projects?</span>\r\n</li></ul>\r\n<p>&nbsp;</p>\r\n<p>For the case where the modules are separated into multiple projects in Visual Studio there might be a slight problem with this approach, because you may end up re-compiling all your modules every single time.</p>\r\n<p>We do things similarly, but we only reference the &quot;.d.ts&quot; declaration files - never the &quot;.ts&quot; files directly.</p>\r\n<p>But if you follow the latter approach then there might be implications for the &quot;--out&quot; option (we use a bundling mechanism at the moment, so I can't tell).</p>\r\n<p>&nbsp;</p>\r\n<p><span style=\"font-size:10pt\">Noel</span></p>\r\n",
+    "PostedDate": "2013-01-29T06:28:59.453-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993729",
+    "ThreadId": "431071",
+    "Html": "\r\n<p>Noel,</p>\r\n<p>It's a .NET web project, making heavy use of AngularJS. I haven't tried this approach with a Node.js project yet.</p>\r\n<p>All the .ts files are in the same project. What I'd really like to do is create a project template where the output is a single .js file and all the .ts files in the project automatically reference each other.</p>\r\n",
+    "PostedDate": "2013-01-29T09:03:49.997-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

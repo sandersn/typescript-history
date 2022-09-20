@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.08-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Currently when using Backbone with TypesScript, I must do this:\r\n\r\n```\r\nclass User extends Backbone.Model {\r\n\tconstructor(args?, options?) {\r\n\t\r\n\t\tthis.idAttribute = \"...\";\r\n\t\t\r\n\t\tthis.url = \"...\";\r\n\t\t\r\n\t\tthis.defaults = { \r\n\t\t\tid: null,\r\n\t\t\tname: \"\"\r\n\t\t}\r\n\t\r\n\t\tsuper(args, options);\r\n\t}\r\n}\r\n```\r\n\r\nThis is because the parent constructor must be called only after you set the class attributes. This mimics Backbone's .extend behavior, where it calls _.extend(this, options) first, then finishes the constructor execution.\r\n\r\nBut it would be much nicer if we could write this:\r\n\r\n```\r\nclass User extends Backbone.Model {\r\n\r\n\tidAttribute = \"...\";\r\n\t\r\n\turl = \"...\";\r\n\t\r\n\tdefaults = { \r\n\t\tid: null,\r\n\t\tname: \"\"\r\n\t};\r\n}\r\n```\r\n\r\nThe only thing preventing this is how TypeScript generates the constructor. Currently, the super() is always called before everything unless you set all the class properties in the constructor. This is the expected behavior for most OO languages, but if there was a way to change this, this scenario would be allowed while allowing to set new properties to the class without errors like \"TS2104: A 'super' call must be the first statement in the constructor when a class contains initialized properties or has parameter properties.\".\r\n\r\nI understand how many things this would break if it was set by default, as this prevents the class to control its own creation process. \r\n\r\nBut this pattern is already used everywhere and the order of the parent constructor call is already controllable in javascript. I believe TS could at least have a modifier that compiled the constructor this way. \r\n\r\nMaybe a hint to the extends clause like:\r\n```\r\nclass User extends propfirst Backbone.Model { ... }\r\n```\r\nOr an triple-slash hint/c#-like attribute:\r\n```\r\n///<constructor propertyFirst=\"true\" />\r\nclass User extends Backbone.Model { ... }\r\n```\r\nThe change itself is quite simple and would make code like this simpler and more elegant to write.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-03T05:53:19.53-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Constructors should have an option to be compiled with properties set before call to super()",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 8,
+    "Id": 1098
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Somehow I remember a restriction that the \"super\" call must be the first line of the constructor?\n\nCan we now initialize class fields before it? ",
+      "PostedDate": "2013-06-04T09:02:18.257-07:00",
+      "Id": 102042
+    },
+    {
+      "Message": "I also ran into this. If you set a property inline. Then it will be overwritten by anything that was setup in the super constructor methods. Hope you can see it the examples below:\n\n``` TS\nclass TodoApp extends Stage\n{\n    private _submitBtn:DOMElement = null;\n\n    constructor(selector:string) {\n        super(selector);// super constructor calls createChildren.\n    }\n\n    public createChildren():void {\n        this._submitBtn = this.getChild('#js-submit-button');\n    }\n\n}\n```\n\nAs you can see _super is called which calls the createChildren method and right after that the ___submitBtn__ gets set to __null__. It seems like all properties that are set inline should be set before call to super(). I am using TypeScript Version 0.9.0.0\n``` JS\nfunction TodoApp(selector) {\n    _super.call(this, selector);\n    this._submitBtn = null;\n}\nTodoApp.prototype.createChildren = function () {\n    this._submitBtn = this.getChild('#js-submit-button');\n};\n```\n\nIf I don't set a value or in this example to null then it will work fine. ",
+      "PostedDate": "2013-07-07T23:59:06.597-07:00",
+      "Id": 105364
+    },
+    {
+      "Message": "Is there any solution except for using Backbone.extend to define a class rather than \"class\"?",
+      "PostedDate": "2013-10-18T07:17:05.487-07:00",
+      "Id": 118829
+    },
+    {
+      "Message": "@alexezh, there is actually a quite simple alternative for this if you are dealing with backbone. Use methods instead of properties. This issue happens specifically with settings that are used by the model constructor that runs before yours, turning them into methods make them available in the prototype and work correctly.\n\nThis was correctly fixed in DefinitelyTyped for Backbone some time ago, so the declaration only accepts some properties as methods.\n\nThis would work then:\n\n```ts\nclass User extends Backbone.Model {\n\t\n\tdefaults() {\n\t\treturn { \n            id: null,\n            name: \"\"\n        };\n\t}\n\t\n\turl() {\n\t\treturn \"...\"\n\t}\n}\n```\nThis should work for any backbone code, as I believe only the \"defaults\" is required by the constructor. Other classes like Collection or View can be dealt like this as well.\n\nFor other libraries that may require a property in the prototype and won't check for methods, you can just declare the type in the class and set it later. \n\n```ts\nclass MyClass {\n\t\n\t// only typing information\n\tsomeProp: string;\n}\n\n// actual implementation\nMyClass.prototype.someProp = \"actual string\";\n```\nThis works for backbone as well, but I prefer the method as it keeps all the code inside the class.\n\nI still think it would be a nice idea to support more the way javascript works intead of trying to force logic that comes from other languages. but there is a workaround and I'm living with it without any problems.",
+      "PostedDate": "2013-10-18T07:59:58.78-07:00",
+      "Id": 118832
+    }
+  ]
+}

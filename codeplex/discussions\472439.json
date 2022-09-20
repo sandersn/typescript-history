@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1133586",
+    "ThreadId": "472439",
+    "Html": "Hi,\r<br />\nI'm experiencing very high CPU usage from Visual studio process.  For example, when I open .ts file in VS2013, CPU usage goes from 0 to 90% in 15 sec and then it needs at least 10 sec to drop down. So for 30 seconds there is very high CPU usage and system is very unresponsive. The same happens when I close ts file or just press a key in editor, so basically you are unable to work normally.\r<br />\n<br />\nHere are some more information:<br />\n<ul>\n<li>the same is if I use VS2012</li>\n<li>if I work with .NET project, (much bigger; 300K+ LOC, 1000+ c# files) there are no problems</li>\n<li>recently I upgrade my system from Windows 8 to 8.1, so I thought that there is connection. So I try clean VirtualBox system, clean VS2013, no addons, but results are the same.</li>\n<li>currently I’m using 0.9.5, but I think the same was true with previous version. I just start to pay more attention now.</li>\n<li>\nthe only connection I see is that recently I’m constantly refactoring the project to single class per file, so I went from 30 ts files to a about 130.  As project grows it is  just not manageable to have files with more than 1 class.<br />\n</li>\n</ul>\nThe problem is also with compiling, because if I open some files, do some changes and then compile, the process will be much longer because VS is taking CPU from tsc.exe.\r<br />\n<br />\nI would like to know if someone else has experience similar behavior. Is this the problem of project having lots of tsc files,…??\r<br />\n<br />\nthanks<br />\n",
+    "PostedDate": "2013-12-10T05:59:53.203-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133646",
+    "ThreadId": "472439",
+    "Html": "A few questions that spring to mind:<br />\n<ul>\n<li>Are all your files in one single project? </li>\n<li>How are you referencing types? </li>\n<li>Do you have any duplicate type declarations? </li>\n<li>Do you have any circular references?</li>\n<li>\nAre your referencing any d.ts with a large number of generics?<br />\n</li>\n</ul>\nSet the build action to &quot;None&quot; for groups of .ts files and compile to see if the problem goes away. Repeat until you have found the offending file.<br />\n",
+    "PostedDate": "2013-12-10T08:13:43.553-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133887",
+    "ThreadId": "472439",
+    "Html": "Just wanted to chime in that I'm noticing this issue as well.  I happened to install the 0.9.5 extension for Visual Studio 2013 today (previously on 0.9.1), and I started migrating some of our larger JavaScript files over to TypeScript and the performance seems to be getting worse and worse as I go along.  Visual Studio hangs and the devenv.exe process is always showing CPU activity, even when I'm not doing anything within Visual Studio.<br />\n<ul>\n<li>All of my files are in 1 project, and I even turned off &quot;Compile on save&quot;.  I have maybe 8 large definition files (JQuery, SharePoint, etc.), but only a few .ts files.</li>\n<li>I'm not explicitly referencing any types; I'm relying on the new &quot;auto-references&quot; feature of the Visual Studio extension to search-and-reference all .d.ts files for me.</li>\n</ul>\n",
+    "PostedDate": "2013-12-10T13:20:19.457-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134258",
+    "ThreadId": "472439",
+    "Html": "Well which of your 8 large definition files is causing the problem? Should be easy enough to identify that.<br />\n",
+    "PostedDate": "2013-12-11T05:10:16.417-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134282",
+    "ThreadId": "472439",
+    "Html": "@nabog \r<br />\nthis was the first thing I have tried! To remove files, to found out which part may cause problems. But I was unable to point to single problem. Because with files removal performance increase gradually. Solution has 5 typescript project, but currently the biggest is server side build on node framework and without this performance are much better. There is certainly no circular references, because I have just refactor and remove all explicit references (using implicit referencing) except those coming from external project, but there are not lot of them.\r<br />\n<br />\nToday I start to use  “Redirect JS to out directory” and I can see little improvement, but I think mostly because git provider (Visual Studio Tools for Git) has less work, as out is part of .gitignore. Of course, I have done tests in Visual studio Safe mode and without Git provider, but without major improvements.\r<br />\n<br />\nthx<br />\n",
+    "PostedDate": "2013-12-11T06:39:44.29-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135290",
+    "ThreadId": "472439",
+    "Html": "Are any of you guys able to share your projects with us so we can try to debug the issue? (you can share it privately if you can't or don't want to post a publicly accessible version).<br />\n",
+    "PostedDate": "2013-12-12T15:16:26.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1137477",
+    "ThreadId": "472439",
+    "Html": "I encountered same issue today, not sure if it caused by the way we reference ts files. will change to user _references.ts to see if this issue goes away.<br />\n",
+    "PostedDate": "2013-12-18T04:59:59.033-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240160",
+    "ThreadId": "472439",
+    "Html": "I was struggling with a very slow VS2013RC2 for the past few days. \r<br />\n<br />\nHad recently included a bunch of JS libraries which VS was trying to index for intellisense. \r<br />\n<br />\nSetting &lt;autosync enabled=&quot;false&quot; /&gt; at the top of /Scripts/_references.js file brought down the 40% of CPU usage that VS was sitting with even at idle\r<br />\n<br />\nRead more here <a href=\"http://madskristensen.net/post/the-story-behind-_referencesjs\" rel=\"nofollow\">http://madskristensen.net/post/the-story-behind-_referencesjs</a><br />\n",
+    "PostedDate": "2014-05-01T00:24:17.707-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

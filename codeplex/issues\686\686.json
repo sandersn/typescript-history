@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:18:52.26-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have extended the String object. I have added a format function to it. I used an interface change to accomplish that.\r\nThe problem is that the jsdoc intellisense is coming up with a large random number of alternative function signatures. The image I attached to this shows 30 when there should only be two. \r\n\r\nCODE:\r\n```\r\n// Module\r\ninterface String {\r\n    /**\r\n      Replace all tokens with values passed in using the order the value is found in args. \r\n         the {0} token is the first parameter, {1} is the second parameter and so on. \r\n      \r\n         USAGE:\r\n             Using numbered parameters.\r\n             var s = '<{0} {1}>{2}</{0}>'\r\n            s = s.format('div', 'style=\"background:blue\"', \"What a wonderful WORLD!\");  \r\n            \r\n            the above would produce \r\n                <div style=\"background:blue\">What a wonderful WORLD!</div>\r\n        \r\n        @param ...args string One or more strings.\r\n        @returns string The string with all the tokens replaced by the values passed in as arguments \r\n    */\r\n    format(...args: string[]): string;\r\n\r\n\r\n    /**\r\n        Replaces the tokens named by key with the value specified by value for each key value pair\r\n        ex \"this is {name}'s {item}.\".format({name:'John',item:'book'})\r\n        That would produce\r\n            \"this is John's book.\"\r\n        @param args key:value pair where value is a string\r\n        @returns string A string that has all the key tokens replaced with the values given in args\r\n    */\r\n    format(args: { [key: string]: (val: string) => string; }): string;\r\n\r\n    /** The regular expression for the formatter to separate terms from the string.\r\n        The default expression will parse to variables named inside brackets.\r\n        Has to be a RegExp\r\n    */\r\n    formatRegExp: RegExp;\r\n}\r\n\r\n\r\n(function () {\r\n    /**    \r\n        Replace all tokens with values passed in using the order the value is found in args.\r\n        the { 0 } token is the first parameter, { 1 } is the second parameter and so on.\r\n        USAGE:\r\n            Using numbered parameters.\r\n            var s = '<{0} {1}>{2}</{0}>'\r\n            s = s.format('div', 'style=\"background:blue\"', \"What a wonderful WORLD!\");  \r\n            \r\n            the above would produce \r\n            <div style=\"background:blue\">What a wonderful WORLD!</div>\r\n\r\n        Replaces the tokens named by key with the value specified by value for each key value pair\r\n        ex \"this is {name}'s {item}.\".format({name:'John',item:'book'})\r\n            That would produce\r\n            \"this is John's book.\"\r\n    */\r\n    String.prototype.format = function (args: any): string {\r\n        var values: string = (arguments.length > 1) ? arguments : args;\r\n        var str = this;\r\n        return str.replace(String.prototype.formatRegExp, function (item) {\r\n            var key = item.substr(1, item.length - 2);\r\n            //console.log('key=' + key + \" item=\" + item);\r\n            var replace;\r\n            if (typeof (values[key]) != 'undefined') {\r\n                replace = values[key];\r\n            } else if (item == '{\\\\') {\r\n                replace = \"{\"; //Replace {\\ with just {\r\n            } else { replace = item; }\r\n            //console.log(\"returning: \" + replace + \" item: \" + item);\r\n            return replace;\r\n        });\r\n    };\r\n});\r\n\r\n/**\r\n    The regular expression for the formatter to separate terms from the string.\r\n    The default expression will separate anything that is written to parse {name}\r\n    Needs to be a RegExp  \r\n*/\r\nString.prototype.formatRegExp = new RegExp(\"{[\\\\w\\\\.-]+}|{\\\\\\\\\", \"g\");\r\n\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-30T09:47:55.617-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Extending built in type producing 942 alternative function signatures",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 686
+  },
+  "FileAttachments": [
+    {
+      "FileId": 614493,
+      "FileName": "format_jsdoc.png",
+      "DownloadUrl": ".\\614493"
+    },
+    {
+      "FileId": 625721,
+      "FileName": "multipledeclarations.png",
+      "DownloadUrl": ".\\625721"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this.\r\n\r\nI changed the title, since it's not related to jsDoc (it repros without). And marked as active, which means we're taking a look at fixing this.",
+      "PostedDate": "2013-01-30T14:22:01.253-08:00",
+      "Id": 87832
+    },
+    {
+      "Message": "I am having the same issue with my repository here [https://github.com/jbaldwin/sugar.d.ts](https://github.com/jbaldwin/sugar.d.ts).\r\n\r\nIt is generating sometimes upwards of 1000+ function declarations for each function...",
+      "PostedDate": "2013-02-18T17:49:56.503-08:00",
+      "Id": 90720
+    }
+  ]
+}

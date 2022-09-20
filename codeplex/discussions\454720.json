@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1085632",
+    "ThreadId": "454720",
+    "Html": "Just a simple question.\r<br />\n<br />\nIn my work we are using commonjs, however in our main file (which is javascript) we are including certain typescript files as global. I was wondering if there was an easy way for me to model that using .d.ts files?\r<br />\n<br />\nThe following is an example of how I thought I could do it.\r<br />\n<br />\nTypescript file foo.ts:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> = <span style=\"color:Blue;\">function</span> Foo (bar: <span style=\"color:Blue;\">string</span>) {\n    console.log(bar);\n}\r\n</pre></div>And a constants.d.ts file:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">import</span> Foo = require(<span style=\"color:#A31515;\">&quot;foo&quot;</span>);\r\n</pre></div>Then, in my working file, I could put:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&quot;constants.d.ts&quot; /&gt;</span>\nFoo(<span style=\"color:#A31515;\">&quot;Hello!&quot;</span>);\r\n</pre></div>Knowing that Foo had already been <code>require</code>d and was available globally.<br />\n",
+    "PostedDate": "2013-08-27T21:13:24.11-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1101171",
+    "ThreadId": "454720",
+    "Html": "Shameless bump.<br />\n",
+    "PostedDate": "2013-09-30T21:28:56.723-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1101367",
+    "ThreadId": "454720",
+    "Html": "IMO no one has bothered to answer this question because it's not very clearly spelled out, and furthermore appears to have a few errors in the posted samples.\r<br />\n<br />\nDid you mean that<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> Foo(bar: <span style=\"color:Blue;\">string</span>) {\n    console.log(bar);\n}\r\n</pre></div>generates foo.d.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Foo(bar: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">void</span>;\r\n</pre></div>And this cannot be referenced in another .ts file? \r<br />\n<br />\nIt appears that when a &quot;.d.ts&quot; contains an <code>export</code> keyword it cannot be referenced in another file (via &lt;reference&gt;), for example this declarations file cannot be referenced:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> Bar { }\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Foo2(bar: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">void</span>;\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Foo(bar: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">void</span>;\r\n</pre></div>This works:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> Bar { }\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Foo2(bar: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">void</span>;\n<span style=\"color:Green;\">// export declare function Foo(bar: string): void;</span>\r\n</pre></div>This may well be a bug.<br />\n",
+    "PostedDate": "2013-10-01T08:51:29.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1101420",
+    "ThreadId": "454720",
+    "Html": "@nabog: that does look odd, copied to a work item <a href=\"https://typescript.codeplex.com/workitem/1746\" rel=\"nofollow\">here</a> <br />\n",
+    "PostedDate": "2013-10-01T11:43:01.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1102524",
+    "ThreadId": "454720",
+    "Html": "To answer the original question: No, that isn't possible.\r<br />\n<br />\nWhen a source file contains 'export' declarations at top-level it is considered an external module (regardless of how it is subsequently referenced). External modules should always be imported with 'import' declarations, otherwise you won't have an alias through which you can reference the contents of the external module.\r<br />\n<br />\nIt is not meaningful to use /// &lt;reference&gt; with an external module. It will include the module in the compilation, but unless you also 'import' it there is no way to reference it.<br />\n",
+    "PostedDate": "2013-10-01T17:56:51.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103449",
+    "ThreadId": "454720",
+    "Html": "Thank you for the feedback - I hadn't realised that the question was ambiguous.\r<br />\nI'll try and clear it up now.\r<br />\n<br />\nSay I have a .ts file which is imported in one project (we'll call it project A) as such:\r<br />\n<br />\nExample utilities.ts file:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> stripCommentsFromJSONString() {\n    <span style=\"color:Green;\">//Code Here.</span>\n}\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> safeEval() {\n    <span style=\"color:Green;\">//Code Here.</span>\n}\r\n</pre></div>Then, in that project B I reference the file as such (using commonjs):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> Utilities = require(<span style=\"color:#A31515;\">&quot;utilities&quot;</span>);\n\n<span style=\"color:Green;\">//... stuff</span>\n<span style=\"color:Blue;\">var</span> JSONobj = JSON.parse(Utilities.stripCommentsFromJSONString(jsonstring));\n<span style=\"color:Green;\">//... stuff</span>\r\n</pre></div>Then in project C (which is also using commonjs) a number of files have been imported and declared as\r<br />\nglobal for use in other files, these are specified in a file called globalconstants.d.ts:\r<br />\n<strong>This is the suggestion - and is not currently supported.</strong><br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&quot;lib/node.d.ts&quot; /&gt;</span>\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> Utilities = <span style=\"color:Blue;\">import</span>(<span style=\"color:#A31515;\">&quot;utilities&quot;</span>);\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> Networking = <span style=\"color:Blue;\">import</span>(<span style=\"color:#A31515;\">&quot;networking&quot;</span>);\r\n</pre></div>And then in any arbitary file in project C I can include globalconstants.d.ts and the variables available from utilities.ts are now available in the Utilities variable declared in globalconstants.d.ts:\r<br />\n<br />\ne.g. in importjsondata.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&quot;lib/projecta/globalconstants.d.ts&quot; /&gt;</span>\n\n<span style=\"color:Green;\">//... CODE - &amp; replacer declaration.</span>\n\n<span style=\"color:Blue;\">var</span> JSONobj = JSON.parse(Utilities.stripCommentsFromJSONString(jsonstring), replacer);\n\n<span style=\"color:Green;\">//... more code</span>\r\n</pre></div>The request is the ability to use an import statement coupled with a declare statement in a .d.ts file to represent a commonjs file that has been previously imported into the current scope.\r<br />\n<br />\nI hope that's more clear :)<br />\n",
+    "PostedDate": "2013-10-03T19:17:10.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103769",
+    "ThreadId": "454720",
+    "Html": "Your final words here highlight the problem, namely &quot;...to represent a commonjs file that has been previously imported into the current scope&quot;\r<br />\n<br />\nIn a CommonJS module system there is no way to &quot;previously import&quot; something into the current scope.  The scope is the module, and the current module is equal to the JavaScript source file, which is equal to a source TypeScript file (as we have no multi-file external module compilation).  Thus if you want a module to be available for use, you need to explicitly import it in the source file that will reference it.\r<br />\n<br />\nAnders last 2 sentences are still highly relevant here, namely:\r<br />\n<br />\n  &quot;<em>External modules should always be imported with 'import' declarations, otherwise you won't have an alias through which you can reference the contents of the external module</em>.&quot;\r<br />\n<br />\n   &quot;<em>It is not meaningful to use /// &lt;reference&gt; with an external module. It will include the module in the compilation, but unless you also 'import' it there is no way to reference it</em>.&quot;<br />\n",
+    "PostedDate": "2013-10-04T11:47:33.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104143",
+    "ThreadId": "454720",
+    "Html": "There is a way that lies in the way that javascript (the language) works, which is to declare a global var (or assign a module to a variable that has not been declared). \r<br />\n<br />\nFor example (imagine a bootstrapper file):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nUtilities = require(<span style=\"color:#A31515;\">&#39;./utilities&#39;</span>);\nNetworking = require(<span style=\"color:#A31515;\">&quot;./networking&quot;</span>);\nrequire(<span style=\"color:#A31515;\">&quot;./application&quot;</span>);\r\n</pre></div>Since neither Utilities or Networking were declared before they were required, they are now available as globals in the /application file (and any further files). There can be many or few of these global constants.\r<br />\n<br />\nI was hoping that the ability to use frameworks (made in CommonJS) or external files in such a manner would be supported, as it would help to find errors when those global constants change - but I can understand if you decide against supporting this style of using JavaScript.<br />\n",
+    "PostedDate": "2013-10-06T00:12:00.693-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1227200",
+    "ThreadId": "454720",
+    "Html": "Hello, I thought I'd try and get some more feedback on this topic now that TypeScript 1.0 (beta) is out.<br />\n",
+    "PostedDate": "2014-03-26T19:41:22.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

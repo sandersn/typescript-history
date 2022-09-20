@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "982926",
+    "ThreadId": "428458",
+    "Html": "\r\n<p>I was creating a .d.ts file for <a title=\"Lodash\" href=\"http://lodash.com/\" target=\"_blank\">\r\nlodash</a>, built on another one created for <a title=\"Underscore\" href=\"http://underscorejs.org/\" target=\"_blank\">\r\nunderscore</a>. &nbsp;And ran into an interesting issue, the underscore file been defined with overloads that appeared as follows.</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>any(\r\n    list: string[],\r\n    iterator?: (element: string, index?: number, list?: string[]) =&gt; bool,\r\n    context?: any): bool;\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>Now it defines index and list as optional parameters, but in this case the compiler expects them to be defined on the calling method, as optional parameters, when you try to use this method.</p>\r\n<p>Now one of the nice things about underscore, is you can simply define a quick function, to filter your collection and continue on. &nbsp;With this case in the compiler, you would have to define all 3 callback parameters, each time you wanted to use this\r\n method. &nbsp;This isn't&nbsp;particularly&nbsp;helpful when you're looking to use the methods, in addition you're just adding extra bytes to your minified output.</p>\r\n<p>I was able to get around this problem, fairly simply, by defining an overload for each optional parameter, as follows.</p>\r\n<pre>any(\r\n    list: string[],\r\n    callback?: (element: string) =&gt; bool,\r\n    context?: any): bool;\r\nany(\r\n    list: string[],\r\n    callback?: (element: string, index: number) =&gt; bool,\r\n    context?: any): bool;\r\nany(\r\n    list: string[],\r\n    callback?: (element: string, index: number, list: string[]) =&gt; bool,\r\n    context?: any): bool;</pre>\r\n<p>Now this is super tedious to do for each and every method, it gets worse if you have 4 different input types for list (string, string[], any[], number[], Object, any, etc, (generics will solve this partially once they can implemented)).</p>\r\n<p>If there was a terser way to define this, and clearly show the consuming developer what potential methods the can implement it would be easier to create declaration files and instead of having 18 overloads you'd only have 6 or less.</p>\r\n<pre>any(\r\n    list: string[],\r\n    callback?: (element: string [, index: number, list: string[]]) =&gt; bool,\r\n    context?: any): bool;</pre>\r\n<p>Any thoughts? &nbsp;Comments, suggestions?</p>\r\n",
+    "PostedDate": "2013-01-03T22:58:16.1-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984237",
+    "ThreadId": "428458",
+    "Html": "\r\n<p>The short answer is that you shouldn't use optional arguments in the type of a callback. In other words, just declare the function like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>any(\r\n    list: string[],\r\n    callback?: (element: string, index: number, list: string[]) =&gt; bool,\r\n    context?: any): bool;\r\n</pre>\r\n</div>\r\n<p>You don't need overloads because implementations of the callback are always free to omit parameters, regardless of whether they're optional or not. For example:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>any(myList, e =&gt; e == <span style=\"color:#a31515\">&quot;hello&quot;</span>);\r\nany(myList, (s, x) =&gt; x &lt; 10);\r\n</pre>\r\n</div>\r\n<p>would both be acceptable calls to the any() function. As a rule, a function type is always assignable to another function type with the same&nbsp;or more parameters because it is always fine for a function to ignore parameters it isn't interested in.</p>\r\n<p>Now, the interesting thing is that if you declare the index and list parameters to be optional then any callback that includes those parameters must also declare them optional. So, the second line above would need to be:</p>\r\n<pre>any(myList, (s, x?) =&gt; x &lt; 10);</pre>\r\n<p>That's likely not what you intended and may seem surprising until you consider the meaning of the ? modifier from a callee's perspective. For a callee, the modifier means that you might not be given an argument for the particular&nbsp;parameter. Therefore, a\r\n function that requires an argument for a particular parameter (such as (x: number) =&gt; bool) can't be assigned to a function reference that, when called, might not supply an argument for that parameter (such as (x?: number) =&gt; bool).</p>\r\n<p>The upshot of this is that callback parameters whose function types&nbsp;have optional parameters are actually MORE restrictive than callback parameters whose function types have non-optional parameters. When you declare</p>\r\n<pre>any(\r\n    list: string[],\r\n    callback?: (element: string, index?: number, list?: string[]) =&gt; bool,\r\n    context?: any): bool;\r\n</pre>\r\n<p>you are basically saying that the callback might or might not receive arguments for the index and list parameters. Therefore,&nbsp;handlers of the callback cannot require those parameters (by declaring them non-optional) but must&nbsp;be prepared for them to be missing\r\n (by declaring them optional).</p>\r\n<p>So, in short, never use optional parameters in callbacks!</p>\r\n",
+    "PostedDate": "2013-01-08T15:48:02.367-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075343",
+    "ThreadId": "428458",
+    "Html": "How does a user know that arguments to the callback are optional if they are not explicitly listed as so?  If the parameters are not marked with '?' then as a user I now have to check documentation or best guess as to how many parameters I need to provide -- or simply provide all because the declaration does not tell me.  This to me seems like it is against what TypeScript is trying to achieve.<br />\n<br />\nSorry for reviving this dead thread but someone posted it on my underscore.d.ts implementation since it has this problem, and I'm not sure I completely agree with the answer here. -&gt; <a href=\"https://github.com/jbaldwin/underscore.d.ts/issues/4\" rel=\"nofollow\">https://github.com/jbaldwin/underscore.d.ts/issues/4</a><br />\n<br />\n&quot;you are basically saying that the callback might or might not receive arguments for the index and list parameters. &quot; That is exactly the point of declaring them as '?' is it not?  As a user I now know for a fact I can omit those parameters if I want to, but the compiler is unfortunately enforcing me to provide them in my callback declaration.<br />\n<br />\nSo why is it more restrictive?  What was the design decision behind this?<br />\n",
+    "PostedDate": "2013-07-31T15:48:19.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075401",
+    "ThreadId": "428458",
+    "Html": "I agree, I think there needs to be a little bit of intellisense help to inform users don't have to provide a function that can handle all parameters.<br />\n",
+    "PostedDate": "2013-07-31T21:24:37.05-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075580",
+    "ThreadId": "428458",
+    "Html": "It seems inconsistent to me as well, for example:<br />\n<pre><code>class Foo {\n    public bar(a?, b?, c?): void {...}\n}\n\nvar foo = new Foo();\nfoo.bar(); // OK\nfoo.bar(1); // OK\nfoo.bar(1, 2); // OK\nfoo.bar(1, 2, 3); // OK\nfoo.bar(1, 2, 3, 4); // Error! but this is expected with the way the function is defined</code></pre>\n\nNow consider:<br />\n<pre><code>class Foo2 {\n    public bar2(fn: (a?, b?, c?) =&gt; void): void { ... }\n}\n\nvar foo2 = new Foo2();\nfoo2.bar2(() =&gt; { ...}): // Error! but it seems like a OK call since a,b,c are optional\nfoo2.bar2(a) =&gt; { ...}); // error again... \nfoo2.bar2((a, b) =&gt; {...}); // error\n...\nfoo2.bar2((a?, b?, c?) =&gt; { ... });  // OK, but maybe I don't need b and c? I don't care about bar2's internals</code></pre>\n\nThis doesn't quite jive with what I would expect as a user.  \n<br />\n",
+    "PostedDate": "2013-08-01T07:15:50.39-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075624",
+    "ThreadId": "428458",
+    "Html": "The parameters are optional <strong>from the caller's side, not the callee's side</strong>. If a callback parameter is optional <strong>from the caller's side</strong>, then the callee cannot depend on it being present (i.e. cannot pass in a function that requires a value).\r<br />\n<br />\nLet's look at some examples<br />\n<pre><code>function forEach&lt;T&gt;(arr: T[], callback: (elem: T, index: number, arr: T[]) =&gt; void) {\n    for(var i = 0; i &lt; arr.length; i++) {\n        callback(arr[i], i, arr);\n    }   \n}</code></pre>\n\nHere, <code>callback</code> is defined without optional parameters <em>because the function implementation always calls it with all its parameters</em>. You want code like this to be legal:<br />\n<pre><code>var items = [ 1, 2, 3 ];\nforEach(items, (el) =&gt; console.log(el));</code></pre>\n\nNote that it is not <code>forEach</code>'s job to decide which parameters you <em>must</em> accept. It wouldn't make sense to force you to declare a bunch of parameters you don't care about.\r<br />\n<br />\nWhat would an actual optional callback look like? Let's imagine a <code>forEach</code> that does need its callback parameter to be optional:<br />\n<pre><code>function wackyForEach(arr: any[], callback: (elem: any, index: number, length?: number) =&gt; void) {\n    for(var i = 0; i &lt; arr.length; i++) {\n        if(typeof arr[i] === 'string') {\n            callback(arr[i], i, arr[i].length);\n        } else {\n            callback(arr[i], i);            \n        }\n    }\n}\n\n// Error: third parameter might not always be present\nwackyForEach(items, (e, i, len) =&gt; console.log(len));\n\n// OK\nwackyForEach(items, (e, i, len?) =&gt; console.log(len || '(none/zero)'));\n\n// OK\nwackyForEach(items, e =&gt; console.log(e));</code></pre>\n\nHere, the we cannot pass a function that <em>requires</em> more parameters than are guaranteed to be invoked by the caller.<br />\n",
+    "PostedDate": "2013-08-01T08:53:30.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075635",
+    "ThreadId": "428458",
+    "Html": "I see, this makes more sense.  '?' is not denoting that you can omit it from the callback signature (what I thought it was doing), but rather it is saying this is a required parameter but it may or may not have a <strong><em>value</em></strong> so you must declare it in the callback signature and potentially handle both cases.  Thanks for the in-depth response, this was helpful.<br />\n<br />\nedit: This seems really obvious in retrospect, I guess the clue is recognizing who the caller and callee are, and that a regular function it must handle the optional parameters, so naturally the same would apply to a callback if it is defined like that... <br />\n",
+    "PostedDate": "2013-08-01T09:11:46.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

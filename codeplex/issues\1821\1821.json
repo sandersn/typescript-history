@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is as-spec'd for now. Note that the code does compile in the presence of type errors - only syntactic errors prevent compilation.",
+    "ClosedDate": "2013-10-21T10:04:32.413-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I came across this on StackExchange:\r\n\r\nhttp://programmers.stackexchange.com/questions/167070/differences-between-typescript-and-dart#comment-329170\r\n\r\nI was surprised to find that he's right - standard JS code like the following does not in fact compile:\r\n\r\n```\r\nvar x = {}; x['foo'] = 5; // works - perceived type is any\r\n\r\nvar y:any = {}; y.foo = 5; // works - perceived type is any\r\n\r\nvar z = {}; z.foo = 5; // fails - perceived type is {}\r\n```\r\n\r\nThis seems like a real problem - TypeScript was supposed to be a true superset of JavaScript, but this very common way of creating an empty hash is invalid code in TypeScript?\r\n\r\nWould it make more sense for the perceived type to be simply `any`?\r\n\r\nIs the type inference a little too smart in this case?\r\n",
+    "LastUpdatedDate": "2013-11-19T16:03:10.48-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-20T17:26:20.143-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type inference issue with empty objects {}",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1821
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The following fails too:\n\n```\nvar x = { foo: 123, bar: 456 }; x.nib = 789;\n```\n\nThis is all very surprising to me...\n",
+      "PostedDate": "2013-10-20T17:29:29.577-07:00",
+      "Id": 119007
+    },
+    {
+      "Message": "Lots of valid JavaScript produces errors in TypeScript. In fact, many of TypeScript's errors are warnings that something *might* not be right based on the type system's understanding of the code. And keep in mind that even as it reports erorrs, the compiler still outputs valid JavaScript code. Indeed, *every* syntactically correct JavaScript program will produce correct output, but not necessarily without semantic errors.\n\nYour examples point out scenarios where you can't have your cake and eat it too:\n``` TypeScript\nvar person = { firstName: 'Darth', lastName: 'Vader' };\nperson.fristName = 'Anakin';\n```\nShould this be an error or should it add a third property called 'fristName'? Since a major point of TypeScript is to catch misspelled property names, we take the conservative view and infer properties only from the initial assignment. Other designs are possible (and we considered this at length), but all come with sacrifices in error detection.",
+      "PostedDate": "2013-10-21T06:58:27.497-07:00",
+      "Id": 119048
+    },
+    {
+      "Message": "Adding a bit more... You could argue that for an empty object literal {} we should employ more aggressive inference since it is almost certainly not the case that the intended type is empty. However, it is not clear what this inference should consider. Where does the declaration end and the use begin? The current block? The current function body? The entire program? You can construct meaningful cases for all of the above, and yet none of them are particularly intuitive. In the end our conclusion was that it is better to require a type annotation in this case.\n\nBut we're always open to ideas...",
+      "PostedDate": "2013-10-21T07:11:54.78-07:00",
+      "Id": 119049
+    },
+    {
+      "Message": "Thanks for taking the time to discuss this, Anders.\n\n> You could argue that for an empty object literal `{}` we should employ more aggressive inference since it is almost certainly not the case that the intended type is empty.\n\nI would argue the opposite: that for an empty object literal `{}` you should employ *no* inference, since it is almost certainly not the case that the intended type is empty.\n\nAll you know know from my creating an empty object, is that I'm almost definitely going to put *something* in there, hence treating that as an error seems a bit crazy.\n\nAs for your Darth Vader example, this is just another JavaScript pattern you will see all over the place, which will cause warnings when interpreted as TypeScript - I personally think it would make much more sense to infer `{ foo:'bar' }` as simply `any`, since that is compatible with JavaScript, whereas simply inventing an arbitrary type and enforcing it, is not.\n\nOf course this is complicated by the fact that you *would* want a type-check when, say, you're passing an anonymous object as part of an interface - so for example:\n\n```\ninterface Thing {\n\tbar: string;\n}\n\nfunction swing(thing: Thing) {}\n\nswing({ bar: 'baz' }); // valid\n\nswing({ barr: 'baz' }); // invalid\n```\n\nIf the perceived type of `{ bar: 'baz' }` was `any`, we would have a problem, since:\n\n```\nvar x: any = { barr: 'baz' };\n\nswing(x); // valid (bad)\n```\n\nSo obviously that's not going to work.\n\nI'm getting sidetracked, so bear with me - but the precise meaning of `any` as a type is a bit baffling to me in some cases - it seems `any` is a valid argument even for functions that explicitly require a specific type:\n\n```\nclass Foo {}\n\nfunction swing(thing: Foo) {}\n\nvar x: any = { lalala: 12345 };\n\nswing(x);\n```\n\nI have a hard time thinking of a real use-case for that? It seems to make specific type-casts an almost redundant feature, since I could just type-cast any variable as `any` and use it as argument or property-value just about anywhere:\n\n```\nclass Wing {}\n\nclass Bird {\n\tleft: Wing;\n\tright: Wing;\n}\n\nvar bird = new Bird();\n\nvar not_a_wing = { arms:2, legs: 2};\n\nbird.left = <any> not_a_wing; // valid\n```\n\n(In fact, this code is currently valid on the Playground even *without* the `<any>` cast - I'm not sure what's going on there...)\n\nAs a work-around for the obvious `{}` case, perhaps that could at least be inferred as `any` rather than as empty.\n\nI certainly don't think you would to open up the can of worms that is deeper code-analysis, to attempt to augment the type of a variable line-by-line, as more properties are added - that's going to be extremely complicated and probably not even reliable or safe in many cases, e.g. nested closures modifying a variable in a parent scope, etc.\n\nPerhaps the simpler/safer solution would be to introduce a new type-flag (e.g. `map`) for anonymous (and/or empty) objects? This type-flag would allow the object to accept any property, such as is true for the type of both `{}` and `{ foo: 'bar' }` which are the same in JavaScript.\n\nOkay, so you can't type-check *as strictly* in these cases - is that really so bad? If somebody on my team is writing TypeScript (as opposed to porting JavaScript), I would very much hope not to see them constructing objects that way to begin with... The only sensible use-case for something like that, is if the constructed anonymous object is used as an argument for a parameter with an interface-type, since the type would then be known and reliable within that function.\n\nThis is obviously a big question with no simple answer, so let's keep thinking about it? :-)\n\nOn a related note, I checked to see if a JSDoc annotation would help this situation, and it appears it will not - hence, for the record, this isn't valid either:\n\n```\n/**\n * @type {*}\n */\nvar foo = {}; foo.bar = 'baz';\n```\n",
+      "PostedDate": "2013-10-21T13:10:00.37-07:00",
+      "Id": 119123
+    },
+    {
+      "Message": "Correction to the Bird/Wing example above:\n\n```\nclass Wing {\n\tfeathers: int;\n}\n\nclass Bird {\n\tleft: Wing;\n\tright: Wing;\n}\n\nvar bird = new Bird();\n\nvar not_a_wing = { arms:2, legs: 2};\n\nbird.left = <any> not_a_wing; // valid\n```\n\nThis is *not* valid without the `<any>` cast, as expected - it seems anything can be automatically cast to an empty class such as `class Wing {}`, which (unrelated) seems rather odd... The types would *not* be compatible at run-time - for example, in the original example posted above, `var left_wing = not_a_wing` would succeed, but `left_wing instanceof Wing` would still evaluate as `false`.\n",
+      "PostedDate": "2013-10-21T13:17:59.12-07:00",
+      "Id": 119126
+    }
+  ]
+}

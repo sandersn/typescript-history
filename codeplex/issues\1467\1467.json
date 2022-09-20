@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the current develop branch.",
+    "ClosedDate": "2013-10-18T15:50:02.7-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "On updating to 0.9.1 I'm now running into an issue where some of my generic classes aren't picking up extension methods to common classes such as Number.\r\n\r\nI've attempted a minimal repro of the issue but i've been unable to reproduce it minimally.\r\n\r\nI've pushed a branch that replicates this issue (along side other issues when updating) to my project: https://github.com/NTaylorMullen/EndGate/tree/TSError\r\n\r\nTo show a quick sample of what's going wrong:\r\n\r\nI have an interface:\r\n\r\n```\r\nexport interface ICloneable {\r\n    Clone(): any;\r\n}\r\n```\r\n\r\nWhich is used to extend the Number prototype:\r\n```\r\n/// <reference path=\"../Interfaces/ICloneable.ts\" />\r\n\r\ninterface Number extends EndGate.ICloneable {}\r\n\r\nNumber.prototype.Clone = function (): any { return this; };\r\n```\r\n\r\nA [Tween class](https://github.com/NTaylorMullen/EndGate/blob/TSError/EndGate/EndGate.Core.JS/Tweening/Tween.ts):\r\n```\r\nexport class Tween<T extends ICloneable> implements IUpdateable {\r\n....\r\n}\r\n```\r\n\r\n[Another class that derives from it](https://github.com/NTaylorMullen/EndGate/blob/TSError/EndGate/EndGate.Core.JS/Tweening/NumberTween.ts):\r\n```\r\nexport class NumberTween extends Tween<number> {\r\n....\r\n}\r\n```\r\n\r\nThe derived NumberTween class has several errors associated with extending Tween<number> because it's not recognizing \"number\" as ICloneable.  This of course can be fixed by changing everything to Number which shouldn't have to be done.\r\n\r\nKeep in mind I was unable to minimally repro this, hence why I pushed a branch.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-09T01:10:18.107-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "number not being Recognized as Number",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 1467
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "thanks for reporting, I have been able to reduce it further... We're taking a look.",
+      "PostedDate": "2013-08-09T14:51:07.077-07:00",
+      "Id": 109258
+    },
+    {
+      "Message": "Just to update the post, this still repros on 0.9.1.1",
+      "PostedDate": "2013-08-21T15:41:46.903-07:00",
+      "Id": 110684
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "1250637",
+    "ThreadId": "546862",
+    "Html": "I have a small app prototype I'm working on; and it includes the CustomEvent polyfill from here:<br />\n<br />\n<a href=\"https://developer.mozilla.org/en/docs/Web/API/CustomEvent\" rel=\"nofollow\">https://developer.mozilla.org/en/docs/Web/API/CustomEvent</a><br />\n<br />\nI'm trying to rename all my .js files to .ts so that I can being using TypeScript; however I'm just completely failing to get it compiling. I'm trying not to make too many changes to the code (TypeScript was sold as being able to progressively introduce, without a bunch of up-front work), though I am open to rewriting it directly in TypeScript if required.<br />\n<br />\nThe code in I'm trying to convert is (from the page linked above);<br />\n<pre><code>(function () {\n  function CustomEvent ( event, params ) {\n    params = params || { bubbles: false, cancelable: false, detail: undefined };\n    var evt = document.createEvent( 'CustomEvent' );\n    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );\n    return evt;\n   };\n\n  CustomEvent.prototype = window.Event.prototype;\n\n  window.CustomEvent = CustomEvent;\n})();\n\n// and call it:\nwindow.dispatchEvent(new CustomEvent('doStuff', { detail: 1 }));</code></pre>\n\nI've managed to get rid of all the red squigglies <a href=\"http://www.typescriptlang.org/Playground#src=interface%20Window%20%7B%0A%09Event%20%3A%20Event%3B%0A%09CustomEvent(event%20%3A%20any%2C%20params%20%3A%20any)%20%3A%20Event%3B%0A%7D%0Ainterface%20Event%20%7B%0A%09prototype%20%3A%20Event%3B%0A%7D%0Adeclare%20var%20CustomEvent%3A%20%7B%0A%20%20%20%20new%20(event%20%3A%20string%2C%20detail%20%3A%20any)%20%3A%20CustomEvent%3B%0A%7D%0A%0A(function%20()%20%7B%0A%20%20function%20CustomEvent%20(%20event%2C%20params%20)%20%7B%0A%20%20%20%20params%20%3D%20params%20%7C%7C%20%7B%20bubbles%3A%20false%2C%20cancelable%3A%20false%2C%20detail%3A%20undefined%20%7D%3B%0A%20%20%20%20var%20evt%20%3D%20%3CCustomEvent%3Edocument.createEvent('CustomEvent')%3B%0A%20%20%20%20evt.initCustomEvent(%20event%2C%20params.bubbles%2C%20params.cancelable%2C%20params.detail%20)%3B%0A%20%20%20%20return%20evt%3B%0A%20%20%20%7D%0A%0A%20%20CustomEvent.prototype%20%3D%20window.Event.prototype%3B%0A%0A%20%20window.CustomEvent%20%3D%20CustomEvent%3B%0A%7D)()%3B%0A%0Awindow.dispatchEvent(new%20CustomEvent('doStuff'%2C%20%7B%20detail%3A%201%20%7D))%3B\" rel=\"nofollow\">in the Playground</a>:<br />\n<pre><code>interface Window {\n    Event : Event;\n    CustomEvent(event : any, params : any) : Event;\n}\ninterface Event {\n    prototype : Event;\n}\ndeclare var CustomEvent: {\n    new (event : string, detail : any) : CustomEvent;\n}\n\n(function () {\n  function CustomEvent ( event, params ) {\n    params = params || { bubbles: false, cancelable: false, detail: undefined };\n    var evt = &lt;CustomEvent&gt;document.createEvent('CustomEvent');\n    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );\n    return evt;\n   }\n\n  CustomEvent.prototype = window.Event.prototype;\n\n  window.CustomEvent = CustomEvent;\n})();\n\n// and call it:\nwindow.dispatchEvent(new CustomEvent('doStuff', { detail: 1 }));</code></pre>\n\nHowever, I just cannot get this to compile in Visual Studio. It always complains at the CustomEvent decleration (presumably because it's already in lib.d.ts; I've no idea why it works in the Playground):<br />\n&nbsp;<br />\n<blockquote>\nSubsequent variable declarations must have the same type.  Variable 'CustomEvent' must be of type '{ prototype: CustomEvent; new(): CustomEvent; }', but here has type 'new(event: string, detail: any) =&gt; CustomEvent'<br />\n</blockquote>\n&nbsp;<br />\nWhat am I doing wrong?<br />\n",
+    "PostedDate": "2014-05-28T13:49:40.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250649",
+    "ThreadId": "546862",
+    "Html": "The lib.d.ts does not have the CustomEvent signature for DOM4 support in this case (perhaps submit a request).  It could be a very new addition.<br />\n<br />\nAnyhow, you can try it this way:<br />\n<pre><code>module pollyfills {\n    export interface StaticCustomEvent {\n        prototype: CustomEvent;\n        new (type: string, eventInitDict?: {}): CustomEvent;\n    } \n    \n    declare var CustomEvent: StaticCustomEvent;\n    \n    (function () {\n      function CustomEvent ( event, params ) {\n        params = params || { bubbles: false, cancelable: false, detail: undefined };\n        var evt = &lt;CustomEvent&gt;document.createEvent('CustomEvent');\n        evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );\n        return evt;\n       }\n    \n      CustomEvent.prototype = Event.prototype;\n    \n      (&lt;any&gt;window).CustomEvent = CustomEvent;\n    })();\n    \n    window.dispatchEvent(new CustomEvent('doStuff', { detail: 1 }));\n}</code></pre>\n\nNote: This does not change the global scope &quot;CustomEvent&quot; static signature, which cannot accept parameters.  Outside the pollyfill, you may need to use a wrapper method - perhaps something like <code>export var CustomEvent: StaticCustomEvent = ...detected implementation...;</code> in the 'pollyfills' module.<br />\n<br />\nEdit: <br />\nNote: IE11 does not support 'CustomEvent' as a function call.  This may be why the lib.d.ts signature is as it is.<br />\n",
+    "PostedDate": "2014-05-28T14:14:01.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250656",
+    "ThreadId": "546862",
+    "Html": "<strong>dannytuppeny wrote:</strong><br />\n<blockquote>\nI'm trying to rename all my .js files to .ts so that I can begin using TypeScript; however I'm just completely failing to get it compiling. I'm trying not to make too many changes to the code (TypeScript was sold as being able to progressively introduce, without a bunch of up-front work), though I am open to rewriting it directly in TypeScript if required.<br />\n</blockquote>\nUnfortunately, because TypeScript imposes a typing layer over top the common JavaScript objects, when those objects are in use in your JS code, it immediately introduces types, and will most likely cause a bunch of errors to pop up.  This can be a good thing, as it can possibly help you weed out potential bugs you never thought of.  The other thing is that TypeScript's library, IMHO, tries to support standardized signatures common to most browsers (hence the <code>CustomEvent</code> declaration), so if you are doing something on the &quot;bleeding edge&quot;, you will most likely have to use a wrapper method as a work-around for now.<br />\n",
+    "PostedDate": "2014-05-28T14:38:13.317-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251203",
+    "ThreadId": "546862",
+    "Html": "I'm struggling to get this to work; I don't fully understand about the &quot;wrapper method&quot;; and it's starting to sound a lot like a hack? :-/\r<br />\n<br />\nOne thing I don't full understand, is why the code seems to work fine in the Playground? :/<br />\n",
+    "PostedDate": "2014-05-30T05:09:13.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251251",
+    "ThreadId": "546862",
+    "Html": "It didn't work for me in the playground.  'CustomEvent' cannot take parameters.\r<br />\n<br />\nThe only way (not really a hack) is to keep ALL your code in your own name space (module), then you can easily replace the lib.d.ts definitions.<br />\n",
+    "PostedDate": "2014-05-30T06:35:18.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251346",
+    "ThreadId": "546862",
+    "Html": "The best solution I've come up with so far (with Mark Rendle's help) involved just two slight &quot;hacks&quot;:\r<br />\n<br />\nWhen raising the event, use window.CustomEvent, since I can't replace the &quot;global&quot; CustomEvent definition:<br />\n<pre><code>new window.CustomEvent('myEvent', { detail: 1 })\n</code></pre>\n\nCast to &lt;any&gt; and back to be able to apply the constructor function to Window:<br />\n<pre><code>interface CustomEvent {\n    new (event: string, params?: CustomEventParams);\n}\n\ninterface Window {\n    CustomEvent: CustomEvent;\n}\n\n(function () {\n    function CustomEvent(event: string, params?: CustomEventParams) : CustomEvent {\n    // ...\n     }\n \n    window.CustomEvent = &lt;CustomEvent&gt;&lt;any&gt;CustomEvent;\n})();</code></pre>\n\nI don't think the first can be avoided without a change to TypeScript; and I can't find a way to avoid the nasty casts in the second; apparently this is a frequent TS hack :-/<br />\n",
+    "PostedDate": "2014-05-30T10:02:00.413-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251360",
+    "ThreadId": "546862",
+    "Html": "IMHO, TS should have created static interfaces for the global vars, and not direct type literals.  This could at least allow for adding new static methods, or new overloads.<br />\n",
+    "PostedDate": "2014-05-30T10:54:56.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251367",
+    "ThreadId": "546862",
+    "Html": "BTW: Just a warning - with that hack, you are polluting the instance type &quot;CustomEvent&quot; with a function call signature, which is wrong.  Intellisense will show &quot;window.CustomEvent.initCustomEvent()&quot;, which is not correct.  The point of my pollyfill example above was to prevent this (and you should wrap your app in your own module anyhow).<br />\n",
+    "PostedDate": "2014-05-30T11:23:44.023-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251374",
+    "ThreadId": "546862",
+    "Html": "FYI: Somewhat related post (for reference): <a href=\"https://typescript.codeplex.com/discussions/547099#post1251363\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/547099#post1251363</a><br />\n",
+    "PostedDate": "2014-05-30T11:38:09.25-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251378",
+    "ThreadId": "546862",
+    "Html": "I would still suggest considering putting all your code in your own namespace, then you will be able to provide your own definition, like so:<br />\n<pre><code>module myApp {\n    declare var CustomEvent: {\n        prototype: CustomEvent;\n        new (event: string, params?: CustomEventParams);\n    }\n\n    // ... the reset of your app ...\n}</code></pre>\n\n",
+    "PostedDate": "2014-05-30T11:43:56.773-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251384",
+    "ThreadId": "546862",
+    "Html": "The code is intended to be a polyfill for browsers that don't implement CustomEvent this way; so adding it via a module is a little naff (though having to do window.CustomEvent isn't much better). <br />\n",
+    "PostedDate": "2014-05-30T11:52:43.463-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251394",
+    "ThreadId": "546862",
+    "Html": "I'm assuming your code is not embedded in the html pages, and exists as .ts files?  To prevent polluting the global scope, I think it's very good practice to put all your app code in a shared module scope (these are for scopes only).  I wasn't referring to a module only for the pollyfill, but instead, putting all your app code in the <em>same</em> module namespace means you don't have to worry about &quot;Window.CustomEvent&quot; at all, and you can continue coding as normal.  In the future, if the global 'CustomEvent' signature changes, your code will be still best kept in a module scope, and you can remove the &quot;declare var CustomEvent...&quot; that was added.<br />\n",
+    "PostedDate": "2014-05-30T12:10:47.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

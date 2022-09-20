@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The best reference on this is probably this thread\nhttps://typescript.codeplex.com/discussions/456796\n\n\nPreviously\nhttps://typescript.codeplex.com/workitem/1458\nhttps://typescript.codeplex.com/workitem/1498\nhttps://typescript.codeplex.com/workitem/2425\nhttps://typescript.codeplex.com/discussions/462195",
+    "ClosedDate": "2014-04-25T09:03:05.57-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "We need a way to reference the type of a generic parameter.  For example:\r\n```\r\nclass A<T> { x: T; }\r\nfunction doSomething<T>(t: typeof T, a: A<T>) {\r\n}\r\n```\r\nDoesn't work, and fails with error \"Could not find symbol 'T'.\" on \"typeof T\".  Removing \"typeof\" makes it compile, but then the user has to call \"doSomething<typeof sometype>()\" which also is in error, because \"A<T> would expect an instance in this case.\r\n\r\nPlease don't say \"typeof T\" fails because \"T\" is unknown. A<T>.x is also unknown until \"T\" is given, so that's just plain silly. ;)\r\n\r\nThanks.\r\n\r\nEdit: The reason I'm asking is because of type inference - I want to pass in type \"SomeType\" for some parameters, and be able to use that to also pass along \"typeof SomeType\" to others.  If not, I end up with this:\r\n```\r\nclass X { }\r\nclass A<T extends X> { x: T; }\r\nfunction doSomething<T>(t: typeof X, a?:A<T>) {\r\n}\r\ndoSomething<X>(X); // (oh, my poor fingers...)\r\n```\r\nWhich is unnecessary extra typing (God forbid! LOL )\r\n\r\nWould be nice to just write this:\r\n```\r\nclass X { }\r\nclass A<T extends X> { x: T; }\r\nfunction doSomething<T>(t: typeof T, a?:A<T>) {\r\n}\r\ndoSomething(X);\r\n```\r\n\r\n_(side note: this is an API, so I would end up expecting end users to specify the type name twice)_",
+    "LastUpdatedDate": "2014-04-25T10:23:58.903-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-24T14:54:48.953-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "\"typeof\" generic parameter doesn't work",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2462
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "What is `typeof T` supposed to be? A string? JavaScript doesn't have System.Type you know.",
+      "PostedDate": "2014-04-24T16:31:06.083-07:00",
+      "Id": 142938
+    },
+    {
+      "Message": "Yes I know.  See the second example.",
+      "PostedDate": "2014-04-24T17:01:25.733-07:00",
+      "Id": 142942
+    },
+    {
+      "Message": "(@GeoffArmstrong I don't think you are aware you can do \"value: typeof anothervalue\" in TS to reference other types).\n",
+      "PostedDate": "2014-04-24T17:06:51.167-07:00",
+      "Id": 142943
+    },
+    {
+      "Message": "Ok, thanks, I do see some work arounds in those links.  However, I think the shear number of requests that keep coming in is an indication that exceptions should be made to the rule.",
+      "PostedDate": "2014-04-25T09:59:48.377-07:00",
+      "Id": 143068
+    },
+    {
+      "Message": "(BTW: I did search \"typeof generics\" and didn't see those posts; I obviously missed them somehow)",
+      "PostedDate": "2014-04-25T10:02:05.863-07:00",
+      "Id": 143070
+    },
+    {
+      "Message": "For the record then (for others finding this post), and as gleaned from the links Ryan posted, this works:\n```\nclass X { }\nclass A<T extends X> { x: T; }\ninterface IXType<T> { new (...args): T }\nfunction doSomething<T>(t: IXType<T>, a?:A<T>) { }\ndoSomething(X);\n```\nIt suits my needs for now - thanks Ryan! ;)",
+      "PostedDate": "2014-04-25T10:21:12.497-07:00",
+      "Id": 143076
+    },
+    {
+      "Message": "Sorry, one mistake: should be `interface IXType<T extends X>`... (hence the \"X\" in \"IXType\" ;) )",
+      "PostedDate": "2014-04-25T10:23:58.903-07:00",
+      "Id": 143077
+    }
+  ]
+}

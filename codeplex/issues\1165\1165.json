@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-19T00:18:02.027-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I hope this doesn't come off as too much of a rant, but I feel I need to voice my concerns here. I was once the evangelist for TypeScript in my area, but this design change is so awful, I'm seriously considering moving a 13K line codebase over to Dart or other.\r\n\r\nRight now I'm going through my code base and copying and pasting \"PersistanceService.\" and \"IntermediateTranslator.\" over, and over, and over, and over, and over again.\r\n\r\nWhat's even worse than the dramatic increase in verbosity is the fact that I'm __littering thousands of type references all over my code base__. \r\n\r\nThis means that the time to refactor anything other than Visual Studio will __increased by an order of magnitude__.\r\n\r\nMy current (lame) solution is to reference the actual type in the parent closure, and using the variable instead of the type reference:\r\n\r\nMethod()\r\n{\r\n   var me = PersistanceService;\r\n   me.Fn1();\r\n   me.Fn2();\r\n}\r\n\r\nBut this is an ugly work-around to fix something that wasn't broken.\r\n\r\nMy suggestion is that if you absolutely need fully-qualified references, then some kind of context-sensitive keyword is required at the static method level (\"me.\"?) that keeps a reference to the enclosing type. I know the TypeScript team avoids things like this, but I'll be considering other options until this improves.",
+    "LastUpdatedDate": "2013-08-13T09:37:58.02-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-18T17:39:51.467-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Forcing Fully Qualified Local Static Member Access Has Basically Killed TypeScript",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1165
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for taking the time to share your impressions.\n\nI'm not sure I fully understand the desire.  Is it that you don't want to qualify calls to other static methods on the class at all?  This is not possible, as just like instance methods, these are functions on an object, not functions in a outer lexical scope, and must be qualified.\n\nOne thing we are 'improving' post 0.9.0, is that 'this' in a static will be typed as the class constructor, so you can call other statics via 'this.'.  This is more to allow some interesting patterns with inheritance than to provide a syntactic shortcut however.  See below code.\n\nIf I have misunderstood your request or my explanation isn't clear/satisfactory, please reopen with more info.\n\n```typescript\nclass Foo {\n    m1() { return 5; }\n    m2() { return m1();} // An error for instance members, need to qualify with 'this.'\n    static s1() {\n    }\n    static s2() {\n        s1(); // Gives an error.  Just as with instance members also requiring qualification\n        Foo.s1();  // OK, as the function is on the Foo constructor function.  Calls the specific s1() instance.\n        this.s1(); // Also OK.  Will allow for 'polymorphic-like' statics and interesting factory patterns in class heirarchies with overriden statics\n    }\n}\n```",
+      "PostedDate": "2013-06-19T00:17:56.66-07:00",
+      "Id": 103377
+    },
+    {
+      "Message": "Yes, great news, making \"this\" reference the current type in a static context will fix my issue.\n\n\n",
+      "PostedDate": "2013-06-19T05:47:42.863-07:00",
+      "Id": 103410
+    }
+  ]
+}

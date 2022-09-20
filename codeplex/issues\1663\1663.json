@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing as by design, since there doesn't seem to be an issue here.",
+    "ClosedDate": "2013-09-13T15:00:37.17-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I originally attempted to rationalize this bug with a incorrect reading of the spec:\r\nhttps://typescript.codeplex.com/workitem/1638 contains my original rationale but I'll repeat it here.\r\n\r\n# Problem\r\nI would like --declaration produced files to be as useful as header files.  I would like large projects to be able to reference .d.ts files so that compiling individual files does not unnecessarily require reparsing other sources when declaration files exist.\r\n\r\nI feel this unnecessarily limits the usefulness of large projects using typescript.\r\n\r\n# Example\r\n\r\nIn a single file, I would expect an ambient declaration to not interfere with a non-ambient declaration.\r\n```typescript\r\ndeclare module A {\r\n\tinterface X {\r\n\t\tid: string;\r\n\t}\r\n}\r\n\r\nmodule A {\r\n\texport interface X {\r\n\t\tid: string;\r\n\t}\r\n}\r\n```\r\n\r\nIn my this particular case, this works\r\n```typescript\r\n/// <reference path=\"this.ts\" />\r\nmodule A {\r\n\texport interface X {\r\n\t\tid: string;\r\n\t}\r\n}\r\n```\r\n\r\nBut in this case, (with this.d.ts being produced from tsc --declaration this.ts), \"id\" is considered a duplicate identifier.\r\n```typescript\r\n/// <reference path=\"this.d.ts\" />\r\nmodule A {\r\n\texport interface X {\r\n\t\tid: string;\r\n\t}\r\n}\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2013-09-13T15:00:37.17-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-09T10:21:52.707-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "ambient interface declarations don't merge with non-ambient ones",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1663
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "As far as your problem statement:\n\n\"I would like --declaration produced files to be as useful as header files. I would like large projects to be able to reference .d.ts files so that compiling individual files does not unnecessarily require reparsing other sources when declaration files exist. \"\n\nThis is indeed how .d.ts files work today. If you provide .d.ts files as references instead of .ts files then build time may improve by virtue of the compiler not needing to check the body of declarations to determine type information.\n\nThat said, I'm not sure I've followed your example. In particular, it's not clear how you're compiling this.ts and the file that references it if they're providing conflicting definitions of interface X. All cases like this should generate a duplicate identifier error. \n\nA declaration file or ambient declaration (a declaration prefaced with 'declare') is no different from a source file in this respect. Whether you're referencing this.ts or this.d.ts you are telling the compiler about a set of names that exist elsewhere which must be checked for conformance against the contents of the file that is referencing it.\n\nWhy would you expect your first example not to be an error? Consider this similar example:\n\n``` Typescript\ndeclare module M {\n    class C {\n        foo(): string; // the implementation this refers to in some other file returns 'bye'\n    }\n}\n\nmodule M {\n    export class C {\n        foo() {\n            return 'hi';\n        }\n    }\n}\n\nvar c: M.C;\nvar r = c.foo(); // is this 'hi' or 'bye'?\n```",
+      "PostedDate": "2013-09-09T16:24:42.613-07:00",
+      "Id": 112921
+    },
+    {
+      "Message": "> Whether you're referencing this.ts or this.d.ts you are telling the compiler about a set of names that exist elsewhere which must be checked for conformance against the contents of the file that is referencing it.\n\n?\n\nThank you.  \"Checked for conformance\" is a great way of describing what typescript doesn't do when it complains that two interfaces are defined with the same fields.\n\nI hope there are other plans for optimizing the reference of blah.ts files in large projects.  It's clear that having --declaration as the basis for a faster alternative isn't flying.  Is this a correct reading of Microsoft's position here?",
+      "PostedDate": "2013-09-09T18:03:06.02-07:00",
+      "Id": 112932
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 09/09/2013 4:24PM",
+      "PostedDate": "2013-09-09T16:24:47.81-07:00",
+      "Id": 112933
+    },
+    {
+      "Message": "\"Thank you. \"Checked for conformance\" is a great way of describing what typescript doesn't do when it complains that two interfaces are defined with the same fields.\"\n\nOn the contrary, the compiler is warning you that you have just introduced a name conflict. It's unclear to me why you need to write conflicting members here. More than likely when someone writes code with duplicated names it is an error or bug. You'll see the compiler report similar errors when you try to define two properties with the same name and same type in an object literal. Likewise for my class example above, clearly an error has been introduced. You've referenced interface A which has a member id. Why do you need to redefine it? It serves no purpose.\n\n\"I hope there are other plans for optimizing the reference of blah.ts files in large projects. It's clear that having --declaration as the basis for a faster alternative isn't flying. Is this a correct reading of Microsoft's position here?\"\n\nNo, referencing a .d.ts rather than a .ts most definitely can help with build time, and this is intentional. There's no reason you should be getting a compilation error when referencing a .d.ts but not an equivalent .ts. If that is the case then there is a bug in the compiler, which is why I said I wasn't clear on what was in this.ts in your original example. As when I do the following I see the results I expect:\n\n```\nC:\\test>type a.ts\nmodule A {\n    export interface X {\n        id: string;\n    }\n}\n\nC:\\test>type b.ts\nmodule A {\n    export interface X {\n        id: string;\n    }\n}\n\nC:\\test>tsc -d b.ts\n\nC:\\test>tsc a.ts b.ts\nC:/test/b.ts(3,9): error TS2000: Duplicate identifier 'id'.\n\nC:\\test>tsc a.ts b.d.ts\nC:/test/b.d.ts(3,9): error TS2000: Duplicate identifier 'id'.\n```",
+      "PostedDate": "2013-09-09T19:32:51.5-07:00",
+      "Id": 112939
+    },
+    {
+      "Message": "Another example of a bad situation, which is clearly programmer error and ought to be caught by the compiler, but let's consider another situation, where there is only one interface in mutually included files:\n```\nC:\\> dir\nMakefile\ta.ts\t\tb.ts\nC:\\> type a.ts\n/// <reference path=\"b.d.ts\" />\n\nmodule A {\n    export interface X {\n        id: string;\n    }\n}\nC:\\> type b.ts\n/// <reference path=\"a.d.ts\" />\n```\n\nThis setup needs a bit of bootstrapping, since a.ts won't compile without b.d.ts and vice-versa, so we have as a pre-compile step a creation of stub a.d.ts and b.d.ts files which just reference the source.  Note: Since make builds targets when the source is newer, these files will be updated whenever the source changes. (I have this prototyped in msbuild as well).\n```\nC:\\> type Makefile\nSOURCES=a.ts b.ts\nDECLARATIONS=$(SOURCES:.ts=.d.ts)\nTARGETS=$(SOURCES:.ts=.js)\n\nall: compile\n\ncompile: stubs $(SOURCES)\n\ttsc -d $(SOURCES)\n\nstubs: $(DECLARATIONS)\n\n%.d.ts: %.ts\n\techo '/// <reference path=\"$<\" />' >$@\n\nclean:\n\t-rm $(DECLARATIONS) $(TARGETS)\n\n.PHONY: all stubs compile clean\n```\n\nThe first time through, the definitions are still only in a.ts and b.ts, the declaration files are stubs which refer to the original sources.\n```\nC:\\> make\necho '/// <reference path=\"a.ts\" />' >a.d.ts\necho '/// <reference path=\"b.ts\" />' >b.d.ts\ntsc -d a.ts b.ts\nC:\\>\n```\n\nNow we have cached the declarations so next time we'll use those, this is the optimization I am trying to achieve.\n\nBut the second compile, we have errors due to the auto-generated multiple-defintion of the interface in both a.ts and a.d.ts.\n```\nC:\\> make\ntsc -d a.ts b.ts\nC:\\a.ts(5,9): error TS2000: Duplicate identifier 'id'.\nmake: *** [compile] Error 1\nC:\\>\n```",
+      "PostedDate": "2013-09-10T09:03:21.247-07:00",
+      "Id": 113000
+    },
+    {
+      "Message": "FYI, your repeated assertion\n\n> You'll see the compiler report similar errors when you try to define two properties with the same name and same type in an object literal.\n\nis false.\n\nThe following code compiles fine both on the playground and on develop (commit 63cafb4).\n```typescript\nvar x = {\n\ta: 2,\n\ta: \"3\",\n};\n```",
+      "PostedDate": "2013-09-10T14:57:12.287-07:00",
+      "Id": 113101
+    },
+    {
+      "Message": "oopsies, that was same name, different type, but same name, same type also compiles without warning:\n\n```typescript\nvar x = {\n    a: 2,\n    a: 3,\n};\n```",
+      "PostedDate": "2013-09-10T15:00:33.027-07:00",
+      "Id": 113102
+    },
+    {
+      "Message": "oh... I was on the wrong branch. (I had my upstream set wrong, sorry!)\n\nCurrent typescript/develop does complain about multiple definitions of the same name.",
+      "PostedDate": "2013-09-11T16:57:35.477-07:00",
+      "Id": 113290
+    }
+  ]
+}

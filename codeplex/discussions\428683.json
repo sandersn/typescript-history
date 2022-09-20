@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "983545",
+    "ThreadId": "428683",
+    "Html": "\r\n<p>How can I make this work?:</p>\r\n<pre><span>import</span> test: string = module(<span>&quot;<span>dojo/text</span><strong id=\"speechFragmentSeparator__1_24\">!</strong><strong id=\"speechFragmentSeparator__1_25\">.</strong><span>/templates/SomeWidget.html</span>&quot;</span>);</pre>\r\n",
+    "PostedDate": "2013-01-06T11:52:25.44-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983862",
+    "ThreadId": "428683",
+    "Html": "\r\n<p>We don't currently support importing html pages as modules.&nbsp; What are you trying to do?</p>\r\n",
+    "PostedDate": "2013-01-07T11:55:44.59-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983966",
+    "ThreadId": "428683",
+    "Html": "\r\n<p>A lot of libraries such as Dojo or Requirejs alow you to import any type of file (such as language files etc.) using AMD &quot;Loader Plugins&quot;.&nbsp;</p>\r\n<p>See&nbsp;https://github.com/amdjs/amdjs-api/wiki/Loader-Plugins</p>\r\n<p>I have also found that this question is related to:</p>\r\n<p><span style=\"font-size:10pt\">http://typescript.codeplex.com/workitem/388</span></p>\r\n<p>I believe that something like:</p>\r\n<p><span>import text = module(&quot;Any text that I want! :o) &quot;) as String;</span></p>\r\n<p><span>would be general enough to work with any loader plugin.</span></p>\r\n",
+    "PostedDate": "2013-01-07T22:31:27.43-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984170",
+    "ThreadId": "428683",
+    "Html": "\r\n<p>Sounds like literal programming!</p>\r\n",
+    "PostedDate": "2013-01-08T11:40:14.99-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132952",
+    "ThreadId": "428683",
+    "Html": "Importing resources in this way is essential to a significant amount of AMD code. Not being able to use loader plugins makes adoption of TypeScript extremely difficult for AMD users.<br />\n<br />\nCurrently, the following works as the only workaround as of TypeScript 0.9.5:<br />\n<ol>\n<li>Manually declare an ambient require global in e.g. <code>require.d.ts</code>: <code>declare var require:{ (moduleId:string):any; };</code></li>\n<li>Add a <code>/// &lt;reference path=&quot;require.d.ts&quot; /&gt;</code> in the module that uses the loader plugin.</li>\n<li>Use the undocumented <code>/// &lt;amd-dependency path=&quot;moduleId&quot; /&gt;</code> comment to make the compiler add the module ID as an AMD dependency when it writes out the module.</li>\n<li>\nUse <code>var foo:type = require('moduleId');</code> to “import” the module.<br />\n</li>\n</ol>\nThis is a very confusing and inelegant solution. Surely TypeScript can have something better?<br />\n",
+    "PostedDate": "2013-12-08T12:46:36.577-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133251",
+    "ThreadId": "428683",
+    "Html": "The gist of the current design is that there are two ways to import a module:<br />\n<ol>\n<li>Use 'import x = require(&quot;y&quot;)' syntax</li>\n<li>\nUse 'declare var require; var x = require(&quot;y&quot;)' syntax<br />\n</li>\n</ol>\nIn the first case, the compiler will track through the path you give, because the job of &quot;import&quot; is to additionally handle any types that come from this import.  In the second case, all we care about is loading the module.  There's no checking by the compiler that the path you give it is correct.  You're also opting out of any compiler help for creating the module load code.<br />\n\r<br />\ntl;dr - the first one has more requirements but the compiler gives you more help.  The second one is all manual.\r<br />\n<br />\nWith that, it makes sense why you would need to manually do the steps that the compiler is doing for you if you choose the manual case.  You need to choose this case when you're using a style of import we don't support by default, like the &quot;!&quot; imports or importing .html pages.  In those cases, you need to tell the compiler what's required (using amd-dependency, eg) and also handle setting up the type. \r<br />\n<br />\nI agree it's on the &quot;serviceable but not pretty&quot; side of things once you get outside of the more automatically support scenarios.  <br />\n",
+    "PostedDate": "2013-12-09T11:00:50.6-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

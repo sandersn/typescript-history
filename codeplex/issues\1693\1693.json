@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I do not believe a solution that addresses #1 exists other than #2. We spent a very long time trying to come up with a solution and didn't arrive at anything satisfactory.\n\nPlease take this to the forum if you want to continue the discussion (it's much easier for the rest of the team to weigh in over there and this is not a bug-level problem).",
+    "ClosedDate": "2013-09-17T16:26:56.7-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Granted, you have to have \"ambiguous\" references in the first place.\r\nHere we have a variable x in both module A and module A.B, which we use from A.B.C\r\n```typescript\r\n> cat a.ts\r\nmodule A {\r\n  export var x = 'A';\r\n}\r\n\r\n> cat b.ts\r\nmodule A.B {\r\n  export var x = 'A.B';\r\n}\r\n\r\n> cat c.ts\r\n/// <reference path=\"a.ts\" />\r\n\r\nmodule A.B.C {\r\n  console.log(x);\r\n}\r\n```\r\n\r\nI would expect (from looking at the source of c.ts and the fact that it only references a.ts), that x would resolve to A.x.\r\n\r\nIn fact, tsc agrees with me:\r\n```javascript\r\n> tsc c.ts\r\n> cat c.js\r\nvar A;\r\n(function (A) {\r\n    (function (B) {\r\n        /// <reference path=\"a.ts\" />\r\n        (function (C) {\r\n            console.log(A.x);      /// <----- Note A.x here\r\n        })(B.C || (B.C = {}));\r\n        var C = B.C;\r\n    })(A.B || (A.B = {}));\r\n    var B = A.B;\r\n})(A || (A = {}));\r\n```\r\n\r\nHowever, when I compile c.ts alongside b.ts, the other definition is now available to tsc and the compilation of c.ts changes!\r\n```javascript\r\n> tsc b.ts c.ts\r\n> cat c.js\r\nvar A;\r\n(function (A) {\r\n    (function (B) {\r\n        /// <reference path=\"a.ts\" />\r\n        (function (C) {\r\n            console.log(B.x);     /// <----- Note {A.}B.x here\r\n        })(B.C || (B.C = {}));\r\n        var C = B.C;\r\n    })(A.B || (A.B = {}));\r\n    var B = A.B;\r\n})(A || (A = {}));\r\n```\r\n\r\nNeedless to say, this makes any results from an incremental build system inconsistent.",
+    "LastUpdatedDate": "2013-10-04T11:56:42.36-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-16T14:36:02.887-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "ambiguous references compile ambiguously",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1693
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure what you would want to have happen instead here. Can you re-open with clarification of what you think the behavior ought to be?\n\r\n\r** Closed by RyanCavanaugh 09/16/2013 4:10PM",
+      "PostedDate": "2013-09-16T16:10:23.69-07:00",
+      "Id": 113752
+    },
+    {
+      "Message": "I think there are resolutions for this:\r\n\r\n1. Make each compilation unit (.ts) file effectively independent.  I expect this to be complicated but I think it is the right solution.\r\n2. Don't resolve up module scopes chains at all. A simpler fix, but it changes the language definition.\r\n\r\nI feel like satisfying https://typescript.codeplex.com/workitem/1684 by itself is insufficient.  Although I think it would be for projects that satisfy the condition that every .ts file *can* compile independently, and when developers actually read compiler warnings. (So nevermind that, since we never read warnings =) ).",
+      "PostedDate": "2013-09-16T18:21:04.343-07:00",
+      "Id": 113754
+    },
+    {
+      "Message": "This is indeed one of the few (if not the only) place in the language where resolution changes the emitted JavaScript.\n\nThe final decision was that the risk introduced here is incredibly small: In order to really hit it in a bad way, you have to have two things in the scope chain with the same name *and* the same type (or same enough that they're identical at all usage sites) *and* be compiling with disjointed sets of files. In practice this is going to be incredibly rare.\n\nThis was weighed against the pervasive inconvenience of having to fully-qualify all module references outside the local module scope. Given the flak we already take over having to qualify class members with `this` (to align with ES6 class semantics), that was a bridge too far in service of a goal that didn't really seem to fix an actual problem that people were having.\n\nUltimately it was a hard call (we *really* wanted the emit phase to not depend on symbol binding, both for performance and ideological reasons) but we think this is the right one for the language.",
+      "PostedDate": "2013-09-16T20:41:06.567-07:00",
+      "Id": 113759
+    },
+    {
+      "Message": "That's a very long response to option #2, but what about option #1 \"Make each compilation unit (.ts) file effectively independent.\" ?\n",
+      "PostedDate": "2013-09-17T14:10:35.597-07:00",
+      "Id": 114831
+    },
+    {
+      "Message": "(see comment)\n\r\n\r** Closed by RyanCavanaugh 09/16/2013 8:41PM",
+      "PostedDate": "2013-09-16T20:41:17.407-07:00",
+      "Id": 114832
+    },
+    {
+      "Message": "It seems to me it would be safer for the compiler to throw an error if the variable being referenced is ambiguous. This is what C# does if you've imported namespaces via `using` that contain types with the same name.",
+      "PostedDate": "2013-09-18T20:18:11.087-07:00",
+      "Id": 114998
+    }
+  ]
+}

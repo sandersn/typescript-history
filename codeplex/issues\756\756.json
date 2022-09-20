@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Duplicate of http://typescript.codeplex.com/workitem/159",
+    "ClosedDate": "2013-02-25T10:05:07.337-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "If I have a namespace, e.g. My.Storage, and then have a class in it named Storage, then the compiler is able to successfully compile the code, but it does not work at runtime.\r\n\r\nExample below:\r\n\r\nmodule My.Storage {\r\n    export class Storage {\r\n        ...\r\n    }\r\n\r\n    export class OtherStorage extends Storage {\r\n        ...\r\n    }\r\n}\r\n\r\nThis code will not work unless I change the \"Storage\" name in either the module name or my base class name.",
+    "LastUpdatedDate": "2013-02-25T10:05:07.337-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-22T13:24:47.247-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Runtime fails to handle classes with same name as module",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 756
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yep! The compiler definitely reuses the \"Storage\" name in the closure that defines the Storage class: http://www.typescriptlang.org/Playground/#src=module%20My.Storage%20%7B%0A%09export%20class%20Storage%20%7B%0A%09%09%0A%09%7D%0A%09%0A%09export%20class%20OtherStorage%20extends%20Storage%20%7B%0A%09%09%0A%09%7D%0A%7D\n\nThis could be fixed by appending the object name passed into the \"Storage\" module closure with an underscore, or some other character, like so:\n\n```\n(function (_Storage) {\n        var Storage = (function () {\n            function Storage() { }\n            return Storage;\n        })();\n        _Storage.Storage = Storage;        \n        var OtherStorage = (function (_super) {\n            __extends(OtherStorage, _super);\n            function OtherStorage() {\n                _super.apply(this, arguments);\n\n            }\n            return OtherStorage;\n        })(Storage);\n        _Storage.OtherStorage = OtherStorage;        \n    })(My.Storage || (My.Storage = {}));\n```\n\nMight be an oversimplified solution, but a solution nonetheless. I don't know how feasible this is with how the compiler is currently written.",
+      "PostedDate": "2013-02-25T02:50:31.987-08:00",
+      "Id": 91412
+    }
+  ]
+}

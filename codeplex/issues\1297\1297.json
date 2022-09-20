@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-03T12:59:30.207-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I don't know if this is a bug or if it's how Typescript is meant to work by design, but  looks a bit confusing to me.\r\n\r\nI was hopping the following version of the \"Simple inheritance\" demo could work. Here, I'm calling `move()` from the constructor of `Animal`, and the number of meters each animal moves at each call is determined by the variable member `step`, so subclasses of `Animal` would only need to override this member:\r\n\r\n``` TS\r\nclass Animal {\r\n\tstep = 0;\r\n    constructor(public name: string) { \t\t\r\n\t\tthis.move();\t\t\t\r\n\t}\r\n    move() {\t\t\r\n        alert(this.name + \" moved \" + this.step + \"m.\");\r\n    }\r\n}\r\n\r\nclass Snake extends Animal {\r\n\tstep = 5;\r\n}\r\n\r\nvar sam = new Snake(\"Sammy the Python\");\r\n```\r\n\r\nThis will alert...\r\n\r\n```\r\nSammy the Python moved 0m.\r\n```\r\n\r\n... instead of ... \r\n\r\n```\r\nSammy the Python moved 5m.\r\n```\r\n\r\nLooking at the generated JS code, this behaviour is obvious, as call to `super()` is performed before the subclass has initialized its own members and the base class cannot know the overriden values:\r\n\r\n``` JS\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Animal = (function () {\r\n    function Animal(name) {\r\n        this.name = name;\r\n        this.step = 0;\r\n        this.move();\r\n    }\r\n    Animal.prototype.move = function () {\r\n        alert(this.name + \" moved \" + this.step + \"m.\");\r\n    };\r\n    return Animal;\r\n})();\r\n\r\nvar Snake = (function (_super) {\r\n    __extends(Snake, _super);\r\n    function Snake() {\r\n        _super.apply(this, arguments);\r\n        this.step = 5;\r\n    }\r\n    return Snake;\r\n})(Animal);\r\n\r\nvar sam = new Snake(\"Sammy the Python\");\r\n```\r\nA possible solution might be calling `super()` __after__ initialization, and always check with `hasOwnProperty()` if a member has been already initialized before setting it.\r\n\r\nSomething like this would work in the example:\r\n\r\n``` JS\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Animal = (function () {\r\n    function Animal(name) {\r\n        if (!this.hasOwnProperty('name')) this.name = name;\r\n        if (!this.hasOwnProperty('step')) this.step = 0;\r\n        this.move();\r\n    }\r\n    Animal.prototype.move = function () {\r\n        alert(this.name + \" moved \" + this.step + \"m.\");\r\n    };\r\n    return Animal;\r\n})();\r\n\r\nvar Snake = (function (_super) {\r\n    __extends(Snake, _super);\r\n    function Snake() {        \r\n        if (!this.hasOwnProperty('step')) this.step = 5;\r\n        _super.apply(this, arguments);\r\n    }\r\n    return Snake;\r\n})(Animal);\r\n\r\nvar sam = new Snake(\"Sammy the Python\");\r\n```\r\nLooks more intuitive to me.\r\n",
+    "LastUpdatedDate": "2013-07-03T16:36:53.163-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-02T14:12:56.493-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Accessing overriden variable members from base class constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1297
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the feedback, this is by design. Traditionally programming languages ensure the base class instance is fully initialized first as there're many situations where derived classes need the base class instance to be fully initialized before proceeding with their own construction.\n\nWhat you really want is to use an object member that participates in overloading correctly, which properties like this do not. As written, step is just a property on the constructor function, so as you've noticed, it's not initialized on the derived class in time for the base class to see it. If instead you were to use something like accessors then you'd get the behavior you want. So this code:\n\n```\nclass Animal {\n    public get step() { return 0; }\n    constructor(public name: string) {\n        this.move();\n    }\n    move() {\n        console.log(this.name + \" moved \" + this.step + \"m.\");\n    }\n}\n\nclass Snake extends Animal {\n    public get step() { return 5; }\n    constructor(public name: string) {\n        super(name);\n    }\n}\n\nvar sam = new Snake(\"Sammy the Python\");\n```\n\nwill alert 'Sammy the Python moved 5m.'",
+      "PostedDate": "2013-07-03T12:59:25.76-07:00",
+      "Id": 105024
+    },
+    {
+      "Message": "Thought I might add where in the spec this is covered a little more clearly. See section 8.3.2 Super Calls:\n\n>The first statement in the body of a constructor must be a super call if both of the following are true:\n>•\tThe containing class is a derived class.\n>•\tThe constructor declares parameter properties or the containing class declares instance member variables with initializers.\n>In such a required super call, it is a compile-time error for argument expressions to reference this.\n\n>Initialization of parameter properties and instance member variables with initializers takes place immediately at the beginning of the constructor body if the class has no base class, or immediately following the super call if the class is a derived class.\n\nThe second clause being relevant to the discussion here about object initialization order.",
+      "PostedDate": "2013-07-03T16:36:53.163-07:00",
+      "Id": 105052
+    }
+  ]
+}

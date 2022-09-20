@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.237-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "This might be \"by design\", but figured I'd report it anyway.\r\n\r\nToday, I ran into an issue trying to use should.js (https://github.com/visionmedia/should.js/) with type definitions (https://github.com/borisyankov/DefinitelyTyped/blob/master/should/should.d.ts). I was importing should.js, but the typescript compiler removed it because there were no direct references to it.\r\n\r\nRequiring should.js executes some side effects that extend the Object prototype and allow you to write code like 'this'.is.a.String. As a workaround, I can reference the should variable somewhere.\r\n\r\nI wasn't really sure if it was correct to remove unused import statements as it prevents their side effects from running.\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-11T14:58:21.83-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Importing modules with side effects on load",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2172
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I found a good workaround for this, which is to just do \"require('should')\" without the import. Typescript leaves it in tact and its even more clear it's just getting included for the side effects.\n\nI did however notice a similar case where TS prunes an import that is used:\n\n```\nimport util = require('./util/index');\nexport = util;\n```\n\nThe compiled source ends up as\n\n```\nmodule.exports = util;\n```",
+      "PostedDate": "2014-02-12T12:20:29.193-08:00",
+      "Id": 133414
+    },
+    {
+      "Message": "This is 'by design' but indeed a little awkward for cases like this. I'm sure we could have a lively conversation about the merits of module loads which have sides effects but such is the world we live in ;) Given that, we may want to revisit the rule here in the future (which as you have surmised is that the module loading is elided if the compiler only sees it used in type positions), so I've marked this as a suggestion.",
+      "PostedDate": "2014-02-12T17:34:47.723-08:00",
+      "Id": 133442
+    },
+    {
+      "Message": "I have the same issue.\n\nI cannot \"require\" simply a module that extends other objects.\nEven using simply:\nrequire(\"should\");\n\nraise the following error.\n>> /Users/alexandreroba/Projects/cqrsjs/src/test/aggregateRoot_test.ts(4,1):\n>> error TS2095: Could not find symbol 'require'.\n\nIt leaves it untouched but I have an error at compile time.\n\n",
+      "PostedDate": "2014-02-15T04:41:38.697-08:00",
+      "Id": 133652
+    },
+    {
+      "Message": "It's kind of funny, because I've also been bit by the \"opposite\" of this issue - times where I needed the require statement to be compiled out, but it wasn't (for some reason I can't determine).\n\nIn my particular case, I have some utility code that lives in a separate repository, and I would like it to be able to work with some common type definitions that are used by all projects. It need to use import statements to reference the types, but the project doesn't actually have those modules as dependencies, so it can't load them. For example, I have a utility method that takes an express.Application as a parameter, but my utility project does not have express as a dependency (and I don't want it to).",
+      "PostedDate": "2014-02-20T13:16:34.09-08:00",
+      "Id": 134246
+    }
+  ]
+}

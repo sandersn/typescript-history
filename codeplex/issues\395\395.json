@@ -1,0 +1,120 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.547-07:00",
+    "CommentCount": 16,
+    "Custom": null,
+    "Description": "Nothing seems to prevent the compiler to supports abstract classes, this could only be a compile time problem for it to write methods from the Abstract classes into each of its implementors. Right after this, at runtime those classes types (for type verification etc.) would be used as interfaces types are.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-09T05:05:06.343-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support for abstract classes",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 145,
+    "Id": 395
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "There are no plans currently for any kind of abstract class syntax.  If you have some compelling scenarios that would benefit from their implementation in JavaScript, please open a thread in the \"Discussions\" section (perhaps under \"Language Specification\").  Thanks!",
+      "PostedDate": "2012-12-28T13:41:35.563-08:00",
+      "Id": 85021
+    },
+    {
+      "Message": "How about:\n\n```\nmodule Shapes {\n\t// Interface for all shapes\n\texport interface Shape {\n\t\tdraw(surface: Drawing.ISurface): void;\n\t}\n\n\t// Helper base class - implements lots of common code for all shapes\n\texport class ShapeBase implements Shape {\n\t\tconstructor(public x: number, public y: number) { }\n\n\t\tdraw(surface: Drawing.ISurface): void {\n\t\t\t// I CAN'T IMPLEMENT THIS - I'M AN ABSTRACT BASE CLASS AND CAN'T DRAW\n\t\t\tthrow new Error('I want to catch this at compile time!!!');\n\t\t\t// THERE IS NO REASON I SHOULD NEED TO IMPLEMENT THIS\n\t\t}\n\t}\n\n\texport class Circle extends ShapeBase {\n\t\tconstructor(x: number, y: number, radius: number) {\n\t\t\tsuper(x, y);\n\t\t\tthis.m_radius = radius;\n\t\t}\n\t\t\n\t\tdraw(surface: Drawing.ISurface): void {\n\t\t\t// This is OK - I know how to draw myself\n\t\t}\n\n\t\tm_radius: number;\n\t}\n}\n```\n\nThis sort of thing crops up a *lot* and it would be nice to be able to handle this in TypeScript rather than resort to runtime errors if a call occurs to a method I am forced to implement even though it doesn't make sense.\n\nOr is there an alternative way to stop ShapeBase objects being created?  Then at least I could catch the error at compile time, even though I would still be forced to implement a method that can never be called!",
+      "PostedDate": "2013-03-04T04:19:46.99-08:00",
+      "Id": 92164
+    },
+    {
+      "Message": "It would be great, in my previous example, if we could write something like:\n\n```\nexport abstract class ShapeBase implements Shape {\n\tconstructor(public x: number, public y: number) { }\n}\n\nexport abstract class ShapeBaseEx extends ShapeBase {\n\tconstructor(public x: number, public y: number, public foo: string) {\n\t\tsuper(x, y);\n\t}\n}\n```\n\nand have the compiler not complain about draw not being implemented in either.  I.e. classes should be able to extend/implement base classes and interfaces but remain abstract (non-instantiable) and not be forced to implement all methods of the parent item.  It is preferable that those method be compile-time (type) checkable rather than handled with runtime errors.",
+      "PostedDate": "2013-03-06T01:56:55.403-08:00",
+      "Id": 92395
+    },
+    {
+      "Message": "Abstract classes are not needed to model common idioms in JavaScript in a strongly-typed fashion, so I think this feature deserves less priority than other features like \"this\" typing.\n\nHowever, abstract classes are very common in object-oriented programming. In our code base, we already have a several of instances where we are doing the following to \"mimic\" abstract classes:\n\n```\nclass X {\n    public abstractMethod() {\n        throw new Method(\"This is an abstract method\");\n    }\n}\n```\n",
+      "PostedDate": "2013-04-10T22:13:28.253-07:00",
+      "Id": 96718
+    },
+    {
+      "Message": "If advatanges of using TypeScript over JavaScript are minimized to losing time using a new environment I don't want to wrk with, I will stay JavaScript. Thanks.",
+      "PostedDate": "2013-04-10T23:03:21.12-07:00",
+      "Id": 96720
+    },
+    {
+      "Message": "I started a thread as suggested: https://typescript.codeplex.com/discussions/449920.",
+      "PostedDate": "2013-07-13T18:41:15.623-07:00",
+      "Id": 105978
+    },
+    {
+      "Message": "I'd like this as well, thanks. :)",
+      "PostedDate": "2013-08-12T06:46:59.883-07:00",
+      "Id": 109413
+    },
+    {
+      "Message": "@Tekool: First of all, Typescript is in Alpha stage, so expect lack of features and more changes to come.  Second, Typescript IS JavaScript for the most part.  I can right an entire .js file in a .ts file and it outputs pretty much the same thing.   I can then simply (and optionally) enforce the function parameter types, or variables, to make development easier (not to mention the intellisense is a huge help).  Between intellisense and type checking, I've gotten further faster.",
+      "PostedDate": "2013-08-12T06:52:29.72-07:00",
+      "Id": 109415
+    },
+    {
+      "Message": "This is definitely what we want.",
+      "PostedDate": "2013-08-23T19:06:50.293-07:00",
+      "Id": 111029
+    },
+    {
+      "Message": "Surely all we need from TypeScript here is:\n\n(a)  The compiler to not insist that methods in derived classes are implemented if the class is marked abstract (so, probably, the support for an 'abstract' keyword before class definitions), and\n\n(b)  The compiler to shout if you ever try to instantiate an abstract class.\n\nThat's it, isn't it?  And just by adding that we'd all gain a really common and powerful feature of object-oriented design that could avoid loads of bugs by catching these common situations at compile time, whilst the best we can do at the moment is try to throw an exception at run-time.\n\nCould this feature please be prioritised?  It's been classes as \"low impact\" and look how many votes it now has!\n\nThanks 8-)",
+      "PostedDate": "2013-12-13T02:16:42.69-08:00",
+      "Id": 127328
+    },
+    {
+      "Message": "@rb126 I totally agree - not sure what the point of voting is if requests can simply be categorized as \"low\" when hundreds have voted! :/",
+      "PostedDate": "2014-04-14T01:03:36.28-07:00",
+      "Id": 141696
+    },
+    {
+      "Message": "I agree with rb126's first post.  I keep wanting to declare base event methods that, by default, should be *undefined* until defined *later* by the end users of the class.  Currently I have to test if the \"instance property\" == \"the prototype property\" which is just silly (or create work arounds to erase the prototype function properties later).",
+      "PostedDate": "2014-04-14T01:12:56.633-07:00",
+      "Id": 141698
+    },
+    {
+      "Message": "+1'd for stronger OOP support. ",
+      "PostedDate": "2014-04-17T03:31:55.613-07:00",
+      "Id": 142203
+    },
+    {
+      "Message": "The discussion forum has a partial view of it being an anti-pattern, causing issues I believe. I don't agree, and I think it's with reference to the \"too easily abused\" paradigm it falls under. A feature shouldn't be prohibited due to this. If so, Regex tops the list on removal!",
+      "PostedDate": "2014-06-17T18:03:18.93-07:00",
+      "Id": 149983
+    },
+    {
+      "Message": "I have a team of 10 working fulltime working in typescript; I'd love abstract types. There are so many reasons! \n\n1) One of the most compelling in my mind is that indexes typically come from somewhere. e.g. we have some mappings that are maintained between indexes. Because all indexes are strings, it's easy to use the an index variable for one mapping in another one by mistake. Because all indexes are strings, no error is given. If I could have abstract index classes this would be fixed. \n\n2) Certain classes of functions (e.g. callbacks) can be important to be distinguished even though they have the same type. e.g. \"() => void\" often captures a side-effect producing function. Sometimes you want to control which ones are put into an event handler. Currently there's no way to type-check them. \n\nhuge +1 for having abstract types from me and my team. I'm happy to discuss in person/phone etc and explain what we're up. We're big fans of typescript and are using it for a pretty big project",
+      "PostedDate": "2014-06-21T20:13:00.77-07:00",
+      "Id": 150431
+    },
+    {
+      "Message": "Oh, here's another common case: you have different interfaces that have different optional parameters, but either no required ones, or the same required ones. In typescript, you will not get a compiler error for using one when you need another. Sometimes this is ok, but very often this is very not ok and you would love to have a compiler error rather than be confused at runtime. :)  ",
+      "PostedDate": "2014-06-21T23:38:31.963-07:00",
+      "Id": 150436
+    }
+  ]
+}

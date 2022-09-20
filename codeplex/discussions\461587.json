@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1105287",
+    "ThreadId": "461587",
+    "Html": "I'm creating typings for a existing module (Q-io/fs) and have some problems with some functions that can return different types of objects depending on an options argument:<br />\n<br />\nThis is not acceptable for the compiler (overload cannot differ only in return types):<br />\n<pre><code>export function open(path:string, options?:any):Q.Promise&lt;Qio.Reader&gt;;\nexport function open(path:string, options?:any):Q.Promise&lt;Qio.Writer&gt;;\nexport function open(path:string, options?:any):Q.Promise&lt;Qio.Stream&gt;;\nexport function open(path:string, options?:any):Q.Promise&lt;NodeBuffer&gt;;\nexport function open(path:string, options?:any):Q.Promise&lt;string&gt;;</code></pre>\n\nThe <code>options</code> has a few properties that will determine what gets returned but it requires some logic: the existence of property 'charset' and a 'flags' property that is a string made up of some concatenated flag names (combination of r, w, a, b).<br />\n<br />\nI think this is impossible to model directly. How would you solve this?<br />\n",
+    "PostedDate": "2013-10-08T20:44:43.58-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105930",
+    "ThreadId": "461587",
+    "Html": "What you want is the following, which is not possible:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> open(path:<span style=\"color:Blue;\">string</span>, options?:{ flags: <span style=\"color:#A31515;\">&quot;r&quot;</span>}):Q.Promise&lt;Qio.Reader&gt;;\n<span style=\"color:Blue;\">function</span> open(path:<span style=\"color:Blue;\">string</span>, options?:{ flags: <span style=\"color:#A31515;\">&quot;w&quot;</span>}):Q.Promise&lt;Qio.Writer&gt;;\r\n</pre></div>One solution is to explicitly model the options:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Options {\n    flags:<span style=\"color:Blue;\">string</span>;\n}\n<span style=\"color:Blue;\">interface</span> ReadOptions <span style=\"color:Blue;\">extends</span> Options { isRead: <span style=\"color:Blue;\">boolean</span>;}  <span style=\"color:Green;\">// A dummy property </span>\n<span style=\"color:Blue;\">interface</span> WriteOptions <span style=\"color:Blue;\">extends</span> Options {}\n\n<span style=\"color:Blue;\">function</span> open(path:<span style=\"color:Blue;\">string</span>, options?:ReadOptions): Q.Promise&lt;Qio.Reader&gt;;;\n<span style=\"color:Blue;\">function</span> open(path:<span style=\"color:Blue;\">string</span>, options?:WriteOptions): Q.Promise&lt;Qio.Writer&gt;;\n\r\n</pre></div>If there are no differences between the read and write options then you are forced to define a dummy property in order to force a distinction.<br />\n<br />\nA generic solution is also possible, but that would require the caller to specify the return type.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> open&lt;T&gt;(path:<span style=\"color:Blue;\">string</span>, options?:<span style=\"color:Blue;\">any</span>): Q.Promise&lt;T&gt;;\n\n<span style=\"color:Blue;\">var</span> x = open&lt;Qio.Reader&gt;(<span style=\"color:#A31515;\">&quot;foo&quot;</span>, { flags: <span style=\"color:#A31515;\">&quot;r&quot;</span>});\n<span style=\"color:Blue;\">var</span> y = open&lt;Qio.Writer&gt;(<span style=\"color:#A31515;\">&quot;foo&quot;</span>, { flags: <span style=\"color:#A31515;\">&quot;w&quot;</span>});\r\n</pre></div>",
+    "PostedDate": "2013-10-10T03:53:24.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105987",
+    "ThreadId": "461587",
+    "Html": "Nice, I think I can make either of those those work (I can't actually confirm that right now as it would be part of a larger migration that may take a little time to implement).\r<br />\n<br />\nThanks for the input!<br />\n",
+    "PostedDate": "2013-10-10T06:41:16.287-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

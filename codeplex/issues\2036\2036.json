@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "It's not convertible since 'obj' doesn't have an index signature.\n\nThis seems to be more appropriate in the discussion section.\n\nThanks.",
+    "ClosedDate": "2014-01-17T13:02:27.377-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "```ts\r\ninterface A<T> {\r\n\t[index: string]: T;\r\n}\r\n\r\n<A<any>>{ name: 'Joe' };\t// cast ok\r\n\r\nvar obj = { name: 'Joe' };\t// same object\r\n<A<any>>obj;\t\t\t\t// cast failed\r\n```\r\n*Cannot convert '{ name: string; }' to 'A<any>': Type 'A<any>' is missing property 'name' from type '{ name: string; }'. Index signatures of types '{ name: string; }' and 'A<any>' are incompatible.*\r\n\r\nTested on Playground, 0.9.5 and latest bins (`e48f38dd91ab`)",
+    "LastUpdatedDate": "2014-01-17T13:02:27.377-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-19T04:45:07.827-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Index signatures of types are incompatible",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 2036
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks.  Looks like a bug.  We'll take a look.\n\nInterestingly if you add the member \"name: string\" to the interface, everything works.",
+      "PostedDate": "2013-12-19T10:12:09.37-08:00",
+      "Id": 128083
+    },
+    {
+      "Message": "This is actually per the language specification.  \n\nFor the first line commented with \"// cast ok\", the expressions in an object literal, therefore it is contextually typed by the type assertion which provides the indexers.\n\nThe second line commented \"// same object\" is just assigning an object literal to a variable, so there is no indexer provided or inferred for the type.\n\nFor the third line commented \"// cast failed\", the expression is an identifier, therefore contextual typing does not automatically give it the indexer of the type it is being contextually typed by.\n\nObject literals automatically get the indexer of the type when contextually typed, else using object literals in situations where a type has an indexer would be very difficult.  When the expression already has a type (as is the case with an identifier), it is expected to have the correct indexer to be compatible.\n\nIt's subtle, but it is covered in sections 4.19 and 4.5 of the language spec.",
+      "PostedDate": "2014-01-09T17:14:44.38-08:00",
+      "Id": 130026
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 01/09/2014 5:14PM",
+      "PostedDate": "2014-01-09T17:14:49.62-08:00",
+      "Id": 130056
+    },
+    {
+      "Message": "Wow. So I think in this case specification is incorrect.\r\n\r\n1. About the error description. *Type 'A<any>' is missing property 'name' from type '{ name: string; }'.* But in case of code `<{}>obj` it works instead of `{}` also have no property `name`.\r\n2. When we cast expression of type `B` to type `C` it only needs that `B` should be assignable to `C`. In case of my example, `[index: string]: string` means that all properties should be of type `string` and type `{ name: string; }` fit such restriction. So why it's not convertible?\r\n\r\nI reopen item, so If specification related issues only should be under discussion section, I'll move it.",
+      "PostedDate": "2014-01-10T02:33:07.483-08:00",
+      "Id": 130059
+    }
+  ]
+}

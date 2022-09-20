@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments - import of TypeScript.targets file needs to be properly conditioned",
+    "ClosedDate": "2014-01-14T11:25:29.973-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Hi Guys,\r\n\r\nMyself and the rest of my team have upgraded to TypeScript 0.9.5.  We're using a mix of Visual Studio 2012 and Visual Studio 2013.\r\n\r\nWe've noticed that whilst implicit referencing still works for straight compilation.  However, the TypeScript Language Service (provider of Intellisense etc) no longer appears to use implicit referencing.\r\n\r\nThe upshot is that we've had to add a [_references.ts](http://blogs.msdn.com/b/typescript/archive/2013/12/05/announcing-typescript-0-9-5.aspx) file - purely so we don't lose the TypeScript Language Service.\r\n\r\nIs this something you are aware of?  \r\n\r\nI enclose a cut down example to demonstrate.\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-06T05:17:58.667-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "TypeScript Language Service no longer works with Implicit Referencing in TS 0.9.5",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2071
+  },
+  "FileAttachments": [
+    {
+      "FileId": 775463,
+      "FileName": "ImplicitReferencingWhereforeArtThou.zip",
+      "DownloadUrl": ".\\775463"
+    },
+    {
+      "FileId": 775464,
+      "FileName": "ImplicitReferencingWhereforeArtThou - now with _references.zip",
+      "DownloadUrl": ".\\775464"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I also enclose an example with _references.ts added (and the TypeScript Language Service working)",
+      "PostedDate": "2014-01-06T05:19:07.183-08:00",
+      "Id": 129198
+    },
+    {
+      "Message": "Slightly oddly I have to open up _references.ts in order to get the TypeScript Language Service working for the first time.  Both in VS 2012 and VS 2013.  ",
+      "PostedDate": "2014-01-06T05:24:07.31-08:00",
+      "Id": 129201
+    },
+    {
+      "Message": "Finally this may have some relation to @billti's comment here:  https://typescript.codeplex.com/workitem/1995#CommentContainer5",
+      "PostedDate": "2014-01-06T06:00:45.43-08:00",
+      "Id": 129204
+    },
+    {
+      "Message": "Confirmed we believe this should work - nothing wrong with the project as far as I can tell.",
+      "PostedDate": "2014-01-06T14:05:36.507-08:00",
+      "Id": 129265
+    },
+    {
+      "Message": "Vlad tracked this down to an issue in the project file:\n\n> Import for TypeScript.targets in project file is conditioned on the value of 'Configuration' property but imports are expanded earlier in the MSBuild pipeline than property evaluation so condition is never true => TypeScript.targets is never imported. If condition is removed or adjusted to check the existence of .targets file - everything starts working as expected",
+      "PostedDate": "2014-01-14T11:23:27.573-08:00",
+      "Id": 130417
+    },
+    {
+      "Message": "Thanks guys that's very helpful and does resolve my issue.  \n\nI guess something must have changed between TS 0.9.1.1 and TS 0.9.5 because the debug only condition didn't used to cause this issue.  We only introduced it as a way of preventing our build server trying to compile TS (which it can't because it is not installed).\n\nIn case it helps anyone else we've now switched TS import in the csproj from this:\n\n```xml\n  <Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" Condition=\"'$(Configuration)' == 'Debug'\" />\n```\n\nTo this:\n\n```xml\n  <Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" Condition=\"Exists('$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets')\" />\n```\n",
+      "PostedDate": "2014-01-15T02:01:33.45-08:00",
+      "Id": 130475
+    },
+    {
+      "Message": "Just to follow up - we had Visual Studio / TypeScript installed on our build server.  When we switched over we started getting errors when the build server tried to build the project and compile the TypeScript.   \n\nWe got round this by uninstalling TypeScript from the build server.  I know that there are ongoing issues with TypeScript running on a build server which will no doubt be addressed.  It'd be good to hear back from the team on this at some point.",
+      "PostedDate": "2014-01-15T06:34:47.02-08:00",
+      "Id": 130491
+    },
+    {
+      "Message": "For anyone reading the last 2 comments that is a little bit confused: we have 2 build servers; 1 which had TS installed and 1 which didn't.  Now both don't and everything is OK.  At last :-)",
+      "PostedDate": "2014-01-16T01:03:00.053-08:00",
+      "Id": 130555
+    }
+  ]
+}

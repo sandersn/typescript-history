@@ -1,0 +1,100 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the release 0.9.1.1 branch",
+    "ClosedDate": "2013-08-14T14:52:46.48-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "I know I'm talking to myself now, but I've finally finally got my project compiling (with no thanks to the compilers error messages!).\r\n\r\nI'm pretty sure I've found a bug in the compiler, but I just can't figure out where.\r\n\r\nI have a class called Group. Inside it is a property called transform, which is of the type Phaser.Components.TransformManager:\r\n\r\n        public transform: Phaser.Components.TransformManager;\r\n\r\nIf I compile with the type set to that above it errors with \"Error\t102\tUnable to get property 'type' of undefined or null reference\tD:\\wamp\\www\\phaser\\Phaser\\VSTSC\tPhaser\" followed by 100 errors of \"All named properties must be subtypes of string indexer type 'any'\".\r\n\r\nIf remove the type from the property:\r\n\r\n        public transform;\r\n\r\nIt all compiles and runs with no errors. I can compile the TransformManager quite happily, there are no errors in it and I'm using it extensively elsewhere in other classes that reference it in exactly the same way as Group does. If I add the type back in, all hell breaks lose in the compiler.\r\n\r\nI've uploaded the complete VS project here in case anyone from MS cares: https://dl.dropboxusercontent.com/u/182996/PhaserTS091Compile.zip\r\n\r\nYou can replicate the error by opening core/Group.ts and un-commenting line 103.\r\n\r\nA whole day wasted just boiling it down to this :(\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T16:04:47.683-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.1 compiler error",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 1465
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, we're taking a look.\r\n\r\n",
+      "PostedDate": "2013-08-09T12:28:21.773-07:00",
+      "Id": 109243
+    },
+    {
+      "Message": "I'm not sure how much this is going to help, but I am getting a similar error in some of my code on 0.9.1.\n```\nthis.expandedStyle = ko.computed(() => {\n     var ret = this.hasChildren() ? this.expanded() ? \"arrow.down\" : \"arrow.right\" : \"arrow.none\";\n     return ret;\n});\n```\nGives the following error \"Unable to get value of the property ''flags\": object is null or undefined.\"\nIf I change it to the following it compiles fine.\n\n```\nthis.expandedStyle = ko.computed(() => {\n     return this.hasChildren() ? this.expanded() ? \"arrow.down\" : \"arrow.right\" : \"arrow.none\";\n});\n```\n\nBoth of the above code snippets work fine in isolation if I copy to a new class.  Even if I copy the whole class that contains the code to a new class it still works fine.  I can not replicate this issue outside of the existing class, but the class is a generic class that is implemented by 4 other classes and the implemented classes created via a factory.  I did not have the time to replicate the whole structure of the code so that I could work out exactly what combination of things made this happen.  But hopefully it will help a little.\n\nAlso I have absolutely no idea what this flags property is, if I search for flags in my project there is only 1 result for it in anything to do with typescript.  This appears in the latest jquery.d.ts file.\n```\n // Callbacks\nCallbacks(flags?: string): JQueryCallback;\n```\nIf I comment this definition out the error is still there it seems totally unrelated.  It is like the compiler is making up a property name.",
+      "PostedDate": "2013-08-11T05:29:19.17-07:00",
+      "Id": 109346
+    },
+    {
+      "Message": "There is another issue that was closed b/c it was labeled as a duplicate to this issue, but I thought I would provide the issue link to help with trouble shooting this because it is a pretty big issue in 0.9.1 release.\n\nhttps://typescript.codeplex.com/workitem/1491",
+      "PostedDate": "2013-08-13T07:52:50.787-07:00",
+      "Id": 109602
+    },
+    {
+      "Message": "Any update? I am migrating our codebase to compile with 0.9.1 and hit this error. This is a pretty severe roadblock.",
+      "PostedDate": "2013-08-13T14:50:10.543-07:00",
+      "Id": 109733
+    },
+    {
+      "Message": "I haven't verified myself but this checkin (https://typescript.codeplex.com/SourceControl/changeset/fc76680c0e1bb79a85778beca6932a57164bee7e) should've resolved the issue. if you're still seeing this repro with the most recent bits in the develop branch let us know.",
+      "PostedDate": "2013-08-13T15:25:11.067-07:00",
+      "Id": 109748
+    },
+    {
+      "Message": "I don't think I'm on the develop branch. Whatever I have was acquired through npm install -g typescript.",
+      "PostedDate": "2013-08-13T15:47:54.57-07:00",
+      "Id": 109755
+    },
+    {
+      "Message": "Right, there're only npm packages for official releases. To use the bleeding edge bits you would need to manually enlist in the full repository and build yourself a new tsc.js (the compiler) to see this fix (instructions on the homepage here https://typescript.codeplex.com/). ",
+      "PostedDate": "2013-08-13T16:26:26.907-07:00",
+      "Id": 109761
+    },
+    {
+      "Message": "Do you know when a fix will be rolled out in an official release? I can use the bleeding edge stuff locally but I can't make it part of our build process.",
+      "PostedDate": "2013-08-13T17:20:27.22-07:00",
+      "Id": 109768
+    },
+    {
+      "Message": "At the moment I couldn't tell you exactly when unfortunately :(\n\nBased on the above reports it sounds like there should be some workaround, albeit potentially ones that weakens the typing of a variable for now.\n\n@AlexisColes:\n\nThe error you're getting is just an exception from inside the compiler where it's crashing. It doesn't have anything to do with a flags object in your code or some public API (ie it was likely a null reference exception trying to look for the flags property on some type symbol object)",
+      "PostedDate": "2013-08-13T17:54:23.64-07:00",
+      "Id": 109769
+    },
+    {
+      "Message": "I was able to work around it by editing tsc.js inside of node's packages and adding the null check. Hopefully you can release a fix soon -- there's no way for us to upgrade until it's fixed properly :-/",
+      "PostedDate": "2013-08-13T21:57:34.22-07:00",
+      "Id": 109782
+    },
+    {
+      "Message": "You guys should release a hot fix like you did for 0.9.0 (0.9.0.1) that includes this fix.",
+      "PostedDate": "2013-08-14T05:46:50.05-07:00",
+      "Id": 109863
+    },
+    {
+      "Message": "seanrea, can you post what changes you made to tsc.js?  I'm getting the following error too and it's preventing any javascript from being generated. :(\n\nJavaScript runtime error: Unable to get property 'flags' of undefined or null reference",
+      "PostedDate": "2013-08-14T08:24:28.863-07:00",
+      "Id": 109883
+    }
+  ]
+}

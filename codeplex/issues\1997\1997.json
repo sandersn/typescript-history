@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-10T09:20:39.93-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "export interface IA {\r\n    addNumbers(a?: number, b?: number): number;\r\n}\r\n\r\nexport interface IB {\r\n    addNumbers(a?: number, b?: number, c?: number): number;\r\n}\r\n\r\nexport interface IC extends IA, IB {\r\n\r\n}\r\n\r\nThe above piece of code have no problems running with 0.9.1.1 but with 0.9.5, I get the error\r\n<Interface 'IC' cannot simultaneously extend types 'IA' and 'IB':\r\nTypes of property 'addNumbers' of types 'IA' and 'IB' are not identical.>",
+    "LastUpdatedDate": "2013-12-10T09:20:39.93-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-09T19:39:24.857-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Interface extends to other interfaces with same function identifier",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1997
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Ok, the post was not correctly done, i apologise.\nTake the entire code as a whole.",
+      "PostedDate": "2013-12-09T19:40:50.5-08:00",
+      "Id": 126705
+    },
+    {
+      "Message": "I also think that is incorrect. Compare, valid code:\n```ts\ninterface A {\n\tf(a: number): void;\n\tf(a: string): void;\n}\n```\nand invalid code (was valid in 0.9.1.1):\n```ts\ninterface B {\n\tf(a: number): void;\n}\n\ninterface C extends B {\n\tf(a: string): void;\n}\n```\nbut the `C` is exactly the same as `A`. Why overloads can't be extended? Why it was removed in 0.9.5?",
+      "PostedDate": "2013-12-10T07:32:48.223-08:00",
+      "Id": 126781
+    },
+    {
+      "Message": "Unfortunately we've had a few bugs here previously that allowed things that should have been errors.\n\nWhen you derive from a base type, you either inherit the base type's member, or you hide it with a new implementation that must be a subtype.  You cannot inherit AND augment the inherited type.\n\nThe spec states the following in section 7.1 Interface Declarations (only including excerpts for clarity)\n\n> An interface has the members specified in the ObjectType of its declaration and furthermore inherits all base type members that aren’t hidden by declarations in the interface:\n>* A property declaration hides a public base type property with the same name.\n>\n>The following constraints must be satisfied by an interface declaration or otherwise a compile-time error occurs:\n>* The instance type (section 3.5.1) of the declared interface must be a subtype (section 3.8.3) of each of the base type references\n\nThis makes the above illegal, as C if providing a new definition for the f member inherited from B, but it is not a subtype.  Hopefully this makes sense.",
+      "PostedDate": "2013-12-10T09:20:28.853-08:00",
+      "Id": 126806
+    }
+  ]
+}

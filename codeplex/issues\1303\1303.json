@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is actually by design because the string type has a compatible function called localCompare. So because of the structural typing the constraints end up matching. For a different set of names you would get an error with this sort of pattern.",
+    "ClosedDate": "2013-07-26T14:29:49.967-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I think I'm find an error in TypeScript. I took expamle from specification and extended it. Code below. My suggestions in comments.\r\n\r\n```\r\ninterface Comparable<T> {\r\n    localeCompare(other: T): number;\r\n}\r\n\r\nfunction compare<T extends Comparable<T>>(x: T, y: T): number {\r\n    if (x == null) return y == null ? 0 : -1;\r\n    if (y == null) return 1;\r\n    return x.localeCompare(y);\r\n}\r\n\r\nclass ComparableString implements Comparable<string>{\t\r\n\tconstructor(public currentValue: string){}\r\n\t\r\n\tlocaleCompare(other){ //other should be inferred as string not as any?\r\n\t return 0;\t\r\n\t}\r\n}\r\n\r\nvar a = new ComparableString(\"a\");\r\nvar b = new ComparableString(\"b\");\r\nvar c = compare<ComparableString>(a,b); //This should throw a compilation-error , similar c# code in VS throws \"There is no implicit reference conversion from '...' to '...'.\"\r\n\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-03T02:56:42.62-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "complex generic parameter not well inferred in function",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1303
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, something looks fishy in that second case, marking as active.\n\nFor the first issue, we don't contextually type the arguments of type members based on the base class. This is because you might want to simply shadow the base class implementation with a function of the same name but with a different signature. Obviously in many cases this is undesirable and you want the member of the derived class to be of the same signature. In that case, you can provide an explicit type annotation and a future 'noimplicitany' compiler flag will cause an error to be thrown on your original definition of ComparableString.localCompare so you don't accidentally shadow rather than override.",
+      "PostedDate": "2013-07-03T14:54:38.32-07:00",
+      "Id": 105031
+    }
+  ]
+}

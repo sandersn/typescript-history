@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.957-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I have been using 9.1.1 without issue. Since upgrading to 1.0RC, I occasionally receive the following error:\r\n\r\nBuild: Emit Error: Write to file failed..  \r\n\r\nThe file that fails always has the .js extension, but the failure is never for the same file.\r\n\r\nMost of the time, the error goes away when I build the solution again (using VS 2013 Professional on Windows 8.1). However, sometimes it fails two or more times. The max consecutive failures has been three. All failures were on different files.\r\n\r\nThere is one thing that is somewhat unique about my solution. I am using a common ts project that is shared with a couple of other projects in the solution. I am using links from the consuming projects for the .ts files. This may or may not have anything to do with the failures.\r\n\r\nHas anyone else experienced this?\r\n\r\nThanks...",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-08T11:49:33.507-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Periodic Build Emit Errors for 1.0RC",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2281
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I was able to reproduce this with a common project (\"Common\") and two referring projects (\"ClientA\" and \"ClientB\") which refer to a large file in Common.\n\nWhen the build processes launch, each tsc instance from ClientA and ClientB runs concurrently and both try to re-compile the files in Common. Sometimes they finish compiling a file at the same time and try to write to the file at the same time, causing this error.\n\nUnfortunately we can't address this comprehensively for 1.0. There are a few things you can do in the meantime:\n1. Use .d.ts references instead of .ts references so that the leaf node projects aren't recompiling things. This is probably the best solution.\n2. Turn off concurrent build (set number of concurrent builds to 1: http://msdn.microsoft.com/en-us/library/y0xettzf(v=vs.90).aspx). This is easy, but will increase your build times.\n3. Use -outdir settings on each project so that they write to different output folders, then use a post-build step to reconstruct the correct file layout.\n\nAssigning to Jonathan for now to manage our project story post-1.0",
+      "PostedDate": "2014-03-10T14:41:29.37-07:00",
+      "Id": 136442
+    },
+    {
+      "Message": "Ryan,\n\nThanks for the update.\n\nCan you provide any links/examples on how to generate .d.ts references? I am not sure how to generate the .d.ts references for the common project. \n\nOnce generated, I assume that the d.ts reference is included in the other client projects via links. Is that correct?\n\nThanks...",
+      "PostedDate": "2014-03-11T06:10:07.577-07:00",
+      "Id": 136501
+    },
+    {
+      "Message": "I've also seen this same issue but caused by IIS Express. It sometimes 'holds on' to js files after the project has been launched to debug, preventing the TS compiler from updating them - even after the VS debugger is stopped. Shutting down IIS Express clears the file lock and resolves the issue (until IIS Express does it again, anyway).",
+      "PostedDate": "2014-04-05T06:44:24.277-07:00",
+      "Id": 140652
+    },
+    {
+      "Message": "I'm using VS2013 update 2 with a single project in my solution and this happens all the time...",
+      "PostedDate": "2014-05-21T01:36:47.98-07:00",
+      "Id": 147317
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing this as we made a lot of fixes in the 0.9.5 release.",
+    "ClosedDate": "2014-01-14T13:14:24.5-08:00",
+    "CommentCount": 29,
+    "Custom": null,
+    "Description": "TypeScript is awesome, yes.  But the 0.9.0 build is seriously problematic.\r\n\r\nWe are using TypeScript heavily on my current application.  We have 20-40 .ts files.  When I open the solution in VS (after installing 0.9.0) VS just hangs.  I can see tsc.exe spiking in Task Manager (it looks like it's compiling ts files).  After about 10 minutes Visual Studio finishes loading and I can see tsc.exe has chilled out.\r\n\r\nWhen I uninstall 0.9.0 (replace with 0.8.3.1) this problem goes away.\r\n\r\nFor the record, I disabled the Web Essentials add-in.\r\n\r\nAlso, we are using a patched tsc.js because of a bug we found with the compiler.",
+    "LastUpdatedDate": "2014-01-14T13:14:24.5-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-01T10:14:23.16-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Serious issues with 0.9.0",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 14,
+    "Id": 1288
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Same problem here with VS2012 / Update 3 installed before the upgraded from 0.8.3 to 0.9.0.1.\nWeb Essentials is not installed and never was.\n\nThe memory is going up many GB and editor start to freeze after 10 minutes.  Must save and restart VS or it will crash soon.",
+      "PostedDate": "2013-07-01T14:10:10.123-07:00",
+      "Id": 104794
+    },
+    {
+      "Message": "After many tries, I found :\n\n- Uninstalling Resharper (v7.1.3) doesn't resolved the problem.  Was taking more time to crash (Resharper takes a lot of memory).\n- Installing / Uninstalling Web Essentials provides great add-ons, but was accelerating the crash time.\n- Uninstalling \"Typescript for Visual Studio\" definitely solved the problem.\n\nOn crash, I can see there's this exception logged in the Application Event Logs:\n\nApplication: devenv.exe\nFramework Version: v4.0.30319\nDescription: The process was terminated due to an unhandled exception.\nException Info: System.OutOfMemoryException\n[...] (path not relevant - Memory Exception!)\n\nDo you want me to check with WinDBG what I can find on the process dump?",
+      "PostedDate": "2013-07-01T17:28:11.783-07:00",
+      "Id": 104816
+    },
+    {
+      "Message": "I found the source of the problem: it was a faulty declaration in my \".d.ts\" on an interface with generics.  It was the following :\n\nModule Rx{\n[...]\n\tinterface IObservable<T> {\n[...]\n\t\tzip(second: any[], resultSelector: (left: any, right: any) => any): IObservable<TResult>; // CRASH!!\n[...]\n\t}\n}\n\n\nThe line with the \"CRASH\" comment was the source of the problem.  As soon I fixed this faulty line, everything went back normal.",
+      "PostedDate": "2013-07-01T18:50:14.143-07:00",
+      "Id": 104817
+    },
+    {
+      "Message": "Your TResult won't happen to reference or \"wrap\" the generic type parameter \"T\" won't it?\n\nIt would have resulted in a stack-overflow in the compiler together with hanging of the Visual Studio process.\n",
+      "PostedDate": "2013-07-02T01:26:26.863-07:00",
+      "Id": 104832
+    },
+    {
+      "Message": "I have the same problem on a solution that has around 40 *.ts files.\n\nWhat I've noticed when this problem is occurring tsc.exe in task manager gets up to around 300mb of memory usage then the process stops and a new process is spawned.\n\nWhile this is occurring Visual Studio (2012) is completely locked.  After 10mins or so it will come back to life.  If at that point I fix the one error (which was all I had in my case) then I get a successful build with no Visual Studio hanging.\n\nIf I then re-introduce the error and build it will fail the build and point at the error (twice infact - 2 lines in error log) - with no Visual Studio hanging.  If I close Visual Studio and open it again (with the error still in play) and attempt a build I will get the hanging behaviour again.\n\nI don't believe it is anything to do with the particular error I have but something to do with the references as if I copy the code to a new solution I do not get this problem.",
+      "PostedDate": "2013-07-02T22:25:48.1-07:00",
+      "Id": 104958
+    },
+    {
+      "Message": "Same problem here, like @nathanl said, it appears if you try to compile lots of ts files first time, VS2012 update 3 locked and completely locked. ",
+      "PostedDate": "2013-07-03T15:32:31.383-07:00",
+      "Id": 105042
+    },
+    {
+      "Message": "@nathanl and @jingzheshan - just to get a sense for what you might be seeing, are either of you using (or have installed) WebEssentials?  ",
+      "PostedDate": "2013-07-03T15:54:50.55-07:00",
+      "Id": 105047
+    },
+    {
+      "Message": "@jonturner yes I am using WebEssentials 2.5.6.2",
+      "PostedDate": "2013-07-03T16:55:39.607-07:00",
+      "Id": 105057
+    },
+    {
+      "Message": "Hi @jonturner - yes I am running Web Essentials (2.7)\n\nI should have mentioned that if I go back to 0.9 alpha (TypeScriptSetup.0.9.0.alpha-04-22-2013.msi) my issues go away.\n\nI could try uninstalling Web Essentials if you think that could be the issue.\n\nI'm also using these d.ts files (on top of my own)\n\n/// <reference path=\"jquery.d.ts\" />\n/// <reference path=\"jquery.validation.d.ts\" />\n/// <reference path=\"knockout.d.ts\" />\n/// <reference path=\"knockout.mapping.d.ts\" />\n/// <reference path=\"underscore.d.ts\" />\n/// <reference path=\"kolite.d.ts\" />\n\nAll from the [DefinitelyTyped project](https://github.com/borisyankov/DefinitelyTyped)\n\nI have not updated these files in a while and noticed today that some have been updated for 0.9.0+ so that could be causing an issue too? (most noticeable thing is __bool__ is now __boolean__)",
+      "PostedDate": "2013-07-03T17:05:09.897-07:00",
+      "Id": 105058
+    },
+    {
+      "Message": "Should have also mentioned I have this in my *.csproj (MVC4) project file:\n\n```\n<PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\n    <TypeScriptTarget>ES5</TypeScriptTarget>\n    <TypeScriptIncludeComments>true</TypeScriptIncludeComments>\n    <TypeScriptSourceMap>true</TypeScriptSourceMap>\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\n  </PropertyGroup>\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">\n    <TypeScriptTarget>ES5</TypeScriptTarget>\n    <TypeScriptIncludeComments>true</TypeScriptIncludeComments>\n    <TypeScriptSourceMap>true</TypeScriptSourceMap>\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\n  </PropertyGroup>\n```\n\nIs this still required?",
+      "PostedDate": "2013-07-03T17:15:21.963-07:00",
+      "Id": 105059
+    },
+    {
+      "Message": "We're seeing some negative interactions between the 0.9 version of TypeScript and WebEssentials.  These issues should improve/or disappear with WebEssentials disabled:\n\nAdding the generated .js files to the project causes tsc.exe to spawn when the solution is opened.  This could potentially cause slow project start-up times.\n\nCompiling all TS files on build spawns many new instance of tsc.exe rather than using a single build.  \n\nCompile on Save can spawn multiple tsc.exe instances, depending on project layout.  \n\n",
+      "PostedDate": "2013-07-08T10:46:09.11-07:00",
+      "Id": 105419
+    },
+    {
+      "Message": "OK, the only TypeScript feature of Web Essentials I was using was the preview window anyway (which I very seldom use now).\n\nThe first 2 posts here have said they disabled Web Essentials and found they still had the problem, so I'm not sure this will fix the issue but if I get time I will test this.\n\nFor now we will continue to use an older version, we have 80+ people in the team and I need to be sure that this version will work for us before asking them to install the updated version and reboot.",
+      "PostedDate": "2013-07-08T19:19:31.87-07:00",
+      "Id": 105489
+    },
+    {
+      "Message": "I disabled web essentials but now I've lost \"compile on save.\" The native VS option for compile on save in visual studio's editor > typescript doesn't seem to work anymore with 0.9? Am I losing it?",
+      "PostedDate": "2013-07-10T09:55:36.29-07:00",
+      "Id": 105648
+    },
+    {
+      "Message": "The compile-on-save that comes with the official TypeScript plugin *should* work in 0.9.  If it doesn't, definitely let us know what settings you chose and what issues you're seeing.",
+      "PostedDate": "2013-07-10T10:37:45.287-07:00",
+      "Id": 105655
+    },
+    {
+      "Message": "I am also experiencing the issue where my large TypeScript 0.9.0.1 project is taking 10 min to load when I open the project in VS 2012. This is really painful.\n\nI have disabled the Web Essentials Plug-In and configured \"Automatic compile TypeScript files which are part of project\" under Options Dialog > Text Editor > TypeScript > Project\n\nI have removed the generated .js files from my project to try and prevent tsc.exe from spawning when the project is loaded but it didn't seem to have any effect on the load time.\n\nI also added the following in my .csproj file:\n\n    <PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\n      <TypeScriptTarget>ES5</TypeScriptTarget>\n      <TypeScriptIncludeComments>false</TypeScriptIncludeComments>\n      <TypeScriptSourceMap>true</TypeScriptSourceMap>\n      <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\n    </PropertyGroup>\n    <PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">\n      <TypeScriptTarget>ES5</TypeScriptTarget>\n      <TypeScriptIncludeComments>false</TypeScriptIncludeComments>\n      <TypeScriptSourceMap>false</TypeScriptSourceMap>\n      <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\n    </PropertyGroup>\n\nOnce the project loads, compile on save works fine and everything seems to run normally.\n\nWhat else can I try to resolve this?",
+      "PostedDate": "2013-07-16T23:33:30.07-07:00",
+      "Id": 106255
+    },
+    {
+      "Message": "I'd just like to chime in and say that I am also having this problem. Typescript 0.9.0.1, Web Essentials disabled. Opening solution is fine, but I have it configured to compile typescript files on build. Freeze VS for ~10mins, during which time I see a single tsc.exe process start at 100MB, and climb to just under 400MB, and then spawn and replaced by a new tsc.exe process that does the same thing, over and over. This is a very large project with dozens of TS files, many several hundred or 1000+ lines.",
+      "PostedDate": "2013-07-17T10:58:34.39-07:00",
+      "Id": 106302
+    },
+    {
+      "Message": "For those of you having issues, we're definitely looking into it.  It seems like plugins other than WebEssentials also have a negative impact, among them ReSharper.  We've been doing a lot of perf work for 0.9.1, as we realize it's a major pain point for moving to the 0.9 series (and the step back in perf we took has a negative effect with popular plugins).  We also have a repro for the \"takes 10 minutes to load project\" issue, and we're looking into that as well.\n\nThanks again for all the feedback.  We're taking it to heart.",
+      "PostedDate": "2013-07-17T11:58:13.81-07:00",
+      "Id": 106320
+    },
+    {
+      "Message": "Some more info...\n\nRemoving ReSharper and also disabling WebEssentials unfortunately had no effect for me. \n\nThe only thing that makes VS 2012 usable and prevent the \"10 minutes to load project\" issue is to disable the built-in \"save on compile\" features in VS 2012 (under Options > Text Editors > TypeScript > Project) and then re-enable WebEssentials and use it's \"compile on save\" feature instead (even though that's pretty slow too).\n\nThanks\n",
+      "PostedDate": "2013-07-17T12:45:56.967-07:00",
+      "Id": 106324
+    },
+    {
+      "Message": "Hi,\n\nA follow-on to my comment a couple up in the thread:\n\nUsing 0.8.3, I had to solve an  issue where I had too many typescript files in my project, and the build action for typescript files would fail at the tsc exec on the command line because there were too many parameters (one param passed to tsc for each ts file, and the command was simply too long). Props to the guy who posted this solution that helped me solve the problem initially: (http://stackoverflow.com/questions/16333711/web-essentials-compile-all-typescript-files-on-build-doesnt-work)\n\nWell, I had forgotten about this, and the installation of 0.9.0.1 overwrote my custom targets file, so I was also getting this error on build, in addition to the tsc spawning/VS-freeze problem described in this thread. I went back and applied this change to my targets file (I actually had to use a modified version for the new typescript Target node, which I've posted below), and: __this has completely solved the issue described in this work item for me.__\n\nTo summarize, in your C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\Microsoft.TypeScript.targets file, replace this target node:\n```\n<Target Name=\"CompileTypeScript\">\n    <Message Text=\"Compiling TypeScript files\" />\n    <Message Text=\"Executing tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n    <Exec Command=\"&quot;$(ProgramFiles)\\Microsoft SDKs\\TypeScript\\tsc.exe&quot; $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n  </Target>\n```\n\nwith this:\n```\n<Target Name=\"CompileTypeScript\">\n\t<Message Text=\"Compiling TypeScript files\" />\n\t<Message Text=\"Creating response file tscompile.rsp\" />\n\t<WriteLinesToFile File=\"tscompile.rsp\" Lines=\"@(TypeScriptCompile)\" Overwrite=\"true\" />\n\t<Message Text=\"Executing tsc $(TypeScriptBuildConfigurations) @tscompile.rsp\" />\n\t<!--<Exec Command=\"tsc $(TypeScriptBuildConfigurations) @tscompile.rsp\" />-->\n\t<Exec Command=\"&quot;$(ProgramFiles)\\Microsoft SDKs\\TypeScript\\tsc.exe&quot; $(TypeScriptBuildConfigurations) @tscompile.rsp\" />\n\t<Delete Files=\"tscompile.rsp\" />\n  </Target>\n```\n\nI have web essentials installed with all of my desired options enabled, and everything is building and compiling with very acceptable performance (no more freezing or repeatedly spawning tsc processes).\n\nHope this helps others as it has for me.\n\nA suggestion to the TypeScript team would be to possible set up the build action to just work this way anyway - the build action that ships with the TypeScript package fails after 30 or 40 files anyway.\n\nMathias",
+      "PostedDate": "2013-07-17T13:01:31.85-07:00",
+      "Id": 106331
+    },
+    {
+      "Message": "I actually do have the problem when first opening the solution now as well. However, I am no longer having issues on solution build after the changes I posted above.",
+      "PostedDate": "2013-07-17T16:20:28.813-07:00",
+      "Id": 106376
+    },
+    {
+      "Message": "Same here, 0.9.0.1 easily goes off into seemingly infinite loops. I can see many tsc.exe processes being started and VS basically hangs.\n\nOn my machine this seems to be triggered by:\n- complex generics type definition, e.g. JQueryPromise<T>.then().\n- compilation errors (due to type definitions or plain errors in my code).\n\nVery annoying, makes TS unusable for a serious project at the moment.",
+      "PostedDate": "2013-07-22T11:47:25.157-07:00",
+      "Id": 106951
+    },
+    {
+      "Message": "__@jods__, it`s not a TS problem. Try to disable the Web Essentials option 'Compile all TypeScript files on build' and dozen on tsc.exe should disappear (at least it does for me). We have 60+ .ts files and they now comping pretty fast as TS by itself starts only one tsc.exe instance for all specified files for compilation.",
+      "PostedDate": "2013-07-27T00:33:04.807-07:00",
+      "Id": 107664
+    },
+    {
+      "Message": "@armsoft: I am using VS 2013. I thought that the TS support was removed from Web Essentials 2013? I will double-check when I have access to that machine.\nNote that I only have one tsc.exe instance at a time, but as soon as it completes another one starts.\n\nAt the moment compilation has decent performance, but I had to tweak some definitions (notable jquery promises as indicated above). Unbearable performance really seems to be triggered by generics and sometimes errors in source code.\n\nI take this opportunity to add that the 'live' performance is pretty poor as well. E.g. I have to wait several seconds for the red squiggles to disappear when I fix a typo in the code.\n\nA last issue I've noticed is that \"compile on save\" on \"build\" don't always produce the same output. Sometimes \"compile on save\" complains about a module import and set the variable to a string (the module name) rather than the AMD module.",
+      "PostedDate": "2013-07-29T02:24:32.363-07:00",
+      "Id": 107754
+    },
+    {
+      "Message": "@jods We're hoping to address most, if not all, of the perf problems with 0.9.1, including some of the interactive perf.  \n\nTo your other points: compile on save and build should always produce the same output if you're in a project context.  If it doesn't, this is definitely a bug we should track and fix.\n\n",
+      "PostedDate": "2013-07-29T08:08:53.627-07:00",
+      "Id": 107780
+    },
+    {
+      "Message": "@jods, not sure about vs2013. I`m talking about vs2012 and WE has the TS support there.",
+      "PostedDate": "2013-07-29T09:19:17.54-07:00",
+      "Id": 107786
+    },
+    {
+      "Message": "@armsoft I think he's probably referring to TypeScript natively supporting more of the features that WebEssentials provides, like compile-on-save, so WebEssentials 2013 is going to remove support and let us take over that functionality.\n\nhttp://madskristensen.net/post/Web-Essentials-2013-Where-is-the-TypeScript-support.aspx\n\n",
+      "PostedDate": "2013-07-29T09:42:23.45-07:00",
+      "Id": 107789
+    },
+    {
+      "Message": "@jonturner:  I look forward to testing the perf improvements in 0.9.1.\nRE: failed compile-on-save vs build, yes I'm in a project context. If this behavior continues with 0.9.1 I'll open another bug. I'd like to send my project code privately, though.",
+      "PostedDate": "2013-07-29T13:40:02.553-07:00",
+      "Id": 107828
+    },
+    {
+      "Message": "Looks like many perf scenarios will be improved with 0.9.1.  If there are other perf things that aren't yet addressed in 0.9.1, please open new issues to track those.  Thanks everyone for being patient with us.",
+      "PostedDate": "2013-08-02T09:19:07.703-07:00",
+      "Id": 108363
+    },
+    {
+      "Message": "Experiencing the same issue here. Especially deleting/renaming/copying files is a pain and hangs studio for 10-20 seconds. Duplicate issue [here](https://typescript.codeplex.com/workitem/1280) didn't get traction but i'm glad to see this did",
+      "PostedDate": "2013-08-05T02:55:00.927-07:00",
+      "Id": 108534
+    }
+  ]
+}

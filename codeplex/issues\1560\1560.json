@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Can you provide any additional repro code and re-open this issue? I'm unable to hit this error naively filling in the blanks with simple types and modules. I assume my your statement that this sometimes causes compiler errors you mean some specific uses always cause compiler errors, not that the same use sometimes works and sometimes doesn't.",
+    "ClosedDate": "2013-08-22T16:45:50.233-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I've been using a lot of aliases for internal module imports, such as import xxx = ab.cd. Referring to .ts files containing these imports randomly causes the following compiler error:\r\n>Compile Error. \r\n>See error list for details\r\n>tsc.js(36372, 13) JavaScript runtime error: Unable to get property 'isError' of undefined or null reference\r\n\r\n\r\nFor example, I have files file1.ts and file2.ts.\r\nfile1.ts\r\n```\r\nmodule ab.cd {\r\n    import a = (some other module here)\r\n\r\n    export class Foo { \r\n        // class Foo using module a\r\n    }\r\n}\r\n```\r\n\r\nfile2.ts\r\n```\r\n/// <reference path=\"file1.ts\"/>\r\n\r\nmodule ef {\r\n    import c = ab.cd   \r\n\r\n   // Code using ab.cd.Foo as c.Foo\r\n}\r\n```\r\n\r\nMost of the time this kind of pattern containing import chains works, but sometimes it causes the compiler error above. If I replace references to c.Foo with ab.cd.Foo that usually fixes the problem. There might be other ways to cause the error. \r\n\r\nLooking at tsc.js, the crashing code is\r\n```\r\nPullTypeResolver.prototype.isAnyOrEquivalent = function (type) {\r\n            return (type === this.semanticInfoChain.anyTypeSymbol) || type.isError();\r\n};\r\n```\r\n\r\nSo for some reason the \"type\" parameter is null here. I actually tried adding a guard clause to return true or false if the parameter is null, which at least stopped the compiler from crashing, but caused other compiler errors and probably invalid code being generated.",
+    "LastUpdatedDate": "2013-08-27T09:48:50.333-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T03:39:39.713-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "0.9.1.1: Compiler crashes with internal module imports (aliases)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1560
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yes, that's what I meant. Sorry, I can't provide the actual code that crashes (it has happened to two different programmers with different files, but it's definitely caused by imports), because it's proprietary software and finding the simplest case that causes the error would require a lot of work.\n\nI imagined this would be enough since I provided the line of code in the compiler that causes the error, so those familiar with the compiler might be able to figure out the cause. I'm sure we can't be the only ones getting this error, so probably someone else will provide an actual reproducible case later...",
+      "PostedDate": "2013-08-23T11:19:15.82-07:00",
+      "Id": 110945
+    }
+  ]
+}

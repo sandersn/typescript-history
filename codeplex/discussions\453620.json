@@ -1,0 +1,242 @@
+[
+  {
+    "Id": "1081399",
+    "ThreadId": "453620",
+    "Html": "I upgraded from 0.9.0.1 to 0.9.1 and now if I add new .ts file, related .js file is not a part of the project (not included) and so it is not publishable in VS. Does it sound like a bug and I need to add .js files manually to the project for now? Any suggestions?<br />\n",
+    "PostedDate": "2013-08-16T09:01:44.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082299",
+    "ThreadId": "453620",
+    "Html": "A couple things here:\r<br />\n<br />\nThe .js files are no longer part of the project by default.  Starting with 0.9.1, we don't nest them under the TypeScript files.  This is more of a visual change, but it also lets us manage the .js files behind the scenes a bit cleaner. \r<br />\n<br />\nUsing the up-to-date targets file that comes with 0.9.1, you should be able to publish your .js files.  Is this step not working?  They should need to be part of the project to be published.<br />\n",
+    "PostedDate": "2013-08-19T11:24:03.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082556",
+    "ThreadId": "453620",
+    "Html": "@jonturner, \r<br />\n<br />\nwhen you say that &quot;Starting with 0.9.1, we don't nest them under the TypeScript files&quot; do you mean that in a Visual Studio TypeScript project it should no longer be possible to see the generated .js files?\r<br />\n<br />\nI'm using 0.9.1 and just added a new TypeScript file to a project but the .js file appears nested underneath.<br />\n",
+    "PostedDate": "2013-08-20T01:40:55.09-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083749",
+    "ThreadId": "453620",
+    "Html": "@jonturner\r<br />\n<br />\nI have also noted that the .js files were not being included in my web deployment package when I publish a project (e.g. the example &quot;HTML Application with TypeScript&quot;). I assume in your reply on Monday you mean &quot;They should NOT need to be part of the project to be published&quot; in your last sentence.\r<br />\n<br />\nSo I looked a bit closer at the latest targets file to see how it adds the .js files to the published list, and it appears to set a PublishPipelineCollectFilesCore property group to include a new task TypeScriptCollectPublishFiles. It appears for this to work, that the TypeScript import target needs to be <em>before</em> the import of the web application target in the .csproj file. Or rather, for me,  when I moved the line &lt;Import Project=&quot;$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets&quot; /&gt; to be prior to the line &lt;Import Project=&quot;$(VSToolsPath)\\WebApplications\\Microsoft.WebApplication.targets&quot; Condition=&quot;'$(VSToolsPath)' != ''&quot; /&gt;, then it started to include the .js files without having to have them appear in visual studio (including not nested either).<br />\n",
+    "PostedDate": "2013-08-22T10:09:38.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083854",
+    "ThreadId": "453620",
+    "Html": "@nabog - that may be the case for projects made with previous versions of the plugin, as the nesting is described in the project itself.  You can still see the generated .js if you select &quot;Show All Files&quot; in the Solution Explorer.\r<br />\n<br />\n@pgbross - Good catch, I mistyped.  You should <em>not</em> need to pull in the .js files into your project.  When you publish now, they should be part of what is published.  I know there was a fix to this right after 0.9.1.1 shipped, so this may be fixed for the next version, but I'm going to file a bug just in case.<br />\n",
+    "PostedDate": "2013-08-22T14:39:19.347-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083856",
+    "ThreadId": "453620",
+    "Html": "@jonturner, thank you for the explanation. Looking forward to see the next version :)<br />\n",
+    "PostedDate": "2013-08-22T14:45:56.853-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085684",
+    "ThreadId": "453620",
+    "Html": "By using pgbross's method, it starts publish js. But it won't publish ts and map, that makes debugging online web server hard. I have tried to set ts file CopyToOutputDirectory PreserveNewest, but with no luck.<br />\n",
+    "PostedDate": "2013-08-28T01:14:07.773-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085906",
+    "ThreadId": "453620",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nA couple things here:<br />\n<br />\nThe .js files are no longer part of the project by default.  Starting with 0.9.1, we don't nest them under the TypeScript files.  This is more of a visual change, but it also lets us manage the .js files behind the scenes a bit cleaner. <br />\n<br />\nUsing the up-to-date targets file that comes with 0.9.1, you should be able to publish your .js files.  Is this step not working?  They should need to be part of the project to be published.<br />\n</blockquote>\nJust an update to this. The above is true (only) for the &quot;demo file&quot;/scaffolding for new TS project (greeter). If I add a new TypeScript file (which also creates a &quot;demo&quot;):<br />\n<ul>\n<li>the .js file is generated as well (nested under ts)</li>\n<li>it is however, part of the solution (nested under ts file)</li>\n<li>publishing the project publishes this .js (aka &quot;compiled&quot; file).</li>\n</ul>\n",
+    "PostedDate": "2013-08-28T12:28:09.127-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1089253",
+    "ThreadId": "453620",
+    "Html": "@EdSF\r<br />\n<br />\nWhen you say &quot;if I add a new TypeScript file&quot;, are you saying adding it to a project made before 0.9.1?  If so, then yes, you'll get the old behavior.<br />\n\r<br />\nI think the new behavior is on projects started in 0.9.1 (or those converted by hand over to use the slightly new project style).\r<br />\n<br />\nIf you're creating a new project in 0.9.1 (or 0.9.1.1) and seeing this nesting behavior, that's probably an issue we need to iron out.<br />\n",
+    "PostedDate": "2013-09-06T08:24:01.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1089351",
+    "ThreadId": "453620",
+    "Html": "Also, having NuGet package restore enabled for whatever reason prevents the compiled JS files from being published. If you edit the project file and change &lt;RestorePackages&gt;true&lt;/RestorePackages&gt; to &lt;RestorePackages&gt;false&lt;/RestorePackages&gt; it then publishes the compiled JS files. I've tried moving the nuget targets import around as suggested for the TS targets (by @pgbross) file by putting before/after TS targets import, but that didn't make any difference. So, it seems that the other targets files conflict with the TS targets file for publishes.<br />\n",
+    "PostedDate": "2013-09-06T13:30:35.693-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090223",
+    "ThreadId": "453620",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/1661\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-09-09T08:25:59.4-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092412",
+    "ThreadId": "453620",
+    "Html": "@pgbross Changing the order of the &lt;Import&gt; statements solved the problem for me too. Thanks!<br />\n",
+    "PostedDate": "2013-09-13T10:41:00.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098527",
+    "ThreadId": "453620",
+    "Html": "Moving the Import statement before WebApplication.targets solves the problem of publishing, but it won't use any typescript settings anymore.\r<br />\n<br />\nMoving the typescript settings to before the import works, but then variables like $(WebProjectOutputDir) are not available, which is needed for single file output.<br />\n",
+    "PostedDate": "2013-09-24T06:25:20.747-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125943",
+    "ThreadId": "453620",
+    "Html": "I believe you can also edit the Microsoft.TypeScript.targets.\r<br />\n<br />\nFrom the MSBuild logs I see that the target TypeScriptCollectPublishFiles only collates a list of files to publish and if I am correct, this can be run at any time after the CompileTypeScript target.\r<br />\nI changed the compileDependsOn target to the following :-\r<br />\n<br />\n&lt;PropertyGroup&gt;<br />\n<pre><code>&lt;CompileDependsOn&gt;\n  CompileTypeScript;\n  TypeScriptCollectPublishFiles; &lt;!-- Newly added --&gt;\n  $(CompileDependsOn);\n&lt;/CompileDependsOn&gt;</code></pre>\n\n&lt;/PropertyGroup&gt;\r<br />\n<br />\nThis will work for all projects being built and should negate the need to change each visual studio *.proj file to compensate for the default behaviour.\r<br />\n<br />\nI haven't investigated if this impact anything greater than publishing the files, but it's something that works for me at the moment.<br />\n",
+    "PostedDate": "2013-11-18T02:58:21.207-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127575",
+    "ThreadId": "453620",
+    "Html": "I'm trying to get js files to be generated in Team Build and copied to _PublishedWebsites folder. I modified Microsoft.TypeScript.targets file and added  TypeScriptCollectPublishFiles; under CompileDemendsOn node, however, I'm still not getting the .js files to copy. On my machine they build and copy to the publish folder correctly.\r<br />\n<br />\nAny ideas on what I can try on the build folder?<br />\n",
+    "PostedDate": "2013-11-21T08:06:45.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127579",
+    "ThreadId": "453620",
+    "Html": "Hi,<br />\n<br />\nIn visual studio , select a typescript file, look at the properties, can you confirm that the 'Build Action' property is set to 'TypeScriptCompile'?<br />\n<br />\nIf this is set correctly, then ensure typescript 0.9.1.1 is installed on the build server.<br />\n<br />\nIf the two statements above are true, then you will need to look at the msbuild log to see if the typescript files are seen by the typescript compiler.<br />\nYou can do this by searching for the name of any typescript file, and then it's corresponding *.js file.<br />\n<br />\nLet me know how you get on.<br />\n<br />\nVijay<br />\n",
+    "PostedDate": "2013-11-21T08:18:46.217-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127591",
+    "ThreadId": "453620",
+    "Html": "<blockquote>\nIn visual studio , select a typescript file, look at the properties, can you confirm that the 'Build Action' property is set to 'TypeScriptCompile'?<br />\n</blockquote>\nYes. All .ts files are set to 'TypeScriptCompile' and compile correctly on developer workstation.<br />\n<blockquote>\nIf this is set correctly, then ensure typescript 0.9.1.1 is installed on the build server.<br />\n</blockquote>\nI ran the installer several times to make sure. What I'm about to try is install VS2013 on the build server and see how the solution will compile on there using Visual Studio vs Team Build.<br />\n<blockquote>\nIf the two statements above are true, then you will need to look at the log to see if the typescript files are seen by the typescript compiler.<br />\nYou can do this by searching for the name of any typescript file, and then it's corresponding *.js file.<br />\n</blockquote>\nAs far as logs. I turned on Diagnostic logging mode on the Build Definition and it shows that the files were downloaded from course control however, the logs do not show that specific source files were built. I did not see .ts files listed, however, I did not see any of my .cs files listed either. Maybe I'm looking at the wrong log?\r<br />\n<br />\nIlya<br />\n",
+    "PostedDate": "2013-11-21T08:38:53.453-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127596",
+    "ThreadId": "453620",
+    "Html": "Hi,<br />\n<br />\nSeems the log you're looking at is not quite right. In the Build report of your build, you'll see 'View Log File' for the solution you're building.<br />\n<br />\nIn the log you'll find something like this.<br />\n<br />\nCompileTypeScript:<br />\n  C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\tsc.exe  --target ES5 &quot;&lt;PATH&gt;\\FirstFile.ts&quot; <br />\nTypeScriptCollectPublishFiles:<br />\n  Adding to FilesForPackagingFromProject: &lt;PATH&gt;\\FirstFile.js;<br />\n",
+    "PostedDate": "2013-11-21T08:44:19.28-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127634",
+    "ThreadId": "453620",
+    "Html": "Okay, it appears the log was not available because I did not specify the drop folder.\r<br />\n<br />\nI have the following lines in the log for the default Html Website with TypeScript project that I added to the solution:<br />\n<pre><code>       Using &quot;VsTsc&quot; task from assembly &quot;C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\TypeScript\\TypeScript.tasks.dll&quot;.\n       Task &quot;VsTsc&quot;\n       C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\tsc.exe  --module amd --sourcemap --target ES5 &quot;app.ts&quot;</code></pre>\n\nlater in the log I have:<br />\n<pre><code>      Task &quot;Message&quot;\n       Adding to FilesForPackagingFromProject: app.js\n       Done executing task &quot;Message&quot;.</code></pre>\n\nHowever, still not files in the _publishedwebsites.\r<br />\n<br />\nHere's a link to the <a href=\"https://dl.dropboxusercontent.com/u/543072/build_log.txt\" rel=\"nofollow\">log file</a>.<br />\n",
+    "PostedDate": "2013-11-21T10:02:03.957-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127697",
+    "ThreadId": "453620",
+    "Html": "I installed VS2013 on the build machine, opened the solution and was able to generate .js files by doing a regular build within Visual Studio as well as publish to a folder and have the .js files copied over. I'm still not sure what's going on with the Team Build then...<br />\n",
+    "PostedDate": "2013-11-21T12:27:19.417-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127871",
+    "ThreadId": "453620",
+    "Html": "Have you tried moving the targets around, as stated in this thread?<br />\n",
+    "PostedDate": "2013-11-22T04:28:33.373-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127879",
+    "ThreadId": "453620",
+    "Html": "<strong>VijayKotecha wrote:</strong><br />\n<blockquote>\nHave you tried moving the targets around, as stated in this thread?<br />\n</blockquote>\nI have. That's how I got .js files to be copied when doing the manual publish from VS. Still no luck on Team Build though.<br />\n",
+    "PostedDate": "2013-11-22T05:03:42.93-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127940",
+    "ThreadId": "453620",
+    "Html": "Hi,<br />\n<br />\nTFS Build: You're right in that the _PublishedWebsites folder won't have the js files. I have verified this.<br />\nHowever, my build process is tweaked such that I don't create a _PublishedWebsites folder and my build is building as if a developer is building on his own desktop.<br />\nSee my blog article - <a href=\"http://vijayskotecha.blogspot.se/2012/08/tfs-2010-custom-build-output-directory.html\" rel=\"nofollow\">http://vijayskotecha.blogspot.se/2012/08/tfs-2010-custom-build-output-directory.html</a><br />\n<br />\nI was under the impression you had an extra step to actually publish the files for a given web project, whereas you are just building the code and expecting the _PublishedWebsites folder to include everything you want.<br />\n<br />\nIn my TFS build process, I pass in the following as MSBuild arguments:- /p:DeployOnBuild=true /p:PublishProfile=build /p:VisualStudioVersion=11.0.<br />\nIn each of my web projects I have defined a publish profile as &quot;build&quot; - it is publishing to a file system.<br />\nThis web deploy publish actually contains the *.js files as required.<br />\n<a href=\"http://msdn.microsoft.com/en-us/library/dd465337(v=vs.110).aspx\" rel=\"nofollow\">http://msdn.microsoft.com/en-us/library/dd465337(v=vs.110).aspx</a><br />\n<br />\nSo just to summarise, the default TFS build process does not include the *.js files for some reason  - but if you use the publish mechanism , web deploy, you get the files. (The web deploy is what you've been using on your desktop, when you say it works, I think).<br />\n<br />\nVijay.<br />\n",
+    "PostedDate": "2013-11-22T07:39:45.46-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129011",
+    "ThreadId": "453620",
+    "Html": "Thanks for the helpful tips Vijay.\r<br />\n<br />\nYour solution mostly works for me, however I am having a problem where it <em>seems</em> that the publish process takes place <strong><em>before</em></strong> the post-build events.\r<br />\n<br />\nThis only seems to be the case when done on the build server and works fine on local machine.   Any ideas on how I can troubleshoot?\r<br />\n<br />\nThanks,\r<br />\nShaun<br />\n",
+    "PostedDate": "2013-11-25T19:43:06.333-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129077",
+    "ThreadId": "453620",
+    "Html": "Hi,\r<br />\n<br />\nIf you're using TFS 2012 then ensure the MSBuild Multi Proc Arg is set to false.\r<br />\nIf you're using TFS 2010 then ensure you're not using the /m flag.\r<br />\n<br />\nThe scenario you mentioned could be caused by multiple threads per build.\r<br />\n<br />\nIf this isn't the cause then it's best to run through the MSBuild (build) log to see what the ordering is.\r<br />\n<br />\nVijay<br />\n",
+    "PostedDate": "2013-11-26T01:09:24.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129193",
+    "ThreadId": "453620",
+    "Html": "Hi Vijay,\r<br />\n<br />\nI verified parallel building is not enabled.<br />\n\r<br />\nIs there a better build log I can find other than the report displayed within visual studio?  (in other words, the one visible when navigating to the build status from team explorer).\r<br />\n<br />\nEven in diagnostic mode, I don't get nearly the level of information as I do in the 'output' tab when building from within visual studio, particular with regard to publishing and post-build command output.<br />\n",
+    "PostedDate": "2013-11-26T06:58:31.597-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129206",
+    "ThreadId": "453620",
+    "Html": "Hi,\r<br />\n<br />\nAs mentioned previously, there should be a build log produced within the build output.\r<br />\nEnsure your build is outputting some artifacts.\r<br />\nYou should also see the link to the log as 'view log file' in the 'view summary' report.\r<br />\n<br />\nVijay.<br />\n",
+    "PostedDate": "2013-11-26T07:43:31.643-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129555",
+    "ThreadId": "453620",
+    "Html": "Even in 0.9.5 beta the JS files still do not publish using VS2013. I've tried @pgbross and @VijayKotecha suggestions to no such luck.\r<br />\n<br />\nDoes anyone else have problems publishing the JS files w/ 0.9.5 beta in VS2012/2013?<br />\n",
+    "PostedDate": "2013-11-27T05:18:06.197-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129579",
+    "ThreadId": "453620",
+    "Html": "In my build summary after publishing the entry is added before the publish...\r<br />\n<br />\n2&gt;C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.exe  --removeComments --module amd --target ES5 --locale en-US\r<br />\n<br />\nNot sure if this info helps.\r<br />\n<br />\nAlso, what is the &quot;locale&quot; switch?<br />\n",
+    "PostedDate": "2013-11-27T06:19:26.523-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129897",
+    "ThreadId": "453620",
+    "Html": "Not sure how relevant it is to  you but we had a similar issue recently where our javascript files weren't getting added to the msdeploy packages in our CI pipeline.<br />\n<br />\nI modified the csproj file with the following (could probably add it to the targets file instead but wasn't willing to mess around with it):<br />\n<pre><code> &lt;Target Name=&quot;TypeScriptJsCollectFiles&quot;&gt;\n    &lt;ItemGroup&gt;\n      &lt;_CustomFiles Include=&quot;.\\**\\*.js&quot; /&gt;\n      &lt;FilesForPackagingFromProject Include=&quot;%(_CustomFiles.Identity)&quot;&gt;\n        &lt;DestinationRelativePath&gt;%(RecursiveDir)%(Filename)%(Extension)&lt;/DestinationRelativePath&gt;\n      &lt;/FilesForPackagingFromProject&gt;\n    &lt;/ItemGroup&gt;\n  &lt;/Target&gt;\n  &lt;PropertyGroup&gt;\n    &lt;CopyAllFilesToSingleFolderForPackageDependsOn&gt;\n      TypeScriptJsCollectFiles;\n      $(CopyAllFilesToSingleFolderForPackageDependsOn);\n    &lt;/CopyAllFilesToSingleFolderForPackageDependsOn&gt;\n\n    &lt;CopyAllFilesToSingleFolderForMsdeployDependsOn&gt;\n      TypeScriptJsCollectFiles;\n      $(CopyAllFilesToSingleFolderForPackageDependsOn);\n    &lt;/CopyAllFilesToSingleFolderForMsdeployDependsOn&gt;\n  &lt;/PropertyGroup&gt;</code></pre>\n\nHope this helps :)<br />\n",
+    "PostedDate": "2013-11-28T00:54:49.46-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

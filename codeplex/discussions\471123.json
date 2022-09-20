@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1128925",
+    "ThreadId": "471123",
+    "Html": "We are developing the Eclipse plug-in and are finding that calling getDiagnostics() across all files in the workspace when a file is saved is somewhat slow (it takes ~7 seconds).  I was wondering if there was any advice on how to do incremental diagnostic retrieval more efficiently.  For example, is there a way to only check files which depend upon the changed file?  Perhaps we aren't using the caches properly?  etc...\r<br />\n<br />\nIn case you are curious, the code which calls into the language service is here:\r<br />\n<a href=\"https://github.com/palantir/eclipse-typescript/blob/master/Bridge/src/languageService.ts\" rel=\"nofollow\">https://github.com/palantir/eclipse-typescript/blob/master/Bridge/src/languageService.ts</a>\r<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-11-25T13:21:00.383-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128959",
+    "ThreadId": "471123",
+    "Html": "Getting all diagnostics kinds for all files is definitely an over kill, and will not scale with your project size. VS, for instance, uses some heuristics on when and for which files it calls getSemanticDiagnotics or getSyntacticDiagnostics. The host needs to be smart about when it queries for errors, when to invalidate errors, and what files to ask for errors for.<br />\n",
+    "PostedDate": "2013-11-25T15:40:45.827-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128962",
+    "ThreadId": "471123",
+    "Html": "Ah, that's a really good point - we're almost certainly calling getSyntacticDiagnostics too frequently since it should only be necessary for a file that was modified.  My assumption is that getSemanticDiagnostics needs to be called whenever a file within a project is modified (unless references are tracked somehow) since a change to an exported type could break in other files.  Are there any mechanisms you could suggest for making the semantic diagnostic checks more efficient?<br />\n",
+    "PostedDate": "2013-11-25T15:50:01.567-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128964",
+    "ThreadId": "471123",
+    "Html": "There is not much the compiler can do about it, the work here needs to be done on the host side, figuring out what files need to be queried for errors and when. Another thing to note, is that there are trade offs, you can not be both complete and fast, so you can not aim at getting all errors immediately after an edit, again that does not scale with bigger projects.<br />\n",
+    "PostedDate": "2013-11-25T15:59:01.303-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128975",
+    "ThreadId": "471123",
+    "Html": "Thanks for the info - sounds like there is no magic bullet for this.<br />\n",
+    "PostedDate": "2013-11-25T16:32:05.09-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129107",
+    "ThreadId": "471123",
+    "Html": "I had been wondering about this, too, as in: which files do need to be re-processed when there is a change. \r<br />\n<br />\nPart of the problem is that external modules are not yet complete or popular. And with reference-only projects, there is no precise dependency tree - every file that was referenced <em>before</em> can cause breakage later on.\r<br />\n<br />\nAs long as the current edit did not change imports or references, one can report errors on the current file first, looking at dependencies (or files later in the reference order) later. Otherwise, re-resolving the imports and references becomes necessary. Which makes me wonder why the resolver and the language services aren't integrated more closely (currently, they don't know of each other - there is no guarantee that the host integrates them correctly)?<br />\n",
+    "PostedDate": "2013-11-26T02:45:20.067-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129161",
+    "ThreadId": "471123",
+    "Html": "Few things I would look into:\r<br />\n<br />\n1) Make sure to keep the whole AST in memory and use language service API to update only changed files. TS has a effective update mechanism for partial updates, but of course means you have to keep the state of the language service in between.\r<br />\n<br />\n2) Offload the work to a separate thread to do the work. I work on a web based IDE and use a (state full) web worker to do all the hard stuff. To be honest it is quicker than I expected.\r<br />\n<br />\n3) For external referenced files you could find out the dependency:<br />\n<pre><code>            var i = TypeScript.ScriptSnapshot.fromString(script.content);\n            var refs = TypeScript.getReferencedFiles(script.fileName,i);\n\nAnd based on a dependency tree you could first get the Diagnostics for the most likely impacted files.</code></pre>\n\n",
+    "PostedDate": "2013-11-26T05:33:11.9-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129234",
+    "ThreadId": "471123",
+    "Html": "There tends to be no proper dependency tree if references are used, only a position in a list of references (you can use references as explicit dependencies; you can use references as includes, with implicit dependencies; you can use references to manage a project-wide targets list - every source file references a single project-wide file that references all project files; or any mix of these). \r<br />\n<br />\nAny files that come before the changed file in that reference list might be obsoleted by modified references in that file (but it is hard to know which ones, without resolving the whole project again). Any new references in the changed file might have to be added to the reference list. Any file that come after the changed file in the reference list might be affected wrt diagnostics. It is even possible to cause errors in not directly related files (files that neither reference the modified file, nor are referenced by it), just by affecting the order of references in that list.\r<br />\n<br />\nOne should probably do a best-effort thing and ignore the corner cases - my thinking just tends to get stuck on these;-)<br />\n",
+    "PostedDate": "2013-11-26T09:07:40.397-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129535",
+    "ThreadId": "471123",
+    "Html": "Another case (that I often use) is to not use reference at all ! I personally use something like : <br />\n<pre><code>tsc MyDeclFile1.d.ts MyDeclFile2.d.ts MyDeclFile3.d.ts .... myMainFile.ts </code></pre>\n\nfor compiling whithout any reference ^^&quot;<br />\n",
+    "PostedDate": "2013-11-27T03:57:30.13-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132900",
+    "ThreadId": "471123",
+    "Html": "It is perhaps something stupid  but I'm trying actually an approach that could allows to retrieve true 'file dependencies' :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> GetDependenciesWalker <span style=\"color:Blue;\">extends</span> TypeScript.PositionTrackingWalker    {\n    \n    <span style=\"color:Blue;\">static</span> getDependencies(fileName: <span style=\"color:Blue;\">string</span>,  languageService: Services.ILanguageService) {\n                \n        <span style=\"color:Blue;\">var</span> dependencies = <span style=\"color:Blue;\">new</span> collections.StringSet(),\n            syntaxTree = languageService.getSyntaxTree(fileName);\n        \n        syntaxTree.sourceUnit().accept(<span style=\"color:Blue;\">new</span> GetDependenciesWalker(fileName, languageService, dependencies));\n        <span style=\"color:Blue;\">return</span> dependencies.keys;\n    }\n    \n    <span style=\"color:Blue;\">constructor</span>(\n        <span style=\"color:Blue;\">private</span> fileName: <span style=\"color:Blue;\">string</span>, \n        <span style=\"color:Blue;\">private</span> languageService: Services.ILanguageService, \n        <span style=\"color:Blue;\">private</span> dependencies: collections.StringSet\n    ) {\n        <span style=\"color:Blue;\">super</span>();\n    }\n    \n    <span style=\"color:Blue;\">public</span> visitToken(token: TypeScript.ISyntaxToken): <span style=\"color:Blue;\">void</span> {\n        <span style=\"color:Blue;\">if</span> (token.kind() === TypeScript.SyntaxKind.IdentifierName) {\n            <span style=\"color:Blue;\">var</span> definitions = <span style=\"color:Blue;\">this</span>.languageService.getDefinitionAtPosition(<span style=\"color:Blue;\">this</span>.fileName, <span style=\"color:Blue;\">this</span>.position());\n            <span style=\"color:Blue;\">if</span> (definitions) {\n                definitions.forEach(definition =&gt; {\n                    <span style=\"color:Blue;\">if</span> (definition.fileName !== <span style=\"color:Blue;\">this</span>.fileName) {\n                        <span style=\"color:Blue;\">this</span>.dependencies.add(definition.fileName);\n                    }\n                });\n            }\n        }\n        <span style=\"color:Blue;\">super</span>.visitToken(token);\n    }\n}\r\n</pre></div>I'm afraid however about the performance, if anybody has a better idea, let me know<br />\n",
+    "PostedDate": "2013-12-08T06:10:12.213-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

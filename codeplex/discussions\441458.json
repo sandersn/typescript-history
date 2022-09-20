@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1035251",
+    "ThreadId": "441458",
+    "Html": "Have there been any discussions on supporting a &quot;dynamic&quot; keyword for classes or variables?  Seems like this would be a big help in transitioning from existing JS codebases.<br />\n\r<br />\nAs an example using the jquery.d.ts from DefinitelyTyped, one could simply add dynamic to the $ declaration as such:<br />\n<pre><code>declare dynamic var $: JQueryStatic</code></pre>\n\nThis would then allow the compiler to know that $ may be extended with other methods/properties besides those that were defined on the JQueryStatic interface - as is common when working with jQuery plugins.<br />\n\r<br />\nCode completion could continue to work for everything that was defined in the interface, but the compiler wouldn't complain about other usages.\r<br />\n<br />\nIt's nice that there are declaration files for all the common libs, but for an internal codebase with existing JS &quot;classes&quot;, having to write the declarations to pull them into the TS fold becomes a pretty big task.  I know they can still be used via manual JS, but (as far as I know) we're not able to take advantage of the additional TypeScript features like &quot;extends&quot; or super() <em>and</em> call some class-specific methods without having the full declarations in place.<br />\n\r<br />\nIt'd be great to be able to get the ball rolling with a minimal declaration like so:<br />\n<pre><code>// in .d.ts\ndeclare module &quot;existingFile&quot; {\n  export class dynamic class ExistingClass {}\n}\n\n// in .ts\nimport m = module(&quot;existingFile&quot;);\nclass NewClass extends m.ExistingClass {\n  // ...\n}</code></pre>\n\n",
+    "PostedDate": "2013-04-24T11:14:49.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1035692",
+    "ThreadId": "441458",
+    "Html": "More generally, we've talked about ways of supporting expand, though no conclusions there, yet.  I agree that it's common to start at some known structure and grow a little from there.  We can at least know the documented starting point.<br />\n\r<br />\nProbably not going to try to tackle this before 1.0, but it might be worth coming back to after 1.0. <br />\n",
+    "PostedDate": "2013-04-25T08:18:56.487-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1037492",
+    "ThreadId": "441458",
+    "Html": "Something along the lines of that would help out considerably, especially with porting existing code bases, there is still far to many errors thrown by typescript due to the way it tries to infer types... &quot;expandable&quot; should be the default for non explicitly declared variables in my opinion. cases like these are common in many JS codebases but not supported by Typescript, unless you explicitly declare things any, where the idea of porting existing code bases drops dead instantly.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//Common practice in Angular, but mixed arrays are properly more widely spread than we expect.</span>\n<span style=\"color:Blue;\">var</span> mixedArray = [<span style=\"color:#A31515;\">&#39;something&#39;</span>, <span style=\"color:Blue;\">function</span>(something) {}];\n\n<span style=\"color:Green;\">//This I have seen so many places, so that is just so extremely common practice, and it&#39;s silly for TS not to support it.</span>\n<span style=\"color:Blue;\">var</span> exp = {};\nexp.ideally = <span style=\"color:#A31515;\">&quot;this&quot;</span>;\nexp.should = <span style=\"color:#A31515;\">&quot;work&quot;</span>;\n\n\n<span style=\"color:Blue;\">function</span> getValue() {\n  <span style=\"color:Blue;\">if</span>(iHaveValue)\n    <span style=\"color:Blue;\">return</span> value;\n    <span style=\"color:Green;\">//Just a simple value -&gt; string/int/object</span>\n  <span style=\"color:Blue;\">else</span>\n    <span style=\"color:Blue;\">return</span> http.get(<span style=\"color:#A31515;\">&quot;/value&quot;</span>); \n    <span style=\"color:Green;\">// Promise that resolves to a value, normally I wouldn&#39;t wan&#39;t to mix the return types,</span>\n    <span style=\"color:Green;\">// but for Promises/values when a framework like angular directly supports this, wrapping</span>\n    <span style=\"color:Green;\">// the above in a promise becomes boilerplate, besides promises are a special case scenario for mixed return types.</span>\n    <span style=\"color:Green;\">// In any case, this could be a very disputed thing to do even with promises,</span>\n    <span style=\"color:Green;\">//</span>\n    <span style=\"color:Green;\">// it is still a conflict with JS and should just warn, where users could then configure the compiler to warnings as errors,</span>\n    <span style=\"color:Green;\">// ideally where warning types could be ignored individually by configuration and/or level of severity.</span>\n}\n\r\n</pre></div>",
+    "PostedDate": "2013-04-29T22:54:31.24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038696",
+    "ThreadId": "441458",
+    "Html": "Besides <a href=\"https://typescript.codeplex.com/workitem/47\" rel=\"nofollow\">allowing module.exports</a>, I think this is the biggest issue with adopting TypeScript for existing projects.<br />\n\r<br />\nFor variables, you can at least use &quot;any&quot; and keep moving, but for existing &quot;classes&quot; you're pretty much out of luck unless you write a d.ts file to go along with it.<br />\n\r<br />\n<br />\nUsing the inheritance example from the TypeScript playground, assuming I had the following Animal class already in Javascript:<br />\n<pre><code>// animal.js (copied from output of TypeScript playground example)\nvar Animal = (function () {\n    function Animal(name) {\n        this.name = name;\n    }\n    Animal.prototype.move = function (meters) {\n        alert(this.name + &quot; moved &quot; + meters + &quot;m.&quot;);\n    };\n    return Animal;\n})();</code></pre>\n\nI can't do <br />\n<pre><code>// snake.ts (copied from TypeScript playground example)\nclass Snake extends Animal {\n    constructor(name: string) { super(name); }\n    move() {\n        alert(&quot;Slithering...&quot;);\n        super.move(5);\n    }\n}\n</code></pre>\n\nwithout also writing a new d.ts and then referencing that in snake.ts.   \r<br />\n<pre><code>// animal.d.ts\nclass Animal {\n    public name: string;\n    constructor(name: string);\n    public move(meters: number): void;\n}</code></pre>\n\nIn this simple example, I've already doubled the amount of work to create my new Snake class. <br />\n",
+    "PostedDate": "2013-05-02T11:03:51.567-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1038706",
+    "ThreadId": "441458",
+    "Html": "Another help would be to allow a &quot;Class&quot; type - which by default would be assumed dynamic.<br />\nThis would alleviate the need to have a d.ts altogether, as well as the reference tag in the .ts<br />\n<pre><code>// snake.ts\nvar Animal: Class = require('animal.js');\nclass Snake extends Animal {\n    // ...\n}</code></pre>\n\nGranted, it would prevent a lot of compiler errors that would be caught with the full declaration, but we're still better off with the added code completion from TypeScript.  More importantly, it eliminates the friction between JS/TS and lets the codebase start moving in the right direction with TypeScript immediately.<br />\n",
+    "PostedDate": "2013-05-02T11:22:25.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

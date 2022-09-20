@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There are two possible initialization orders and both have drawbacks. See the example below for when you wouldn't want field assignment to happen before the base class constructor call.\n\nIt's widely agreed that calling virtual methods in a constructor is a bad idea, so it doesn't make much sense to optimize for that case. You can open up a topic on the discussion forum if you want to dive deeper on this. Thanks!\n\nclass Parent {\n\tpublic name = 'Parent';\n    constructor() {\n    }\n}\n\nclass Child extends Parent {\n\tpublic name = 'Child';\n\t\n    constructor() {\n        super();\n    }\n}",
+    "ClosedDate": "2013-01-14T10:38:37.203-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Consider this scenario\r\n\r\n    export class Parent {\r\n        constructor() {\r\n        }\r\n    }\r\n\r\n    export class Child extends Parent {\r\n        Values = [];\r\n        constructor() {\r\n            super();\r\n        }\r\n    }\r\n\r\nThe constructor for the Child class compiles to:\r\nfunction Child() {\r\n        _super.call(this);\r\n    this.Values = [];\r\n}\r\n\r\nwhich is incorrect. The array Values should be defined before the _super() call. \r\n\r\nThis has negative implications if an overridden method is called in the constructor of the parent, and the override uses the Values property (expecting it to be pre defined)\r\n\r\nA sample is attached.\r\n",
+    "LastUpdatedDate": "2013-12-24T14:37:35.583-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-12T07:26:23.407-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Invalid ordering of logic in extended class constructor",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 607
+  },
+  "FileAttachments": [
+    {
+      "FileId": 601214,
+      "FileName": "problems.ts",
+      "DownloadUrl": ".\\601214"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "OK, so long as it is by design.\nThanks for the feedback\n\nShane",
+      "PostedDate": "2013-01-16T07:30:14.837-08:00",
+      "Id": 86235
+    },
+    {
+      "Message": "what I want to say is to big for a comment, you can read it here:\nhttp://thealjey.tumblr.com/the-fatal-flaw-of-typescript",
+      "PostedDate": "2013-12-24T14:37:35.583-08:00",
+      "Id": 128379
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "997989",
+    "ThreadId": "432339",
+    "Html": "The code for parameters with default values is generated as:\r<br />\n<br />\nif (typeof paramName === &quot;undefined&quot;) { paramName = defaultValue; }\r<br />\n<br />\nWhy is typeof being used.  Why not just compare to undefined directly?\r<br />\n<br />\nif (paramName === undefined) { paramName = defaultValue; }<br />\n",
+    "PostedDate": "2013-02-07T08:33:51.94-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "998093",
+    "ThreadId": "432339",
+    "Html": "It's not perfect.<br />\n<pre><code>function foo(bar=10) {\n\n}\n\nfoo(); // bar equals 10\nfoo(undefined); //Oops: bar = 10</code></pre>\n\nA better way:<br />\n<pre><code>function foo(bar=10) {\n    \n    if(arguments.length !== 0){\n        bar = 10;   \n    }\n    \n}</code></pre>\n\n",
+    "PostedDate": "2013-02-07T10:25:35.637-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "998149",
+    "ThreadId": "432339",
+    "Html": "The test result is true in both cases you mention and thus bar would equal 10 in both cases.  See:\r<br />\n<a href=\"http://jsfiddle.net/Tn6AU/\" rel=\"nofollow\">http://jsfiddle.net/Tn6AU/</a><br />\n",
+    "PostedDate": "2013-02-07T12:08:17.723-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "998175",
+    "ThreadId": "432339",
+    "Html": "'typeof' is much faster than === undefined in IE, and of similar performance in Chrome (theoretically, the 'typeof' check should more optimizable because you don't have to look up the value of the symbol 'undefined'). It's also safer in the admittedly insane case where someone has mutated the value 'undefined'.<br />\n<br />\nChecking argument length is very, very slow, and doesn't let you do things like specify the 3rd argument while omitting the 2nd.<br />\n<br />\nSee <a href=\"http://jsperf.com/optional-parameters-perf/2\" rel=\"nofollow\">http://jsperf.com/optional-parameters-perf/2</a><br />\n",
+    "PostedDate": "2013-02-07T12:59:10.337-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "998186",
+    "ThreadId": "432339",
+    "Html": "Actually, typeof is not the fastest in my IE.\r<br />\n<br />\n<a href=\"http://screencast.com/t/oc5Kq7PaSU\" rel=\"nofollow\">http://screencast.com/t/oc5Kq7PaSU</a><br />\n",
+    "PostedDate": "2013-02-07T13:16:47.793-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "998386",
+    "ThreadId": "432339",
+    "Html": "Updated the results for FireFox and Opera.\r<br />\n<br />\nI personally think we can live with the fact that <code>foo(undefined); // bar = 10</code> \r<br />\n<br />\n@rcollette, your test appears to be IE9.\r<br />\n<br />\nBut both FireFox and Opera favour <code>if-Undefined</code> - albeit by smaller margins than IE10's margin on 'if-Typeof-Undefined.<br />\n",
+    "PostedDate": "2013-02-08T01:01:58.057-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1029483",
+    "ThreadId": "432339",
+    "Html": "nabog is correct - I've run your test on IE, Chrome and Firefox, and if-undefined is faster on Chrome by 10%, on Firefox by 24%. If-typeof-undefined is faster only on IE, where if-undefined is 52% slower.\r<br />\n<br />\nSince you're affiliated with Microsoft, I suspect you'll want to optimize for IE in the default case, however, I'd appreciate a compiler switch for generating if-undefined instead of if-typeof-undefined code for use with other browsers.\r<br />\n<br />\nAnd of course, TypeScript being open source, I could try doing that myself, but I think it'll be easier for you to get the change out if you add the switch yourself. Shouldn't be too difficult?<br />\n",
+    "PostedDate": "2013-04-12T03:50:32.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1029485",
+    "ThreadId": "432339",
+    "Html": "..Of course, thinking this thing over for a while, the differences are small enough not to warrant the extra work, since performance-critical code shouldn't use optional parameters anyway, and for the rest.. let's just say, that if you're running enough optional parameter logic for it to make a significant difference in performance, you're doing something wrong.<br />\n",
+    "PostedDate": "2013-04-12T03:53:53.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1087709",
+    "ThreadId": "432339",
+    "Html": "If you pass in null the default parameter does not get assigned.<br />\n<pre><code>//Assign null from another method.\nthis._direction = null;\n\n// The transitionToNextView method gets called and since this._direction is null the default value does not get assigned.\nthis._transitionManager.transitionToNextView(view, this._direction);\n\n// The method. I would assume undefined and null would set transitionType to TransitionType.NONE but the value is null.\npublic transitionToNextView(nextView, transitionType:string = TransitionType.NONE):any {\n}</code></pre>\n\nnull: A value has not been assigned or it was nulled out. \r<br />\nundefined: The property does not exist.<br />\n",
+    "PostedDate": "2013-09-03T07:14:29.28-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

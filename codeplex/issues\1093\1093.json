@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. The target of an export= must be a valid identifier. The grammar in the language spec (section 11.2.4 Export Assignments) has this production defined:\n\nExportAssignment:\nexport   =   Identifier   ;\n\nwhere Identifier is the traditional JavaScript notion of an identifier, i.e., this is also an error:\n\nvar x.y = 1;",
+    "ClosedDate": "2013-05-30T20:18:48.287-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "```\r\ndeclare module abc\r\n{\r\n    export class foo {}\r\n}\r\n\r\ndeclare module \"hello/world\"\r\n{\r\n    export = abc.foo;\r\n}\r\n```\r\n\r\ngenerates an error on ```export = abc```.  It is not expecting the period following the namespace.\r\n\r\nReplacing it with:\r\n\r\n```\r\ndeclare module \"hello/world\"\r\n{\r\n    class foo {}\r\n    export = foo;\r\n}\r\n```\r\n\r\nworks fine.\r\n",
+    "LastUpdatedDate": "2013-08-13T09:35:45.25-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-30T19:02:44.037-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "export = ... not recognizing namespaces",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1093
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "OK.  Understood.  So it means that in order to get what I want I must do:\n\n```\ndeclare module \"hello/world\"\n{\n    var retval: abc.foo;\n    export = retval;\n}\n```\n\nThis is a bit convoluted...",
+      "PostedDate": "2013-05-31T07:11:39.97-07:00",
+      "Id": 101784
+    }
+  ]
+}

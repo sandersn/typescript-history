@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in 0.8.3.0.",
+    "ClosedDate": "2013-03-01T09:05:03.5-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "function f(g:()=>void): void {};\n\nfunction h() {\n  f(function() {\n    var k = {}\n    [''].forEach(function() { k['any property']; });\n  });\n}\n\nCrashes tsc 0.8.1 (c283ca0bbc9db460fc638f58947d2d5b23dc9a06) and the playground (they do not produce output for this file) with the following stack trace:\n\n\n/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:19258\n            if(objExprType.elementType) {\n                          ^\nTypeError: Cannot read property 'elementType' of null\n    at TypeFlow.typeCheckIndex (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:19258:27)\n    at BinaryExpression.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:1403:37)\n    at ASTList.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:1005:55)\n    at TypeFlow.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:18599:28)\n    at TypeFlow.typeCheckFunction (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:19930:22)\n    at FuncDecl.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:1889:29)\n    at TypeFlow.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:18599:28)\n    at TypeFlow.postTypeCheckCallArgs (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:20932:34)\n    at TypeFlow.typeCheckCall (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:20995:18)\n    at CallExpression.typeCheck (/usr/local/rictic/lib/node_modules/typescript/bin/tsc.js:1322:33)\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-17T14:01:08.9-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "typescript crashes: Cannot read property 'elementType' of null",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 444
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting!  Looks like this may be due to the way we reformat object/array literals, and semi-colon insertion.  If you put a semi-colon after \"var k = {}\" this fixes the issue.  You can see the type of issues this causes with code such as the below:\n\nvar k = {}\n[1,2,3].join();\n\nWhich generates the below:\n\nvar k = {\n}[1 , 2 , 3].join();\n\nWe definitely shouldn't be crashing the compiler though.  We'll look into it!",
+      "PostedDate": "2012-11-18T10:52:45.477-08:00",
+      "Id": 82679
+    }
+  ]
+}

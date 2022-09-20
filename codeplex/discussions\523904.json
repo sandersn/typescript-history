@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1194767",
+    "ThreadId": "523904",
+    "Html": "Since static method are inherited providing <code>this</code> typing contextually to the class could be cool:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> A {\n    factory() {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">new</span> <span style=\"color:Blue;\">this</span>();\n    }\n}\n\n<span style=\"color:Blue;\">class</span> B <span style=\"color:Blue;\">extends</span> A {\n}\n<span style=\"color:Blue;\">var</span> b = B.factory(); <span style=\"color:Green;\">// b typed to B</span>\n\r\n</pre></div>going further typescript could even allow a special <code>typeof this</code> which could offer many Features.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Base {\n    <span style=\"color:Blue;\">private</span> decorators: Decorator&lt;<span style=\"color:Blue;\">typeof</span> <span style=\"color:Blue;\">this</span>&gt;;\n\n    <span style=\"color:Blue;\">constructor</span>() {\n        <span style=\"color:Blue;\">this</span>.decorators =  <span style=\"color:Blue;\">this</span>.<span style=\"color:Blue;\">constructor</span>\n            .decoratorClasses.map(decoratorClass =&gt; <span style=\"color:Blue;\">new</span> decoratorClass(<span style=\"color:Blue;\">this</span>));\n    }\n    \n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">static</span> decoratorClasses: {&#160; \n            <span style=\"color:Blue;\">new</span>(instance: <span style=\"color:Blue;\">typeof</span> <span style=\"color:Blue;\">this</span>): Decorator&lt;<span style=\"color:Blue;\">typeof</span> <span style=\"color:Blue;\">this</span>&gt;;  \n         }[];\n\n    <span style=\"color:Blue;\">static</span> decorate( decoratoClass {&#160;\n                <span style=\"color:Blue;\">new</span>(instance: <span style=\"color:Blue;\">typeof</span> <span style=\"color:Blue;\">this</span>): Decorator&lt;<span style=\"color:Blue;\">typeof</span> <span style=\"color:Blue;\">this</span>&gt;; \n    }): <span style=\"color:Blue;\">void</span> {\n        decoratorClasses.push(decoratoClass)\n    }\n}\n\n<span style=\"color:Blue;\">interface</span> Decorator&lt;T <span style=\"color:Blue;\">extends</span> Base&gt; {\n    <span style=\"color:Green;\">///do something on instance</span>\n}\n\n<span style=\"color:Blue;\">class</span> MyClass <span style=\"color:Blue;\">extends</span> Base {\n    <span style=\"color:Green;\">//some  methods</span>\n}\n<span style=\"color:Blue;\">class</span> MyClass2 <span style=\"color:Blue;\">extends</span> Base {\n    <span style=\"color:Green;\">//some other incompatible methods</span>\n}\nMyClass.decorate(....) <span style=\"color:Green;\">// wil not accept Decorator&lt;MyClass2&gt;</span>\n\r\n</pre></div>seems a nice pattern :p<br />\n",
+    "PostedDate": "2014-01-23T17:26:31.617-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1195713",
+    "ThreadId": "523904",
+    "Html": "Call me crazy, but your first example makes me think we have a bug in our typechecker.  I altered it a bit and came up with this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> A {\n    bob() { alert(<span style=\"color:#A31515;\">&quot;A&quot;</span>); }\n    <span style=\"color:Blue;\">static</span> factory() {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">new</span> <span style=\"color:Blue;\">this</span>();\n    }\n}\n\n<span style=\"color:Blue;\">class</span> B <span style=\"color:Blue;\">extends</span> A {\n    bob() { alert(<span style=\"color:#A31515;\">&quot;B&quot;</span>); }\n}\n<span style=\"color:Blue;\">var</span> b = B.factory(); <span style=\"color:Green;\">// b actually typed to A</span>\n\nb.bob();  <span style=\"color:Green;\">// alert(&quot;B&quot;), wait, what?</span>\r\n</pre></div>",
+    "PostedDate": "2014-01-24T08:47:13.313-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1197039",
+    "ThreadId": "523904",
+    "Html": "Bug or not actually using 'this' in static methods then subclassing sure results in incoherent typing.<br />\nShould I transform it in an issue ? <br />\n",
+    "PostedDate": "2014-01-25T02:35:44.117-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

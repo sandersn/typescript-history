@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. The empty type `{}` does not have an index signature (or anything else for that matter, it's empty). Intentionally, you cannot really do anything with it - it's the supertype of all types in TypeScript, so if `{}` had indexing behavior, there would be no way to specify an object that *shouldn't* be arbitrarily indexed.\n\nIf you want to specify a type that can be indexed by a string and produces some value, write `Dictionary<any>`.\n\nThis is also relevant to your code and might help explain what you're seeing: http://stackoverflow.com/questions/22077023/why-cant-i-indirectly-return-an-object-literal-to-satisfy-an-index-signature-re",
+    "ClosedDate": "2014-04-14T09:29:49.64-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "This looks like to be a bug (or regression from TS 0.9.5). Index signature of type '{}' used to be compatible with that of an object. Why is it not any more?\r\n\r\nPlease see comments in the code... (run in TypeScript Playground)\r\n\r\n```typescript\r\nvar options1: any = {\r\n\tsilent: true,\r\n\tquick: false\r\n};\r\n\r\nvar options2: {} = {\r\n\tsilent: true,\r\n\tquick: false\r\n}\r\n\r\nvar options3: {[index: string]: any} = {\r\n\tsilent: true,\r\n\tquick: false\r\n};\r\n\r\nvar newParams = {};\r\n\r\n// This works\r\n_.each(options1, (val, key) => {\r\n    newParams[key] = false;\r\n});\r\n\r\n// Unexpected Error, by specifying '{}' as type of options2\r\n// I want to signify that the type is an object hash and not an array\r\n// i.e. it has string indexer rather than number indexer.\r\n// I thought that was the difference between '{}' and 'any'\r\n// where 'any' can be either an object or an array while\r\n// '{}' is only object.\r\n_.each(options2, (val, key) => {\r\n    newParams[key] = false;\r\n});\r\n\r\n// This works too\r\n_.each(options3, (val, key) => {\r\n    newParams[key] = false;\r\n});\r\n\r\n// underscore.d.ts\r\ndeclare module _ {\r\n\tinterface Dictionary<T> {\r\n\t\t[index: string]: T;\r\n\t}\r\n\t\r\n\tinterface ObjectIterator<T, TResult> {\r\n\t\t(element: T, key: string, list: any): TResult;\r\n\t}\r\n}\r\n\r\ninterface UnderscoreStatic {\r\n\teach<T>(\r\n\tobject: _.Dictionary<T>,\r\n\titerator: _.ObjectIterator<T, void>,\r\n\tcontext?: any): void;\r\n}\r\n\r\ndeclare var _: UnderscoreStatic;\r\n\r\n```",
+    "LastUpdatedDate": "2014-04-14T09:29:49.64-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-10T18:12:56.297-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Indexer of type '{}' is not string",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2417
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure I follow.  By specifying \"var options2: { [index: string]: any /*or { }*/ }\" you *are* \"signifying that the type is an object hash (string indexer) and not an array\". In fact, the syntax for declaring both array and object indexing is identical.  You cannot index by object references, only strings and numbers (object references will be converted to strings for the index).",
+      "PostedDate": "2014-04-10T19:41:50.457-07:00",
+      "Id": 141450
+    },
+    {
+      "Message": "OK, I get that. But I'm not indexing by object reference (am I?).\n\n```\n_.each(options2, (val, key) => {\n    newParams[key] = false;\n});\n```\nIn the Playground if you hover over `key` it is in fact `string`. So why is it failing to compile?\n\nPlease see if my assumptions below are correct:\n\n`any[]` has number indexer\n`{}` and `Object` have string indexer\n`any` has string or number indexer\n\nIf my assumptions above are correct then this is probably a compiler bug.\n",
+      "PostedDate": "2014-04-11T15:31:03.957-07:00",
+      "Id": 141543
+    },
+    {
+      "Message": "Also is `any[]` equivalent to `Array<any>`?\n\nThanks!",
+      "PostedDate": "2014-04-11T15:35:04.43-07:00",
+      "Id": 141544
+    },
+    {
+      "Message": "How does it compile? Your ObjectIterator expects 3 parameters (\"list\" is not marked optional).\n\n\n[ ] vs new Array()\nECMA-262 11.1.4\n\nSemantics\n\nThe production ArrayLiteral : [ Elisionopt ] is evaluated as follows:\n\nLet array be the result of creating a new object as if by the expression new Array() where Array is the standard built-in constructor with that name.\nLet pad be the result of evaluating Elision; if not present, use the numeric value zero.\nCall the [[Put]] internal method of array with arguments \"length\", pad, and false.\nReturn array.",
+      "PostedDate": "2014-04-11T23:59:29.027-07:00",
+      "Id": 141564
+    },
+    {
+      "Message": "Compiler is not complaining about `list` parameter in `ObjectIterator` since it is a callback function. Even if I set `list` as optional or provide it in callback parameters or remove it altogether, I get same error:\n\n    Supplied parameters do not match any signature of call target: Index signatures of types '{}' and '_.Dictionary<{}>' are incompatible.\n\nPlease copy/paste and verify in [typescript playground](http://www.typescriptlang.org/Playground).\n\n\n\n",
+      "PostedDate": "2014-04-14T05:49:36.197-07:00",
+      "Id": 141736
+    },
+    {
+      "Message": "Interesting (sorry, didn't have access to a computer when I posted that). \n\nI see changing \"object: _.Dictionary<T>,\" directly to \"object: { [index: string]: any },\" doesn't fix it either.  Yet, \"object: { },\" seems to work in all cases.   Seems like a bug to me also.  ;)",
+      "PostedDate": "2014-04-14T07:12:18.417-07:00",
+      "Id": 141744
+    }
+  ]
+}

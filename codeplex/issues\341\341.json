@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed",
+    "ClosedDate": "2013-01-30T14:06:21.9-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Hi, here is a code snippet that describes the problem:\r\n\r\nclass Y { public myMethod: any;  };\r\nclass QQ { public test(name, fun: () => any) { } }\r\n\r\nvar qq = new QQ();\r\nqq.test(\"Run test1\", () => {\r\n\r\n        var outer = 10;\r\n        Y.prototype.myMethod = () => {\r\n\r\n          // Error: The name 'outer' does not exist in the current scope\r\n            outer = 11;\r\n        }\r\n});\r\n\r\nThe closure variable \"outer\" is not visible to the inner lambda.\r\n\r\nFor more details see StackOverflow question: http://stackoverflow.com/questions/13109413\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-29T12:58:49.777-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Closure variable not visible to nested function",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 341
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm unable to reproduce, either on the Playground, or with the tsc command in the master branch or the develop branch.",
+      "PostedDate": "2012-10-30T08:28:05.137-07:00",
+      "Id": 81266
+    },
+    {
+      "Message": "Hi, you are right in that if the code I provided is pasted into the Playground or a new file the error does not occur.\n\nIt appears that the error occurs when there are <reference> includes to other code files.\n\nI've been able reproduce this by adding references to a newly created .ts file holding the code above. \n\nIf the error does not immediately occur try the following:\n\n - Edit a reference path to make the path invalid\n - Wait until the red squiggly line appears in the path\n- Edit the reference path again to make it valid\n- Now the red squiggly line under the path disappears, but error I reported above appears\n\nIt's all rather strange. There was nothing special in the referenced files that could have caused a problem; they were all compiling fine.\n\nLet me know if I can help further.\n\nNoel",
+      "PostedDate": "2012-10-30T09:48:16.437-07:00",
+      "Id": 81275
+    },
+    {
+      "Message": "Even following the extended steps of editing the reference lines, I can't reproduce the issue. Is there anything else I should try?",
+      "PostedDate": "2012-11-06T14:02:21.46-08:00",
+      "Id": 81827
+    },
+    {
+      "Message": "Closing. Feel free to reactivate with extra info if you're still seeing this. Thanks!\n\r\n\r** Closed by RyanCavanaugh 11/28/2012 5:24PM",
+      "PostedDate": "2012-11-28T17:24:35.513-08:00",
+      "Id": 83335
+    },
+    {
+      "Message": "Hi, I think I have a repro for this bug. Please check below.\n\nclass TartuffeTwo {\n\tblas: () => { b: string; cc: number;};\n\t\n\tconstructor(){\n\t\n\t\tthis.blas = () => {b: \"2\", cc : 202}; // The name \"cc\" does not exist in the current scope\n\t\t\n\t\tvar abc = {b: \"2\", cc : 202};\n\t\tthis.blas = () => abc; // No error\n\t}\n}",
+      "PostedDate": "2012-11-30T03:24:50.12-08:00",
+      "Id": 83336
+    },
+    {
+      "Message": "@nabog that code doesn't do what you think it does;-) \n{} in an arrow function is a function body, not an object literal, hence the error message. \nUse .. => ({..}), and the error goes away.",
+      "PostedDate": "2012-11-30T07:39:38.127-08:00",
+      "Id": 83350
+    },
+    {
+      "Message": "Yes, of course. I've given my brain a short holiday - it appears. \n\nI have not been able to reproduce this bug. Please close it, and I'll get back if it re-surfaces.\n\nThanks.",
+      "PostedDate": "2012-11-30T14:03:31.883-08:00",
+      "Id": 83375
+    }
+  ]
+}

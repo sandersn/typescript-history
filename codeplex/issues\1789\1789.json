@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for updating with your solution.",
+    "ClosedDate": "2013-10-15T15:17:44.39-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "[Issue 1421](https://typescript.codeplex.com/workitem/1421) was marked as fixed in 0.9.1.0\r\n\r\nI'm running 0.9.1.1 and this issue is not fixed. `key` is said to be of type `any` while it is of type `string`.\r\n\r\n```\r\nfor (var key in data)\r\n{\r\n}\r\n```\r\n\r\nThis causes problems like storing the key in a variable of type `number` and then doing `if (foo === 1)`. The compiler will not complain, but the code will throw an error when executed. Changing it to `if (foo === \"1\")` makes the code work, but then the compiler will complain.",
+    "LastUpdatedDate": "2014-04-21T12:58:53.89-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-14T07:56:04.367-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Wrong property type with for-in loops (take two)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1789
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Closed \"By Design\"? Then the design is flawed. One of the major reasons to use TS is to avoid these kind of issues.\n\nAllow me to repeat myself: TS is telling me my code will work, but it doesn't. TS is lying to me.",
+      "PostedDate": "2013-10-14T12:27:32.3-07:00",
+      "Id": 118367
+    },
+    {
+      "Message": "Defined in the spec to always be any.\n\n5.4 5.4\tFor-In Statements\nWhen a ‘for-in’ statement includes a ‘var’ declaration, that declaration is not permitted to specify a type annotation. The type of a variable declared in a ‘for-in’ statement is always the Any type.\nThe variable specified before the ‘in’ keyword in a ‘for-in’ statement must be of type Any or the String primitive type, and the expression following the ‘in’ keyword must be of type Any, an object type, or a type parameter type.\n\n\r\n\r** Closed by paulb 10/14/2013 11:36AM",
+      "PostedDate": "2013-10-14T11:36:00.047-07:00",
+      "Id": 118368
+    },
+    {
+      "Message": "(addition to my comment, I can't edit it)\n\nWhen I fix my code, TS is telling me my code will not work, but it does. Again, TS is lying to me.",
+      "PostedDate": "2013-10-14T12:29:19.77-07:00",
+      "Id": 118369
+    },
+    {
+      "Message": "This is an issue we have extensively debated. When you index an array with an expression of type 'string' you get a value of type 'any' (because non-numerically named properties on an array, such as the methods of the array, are not of the array element type). However, it is really common to iterate over an array with a for-in loop:\n``` TypeScript\nvar a = [10, 20, 30];\nfor (var x in a) {\n    var item = a[x];\n}\n```\nHere, you really want 'item' to be of type 'number' (the element type of the array), but it wouldn't be if 'x' was of type 'string'.\n\nNow, you could argue that when 'x' is of type 'any', 'item' should also be of type 'any', and technically you'd be right. But overwhelmingly people expect that to produce a value of the array element type, so that is what TypeScript does.\n\nBasically, we're kind of damned if we do and damned if we don't. We think the current solution (typing the for-in variable as 'any') strikes the best balance.\n\nBTW, you can use the unary plus operator to force an operand to become a number:\n``` TypeScript\nvar a = [10, 20, 30];\nfor (var x in a) {\n    var index = +x;\n    if (index === 1) { ... }\n}\n```",
+      "PostedDate": "2013-10-14T14:20:28.987-07:00",
+      "Id": 118387
+    },
+    {
+      "Message": "Not sure whether this helps, but `Object.keys().forEach` gives the `string` type (also, you'll want `Object.create(null)` for your map, to avoid the [[prototype]] chain)\n```\ninterface Item { dispose() };\ninterface ItemMap {\n    [id:string]:Item;\n}\n\nvar staleItems:ItemMap = Object.create(null);\n\nObject.keys(staleItems).forEach(staleItemId=>{\n   if (staleItems.hasOwnProperty(staleItemId)) {\n        staleItems[staleItemId].dispose();\n    }\t\n});\n```\nAside: isn't `for-in` over `Array` considered bad style?-)",
+      "PostedDate": "2013-10-14T15:38:36.317-07:00",
+      "Id": 118403
+    },
+    {
+      "Message": "Thank you for all the info. I guess I'm just hitting the limit on what is possible within TypeScript.\n\nHere's what I wanted to do:\n```\nwindow.onload = () =>\n{\n\tvar data =\n\t\t{\n\t\t\t1: {\n\t\t\t\t\"foo\": [1, 2, 3],\n\t\t\t\t\"bar\": [4, 5, 6]\n\t\t\t},\n\t\t\t5: {\n\t\t\t\t\"foo\": [5, 10, 15],\n\t\t\t\t\"bar\": [20, 25, 30]\n\t\t\t},\n\t\t\t100: {\n\t\t\t\t\"foo\": [100, 200, 300],\n\t\t\t\t\"bar\": [400, 500, 600]\n\t\t\t}\n\t\t};\n\n\tvar parsedData = LiteralToKeyValueCollection<number, Array<KeyValuePair<string, number>>>(data, 2);\n\n\tconsole.log(parsedData);\n};\n\nfunction LiteralToKeyValueCollection<TKey, TValue>(data, levels: number = 1)\n{\n\tvar collection: Array<KeyValuePair<TKey, TValue>> = [];\n\n\tfor (var key in data)\n\t{\n\t\tvar value = data[key];\n\t\tif (levels > 1)\n\t\t{\n\t\t\tvalue = LiteralToKeyValueCollection(value, levels - 1);\n\t\t}\n\n\t\tcollection.push(new KeyValuePair<TKey, TValue>(key, value));\n\t}\n\n\treturn collection;\n}\n\nclass KeyValuePair<TKey, TValue>\n{\n\tpublic Key: TKey;\n\n\tpublic Value: TValue;\n\n\tconstructor(key: TKey, value: TValue)\n\t{\n\t\tthis.Key = key;\n\t\tthis.Value = value;\n\t}\n}\n```\n\nThe top-level keys will be `string`s instead of `number`s. The `var index = +x;` trick works for numbers, but I'd need to conditionally apply this trick (only when `TKey` is `number`), and afaik it's not possible to do the required type check in JavaScript.\nI'll adapt my code that consumes `LiteralToKeyValueCollection` to account for this.",
+      "PostedDate": "2013-10-15T02:04:19.583-07:00",
+      "Id": 118445
+    },
+    {
+      "Message": "This is a damned-if-you-do, damned-if-you-don't situation, but the var in a for-in loop is unequivocally a string.    What I think ought to be equivocal is the type of the indexer.\n\nStrictly speaking, all indexers are converted to strings, so this is a place where typescript is creating a kind-of fantasy.\n\nI think a better solution for typescript would be to have\n { [x:number]: T; } implicitly add { [x:string]: T; } to the interface unless otherwise specified.  I think this would have less tradeoffs and be closer to reality.\n\nno?\n",
+      "PostedDate": "2013-10-17T19:25:27.17-07:00",
+      "Id": 118794
+    },
+    {
+      "Message": "Just to add a comment for any future browsers of this thread.\n\nI would prefer a syntax like this:\n\n```\nfor (var userId: string in obj) {\n    console.log(obj[userId]);\n}\n```\n\nI think that allows the for in construct to work either the way JavaScript works (everything is a string) or like people's mental model (e.g. pretend it's a number).\n\nThough really, the default should be string, but allow other types with the type annotation.\n\nAnyway, the real reason I wrote this is to point out that you can type the indexer before the for in, at which point it accepts the type and everything works as expected:\n\n```\nvar userId: string; for (userId in obj) {\n    console.log(obj[userId]);\n}\n```\n\nYou're welcome. :)",
+      "PostedDate": "2014-04-21T10:11:42.983-07:00",
+      "Id": 142476
+    },
+    {
+      "Message": "<2 cents>\nI agree that *defaulting* to \"any\" is best, I don't agree that TS should prevent type casting the variable if the developer wishes.  I mean, it's quite silly to allow \"var p: string; for (p in obj) ...\" (like Geoff posted), then turn around and also prevent \"for (var p: string in obj) ...\" which is just absurd.\n</2 cents>",
+      "PostedDate": "2014-04-21T12:58:53.89-07:00",
+      "Id": 142514
+    }
+  ]
+}

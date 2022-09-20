@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.537-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "This NOT a request to initialize to defaults, like here: https://typescript.codeplex.com/workitem/401\r\n\r\nThis is a request to make class initialization more efficient.  When initializing non-object references (numbers, booleans, and/or strings) on a class, these should be placed on a class's prototype.  This falls in line with some native objects, such as `Array.prototype.length` (which is always set to 0).\r\n\r\n```\r\nclass Point {\r\n    x = 0;\r\n    y = 0;\r\n}\r\n```\r\n\r\nIf I create a 1000 of these, the constructor shouldn't have to set 2000 properties - that's just ridiculous.\r\n\r\nIf a property is later set, it gets set on the instance, naturally overriding the prototype value.  As well, if deleted, there's the benefit of the value resetting back to the default prototype value (again, the same as any object extending from the Array object's prototype).\r\n\r\nAt the very least, there should be a modifier to allow this.  It's just faster, and overall more efficient.\r\n",
+    "LastUpdatedDate": "2014-07-28T15:20:16.537-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-17T10:56:09.113-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Initialize properties on prototype",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2563
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We wouldn't do this by default since it would break JSON.stringify as well as Object.hasOwnProperty, both of which people expect to work with class instances.\n\nI don't think adding a modifier meets the bar in terms of language complexity vs gain because a) very few people need to do this and b) a typesafe workaround exists:\n```\nclass Point {\n    x: number;\n    y: number;\n}\nPoint.prototype.x = 0;\nPoint.prototype.y = 0;\n```",
+      "PostedDate": "2014-06-17T16:49:33.023-07:00",
+      "Id": 149981
+    },
+    {
+      "Message": "I was aware of the work around, but I forgot about \"Object.hasOwnProperty()\".  Yes, I agree it does make sense not to do it by default.  It just seems a bit messy to move the initializers after the class - especially when a class may be hundreds of lines long (and many of mine are).  It does not promote good readability.  I suppose this could be avoided with a static constructor hack.  I just figured since it's obviously done in \"native land\", why not also support it in TS as well? (somehow)  Makes sense to me. ;)  Anyhow, making the generation of efficient JS a bit less \"messy\" would go a long way to supporting the use of TS in game engines.  IMHO it fails here in this by making people have to declare properties, and then making them have to type it again somewhere else far down, buried deep in the code (or force everyone to put the properties at the bottom of all classes, which I really loath).\n\nFYI: I'm guessing (was well) that few people care because few people are creating games compared to those who are not.  In working with Construct2, and knowing a bit on how the engine works, I would never use TS for most of it, and would end up with dozens of hacks and work arounds.  I'd like to see TS become well efficient for large scale games as well (especially since iOS 8 will soon, as well as many other devices already, support WebGL [http://goo.gl/egUslR]).  On mobile devices, speed and efficiency is everything.\n",
+      "PostedDate": "2014-06-18T11:32:47.27-07:00",
+      "Id": 150054
+    },
+    {
+      "Message": "_(http://goo.gl/egUslR - it works without the ']' on the end)_",
+      "PostedDate": "2014-06-18T11:35:22.693-07:00",
+      "Id": 150055
+    }
+  ]
+}

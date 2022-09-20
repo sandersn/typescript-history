@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "921203",
+    "ThreadId": "397870",
+    "Html": "\r\n<p>Right now, if I understand well, we could use the &lt;reference&gt; tag to tell the compiler we want him to check for the reference and resolve recursively all its dependency before actually compile the source code.</p>\r\n<p>The problem is that writing:</p>\r\n<p style=\"padding-left:30px\">/// &lt;reference path=&quot;./othersourcecode.ts&quot; /&gt;</p>\r\n<p>Will also import &quot;othersourcecode.ts&quot; content inside the compiled javascript.</p>\r\n<p>I'm looking to know if there is a way we could let the compiler know that the current .ts file needs others to be parsed and resolved but not imported in the compiled content.</p>\r\n<p>something like:</p>\r\n<p style=\"padding-left:30px\">/// &lt;reference path=&quot;./othersourcecode.ts&quot; <strong>\r\nreference-only=&quot;true&quot;</strong> /&gt;</p>\r\n<p>Would be nice but i'd probably suggest having a compiler option you can use so that the source code could be compiled in both way if you want. Something like:</p>\r\n<p style=\"padding-left:30px\">tsc --out file.js --dependency-inclusion false SourceFile.ts</p>\r\n",
+    "PostedDate": "2012-10-03T05:42:31.997-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921306",
+    "ThreadId": "397870",
+    "Html": "<p>It seems you are correct based on the <a title=\"TypeScript language specification\" href=\"http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf\">language spec</a> (see \"9.1.1 Source Files Dependencies\"). &nbsp;This behavior is incredibly unexpected to me given past experience utilizing the &lt;reference&gt; element in JavaScript files for Intellisense purposes. &nbsp;I would agree that there either needs to be a way to prevent that dependency from being compiled in, or else a user should be forced to utilize `import` statements instead of having implicit dependency resolution at compile-time based on these &lt;reference&gt; elements.</p>\r\n<p>I am very disappointed in this one. &nbsp;I would consider this a bug, personally, but it is clearly intended based on its presence in the language spec. =(</p>",
+    "PostedDate": "2012-10-03T08:20:41.487-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921308",
+    "ThreadId": "397870",
+    "Html": "<p>This is very needed. Our app already has a system in place for managing JS file dependencies at runtime and <strong>tsc</strong>&nbsp;is completely incompatible with it. The ability to reference JS files for type checking without having them compiled into the same JS file is necessary to fix this.</p>",
+    "PostedDate": "2012-10-03T08:23:50.88-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921416",
+    "ThreadId": "397870",
+    "Html": "<p>I actually found, reading the compiler code, that if the --out file.js argument is not present than we get the expected behavior.</p>",
+    "PostedDate": "2012-10-03T11:40:15.997-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

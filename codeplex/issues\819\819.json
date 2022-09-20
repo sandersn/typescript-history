@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments in other bug. The issue tracker is not the place to have a language design debate.",
+    "ClosedDate": "2013-04-08T10:22:21.307-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "There is some cases where I think TypeScript should treat a type, that doesn't have any explicit type defined,  as any.\r\n\r\nFirst one should be obvious to discover:\r\n\r\n```\r\n   var myvar = {};\r\n```\r\n\r\nIt simply makes no sense to define a completely empty object to me?... Subsequently TypeScript treats this as a type with no functions, fields etc... To me it makes sense that the above is treated as \"Any\" implicitly.\r\n\r\nThe second one might be more disputable... But it would fix the above if implemented.\r\n\r\n```\r\n   var myvar = { one: 1 };\r\n   myvar.two = 2; //ERROR\r\n```\r\n\r\nHere myvar is a type with a field \"one\"... But we haven't explicitly said that it is... But TypeScript tries to make sense of it and throws an error when we try to assign \"two\".\r\n\r\nSo here I am thinking that at first pass of altering the \"type definition\" of an object which wasn't defined explicitly in some way, we let it revert to any.\r\n\r\nThat causes for a discussion on when is something defined explicitly. These are some examples to me that is Explicitly defined either direly or by return types.\r\n\r\n```\r\nvar mystr = \"String\";\r\nvar myobj1: { one: number; } = { one: 1 };\r\nvar myobj2: {} = {};\r\nvar myobj3 = myobj4.GetOne();\r\nvar myobj4 = myobj3.GetOne();\r\n\r\ninterface IMyObj { GetOne():IMyObj; }\r\n```\r\n\r\nBtw. Why doesn't the compiler complain about myobj4 being used before being defined? o.O...\r\n",
+    "LastUpdatedDate": "2013-04-08T10:22:21.307-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-15T01:25:24.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type more as any when not explicitly defined",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 819
+  },
+  "FileAttachments": [
+    {
+      "FileId": 639266,
+      "FileName": "ErrorList.png",
+      "DownloadUrl": ".\\639266"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "_This is how we intended the language to behave, the biggest advantage of the current behavior is that it's easier to migrate existing javascript project to typescript. It allows you to get type information without having to annotate every function/var._\n\nThat is fundamentally wrong as this actually leaves allot of errors to fix in current javascript code in many cases, so the behavior as is really bats you in the head... This is why I ran into this in the first place, so I had to spread \"any\" around with a gracefully attitude...\n\nAnd you CAN'T be serious that you want to treat 'var myvar = {};' as an object with the interface: 'interface {}'... Seriously? What is the use of that?",
+      "PostedDate": "2013-03-15T14:51:20.307-07:00",
+      "Id": 93404
+    },
+    {
+      "Message": "Added screenshot.\r\n\r\n(I know this is from inside VS)",
+      "PostedDate": "2013-03-15T14:56:12.937-07:00",
+      "Id": 93407
+    },
+    {
+      "Message": "Thanks for reporting this. \n\nThis is how we intended the language to behave, the biggest advantage of the current behavior is that it's easier to migrate existing javascript project to typescript. It allows you to get type information without having to annotate every function/var.\n\nThe myobj4 is available before it's defined, is because javascript hoists declaration to the beginning of the block. See for example here:\n\nhttp://www.adequatelygood.com/2010/2/JavaScript-Scoping-and-Hoisting\n\r\n\r** Closed by paulb 03/15/2013 11:19AM",
+      "PostedDate": "2013-03-15T11:19:33.65-07:00",
+      "Id": 96292
+    },
+    {
+      "Message": "Btw...\n\nI have been though a couple of larger projects, I assume that 101 is the maximum of errors you report back to visual studio?\n\nAngularJS: 101 errors\njQuery: 101 errors\nBackbone: 29 errors\nEmber: 101 errors\nGrunt: 28 errors\nunderscore: 35 errors\nJasmine: 101 errors\n\nI mean when people has to go through that, how exactly is it that you claim that it is \"Easier\" to migrate?...",
+      "PostedDate": "2013-04-07T12:06:45.253-07:00",
+      "Id": 96293
+    },
+    {
+      "Message": "Ohh... and no... there is no output from the compiler in allot of cases either... ",
+      "PostedDate": "2013-04-07T12:08:32.41-07:00",
+      "Id": 96294
+    }
+  ]
+}

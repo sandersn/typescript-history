@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "996594",
+    "ThreadId": "432013",
+    "Html": "Hi,\r<br />\n<br />\nTrying to get up to speed on TypeScript at the moment and was wondering about the following.\r<br />\n<br />\nShould TS be type checking the callback definition in the following code example to make sure that its signitature matches.\r<br />\n<br />\ninterface CallbackContext\r<br />\n{\r<br />\n}\r<br />\n<br />\n// callback function signature\r<br />\ninterface CallbackDefn { ( context: CallbackContext ) : void ; }\r<br />\n<br />\n// object literal definition that will get passed to other code\r<br />\ninterface CallbackSettings\r<br />\n{<br />\n<pre><code>One? : CallbackDefn ;\nTwo? : CallbackDefn ;\nThree? : CallbackDefn ;\nFour? : ( context: CallbackContext ) =&gt; void ;</code></pre>\n\n}\r<br />\n<br />\n export class Testing\r<br />\n {<br />\n<pre><code>// callback function WITHOUT the CallbackContext argument\n public static Callback()\n {\n }\n</code></pre>\n\n// building the object literal\r<br />\npublic static Configure()\r<br />\n{<br />\n<pre><code>var settings : CallbackSettings = { One : Callback, Two : Callback, Three : Callback, Four : Callback } ;</code></pre>\n\n}\r<br />\n<br />\nThis compiles fine. I would have expected the compiler to generate an error that method Callback does not match the signitature of CallbackDefn?\r<br />\n<br />\nIs it a bug or am I missing something.\r<br />\n<br />\nThanks\r<br />\n<br />\nDonal<br />\n",
+    "PostedDate": "2013-02-05T03:55:07.207-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996769",
+    "ThreadId": "432013",
+    "Html": "A couple things:<br />\n<pre><code>interface CallbackDefn { ( context: CallbackContext ) : void ; }\n//&lt;snip&gt;\nThree? : CallbackDefn ; \nFour? : ( context: CallbackContext ) =&gt; void ; </code></pre>\n\nCallbackDefn is the same as ( context: CallbackContext ) =&gt; void, so the types for Three? and Four? are the same.\r<br />\n<br />\nAlso, you can assign a function that takes less arguments than the type provided.  It's like saying you won't use the arguments.  \r<br />\n<pre><code>var f: (x:number)=&gt;number = function() { return 1; }\nf(2); //doesn't use x and still returns 1</code></pre>\n\n",
+    "PostedDate": "2013-02-05T08:36:00.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996917",
+    "ThreadId": "432013",
+    "Html": "Hi Jon,\r<br />\n<br />\nThanks for the response.<br />\n<blockquote>\n<blockquote>\nCallbackDefn is the same as ( context: CallbackContext ) =&gt; void, so the types for Three? and Four? are the same<br />\n</blockquote>\n</blockquote>\nI understand that - I was checking if the compiler treated them differently.<br />\n<blockquote>\n<blockquote>\nAlso, you can assign a function that takes less arguments than the type provided. It's like saying you won't use the arguments<br />\n</blockquote>\n</blockquote>\nI think this is the answer! Hard to remove the c# hat with delegates etc!!!\r<br />\n<br />\nI would have thought that if I had the argument marked as optional that it would be ok to not flag a warning.\r<br />\nAlso I think I was able to assign functions that took more that 1 argument - must test this again tomorrow.\r<br />\n<br />\nIs there any way to get strict signature checking on &quot;delegates&quot;? \r<br />\n<br />\nThanks\r<br />\n<br />\nDonal<br />\n",
+    "PostedDate": "2013-02-05T13:38:21.213-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "997319",
+    "ThreadId": "432013",
+    "Html": "Right, if you assign a function that needs more argument to a type that needs less, you'll see an error.  \r<br />\n<pre><code>var f:() =&gt; number = function(x) { return x; }  // error, incompatible types\n</code></pre>\n\nTo my knowledge, there isn't a way to strictly test the arrity (and also only test for contravariance) of the arguments.  The typesystem is a little more permissive than the typesystems in languages like C# largely because it's optimized for ease of use when interacting with JavaScript patterns.<br />\n",
+    "PostedDate": "2013-02-06T07:13:58.35-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "997544",
+    "ThreadId": "432013",
+    "Html": "Jon,\r<br />\n<br />\nThanks for the info!\r<br />\n<br />\nDonal<br />\n",
+    "PostedDate": "2013-02-06T13:48:33.277-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

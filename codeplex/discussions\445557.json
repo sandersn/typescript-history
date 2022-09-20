@@ -1,0 +1,178 @@
+[
+  {
+    "Id": "1051138",
+    "ThreadId": "445557",
+    "Html": "From what I can tell, TypeScript appears to generate sometimes redundant code and it got me thinking. What I'd really like from this great compiler is to have it fully optimise my JS in a way similar to the google closure compiler.\r<br />\n<br />\nCan it do this?\r<br />\n<br />\nIf not, it's missing a significant trick and it really should!<br />\n",
+    "PostedDate": "2013-05-31T04:33:32.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051213",
+    "ThreadId": "445557",
+    "Html": "With the current compiler, we're focusing on outputting JavaScript that has a high fidelity with the TypeScript, so you can get out what you put in.  This lets you use TypeScript in a toolchain of your choice more easily.  In the future, we may opt to add some optimizations to TypeScript, especially since we have the type system's information available to us then, but for now our goal is to keep a nice 1:1 with what you wrote.<br />\n",
+    "PostedDate": "2013-05-31T06:57:48.19-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051215",
+    "ThreadId": "445557",
+    "Html": "\r\n<p dir=\"ltr\">I'd like to see a compiler flag to output JsDoc comments based on TypeScript type annotations. Then the Closure compiler's type-aware optimizations could be applied.</p>\r\n<div></div>\r\n",
+    "PostedDate": "2013-05-31T07:05:30.873-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051216",
+    "ThreadId": "445557",
+    "Html": "Rather than optimizing the JavaScript output, why not work with the IE team (and other browser vendors) to include execution hints in the code?  This could include type hints to avoid boxing, hints for separate code generation for template specialization from a generic class/function etc...<br />\n",
+    "PostedDate": "2013-05-31T07:12:22.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083056",
+    "ThreadId": "445557",
+    "Html": "After the initial discovery curve, I don't really see a lot of benefit in maintaining 1:1 between JS and TS, particularly with the .map files. I would love to see some optimisation flags. Microsoft have always been good at optimising compilers, it seems a shame not to capitalise on that. People I talk to would also love to see an end to end solution for producing optimsed JS and TypeScript seems like the perfect candidate for this.\r<br />\n<br />\nOnce we got used to C, we stopped worrying about and looking at the ASM. Surely the same will be true of JS?<br />\n",
+    "PostedDate": "2013-08-21T04:42:12.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083089",
+    "ThreadId": "445557",
+    "Html": "I have to agree with <a href=\"mailto:@danieljsinclair\" rel=\"nofollow\">@danieljsinclair</a>. I don't see the benefit of maintaining a 1:1 between JS and TS. At the least, a compiler flag should be available to optimize the JS output. Anything released to production is minified anyways and while working in development or deploying development version of your scripts you have TS debugging via the generated map files.<br />\n",
+    "PostedDate": "2013-08-21T06:20:44.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083158",
+    "ThreadId": "445557",
+    "Html": "I've raised a feature request - please vote if you would like to see it!\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/workitem/1542\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1542</a> <br />\n",
+    "PostedDate": "2013-08-21T08:35:50.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083160",
+    "ThreadId": "445557",
+    "Html": "At least for a debug build the 1:1 with JavaScript needs to be maintained because we use that for debugging in the browser, because the .map files are too troublesome.\r<br />\n<br />\nIdeally a release build should be capable of producing minified JavaScript.\r<br />\n<br />\nI'm not sure what people mean by optimised code, because that is by default the job of the people writing the compiler.<br />\n",
+    "PostedDate": "2013-08-21T08:39:33.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083167",
+    "ThreadId": "445557",
+    "Html": "As I said at the least to have a compiler flag would be nice, so you could then use for example in a release build the optimization flag. If you are using web optimization and your scripts are bundled for release builds, then the TS outputted extends code could possibly exists multiple times in them same bundled script file. In a large project, say you have 20-30 different scripts bundled into a single script and what if you extend at least one class in every script. That would mean the same duplicate outputted JS extends code would exists 20-30 times in the bundled script. That's a lot extra bytes added to your script file.<br />\n",
+    "PostedDate": "2013-08-21T08:49:51.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083168",
+    "ThreadId": "445557",
+    "Html": "@nabog Ideally, yes. But that doesn't appear to be a current goal. For instance, if you write this in 0.9.1;<br />\n<pre><code>  function noop() {\n  }\n  noop();</code></pre>\n\nyou shouldn't get any code at all, but you get <em>exactly</em> that back again. An optimizing compiler would short-circuit that. SImilarly, an enum should result in a literal IMHO. <br />\nIt's a contrived example, but the ability to rely on the compiler for that kind of optimization would be very liberating when writing higher level code.<br />\n<br />\nSee the Google <a href=\"http://closure-compiler.appspot.com/home\" rel=\"nofollow\">Closure compiler</a> for examples of function optimization. Make sure you select [x] Advanced optimizations with that same example.<br />\n",
+    "PostedDate": "2013-08-21T08:50:35.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083192",
+    "ThreadId": "445557",
+    "Html": "I think specific examples where the complied output can be improved is more likely to get the requisite attention.\r<br />\n<br />\nAs it stands this discussion is more along the lines of &quot;hey, guys, why don't you try writing better code?!&quot;\r<br />\n<br />\nAn important consideration (the reason I believe why the noop function cannot be optimised away) is that the compiler is only able to operate on one project at a time. What if there are other projects referencing that particular function?\r<br />\n<br />\ne.g.\r<br />\n<br />\nProject1<br />\n<pre><code>\\foo1.ts\n\\foo2.ts\n\\foo3.ts     // function noop(){}\n</code></pre>\n\nProject2<br />\n<pre><code>\\bar1.ts\n\\bar2.ts\n\\bar3.ts       // noop();\n\n</code></pre>\n\nSame story for the multiple &quot;extends&quot;.\r<br />\n<br />\nIMO this is sort of outside the scope of the compiler, and more in the realm of a bundling mechanism.\r<br />\n<br />\nSee also: <a href=\"https://typescript.codeplex.com/discussions/407063\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/407063</a><br />\n",
+    "PostedDate": "2013-08-21T09:35:23.613-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083205",
+    "ThreadId": "445557",
+    "Html": "I think that because we have the Google Closure compiler which can easily be part of your build process, having the TypeScript compiler do the optimizations doesn't need to be a high priority.  The TypeScript compiler could one day do a better job because it has the benefit of the typing information, but the tools we have currently are pretty good.\r<br />\n<br />\nI would prefer to see compiler correctness improved and async/await support first.  I think await is the potential productivity boost that takes TypeScript mainstream.<br />\n",
+    "PostedDate": "2013-08-21T10:14:50.18-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083209",
+    "ThreadId": "445557",
+    "Html": "I agree that TypeScript is good and correctness is import, but doesn't mean you disregard anything else that could make it better b/c async support is more desired. The point of this discussion to discuss TS compiler optimization.<br />\n",
+    "PostedDate": "2013-08-21T10:19:29.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083210",
+    "ThreadId": "445557",
+    "Html": "@nabog, if you have the below scenario...\r<br />\n<br />\nProject1\r<br />\n\\foo1.ts\r<br />\n\\foo2.ts    class foo2 extends foo1\r<br />\n\\foo3.ts    class foo3 extends foo1\r<br />\n\\foo4.ts    class foo4 extends foo1\r<br />\n<br />\nYou would get a unminified bundled JS output that contains this...\r<br />\n<br />\nvar __extends = this.__extends || function (d, b) {<br />\n<pre><code>for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\nfunction __() { this.constructor = d; }\n__.prototype = b.prototype;\nd.prototype = new __();</code></pre>\n\n};\r<br />\nvar __extends = this.__extends || function (d, b) {<br />\n<pre><code>for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\nfunction __() { this.constructor = d; }\n__.prototype = b.prototype;\nd.prototype = new __();</code></pre>\n\n};\r<br />\nvar __extends = this.__extends || function (d, b) {<br />\n<pre><code>for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\nfunction __() { this.constructor = d; }\n__.prototype = b.prototype;\nd.prototype = new __();</code></pre>\n\n};\r<br />\n<br />\nIs it the bundler's responsibility to identify and decide what is duplicate code? Or should we have a compiler flag in TS that prevents code like this from being generated multiple times and maybe a startup/boot JS file that is created by the compiler (or developer) to hold any possible duplicate output code?<br />\n",
+    "PostedDate": "2013-08-21T10:23:45.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083230",
+    "ThreadId": "445557",
+    "Html": "@djarekg, the compiler could only do half the job, because the &quot;extends&quot; in the other projects would still be duplicated.\r<br />\n<br />\nThis why I think the bundler is in the best position to deal with removal of redundant code.\r<br />\n<br />\nMinification on the other hand should ideally be carried out by the compiler, because it will be able to decide on the basis of access modifiers (public, private and hopefully, protected and internal in the future) on what should be minfied and what left alone.<br />\n",
+    "PostedDate": "2013-08-21T11:05:55.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083247",
+    "ThreadId": "445557",
+    "Html": "@djarekg I didn't say hey you stop talking about this.  I certainly didn't mean it to come off that way.  In my view an important part of discussing any feature is figuring out where it sits in the order of priorities.  If the community asks for every feature equally loudly we're not sending a useful signal to the devs.<br />\n",
+    "PostedDate": "2013-08-21T11:59:37.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083588",
+    "ThreadId": "445557",
+    "Html": "I agree with <a href=\"mailto:@djarekg\" rel=\"nofollow\">@djarekg</a>. Minification is quite different to optimization. We need both. And I don't think that TypeScript producing bundled/minified code is anywhere near as important as producing optimized code. Having said that, bundling to a single file might be something worthwhile if it produces cleaner optimizations.\r<br />\n<br />\nWhilst I'd be happy for a post-build minification step, I don't agree with @Graijkowski that we can simply string together multiple different solutions like Google Closure over the back of TypeScript output, as this can be problematic, but if Microsoft were to at very least support integrating Google Closure end-to-end within Visual Studio and have the TypeScript compiler produce code compatible with Google Closure's advanced optimizer then if that was the 'supported' path, I'd be content in the interim. The trouble is, right now I don't think there is a well supported path. Furthermore, given Microsoft's experience in building optimizing compilers it would surely make sense to capitalize on the type-system available to TypeScript which becomes lost after compilation.<br />\n",
+    "PostedDate": "2013-08-22T05:15:25.677-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084427",
+    "ThreadId": "445557",
+    "Html": "<strong>danieljsinclair wrote:</strong><br />\n<blockquote>\n...I don't agree with @Graijkowski that we can simply string together multiple different solutions like Google Closure over the back of TypeScript output, as this can be problematic...<br />\n</blockquote>\nYou don't specify how tool-chaining is problematic. It's the norm for most builds.<br />\n",
+    "PostedDate": "2013-08-24T02:48:50.38-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085171",
+    "ThreadId": "445557",
+    "Html": "Here's the no-op case, with some more surrounding code:<br />\n<pre><code>debugger;\n\ndoSomethingElse(doSomething(window)); \n\nfunction noop(){\n}\nnoop();\n\nfunction doSomething(w)\n{\n   w.noop = function() { alert('I want this function to alert.'); }\n   return w;\n}\nfunction doSomethingElse(z)\n{\n   z.noop = function() { alert('I am a no-op') }\n}</code></pre>\n\nI could make it even worse by doing something like:<br />\n<pre><code>var q = 'noop';\nfunction doSomethingElse(z)\n{\n   var r = getFunction();\n   z[q] = r;\n}\nfunction getFunction()\n{\n   return function() { alert('I am a no-op') }\n}</code></pre>\n\nI don't think that it can safely assume noop is empty at the call, I don't think there's a way to be certain that it's safe to remove that call, at that spot.  Even a call to new can change what the function is pointed at, and so I think you have to output the function call no matter what.  That'll be the case for anything involving a function or a var, including built-in vars.<br />\n",
+    "PostedDate": "2013-08-26T18:39:18.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085192",
+    "ThreadId": "445557",
+    "Html": "@dbacher\r<br />\nFor sure there are limits to what function calls and variable references can be detected with a reasonable amount of effort. In situations like the one you describe it is necessary to hint the compiler that a given function is not redundant. See <a href=\"https://developers.google.com/closure/compiler/docs/api-tutorial3#removal\" rel=\"nofollow\">https://developers.google.com/closure/compiler/docs/api-tutorial3#removal</a>\r<br />\n<br />\n@markrendle\r<br />\nIn regards to tool chaining: I found that source maps <strong>can</strong> be problematic - last time I checked only view tools supported rewriting source maps so that the final code will still reference the original source input from the beginning of the tool chain. <br />\n",
+    "PostedDate": "2013-08-26T20:56:26.133-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085358",
+    "ThreadId": "445557",
+    "Html": "@mistaecko I'm using Uglify2 and it accepts an input source map to let it output a second source map that still points to the original ts files. Seems to work OK in Chrome Dev Tools. Don't know if Closure supports the same thing.<br />\n",
+    "PostedDate": "2013-08-27T05:57:47.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085439",
+    "ThreadId": "445557",
+    "Html": "nice. I will check it out. Thx @markrendle<br />\n",
+    "PostedDate": "2013-08-27T08:28:48.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

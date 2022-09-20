@@ -1,0 +1,125 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.047-07:00",
+    "CommentCount": 17,
+    "Custom": null,
+    "Description": "Currently typescript will type the \"this\" pointer in function callbacks as \"any.\" Arrow syntax lets us capture \"this\" from the outer scope, and this can enable proper typing. It would be nice to be able to provide\r\n an optional \"ambient this\" declaration in function signatures:\r\n\r\n(declare this : MyType, first: number, second: string) : any;\r\n\r\nThe rules would be:\r\n\r\n1) the declaration is obviously optional\r\n2) if specified, should be first parameter\r\n3) cannot be used with arrow syntax lambdas (should be compiler error)\r\n \r\nI know you can cast as needed to get the intellisense but I'd rather not put this responsibility on the implementer of the function. Ideally it should be part of the definition.\r\n\r\nExample with Sammy:\r\n\r\n```TypeScript\r\nvar app = $.sammy(\"#view\", function() {\r\n     // define default route\r\n     this.get(\"#/\", function() { ... } \r\n});\r\n```\r\n\r\nIn the above case, typescript can only type this as any. \r\n\r\nThoughts?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-28T16:56:40.147-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support optional ambient \"this\" pointer typing in callback/function signatures",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 68,
+    "Id": 507
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@oisin: We've actually had discussions about a feature exactly like what you describe, and I believe it is a natural extension of current TypeScript which would enable use cases like the example you mention.  Because 'this' is a keyword, we have actually talked about it as being written like:\n\nvar f: (this: MyType, first: number) => any;\n\nAnd similarly, for implementations:\n\nfunction f(this: MyType, first: number) { return 3; }\n\nThere's several unanswered questions around the precise rules for how this is treated in assignment compatibility, whether methods on classes have 'this' types, etc. \n",
+      "PostedDate": "2012-11-28T16:57:49.383-08:00",
+      "Id": 83209
+    },
+    {
+      "Message": "Thanks Luke. It would interesting if you got a chance to update this thread with current thinking on implementation details.",
+      "PostedDate": "2012-12-03T11:12:51.733-08:00",
+      "Id": 83465
+    },
+    {
+      "Message": "I think this is a very important feature. We have already seen several bugs where we used the wrong anonymous function syntax (\"=>\" vs \"function\"). Given that a lot of library (eg. jQuery) like to set the \"this\" refeerence of a callback, supplying the ability to provide this kind of typing in these libraries will help to catch the majority of these bugs at compile time.",
+      "PostedDate": "2013-04-10T22:21:42.553-07:00",
+      "Id": 96719
+    },
+    {
+      "Message": "+1",
+      "PostedDate": "2013-04-17T02:23:16.257-07:00",
+      "Id": 97208
+    },
+    {
+      "Message": "As you guys haven't mentioned it in the announcements, I'm assuming this feature is being pushed back from the 0.9 release? ",
+      "PostedDate": "2013-04-25T10:46:06.583-07:00",
+      "Id": 98445
+    },
+    {
+      "Message": "@MgSam\n\nLooks like it.  We're focusing 1.0 on just making the compatibility story with JavaScript as strong as possible.  This would go into making the TypeScript development experience nicer, which we're roughly thinking of 1.x and beyond.",
+      "PostedDate": "2013-04-26T14:55:02.187-07:00",
+      "Id": 98654
+    },
+    {
+      "Message": "This issue seems pretty important for compatibility with existing JavaScript, actually. I don't think you can have a really complete definition file for JQuery without this. I think to do JQuery really effectively you need: generics + overload on string constants + ability to set a type for the `this` pointer.",
+      "PostedDate": "2013-04-26T15:46:58.997-07:00",
+      "Id": 98656
+    },
+    {
+      "Message": "+1 working on typing meteor.js and this pattern is used all over the place. For now the user needs to cast this into a new variable - kind of ugly, but js is really a hack.",
+      "PostedDate": "2013-08-22T04:32:52.15-07:00",
+      "Id": 110729
+    },
+    {
+      "Message": "+1; see also https://typescript.codeplex.com/workitem/1561",
+      "PostedDate": "2013-08-22T04:40:42.147-07:00",
+      "Id": 110731
+    },
+    {
+      "Message": "+1! It is a common pattern in a lot of JavaScript libraries to bind a given callback to some important object. Even if the declaration were ambient (ignored by the compiler when the bind method is called), it would be helpful and less messy than creating another \"this dance\"\n\n    function() {\n        var dance: IComplexLibraryObject = this;  // not needed in JavaScript\n        dance.complexSignature(\"\", [])\n    }\n\nWhere the resulting JavaScript would be unnecessarily cluttered with:\n\n    function() {\n        var dance = this;  // not needed in JavaScript\n        dance.complexSignature(\"\", [])\n    }",
+      "PostedDate": "2013-10-25T14:43:42.813-07:00",
+      "Id": 119734
+    },
+    {
+      "Message": "It seems such rule should also work: \n\n```\ninterface IDoSomething {\n   test(first: number, second: string);\n\n   x: number;\n}\n\nvar d: IDoSomething = {\n    test: (a, b) => {\n        alert(this.x);       // OK\n        alert(this.y);       // Error: y is not defined in IDoSomething \n    }\n}\n\n```",
+      "PostedDate": "2014-01-28T22:35:37.403-08:00",
+      "Id": 131980
+    },
+    {
+      "Message": "I think a neat way of defining this would be similar to c#'s extension methods:\n\nfunction myFunction(this currentWindow: Window) {\n    alert(currentWindow.clientWidth);\n    alert(this.clientWidth); // identical to call above\n}\n\nmyFunction(); // good\nmyFunction.call(\"string\"); // bad, context is not the same type",
+      "PostedDate": "2014-02-02T22:20:33.9-08:00",
+      "Id": 132381
+    },
+    {
+      "Message": "Just to add what I said above... such a shame I can't edit comments to fix the formatting in my post... but this could be defined in the callback definition. Then when the user does the callback like, `function() { }` it will know what the type of `this` should be.",
+      "PostedDate": "2014-02-02T22:28:20.187-08:00",
+      "Id": 132382
+    },
+    {
+      "Message": "I always end up creating my own variable as \"_this\" typed to what I need, but this would make things easier!",
+      "PostedDate": "2014-03-25T13:22:04.947-07:00",
+      "Id": 138802
+    },
+    {
+      "Message": "I want this so much I accidentally posted a duplicate: https://typescript.codeplex.com/workitem/2364 (it should be closed).\n\nIt has some example cases (as if we need more? :) ",
+      "PostedDate": "2014-04-03T15:26:04.51-07:00",
+      "Id": 140475
+    },
+    {
+      "Message": "@LukeH: This could be used for the usual \"context\" parameter in things that take contexts, like map or foreach:\n\n```\nclass Array<T> {\n    map<TResult, TContext>(func: (this: TContext, item: T, index: number, array: T[]) => TResult, context: TContext) {\n        var result = <TResult[]>[];\n        for (var i = 0, len = this.length; i < len; i++) {\n            result.push(func.call(context, this[i], i, this));\n        }\n        return result;\n    }\n}\n```\n\nThat would be super useful! You could have proper Intellisense even without converting everything to arrow functions! Could you even verify that func.call's first parameter matches the \"this\" of its type? That would be even better!",
+      "PostedDate": "2014-04-24T16:27:19.587-07:00",
+      "Id": 142937
+    },
+    {
+      "Message": "Moved to Github: https://github.com/Microsoft/TypeScript/issues/229",
+      "PostedDate": "2014-07-24T04:05:36.027-07:00",
+      "Id": 153364
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:31:56.273-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I am trying to create a library, with the namespaces split into different files.\r\n\r\nso I'm using the syntax of:\r\n```\r\n\r\n//library.ts\r\nexport import moduleName = require(\"path/to/module\");\r\n\r\n```\r\nit looks like the emitted javascript is correct (with AMD modules at least)\r\n\r\nbut when trying to consume the library.ts the typescript compiler breaks.\r\n\r\nplease note that the following works, but typescript intellisence shows the namespace as a variable, not as a module:\r\n```\r\nimport moduleName = require(\"path/to/module\");\r\nexport var _moduleName = moduleName;\r\n```\r\n\r\n__reopen:  additional repro as follows:__\r\n\r\n```\r\n\r\n//math.ts\r\nexport function add(a,b){return a+b;}\r\n\r\n//logger.ts\r\nexport function assert(test,message){ console.assert(test,message);}\r\n\r\n//library.ts\r\nexport import math = require(\"math\");\r\nimport _logger = require(\"logger\");\r\nexport var logger = _logger;\r\n\r\n//usercode.ts\r\nimport lib = require(\"library\");\r\n\r\nlib.logger.assert(true,\"\");   //this works ok, but intelisence shows lib.logger as a variable\r\n\r\nlib.math.add(1,2);  //this will cause the tsc to fail\r\n\r\n```\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-20T17:21:56.997-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.5 beta: errors with:   export import moduleName = require(\"path/to/module\");",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 6,
+    "Id": 1928
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you add a sample project, which shows what you're trying to do?\n\nI have trouble repro-ing this with the information provided.\n\nPlease, reopen using the button on top, when you've added the information\n\r\n\r** Closed by paulb 11/20/2013 6:03PM",
+      "PostedDate": "2013-11-20T18:03:27.363-08:00",
+      "Id": 123728
+    },
+    {
+      "Message": "see reopen seciton of the description for a repro",
+      "PostedDate": "2013-11-20T20:56:39.523-08:00",
+      "Id": 123729
+    },
+    {
+      "Message": "Thanks! Marking active.",
+      "PostedDate": "2013-11-21T10:04:25.797-08:00",
+      "Id": 123788
+    },
+    {
+      "Message": "Do you have any idea when this will be fixed? The issue has been open for some time.",
+      "PostedDate": "2014-02-13T06:37:26.103-08:00",
+      "Id": 133486
+    },
+    {
+      "Message": "I just ran into this today and it's caused me quite a bit of pain.\n\nIn my case, I have both some utility classes and some interfaces under a \"util\" object that I want to reference. For instance, util.x.doSomething(), and util.y.ISomething. \n\nImporting, then exporting a variable to point to \"x\" within util works fine for just calling doSomething. But it doesn't work to implement the interface within y. In order to reference an interface contained within the \"sub module\", you have to use the \"export import\" syntax. But that doesn't work to call util.x.doSomething. So there's no way to do both of those at the same time, which means I need to restructure things just to work around the problem.",
+      "PostedDate": "2014-02-19T14:18:10.723-08:00",
+      "Id": 134110
+    },
+    {
+      "Message": "I also am having great pains with the lack of interface export.    I guess there's a workaround by building a d.ts file but i'm just choosing to hold off on my general libraries until this gets fixed.",
+      "PostedDate": "2014-02-19T19:31:36.583-08:00",
+      "Id": 134149
+    },
+    {
+      "Message": "this looks to be resolved in 1.0rc.\n\nboth \n```\nexport import\n``` \nand \n```\nimport _x;  export var x=_x;\n```\nsyntax seem to be working on first try, and the interfaces are being properly visible externally too.",
+      "PostedDate": "2014-02-25T22:25:39.21-08:00",
+      "Id": 134744
+    }
+  ]
+}

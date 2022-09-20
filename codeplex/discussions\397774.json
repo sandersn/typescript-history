@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "920817",
+    "ThreadId": "397774",
+    "Html": "\r\n<p>I read the language&nbsp;specification&nbsp;but couldn't work it out. &nbsp;How do you ensure that a member function is always bound to the 'this' instance? &nbsp;This is something CoffeeScript does by generating the necessary bind calls in the function\r\n prototype.</p>\r\n",
+    "PostedDate": "2012-10-02T12:46:26.253-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920842",
+    "ThreadId": "397774",
+    "Html": "<p>Whenever you declare a class all of its members will be hung off the prototype so any member function will automatically have a proper 'this' pointer.&nbsp; What you have to be careful about is the use of closures within your methods. So in the example below this.x is visible from within bar() but this.y isn't visible within the callback just as it wouldn't be visible in javascript:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> Foo {\r\n     <span style=\"color: blue;\">public</span> x: string;\r\n     <span style=\"color: blue;\">public</span> y: string;\r\n\r\n     <span style=\"color: blue;\">public</span> bar() {\r\n          <span style=\"color: blue;\">this</span>.x = <span style=\"color: #a31515;\">'good'</span>;\r\n          setTimeout(<span style=\"color: blue;\">function</span> () {\r\n               <span style=\"color: blue;\">this</span>.y = <span style=\"color: #a31515;\">'bad'</span>;\r\n          }, 100);\r\n     }\r\n}\r\n</pre>\r\n</div>\r\n<p>To fix the 'this' pointer you can do two things, 1) you can create an external 'var _this = this;' like you would today or 2) you can use a Lambda to declare your callback:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> Foo {\r\n     <span style=\"color: blue;\">public</span> x: string;\r\n     <span style=\"color: blue;\">public</span> y: string;\r\n\r\n     <span style=\"color: blue;\">public</span> bar() {\r\n          <span style=\"color: blue;\">this</span>.x = <span style=\"color: #a31515;\">'good'</span>;\r\n          setTimeout(() =&gt; {\r\n               <span style=\"color: blue;\">this</span>.y = <span style=\"color: #a31515;\">'bad'</span>;\r\n          }, 100);\r\n     }\r\n}\r\n\r\n\r\n</pre>\r\n</div>\r\n<p>If you use a Lambda (TypeScript only feature) they&nbsp;correct the 'this' pointer for you.&nbsp;&nbsp;</p>",
+    "PostedDate": "2012-10-02T13:19:06.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920847",
+    "ThreadId": "397774",
+    "Html": "<p>I realize the use with lambdas. &nbsp;My point is that some frameworks allow you to bind member functions directly to events (Knockout.JS for example). &nbsp;In CoffeeScript you can define member functions using the arrow syntax - this ensures that they are always bound to the class instance. &nbsp;I don't see support for this in TypeScript.</p>\r\n<p>For example:</p>\r\n<p>\r\n<pre>class fred\r\n{\r\n\tprivate x = \"OK\";\r\n\tconstructor() {\r\n\t}\r\n\t\r\n\tpublic DoFun(s:string):string   {\r\n\t\treturn s + this.x;\r\n\t}\r\n}\r\n\r\nfunction dostuff() {\r\n\tvar freed = new fred();\r\n\talert(freed.DoFun(\"Is\"));\r\n\talert(freed.DoFun.call(Window,\"Not \"));\r\n}\r\n\r\ndostuff()</pre>\r\n</p>\r\n<p>This wouldn't fail in CoffeeScript because it generates this in the function prototype:</p>\r\n<p>\r\n<pre>  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };\r\n\r\n   this.DoFun = __bind(this.DoFun, this);\r\n\r\n\r\n</pre>\r\nThis overwrites the slot for the function on the object with a function bound to the object.</p>",
+    "PostedDate": "2012-10-02T13:27:09.67-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920871",
+    "ThreadId": "397774",
+    "Html": "\r\n<p>Oh I see... That's interesting.&nbsp; In our project we have a proxy() function that does something similar:</p>\r\n<div style=\"background-color:white; color:black\">\r\n<pre>proxy(fn: (...args:any[]) =&gt; any, _this: any): (...args:any[]) =&gt; any\r\n</pre>\r\n</div>\r\n<p>This guy returns a function that's a wrapper around a class method with a corrected 'this' pointer which we use in our callbacks a lot.&nbsp; I hadn't thought about just pre-fixing them on the class instance but here's how I'd probably do it:</p>\r\n<pre><span style=\"color:blue\">class</span> Foo {\r\n     <span style=\"color:blue\">public</span> bar: (x:string) =&gt; string;\r\n     <span style=\"color:blue\">private</span> y: string;\r\n\r\n     constructor() {\r\n          <span style=\"color:blue\">var</span> _this = <span style=\"color:blue\">this</span>;\r\n          <span style=\"color:blue\">this</span>.bar = <span style=\"color:blue\">function</span> (x) {\r\n               <span style=\"color:blue\">return</span> x &#43; _this.y;\r\n          }\r\n     }\r\n}\r\n</pre>\r\n<p>Obviously not as clean as what yo're looking for but not sure how else you'd do it in TypeScript.</p>\r\n<div style=\"background-color:white; color:black\"></div>\r\n",
+    "PostedDate": "2012-10-02T14:04:13.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921598",
+    "ThreadId": "397774",
+    "Html": "<p>Just as an addendum and back to the original question: \"How do you ensure that a member function is always bound to the 'this' instance?\"</p>\r\n<p>We don't.&nbsp; You can still take a member reference and call it as a function, and 'this' will not be the object instance.</p>\r\n<p>With the arrow syntax \"() =&gt; {}\" we lexically bind this.&nbsp; This means of course, if your outer this was not the instance (e.g. a method called as a function), then your inner this is also not what you expect.</p>\r\n<p>As outlined above, the only place you can guarantee that 'this' is your instance is within the constructor (if called with new).&nbsp; Thus using the arrow syntax here also ensures you are binding correctly (as does the proxy and bind methods above).&nbsp; e.g. to modify the Greeter sample to ensure greet is always called with the correct this:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>\r\n<span style=\"color: blue;\">class</span> Greeter {\r\n greeting: string;\r\n greet: Function;\r\n constructor (message: string) {\r\n  <span style=\"color: blue;\">this</span>.greeting = message;\r\n  <span style=\"color: blue;\">this</span>.greet = (x: string) =&gt; {console.log(<span style=\"color: blue;\">this</span>.greeting + x);};\r\n }\r\n}  \r\n</pre>\r\n<pre>This will automatically capture this in a closure and use it within the function.</pre>\r\n<pre>var Greeter = (function () {<br />&nbsp;&nbsp;&nbsp; function Greeter(message) {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var _this = this;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.greeting = message;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.greet = function (x) {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; console.log(_this.greeting + x);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };<br />&nbsp;&nbsp;&nbsp; }<br />&nbsp;&nbsp;&nbsp; return Greeter;<br />})();</pre>\r\n</div>",
+    "PostedDate": "2012-10-03T17:32:53.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921606",
+    "ThreadId": "397774",
+    "Html": "<p>Any chance you could change the syntax a little to add member functions bound to the right type? &nbsp;Doesn't impact verification if you can't assume the type of 'this' in a member function?</p>\r\n<p>maybe something like:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">public</span> DoStuff( x: string ) : number =&gt; {\r\n    <span style=\"color: blue;\">this</span>.myOtherMEmber();\r\n}\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-03T18:21:58.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921632",
+    "ThreadId": "397774",
+    "Html": "<p>You got me thinking about this and while TypeScript doesn't have any built in support for this I was able to cook up a little base class that will do what you want.&nbsp; If you derive a class from the HasCallbacks class below, any method (private or public) pre-fixed with \"cb_\" will&nbsp;be perminantly bound to it's \"this\" pointer.&nbsp; Try running the code below in the playground and you'll see that it works.&nbsp;&nbsp;It's also effecient in that it only reflects over a class once on first creation and then for each additional \"new\" you only pay the overhead of binding the \"cb_\" methods.&nbsp; Hope that helps... We're planning to switch to this approach in our project as well&nbsp;:)&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> HasCallbacks {\r\n\tconstructor() {\r\n\t\t<span style=\"color: blue;\">var</span> _this = <span style=\"color: blue;\">this</span>, _constructor = (&lt;any&gt;<span style=\"color: blue;\">this</span>).constructor;\r\n\t\t<span style=\"color: blue;\">if</span> (!_constructor.__cb__) {\r\n\t\t\t_constructor.__cb__ = {};\r\n\t\t\t<span style=\"color: blue;\">for</span> (<span style=\"color: blue;\">var</span> m <span style=\"color: blue;\">in</span> <span style=\"color: blue;\">this</span>) {\r\n\t\t\t\t<span style=\"color: blue;\">var</span> fn = <span style=\"color: blue;\">this</span>[m];\r\n\t\t\t\t<span style=\"color: blue;\">if</span> (<span style=\"color: blue;\">typeof</span> fn === <span style=\"color: #a31515;\">'function'</span> &amp;&amp; m.indexOf(<span style=\"color: #a31515;\">'cb_'</span>) == 0) {\r\n\t\t\t\t\t_constructor.__cb__[m] = fn;\t\t\t\t\t\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t\t<span style=\"color: blue;\">for</span> (<span style=\"color: blue;\">var</span> m <span style=\"color: blue;\">in</span> _constructor.__cb__) {\r\n\t\t\t(<span style=\"color: blue;\">function</span> (m, fn) {\r\n\t\t\t\t_this[m] = <span style=\"color: blue;\">function</span> () {\r\n\t\t\t\t\t<span style=\"color: blue;\">return</span> fn.apply(_this, Array.prototype.slice.call(arguments));\t\t\t\t\t\t\r\n\t\t\t\t};\r\n\t\t\t})(m, _constructor.__cb__[m]);\r\n\t\t}\r\n\t}\r\n}\r\n\r\n<span style=\"color: blue;\">class</span> Foo <span style=\"color: blue;\">extends</span> HasCallbacks  {\r\n\t<span style=\"color: blue;\">private</span> label = <span style=\"color: #a31515;\">'test'</span>;\r\n\t\r\n\tconstructor() {\r\n\t\t<span style=\"color: blue;\">super</span>();\r\n\t\t\r\n\t}\r\n\t\r\n\t<span style=\"color: blue;\">public</span> cb_Bar() {\r\n\t\talert(<span style=\"color: blue;\">this</span>.label);\r\n\t}\r\n}\r\n\r\n<span style=\"color: blue;\">var</span> x = <span style=\"color: blue;\">new</span> Foo();\r\nx.cb_Bar.call({});\r\n</pre>\r\n</div>",
+    "PostedDate": "2012-10-03T20:50:27.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933508",
+    "ThreadId": "397774",
+    "Html": "<p>Search Internet for \"jQuery proxy\"</p>",
+    "PostedDate": "2012-10-28T07:34:51.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222135",
+    "ThreadId": "397774",
+    "Html": "Old discussion, but for the benefit of people continuing to arrive here via G ... er ... Bing, fat arrow methods can be created outside the constructor as of TypeScript 0.9.1 and will capture <code>this</code> as desired.<br />\n",
+    "PostedDate": "2014-03-12T16:30:17.003-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

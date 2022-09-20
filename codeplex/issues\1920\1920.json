@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-19T17:28:46.547-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "From: https://typescript.codeplex.com/discussions/470516\r\n\r\nI'm trying to deploy my solution to Azure using the brand spanking new TS 0.9.5 beta. (Thanks, guys!) However, I'm getting the following error message during the Kudu build process. Note that this only seems to happen on Azure, not during local builds, or even while running \"deploy.cmd\" locally:\r\n\r\nC:\\DWASFiles\\Sites\\payboardbeta\\VirtualDirectory0\\site\\repository\\Payboard.Web\\bin\\Payboard.Web.dll\r\n  Building TypeScript: Payboard.Site.js (using ..\\typescript\\tsc.exe)\r\n  Building TypeScript: Payboard Widget (using ..\\typescript\\tsc.exe)\r\n  Building TypeScript: App\\Payboard.App.js (using ..\\typescript\\tsc.exe)\r\ntsc.js(59664, 13) JavaScript runtime error : Automation server can't create objecttsc.js(59664, 13) JavaScript runtime error : Automation server can't create objecttsc.js(59664, 13) JavaScript runtime error: Automation server can't create object \r\n\r\nBecause I couldn't figure out any other way to do it (open to suggestions!), I've included the TypeScript tsc.exe (and supporting files, such as lib.d.ts, tsc.js, and tschost.dll) within my source code, so that I could call it from my \"tsbuild.cmd\" and have some reasonable guarantees that it was going to be there on the Azure build server and was going to be the right version. So my \"tsbuild.cmd\" looks like so:\r\n\r\nset tsc=..\\typescript\\tsc.exe\r\necho Building TypeScript: Payboard.Site.js (using %tsc%)\r\n%tsc% --sourcemap --out Scripts\\Payboard\\Payboard.Site.js @tsbuild_Site.txt\r\necho Building TypeScript: Payboard Widget (using %tsc%)\r\n%tsc% --sourcemap --out Widget\\v1.0\\Payboard.js @tsbuild_Widget_v10.txt\r\necho Building TypeScript: App\\Payboard.App.js (using %tsc%)\r\n%tsc% --sourcemap --out App\\Payboard.App.js @tsbuild_App.txt\r\n\r\nAny troubleshooting suggestions?",
+    "LastUpdatedDate": "2014-03-31T16:05:23.957-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-19T15:59:25.747-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "\"Automation server can't create objecttsc.js\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1920
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The binaries used for tsc.exe have dependencies on the IE/OS version that means you can't simply copy them across machines and expect everything to work.  The MSI installer detects the environment and puts down the correct DLL.  If a dependency isn't present (typically IE10/11 isn't installed on the target machine), you can get errors such as the above.\n\nFor cross machine compilation, you'll need to either copy the files from an identically configured machine, or use the TypeScript package from NPM inside Node instead of the tsc.exe binary.",
+      "PostedDate": "2013-11-19T17:28:26.907-08:00",
+      "Id": 123611
+    },
+    {
+      "Message": "I had all sorts of trouble getting TypeScript to install correctly on the Azure/Kudu build server. I tried for quite a while, but was never able to get it working correctly. (It was some months ago, so I don't recall what the precise issue was, but I remember it was pretty frustrating.) Do you guys have any recommendations for how to get this scenario to work?",
+      "PostedDate": "2013-11-28T23:36:25.183-08:00",
+      "Id": 125596
+    },
+    {
+      "Message": "\nI had the same problem earlier after some 0.9.x upgrade.\nThe TypeScript team tipped me about replacing tschost.dll with an older version of that file.\n\nI then reverted the file to tschost.dll from some 0.8.x release and the thing built fine both locally and on Azure.\n\nI now had the same problem after upgrading to 0.9.5, but by replacing tschost.dll with the good old version, the thing builds fine on Azure again.\n\nI prefer the MSBuild strategy for TypeScript compilation when developing locally because of the good VS integration. VS Web project files now automatically get the TS build target included as soon as you add a .ts file, and VS Web projects now also has a TypeScript compilation property page. The integration between the compiler and the VS error list window also seems to eventually work well with 0.9.5. \n\nIt seems to me that the TypeScript team encourage using the MSBuild compilation strategy for VS development. It should in my opinion be possible to build the same way on a build server without having to change to nodejs compilation, requiring several quite complicatied manual steps.\n\nIn my current project we are therefore keeping the TypeScript build target + compiler files under source control (changing some file path references here and there). This is needed since TypeScript may not be installed on a build server, and you would anyway never know that the TypeScript version installed on the build server matches the version your code depends on.\n\nI also have the possibility to run typescript compilation using node/grunt, which I also use often when debugging.\n\nThe current problem of the MSBuild integration for TypeScript is the attempt to enable compilation without a nodejs runtime. The dependency on the Windows Scripting Host and the ActiveX objects, makes it hard to do a XCopy deployment, since these may or may not be installed, and they may be of different versions  on different platforms.\n\nMaybe we would all be better off if the TypeScript build targets only required that nodejs was installed instead?",
+      "PostedDate": "2013-12-12T16:28:02.603-08:00",
+      "Id": 127291
+    }
+  ]
+}

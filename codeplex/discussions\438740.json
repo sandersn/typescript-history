@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1024029",
+    "ThreadId": "438740",
+    "Html": "<strong>Problem</strong>\r<br />\n<br />\nWhen typing variables as &quot;string&quot;s or &quot;number&quot;s, we often throw out important semantic information about the value of the variable. In keeping with the type safe ideals of TypeScript, I'd like to propose for discussion the idea of &quot;strongly enforced&quot; type aliases. Consider the following example<br />\n<pre><code>interface Student {\n  id:  number; // internal student number for the school\n  ssn: number; // social security number\n}\n\nfunction doStuffForStudent(studentNumber: number) { ... }\n\nvar student: Student;\n\ndoStuffForStudent(student.id);\ndoStuffForStudent(student.ssn);</code></pre>\n\nThe problem is that both of these function calls type check, yet only one will behave correctly assuming a reasonable implementation of doStuffForStudent. This sort of problem, in my opinion, is a typing problem. (And yes, better variable names will make the code more readable and thus users will have a higher chance of passing the right value in, but that's not the point.)\r<br />\n<br />\n<br />\n<strong>Proposed Solution</strong>\r<br />\n<br />\nWe can give a much tighter type to these members and parameters, and catch more errors at compile time. Consider the proposed alternative:<br />\n<pre><code>type StudentId: number;\ntype SocialSecurityNumber: number;\n\ninterface Student {\n  id:  StudentId;\n  ssn: SocialSecurityNumber;\n}\n\n// yes, the formal parameter should be better named, but that's not the point\nfunction doStuffForStudent(studentNumber: StudentId) { ... }\n\nvar student: Student;\n\ndoStuffForStudent(student.id);   // will type check\ndoStuffForStudent(student.ssn);  // will NOT type check\n\n// Chances are that data like this comes from the backend, and is\n// typed by virtue of an interface that's associated with the data\n// payload coming from the backend. Still, sometimes there is a need\n// to assign an explicit value. In such cases, explicit declaration of\n// intent reads beautifully:\n\nstudent.id  = &lt;StudentId&gt;123456;\nstudent.ssn = &lt;SocialSecurityNumber&gt;987654321;</code></pre>\n\n<strong>In the Current Spec</strong>\r<br />\n<br />\nWhat can we do to approach this solution within the current spec? Classes and interfaces cannot extend primitive types, so they cannot be used generally, and interfaces are too permissive anyway: even if you had<br />\n<pre><code>interface StudentId extends number {}</code></pre>\n\nyou'd be able to assign 123 to var id: StudentId, and it would type check, without an explicit cast.\r<br />\n<br />\nAn interesting hack one can in theory do is to use dummy classes for compile time type checking, and rely on type erasure to have everything hum at runtime with primitive type values.<br />\n<pre><code>class StudentId {}\n\nfunction doStuffForStudent(studentNumber: StudentId) { ... }\n\ndoStuffForStudent(student.id); // type checks</code></pre>\n\nWe'd probably want to have these dummy classes have special names so that users know what they are for. Maybe StudentId$$ or something.\r<br />\n<br />\nIn practice this doesn't work because<br />\n<pre><code>var id: StudentId = &lt;StudentId&gt;(123);</code></pre>\n\ndoes not compile. I thought explicit casts are supposed to override any compiler decisions, but apparently that's not how it works. Explicitly casting &lt;StudentId&gt;({}) does work, for the record.\r<br />\n<br />\nEither way, this is an interesting type system hacking exercise at best, and any real solution would need to be supported by the compiler.\r<br />\n<br />\n<br />\n<strong>Thoughts?</strong>\r<br />\n<br />\nSo, thoughts? I don't know what's involved in getting this idea attention, but I feel that the idea is cheap to implement, yet can be highly valuable in terms of additional logic errors caught at compile time.<br />\n",
+    "PostedDate": "2013-04-01T20:39:47.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024325",
+    "ThreadId": "438740",
+    "Html": "What you're proposing is basically typedef from C/C++.  That's a feature with a long history and I'm sure a lot of people have strong feelings both for and against it.\r<br />\n<br />\nI think the example you give is certainly a good use of typedef, though in my own code I would prefer the function doStuffForStudent to take in a Student object unless ssn can exist outside of Student.\r<br />\n<br />\nThe biggest problem with your proposal is if all typedefs are in the global namespace then collisions are inevitable.  JavaScript has come a long way in the last decade to get everything out of the global namespace so libraries can play nicely together and it would a waste of go backwards.  Does applying the typedef to the namespace it was declared in make sense?  Would it be weird if School.Package.StudentId was really an alias for a primitive type?<br />\n",
+    "PostedDate": "2013-04-02T09:00:16.973-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024536",
+    "ThreadId": "438740",
+    "Html": "Thanks for replying.<br />\n<blockquote>\ndoStuffForStudent should take a Student object<br />\n</blockquote>\nThis is my failure at finding the perfect example that is small, easy to understand, illustrates the problem completely, yet does not have any holes. Indeed, taking a Student object would make sense in this example. This does not diminish the problem that I'm trying to address. Perhaps a better example would be the following:<br />\n<pre><code>interface Student {\n  id:  number; // internal student number for the school\n  ssn: number; // social security number\n}\n\ninterface UpdateNameRequestPayload {\n  id:   number;\n  name: string;\n}\n\nvar student: Student;\n\nvar payload: UpdateNameRequestPayload = {\n  id:   student.ssn,   // incorrect data, but type checks fine\n  name: &quot;New Name&quot;\n};\n\nsomeLibrary.ajaxPost(&quot;/students&quot;, payload);</code></pre>\n\nversus<br />\n<pre><code>type StudentId: number;\ntype SocialSecurityNumber: number;\n\ninterface Student {\n  id:  StudentId;\n  ssn: SocialSecurityNumber;\n}\n\ninterface UpdateNameRequestPayload {\n  id:   StudentId;\n  name: string;\n}\n\nvar student: Student;\n\nvar payload: UpdateNameRequestPayload = {\n  id:   student.ssn,   // type check fails at compile time\n  name: &quot;New Name&quot;\n};\n\nsomeLibrary.ajaxPost(&quot;/students&quot;, payload);</code></pre>\n\n<blockquote>\nif all typedefs are in the global namespace<br />\n</blockquote>\nNothing necessitates this, just like nothing necessitates that classes are all declared in a global namespace.<br />\n<pre><code>module myModule {\n  export type StudentId: number;\n\n  export interface Student {\n    ...\n  }\n}</code></pre>\n\nI don't see it as any different from what we have with classes and interfaces, and other modules.<br />\n<blockquote>\nDoes applying the typedef to the namespace it was declared in make sense?<br />\n</blockquote>\nIt makes sense to me. If it does not make sense to you, could you please explain why?<br />\n<blockquote>\nWould it be weird if School.Package.StudentId was really an alias for a primitive type?<br />\n</blockquote>\nI do not think it would be weird. If you do feel that way, can you please define &quot;weird&quot; and explain what you mean concretely? Sorry if I'm missing something obvious that you're hinting at here.<br />\n",
+    "PostedDate": "2013-04-02T16:28:33.78-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024906",
+    "ThreadId": "438740",
+    "Html": "We have the following use case:<br />\n<pre><code>interface Guid extends String {\n}\n\nvar guidBad: Guid = &quot;oops!&quot;; // Should fail, but currently compiles\nvar guidGood: Guid = &lt;Guid&gt; &quot;516FEF91-788C-44G2-B5C8-89A36ECB777B&quot;; // Should work, and currently works\n}</code></pre>\n\nI believe this is all that is required? Basically, we want the developer to say &quot;trust me, that is a GUID&quot;.\r<br />\n<br />\nWe'd like to see a solution to this but not at the expense of introducing typedef which is open to abuse, and can make reading code very difficult on account of custom types. Furthermore, the use case is very small and IMO does not warrant a new keyword.\r<br />\n<br />\nPerhaps if there is a way of decorating the interface so that an explicit cast is required?<br />\n<pre><code>[Explicit]\ninterface Guid extends String {\n}</code></pre>\n\nor<br />\n<pre><code>explicit interface Guid extends String {\n}</code></pre>\n\nYes, this is introducing new syntax, but both the attribute and the explicit keyword would have applications in other contexts.\r<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-04-03T08:06:27.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024951",
+    "ThreadId": "438740",
+    "Html": "@nabog - enforcing this kind of stricter compatibility rules and requiring casts is something that generally falls outside of a structural type system and is more inline with the types of rules you see in nominal type systems.  When you say &lt;Guid&gt;, it's not actually a cast from one type name to another.  It's an assertion that the shape of the thing on the right hand side is assignment compatible with the structure of the type given (Guid in your example).\r<br />\n<br />\nThere are some cases where you can enforce some strictness, for example two classes with the same public members aren't structural compatible if either class has private members.  \r<br />\n",
+    "PostedDate": "2013-04-03T08:58:28.037-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024963",
+    "ThreadId": "438740",
+    "Html": "<blockquote>\ncan you please define &quot;weird&quot; and explain what you mean<br />\n</blockquote>\nI can't think of any specific reasons it would be bad but I've never seen it before so I think it's worth drawing attention to.  I just want to make sure everything is thought through, not be passive aggressive.\r<br />\n<br />\nI'm also wondering where casting would be required and where it wouldn't.<br />\n<pre><code>type StudentId: number;\nStudentId idOne = 5; // error requires cast\nStudentId idTwo = &lt;StudentId&gt; 5; // ok\nStudentId idThree = &lt;StudentId&gt; 6; // ok\n\nidTwo++; // is this ok?\nidTwo + idThree; // I think this makes sense\nvar w: number = idTwo; // is this ok?\nvar x: number = idTwo + 3; // is this ok?\nvar y: StudentId = idTwo + 3; // is this ok?\n\ntype SuperStudentId: StudentId; // what are the implications of this?</code></pre>\n\nI refreshed my memory in C a little bit and noticed that typedef aliases the type but doesn't actually require any casting.  So following C's lead definitely doesn't get you what you want.<br />\n",
+    "PostedDate": "2013-04-03T09:13:20.69-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1028272",
+    "ThreadId": "438740",
+    "Html": "@Grajkowski<br />\n<blockquote>\nI just want to make sure everything is thought through, not be passive aggressive.<br />\n</blockquote>\nYou're right, I was focused on what benefits I want to reap from the proposed extension of the type system, and paid barely any attention to the consequences, potential inconsistencies, etc.\r<br />\n<br />\n@jonturner\r<br />\n<br />\nPreemptive apologies for potentially dumb questions, I'm a layprogrammer and know little about type theory.\r<br />\n<br />\nIf TypeScript's type system is structural, then is it impossible to differentiate between an instance of <code>number</code> and and instance of some sort of <code>StudentId inherits-but-is-distinct-from number</code>, because structurally the two types are assignment compatible? So even if we assumed that what I'm proposing is a reasonable idea, it falls outside of the realm of structural type systems, and thus cannot be [easily] implemented in tsc? Is it basically the same problem as this:<br />\n<pre><code>interface Person {\n    name: string;\n}\n\ninterface Pet {\n    name: string;\n}\n\nvar jack: Person = { name: &quot;Jack Sparrow&quot; };\nvar pet: Pet = jack;  // type checks just fine</code></pre>\n\nwhere the last line makes &quot;no sense&quot; if you're used to Java-style interface definition and inheritance, but type checks fine because <code>Pet</code> and <code>Person</code> are structurally equivalent?\r<br />\n<br />\nAm I understanding it correctly?<br />\n",
+    "PostedDate": "2013-04-10T01:10:52.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1028494",
+    "ThreadId": "438740",
+    "Html": "@anchann - That's exactly right.  Structural type systems don't care what the name of the type is, they simply look at the components of the type.<br />\n\r<br />\nUsing just interfaces, you can't tell a difference between Person and Pet.  This is one of the drawbacks of structural systems, but they also give you the flexibility to handle situations where you only care about what properties an object has without knowing specifically what its original class was.  That's the case with TypeScript, since you can create objects out of thin air in JavaScript without any named class that they're constructed from.<br />\n",
+    "PostedDate": "2013-04-10T08:23:40.023-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1033730",
+    "ThreadId": "438740",
+    "Html": "Just to rant a little, real functional languages have had algebraic types as their backbone for decades; structural typing (in the form of type classes) rather takes second place in most functional programs.\r<br />\n<br />\nI really wish the OO world would take a good look at including algebraic types; I can't think of any good reason not to have them, while the benefits would be great.<br />\n",
+    "PostedDate": "2013-04-21T21:14:34.24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

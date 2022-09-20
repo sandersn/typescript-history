@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I can't reproduce the problem:\n\n```\n1>------ Rebuild All started: Project: jriappTS, Configuration: Debug Any CPU ------\n1>  jriappTS -> C:\\customer\\jriappTS\\jriappTS\\bin\\jriappTS.dll\n========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========\n```\n\nOne thing to check is if 'tsc' is still in your path. There can also be an issue during install updates where a lingering msbuild process hangs on to the wrong path; logging off and on again may help.\n\nPlease reactivate with your investigation if you can turn up some more information. Thanks!",
+    "ClosedDate": "2014-02-26T13:02:46.403-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I tried to compile my jriappTS  typescript  project which was normaly compiled in 0.95 version into a single javascript file.\r\nYou can download it at https://github.com/BBGONE/jRIAppTS\r\nThe download contains VS2012 typescript project jriappTS which has a postbuild event command \r\n```\r\ntsc --out $(ProjectDir)\\jriapp.js --d --target ES5  $(ProjectDir)\\main\\app.ts\r\n```\r\nThis is now produces an error\r\n```\r\nError\t1\tThe command \"tsc --out C:\\DATA\\NEW_SVM\\DEMO_JRIAPP2\\jriappTS\\jriappTS\\\\jriapp.js --d --target ES5  C:\\DATA\\NEW_SVM\\DEMO_JRIAPP2\\jriappTS\\jriappTS\\\\main\\app.ts\" exited with code 9009.\tjriappTS\r\n\r\n```\r\napp.ts file contains references which are supposed to be compiled into one aggregated file :\r\n\r\n```\r\n/// <reference path=\"..\\thirdparty\\jquery.d.ts\" />\r\n/// <reference path=\"..\\thirdparty\\moment.d.ts\" />\r\n/// <reference path=\"..\\jriapp_strings.d.ts\"/>\r\n/// <reference path=\"baseutils.ts\"/>\r\n/// <reference path=\"baseobj.ts\"/>\r\n/// <reference path=\"globalobj.ts\"/>\r\n/// <reference path=\"..\\modules\\consts.ts\"/>\r\n/// <reference path=\"..\\modules\\utils.ts\"/>\r\n/// <reference path=\"..\\modules\\errors.ts\"/>\r\n/// <reference path=\"..\\modules\\converter.ts\"/>\r\n/// <reference path=\"..\\modules\\defaults.ts\"/>\r\n/// <reference path=\"..\\modules\\parser.ts\"/>\r\n/// <reference path=\"..\\modules\\mvvm.ts\"/>\r\n/// <reference path=\"..\\modules\\baseElView.ts\"/>\r\n/// <reference path=\"..\\modules\\binding.ts\"/>\r\n/// <reference path=\"..\\modules\\collection.ts\"/>\r\n/// <reference path=\"..\\modules\\template.ts\"/>\r\n/// <reference path=\"..\\modules\\baseContent.ts\"/>\r\n/// <reference path=\"..\\modules\\dataform.ts\"/>\r\n//*** the rest are optional modules, which can be removed if not needed ***\r\n/// <reference path=\"..\\modules\\dynacontent.ts\"/>\r\n/// <reference path=\"..\\modules\\datepicker.ts\"/>\r\n/// <reference path=\"..\\modules\\tabs.ts\"/>\r\n/// <reference path=\"..\\modules\\listbox.ts\"/>\r\n/// <reference path=\"..\\modules\\datadialog.ts\"/>\r\n/// <reference path=\"..\\modules\\datagrid.ts\"/>\r\n/// <reference path=\"..\\modules\\pager.ts\"/>\r\n/// <reference path=\"..\\modules\\stackpanel.ts\"/>\r\n/// <reference path=\"..\\modules\\db.ts\"/>\r\n\r\n```",
+    "LastUpdatedDate": "2014-03-31T16:38:17.583-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-26T00:21:56.027-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "1.0 RC stopped to compile several ts files into one js file",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2220
+  },
+  "FileAttachments": [
+    {
+      "FileId": 807532,
+      "FileName": "jriappTS.zip",
+      "DownloadUrl": ".\\807532"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Attached the project which does not compile into one javascript file.\r\nAlthough it still compiles without error producing a js file per ts file.",
+      "PostedDate": "2014-02-26T00:36:26.217-08:00",
+      "Id": 134755
+    },
+    {
+      "Message": "Also, please post the results of running that build command from a normal command prompt so we can at least know what error is being issued.",
+      "PostedDate": "2014-02-26T13:03:17.96-08:00",
+      "Id": 134926
+    },
+    {
+      "Message": "I found the reason of the compilation error.\nIn expression:\ntsc --out $(ProjectDir)\\jriapp.js --d --target ES5  $(ProjectDir)\\main\\app.ts\n\n $(ProjectDir)\nexpands to a path with a backslash at the end \nso it introduces double slashes like: SomePath\\\\main\\app.ts\n\nProbably previous compiler version tolerated this, and now it produces error.\n\nThank you for help.\n",
+      "PostedDate": "2014-02-26T23:48:36.063-08:00",
+      "Id": 135242
+    }
+  ]
+}

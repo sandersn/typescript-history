@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:23:03.593-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Behaviour of this in get/set accessor differs from behaviour in 'normal' member functions called thru super from derived class.\r\n\r\nIn example below, t.setModeA(9) fails because this does not refer to class A in public set mode(m: number) and hence this._modeA is undefined. t.setModeB(9) works because this correctly refers to class B in public mode(m: number).\r\n\r\nReplace super.mode = m; with this.mode = m; works in this example but that precludes the use of an override for the get/set accessor in the derived class with the ability to still invoke the get/set accessor in the base class.\r\n\r\n[TypeScript 0.8.3 + VS2012 + WE 2.5.4]\r\n\r\n```\r\n\r\n\r\n$(document).ready(\r\nfunction () {\r\n   var t: any = new client.C;\r\n   t.setModeA(9);\r\n\r\n   t = new client.D;\r\n   t.setModeB(9);\r\n});\r\n\r\n\r\nmodule tester\r\n{\r\n   export class amode\r\n   {\r\n      public v: number;\r\n   }\r\n\r\n   export class A\r\n   {\r\n      private _modeA: amode;\r\n      constructor()\r\n      {\r\n         this._modeA = new amode;\r\n         this._modeA.v = 1;\r\n      }\r\n\r\n      public set mode(m: number)\r\n      {\r\n         this._modeA.v = m;\r\n      }\r\n   }\r\n\r\n   export class B\r\n   {\r\n      private _modeB: amode;\r\n      constructor()\r\n      {\r\n         this._modeB = new amode;\r\n         this._modeB.v = 1;\r\n      }\r\n\r\n      public mode(m: number)\r\n      {\r\n         this._modeB.v = m;\r\n      }\r\n   }\r\n}\r\n\r\nmodule client\r\n{\r\n   export class C extends tester.A\r\n   {\r\n      constructor()\r\n      {\r\n         super();\r\n      }\r\n\r\n      public setModeA(m: number)\r\n      {\r\n         super.mode = m;\r\n      }\r\n   }\r\n\r\n   export class D extends tester.B\r\n   {\r\n      constructor()\r\n      {\r\n         super();\r\n      }\r\n\r\n      public setModeB(m: number)\r\n      {\r\n         super.mode(m);\r\n      }\r\n   }\r\n}\r\n\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-20T12:13:38.477-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "this in get/set accessor",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 835
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The root cause here is that you shouldn't be allowed to use 'super' to access anything except methods",
+      "PostedDate": "2013-03-22T14:46:30.867-07:00",
+      "Id": 94136
+    },
+    {
+      "Message": "You should definitely be able to use 'super' with Properties. At least thats what i know from other languages with Properties (AS3, C# etc.) and works.",
+      "PostedDate": "2013-05-11T01:55:09.067-07:00",
+      "Id": 99974
+    }
+  ]
+}

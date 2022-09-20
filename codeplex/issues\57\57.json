@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I believe this is fixed in 0.8.2.0 (for the error cases I tried, at least). Please reopen if you see otherwise. Thanks!",
+    "ClosedDate": "2013-01-29T09:47:44.713-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I'm interested in integrating tsc with a CI build but currently I don't see any way to easily spot whether there were warnings in the output. I understand that tsc will output the JS file regardless of any errors/warnings in the code but I want to fail the build if there were problems.\n\nI suggest that `tsc` return an exit code of 1 if there are any warnings in the output.\n\nIt should also return an exit code of 1 if there was an error reading the input files or writing the output file. Currently it returns 0 for those scenarios as well.",
+    "LastUpdatedDate": "2017-11-27T11:51:35.14-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T06:08:33.75-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "tsc should (optionally?) return a failing exit code when there are warnings",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 4,
+    "Id": 57
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Type errors in TypeScript are actually, like you say, more like type warnings.  A file with type warnings could still be valid JavaScript, so we don't want to error in that case.\n\nOne possible solution would be to wrap your call to tsc with something that calls out and then looks through the resulting string to see if error/warnings were found.\n\nAlternately, the compiler could support a flag that errors with an exit code when errors are detected. ",
+      "PostedDate": "2012-10-03T14:51:37.7-07:00",
+      "Id": 78484
+    },
+    {
+      "Message": "(Assigning to jopamer for comment on compiler flag)",
+      "PostedDate": "2012-10-03T14:52:11.53-07:00",
+      "Id": 78485
+    },
+    {
+      "Message": "Obviously I think a flag would be great. ;)\n\nHow about the other case where a JS file isn't created due to a true error. Surely a failing exit code should always be used in this case. ",
+      "PostedDate": "2012-10-03T15:17:22.03-07:00",
+      "Id": 78487
+    },
+    {
+      "Message": "We should actually already be doing this.  Sheetal - can you take a look?",
+      "PostedDate": "2012-10-05T16:14:50.423-07:00",
+      "Id": 78755
+    },
+    {
+      "Message": "We are already returning with exit code 1 when there are errors.",
+      "PostedDate": "2012-10-09T14:49:05.267-07:00",
+      "Id": 79247
+    },
+    {
+      "Message": "Which errors are you returning an exit code 1 for? You aren't for the example I gave.\n\nIn PowerShell (also test in bash on OS X).\n\nPS> tsc some_non_existent_file.ts\nError reading file \"some_non_existent_file.ts\": File not found\nPS> echo $LASTEXITCODE\n0",
+      "PostedDate": "2012-10-09T16:00:13.307-07:00",
+      "Id": 79252
+    },
+    {
+      "Message": "Thanks for the update.  I can verify that we still have ERRORCODE of 0 on exit if a file is not found.  Making sure this is still on the radar...",
+      "PostedDate": "2012-12-28T13:02:59.44-08:00",
+      "Id": 85013
+    }
+  ]
+}

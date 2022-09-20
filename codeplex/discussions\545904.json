@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1247252",
+    "ThreadId": "545904",
+    "Html": "It would be great if compiler could understand void types and put nothing in the generated JS.\r<br />\nThen it would be possible to write this code and change function signatures without changing the usage !\r<br />\n<br />\nWorking one:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f() : <span style=\"color:Blue;\">number</span> {}\n<span style=\"color:Blue;\">function</span> g(x : <span style=\"color:Blue;\">number</span>) : <span style=\"color:Blue;\">void</span> {}\n\n<span style=\"color:Blue;\">var</span> a = f();\ng(b);\r\n</pre></div>Not working with void:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f() : <span style=\"color:Blue;\">void</span> {}\n<span style=\"color:Blue;\">function</span> g() : <span style=\"color:Blue;\">void</span> {}\n\n<span style=\"color:Blue;\">var</span> a = f();\ng(b);\r\n</pre></div>",
+    "PostedDate": "2014-05-19T21:27:37.75-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247259",
+    "ThreadId": "545904",
+    "Html": "Void is not a type - it means &quot;returning nothing&quot;, and you are trying to return something from nothing, which is not allowed. I understand that this is a request to open a hole in the type enforcement system to delete the &quot;= f();&quot; part, but what if someone did this by mistake? I'm sure 99% of people would never expect this behaviour. What if I typed 'g' instead of 'f' (assuming no parameters), and it compiled fine, in a 5000 line TS file? The type system SHOULD capture this as an error, otherwise it could make bugs a nightmare for many more people than it would help.  If this is to be proposed properly, there'd have to be a modifier associated, much like &quot;partial methods&quot; in C#, where the &quot;partial&quot; modifier is used.<br />\n",
+    "PostedDate": "2014-05-19T22:42:19.753-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247263",
+    "ThreadId": "545904",
+    "Html": "Another idea may be a directive similar to the &quot;[Conditional(&quot;DEBUG&quot;)]&quot; attribute in C# - see discussion here: <a href=\"https://typescript.codeplex.com/discussions/528227\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/528227</a><br />\n",
+    "PostedDate": "2014-05-19T23:07:32.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247723",
+    "ThreadId": "545904",
+    "Html": "You can use it in generics, so it is a type:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f&lt;T&gt;(){}\nf&lt;<span style=\"color:Blue;\">void</span>&gt;();\n\n<span style=\"color:Blue;\">class</span> A&lt;U,V&gt;{\n    u:U;\n}\n\n<span style=\"color:Blue;\">var</span> x = <span style=\"color:Blue;\">new</span> A&lt;<span style=\"color:Blue;\">number</span>, <span style=\"color:Blue;\">void</span>&gt;();\r\n</pre></div>As long as you don't use a variable with void type it is fine.<br />\n",
+    "PostedDate": "2014-05-20T23:54:05.793-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247963",
+    "ThreadId": "545904",
+    "Html": "Your example actually works when all you do is change type 'number' to type 'void':<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f(): <span style=\"color:Blue;\">void</span> { }\n<span style=\"color:Blue;\">function</span> g(x: <span style=\"color:Blue;\">void</span>): <span style=\"color:Blue;\">void</span> { }\n<span style=\"color:Blue;\">var</span> a = f();\ng(a);\r\n</pre></div>However it doesn't work if you change 'g' to have no parameters because the absence of a parameter isn't the same as a parameter of type 'void'.<br />\n",
+    "PostedDate": "2014-05-21T07:17:00.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1248030",
+    "ThreadId": "545904",
+    "Html": "@NN 'void' is not really a type.  It's a type placeholder that represents 'no type' that happens to mean 'undefined' is expected (or null).  It's only a type in that its a no-type type. ;) Apparently you can expect void values (undefined), so it appears I was off there, but you cannot assign anything but &quot;undefined&quot;/&quot;null&quot; to voided vars/properties.<br />\n<br />\nAs the specification says: &quot;The Void type exists purely to indicate the absence of a value, such as in a function with no return value. ...... NOTE: We might consider disallowing declaring variables of type Void as they serve no useful purpose.&quot;<br />\n<br />\n@ahejlsberg I think he wants the code removed from the output, which doesn't occur when void is used.<br />\n<br />\nps. Is black a color? I suppose it depends on how you look at it, or don't (pun intended). ;) <br />\n",
+    "PostedDate": "2014-05-21T09:02:41.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252747",
+    "ThreadId": "545904",
+    "Html": "Making void as type allows writing generic functions easily.\r<br />\nFor example CLR type system doesn't consider void as a type, so it has duplication for methods returning types and methods returning void.\r<br />\n<br />\nAlso this is useful for creating very generic interfaces.\r<br />\nFor instance:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> DictionaryOrSet&lt;K, V&gt;\n{\n  add(key : K, value : V) : <span style=\"color:Blue;\">void</span>;\n  remove(key : K) : <span style=\"color:Blue;\">void</span>;\n}\n\n<span style=\"color:Blue;\">class</span> Dictionary&lt;K,V&gt; <span style=\"color:Blue;\">implements</span> DictionaryOrSet&lt;K,V&gt; {\n  add(key : K, value : V) : <span style=\"color:Blue;\">void</span> { }\n}\n\n<span style=\"color:Blue;\">class</span> Set&lt;T&gt; <span style=\"color:Blue;\">implements</span> DictionaryOrSet&lt;T,<span style=\"color:Blue;\">void</span>&gt; {\n  add(value : T) : <span style=\"color:Blue;\">void</span> { }\n}\r\n</pre></div>",
+    "PostedDate": "2014-06-04T01:13:15.797-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252967",
+    "ThreadId": "545904",
+    "Html": "Those types definitions there are valid in TypeScript, you just need to implement 'remove' in Dictionary and Set as per the normal interface implementation rules.<br />\n",
+    "PostedDate": "2014-06-04T11:37:26.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1254034",
+    "ThreadId": "545904",
+    "Html": "<strong>danquirk wrote:</strong><br />\n<blockquote>\nThose types definitions there are valid in TypeScript, you just need to implement 'remove' in Dictionary and Set as per the normal interface implementation rules.<br />\n</blockquote>\nGreat. It really works.\r<br />\nI just didn't try it :)<br />\n",
+    "PostedDate": "2014-06-07T10:12:53.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

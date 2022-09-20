@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We do not synthesize new types when trying to find the best common type of an array.\n\nWe're definitely aware this isn't the best thing to do at all times, but there are some performance implications of trying to construct a new type at every array literal, as well as some open design questions that need addressing (i.e. how 'far' should we be willing to go to synthesize some complex type?).",
+    "ClosedDate": "2014-04-07T11:03:46.657-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "```\r\nvar arrayInferTest = [\r\n    { prop: \"val\", prop2: \"val\", prop3: \"val\" },\r\n    { prop: \"val\", prop2: \"val\" }\r\n];\r\n\r\nvar arrayInferTest2 = [\r\n    { prop: \"val\", prop2: \"val\", prop3: \"val\" },\r\n    { prop: \"val\", prop2: \"val\" },\r\n    { prop2: \"val\", prop3: \"val\" }\r\n];\r\n\r\n```\r\n\r\n`arrayInferTest` type is `{prop:string; prop2:string;}[]` but for `arrayInferTest2` it's `{}[]`. Shouldn't it be `{prop2:string;}[]` for `arrayInferTest2`?\r\n\r\nI thought inference algorithm tries to find \"best common\" type for these objects.",
+    "LastUpdatedDate": "2014-04-07T11:03:46.657-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-06T06:35:53.017-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "array type inference bug?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2392
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If you change the last line to { prop: \"val\" } on 'arrayInferTest2', then you will get \"{ prop: string } []\".  It makes sense that similar names are required.  When looping, you generally use a type common to ALL references, *and that includes expected property names*.  TypeScript adds type checking, which includes property names.  The ENITRE object - that is, all properties between \"{\" and \"}\" for ONE of the items must match ALL items, otherwise a common type cannot be accepted.  \n\nAnyhow, all that said, I do think it would be nice to do this:\n\n```\nvar arrayInferTest2 = [\n    { prop: \"val\", prop2: \"val\", prop3: \"val\" },\n    { prop: \"val\", prop2: \"val\" },\n    { prop: \"val\", _prop: \"val\" }\n];\n```\nIn this case, I would expect the type to be \"{ prop: string } []\", but it does not \"break apart\" objects to make a new object type that is not specified.  I would agree, however, that creating an implicit type common to all these types would be nice. :)",
+      "PostedDate": "2014-04-06T12:43:36.54-07:00",
+      "Id": 140739
+    }
+  ]
+}

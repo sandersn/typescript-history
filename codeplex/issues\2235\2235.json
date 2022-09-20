@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-27T14:48:31.66-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following code is accepted, even though it is ill-typed:\r\n\r\n```\r\nfunction map<A,B> (f : (x:A) => B, xs : Array<A>) : Array<B>\r\n{\r\n   return xs.map(f);\r\n}\r\n\r\nvar xs:Array<string> = [\"mies\",\"noot\",\"aap\"]\r\nmap(function (x:number) { return x + 1}, xs)\r\n```\r\n\r\nIf we use `map` from the `Array<T>` interface (or define our own similar method), it does flag the error.",
+    "LastUpdatedDate": "2014-03-31T16:18:38.653-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-27T02:16:32.497-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Ill-typed application accepted with static, not with class method",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2235
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is working as intended although the behavior here is indeed surprising and not desirable. In 0.9.5 this was an error but only due to a compiler bug, the language specification rules were the same (which is that this is not an error). We'll be investigating options in future versions that would allow for some stricter checking in cases like this.\n\nAs for the rationale:\n\nThe compiler tries to infer types for A and B based on the arguments to map. From the first argument it infers number for A. Then examining the return expression to determine a type candidate for B we have x + 1, we know x was explicitly typed as number, so B must be a number. The second argument to map then provides string as a candidate for A. Now the compiler tries to determine the final type for A and B by computing a best common type from the candidates for each type parameter. The candidates for A are string and number, the best common type between them is {}, so A is considered {} (this is easily observable if you return an Array<A>). B's only candidate is number so B is number. So after all that your call results in a number[] although it's quite understandable why you expected an error here. One workaround here is to not use a type annotation on the parameter types for the function argument. Doing so will cause the compiler to not make further inferences for A after seeing the function parameter type and yield an error since {} + 1 is not valid (ie no candidates for A had been found prior to fixing A and stopping type inference for it). \n\n```TypeScript```\nvar r = map(function (x) { return x + 1 }, xs) // error: Invalid + expression - types not known to support the addition operator\n```\n\nThe reason there is an error when you use Array.map like this\n\n```TypeScript```\nvar r2 = xs.map(function (x: number) { return x + 1 }, xs);\n```\nis because now the type of the first argument is not A => B with a need to make inferences for both type arguments, instead it is T => U where T is already known to be string from the instance type. So now you immediately get an error for trying to provide a function that is number => number when a string => U was expected.",
+      "PostedDate": "2014-02-27T14:48:22.143-08:00",
+      "Id": 135338
+    },
+    {
+      "Message": "Thanks for the explanation! The problem with not having a type annotation on the parameter is that this example was artificial. In actual code, we often pass separately defined static functions that are defined standalone, and there we try to have type signatures.\n\nGood to know you're thinking about a solution.\n\nRegards,\n\nErik",
+      "PostedDate": "2014-02-28T01:04:32.987-08:00",
+      "Id": 135374
+    }
+  ]
+}

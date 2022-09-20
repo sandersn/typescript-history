@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Captured locals in class definitions create *static* variables, not *instance* members. The current private implementation is really the best we can do without ES6 private names.",
+    "ClosedDate": "2013-02-25T16:28:33.547-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "private variables don't really work like how they should. Check out the TypeScript code bellow and the output and the desired output \r\n\r\nclass Greeter {\r\n\tgreeting: string;\r\n\tprivate numbah: number = 5;\r\n\tconstructor (message: string) {\r\n\t\tnumbah = numbah * Math.floor(Math.random() * 100);\r\n\t\tthis.greeting = message;\r\n\t}\r\n       alterNumbah () {\r\n          numbah = numbah * Math.floor(Math.random() * 100);\r\n          console.log(numbah);\r\n       }\r\n}\r\n\r\nGETS converted to :\r\n\r\nvar Greeter = (function () {\r\n    function Greeter(message) {\r\n        this.numbah = 5;\r\n        this.greeting = message;\r\n    }\r\n    this.alterNumbah = function () {\r\n        numbah = numbah * Math.floor(Math.random() * 100);\r\n        console.log(numbah);\r\n    }\r\n    return Greeter;\r\n})();\r\n\r\nwhich given an error that numbah is not defined and makes numbah part of the constructor. It should actally be compiled like this:\r\n\r\nvar Greeter = (function () {\r\n    var numbah;\r\n    function Greeter(message) {\r\n        numbah = 5;\r\n        this.greeting = message;\r\n    }\r\n    this.alterNumbah = function () {\r\n        numbah = numbah * Math.floor(Math.random() * 100);\r\n        console.log(numbah);\r\n    }\r\n    return Greeter;\r\n})();",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-18T07:14:37.08-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "private members are not properly compiled",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 281
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Actually, your example can't compile. You must use the keyword this to reference your member data, or else it throws a \"<variable> is does not exist in current scope\" error.\n\nIn that case, it then compiles properly. Also, functions are referenced by <classname>.prototype, not with \"this\".\n\nSo, you have TypeScript of:\nclass Greeter {\n    greeting: string;\n    private numbah: number = 5;\n\n    constructor (message: string) {\n        this.numbah = this.numbah * Math.floor(Math.random() * 100);\n        this.greeting = message;\n    }\n\n    alterNumbah () {\n        this.numbah = this.numbah * Math.floor(Math.random() * 100);\n        console.log(this.numbah);\n    }\n}\n\nAnd compiled as:\nvar Greeter = (function () {\n    function Greeter(message) {\n        this.numbah = 5;\n        this.numbah = this.numbah * Math.floor(Math.random() * 100);\n        this.greeting = message;\n    }\n    Greeter.prototype.alterNumbah = function () {\n        this.numbah = this.numbah * Math.floor(Math.random() * 100);\n        console.log(this.numbah);\n    };\n    return Greeter;\n})();\n\nUnless I'm terribly mistaken, I believe this works as intended.",
+      "PostedDate": "2012-10-24T10:30:39.383-07:00",
+      "Id": 80908
+    },
+    {
+      "Message": "well no, because if I create an instance\nvar g = new Greeter('Aloha@');\ng.numbah; // this should be undefined as numbah was marked as private, instead this is accessible\n\nwhat I was saying - and why the above mentioned compiled code works, but with the minor adjustment that the function alterNumbah should be bound to Greeter.prototype instead of this;\n\nIf you just put the adjusted Greeter code and followed by the short test case, you'll see what I mean. This should be the expected behavior for when declaring a variable _private_. What you specified above is the equivalent of a public variable, which is misleading :)\n\n-------------------------- \nvar g = new Greeter('Aloha@');\ng.numbah; // is undefined as it should be\ng.alterNumbah(); // \ng.alterNumbah(); // successfully uses the previous variable as a base\n \n-----------------------\nvar Greeter = (function () {\nvar numbah;\nfunction Greeter(message) {\nnumbah = 5;\nthis.greeting = message;\n}\nGreeter.prototype.alterNumbah = function () {  // this line was changed from this. to Greeter.prototype\nnumbah = numbah * Math.floor(Math.random() * 100);\nconsole.log(numbah);\n}\nreturn Greeter;\n})();\n-----------------------",
+      "PostedDate": "2012-10-24T11:14:53.623-07:00",
+      "Id": 80910
+    }
+  ]
+}

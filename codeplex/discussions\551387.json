@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1265179",
+    "ThreadId": "551387",
+    "Html": "I'm struggling with large-scale TypeScript development. Imagine I had two animals, and each contained a lot of code.<br />\n<pre><code>// zebra.ts\nexport class Zebra {\n    constructor() {\n        console.log(&quot;You made a zebra. Good for you!&quot;);\n    }\n\n    // lots of code goes here (1000ish lines)\n}\n\n// lion.ts\nexport class Lion {\n    constructor() {\n        console.log(&quot;You made a lion. Good for you!&quot;);\n    }\n\n    // lots of code goes here (1000ish lines)\n}</code></pre>\n\nI definitely want those large classes to be in separate files. <br />\n<br />\nWhen I want to import them, I need to do something like this:<br />\n<pre><code>// zoo.ts\nimport ZebraModule = require(&quot;Zebra&quot;);\nimport LionModule = require(&quot;Lion&quot;); </code></pre>\n\nThis seems really silly. We loose the benefits of compartmentalizing the imports into one container. There's no IntelliSense friendly way of seeing all the imported animals.<br />\n<br />\nSince both variables are of type module, it makes sense that module merging (<a href=\"http://www.typescriptlang.org/Handbook#declaration-merging-merging-modules\" rel=\"nofollow\">http://www.typescriptlang.org/Handbook#declaration-merging-merging-modules</a>) would somehow be an option:<br />\n<pre><code>// zoo.ts (this doesn't work, but it would be awesome if it did)\nimport Animals = require(&quot;Zebra&quot;);\nimport Animals = require(&quot;Lion&quot;); </code></pre>\n\nAm I missing something that allows for this already?<br />\n",
+    "PostedDate": "2014-07-12T14:31:18.783-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265404",
+    "ThreadId": "551387",
+    "Html": "This is already possible, if you change your code slightly:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Zebra.ts</span>\n<span style=\"color:Blue;\">class</span> Zebra {\n  <span style=\"color:Green;\">/* ... */</span>\n}\n<span style=\"color:Blue;\">export</span> = Zebra;\n\n<span style=\"color:Green;\">// Lion.ts</span>\n<span style=\"color:Blue;\">class</span> Lion {\n    <span style=\"color:Green;\">/* ... */</span>\n}\n<span style=\"color:Blue;\">export</span> = Lion;\n\n<span style=\"color:Green;\">// zoo.ts</span>\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">import</span> Zebra = require(<span style=\"color:#A31515;\">&quot;Zebra&quot;</span>); Zebra;\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">import</span> Lion = require(<span style=\"color:#A31515;\">&quot;Lion&quot;</span>); Lion;\r\n</pre></div>Here, 'export' has been moved from the class definition to a statement, to remove one unnecessary level of indirection (only works if it's just the class you want to export, not if you want to e.g. export multiple classes/interfaces from one file).\r<br />\nAlso note the 'export import' syntax to re-export existing things.\r<br />\n<br />\nNote that TypeScript currently doesn't emit code for the imports in zoo.ts, because it apparently thinks they are not really used in the file. I think that's a bug. As a work-around, I've placed a no-op statement after the imports to convince the compiler to include the export statements.<br />\n",
+    "PostedDate": "2014-07-14T00:58:12.187-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265408",
+    "ThreadId": "551387",
+    "Html": "For easy reference, here's an existing bug-report for the unused-module-problem: <a href=\"https://typescript.codeplex.com/workitem/2304\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2304</a><br />\n",
+    "PostedDate": "2014-07-14T01:10:05.983-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1265638",
+    "ThreadId": "551387",
+    "Html": "I suspect the ideal solution for you is merged external modules which we don't support yet. The internal module version would be like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nfile1.ts:\n<span style=\"color:Blue;\">module</span> Animals {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Zebra {\n        <span style=\"color:Green;\">// stuff a Zebra does</span>\n    }\n}\n\nfile2.ts:\n<span style=\"color:Blue;\">module</span> Animals {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Lion {\n        <span style=\"color:Green;\">// stuff a Lion does</span>\n    }\n}\n\nfile3.ts:\n<span style=\"color:Green;\">/// &lt;reference path=&#39;file1.ts&#39;/&gt;</span>\n<span style=\"color:Green;\">/// &lt;reference path=&#39;file2.ts&#39;/&gt;</span>\n\n<span style=\"color:Blue;\">var</span> anAnimal = <span style=\"color:Blue;\">new</span> Animals. <span style=\"color:Green;\">// now you get Intellisense with Lion and Zebra available</span>\r\n</pre></div>If file1 and file2 could export the Animals module then you'd be able to write file3 using import/require rather than only /// references. Unfortunately we've had trouble designing a satisfactory user experience here, suffice to say it has definitely been on our radar for a long time. If you must use import/require and you want the classes under a single namespace then yeah for the moment you're stuck with having to put them in the same file that is exporting that module. The use of export= shown above does help in other ways too.<br />\n",
+    "PostedDate": "2014-07-14T12:53:51.283-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

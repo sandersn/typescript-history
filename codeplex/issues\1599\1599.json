@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the develop branch",
+    "ClosedDate": "2013-08-27T13:24:35.483-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "\r\nThis may well be something I'm doing wrong, but the compiler should help guide me as to what it is I have wrong (or possibly this is a bug)\r\n\r\n\r\nWhen I construct two files (project) as such.\r\n\r\n    ./main.ts\r\n    ./utils/helpers.ts\r\n\r\nwhere the contents of each file is\r\n\r\n*./main.ts*\r\n\r\n\r\n\timport utils = require(\"./utils/helpers.ts\");\r\n\r\n\tutils.log(\"hello\");\r\n\r\n./utils/helpers.ts\r\n\r\n\tmodule utils {\r\n\r\n\t\texport function log(args) {\r\n\t\t\tconsole.log(args);\r\n\t\t}\r\n\r\n\t}\r\n\r\nI then run `tsc` Version `0.9.1.1` with this command\r\n\r\n`tsc .\\Main.ts --module`\r\n\r\nI get the following error:\r\n\r\n    tsc.js(55958, 21) JavaScript runtime error: Unable to get property 'toLowerCase' of undefined or null reference\r\n\r\nAny thoughts?",
+    "LastUpdatedDate": "2013-08-27T13:24:35.483-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-26T21:25:22.287-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "error in compiler: Unable to get property 'toLowerCase' when building a simple 2 file 'project'",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1599
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I worked it out (to get the compiler happy) but only got it to work with the VS tooling where it inferred the project. Still can't get the command-line to work with this sample.\n\n\nfile paths remained the same but the code in each file changed. \n\nutils/helpers.ts\n\n    export module utils {\n        export function log(args) {\n            console.log(args);\n        }\n    }\n\nmain.ts\n\n    import utilsMod = require(\"./utils/helpers\");\n\n    var utils = utilsMod.utils;\n\n    utils.log(\"hello\");\n\n",
+      "PostedDate": "2013-08-26T21:38:44.143-07:00",
+      "Id": 111244
+    },
+    {
+      "Message": "Ok, I looked at `typescript.js` at the line# in my file and realized that I am supposed to pass in a value to the --module parameter.\n\n\nMight I suggest on the `set:` below that the argument is checked and possibly throw a helpful exception as to usages of the `--module`?\n\n\n            opts.option('module', {\n                usage: {\n                    locCode: TypeScript.DiagnosticCode.Specify_module_code_generation_0_or_1,\n                    args: ['commonjs', 'amd']\n                },\n                type: TypeScript.DiagnosticCode.KIND,\n                set: function (type) {\n                    type = type.toLowerCase();\n\n                    if (type === 'commonjs') {\n                        _this.compilationSettings.moduleGenTarget = 1 /* Synchronous */;\n                    } else if (type === 'amd') {\n                        _this.compilationSettings.moduleGenTarget = 2 /* Asynchronous */;\n                    } else {\n                        _this.addDiagnostic(new TypeScript.Diagnostic(null, 0, 0, TypeScript.DiagnosticCode.Module_code_generation_0_not_supported, [type]));\n                    }\n                }\n            }, 'm');",
+      "PostedDate": "2013-08-26T21:46:45.123-07:00",
+      "Id": 111245
+    }
+  ]
+}

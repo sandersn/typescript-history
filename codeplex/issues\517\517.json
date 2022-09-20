@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design, basically for the reasons Crwth mentioned.\n\nThe idea here is that if you say you're going to return something, we're going to check that you at least tried on some code path. This catches the most common class of error (oops, I forgot the return statement at the end of the function!) without complicating the JavaScript semantics of an implicit (and universally-type-matching) \"return undefined\" at any other function exit point.",
+    "ClosedDate": "2012-11-30T13:47:37.573-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "for given code:\r\n\r\ntest(arg: string): string {\r\n        if (arg !== null)\r\n            return \"\";\r\n    }\r\n\r\nthere is no compilation error saying that not all control paths return value and this method returns undefined when arg is null which is clearly not intended by declaring string as return type.",
+    "LastUpdatedDate": "2012-11-30T13:47:37.573-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-30T05:26:56.553-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "there is no compiler error \"not all control paths return a value\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 517
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Except that \"undefined\" is technically a subtype of string, and Javascript implicitly has \n\n  return;\n\nat the end of every function. \n\nSo while it shouldn't be a compilation error, it's a nice place for a warning.",
+      "PostedDate": "2012-11-30T07:36:30.663-08:00",
+      "Id": 83348
+    },
+    {
+      "Message": "@Crwth\n\nIn that case how should I understand below functions?\n\n    function f1():string { return undefined; }\n    function f2():string {}\n\nBoth return `undefined` but compiling `f2()` gives \"Function declared a non-void return type, but has no return expression\".",
+      "PostedDate": "2012-11-30T08:19:28.847-08:00",
+      "Id": 83355
+    },
+    {
+      "Message": "section 6.4 of the spec:\n\n\"If there are no return statements with expressions in f's function body, the inferred return type is Void.\"\n\nI'm guessing that that rule is inferring that the return type of \n\n{}\n\nis Void, and noting the mismatch with f2():string .\n\nI agree that such an inference looks logical, but does go contrary to the Javascript implementation of an empty function. \n\nWhile we might argue that there should be no error, I think I'll put forth that, in your f2() example, the compiler is helping you out by pointing out that your expectation of a string is a bit strong; leaving the explicit typing off of the function would default it to any, which I'm assuming would pass the Void inference for the function block.\n",
+      "PostedDate": "2012-11-30T13:15:24.133-08:00",
+      "Id": 83368
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As mentioned, this is intentional. TSC does not do any dependency management for you. The order of files on the command line matters, and the set of /// references or imports in those files matters. If you have ordering dependencies necessary for correct runtime behavior then you need to specify it yourself. There are some threads in the discussion forum about managing this in large projects with strategies and concerns, feel free to chime in further there.",
+    "ClosedDate": "2013-09-26T10:44:44.46-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\nIf you place the following 3 code sections inside 3 files (as the comments suggest, d1.ts, d2.ts and d3.ts)...\r\n\r\n```\r\n// File: d1.ts\r\n\r\n/// <reference path=\"d2.ts\" />\r\n\r\nclass A {\r\n    constructor() {\r\n        this.foo();\r\n    }\r\n    foo():void {\r\n        console.log(\"called foo in base\");\r\n    }\r\n}\r\n\r\n\r\n// File: d2.ts\r\n\r\n/// <reference path=\"d1.ts\" />\r\n\r\nclass B extends A {\r\n    foo():void {\r\n        console.log(\"called foo in derived\");\r\n    }\r\n}\r\n\r\n\r\n// File: d3.ts\r\n\r\n/// <reference path=\"d1.ts\" />\r\n/// <reference path=\"d2.ts\" />\r\n\r\nvar b = new B();\r\n```\r\n\r\nEach file declares its references, and indeed the code compiles - but crashes at runtime:\r\n\r\n```\r\n$ tsc --out foo.js d1.ts d2.ts d3.ts \r\n$ node foo.js \r\n\r\n/home/ttsiod/work/foo.js:5\r\n    __.prototype = b.prototype;\r\n                    ^\r\nTypeError: Cannot read property 'prototype' of undefined\r\n    at __extends (/home/ttsiod/work/foo.js:5:21)\r\n    at /home/ttsiod/work/foo.js:10:5\r\n    at Object.<anonymous> (/home/ttsiod/work/foo.js:18:3)\r\n    at Module._compile (module.js:456:26)\r\n    at Object.Module._extensions..js (module.js:474:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Function.Module.runMain (module.js:497:10)\r\n    at startup (node.js:119:16)\r\n    at node.js:901:3\r\n```\r\n\r\n...because tsc generates a wrong order of declarations (first B, then A) in the generated javascript.\r\n\r\nIf the compiler is invoked with the *wrong* order of files (i.e. first the file with the derived, then the file with the base!) then it all works:\r\n```\r\n$ tsc --out foo.js d2.ts d1.ts d3.ts \r\n$ node foo.js \r\ncalled foo in derived\r\n```\r\n\r\nIs this a bug in tsc, or am I missing something?",
+    "LastUpdatedDate": "2013-09-26T10:44:44.46-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-25T07:34:05.29-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "tsc emits invalid declaration order in the output",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1729
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Think of `reference path` as includes - `tsc` does not reorder code according to semantic dependencies, but simply concatenates code in order of file includes (referenced files first). `d1.ts` does not need a reference, `d3.ts` only needs to reference `d2.ts`. Then, `tsc --out foo.js d3.ts` should do the trick.",
+      "PostedDate": "2013-09-25T08:41:44.567-07:00",
+      "Id": 115615
+    },
+    {
+      "Message": "First of all, thanks for responding - I am new to TypeScript and need all the help I can get.\n\nI understand what you said - but in my experience (and as also shown in the example above) it's not just the order of includes that matters - it's also the order of filenames passed to tsc that influences the .js generation. Based on your response, I now believe that for each .ts file passed in through the cmd line, tsc will process the referenced .ts files, then the body of the .ts file itself, and then move on to the next file in the cmd line, etc. Is my assumption correct?\n\nThen, it is true that in this example you can easily apply a \"mental\" topological sort and find a \"root\" .ts file - and pass that to tsc, knowing that all necessary files will be included. In large projects however (as the one I am tasked with), there are big hierarchies of classes, and I am not sure how one could easily arrange the tsc invocation to always be sure it would work. Again, if I understand correctly, I am currently tasked to do this topological sort on my own, and create a proper tsc invocation line - right?\n\nIf so, I think this is something that should probably be fixed in later versions of tsc - this kind of topological sort based on contained class dependencies is anything but easy to figure out for complex class hierarchies broken down into many .ts files.",
+      "PostedDate": "2013-09-25T09:13:59.91-07:00",
+      "Id": 115621
+    },
+    {
+      "Message": "Personally, I prefer to use references as specifying dependencies, then let `tsc` figure out the overall project files list in dependency-first order. Then I never have to do the sorting myself, only need to think about local dependency-order. And the app entry point is in the root file passed to `tsc`.\n\nAlternatively, you can have files listing nothing but references, to fix the order manually, then reference these \"reference list\" files from every source file. You can even have a \"reference list\" file for every project directory. And you can use a \"reference list\" file as your project root, instead of passing all the files as arguments to `tsc`.\n\nYou need to be careful when mixing the two styles: if you specify file reference lists _and_ use references as dependencies, the two can come into conflict, as in your example. Then the dependency resolution takes precedence, as you've noticed. If your file lists are in dependency-first order, that doesn't matter, but if the two methods specify different orderings (eg, because your dependencies or file lists are not up to date, or otherwise incorrect), you've got trouble.\n\nYou can see a mixed style in the TypeScript sources, eg `typescript.ts` references both dependencies and \"reference list\" files: https://typescript.codeplex.com/sourcecontrol/latest#src/compiler/typescript.ts",
+      "PostedDate": "2013-09-25T11:21:28-07:00",
+      "Id": 115633
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Detecting type structure from prototype modification isn't something the language will do. You can just stick an <any> type assertion in front of the RHS in the erroring assignment to remove the error.",
+    "ClosedDate": "2013-01-21T13:11:01.04-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "in the following code, the implementation of BankAccount matches the definition:\r\n\r\n```\r\n\r\n////normal TS way of writing a class\r\n//class BankAccount{\r\n//\tbalance = 0;\r\n//\tdeposit(credit: number) {\r\n//\t\tthis.balance += credit;\r\n//\t\treturn this.balance;\r\n//\t}\r\n//}\r\n\r\n////instead, write BankAccount as an interface\r\ninterface IBankAccount {\r\n\tbalance: number;\r\n\tdeposit(credit: number): number;\r\n\tconstructor();\r\n}\r\n//define the type of BankAccount (as a \"IBankAccount Constructor\")\r\nvar BankAccount: new () => IBankAccount;\r\n\r\n//now provide the implementation\r\nBankAccount = (function() {\r\n\tfunction BankAccount() {\r\n\t\tthis.balance = 0;\r\n\t}\r\n\tBankAccount.prototype.deposit = function(credit){\r\n\t\tthis.balance += credit;\r\n\t\treturn this.balance;\r\n\t};\r\n\treturn BankAccount;\r\n }) ();\r\n\r\n```\r\n\r\nunfortunatly i get the following static error with that implementation.  (fyi, the generated javascript runs fine)\r\n\r\n```\r\nError\t1\tCannot convert '() => void' to 'new() => IBankAccount': Type '() => void' requires a call signature, but Type 'new() => IBankAccount' lacks one\r\n```\r\n",
+    "LastUpdatedDate": "2013-01-21T13:11:01.04-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-18T20:25:32.697-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "static typing error (class construction)",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 625
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "using ts 0.8.1.1",
+      "PostedDate": "2013-01-18T20:25:57.743-08:00",
+      "Id": 86595
+    }
+  ]
+}

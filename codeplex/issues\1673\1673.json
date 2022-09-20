@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.3-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "This may be functioning as designed or as expected, but just thought i'd report it in case.\r\n\r\n```\r\nclass Base {\r\n    doStuff() {\r\n        return this;\r\n    }\r\n}\r\n\r\nclass Derived extends Base {\r\n    doMoreStuff(){ }\r\n}\r\n\r\nclass StuffDoer {\r\n    doStuff(): Derived {\r\n        return new Derived().doStuff();\r\n    }\r\n}\r\n```\r\n\r\nerror TS2012: Cannot convert 'Base' to 'Derived':\r\n\tType 'Base' is missing property 'doMoreStuff' from type 'Derived'.\r\n\r\nFrom my (very limited) perspective, it seems like typescript should understand that when an inherited method on the Derived class returns \"this\", that it will be of the derived instance's type. (The case where I originally ran into this was with generic classes, but it looks like it occurs with normal classes as well.)",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-11T08:30:54.567-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "TS2012: Cannot convert 'Base' to 'Derived':",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 2,
+    "Id": 1673
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is actually as designed, but considering the feedback, I'm assigning this to Jon to take a look here.",
+      "PostedDate": "2013-09-13T15:15:08.743-07:00",
+      "Id": 113538
+    },
+    {
+      "Message": "Cool, thanks for taking another look!\n\nHad to add some casting to counteract this. Would be nice if it wasn't needed.",
+      "PostedDate": "2013-09-13T16:07:57.357-07:00",
+      "Id": 113544
+    },
+    {
+      "Message": "There's a similar issue with type definitions as well. Sometime I run into a situation like this:\n\n```\ninterface Base {\n  x(): Base\n}\n\ninterface Derived extends Base {\n  y(): Derived\n}\n\n------\n\nvar d = new Derived();\nd.y().x(); //Works\nd.x().y(); //Doesn't work, because x returns a Base, and Base doesn't have a y method\n```\n\nI'm not really sure that you have a good way to solve it. Here's a couple places it's come up \"in the wild\":\n\nhttps://github.com/borisyankov/DefinitelyTyped/blob/master/supertest/supertest.d.ts\nhttps://github.com/borisyankov/DefinitelyTyped/blob/master/superagent/superagent.d.ts\n\nSuperTest.Test extends SuperAgent.Request. That means you can write request(url).expect(200).send('data').end(), but not request(url).send('data').expect(200).end().\n\nAlso, here: https://github.com/gamesbrainiac/mongoose-typescript-definitions/blob/20c2210b9d7352a4a774f04bf824bc1176ec76cf/mongoose.d.ts#L194-L394\n\nQueryOne<T> should be able to inherit from Query<T>, but instead it has to reproduce all the methods.",
+      "PostedDate": "2014-02-19T15:24:48.96-08:00",
+      "Id": 134121
+    },
+    {
+      "Message": "I'm surprised about the \"as designed\" comment - from previous discussions, I thought that a solution to the  `this`-typing issue was rather high on the agenda. It has been a real problem for a while: TS has tightened the type errors without giving the type expressiveness to avoid them. \n\nIf there is a better workaround than reimplementing base methods involving `this`-types in derived classes, I'd like to know (littering client code with casts seems even worse).\n\nNot suggesting the following as a workaround, but just as an emulation to indicate how `this` typing would help:\n```\ninterface Base_<THIS> {\n  x(): THIS\n}\n\ninterface Base extends Base_<Base> {} // should there be a warning here?-)\n\ninterface Derived extends Base_<Derived> {\n  y(): Derived\n}\n\nvar b:Base;\nb.x();\n\nvar d:Derived;\nd.y().x(); //Works\nd.x().y(); //Works\n```",
+      "PostedDate": "2014-02-21T11:45:02.397-08:00",
+      "Id": 134374
+    }
+  ]
+}

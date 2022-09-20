@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:26:06.54-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Reduced test case:\r\n\r\n```\r\nclass Thing {\r\n  // Note: There is no method foo()\r\n}\r\n\r\nclass Wrapper<T extends Thing> {\r\n  constructor(bar: (thing: T) => void) {}\r\n}\r\n\r\n// Expected: The property 'foo' does not exist on value of type 'Thing'.\r\nvar baz = new Wrapper(object => object.foo());\r\n```\r\n\r\nThe code above doesn't generate any errors on either the playground or on the latest develop branch (a52d62... from today). It was compiled with `--noImplicitAny` using the develop branch, so the `object` parameter of the lambda should not have the `any` type.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-17T20:10:44.527-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Type inference failure for generics",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1805
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Added as discussion [#462770](https://typescript.codeplex.com/discussions/462770). If this is by design according to the spec, than I would have expected the compiler's --noImplicitAny flag to catch this. So maybe it's just a bug with --noImplicitAny?\n",
+      "PostedDate": "2013-10-18T14:13:01.18-07:00",
+      "Id": 118876
+    },
+    {
+      "Message": "This is by design, we don't take the constraint into account when we infer the type parameter.\n\nSee 3.8.5 in the latest spec. You can open a discussion on the discussion board, if you have additional thoughts.\n\r\n\r** Closed by paulb 10/18/2013 1:23PM",
+      "PostedDate": "2013-10-18T13:23:01.78-07:00",
+      "Id": 118897
+    },
+    {
+      "Message": "Reopened after comment from danquirk: The inferred type should be {} and not any, in which case the call to the non-existent method foo() will be caught.\n",
+      "PostedDate": "2013-10-18T17:30:05.963-07:00",
+      "Id": 118899
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "994586",
+    "ThreadId": "431521",
+    "Html": "The following scenario is currently not possible:\r<br />\n<br />\nImplement a class Foo in Foo.ts with a reference to Bar and a class Bar  in Bar.ts containing a reference to Foo. First, you will not be able to generate Foo.d.ts and Bar.d.ts  automatically. If you create them manually and reference them via &lt;reference&gt;, you will get strange compilation issues if you want to compile them to a single file like &quot; Malformed function body (is this a class named the same as an existing interface?). \r<br />\n<br />\nThe reason is that a .d.ts is not really a declaration. It is already a definition. The smallest repo of this issue is referencing Foo.d.ts in Foo.ts which causes the same error as above.  Although this not really a use case, the above example with Foo and Bar is quite frequent.\r<br />\n<br />\n.d.ts files should either behave like C/C++ headers or there should be no .d.ts files at all (as in Java or C#). <br />\n",
+    "PostedDate": "2013-01-31T01:33:09.707-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995262",
+    "ThreadId": "431521",
+    "Html": "I'm trying this on a compiler built from the latest 'develop' branch (which will be 0.8.3 in the future).  Here's my example:\r<br />\n<br />\nBar.ts<br />\n<pre><code>///&lt;reference path=&quot;./Foo.ts&quot;/&gt;\n\nclass Bar {\n    public barField: string;\n}\n\nvar foo = new Foo();</code></pre>\n\nFoo.ts<br />\n<pre><code>///&lt;reference path=&quot;./Bar.ts&quot;/&gt;\n\nclass Foo {\n    public fooField: number;\n}\n\nvar bar = new Bar();</code></pre>\n\nIf I then run: \r<br />\n<br />\ntsc --declaration Bar.ts\r<br />\n<br />\nI get a pair of .js files for each .ts file and two declarations files to go along with them, so this may have been fixed recently.  If you can, I suggest trying out the latest compiler and see if you still see the issue.<br />\n",
+    "PostedDate": "2013-02-01T08:11:04.74-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996194",
+    "ThreadId": "431521",
+    "Html": "I tried your example with 0.8.2 and it worked as well. Here is my example:\r<br />\n<br />\nBar.ts<br />\n<pre><code>/// &lt;reference path=&quot;Foo.d.ts&quot;/&gt;\nmodule foo {\n  export class Bar {\n    public barField: string;\n  }\n}</code></pre>\n\nFoo.ts<br />\n<pre><code>/// &lt;reference path=&quot;Bar.d.ts&quot;/&gt;\n\nmodule foo {\n  export class Foo {\n    private _bar: Bar;\n\n    constructor() {\n      this._bar = null;\n    }\n  };\n}</code></pre>\n\nThen, I do the following:\r<br />\n<br />\nrm Bar.d.ts Foo.d.ts\r<br />\ntsc --declaration Bar.ts\r<br />\ntsc --declaration Foo.ts\r<br />\ntsc --declaration Foo.ts\r<br />\nFoo.ts(9,2): Malformed function body (is this a class named the same as an existing interface?)<br />\n",
+    "PostedDate": "2013-02-04T08:20:01.567-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

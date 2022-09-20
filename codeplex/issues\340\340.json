@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing as there's actually only one minor compiler bug here (which we're tracking internally already). Let me break this down by each function call (starting at line 15 of the code sample from the discussion post):\n\n\"service(successHandlerA); // compliler complains\"\nInvalid, because 'service' is expecting to be able to get a 'number' return value from 'successHandlerA', but we know 'successHandlerA' is 'void' (it has no expressionful return statements).\n\n\"service(successHandlerB); // compiles ok\"\nValid, because 'successHandlerB' is a function that is capable of taking 1 argument and returning a number. You are always allowed to pass a function taking a *fewer* number of arguments (more informally: You can always implicitly throw away parameters during function type conversion). The spec covers this (feel free to start a post on the discussion forum if you want more details on why the function subtype rules work this way - it is intentional).\n\n\"service(() => {}); // compiles ok\"\nThis is a bug (we're tracking internally). The actual compiler bug here is that the function body of the lambda expression is contextually typed to be () => number, but the compiler forgot to check that you have a return statement in the function body (oops).\n\n\"service(() => { return 'a'; }); // compiler complains\"\nInvalid, of course.\n\nservice(function () { }); // compiles ok\nservice(function () { return 'a'; }); // compiler complains \nThese two are the same as the above two, respectively.",
+    "ClosedDate": "2012-11-05T17:10:19.89-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Regarding this discussion (with example): http://typescript.codeplex.com/discussions/400552\r\n\r\nWhen using functions as function parameters:\r\n\r\n1) It seems the compiler does not care to force the parameter list of the function being passed;\r\n2) It seems the compiler only cares to check its return type;\r\n3) Looks like the compiler only checks the return type of anonymous functions if they actually return something.",
+    "LastUpdatedDate": "2012-11-05T17:10:19.89-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-29T08:47:29.07-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Call signature checking for function types not being checked",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 340
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

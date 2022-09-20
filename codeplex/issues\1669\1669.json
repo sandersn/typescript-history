@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "If you put the targets file under the 'content' files it should stay underneath any content files you add to the project (the same as for example cs files and the csharp target).",
+    "ClosedDate": "2013-09-13T15:09:14.123-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "I understand that this is by design, but it does not seem to be a workable system.  Until recently, the JS and map files were included as dependent files under the TS file in a project.   As I understand it, those dependent files are now being created but not included in the project.  The basic problem is, in a source controlled project, if team member A creates a TS file, compiles, runs, debugs it, etc.  When it's checked in, the dependent files are not included.  When team member B performs a \"Get Latest\" and runs the app, the dependent files are not available and the app will crash.  Is the intention of the VS developers that we should open every TS file in the project and perform a compile?  Similarly, when changes are made, we'd have to keep a list of which files changed, open them up and perform a save to get them to compile?  \r\n\r\nWhy the change from workable scaffolding configurations to this new, virtually unusable non-scaffolding scenario?  Am I missing something?",
+    "LastUpdatedDate": "2013-11-22T09:50:23.847-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-10T09:55:30.543-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "JS file no longer being included in project",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1669
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@bnemetchek, \n\nThere is no need to open every TS file to have it compiled.\n\nYou need to edit the project containing the TypeScript files to include the new build target. Once that is in place Team member B can perform a \"Get Latest\" and simply build the project - that way they would a C# or any other project.\n\nCheck this link for the project settings: https://typescript.codeplex.com/wikipage?title=Compile-on-Save\n",
+      "PostedDate": "2013-09-10T10:11:40.987-07:00",
+      "Id": 113006
+    },
+    {
+      "Message": "* the way they would a C#",
+      "PostedDate": "2013-09-10T10:12:32.31-07:00",
+      "Id": 113008
+    },
+    {
+      "Message": "I've had those project settings for some time.  Is \"Compile on Save\" really supposed to compile other files besides the one you are saving?  In any event, it doesn't work.  It certainly used to work very well but no longer.",
+      "PostedDate": "2013-09-10T10:53:42.247-07:00",
+      "Id": 113015
+    },
+    {
+      "Message": "Leaving \"Compile on Save\" aside for the moment, what happens when you right-click on the ___project___ containing the TS files and select \"Build\"?\n\nI am assuming this is Visual Studio 2012 or 2013.",
+      "PostedDate": "2013-09-10T11:34:11.027-07:00",
+      "Id": 113021
+    },
+    {
+      "Message": "I've selected \"Build\" and \"Rebuild\" but neither will produce the JS or map files.  Tried both in VS2012 update 3, and VS2013 RC",
+      "PostedDate": "2013-09-10T11:44:34.267-07:00",
+      "Id": 113022
+    },
+    {
+      "Message": "You may want to create a new TypeScript project (File > New > Project > TypeScript > HTML App....\n\nand moving your files in there.\n",
+      "PostedDate": "2013-09-10T12:06:25.55-07:00",
+      "Id": 113076
+    },
+    {
+      "Message": "I tried just about everything, so I finally gave up and created a C# console app that will fix a project to include the JS and MAP dependent file references when they are missing.  The source is below in case anyone else has similar issues.\n\n```\nusing System;\nusing System.Collections.Generic;\nusing System.IO;\nusing System.Linq;\nusing System.Text;\nusing System.Threading.Tasks;\nusing System.Xml;\nusing System.Xml.Linq;\n\nnamespace TSprojFixup\n{\n    class Program\n    {\n        static int Main(string[] args)\n        {\n            // Test if input arguments were supplied: \n            if (args.Length != 1)\n            {\n                System.Console.WriteLine(\"Please enter a project file name.\");\n                System.Console.WriteLine(\"Usage: TSprojFixup <ProjectFileName>\");\n                return 1;\n            }\n\n            // Ensure a fileName was supplied:\n            string fileName = args[0];\n            if (!File.Exists(fileName))\n            {\n                System.Console.WriteLine(\"Project file name does not exist.\");\n                System.Console.WriteLine(\"Usage: TSprojFixup <ProjectFileName>\");\n                return 1;\n            }\n            if (new FileInfo(fileName).IsReadOnly)\n            {\n                System.Console.WriteLine(\"Project file is readonly.\");\n                System.Console.WriteLine(\"Usage: TSprojFixup <ProjectFileName>\");\n                return 1;\n            }\n\n            try\n            {\n                bool changed = false;\n                // Load the project file\n                XmlDocument xmlDoc = new XmlDocument();\n                xmlDoc.Load(fileName);\n\n                // find all Content items\n                var contentNodes = new List<XmlNode>(xmlDoc.GetElementsByTagName(\"Content\").Cast<XmlNode>());\n\n                // find all TypeScript targets\n                foreach (XmlNode tsNode in xmlDoc.GetElementsByTagName(\"TypeScriptCompile\"))\n                {\n                    var inc = tsNode.Attributes[\"Include\"];\n                    if (inc == null || String.IsNullOrWhiteSpace(inc.Value))\n                        continue;\n                    var tsFileName = inc.Value;\n                    // ignore TS definition files\n                    if (tsFileName.EndsWith(\".d.ts\"))\n                        continue;\n                    var jsFileName = tsFileName.Replace(\".ts\", \".js\");\n                    var mapFileName = tsFileName.Replace(\".ts\", \".js.map\");\n\n                    #region find or create JS file\n                    var jsNode = contentNodes.Where(n => n.Attributes[\"Include\"].Value == jsFileName).FirstOrDefault();\n                    // add the JS node if it doesn't exist\n                    if (jsNode == null)\n                    {\n                        XmlElement newJsNode = xmlDoc.CreateElement(\"Content\", tsNode.NamespaceURI);\n                        XmlAttribute newJsAttr = xmlDoc.CreateAttribute(\"Include\");\n                        newJsAttr.Value = jsFileName;\n                        newJsNode.Attributes.Append(newJsAttr);\n                        tsNode.ParentNode.AppendChild(newJsNode);\n                        jsNode = newJsNode;\n                        changed = true;\n                    }\n                    #endregion\n\n                    #region find or create MAP file\n                    var mapNode = contentNodes.Where(n => n.Attributes[\"Include\"].Value == mapFileName).FirstOrDefault();\n                    // add the MAP node if it doesn't exist\n                    if (mapNode == null)\n                    {\n                        XmlElement newMapNode = xmlDoc.CreateElement(\"Content\", tsNode.NamespaceURI);\n                        XmlAttribute newMapAttr = xmlDoc.CreateAttribute(\"Include\");\n                        newMapAttr.Value = mapFileName;\n                        newMapNode.Attributes.Append(newMapAttr);\n                        tsNode.ParentNode.AppendChild(newMapNode);\n                        mapNode = newMapNode;\n                        changed = true;\n                    }\n                    #endregion\n\n                    #region add JS DependentUpon\n                    var jsChildNode = new List<XmlNode>(jsNode.ChildNodes.Cast<XmlNode>()).Where(n => n.Name == \"DependentUpon\").FirstOrDefault();\n                    if (jsChildNode == null)\n                    {\n                        XmlElement newDepNode = xmlDoc.CreateElement(\"DependentUpon\", jsNode.NamespaceURI);\n                        newDepNode.InnerText = Path.GetFileName(tsFileName);\n                        jsNode.AppendChild(newDepNode);\n                        changed = true;\n                    }\n                    #endregion\n\n                    #region add MAP DependentUpon\n                    var mapChildNode = new List<XmlNode>(mapNode.ChildNodes.Cast<XmlNode>()).Where(n => n.Name == \"DependentUpon\").FirstOrDefault();\n                    if (mapChildNode == null)\n                    {\n                        XmlElement newDepNode = xmlDoc.CreateElement(\"DependentUpon\", mapNode.NamespaceURI);\n                        newDepNode.InnerText = Path.GetFileName(tsFileName);\n                        mapNode.AppendChild(newDepNode);\n                        changed = true;\n                    }\n                    #endregion\n                }\n                if (changed)\n                {\n                    xmlDoc.Save(fileName);\n                    System.Console.WriteLine(\"Project file updated.\");\n                }\n                else\n                    System.Console.WriteLine(\"No changes required\");\n            }\n            catch (Exception ex)\n            {\n                System.Console.WriteLine(ex.Message);\n                return 1;\n            }\n            return 0;\n        }\n    }\n}\n\n```",
+      "PostedDate": "2013-09-11T10:48:54.08-07:00",
+      "Id": 113210
+    },
+    {
+      "Message": "The current behavior is by design.  As nabog outlines, we now consider the compiled JavaScript file a generated artifact of the build, similar to .pdb, .obj. or .dll files in other projects - which typically aren't considered part of the project and checked-in.  \n\nWe do realize there are some scenarios where users would prefer to have the .js part of the project, but in looking at a number of scenarios there were far more unsolvable (or at least very complex) problems caused by having them part of the project (especially once you start involving source control systems that mark files read only unless checked out, and configurations where multiple inputs contribute to one output, or impact each other's output).  In many larger projects of the type TypeScript is targeting, the emitted code is indeed not even of interest, and just one temporary artifact of many build steps (e.g. concatenation, minification, etc... then occur to product the final 'build')\n\nIf your JavaScript is only being emitted via compile-on-save, and not via a project build, then it sounds as if the build target for TypeScript is not wired up correctly.  I'd create a new blank TypeScript project from the HTML template and see how the .csproj file is set up.  If your project does not contain the same .targets file imports and build tasks, it may need updating.  The project build should definitely recompile all your TypeScript files.",
+      "PostedDate": "2013-09-11T21:57:59.423-07:00",
+      "Id": 113309
+    },
+    {
+      "Message": "billti,\n\nI followed your advice and found that when creating a typescript HTML project, it works as expected.  This is indeed the behavior that I desire and is very workable.  \n\nMy particular project, which is an MVC 4 project, still did not exhibit that behavior.  I had the correct TypeScript target entry in the project file yet it was not working.  After examining the typescript HTML project file, I noticed that the target entry was the last entry in the project section.  I tried moving that entry from near the top of my file to the end of the project section.  To my delight, it worked!\n\nNow, as pleased as I am that it is now working, I'm troubled that the position of that entry was the cause of the problem.  As the project grows, I'm assuming that more entries will be created in the project file and that I will have to continually monitor the project file to ensure that typescript target entry remains at the end.\n\nSo, I think there is still a bug, just not the one I thought it was.\n\nthanks for the help and advice on this.\n\n\nEntry I moved to the end:\n```\n<Import Project=\"$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets\" />\n```",
+      "PostedDate": "2013-09-12T08:31:44.067-07:00",
+      "Id": 113354
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 09/11/2013 9:58PM",
+      "PostedDate": "2013-09-11T21:58:07.397-07:00",
+      "Id": 113382
+    },
+    {
+      "Message": "bnemetchek:\n\nThanks for the very helpful observations, I in fact had the same symptoms and the same problem.\n\nRegarding your worry about keeping it at the end, if my limited findings are correct it seems it's enough to be after any <TypescriptCompile />, it doesn't have to be dead last.",
+      "PostedDate": "2013-11-22T02:58:32.803-08:00",
+      "Id": 123865
+    }
+  ]
+}

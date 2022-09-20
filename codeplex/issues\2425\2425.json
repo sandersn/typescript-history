@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-11T18:22:04.657-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "This code looks totally valid but it produces error:\r\n\r\n```typescript\r\nclass Model { }\r\nclass Collection<TModel extends Model> {\r\n        model: typeof TModel; //Error: Could not find symbold 'TModel'. \r\n        models: TModel[];\r\n}\r\n```\r\n\r\nIt seems to be a compiler bug. Some of the workarounds we found are the followings:\r\n\r\n```typescript\r\nclass Model { }\r\nclass Collection<TModel extends Model> {\r\n        model: { new(): TModel; };\r\n        models: TModel[];\r\n}\r\n\r\nclass MyModel extends Model { }\r\nclass MyCollection extends Collection<MyModel> { }\r\n```\r\n\r\nand\r\n\r\n```typescript\r\nclass Model { }\r\nclass Collection<TModelConstructor extends typeof Model, TModel extends Model> {\r\n        model: TModelConstructor;\r\n        models: TModel[];\r\n}\r\n\r\nclass MyModel extends Model { }\r\nclass MyCollection extends Collection<typeof MyModel, MyModel> { }\r\n```\r\n",
+    "LastUpdatedDate": "2014-04-11T18:22:04.657-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-11T17:11:23.387-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "typeof of generic type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2425
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. The TypeScript typeof operator only accepts expressions. TModel is a type, the name does not exist in an expression context, hence the error you see in the first example.",
+      "PostedDate": "2014-04-11T18:22:00.99-07:00",
+      "Id": 141550
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:16:34.827-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hi,\nI posted before a couple of issues regarding intellisense but no full repro details.\nNow you have all the data needed.\nVersion 0.8.1.1\n\nThe cursor at line 708, pos 102:\n\n entity.pos = { x: rowTopLeft.x, y: rowTopLeft.y + this.maxItemHeight - entity.#cursor here#size.y };\n\nThe intellisense hint shows entity of type IG_Entity, but the dropdown with members shows only x and y instead of members from IG_Entity interface.\n\nYou have a screenshot and the repro.ts that behaves wrong in VS IDE as in playground.\nThe sources are latest sources from git repository as of 2012-dec-09, but it behaved the same with previous versions.\n\nPlease address this issue.\nIt appears randomly inside the code, making typescript intellisense confusing and useless....\n\nBest Regards\n\n\n\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-09T04:43:38.487-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Annoying intellisense problem reproductible in Playground",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 544
+  },
+  "FileAttachments": [
+    {
+      "FileId": 561054,
+      "FileName": "screen.png",
+      "DownloadUrl": ".\\561054"
+    },
+    {
+      "FileId": 561055,
+      "FileName": "repro.ts",
+      "DownloadUrl": ".\\561055"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for the repro! Marking 'active' and adding a test (commit de8514e7f45bcb744581a99)",
+      "PostedDate": "2012-12-10T10:03:27.19-08:00",
+      "Id": 83894
+    },
+    {
+      "Message": "Any news on this issue? I was able to reproduce the bug in the TypeScript playground using the following code:\n\n```\ninterface myinterface {\n\tA: number;\n\tB: string;\n\tC: {[index: string]: number;};\n\t\n}\n\nvar testing: myinterface = {\n\tA: 1,\n\tB: \"Hello!\",\n\tC: {}\n};\n\ninterface probleminterface {\n\tX: number;\n\tY: number;\n\tZ: number;\n}\n\nvar problem : probleminterface = {\n\tX: 1,\n\tY: testing.A,\n\tZ: 1\n};\n```\nWriting testing.#cursor outside of the \"problem\" json object resulted in the expected result of:\n![Image](https://dl.dropboxusercontent.com/u/5830355/Screenshots/Screenshot%20(25).png)\n\nWriting testing.#cursor, (notice the trailing comma) _inside_ the \"problem\" json object resulted in the intellisense showing:\n![Image](https://dl.dropboxusercontent.com/u/5830355/Screenshots/Screenshot%20(24).png)\n\nWriting testing.#cursor __without__ the trailing comma resulted in:\n![Image](https://dl.dropboxusercontent.com/u/5830355/Screenshots/Screenshot%20(26).png)\n\nIt seems that intellisense gets really confused in JSON objects. If the object is invalid then the intellisense auto-completes with everything(? I think) otherwise it autocompletes with the \"problem\" object's members instead of myinterface's members.\n\nCheers, Griffork.",
+      "PostedDate": "2013-04-14T18:38:59.857-07:00",
+      "Id": 96980
+    }
+  ]
+}

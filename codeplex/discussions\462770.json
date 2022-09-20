@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1109396",
+    "ThreadId": "462770",
+    "Html": "As reported in bug <a href=\"https://typescript.codeplex.com/workitem/1805\" rel=\"nofollow\">#1805</a>, I encountered an issue with type inference and generic type parameters. Here is a reduced test case from our app:<br />\n<pre><code>class Thing {\n  // Note: There is no method foo()\n}\n\nclass Wrapper&lt;T extends Thing&gt; {\n  constructor(bar: (thing: T) =&gt; void) {}\n}\n\n// Expected: The property 'foo' does not exist on value of type 'Thing'.\nvar baz = new Wrapper(object =&gt; object.foo());</code></pre>\n\nThe above code was compiled with --noImplicitAny and doesn't cause any errors either on 0.9.1-1 or on develop. I either expect that 1) the call to the non-existent method foo() is caught by the compiler or that 2) the --noImplicitAny flag forces me to provide an annotation for the lambda parameter &quot;object&quot;. Option 1 would be preferred but option 2 would also catch this bug. I did not expect the lambda parameter object to implicitly have the type any, especially with the --noImplicitAny flag.\r<br />\n<br />\nApparently this is by design, according to section 3.8.5 in the new spec. Type parameter constraints are ignored during type inference. Is this a fundamental limitation of the type inference algorithm, or would it be possible to implement? If so, why is it more useful the way it is now than with better type inference? If not, why is the any type implicitly inserted despite the --noImplicitAny flag?<br />\n",
+    "PostedDate": "2013-10-18T14:09:18.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1109406",
+    "ThreadId": "462770",
+    "Html": "I'm pretty sure this is a bug, you can reopen the issue. The generic constraint is not considered as a candidate type during type argument inference but the algorithm is not designed to infer 'any' when a proper candidate cannot be found. In addition, at the moment --noImplicitAny does not warn when 'any' is inferred for a generic type argument, we may expand its capabilities to do that at some later date.\r<br />\n<br />\nMore specifically, during the process of inferring a type for T when constructing Wrapper, the compiler stops producing candidates for T upon finding that T is used as an argument type in a function typed argument (in the spec this is described as saying T becomes fixed). At that point the compiler will then choose a concrete type to use for T for the rest of the inference process so that it can effectively process the body of that function type (and any successive function typed arguments). It does so by saying that T is now considered to be the widened form of the best common type of the current set of candidates for T. Since there are no candidates for T at this point the best common type is {} (empty object) whose widened form is {}. So <code>object</code> should be of type {} and <code>object.foo</code> would report an error. If the constructor for Wrapper were instead defined as: \r<br />\n<code>constructor(x: T, bar: (thing: T) =&gt; void) {}</code>\r<br />\nand you called it like:\r<br />\n<code>var baz = new Wrapper(&quot;hello&quot;, object =&gt; object.foo());</code>\r<br />\nthen type argument inference would generate 'string' as a candidate for T while processing the first argument, then it would process the second argument and fix T. So T would be considered 'string' the rest of the way and you would see an error like 'the property 'foo' does not exist on value of type &quot;string&quot;' inside the lambda body.<br />\n",
+    "PostedDate": "2013-10-18T15:31:39.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

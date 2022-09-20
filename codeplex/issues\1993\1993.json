@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:32:35.697-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The following code will cause an infinite loop on 0.9.5:\r\n\r\n```\r\nexport interface I<T> {\r\n\tf( ...xs: I<T>[] ): I<T>;\r\n\tg<T2, T3, U>( x1: I<T2>, x2: I<T3>, y: ( v1: T, v2: T2, v3: T3 ) => U ): I<U>;\r\n\tg<T2, T3, T4, U>( x1: I<T2>, x2: I<T3>, x3: I<T4>, y: ( v1: T, v2: T2, v3: T3, v4: T4 ) => U ): I<U>;\r\n\tg<T2, T3, T4, T5, U>( x1: I<T2>, x2: I<T3>, x3: I<T4>, x4: I<T5>, y: ( v1: T, v2: T2, v3: T3, v4: T4, v5: T5 ) => U ): I<U>;\r\n\tg<U>( ...xs: any[] ): I<U>;\r\n}\r\n\r\nfunction a<T>( x: () => I<T> ): I<T> { return null; }\r\nfunction b<T>(): I<T> { return null; }\r\nfunction c<T>( x: T ): I<T> { return null; }\r\n\r\nc(0).f( a( () => b() ) );\r\n```\r\n\r\n__NOTE:__ removing any of the `I<T>.g` overloads allows compilation to succeed.\r\n__NOTE 2:__ technically, this code should produce a compilation error: the `b()` call on the last line is missing generic argument. If I add the correct argument of `<number>`, the compilation succeeds.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-09T08:34:05.35-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Infinite loop with missing generic argument and multiple generic overloads",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1993
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the repro! Marking active",
+      "PostedDate": "2013-12-09T09:23:48.12-08:00",
+      "Id": 126623
+    }
+  ]
+}

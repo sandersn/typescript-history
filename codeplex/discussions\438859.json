@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1024521",
+    "ThreadId": "438859",
+    "Html": "Hi,\r<br />\n<br />\nI've been working on strong typing for some asynchronous methods (promise type objects) for my codebase. I've managed to do this, but, it's rather code heavy since I have to redeclare quite a few methods for each derived class in order to override their returned types. So, this case comes to mind:<br />\n<pre><code>class A {\n    result: any;\n    getResult() {\n        return this.result;\n    }\n    // More code that uses result.\n}\n\nclass B extends A {\n    result: string;\n    // More code that uses result.\n}\n\nvar a = new A();\nvar ar = a.getResult(); // Inferenced type: any. Real type: any.\n\nvar b = new B();\nvar br = b.getResult(); // Inferenced type: any. Real type: string.</code></pre>\n\nBoth variable ar and br are inferenced to have type any. However, I think it should be possible to inference that class B's .getResult() will return a string instead.\r<br />\n<br />\nUnderstandibly, in a real runtime language doing this kind of inference would blow up the virtual method table sizes - but, since TypeScript is a compile-time-only language, overloading the VMTs shouldn't be a big issue.\r<br />\n<br />\nThoughts?<br />\n",
+    "PostedDate": "2013-04-02T15:17:18.89-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024941",
+    "ThreadId": "438859",
+    "Html": "There are cases like this we can offer better type information in the future, and I suspect we'll work to continue to improve the information we give you.  The language spec is settling down for the 1.0 release, but this might be a good suggestion for post-1.0.<br />\n",
+    "PostedDate": "2013-04-03T08:45:33.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024942",
+    "ThreadId": "438859",
+    "Html": "IT would be really neat for the type inferencer to re-infer all superclass methods for each child with what it knows about the child. Having said that, I think overriding/shadowing properties is an anti-pattern. When generics are available in 0.9.x, I'd imagine the following would work well:<br />\n<pre><code>class A&lt;T&gt; {\n    result: T;\n    getResult() {\n        return this.result;\n    }\n}\n\nclass B extends A&lt;string&gt; {\n}</code></pre>\n\n",
+    "PostedDate": "2013-04-03T08:46:34.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1025163",
+    "ThreadId": "438859",
+    "Html": "@jonturner: Awesome, thanks!\r<br />\n@cretz: Didn't know generics were coming so soon - very cool! I think you're right and they would solve this issue as well.<br />\n",
+    "PostedDate": "2013-04-03T17:52:16.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

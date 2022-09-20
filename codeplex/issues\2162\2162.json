@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:22:18.22-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "From spec, 10.3:\r\n> In effect, it is as if the imported entity or entities were declared locally with the local alias name.\r\n\r\nThis is not how it currently works in playground. See highlighted errors in the code sample below and try to comment lines with import and uncomment lines with locally declared entities to see that behavior is different.\r\n\r\nParticularly:\r\n1. When I have interface and alias with the same names, interface always takes precedence and hides an alias, even when alias is declared in an innermost scope. Obviously, if I declare another interface with the same name instead of alias, it would take precedence. I think that this is an error in compiler.\r\n\r\n2. When interface and alias are in the same scope, they are not merged as if they would with locally declared second interface instead of alias. Currently interface again takes precedence over alias and no error is reported. I think that this is an error in spec: alias and interface should not be merged, instead, error should be reported.\r\n\r\n3. Also, alias to an interface conflicts with a variable, which results in an error. Obviously, locally declared interface would not conflict with a variable. I think that a spec should be corrected here to explicitly prohibit any types of local entities that could conflict with an alias by name.\r\n\r\n```\r\ninterface XXX {\r\n\tIntExt;\r\n}\r\n\r\nvar XXX : { VarExt; }\r\n\r\nmodule B {\r\n\texport interface AAA {\r\n\t\tIntInt;\r\n\t}\r\n\texport var AAA: { VarInt; }\r\n}\r\n\r\nmodule MyModule {\r\n\timport XXX = B.AAA;\r\n\t// interface XXX { IntInt; } // Try to comment import and uncomment these two lines \r\n\t// var XXX: { VarInt; }\r\n\tvar a = XXX;\r\n\tvar b: XXX;\r\n\ta.VarInt; // No error - ok\r\n\ta.VarExt; // Error - ok\r\n\tb.IntInt; // Error - not ok\r\n\tb.IntExt; // No error - not ok\r\n}\r\n\r\nmodule M {\r\n  export interface I {\r\n\t  propMI;\r\n  }\r\n}\r\n\r\nmodule AnotherModule {\r\n\timport m = M.I;\r\n\t// interface m { propMI; } // Try to comment import and uncomment this line\r\n\r\n\tvar m: number; // Error, but no error with interface m instead of import m\r\n\t               // I think that spec should be corrected here\r\n\t\t\t\t   \r\n\tinterface m { // No error, but interfaces are not merged (as with interface m instead of import m)\r\n\t\t\t\t  // I think spec should be corrected here to give an error instead of merging \r\n\t\tpropAl;\r\n\t}\r\n\t\r\n\tvar q: m;\r\n\tq.propAl; // No error - ???\r\n\tq.propMI; // Error - not ok\r\n}\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-08T16:36:48.693-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Errors when import alias conflicts with a type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2162
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hat trick here - some of these are fixed (specifically the wrong errorness in 'MyModule' are all fixed now), some of these are by design (interfaces do not merge through 'import' statements; the language quoted there is not intended to be a complete description), and some are actual bugs ('var m' in 'AnotherModule' should be legal and the internal name conflict should be detected as error).",
+      "PostedDate": "2014-02-10T12:40:36.757-08:00",
+      "Id": 133139
+    },
+    {
+      "Message": "Thanks for an explanation, that is really important for us! IMHO, things that are \"by design\" should be explicitly stated in the spec even if they are obvious.",
+      "PostedDate": "2014-02-10T13:11:18.557-08:00",
+      "Id": 133141
+    },
+    {
+      "Message": "Please also check this code - currently in playground there is no duplicate errors, but they should appear.\n\n```\nmodule A.B.C {\n}\n\nimport myNamespace = A.B.C;\nmodule myNamespace.D {\n\texport interface I {}\n}\n```",
+      "PostedDate": "2014-02-12T06:52:44.787-08:00",
+      "Id": 133374
+    },
+    {
+      "Message": "I guess this error is the same error (3) reported above\n\n```\nmodule X {\n}\n\nvar Y: {myProp};\n\nmodule A {\n\nimport Y = X;\n\nvar b = Y.myProp; // Wrong error here\n}\n```",
+      "PostedDate": "2014-02-19T07:56:19.783-08:00",
+      "Id": 134071
+    }
+  ]
+}

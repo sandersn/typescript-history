@@ -1,0 +1,322 @@
+[
+  {
+    "Id": "1046572",
+    "ThreadId": "444444",
+    "Html": "DefinitelyTyped has a definition for <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/sammyjs/sammyjs.d.ts\" rel=\"nofollow\">SammyJS</a> that use modules to organize the definition. Sammy itself uses namespace Sammy for its objects, where you have Sammy.Object, Sammy.Application, Sammy.EventContext, etc, so the module mimics the behavior correctly.<br />\n<br />\nSammy is also a function, and the main way to call it is <code>var app = Sammy(...);</code>.<br />\n<br />\nIn 0.8, the definition works fine with the following (simplified) code:<br />\n<pre><code>module Sammy {\n    export function (): Sammy.Application;\n    ...\n    export interface Application {\n        new ();\n        ...\n    }\n}</code></pre>\n\nThis code no longer compiles in 0.9 due to the breaking change &quot;The ‘module’ keyword no longer creates a type&quot;, and requires the first function to be named in the module.<br />\n<br />\nThe issue is that I cannot find any code that produces the same behavior for this valid javascript code in TS 0.9.<br />\n<br />\nSammy is both a global function and a module for classes, and this is perfectly valid javascript. The definition should support a way to have all these lines compilling:<br />\n<pre><code>var app = Sammy();\nvar app = new Sammy.Application();\nvar app : Sammy.Application;</code></pre>\n\nHow to map this behavior in the definiton file for 0.9?<br />\n",
+    "PostedDate": "2013-05-21T08:18:17.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1046813",
+    "ThreadId": "444444",
+    "Html": "The export assignment feature combined with merged declarations are designed to allow his sort of pattern going forward. It appears there is currently a bug blocking your particular case (we only just put these features in quite recently) but we do intend to support this pattern.<br />\n",
+    "PostedDate": "2013-05-21T17:38:46.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047001",
+    "ThreadId": "444444",
+    "Html": "Hi Dan,\r<br />\n<br />\nPlease correct me if I didn't understand this. Merged declarations would be declaring the same name twice, like this?<br />\n<pre><code>export module Sammy {\n    interface Application { }\n}\nexport interface SammyStatic { }\ndeclare var Sammy : SammyStatic; </code></pre>\n\nIf not, can you give an example on what should it look like in 0.9?<br />\n",
+    "PostedDate": "2013-05-22T03:26:11.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047252",
+    "ThreadId": "444444",
+    "Html": "What you're looking for is the following:<br />\n<pre><code>function Sammy() { return null; }\n\nmodule Sammy {\n    export class Application {\n        constructor() { }\n    }\n}\n\n\n\nexport = Sammy;\n</code></pre>\n\nBut as Dan said, that's currently blocked by a bug on the import side.<br />\n",
+    "PostedDate": "2013-05-22T10:28:02.447-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047450",
+    "ThreadId": "444444",
+    "Html": "How would one declare such a module with the new syntax. E.g what is the new syntax for the declaration: <br />\n<pre><code>declare module Sammy {\n    export function (): any;   \n}</code></pre>\n\n",
+    "PostedDate": "2013-05-22T16:48:26.45-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047582",
+    "ThreadId": "444444",
+    "Html": "@basarat's question is also mine.  Basically, we need new syntax for these two:<br />\n<pre><code>declare module Sammy {\n    export class SammyClass {\n        constructor();\n    }\n    export function (): any;\n    export function new (): SammyClass;\n}</code></pre>\n\n",
+    "PostedDate": "2013-05-23T01:45:32.47-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047595",
+    "ThreadId": "444444",
+    "Html": "Incidentally, just noticed the ID of this discussion -- 444444.\r<br />\n<br />\nIn Chinese, the number 4 is bad luck, since it sounds similar to &quot;death&quot;.\r<br />\n<br />\nHope this won't affect this extremely important feature...<br />\n",
+    "PostedDate": "2013-05-23T02:33:05.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1047617",
+    "ThreadId": "444444",
+    "Html": "I did some tests last night and it seems to work, and it even compiles and produces the expected code in . For basarat and schungx, here is what I did:\r<br />\n<br />\nGet Paul's code and compile with --declaration\r<br />\n<br />\nSammy.ts:<br />\n<pre><code>function Sammy() { return null; }\n\nmodule Sammy {\n    export class Application {\n        constructor() { }\n    }\n}\n--\ntsc --declaration Sammy.ts</code></pre>\n\nThe declaration generated in Sammy.d.ts for this is:<br />\n<pre><code>declare function Sammy();\ndeclare module Sammy {\n    class Application {\n        constructor();\n    }\n}</code></pre>\n\nCreate a &quot;file.ts&quot; and reference the Sammy.d.ts you just created:<br />\n<pre><code>/// &lt;reference path=&quot;Sammy.d.ts&quot; /&gt;\n\nvar a = Sammy();\nvar b: Sammy.Application;\nvar c = new Sammy.Application();</code></pre>\n\nSeems to work for both the declaration as for real javascript code. Overloads can be declared as usual.\r<br />\n<br />\n<br />\nSo Paul/Dan, it seems that if I'm not using modules and the import clause, this should be possible to map today.<br />\n",
+    "PostedDate": "2013-05-23T03:23:42.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1048017",
+    "ThreadId": "444444",
+    "Html": "Yup nvivo. However (as you stated at the end) it will <strong><em>not</em></strong> work when using modules and the import clause. i.e. the following is invalid: <br />\n<pre><code>declare function &quot;mymodule&quot;();\ndeclare module &quot;mymodule&quot;{\n    \n}\n\nimport x = module(&quot;mymodule&quot;);\nx(); </code></pre>\n\n",
+    "PostedDate": "2013-05-23T16:54:44.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1048019",
+    "ThreadId": "444444",
+    "Html": "So the question is how can we declare the following in the new syntax: <br />\n<pre><code>declare module &quot;mymodule&quot; {\n    export function (): any;   \n}</code></pre>\n\n",
+    "PostedDate": "2013-05-23T16:57:22.267-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1048756",
+    "ThreadId": "444444",
+    "Html": "Thought I'd post it here. The planned declare syntax: <br />\n<pre><code>declare module 'express' {\n    function someName() : number;\n\n    export = someName;\n}</code></pre>\n\nSource: <a href=\"https://typescript.codeplex.com/workitem/1058\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1058</a><br />\n",
+    "PostedDate": "2013-05-25T22:51:17.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049342",
+    "ThreadId": "444444",
+    "Html": "I still don't get it how to fix Express definitions:<br />\n<pre><code>interface ExpressApplication {\n    ...\n}\n\ninterface Express extends ExpressApplication {\n    ...\n    (): ExpressApplication;\n    ...\n}\n\ndeclare module &quot;express&quot; {\n    export function (): Express;\n    export function bodyParser(options?: any): Handler;\n    ...</code></pre>\n\nWith what do I have to replace this line: export function (): Express;<br />\n",
+    "PostedDate": "2013-05-27T17:30:50.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049343",
+    "ThreadId": "444444",
+    "Html": "@jzvelc here you go: <br />\n<pre><code>interface ExpressApplication {\n    ...\n}\n\ninterface Express extends ExpressApplication {\n    ...\n    (): ExpressApplication;\n    ...\n}\ndeclare module &quot;express&quot; {\n   export function moduleExport(): Express;\n   export function bodyParser(options?: any): Handler;\n   ...\n   export = moduleExport;\n}</code></pre>\n\n",
+    "PostedDate": "2013-05-27T17:34:45.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049348",
+    "ThreadId": "444444",
+    "Html": "I actually tried this but it doesn't work.<br />\nI get TS1064 Export assignment not allowed in module with exported element in line:<br />\n<pre><code>export = moduleExport;</code></pre>\n\nProblem is that if I remove export before function they don't get exported =)<br />\n",
+    "PostedDate": "2013-05-27T18:02:32.78-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049351",
+    "ThreadId": "444444",
+    "Html": "It will not work with the released 0.9.0-alpha version. You need to use the latest src version from <a href=\"https://typescript.codeplex.com/SourceControl/latest\" rel=\"nofollow\">https://typescript.codeplex.com/SourceControl/latest</a> \r<br />\n<br />\nThe compiled code is in the bin folder. <br />\n",
+    "PostedDate": "2013-05-27T18:06:39.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049501",
+    "ThreadId": "444444",
+    "Html": "I am using release-0.9.0 branch and not release-0.9.0-alpha.\r<br />\nI did fresh clone as demonstrated in blog:\r<br />\ngit clone <a href=\"https://git01.codeplex.com/typescript\" rel=\"nofollow\">https://git01.codeplex.com/typescript</a>\r<br />\ncd typescript\r<br />\ngit checkout release-0.9.0\r<br />\n<br />\nAm I missing something? I use tsc.js from bin folder.\r<br />\n@basarat does your code for express compile?<br />\n",
+    "PostedDate": "2013-05-28T03:14:28.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050036",
+    "ThreadId": "444444",
+    "Html": "I have also tried with develop branch and it doesn't work either ...\r<br />\nI can't get around TS1064 Export assignment not allowed in module with exported element error ...\r<br />\nDoes anybody have solution to this because I would like to make transition to 0.9.0?\r<br />\nI have tried with branches: develop, release-0.9.0-alpha, release-0.9.0 ...<br />\n",
+    "PostedDate": "2013-05-29T04:07:39.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050364",
+    "ThreadId": "444444",
+    "Html": "This is not a bug. You cannot use export assignment (ie export = ) in a module that also uses the export keyword on other elements. You must use one or the other. If you only want to export the moduleExport function, then just export it the same way you always did pre-0.9.0. If you have multiple declarations named moduleExport which you want to merge and export, then use 'export = moduleExport.' If you want to export a merged declaration along with other things, you will need to compose some modules and interfaces which describe the shape of the thing you want to export=.<br />\n",
+    "PostedDate": "2013-05-29T15:58:19.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050369",
+    "ThreadId": "444444",
+    "Html": "Well I would somehow like to achieve to use Express as I did before:<br />\n<pre><code>import express = require(&quot;express&quot;); // I guess this is the new syntax in 0.9.0 instead of module\nvar app = express();</code></pre>\n\nCurrent definition file for express is broken due to module no longer exports a type ...<br />\n<pre><code>declare module &quot;express&quot; {\n    export function (): Express; // This is the problamatic part\n    export function bodyParser(options?: any): Handler;\n    ...</code></pre>\n\nHow could I simulate the problematic line in 0.9.0?<br />\n",
+    "PostedDate": "2013-05-29T16:08:32.2-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050385",
+    "ThreadId": "444444",
+    "Html": "@danquirk the issue with what jzvelc wants to do is that express is defined inside a string i.e. &quot;express&quot; because that is the format it needs to be in to be usable by module(&quot;express&quot;) \r<br />\n<br />\nHowever because of this he cannot get access to this variable &quot;express&quot; elsewhere as quotes are not allowed in variable names. Therefore he cannot use it to shape an object for the the single export =. \r<br />\n<br />\nSo I don't see a new syntax for what jzvelc wants. <br />\n",
+    "PostedDate": "2013-05-29T16:51:50.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050394",
+    "ThreadId": "444444",
+    "Html": "@jzvelc\r<br />\n<br />\nI see the confusion. I could've been more explicit in what I meant at the end of my last reply about using modules and interfaces to describe the shape of the exports along with an export =. This is the simplest example of what you want. An external module 'express' which is imported and then can be used as if it has a call signature:<br />\n<pre><code>declare module 'express' {\n    function foo(): string;\n    export = foo;\n}\n\nimport express = require('express');\nvar r = express(); // r is string</code></pre>\n\nIf you wanted to export more than just that individual function, then you could instead have the right hand side of the export= statement be an interface name. This interface would effectively be describing the shape of your 'express' module. So it would include a call signature and potentially other things. For example,<br />\n<pre><code>declare module 'express' {\n    interface I {\n        (): string; // this call signature is performing the same role as 'foo' in the first example\n        doStuff(x: number): void;\n    }\n    export = I;\n}\n\nimport express = require('express');\nvar r = express(); // r is string\nexpress.doStuff(3);</code></pre>\n\nThere is currently a bug blocking this example from working today but that is the pattern that captures the expressions you want. You can then combine this with merged declarations to export an identifier that is multiple things (ex a module named 'foo' and a function named 'foo') or an interface describing the shape of those things. Is that clearer?<br />\n",
+    "PostedDate": "2013-05-29T17:39:28.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050518",
+    "ThreadId": "444444",
+    "Html": "Thank you for your explanation. So you are saying that one declaration file may export more stuff this way (multiple export = ? expressions)?\r<br />\nAlthough this is clear now I guess I should wait until this is fixed.\r<br />\n<br />\nI have another question and maybe it should go in another post but I think it is related ...\r<br />\nConsider this example<br />\n<pre><code>interface Test {\n    ...\n}\nclass Tester {\n    constructor() {\n        console.log(&quot;Class constructed.&quot;);\n    }\n    public dotest(t: Test): void {\n        console.log(&quot;Index&quot;);\n    }\n}\nexport = Tester;</code></pre>\n\nI get following error when I compile this:\r<br />\nTS 2038 Parameter t of public method from exported class has or is using private type Test\r<br />\n<br />\nSimilar happens when I try to access interfaces which are outside of current namespace. This is logical but how can I refer to things which are in different namespace (global or another module)?\r<br />\noutside of current namespace or perhaps are in global namespace?<br />\n",
+    "PostedDate": "2013-05-30T02:34:34.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050702",
+    "ThreadId": "444444",
+    "Html": "Dan, here is another issue related to the module not being a type anymore.\r<br />\nHow to declare &quot;noConflict&quot; and similar methods?\r<br />\n<br />\n0.8 allowed for this:<br />\n<pre><code>declare module Backbone {\n    class View { }\n    function noConflict(): Backbone;\n}\n\nvar bb = Backbone.noConflict();</code></pre>\n\nOn latest LKG, we get:\r<br />\n<br />\nerror TS4022: Type reference cannot refer to container 'Backbone'.\r<br />\n<br />\nFollowing the guidelines, the alternative would be:<br />\n<pre><code>declare module Backbone {\n    class View {}\n}\ndeclare class Backbone {\n    static noConflict(): Backbone;\n}\n\nvar bb = Backbone.noConflict();</code></pre>\n\nBut this gives the following error:\r<br />\n<br />\ntest.ts(8,19): error TS2094: The property 'noConflict' does not exist on value of type 'Backbone'.\r<br />\n<br />\n<br />\nA similar issue happens when defining aliases for modules.<br />\n<pre><code>declare module Sammy {\n    class View {}\n}\ninterface JQueryStatic {\n    sammy: Sammy;\n}</code></pre>\n\nThis gives an error TS4022: Type reference cannot refer to container 'Sammy'.\r<br />\n<br />\nAgain, following the guideline to multiple declarations, this seem this works:<br />\n<pre><code>declare module Sammy {\n    class View {}\n}\ndeclare class Sammy {\n}\ninterface JQueryStatic {\n    sammy: Sammy;\n}</code></pre>\n\nNow, it seems very strange that we must declare this empty class to create the alias.\r<br />\n<br />\nI was wondering: why is this rule of 'modules cannot be used as types' being enforced? Is this enforced by ES6 as well?\r<br />\nIt seems that sometimes it would be useful to make containers behave as types, as the case above.<br />\n",
+    "PostedDate": "2013-05-30T09:05:09.603-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050805",
+    "ThreadId": "444444",
+    "Html": "Sorry, I got confused with my last reply as the design has evolved. The bug I was referring to I believe is actually the current design, you can use the imported name in a type position if it makes sense to given the export=. So the original Express example looks like this:<br />\n<pre><code>declare module 'express' {\n    interface I {\n        (): string; // this call signature is performing the same role as 'foo' in the first example\n        doStuff(x: number): void;\n    }\n    export = I;\n}\n\nimport express = require('express');\nvar r = express(); // error\nexpress.doStuff(3); // error\nvar e: express; // express is an interface type, not a module, so this is allowed\nvar r2 = e(); // r2 is string\ne.doStuff(1);</code></pre>\n\nFor your second example, this works:<br />\n<pre><code>module M {\n    export interface Test {\n        x: number;\n    }\n    export class Tester {\n        constructor() { }\n        public dotest(t: Test): void { }\n    }\n}\nexport = M;</code></pre>\n\n<pre><code>import e = require('testers');\nvar test: e.Test;\nvar tester: e.Tester;\ntester.dotest(1); // error\ntester.dotest(test); // works</code></pre>\n\nFor your Backbone example there is a bug there blocking that. You should be able to merge a class and module of the same name as long as the class definition comes first or is ambient.\r<br />\n<br />\nI'll have to go back and look through the design notes to give you the canonical explanation for why the modules as types situation is how it is today. Someone else may chime in first.<br />\n",
+    "PostedDate": "2013-05-30T12:28:42.903-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050864",
+    "ThreadId": "444444",
+    "Html": "In your express example is this the planned design for exporting? Well it is not intuitive to users that came from javascript ...<br />\nThere should be a way to just write (the same way as in javascript):<br />\n<pre><code>import express = require('express');\nvar app = express(); // express should already be an express interface type</code></pre>\n\nApproach you have shown is confusing because this is not how express works (many definition files for different modules will export stuff in many different ways):<br />\n<pre><code>import express = require(&quot;express&quot;);\nvar e: express; // user won't know what to do here unless he figures it out from definition file, besides this will present way too many variables and it is unreadable\nvar app = e();</code></pre>\n\nIn line var e: express what is express referring to? You said &quot;express&quot; is an interface type but it is a module name which doesn't export a type anymore? Shouldn't it be:<br />\n<pre><code>var e: Express;</code></pre>\n\nbecause &quot;Express&quot; is an interface ... It works with both, is that intended? I suggest you include a sample in sample folder which shows how to correctly use this pattern and distribute it with typescript release (such as express 2, node.js, imageboard, ...)<br />\n<br />\nFor the second example with tester I know this approach, but I would like to somehow export it in the way that module.exports works.<br />\nSo basically I need to export a class (like module.exports in javascript) and other stuff with normal (exports.somefunction = x in javascript) so I could do:<br />\n<pre><code>import e = require('testers');\nvar tester = new e(); // class is exported directly\nvar somedata = e.getDataFunction(); // getDataFunction is outside Tester class</code></pre>\n\nWell this is not as critical as the first example as long as it is possible to write definition files for existing javascript modules that have this pattern.<br />\n<br />\nAs I can see the current state of typescript allows us to write typescript files which resemble module.exports but it is impossible to write such definition files for existing modules (without using extra variable to define the type).<br />\n<br />\nEdit:<br />\nThis seems to work:<br />\n<pre><code>/// &lt;reference path=&quot;express.d.ts&quot; /&gt;\nimport express = require(&quot;express&quot;);\nvar app = (&lt;express&gt;express)();</code></pre>\n\nBut this is still confusing because many people who write definition files will follow different conventions and thus &lt;type&gt; will vary ... Besides this way I have to provide the reference to express definition in every file (normally I provide definition file in root of the project which is resolved automatically and I don't reference it explicitly where I don't use type casting).<br />\n",
+    "PostedDate": "2013-05-30T14:13:21.747-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050931",
+    "ThreadId": "444444",
+    "Html": "<blockquote>\nThere should be a way to just write (the same way as in javascript):<br />\nimport express = require('express');<br />\nvar app = express(); // express should already be an express interface type<br />\n</blockquote>\nThe problem is you're doing something that isn't the same as JavaScript. In JavaScript when you import a name it always represents something with a value. There is no concept of importing a name which is only a type definition, or a container of type definitions, or a container of type definitions and values. The name 'express' introduced by the import is of a type that depends on the value of the export assignment in the target module. It is not necessarily a module, this is part of why we now use the require keyword rather than the module keyword as in the older versions of Typescript. So in this case the name introduced by import is an interface. You would not expect this to work:<br />\n<pre><code>interface I {\n    (): string; \n    doStuff(x: number): void;\n}\nvar r = I();</code></pre>\n\nand that is basically what you have now, the name is just express instead of I as it was in the original module.<br />\n<blockquote>\nimport express = require(&quot;express&quot;);<br />\nvar e: express; // user won't know what to do here unless he figures it out from definition file, besides this will present way too many variables and it is unreadable<br />\nvar app = e();<br />\n</blockquote>\nHow is this different from a regular interface? If I wrote this along with my last code snippet:<br />\n<pre><code>var r2: I;</code></pre>\n\nyou would have the same issue would you not? You can mouse over the type annotation to see more information for the type (like the fact that it is an interface), use Go To Definition on the type symbol (it even takes you to the interface that was the target of the export= in the imported module), or dot off the identifier of that type to see what members it provides. I'm not sure what 'too many variables' means as I see a completion list which properly displays the fact that express is a callable function (apply/arguments/bind/etc) with an additional member named doStuff. <br />\n<blockquote>\nIn line var e: express what is express referring to? You said &quot;express&quot; is an interface type but it is a module name which doesn't export a type anymore? Shouldn't it be:<br />\nvar e: Express;<br />\nbecause &quot;Express&quot; is an interface ... It works with both, is that intended? <br />\n</blockquote>\nTo be clearer, let's use this line as the example so there's no confusion about names:<br />\n<pre><code>import x = require(&quot;express&quot;);\n</code></pre>\n\nx is an interface type because the module named 'express' which is being imported has an export assignment whose value is an interface. If the 'express' module's export assignment statement were a different type, then you would need to use it differently at the import site. For example:<br />\n<pre><code>declare module 'express' {\n    module M {\n        export interface I {\n            (): string; // this call signature is performing the same role as 'foo' in the first example\n            doStuff(x: number): void;\n        }\n    }\n    export = M;\n}\n\nimport x = require('express');\nvar e: x; // x is a module, so this is an error\nvar e2: x.I; // works\nvar r2 = e2(); // r2 is string</code></pre>\n\nDoes that make sense? I think you're noticed this in the Tester example where a class is the target of the export assignment so now the imported name is a class that can be new'd up.<br />\n<blockquote>\nI suggest you include a sample in sample folder which shows how to correctly use this pattern &gt; and distribute it with typescript release (such as express 2, node.js, imageboard, ...)<br />\n</blockquote>\nWe absolutely intend to have some samples and documentation for all the new stuff as time goes on. We're busy getting the features working, then we'll make sure to have documentation to go along with an official, non-preview release :)<br />\n<blockquote>\nThis seems to work:<br />\n</blockquote>\nI don't think this does what you think it does. The type assertion should actually be an error because there is no type express to cast to. Even if it were somehow valid at compile time, you've cast the express.I interface to the type of the module express. At runtime this will fail because your object is not actually a callable function type. <br />\n",
+    "PostedDate": "2013-05-30T17:44:46.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051084",
+    "ThreadId": "444444",
+    "Html": "Thanks for all your answers, things are becoming clearer now. <br />\n<br />\nThis example compiles ok and works even at runtime (I don't see why this is a problem if I reference the definition file):<br />\n<pre><code>/// &lt;reference path=&quot;express.d.ts&quot; /&gt;\nimport express = require(&quot;express&quot;);\nvar app = (&lt;express&gt;express)(); //\napp.get('/hello.txt', function(req, res){\n    res.send('Hello World');\n});\napp.listen(3000);</code></pre>\n\nOn the other hand it is weird to cast interface to interface (I get your point, we need another variable of type express).<br />\nBut your example fails at runtime with TypeError undefined is not a function:<br />\n<pre><code>/// &lt;reference path=&quot;../node.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;../express.d.ts&quot; /&gt;\nimport express = require(&quot;express&quot;);\nexport function main(args: string[]): number {\n    var e: express;\n    var app = e();\n    app.use(e.static(__dirname + '/lib'));\n    app.get('/hello.txt', function(req, res){\n        res.send('Hello World');\n    });\n    app.listen(3000);\n}</code></pre>\n\nResulting javascript:<br />\n<pre><code>var express = require(&quot;express&quot;);\nfunction main(argc, args) {\n    var e;\n    var app = (express)();\n    app.use(e.static(__dirname + '/lib'));\n    app.get('/hello.txt', function (req, res) {\n        res.send('Hello World');\n    });\n    app.listen(3000);\n\n    return -1;\n}\nexports.main = main;</code></pre>\n\nIs that the bug you were talking about?<br />\nMy current definition is as follows:<br />\n<pre><code>declare module &quot;express&quot; {\n    interface Wrapper {\n        (): Express;\n        static(root: string, options?: any): Handler;\n        ...\n    }\n    export = Wrapper;\n}</code></pre>\n\nSo exported type is of type Wrapper interface:<br />\n<pre><code>var e: express; // express is Wrapper?</code></pre>\n\nAnd when we call the constructor of e it becomes Express. Is that correct?<br />\n<br />\nIf I understand with this snippet of code we lost all methods of Wrapper interface:<br />\n<pre><code>/// &lt;reference path=&quot;express.d.ts&quot; /&gt;\nimport express = require(&quot;express&quot;);\nvar app = (&lt;Express&gt;express)(); // note that Express is capitalized\napp.get('/hello.txt', function(req, res){\n    res.send('Hello World');\n});\napp.listen(3000);</code></pre>\n\nWith too many variables I meant that the code will become less readable because developers expect to call:<br />\n<pre><code>var app = express();</code></pre>\n\nWith current approach we have to define another var with another name. For example let us import 5 modules:<br />\n<pre><code>import express = require(&quot;express&quot;);\nimport socket = require(&quot;socket.io&quot;);\n...\nvar e: express;\nvar s: socket;\n...</code></pre>\n\nWe will have twice as many variables only for modules and the source code will become unclean.<br />\n<br />\nI hope you understand what is bothering me (things that shouldn't work work and things that should don't). I still think that code in 0.8.3 was much cleaner:<br />\n<pre><code>import express = require(&quot;express&quot;):\nvar app = express();</code></pre>\n\n",
+    "PostedDate": "2013-05-31T02:02:22.413-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063875",
+    "ThreadId": "444444",
+    "Html": "Just to tag on here....this is needed for a lot of Node modules and many js libs which define optional AMD versions....jQuery is a big example of a library that appears to be broken for AMD as a result of these issues.<br />\n",
+    "PostedDate": "2013-07-02T18:13:39.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063921",
+    "ThreadId": "444444",
+    "Html": "Here's how I offered both standard library support and AMD/CommonJS support for Q: <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts#L87\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts#L87</a><br />\n",
+    "PostedDate": "2013-07-02T22:32:38.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064882",
+    "ThreadId": "444444",
+    "Html": "I just wasted an hour wrestling with trying to fix sammy.d.ts also - so what's the end result? Is it possible to model in typescript or not? &lt;s&gt;I gave up&lt;/s&gt;.. the new module syntax is even more obtuse than before. <br />\n<br />\nAnyone? <br />\n<br />\n<strong>Edit</strong>: I figured it out using the merged declaration trick (but I have some comments on this, see below)<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> SammyFunc {\n    (): Sammy.Application;\n    (selector: <span style=\"color:Blue;\">string</span>): Sammy.Application;\n    (handler: Function): Sammy.Application;\n    (selector: <span style=\"color:Blue;\">string</span>, handler: Function): Sammy.Application;\n}\n\n<span style=\"color:Green;\">// NOTE: This should work, but doesn&#39;t - we get a name conflict. </span>\n<span style=\"color:Green;\">// If it did work, we could avoid the duplicate declarations for interface and functions</span>\n<span style=\"color:Green;\">//declare var Sammy: SammyFunc;</span>\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(): Sammy.Application;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(selector: <span style=\"color:Blue;\">string</span>): Sammy.Application;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(handler: Function): Sammy.Application;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> Sammy(selector: <span style=\"color:Blue;\">string</span>, handler: Function): Sammy.Application;\n\n<span style=\"color:Blue;\">interface</span> JQueryStatic {\n    sammy: SammyFunc;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Sammy {\n    <span style=\"color:Green;\">//export function (): Sammy.Application;</span>\n    <span style=\"color:Green;\">//export function (selector: string): Sammy.Application;</span>\n    <span style=\"color:Green;\">//export function (handler: Function): Sammy.Application;</span>\n    <span style=\"color:Green;\">//export function (selector: string, handler: Function): Sammy.Application;</span>\n\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> Cache(app, options);\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> DataCacheProxy(initial, $element);\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> DataLocationProxy(app, data_name, href_attribute);\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> DefaultLocationProxy(app, run_interval_every);\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> EJS(app, method_alias);\n    ...\r\n</pre></div>Everything in the module remains unchanged apart from the four commented out unnamed functions which are replaced by the interface <code>SammyFunc</code>.<br />\n",
+    "PostedDate": "2013-07-05T06:54:50-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064929",
+    "ThreadId": "444444",
+    "Html": "FYI: I submitted a pull request to Boris for definitelytyped, and it was accepted about an hour ago. I expect it will make the next nuget push.<br />\n",
+    "PostedDate": "2013-07-05T09:29:50.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064946",
+    "ThreadId": "444444",
+    "Html": "I'm not familiar with Sammy, but are you trying to model the following calls?\r<br />\n<br />\n<br />\nvar app: Sammy.Application;\r<br />\nvar app = Sammy();\r<br />\nvar app = new Sammy.Application();\r<br />\n<br />\nvar app = $.sammy();\r<br />\n<br />\nand for Cache?\r<br />\n<br />\nSammy.Cache(app, ......)?<br />\n",
+    "PostedDate": "2013-07-05T10:42:23.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064953",
+    "ThreadId": "444444",
+    "Html": "Hey Paul, yes, that's it - I used the merge trick as shown further up the thread and came to the solution above.<br />\n",
+    "PostedDate": "2013-07-05T11:02:57.383-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075686",
+    "ThreadId": "444444",
+    "Html": "It's really hard to describe just how frustrated I am right now. I read this thread almost a month ago. I've come back to it today and it is still not clear how to accomplish this. I will spell out my scenario. Please, would someone show how to create the declaration file?\r<br />\n<br />\nI have a module named 'durandal/events'.\r<br />\nThe module works as a constructor function, so I should be able to do this:<br />\n<pre><code>import Events = module('durandal/events');\n\nvar publisher = new Events();\npublisher.on('some:event', callback);</code></pre>\n\nThe module also has a function to allow it to be used as a mixin. So, I should be able to do this:<br />\n<pre><code>import Events = module('durandal/events');\n\nvar something = {};\nEvents.includeIn(something);</code></pre>\n\nI have messed around with so many combinations in my definition file...and have not found anything that works. I would really appreciate some assistance. My community is begging for an official TypeScript definition file for my 2.0 release and I told them I would have one. Right now, it looks like there are portions of my library which are not possible to describe. Please, please, prove me wrong.<br />\n",
+    "PostedDate": "2013-08-01T11:48:32.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075704",
+    "ThreadId": "444444",
+    "Html": "Ok. I did manage to find a way to get this working. BUT...I get a red squigly from VS on my export = Events, where Events is a declared class. Also, I get no intellisense at all on the module from my TypeScript code. It does compile correctly though. So, I guess I can live with that for now. I'm eager awaiting a release that fixes these issues...and hopefully improves the speed of intellisense...which is so slow it's pretty much useless at this point.<br />\n",
+    "PostedDate": "2013-08-01T12:10:42.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075709",
+    "ThreadId": "444444",
+    "Html": "And the really strange thing is....if I hover my mouse over any of the class defined members in my TypeScript code, a tooltip pops up displaying the correct metadata and doc comment values. But, if I 'dot' off the object itself, no member completion list comes up.<br />\n<br />\nHere's my code for reference:<br />\n<pre><code>interface EventSubscription {\n    then(thenCallback: Function, context?: any): EventSubscription;\n    on(thenCallback: Function, context?: any): EventSubscription;\n    off(): EventSubscription;\n}\n\ndeclare class Events {\n    constructor();\n    on(events: string): EventSubscription; \n    on(events: string, callback: Function, context?: any): Events;\n    off(events: string, callback: Function, context?: any): Events;\n    trigger(events: string, ...eventArgs:any[]): Events;\n    proxy(events: string): Function;\n    static includeIn(targetObject: any): void;\n}\n\ndeclare module 'durandal/events' {\n    export = Events;\n}</code></pre>\n\nAnd I use it like this:<br />\n<pre><code>import Events = module('durandal/events');\n\nvar ev = new Events();\n    \nev.on('test:event').then(arg =&gt; {\n    console.log(arg);\n});\n\nev.trigger('test:event', { prop: 'value' });\n\nEvents.includeIn({});</code></pre>\n\nThis does compile to the correct JavaScript code. If I hover over the function calls, I get tooltips with the correct metadata. But, I get no member completion. Is this just a bug in the VS tooling?<br />\n",
+    "PostedDate": "2013-08-01T12:20:45.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076150",
+    "ThreadId": "444444",
+    "Html": "I would like to point out that the solution above is not ideal in another way: both the class and the interface are in global scope. They really should not be, but I could not find a way to include them inside the module. As always, any help is appreciated.<br />\n",
+    "PostedDate": "2013-08-02T13:33:38.03-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076193",
+    "ThreadId": "444444",
+    "Html": "The following works:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> EventSubscription {\n    then(thenCallback: Function, context?: <span style=\"color:Blue;\">any</span>): EventSubscription;\n    on(thenCallback: Function, context?: <span style=\"color:Blue;\">any</span>): EventSubscription;\n    off(): EventSubscription;\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;durandal/events&quot;</span> {\n    <span style=\"color:Blue;\">class</span> Events {\n        <span style=\"color:Blue;\">constructor</span>();\n        on(events: <span style=\"color:Blue;\">string</span>): EventSubscription;\n        on(events: <span style=\"color:Blue;\">string</span>, callback: Function, context?: <span style=\"color:Blue;\">any</span>): Events;\n        off(events: <span style=\"color:Blue;\">string</span>, callback: Function, context?: <span style=\"color:Blue;\">any</span>): Events;\n        trigger(events: <span style=\"color:Blue;\">string</span>, ...eventArgs: <span style=\"color:Blue;\">any</span>[]): Events;\n        proxy(events: <span style=\"color:Blue;\">string</span>): Function;\n        <span style=\"color:Blue;\">static</span> includeIn(targetObject: <span style=\"color:Blue;\">any</span>): <span style=\"color:Blue;\">void</span>;\n    }\n    <span style=\"color:Blue;\">export</span> = Events;\n}\r\n</pre></div>You could also move the interface inside the external module:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;durandal/events&quot;</span> {\n    <span style=\"color:Blue;\">class</span> Events {\n        <span style=\"color:Blue;\">constructor</span>();\n        on(events: <span style=\"color:Blue;\">string</span>): Events.EventSubscription;\n        on(events: <span style=\"color:Blue;\">string</span>, callback: Function, context?: <span style=\"color:Blue;\">any</span>): Events;\n        off(events: <span style=\"color:Blue;\">string</span>, callback: Function, context?: <span style=\"color:Blue;\">any</span>): Events;\n        trigger(events: <span style=\"color:Blue;\">string</span>, ...eventArgs: <span style=\"color:Blue;\">any</span>[]): Events;\n        proxy(events: <span style=\"color:Blue;\">string</span>): Function;\n    }\n    <span style=\"color:Blue;\">module</span> Events {\n        <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> EventSubscription {\n            then(thenCallback: Function, context?: <span style=\"color:Blue;\">any</span>): EventSubscription;\n            on(thenCallback: Function, context?: <span style=\"color:Blue;\">any</span>): EventSubscription;\n            off(): EventSubscription;\n        }\n        <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> includeIn(targetObject: <span style=\"color:Blue;\">any</span>): <span style=\"color:Blue;\">void</span>;\n    }\n    <span style=\"color:Blue;\">export</span> = Events;\n}\r\n</pre></div>In 0.9 we merge class and module declarations for the same name. Basically the module becomes an alternate (and more complete) way of declaring the static side of the class. I've moved the declaration of the 'includeIn' method into the module to illustrate this. Either way of declaring it works.\r<br />\n<br />\nUnfortunately, there are still some bugs in the class/module merging parts of the compiler. Specifically, it is not possible to refer to interfaces declared in the merged class/module by name:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&quot;durandal.d.ts&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">import</span> Events = require(<span style=\"color:#A31515;\">&#39;durandal/events&#39;</span>);\n<span style=\"color:Blue;\">var</span> x: Events.EventSubscription;  <span style=\"color:Green;\">// Should not be an error</span>\r\n</pre></div>We're fixing this, and other than the inability to reference the interface by name things should work. Still, until it is fixed you might want to go with the first solution.<br />\n",
+    "PostedDate": "2013-08-02T16:13:07.687-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076207",
+    "ThreadId": "444444",
+    "Html": "Fantastic. Thank you very much. This example, particularly the second one, sheds a lot of light on things for me. I had used some merging in another one of my modules, but hadn't thought of this particular combination. The second example will work perfectly to describe my API. Unfortunately, the bug you mention does mean I cannot use it at this time as I have other module definitions which need to reference the interface. So, I ended up going with your first option for now. That will work well enough until the compiler issues are resolved. I should also mention that intellisense doesn't work with this combination. Not a biggie, but wanted to mention that for completeness.\r<br />\n<br />\nAgain, thank you. My community is going to be very excited about us delivering an official TypeScript definition file in our next release. I think this was the last piece of information I needed to complete it.<br />\n",
+    "PostedDate": "2013-08-02T18:05:27.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083470",
+    "ThreadId": "444444",
+    "Html": "Your answer made things much clearer. However, how can you export a generic class from a module? I'd think something like this should work:<br />\n<pre><code>declare module 'someModule' {\n    module someModule {\n        interface GenClass&lt;T&gt; {\n            prop:T;\n        }\n        interface GenClassStatic&lt;T&gt; {\n            ():GenClass&lt;T&gt;;\n        }\n    }\n\n    // this wont work :(, since we need a type for the generic arg;\n    // var someModule:GenClassStatic&lt;???&gt;;\n\n    export = GenClassStatic;\n}</code></pre>\n\nsome other file:<br />\n<pre><code>import someModule = require('someModule');\n// compile error TS2088: Cannot invoke an expression whose type lacks a call signature\nvar x = someModule&lt;string&gt;();</code></pre>\n\nIs there a way to <code>declare module &quot;someModule&quot;</code> that is a generic class?<br />\n",
+    "PostedDate": "2013-08-22T00:12:46.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

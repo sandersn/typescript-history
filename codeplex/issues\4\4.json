@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We will not be automatically inferring type data from .prototype assignments",
+    "ClosedDate": "2013-03-25T09:38:32.993-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Adding properties through `.prototype.<value> = …` breaks the type analysis.\r\nWhat I expected it to do was to understand that I'm adding a property to the prototype,\r\nand therefore I expected it to understand what type `this` was, in the context.\r\n\r\nInstead, it refuses to perform any type analysis (and infers `any` everywhere).\r\nIt also raises a warning saying that the property I'm adding doesn't exist on the prototype (duh).\r\n\r\nAt least, it still compiles to JS just fine!",
+    "LastUpdatedDate": "2013-03-25T09:38:32.993-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T12:06:55.007-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Adding properties through .prototype",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 0,
+    "Id": 4
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Interfaces are open ended, so you can extend the Math interface to include your additions.  For example,\n\ninterface Math {\n    qsort: (input: Array) => Array;\n}\n\nvar x = Math.qsort([1,4,2]);\n\n\nThis should compile without any issue via tsc on the command line.  Note however that the Math interface is defined in lib.d.ts.  This is treated specially by the language service in VS, and simply extending types defined within it causes issues currently.  The solution is to copy the lib.d.ts out of the install location (\"C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.8.0.0\") and into your project, and then just reference it there, i.e. your final code would look like:\n\n/// <reference path=\"lib.d.ts\"/>\n\ninterface Math {\n    qsort: (input: Array) => Array;\n}\nvar x = Math.qsort([1,3,2]);\n\n\n(Of course if you're copying lib.d.ts to your project locally - you could also modify the type in there).\n\nLet me know if this resolves your issue.",
+      "PostedDate": "2012-10-01T14:30:09.897-07:00",
+      "Id": 94145
+    },
+    {
+      "Message": "It does work, but I'm not trying to modify the Math interface ?\n\nThere are many ways to implement qsort,\nincluding just writing the function with an array as a parameter.\nUnless modifying the prototype is not allowed\n(in which case it shouldn't compile at all, but that would be a shame),\nit feels unfortunate that the type analysis fails to provide cues when we do.\n\n(Of course, there is the other issue that Array::filter doesn't return an Array,\nwhich the type system seems furious about. Never mind that;\nI guess it would need re-implementing that function to make it happy.)",
+      "PostedDate": "2012-10-01T23:15:17.26-07:00",
+      "Id": 94146
+    }
+  ]
+}

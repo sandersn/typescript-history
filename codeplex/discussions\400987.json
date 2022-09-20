@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "933324",
+    "ThreadId": "400987",
+    "Html": "\r\n<p>If i define a property with a default value, why not output this value on &nbsp;prototype? Ex:</p>\r\n<p>Ex:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> EditPanel <span style=\"color:blue\">extends</span> Ext.Panel {\n    title : string = <span style=\"color:#a31515\">'foo'</span>;\n}\n\n</pre>\r\n</div>\r\n<p></p>\r\n<p>output</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> EditPanel = (<span style=\"color:blue\">function</span> (_super) {\n    __extends(EditPanel, _super);\n    <span style=\"color:blue\">function</span> EditPanel() {\n        _super.apply(<span style=\"color:blue\">this</span>, arguments);\n\n        <span style=\"color:blue\">this</span>.title = <span style=\"color:#a31515\">'foo'</span>;\n    }\n    <span style=\"color:blue\">return</span> EditPanel;\n})(Ext.Panel);\n</pre>\r\n</div>\r\n<p></p>\r\n<p>&nbsp;</p>\r\n<p>should output</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> EditPanel = (<span style=\"color:blue\">function</span> (_super) {\n    __extends(EditPanel, _super);\n    <span style=\"color:blue\">function</span> EditPanel() {\n        _super.apply(<span style=\"color:blue\">this</span>, arguments);\n    }\n    EditPanel.prototype.title = <span style=\"color:#a31515\">'foo'</span>;\n    <span style=\"color:blue\">return</span> EditPanel;\n})(Ext.Panel);\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2012-10-27T10:32:49.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933502",
+    "ThreadId": "400987",
+    "Html": "<p>I don't think that would always produce the expected results. For example:</p>\r\n<p>&nbsp;</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">function</span> Hello() {\r\n}\r\n\r\nHello.prototype.test = 12;\r\n\r\n<span style=\"color: blue;\">var</span> h = <span style=\"color: blue;\">new</span> Hello();\r\nconsole.log(h.test); <span style=\"color: green;\">// So far so good</span>\r\n\r\nh.test = 13;\r\nconsole.log(h.test); <span style=\"color: green;\">// Still ok</span>\r\n\r\n<span style=\"color: blue;\">delete</span> h.test;\r\nconsole.log(h.test); <span style=\"color: green;\">// Didn't expect this</span>\r\n</pre>\r\n<pre><span style=\"color: green;\"><br /></span></pre>\r\n<pre><span style=\"color: green;\">//Peter</span></pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-28T06:48:29.75-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933512",
+    "ThreadId": "400987",
+    "Html": "<p>Interesting, but this behavior is right. When you delete a property value, that property now will have value of prototype. In this case you should assign null value to the property.&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>We also should assign only primitive values on prototype. If you assign an Array for example, this array will be shared with all objects that inherit the prototype.</p>",
+    "PostedDate": "2012-10-28T07:54:06.4-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933516",
+    "ThreadId": "400987",
+    "Html": "<p>The behavior is indeed correct. But the example was to demonstrate that if you would \"under the hood\" assign the default value to the prototype, a developer might be confused when he deletes a property, he gets his default value back.&nbsp;</p>\r\n<p>Also the following might surprise a developer (a typical idiom in JS):</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">for</span> (<span style=\"color: blue;\">var</span> i <span style=\"color: blue;\">in</span> h) { \r\n  <span style=\"color: blue;\">if</span> (h.hasOwnProperty(i)) console.log(i);\r\n}</pre>\r\n</div>\r\n</p>\r\n<p>Again, in his mind he just defined a property on a Class, so why he doesn't see it back. Of course you could explain why this behavior is correct, but my feeling is that many developers would have a hard time understanding this different behavior that occurs only when you define a default value.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-28T08:24:38.133-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935087",
+    "ThreadId": "400987",
+    "Html": "<p>I understand your concern, but personally I use this loop pattern only for Object literals...</p>\r\n<p>I also found a proposal for ES6 indicating that properties should be on prototype when keyword \"public\" is specified:</p>\r\n<p>&nbsp;</p>\r\n<p><a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:classes\">http://wiki.ecmascript.org/doku.php?id=harmony:classes</a></p>\r\n<p>&nbsp;</p>\r\n<h3>Member Modifiers</h3>\r\n<div class=\"level3\">\r\n<p>Since a class body defines properties on&nbsp;<em>two</em>&nbsp;objects, syntax is needed to indicate on which object, constructor or prototype, the member becomes a property. Keyword prefixes are used:</p>\r\n<pre class=\"code javascript\"><span class=\"kw2\">class</span> Monster <span class=\"br0\">{</span>\r\n  <span class=\"co1\">// \"static\" places the property on the constructor.</span>\r\n  static allMonsters = <span class=\"br0\">[</span><span class=\"br0\">]</span>;\r\n&nbsp;\r\n  <strong><span class=\"co1\">// \"public\" declares on the prototype.</span></strong>\r\n  <span class=\"kw2\">public</span> numAttacks = <span class=\"nu0\">0</span>;\r\n&nbsp;\r\n  <span class=\"co1\">// Although \"public\" is not required for prototype methods, </span>\r\n  <span class=\"co1\">// \"static\" is required for constructor methods</span>\r\n  static numMonsters<span class=\"br0\">(</span><span class=\"br0\">)</span> <span class=\"br0\">{</span> <span class=\"kw1\">return</span> Monster.<span class=\"me1\">allMonsters</span>.<span class=\"me1\">length</span>; <span class=\"br0\">}</span>\r\n<span class=\"br0\">}</span></pre>\r\n<div><span class=\"br0\"><br /></span></div>\r\n</div>\r\n<p><a name=\"the_proposal_in_full\"></a></p>",
+    "PostedDate": "2012-10-31T18:40:37.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "955499",
+    "ThreadId": "400987",
+    "Html": "\r\n<p>With a lot of attributes and a lot of instances of the same object it's very memory wasteful not to use prototype for them.</p>\r\n<p>Having it in the prototype, we can have pattern similar to copy-on-write. It's quite common in advanced JS development.</p>\r\n",
+    "PostedDate": "2012-12-13T02:49:13.677-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "956300",
+    "ThreadId": "400987",
+    "Html": "\r\n<p>I personally agree with them NOT being on the prototype by default due to the inherit dangers of array & object properties. &nbsp;With that said, nothing prevents you from doing the below which will in fact make them prototype properties:</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Foo {\r\n\t<span style=\"color:blue\">public</span> title: string;\r\n}\r\nFoo.prototype.title = <span style=\"color:#a31515\">&quot;bar&quot;</span>;\r\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2012-12-14T13:55:13.047-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

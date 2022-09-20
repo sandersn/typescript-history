@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by-confusing-design, at least until we update the project system to be more predictable.\n\nLet's informally define \"group\" as \"all the TypeScript files in play\". When you're working in Visual Studio, there are two \"groups\" in play:\n1. All of the .ts files in the project that are marked with ProjectAction = TypeScriptCompiler, plus the files pointed to by their /// <reference... tags (recursively)\n2. All of the .ts files that are currently open in the editor, plus the files pointed to by their /// <reference... tags (recursively).\n\nWhat you're seeing is the difference between #1 and #2.\n\nWhen you build the project, the compiler gets passed a list of all the files in group #1, and the build succeeds.\n\nWhen you open only SomeOtherClass.ts, group #2 consists of only that file. Group #2 is the only group of files visible to the \"language service\" (the thing that provides errors and completion lists and tooltips and such), so you get the errors you saw (until you open SomeClass.ts, which you probably do very often, hence why you don't see this class of problem very often).\n\nAgain, this is all just for the time being until the project system gets revamped in a future release. You can expect things to change substantially at that point (thus why I'm closing this rather than marking 'active' - it's more of a planned rewrite than a bug fix).\n\nThanks!",
+    "ClosedDate": "2012-12-03T13:26:25.973-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have a class in SomeClass.ts:\r\n\r\nmodule SomeNamespace {\r\n    export class SomeClass{\r\n    }\r\n}\r\n\r\nI have another class SomeOtherClass.ts\r\n\r\nmodule SomeNamespace {\r\n    export class SomeOtherClass{\r\n        constructor (value: SomeClass) {\r\n        }\r\n    }\r\n}\r\n\r\nNote that I have not included any <references> in SomeOtherClass.ts, yet SomeOtherClass uses SomeClass. This should be an error that should cause the TypeScript compiler to fail, yet the output from the compiler in the Output window is:\r\n\r\n1>------ Rebuild All started: Project: TypeScriptHTMLApp1, Configuration: Debug Any CPU ------\r\n1>  TypeScriptHTMLApp1 -> D:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\bin\\TypeScriptHTMLApp1.dll\r\n========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========\r\n\r\nHowever, the Error List window correctly reports an error. Actually it reports 5 errors (I'd expect only 1, but that's another problem).\r\n\r\nError\t1\tThe name 'SomeClass' does not exist in the current scope\tD:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\SomeOtherClass.ts\t3\t29\tSomeOtherClass.ts\r\nError\t2\tThe name 'SomeClass' does not exist in the current scope\tD:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\SomeOtherClass.ts\t3\t29\tSomeOtherClass.ts\r\nError\t3\tThe name 'SomeClass' does not exist in the current scope\tD:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\SomeOtherClass.ts\t3\t29\tSomeOtherClass.ts\r\nError\t4\tThe name 'SomeClass' does not exist in the current scope\tD:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\SomeOtherClass.ts\t3\t29\tSomeOtherClass.ts\r\nError\t5\tThe name 'SomeClass' does not exist in the current scope\tD:\\TFS\\Vertigo.Users\\WillA\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\SomeOtherClass.ts\t3\t29\tSomeOtherClass.ts\r\n\r\nIf I add /// <reference path=\"SomeClass.ts\" /> to SomeOtherClass.ts, then the errors go away.\r\n\r\nThis seems bad because the compiler builds without errors when it shouldn't. If I never looked at the Error List window, then I would mistakenly assume my code is perfect.",
+    "LastUpdatedDate": "2013-08-13T09:46:56.343-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-03T11:40:31.24-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Out of scope usage not causing build to fail when it should",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 526
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "By the way, I have been using TypeScript for awhile now and am very surprised that I haven't noticed this before, so I'm wondering if this issue was introduced by the recent VS 2012 update (Update 1) I installed this morning.",
+      "PostedDate": "2012-12-03T11:43:27.473-08:00",
+      "Id": 83466
+    },
+    {
+      "Message": "OK, thanks for the detailed description! It sounds like I need to close all my open files except the one I'm working on as a final check until we get an update to the TypeScript project template.",
+      "PostedDate": "2012-12-03T15:16:31.63-08:00",
+      "Id": 83478
+    }
+  ]
+}

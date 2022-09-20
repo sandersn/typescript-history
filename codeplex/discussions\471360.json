@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1129803",
+    "ThreadId": "471360",
+    "Html": "I noticed this change as of 0.9.5:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x: { [name: <span style=\"color:Blue;\">string</span>]: <span style=\"color:Blue;\">string</span>; };\nx = {};    <span style=\"color:Green;\">// works</span>\nx = <span style=\"color:Blue;\">new</span> Object();   <span style=\"color:Green;\">// error: Index signatures of type Object and { [name: string]: string; } are incompatible</span>\r\n</pre></div>Why are Object and {} not the same thing?  I'm curious.  I've noticed the types are generally assignable to one another.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> y: {} = <span style=\"color:Blue;\">new</span> Object();    <span style=\"color:Green;\">// works</span>\n<span style=\"color:Blue;\">var</span> z: Object = {};    <span style=\"color:Green;\">// works</span>\r\n</pre></div>",
+    "PostedDate": "2013-11-27T15:34:44.533-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129810",
+    "ThreadId": "471360",
+    "Html": "<pre><code>x = {};</code></pre>\n\nThis is only allowed because the assignment introduces a contextual type on the object literal (spec section 4.5):<br />\n<blockquote>\nWhen an object literal is contextually typed by a type that includes a string index signature of type T, the resulting type of the object literal includes a string index signature with the widened form of the best common type of T and the types of the properties declared in the object literal<br />\n</blockquote>\nThe equivalent version using parentheses to prevent contextual typing gives you the same error as if <code>{ }</code> were <code>new Object()</code><br />\n<pre><code>x = ({});    // error</code></pre>\n\n",
+    "PostedDate": "2013-11-27T15:53:06.847-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129847",
+    "ThreadId": "471360",
+    "Html": "I'm going to have to work harder to understand that bit.<br />\n",
+    "PostedDate": "2013-11-27T20:36:28.933-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130666",
+    "ThreadId": "471360",
+    "Html": "This comes down to the way TypeScript treats the members that every object inherits from the Object prototype. A string index signature defines a constraint that must be satisfied by all properties on a particular object (in your example they must all be of type string), but the members inherited from Object are excluded from this check (as index signatures would otherwise be pretty useless). Likewise, an object is permitted to redefine a member inherited from Object with a type that isn't a subtype of the inherited member's type. Indeed, members from Object technically aren't inherited, but rather are simply present if the object doesn't define its own members with the same name. These rules exist such that an object can define members with <em>any</em> name and type without error--too much code would break if TypeScript required every object to be a strict subtype of Object.\r<br />\n<br />\nNow, in your example, the literal <code>{}</code> has no members (when those inherited from Object are excluded) and therefore satisfies the string indexer constraint. But the Object type does have the members of Object (stating the obvious here), and those members do not satisfy the string indexer constraint. However, when it comes to assignment compatibility, the literal <code>{}</code> is compatible with Object because it doesn't redefine any of Object's properties.<br />\n",
+    "PostedDate": "2013-12-01T08:58:08.223-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130974",
+    "ThreadId": "471360",
+    "Html": "Oh that actually makes sense.  Thank you for the clear explanation.<br />\n",
+    "PostedDate": "2013-12-02T09:55:24.987-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1131045",
+    "ThreadId": "471360",
+    "Html": "This explanation makes sense, but it still seems slightly odd that two expressions in JavaScript which are equivalent are considered different in TypeScript because of type inference. \r<br />\n<br />\nWas the reasoning behind this change to allow people to more easily create simple object maps? Or is there more to it than that?<br />\n",
+    "PostedDate": "2013-12-02T13:09:08.267-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132577",
+    "ThreadId": "471360",
+    "Html": "<blockquote>\nWas the reasoning behind this change to allow people to more easily create simple object maps?<br />\n</blockquote>\nExactly. The problem comes down to this:<br />\n<pre><code>var stringMap: { [s: string]: string; };\nvar numberMap: { [s: string]: number; };\nvar notMap = { };\n\nstringMap = notMap; // You want this to be an error\nnumberMap = notMap; // You want this to be an error\nstringMap = numberMap; // You want this to be an error</code></pre>\n\nSeems simple enough, we'll make it so that types without matching index signatures aren't assignment compatible. But then when you want to actually initialize one of those map objects, you find that that error is a giant pain:<br />\n<pre><code>var stringMap: { [s: string]: string; } = {}; // ... error? {} doesn't have a string-&gt;string indexer\nstringMap = &lt;{[s: string]: string; }&gt;{ }; // Please stop making me write all these type assertions :(</code></pre>\n\n... but we still want all those error cases in the first example to still be errors, despite the fact that there's not really an easily-described difference between this snippet and the error cases above.\r<br />\n<br />\nThe solution was to have contextual typing apply the indexer when appropriate. This solves the initializer problem while still keeping the &quot;should be an error&quot; cases as errors. This also fixes some other cases, such as function invocation:<br />\n<pre><code>function makeZoo(animalLookup: { [s: string]: Animal; }) { /*... */ }\n// Empty zoo\nmakeZoo({}); // OK\n// Mistake\nmakeZoo(stringMap); // Error</code></pre>\n\n",
+    "PostedDate": "2013-12-06T10:23:09.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

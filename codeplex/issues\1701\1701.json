@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-19T18:25:02.15-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I think either both of these should not be an error OR both of these should be an error. I am leaning towards *not* being an error. \r\n\r\n```\r\n// Okay \r\nmodule X\r\n{\r\n\texport class Y{\t\t\r\n    }\r\n\texport module Y{\t\t\r\n\t}\r\n}\r\n```\r\n\r\n```\r\n// Error : Duplicate identifier\r\nmodule X\r\n{\r\n\texport module Y{\t\t\r\n    }\r\n\texport class Y{\t\t\r\n\t}\r\n}\r\n```",
+    "LastUpdatedDate": "2013-09-19T18:25:02.15-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-19T05:38:58.54-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Duplicate Identifier Inconsistency",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1701
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. You are allowed to merge declarations with the same name in certain cases. In this case, a class followed by a module is allowed, the module adds new values to the static side of the class. In the second case it is not allowed due to code generation limitations. You can see the specifics in section 10.5 Declaration Merging in the language specification. For a concrete example:\n\n```Typescript\nclass Y {\n    foo: string;\n}\nmodule Y {\n    export var bar: number;\n}\n\nvar a: number = Y.bar;\nvar b: string = Y.foo; // error, foo is an instance value\nvar y = new Y();\nvar c: number = y.bar; // error, bar is a static value\nvar d: string = y.foo;\n```",
+      "PostedDate": "2013-09-19T18:24:58.017-07:00",
+      "Id": 115088
+    }
+  ]
+}

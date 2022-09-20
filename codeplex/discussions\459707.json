@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1100885",
+    "ThreadId": "459707",
+    "Html": "<pre><code>\nfunction Auto(arg0: any, arg1?: any) {\n \n}\n</code></pre>\n\nGives:<br />\n<pre><code>function Auto(arg0, arg1) {\n}</code></pre>\n\nHOWEVER:<br />\n<pre><code>export interface IResolverFactory {\n}\n\nfunction Auto(arg0: any, arg1?: any) {\n \n}</code></pre>\n\nGives:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {\n    function Auto(arg0, arg1) {\n    }\n});</code></pre>\n\nWhich makes Auto unavailable in the global namespace.\r<br />\nWhat gives?<br />\n",
+    "PostedDate": "2013-09-30T06:16:11.59-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100985",
+    "ThreadId": "459707",
+    "Html": "A file with a top-level 'export' directive is an external module. External modules are intended to prevent leaking objects into the global namespace. We don't allow for mixing of external and non-external module code in the same file.<br />\n",
+    "PostedDate": "2013-09-30T10:31:43.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100988",
+    "ThreadId": "459707",
+    "Html": "Got it. Perhaps issuing a warning would be useful - it took me a while to figure out why 'Auto' wasn't available any longer.<br />\n",
+    "PostedDate": "2013-09-30T10:53:06.663-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1101006",
+    "ThreadId": "459707",
+    "Html": "It's very typical for external modules to only export some of their functions; e.g. in this case 'Auto' might be an implementation detail used by some other exported type. There's really nothing to warn about at all.<br />\n",
+    "PostedDate": "2013-09-30T11:22:04.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1101015",
+    "ThreadId": "459707",
+    "Html": "In my case, the functions were not referenced in that file and couldn't have been referenced from another file because of the export and me not being aware of what JS that would produce.<br />\nSo, at least an &quot;unreferenced symbol&quot; warning?<br />\n",
+    "PostedDate": "2013-09-30T11:41:01.677-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

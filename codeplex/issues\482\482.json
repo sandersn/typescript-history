@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.097-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "What: Currently it is only possible to extends the global objects like Date in its type interfaces, but not on its static interfaces (aka global variables). \r\n\r\nWhy: There are libraries like sugar.js which extending the global objects with some useful functions which are missing in the base library. Its currently not possible (at least as I know) to support them without that.\r\n\r\nHow: This can be solved by changing lib.d.ts to use FooStatic interfaces instead of object type definitions. Example:\r\n\r\n instead of \r\n\r\n```TypeScript\r\n   declare var Date: {}\r\n```\r\n\r\nit should be\r\n\r\n```TypeScript\r\n   interface DateStatic: {}\r\n   declare var Date: DateStatic;\r\n```   ",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-22T12:01:20.097-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Allow to extend global variables like Date or Object to support libs like sugar.js",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 40,
+    "Id": 482
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This sounds like the right thing to do - over to Luke to verify.",
+      "PostedDate": "2012-11-26T09:54:14.903-08:00",
+      "Id": 83016
+    },
+    {
+      "Message": "Can we also have similar support for Function?\n\nMicrosoft AJAX extends Function with methods such as createDelegate. Currently there's no way to model that using TypeScript since Function is defined as:\n\ndeclare var Function: {\n    new (...args: string[]): Function;\n    (...args: string[]): Function;\n    prototype: Function;\n}\n\nCan it instead be:\n\ninterface StaticFunction {\n     new (...args: string[]): Function;\n    (...args: string[]): Function;\n    prototype: Function;\n}\n\ndeclare var Function: StaticFunction;\n\nor similar?\n",
+      "PostedDate": "2013-01-08T09:01:19.453-08:00",
+      "Id": 85548
+    },
+    {
+      "Message": "We're considering allowing declare vars to be extended just like interfaces.  If we end up not going down that route, we should definitely make sure the interfaces we aren't allowing to be extended are the ones we intend to be limited, otherwise we should move them to interfaces as originally suggested.",
+      "PostedDate": "2013-03-07T16:32:16.24-08:00",
+      "Id": 92620
+    },
+    {
+      "Message": "Another option would be to allow `static` and `constructor` members on interfaces. This would be much more elegant, as you would only need a single interface to describe an entire type:\n\n``` TypeScript\n\ninterface Date: {\n    constructor(): Date;\n    constructor(value: number): Date;\n    constructor(value: string): Date;\n    constructor(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;\n    static (): string;\n    static prototype: Date;\n    static parse(s: string): number;\n    static UTC(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number;\n    toString(): string;\n    toDateString(): string;\n    toTimeString(): string;\n    toLocaleString(): string;\n    toLocaleDateString(): string;\n    ...\n}\n```",
+      "PostedDate": "2013-04-24T07:36:40.46-07:00",
+      "Id": 98317
+    },
+    {
+      "Message": "I've created a quick gist with my current workaround/solution for using Sugar.js's static extensions.  I'm still pretty new to TypeScript, so I'm sure its not the best solution, but I did not see a workaround example in my own search so maybe this will help someone.\n\n- https://gist.github.com/vmadman/8034329",
+      "PostedDate": "2013-12-18T20:27:26.227-08:00",
+      "Id": 128029
+    },
+    {
+      "Message": "Is this still on? \n\nI'd like to rig a definition for the new ES6 language extensions (like the polyfills from `es6-shim`) but most of it extends native types.",
+      "PostedDate": "2014-03-08T05:25:45.177-08:00",
+      "Id": 136284
+    },
+    {
+      "Message": "I think declare should be open ended same as interface.",
+      "PostedDate": "2014-04-03T22:47:12.987-07:00",
+      "Id": 140498
+    },
+    {
+      "Message": "Just keep in mind that this introduces one exception to class rules: \"super()\" calls should not be placed in classes that derive from primitive types.  You cannot apply Array's constructor to an object instance. As well, you cannot pass a value to the \"String\" constructor, and have it populate the character array - this has to be done manually.  Another note is that to extend from some primitive types, you HAVE to implement custom \"toString()\" and/or \"toValue()\" functions, or the native calls WILL fail (with message \"TypeError: String.prototype.toString is not generic\").  Doing this for Strings ALSO requires creating YOUR OWN variable to store the underlying value.  So if you expect a class to extend \"String\" and type \"new MyString(value)\", what should happen?  All you end up with is a simple object who's prototype connects with String.prototype, and it would fail to work as expected (in fact, errors will ensue if extended only).  If you cannot natively apply the primitive constructors to the derived objects, you need workarounds - and I was recently told that is something TypeScript was not going to allow (not that I'm against it! ;) ).",
+      "PostedDate": "2014-04-04T06:56:59.62-07:00",
+      "Id": 140542
+    },
+    {
+      "Message": "Is there smth new? I would like to extend Some objets like String and Array with new static functions and I have read about some months ago, that this will be possible in TS 1.0 but I dont think so.\n\n\nRegards\n\nChris",
+      "PostedDate": "2014-04-08T05:18:36.93-07:00",
+      "Id": 140937
+    },
+    {
+      "Message": "Hi Chris, be sure to read my previous comment.  If you want to extend String, you will need to add methods to \"String.prototype\".  You CANNOT inherit from \"String\" in JavaScript simply by prototype without errors.  More needs to be done to make it work (and it will be many times slower).",
+      "PostedDate": "2014-04-08T14:41:49.517-07:00",
+      "Id": 141018
+    },
+    {
+      "Message": "Related issue tracking on GitHub: https://github.com/Microsoft/TypeScript/issues/182",
+      "PostedDate": "2014-10-06T20:35:32.027-07:00",
+      "Id": 161557
+    }
+  ]
+}

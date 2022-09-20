@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As you noticed we removed this restriction, all your samples work in the develop branch.",
+    "ClosedDate": "2013-10-25T10:26:01.807-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I worked on type definitions for IxJS project.\r\n\r\nReduced code:\r\n```\r\ndeclare module Ix {\r\n    export interface Enumerable<T> {\r\n        toLookup<TKey>(keySelector: (item: T) => TKey): Lookup<TKey, T>;\r\n    }\r\n\r\n    export interface Grouping<TKey, T> extends Enumerable<T> {\r\n        key: TKey;\r\n    }\r\n\r\n    export interface Lookup<TKey, TValue> {\r\n        toEnumerable(): Enumerable<Grouping<TKey, TValue>>;\r\n    }\r\n}\r\n```\r\n\r\nAnd on Lookup interface definition I've got error: \"A generic type may not reference itself with a wrapped form of its own type parameters.\"\r\n\r\nBut this types is valid in .Net (IEnumerable, IGrouping, ILookup) and in IxJS (javascript).\r\nI know that you verify types not by reference but by structure. But it seems strange, I think language shouldn't disallow such type structures.\r\n\r\nBy the way, I didn't realize is this an error or just a warning, because the code compiled but lost some type information (it used any instead of generic type parameter).",
+    "LastUpdatedDate": "2013-10-25T10:26:01.807-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-25T05:05:09.537-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "A generic type may not reference itself with a wrapped form of its own type parameters.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1839
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Another example of this issue:\n\n```\n// Type definitions for IxJS 1.0.6\n// Project: https://github.com/Reactive-Extensions/IxJS\n// Definitions by: Igor Oleinikov <https://github.com/Igorbek>\n\ndeclare module Ix {\n    export interface Enumerable<T> {\n        toDictionary<TKey>(\n            keySelector: (item: T) => TKey): Dictionary<TKey, T>;\n    }\n\n    class Dictionary<TKey, TValue> {\n        toEnumerable(): Enumerable<KeyValuePair<TKey, TValue>>;\n    }\n\n    export interface KeyValuePair<TKey, TValue> {\n        key: TKey;\n        value: TValue;\n    }\n}\n```",
+      "PostedDate": "2013-10-25T05:22:14.527-07:00",
+      "Id": 119647
+    },
+    {
+      "Message": "More reduced code sample:\n```\ninterface A<T> {\n\twrap(): A<wrapper<T>>;\n}\ninterface wrapper<T> { }\n```\nError on A: A generic type may not reference itself with a wrapped form of its own type parameters.\n\nCan't understand why it should be restricted.",
+      "PostedDate": "2013-10-25T05:23:46.333-07:00",
+      "Id": 119649
+    },
+    {
+      "Message": "I've found in the language specification at \"3.5.2 Recursive Generic Types\":\n\nTODO: The restriction on generative recursion is likely to be removed. \n\nThat's definitely a generative recursion, and it's very useful, so pleeeese remove it =)",
+      "PostedDate": "2013-10-25T05:29:30.857-07:00",
+      "Id": 119650
+    }
+  ]
+}

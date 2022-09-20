@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:24:53.073-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "A recent change strengthened varargs validation and uncovered a bug:\r\n9c7135ec23625e02b0aafba2d258d2a613161d47\r\nReject non-array vararg type annotations; fix a retypecheck bug for setters without parameters\r\n\r\nThat change makes TypeScript barf at itself. Compiling typescriptServices.ts with --declaration option yields  typescriptServices.d.ts with syntax that is invalid.\r\n\r\nHere's the source of the place that turns invalid:\r\n/src/services/formatting/ruleOperationContext.ts\r\n\r\n```\r\nmodule TypeScript.Formatting {\r\n\r\n    export class RuleOperationContext {\r\n        private customContextChecks: { (context: FormattingContext): boolean; }[];\r\n        \r\n        constructor(...funcs: __{ (context: FormattingContext): boolean; }[]__) {\r\n            this.customContextChecks = funcs;\r\n        }\r\n\r\n```\r\n\r\nThat generates the following in typescriptServices.d.ts:\r\n\r\n```\r\ndeclare module TypeScript.Formatting {\r\n    class RuleOperationContext {\r\n        private customContextChecks;\r\n        constructor(...funcs: (context: __FormattingContext) => boolean[]__);\r\n```\r\n\r\nThis generated declaration has curly brackets omitted. Which means the closing '[]' now applies to the return type of the function rather than the whole function-array type.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-25T23:27:27.173-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Brackets missing in --declaration compilation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 959
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sorry about the extra underscores, I wanted to highlight the place with bold, but CodePlex has its own quirks.",
+      "PostedDate": "2013-04-25T23:29:18.01-07:00",
+      "Id": 98558
+    },
+    {
+      "Message": "The simplest way to patch it quickly is to add a named interface for that function signature. Something like:\n\n```\ninterface FormattingContextPredicate {\n    (context: __FormattingContext): boolean;\n}\n\nexport class RuleOperationContext {\n    constructor(private ...customContextChecks: FormattingContextPredicate[]) {\n    }\n```\n\nOtherwise you would either introduce curly brackets syntax for any function type across the board (and produce horrible output in many cases), or add quite a bit of smartness to ensure curly brackets only appear  where there is ambiguity.\n\nSooner or later you would need to do the latter, but this bug is serious enough that you'd have to fix ASAP. It would break anybody who uses TS services via declaration, and I imagine that's most of those who use it.",
+      "PostedDate": "2013-04-25T23:43:23.94-07:00",
+      "Id": 98560
+    },
+    {
+      "Message": "Thanks for reporting, marked as active. We're taking a look.",
+      "PostedDate": "2013-04-26T11:32:33.293-07:00",
+      "Id": 98616
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1160984",
+    "ThreadId": "492934",
+    "Html": "A lot of our Javascript codebase consists of AMD blocks like this:<br />\n<pre><code>define([\n  'underscore',\n  'backbone',\n  'text!templates/view.html'\n], function(_, Backbone, template) {\n  var compiled = _.template(template);\n  // continues with defining Backbone view that uses the template\n});</code></pre>\n\nLoading underscore or Backbone through Typescript is rather trivial. The problem lies in loading templates.\r<br />\n<br />\nThe only way around this problem seems to be:<br />\n<ul>\n<li>Create a new typescript file, <em>template.ts</em> - as you cannot use <em>declare module</em> block in the importing file</li>\n<li>Declare the template as a module:</li>\n</ul>\n<pre><code>  declare module 'text!templates/view.html' {\n    var template: string;\n    export = template;\n  }</code></pre>\n\n<ul>\n<li>Use <em>///&lt;reference</em> comment in the importing file</li>\n<li>\n<em>import template = require('text!templates/view.html');</em><br />\n</li>\n</ul>\nThis is very tedious, error-prone and promotes code duplication. Is there any language feature I am missing?<br />\n",
+    "PostedDate": "2014-01-13T05:02:16.55-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1164184",
+    "ThreadId": "492934",
+    "Html": "There is a secret comment instruction that can add AMD dependency so you don't have to declare module anymore but still there is some boilerplate associated:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;amd-dependency path=&quot;text!templates/view.html&quot;/&gt;</span>\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> require(name: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">string</span>;\n\n<span style=\"color:Blue;\">var</span> template = require(<span style=\"color:#A31515;\">&#39;text!templates/view.html&#39;</span>);\r\n</pre></div>See this discussion: <a href=\"https://stackoverflow.com/questions/13906656/invoke-the-text-plugin-from-requirejs-mapping\" rel=\"nofollow\">https://stackoverflow.com/questions/13906656/invoke-the-text-plugin-from-requirejs-mapping</a><br />\n",
+    "PostedDate": "2014-01-14T00:41:20.637-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1164214",
+    "ThreadId": "492934",
+    "Html": "Your solution reduces the need for an additional file, but is still far from ideal - especially mixing <em>require</em> as a function and <em>require</em> as a language construct is very confusing.\r<br />\n<br />\nI hope there will be some language feature to declare &amp; require a module as a one-liner.<br />\n",
+    "PostedDate": "2014-01-14T00:52:21.243-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1164265",
+    "ThreadId": "492934",
+    "Html": "Well I don't consider it a solution just a workaround :)\r<br />\n<br />\nAnother one is having one file with all require('text!...') calls (let's say template.ts) and export each template string. In this case it would be only one file with ugly syntax and the rest of the code would be clean.<br />\n",
+    "PostedDate": "2014-01-14T01:09:48.977-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1164300",
+    "ThreadId": "492934",
+    "Html": "Yes, there seems to be no language feature that would alleviate the need for this chanting and ritual dances whenever you want to load a HTML snippet.\r<br />\n<br />\nFor future readers of this thread - this feature request is tracked by the following issue:\r<br />\n<a href=\"https://typescript.codeplex.com/workitem/1046\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1046</a><br />\n",
+    "PostedDate": "2014-01-14T01:22:59.943-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1223358",
+    "ThreadId": "492934",
+    "Html": "I wrote a small story about <a href=\"https://typescript.codeplex.com/discussions/539193\" rel=\"nofollow\">module resolution plugins here</a>.<br />\n",
+    "PostedDate": "2014-03-16T17:41:27.147-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

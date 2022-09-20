@@ -1,0 +1,106 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:53:25.577-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "This is been reported multiple times already but I wanted to include a reproducible demo of the issue.  I get a compiler error stating that it is not able to write to a dependent file when the compiling the target module.\r\n\r\nI'm using Web Essentials 2.5.1, TypeScript 0.8.3. The AMD option as well as the compile on save options are set to true in Web Essentials.\r\n\r\nIn the example included, has two files App.ts and Module1.\r\n\r\n__App.ts:__\r\n\r\n```\r\nimport module1 = module(\"Module1\");\r\nmodule1.test();\r\n```\r\n\r\n__Module1.ts__\r\n\r\n```\r\nexport function test() {\r\n    alert(\"hello world!\");\r\n}\r\n```\r\n\r\nThe output files, *.js and *.min.js, are included in the project.  To mimic a TFS environment, I've marked Module1.ts, Module1.js, and Module.min.js as read only.\r\n\r\nWhen saving App.ts I get the following error:\r\n\r\n/*\r\nCompile Error. \r\nSee error list for details\r\n C:/Workspace/TypeScriptDemo/Module1.ts(0,0): Couldn't write to file 'C:\\Workspace\\TypeScriptDemo\\Module1.js'. Write to file failed.\r\n*/",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-27T14:54:15.763-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "write to file failed",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 13,
+    "Id": 768
+  },
+  "FileAttachments": [
+    {
+      "FileId": 631816,
+      "FileName": "TypeScriptDemo.zip",
+      "DownloadUrl": ".\\631816"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for the easy repro, I see what you mean even without Web Essentials. Marking as active and we'll take a look at fixing this.",
+      "PostedDate": "2013-02-28T17:42:31.447-08:00",
+      "Id": 91895
+    },
+    {
+      "Message": "This conflicts with the Web Essentials option to include the output into the project and TFS's tendency to mark these files as read only.  \n\nFrom all appearances, we are being penalized for buying into the Microsoft tooling stack.\n\nIf this is not going to be fixed in the compiler, where will it be fixed? The workarounds are exactly that and not a well thought out cohesive solution.",
+      "PostedDate": "2013-05-06T23:08:57.877-07:00",
+      "Id": 99540
+    },
+    {
+      "Message": "You are correct in your points, but I think you miss the point. Although TypeScript needs to process a base module to ensure the correct types are in scope, it does not have to write the output as well. \n\nI would suggest a __warning__ rather than an error from the TypeScript compiler would help here.\n\nA typical development path is to first write App.ts, compile, check in. Both .ts and .js are now read-only.\n\nThen you write Module1.ts. When you compile module1, TypeScript obviously needs to compile both it and App.ts - but writing the output JavaScript for App.ts is not required as part of the Module1.ts compilation. So far as I am aware TypeScript does not use or refer to the output file.\n\nWhile checking out App.ts is a workaround, it means everyone in a development team has to keep _any_ referenced .ts file checked out, even if they don't want/need to change it.\n",
+      "PostedDate": "2013-05-07T03:22:57.517-07:00",
+      "Id": 99563
+    },
+    {
+      "Message": "I've given this more thought about not including the compiled JavaScript files into the project files.  Unless Microsoft plans to allow multiple compiler versions to be installed on a build machine, you will not be able to reproduce the same output once a new compiler is installed.  If there is a conflict in compiler versions, this would prevent us from running a build on a previous branch and expect the same output.\n\nThis is a serious issue and could prevent adoption of TypeScript. Please reconsider fixing this issue.",
+      "PostedDate": "2013-05-09T03:12:59.73-07:00",
+      "Id": 99776
+    },
+    {
+      "Message": "After some thought this isn't behavior we intend to fix. Some potential options:\n\n1.       Don’t check in .js files, or don’t leave them read-only. You would not normally mark your compiler outputs as read-only in any programming environment and expect anything to work. \n\n2.       Add a pre-build step to mark as writeable/editable (depending on your source control solution) the relevant files.\n\n3.       Use .d.ts files to enforce cleaner separation between the modules, though this would complicate the build system a bit (you’d need one compiler invocation per file, essentially)\n\nLet us know if there's something important we haven't considered here.\n\r\n\r** Closed by danquirk 05/03/2013 5:13PM",
+      "PostedDate": "2013-05-03T17:13:02.953-07:00",
+      "Id": 99777
+    },
+    {
+      "Message": "The proposed workarounds are not viable solutions. \r\n\r\n1. Creating type definitions for each referenced module is a too much of a burden. Most developers will most likely create a single file for each class or module.  The goal of TypeScript is to support application scale JavaScript development. This approach is  antithetical to that goal.\r\n\r\n2. Do not include the output javascript into project files would break older code branches written against older versions of the compiler.",
+      "PostedDate": "2013-05-09T03:23:00.147-07:00",
+      "Id": 99778
+    },
+    {
+      "Message": "Amendment to my earlier suggestion:\n\nTS compiler should compile any file but won't output to a .js file if that file is read-only. If the file is read-only, it can compare the output vs the existing file, and __only write a warning if they are not identical__. This means that (in most cases) a checked-in, stable .ts library file can stay checked-in and still be referenced and compiled for other code.\n\nThis fixes the problem of having to check out referenced .ts/.js files that you have no intention of changing.",
+      "PostedDate": "2013-05-09T04:59:41.053-07:00",
+      "Id": 99783
+    },
+    {
+      "Message": "In my team, I was not exhibiting this problem, but others were, so after some digging I found out what was different. I was using a Local Workspace instead of a Server Workspace.\n\nA Local Workspace does not apply the read-only flag on files, so saving the .JS files does not require a check-out to for it to be writeable.\n\nThe others have converted to a Local Workspace and they are smooth sailing once again.\n\nI hope this helps.",
+      "PostedDate": "2013-07-18T02:30:08.903-07:00",
+      "Id": 106424
+    },
+    {
+      "Message": "I also find this behaviour very annoying when working with TFS. \n\nThe Typescript would not compile unless you check out all Typescript files even if the output would not change.\n\nThis is a real show stopper for larger applications and many developers working at the same time.",
+      "PostedDate": "2013-07-19T04:19:48.52-07:00",
+      "Id": 106606
+    },
+    {
+      "Message": "@danquirk - are we going to get any responses to the very valid points people have been raising after this issue was closed? Do we need to open a duplicate bug to get noticed?",
+      "PostedDate": "2014-05-14T13:26:30.12-07:00",
+      "Id": 146610
+    },
+    {
+      "Message": "Ditto above - this is not fixed.   I still get the error when TypeScript attempts to overwrite a read-only .js file.\n\nI would expect TypeScript to interact with Visual Studio's integrated source control provider to check out the file if it has changed since the last version.\n\nSince TypeScript is not installed on our build server (and the build targets fail to run if they are copied locally), \"Don't check in .js files\" is __not__ a valid option.\nSwitching to a Local Workspace is not a valid option, either.\n\n___Please___ re-open and fix this issue.",
+      "PostedDate": "2014-06-04T08:34:22.917-07:00",
+      "Id": 148815
+    },
+    {
+      "Message": "Ditto jesschadwick. Still not fixed and still causes problems. Workarounds which require me to change my process (don't include .js files in solution or add custom build events) are not ideal and are not representative of a quality solution.\n\nTypescript should *just work* with visual studio & TFS. It's a product that is deeply integrated in VS2013, and all are products of the same company. Please re-open this and truly fix it instead of giving me workarounds.",
+      "PostedDate": "2014-07-14T09:28:51.23-07:00",
+      "Id": 152342
+    }
+  ]
+}

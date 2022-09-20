@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1151748",
+    "ThreadId": "484278",
+    "Html": "I was trying to create a declarations file for React,  and found a strange behavior :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">interface</span> MyInterface&lt;A&gt;{\n    getA():A\n}\n\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> func&lt;C <span style=\"color:Blue;\">extends</span> MyInterface&lt;A&gt;, A&gt;(c: C): A\n\n<span style=\"color:Blue;\">class</span> Impl&lt;A&gt; <span style=\"color:Blue;\">implements</span> MyInterface&lt;A&gt;  {\n    getA():A {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">null</span>;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> impl = <span style=\"color:Blue;\">new</span> Impl&lt;{ anything : <span style=\"color:Blue;\">string</span>}&gt;();\n<span style=\"color:Blue;\">var</span> a = func(impl);\r\n</pre></div>the <code>func</code> call result in the following error : <br />\n<pre><code>Type '{}' does not satisfy the constraint 'MyInterface&lt;Impl&lt;{ anything: string; }&gt;&gt;' for type parameter 'C extends MyInterface&lt;A&gt;'.\n&lt;A, C extends MyInterface&lt;A&gt;&gt;(c: C): A</code></pre>\n\nif I define the function this way : <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> func&lt; C <span style=\"color:Blue;\">extends</span> MyInterface&lt;A&gt;, A&gt;(c: C): A\r\n</pre></div>No errors , but <code>a</code> is seen as <code>{}</code> by the compiler<br />\n<br />\nIs there something that I did not understood, or is it a bug ?<br />\n",
+    "PostedDate": "2014-01-10T05:26:46.19-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151796",
+    "ThreadId": "484278",
+    "Html": "I would just define the function as:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> func&lt;A&gt;(c: MyInterface&lt;A&gt;): A\r\n</pre></div>The compiler can make type argument inferences from regular arguments, but it cannot infer one type argument from another.<br />\n",
+    "PostedDate": "2014-01-10T07:26:56.757-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151863",
+    "ThreadId": "484278",
+    "Html": "Thanks for the information,\r<br />\nIn fact what I really wanted to obtains what more something like :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> func&lt; C <span style=\"color:Blue;\">extends</span> MyInterface&lt;A&gt;, A&gt;(c: C):  (a: A) =&gt; C\r\n</pre></div>I'll try to find a workaround.<br />\n",
+    "PostedDate": "2014-01-10T09:56:39.007-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

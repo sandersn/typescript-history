@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "983267",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>What is the motivation for the current subtyping rule on functions? AFAIK, the 0.8 language spec has both of the following rules:</p>\r\n<pre>(A :&gt; B) |- (A -&gt; R) :&gt; (B -&gt; R)</pre>\r\n<pre>(B :&gt; A) |- (A -&gt; R) :&gt; (B -&gt; R)</pre>\r\n<p>The first of these is not sound. I created a small TS example that <a href=\"http://gist.github.com/4449351\">\r\ndemonstrates this</a>. There is also a little Coq formalization that interprets &quot;A :&gt; B&quot; as &quot;there exists a function from A to B&quot; and shows that the first rule above leads to an inconsistency, while the correct rule is:</p>\r\n<pre>(P :&gt; A), (B :&gt; Q) |- (A -&gt; P) :&gt; (B -&gt; Q)</pre>\r\n",
+    "PostedDate": "2013-01-04T21:20:50.483-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983860",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>You're right that allowing both co- and contra-variance in the parameter position isn't sound.&nbsp; This is actually intentional and also somewhat controversial (one&nbsp;example is&nbsp;<a href=\"http://siek.blogspot.com/2012/10/is-typescript-gradually-typed-part-1.html\">http://siek.blogspot.com/2012/10/is-typescript-gradually-typed-part-1.html</a>).</p>\r\n<p>The type system in TypeScript has a different set of motivations that is often the case in other type systems.&nbsp; In TypeScript, the motivations tend to favor tooling and ability to express common idioms in JavaScript over being type safety or soundness.&nbsp;\r\n It also tends to favor simplicity in the type system.</p>\r\n<p>The classic one that Java and C# is that arrays should actually be invariant.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> array1: {foo:number;}[] = [{foo: 1}];\r\n<span style=\"color:blue\">var</span> array2: {}[] = array1;\r\n\r\narray2[0] = {bar: <span style=\"color:#a31515\">&quot;bar&quot;</span>};\r\n\r\nconsole.log(array1[0]);\r\n</pre>\r\n</div>\r\n<p>&nbsp;In order to prevent issues like this, you have to make your type system more complex (by adding, for example, variance or in/out annotations on your generics).&nbsp; TypeScript instead tries to simplify and give the user a fairly straightforward story, at the\r\n expense that there are some cases that become less safe.&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-07T11:49:23.073-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983882",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>Toyvo,</p>\r\n<p>&nbsp;</p>\r\n<p><span>&quot;A :&gt; B&quot; as &quot;there exists a function from A to B&quot;</span></p>\r\n<p>&nbsp;</p>\r\n<p>do you mean &quot;A -&gt; B&quot;?</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-07T13:39:52.197-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984130",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>The way I've seen it is &quot;A &lt;: B&quot; meaning A is a subtype of B.</p>\r\n",
+    "PostedDate": "2013-01-08T08:48:06.237-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984443",
+    "ThreadId": "428572",
+    "Html": "\r\n<p><a href=\"http://www.codeplex.com/site/users/view/ShiqiCao\">ShiqiCao</a>, please refer to the Coq file. I am not overly familiar with type systems including subtyping, as you see I was even confused about the standard notation; but I like things being formal,\r\n and at a first glance my intuition for subtyping would be this:</p>\r\n<pre>Inductive subtype (a b : Set) : Set :=\r\n| ST : (a -&gt; b) -&gt; subtype a b.</pre>\r\n<p>In plain words, this says: we can demonstrate that A is a subtype of B by providing a function (as in math) from A to B. That is, A contains all the information in B and more.&nbsp;</p>\r\n<p><a href=\"http://www.codeplex.com/site/users/view/jonturner\">jonturner</a>, thanks for your reply. I would question the assumption that a sound type system would hinder your scenarios - ability to express JavaScript idioms, and hinder tooling. I also doubt\r\n that a sound type system would be significantly more complex, and I would argue you do not need to expose any of the additional complexity to the user.</p>\r\n<p>For example, to avoid the need for variance annotation on generics, you could simply exclude rules that depend on it from the formalized subtyping relation. It is a strategy works quite well - when the compiler is in doubt, assume a NO answer. In the limit,\r\n it could also achieve removing subtyping altogether.&nbsp;You can then recover JavaScript idioms by providing an explicit &quot;cast&quot; primitive compiled to the identity function. That is, when the user is certain a cast is safe, but TypeScript's approximation of subtyping\r\n fails to infer safety, the user inserts an explicit cast.</p>\r\n<p>I have a strong preference for an explicit cast, because in this setup a compiling cast-free program gives me a static guarantee there will be no type errors. In current TypeScript the fact a program compiles tells me nothing about type errors - they can\r\n still manifest themselves for certain runs of the program.</p>\r\n<p>I am speaking from experience. In our company we have developed an F#-&gt;JavaScript platform, WebSharper, and have been quite happy with the explicit cast over the years. This is indeed how F# works - a sound core typesystem with use-at-your-own-risk extensions.\r\n I have not had any problem expressing JavaScript idioims. Our programs are typically written mostly in the sound core of F#, and casts are inserted at the FFI boundary to make sense out of untyped JavaScript and bring it into the typed setting.</p>\r\n<p>If anything, we have felt the need for more *safety*, not more flexibility. For example, we are now looking at implementing a contract system to check at runtime that untyped JavaScript fragments preserve the announced typing, in the spirit of Findler and\r\n Felleisen (http://www.ccs.neu.edu/racket/pubs/icfp2002-ff.pdf).</p>\r\n",
+    "PostedDate": "2013-01-09T05:17:16.4-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984613",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>The design choices here (and Anders may even weigh in) are about balance rather than removing all unsafe activity.&nbsp; JavaScript code tends to be, especially to many&nbsp;coming from languages like F#, more on the fast and loose side of coding.&nbsp;</p>\r\n<p>The more we require users to use casts to port code over, the less it feels like coding in helpful superset of JavaScript and the more it feels like a restrictive, type-heavy language.&nbsp; We'd rather avoid that and keep the language easier to use for doing\r\n the types of things JavaScript is good at, even if it means risking some type safety in some cases.&nbsp; The hope is the holes it opens up in the type system are rarely felt in practice, but we gain a net positive by having a lighter weight type system.</p>\r\n<p>That said, TypeScript won't be everyone's cup of team.&nbsp; There are other languages that compile to JavaScript that favor a more strict system, like your own project, which may be a better fit for programmers who want that extra level of assurance a stricter\r\n type system gives them.</p>\r\n",
+    "PostedDate": "2013-01-09T11:08:52.013-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984648",
+    "ThreadId": "428572",
+    "Html": "\r\n<p>Just count my feedback as a vote for a sound type system. I think I understand your arguments, but from my (biased) position, I fail to see any benefit at all in allowing implicit TS holes. See also some more or less informed discussion on LtU:&nbsp;<a title=\"LtU discussion\" href=\"http://lambda-the-ultimate.org/node/4612\">http://lambda-the-ultimate.org/node/4612</a>.&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-09T12:26:39.61-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051419",
+    "ThreadId": "428572",
+    "Html": "+1 for the sound type system. Generics are also affected by this: <a href=\"https://gist.github.com/valtron/5688638\" rel=\"nofollow\">https://gist.github.com/valtron/5688638</a>.\r<br />\n<br />\nIn my opinion, it'd be great if you could annotate generic params with in/out (C#) or +/- (Scala) to indicate variance, and have the type-system check it.\r<br />\n<br />\nI don't think this is a flexibility issue. If someone is writing code similar to my generics example, it's likely they intend to enforce that the objects they get out of a Box&lt;T&gt; are actually of type T; otherwise, they'd write just Box.\r<br />\n<br />\nThe reason I write this is because I really like Typescript; I think it's the cleanest, lightest, and best typed Javascript alternative. I'm planning on using it in my work projects when 0.9 comes out, regardless of the holes in the type system, because the benefit over Javascript is enormous. It's just a shame that I'll be able to write code with full type annotations and still not be sure that I'm not making a subtle mistake.<br />\n",
+    "PostedDate": "2013-05-31T16:53:50.707-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

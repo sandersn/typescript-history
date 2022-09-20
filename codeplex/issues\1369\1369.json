@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.25-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The current ES6 and TypeScript syntax for classes makes it difficult to perform any meaningful modifications to a function that is a member of a class without extreme effort. Libraries such as ember.js added additional properties to the Function prototype to augment the function with additional capabilities, but this is not feasible in the class syntax.\r\n\r\nSomething like Python decorators provide a possible mechanism to solve this problem. As per [PEP-318](http://www.python.org/dev/peps/pep-0318/), decorators allow you to define a function that can be applied to another function in place. For example, a naïve logging decorator might look like this:\r\n\r\n```ts\r\n// decorator\r\nfunction log(fn: Function, metadata: DecoratorMetadata) {\r\n  return function(...args: any[]) {\r\n    console.log(metadata.name);\r\n    return fn.apply(this, args);\r\n  }\r\n}\r\n\r\nclass A {\r\n  // decorator application\r\n  @log foo() {\r\n  }\r\n}\r\n\r\n// execution\r\nvar a = new A();\r\na.foo(); // LOG: foo \r\n``` \r\n\r\nThis provides a capability that allows for very expressive development against the class syntax that is far beyond C#-style attributes and allows for a number of uses including (but not limited to): logging, binding, composition, testing, control over ES5 property descriptors, AOP-like join-points, etc.\r\n\r\nIn addition to the general syntax borrowed from Python, a TypeScript decorator would accept an additional piece of metadata in the form of a DecoratorMetadata object, which contains contextual information about the target that is being decorated (such as a function, class, method, getter, setter, or even fields and parameters).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-18T16:46:19.29-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Add support for Python-like decorators",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 13,
+    "Id": 1369
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion, won't happen for 1.0 but others feel free to upvote for future consideration. Assigning to Jonathan.",
+      "PostedDate": "2013-07-19T11:12:56.443-07:00",
+      "Id": 106654
+    },
+    {
+      "Message": "don't limit it to method, also let us decorate property",
+      "PostedDate": "2013-10-15T02:35:50.657-07:00",
+      "Id": 118448
+    },
+    {
+      "Message": "Someone submitted a PR for this over a year ago, https://typescript.codeplex.com/SourceControl/network/forks/rbuckton/Decorators/contribution/3840",
+      "PostedDate": "2014-01-27T07:47:43.603-08:00",
+      "Id": 131702
+    },
+    {
+      "Message": "@csnover I was the one who created the Fork. Unfortunately it's a bit outdated at this point as it was for 0.8.3 and I haven't had the time to update it to more recent bits. I also have been discussing a variation of this proposal with some of the people on TC39 for possible inclusion in ES7 or later.\n\nThe new proposal only targets decorators/annotations on class members only (fields, methods, properties) and not function statements or function expressions and is more consistent with existing ES5 and ES6 method signatures that mutate object members such as Object.defineProperty:\n\n```ts\nfunction log(target: any, name: string, descriptor: PropertyDescriptor) {\n  var fn = descriptor.value;\n  descriptor.value = function(...args: any[]) {\n    console.log(name);\n    return fn.apply(this, args);\n  }\n  // return mutated or new descriptor to change behavior, or return null to remove the property\n  return descriptor;\n}\n```\n\nThis makes it more usable for things like field decoration and removes the need for the DecoratorMetadata object. \n\n",
+      "PostedDate": "2014-01-27T11:51:05.663-08:00",
+      "Id": 131769
+    }
+  ]
+}

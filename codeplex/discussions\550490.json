@@ -1,0 +1,130 @@
+[
+  {
+    "Id": "1262412",
+    "ThreadId": "550490",
+    "Html": "I ran into a problem with trying to downcast a variable of a constrained generic type.  Here's an example of what doesn't work.  It seems to me that both casts should succeed, but when I try to downcast the argument of generic type, I get a compile error, even though T is constrained to the base type of the type being cast to.  Is this an intentional limitation?  Thanks.<br />\n<pre><code>class Base { }\nclass Derived1 extends Base {\n    public name1 = &quot;Derived1&quot;;\n}\nclass Derived2 extends Base {\n    public name2 = &quot;Derived2&quot;;\n}\n\nclass Container&lt;T extends Base&gt; {\n    public aMethod(arg: T): string {\n        // Next line gives compiler error: error TS2012: Cannot convert 'T' to 'Derived1'\n        return (&lt;Derived1&gt;arg).name1;  \n    }\n    \n    public anotherMethod(arg: Base): string\n    {\n        return (&lt;Derived1&gt;arg).name1;  // this compiles fine\n    }\n}\n    </code></pre>\n\n",
+    "PostedDate": "2014-07-03T08:49:10.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262440",
+    "ThreadId": "550490",
+    "Html": "This is because we know that T is a subtype of Base, but we don't know which one.  Because of this, it can't be shown that you can safely move from this subtype of Base to Derived1 or any other subtype of Base.<br />\n\r<br />\nIn the second part of the example, we know that arg <em>is</em> of type Base locally, so we know you can safely downcast from that to Derived1 because we're cleanly going down in the subtype hierarchy.<br />\n",
+    "PostedDate": "2014-07-03T09:47:21.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262459",
+    "ThreadId": "550490",
+    "Html": "Thanks for the response.  That makes sense.  I realized after posting that C# has the same behavior.  Of course my real code did a check that the cast was valid, like:<br />\n<pre><code>if (arg instanceof Derived1) {\n    return (&lt;Derived1&gt;arg).name1;\n}\n</code></pre>\n\nI got the code to compile by changing the cast to<br />\n<pre><code>if (arg instanceof Derived1) {\n    return (&lt;Derived1&gt;&lt;any&gt;arg).name1;\n}\n</code></pre>\n\nI realize the most desirable solution would be to refactor the code so that Container doesn't need to know about specific subtypes of Base.<br />\n",
+    "PostedDate": "2014-07-03T10:16:28.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262460",
+    "ThreadId": "550490",
+    "Html": "<blockquote>\nbut we don't know which one.<br />\n</blockquote>\n <br />\n@jonturner <br />\nHow is this different from the second case?  It is still unknown &quot;which one&quot;.<br />\n",
+    "PostedDate": "2014-07-03T10:16:55.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262483",
+    "ThreadId": "550490",
+    "Html": "@jamesnw\r<br />\n<br />\nThe case where you have<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nanotherMethod(arg: Base): <span style=\"color:Blue;\">string</span> {\n    <span style=\"color:Blue;\">return</span> (&lt;Derived1&gt;arg).name1;  <span style=\"color:Green;\">// this compiles fine</span>\n}\r\n</pre></div>Locally, we know the type is Base, not &quot;a subtype of Base&quot;.  One thing that might be confusing at first is that functions are typed by what we know locally, not how they're called.  You may have passed in a type that is a subtype of Base, but locally all we know is Base.\r<br />\n<br />\nThis is different from &quot;T extends Base&quot; because here we have an unknown type that we're marshalling around.  We know it's a subtype of Base, and we know we'll be using and returning this subtype, but we don't know which one it is, only that it has at least the same shape as Base (but could have more).<br />\n",
+    "PostedDate": "2014-07-03T11:12:32.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262491",
+    "ThreadId": "550490",
+    "Html": "Unfortunately that doesn't make it more clear.  &quot;but we don't know which one it is&quot; applies to the code you posted as well. &quot;it has at least the same shape as Base (but could have more)&quot; could also apply to the posted code.<br />\n",
+    "PostedDate": "2014-07-03T11:24:57.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262538",
+    "ThreadId": "550490",
+    "Html": "When you say &quot;anotherMethod(arg: Base)&quot; we know that arg has type Base in the context of the anotherMethod function.  Locally, there isn't anything we don't know about it.  We know it's Base.  &quot;T extends Base&quot; means &quot;a type I don't know, having a shape I don't know except for the Base component I do know&quot;.  They're two different things.<br />\n<br />\nThe operator &lt;&gt; actually isn't a cast, it's a &quot;type assertion&quot;.  These can go up to less-specific types or down to more-specific types but not sideways to siblings of the same parent type.  Type asserting a &quot;T extends Base&quot; to some other subtype of Base is not up or down, but rather sideways to siblings.  You can check out more about the type assertion operator in 4.13 of the spec.<br />\n<br />\nAs an example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Animal {\n  legs: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> Dog <span style=\"color:Blue;\">extends</span> Animal {\n  pants: <span style=\"color:Blue;\">boolean</span>;\n}\n\n<span style=\"color:Blue;\">interface</span> Bat <span style=\"color:Blue;\">extends</span> Animal {\n  wingLength: <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">var</span> x : Dog;\n<span style=\"color:Blue;\">var</span> y  = &lt;Bat&gt; Dog; <span style=\"color:Green;\">// error: Cannot convert &#39;Dog&#39; to &#39;Bat&#39;: Type &#39;Dog&#39; is missing property &#39;wingLength&#39; from type &#39;Bat&#39;. Type &#39;Bat&#39; is missing property &#39;pants&#39; from type &#39;Dog&#39;.</span>\r\n</pre></div>Meaning the types are mutually incompatible.  \n<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f(x: Animal) { <span style=\"color:Blue;\">return</span> &lt;Bat&gt;x; }\n<span style=\"color:Blue;\">function</span> g&lt;T <span style=\"color:Blue;\">extends</span> Animal&gt;(x: T) { <span style=\"color:Blue;\">return</span> &lt;Bat&gt;x; }  <span style=\"color:Green;\">// error to be consistent with the non-generic error for type assertions given above</span>\r\n</pre></div><strong>Edit</strong>: for consistency<br />\n",
+    "PostedDate": "2014-07-03T13:12:38.85-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262579",
+    "ThreadId": "550490",
+    "Html": "Those examples are not much different from before ... but I think you are saying that &quot;T extends base&quot; doesn't mean that &quot;base&quot; is the guaranteed super class, but instead that the SIGNATURE of T must have a similar signature of &quot;base&quot;, but may be of another type...?  In contrast, a function parameter expecting an explicit base type must be of THAT type, or a derived type (explicitly)...?<br />\n<br />\nAnyhow, in either case, I still think the logic is weak.  Typescript doesn't even enforce specific types.<br />\n<pre><code>class A {\n    x = 0;\n}\nclass B {\n    x = 0;\n}\nfunction func(b: A) {\n}\nfunc(new B()); // ok</code></pre>\n\nIt's the signature of the object that really defines the type, not the type itself.  I'm still not convinced that there should be a difference:<br />\n<pre><code>class A {\n    x = 0;\n}\nclass B extends A {\n    y = 0;\n}\nclass C&lt;T extends A&gt; {\n    a: T;\n    func1(t: T) {\n        return &lt;B&gt;t; // &lt;- Error, BUT, we know T has the SIGNATURE of A, like &quot;a: A&quot; below, so this should be allowed.\n    }\n    func2(a: A) {\n        return &lt;B&gt;a;        \n    }\n}</code></pre>\n\n",
+    "PostedDate": "2014-07-03T14:35:24.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262587",
+    "ThreadId": "550490",
+    "Html": "Hi James,\r<br />\nI think the difference between the two cases is: in your C class, T doesn't represent type A, but rather represents whatever type you actually instantiated C with, which could be a subtype of A.  T might be B, or it might be another class derived from A. This is different from func2, where the parameter type is explicitly A.<br />\n\r<br />\nHere's an example that might illustrate the difference. Imagine your funcs had these signatures:\r<br />\n<br />\nfunc1(t: T): T\r<br />\nfunc2(a: A): A\r<br />\n<br />\nYou might think these are the same, since T was declared as extending A.  But really they're not the same.  func1 can only accept arguments which are the same subtype of A that C was instantiated with.  So for C&lt;string&gt; the argument would have to be string.  Additionally the return type of func1 is guaranteed to be the same type as the input.  For func2, the input can be any subtype of A, and the return value can be any other subtype of A.  So the point is that compiler isn't treating T as a synonym for A, but rather you can think of T as a synonym for whatever subtype of A C was instantiated with.  \r<br />\n",
+    "PostedDate": "2014-07-03T14:54:31.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262609",
+    "ThreadId": "550490",
+    "Html": "Ok, tell you what, give me a scenario where func1 will fail, and func2 will not:<br />\n<pre><code>class A {\n    x = 0;\n}\nclass B extends A {\n    y = 0;\n}\nclass C&lt;T extends A&gt; {\n    a: T;\n    func1(t: T) {\n        return &lt;B&gt;&lt;any&gt;t; // &lt;- forced using &quot;any&quot;\n    }\n    func2(a: A) {\n        return &lt;B&gt;a;        \n    }\n}</code></pre>\n\n",
+    "PostedDate": "2014-07-03T16:14:54.417-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262616",
+    "ThreadId": "550490",
+    "Html": "Hi James,<br />\nHopefully Jon can correct me if I get anything wrong in what I'm about to say.<br />\n<br />\n I believe you are correct in thinking that in your example func1 and func2 compile down to exactly the same code, so there are no cases where func1 will fail at runtime and func2 won't.  That's why I expected func1 to work and started this thread.<br />\n<br />\nAfter reading Jon's responses and also considering that C# has the same rule, I think I understand the reasoning for this.  The reason they are treated differently by the compiler is all about type safety.  A big part of the point of using generics is to enlist the compiler's help in catching type errors in your code.  Using your class C as an example, let's say T is the generic type parameter, and T' is the type which is bound to T when you instantiate C with a concrete type.  So for the declaration C&lt;string&gt;, T' = string, and for C&lt;number&gt;, T' = number.<br />\n<br />\nOne guarantee that the compiler makes with generics is:<br />\n<br />\nGuarantee 1: Any operation which wouldn't be allowed on a value of type T' won't be allowed on a value of type T.<br />\n<br />\nHowever, the compiler has to ensure that that guarantee is met without knowing what T' actually will be.  The only thing it knows about T' when it's compiling C is whatever you declared in the constraint on the generic parameter, in this example that it extends A.  So if the compiler allowed you to cast a value of type T to B, it would possibly be violating guarantee 1 because the for all the compiler knows T' might be some other subtype of A.<br />\n<br />\nIt's also important to note there is a converse guarantee which the compiler does not make:<br />\n<br />\nGuarantee 2: Any operation which <em>would</em> be allowed on a value of type T' will be allowed on a value of type T.<br />\n<br />\nIf we were talking about C++ templates instead of generics, then guarantee 2 would exist.  In C++, template classes are just that, templates. When the compiler sees a declaration like C&lt;string&gt;, it actually generates a new version of the C class with T replaced with string.  So in C++, any operation allowed on T' is also allowed on T.  If your template code contains any statements that aren't valid on T', the compiler will catch them when it creates the new version of C specialized for T'.   In your example, for C&lt;B&gt;, the compiler would translate func1 into:<br />\n<pre><code>func1(t: B) { return &lt;B&gt;t; }</code></pre>\n\nwhich would of course be valid.  If on the other hand you declared C&lt;F&gt;, where F was some other subtype of A, then func1 would be generated as <br />\n<pre><code>func1(t: F) { return &lt;B&gt;t; }</code></pre>\n\nwhich would cause a compile error because B and F are sibling classes.<br />\n<br />\nIn TypeScript or C# though, the C class is only compiled once, so that one implementation has to work for all T'.   So the compiler can't implement guarantee 2 without violating guarantee 1.<br />\n<br />\nWas that at all clear?<br />\n<br />\nEdit: for some reason, the forum is converting the plus signs after C to entity references, so where I tried to type C-plus-plus it prints it as C-ampersand-43<br />\n",
+    "PostedDate": "2014-07-03T17:13:59.65-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262626",
+    "ThreadId": "550490",
+    "Html": "Ok, I think I see it now.  So simply, this would break it then:<br />\n<pre><code>class A {\n    x = 0;\n}\nclass B1 extends A {\n    y1 = 0;\n}\nclass B2 extends A {\n    y2 = 0;\n}\nclass C&lt;T extends A&gt; {\n    a: T;\n    func1(t: T) {\n        return &lt;B1&gt;&lt;any&gt;t; // &lt;- forced using &quot;any&quot;\n    }\n    func2(a: A) {\n        return &lt;B1&gt;a;        \n    }\n}\nvar c = new C&lt;B2&gt;();\nc.func1(new B2()); // &lt;- would return as 'B1', which is wrong.</code></pre>\n\nThanks all for the clarification.  I just wanted to get it all straight in my head in case I find myself in the same situation. ;)<br />\n",
+    "PostedDate": "2014-07-03T18:16:39.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262631",
+    "ThreadId": "550490",
+    "Html": "That's right, assuming you declared the return type of func1 and func2 to be T.  Without the &lt;any&gt; cast, the compiler wouldn't have allowed that to compile in the first place to prevent you from accidentally making that error.  By adding the &lt;any&gt; cast you're opting out of the compiler's type checking guarantee, guarantee 1 in my post.<br />\n<br />\nAlso I wanted to clarify my rule that the compiler guarantees, to make it clear that I'm talking about compile-time guarantees.  So the guarantee the compiler makes about generics, where T is a generic type parameter, and T' is a type which is bound to T by a declaration, is:<br />\n<br />\nGuarantee 1: Any operation on an expression of type T' which would fail to compile, will also fail to compile on an expression of type T.<br />\n<br />\nSo in your class, if func1 looked like this:<br />\n<pre><code>func1(t: T): number {\n    return (&lt;B1&gt;t).y1;\n}</code></pre>\n\nthe compiler won't allow that because it can't uphold the above guarantee, since there could be values of T' for which that cast wouldn't be allowed.<br />\n",
+    "PostedDate": "2014-07-03T18:44:54.19-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262633",
+    "ThreadId": "550490",
+    "Html": "<blockquote>\nassuming you declared the return type of func1 and func2 to be T. <br />\n</blockquote>\n \r<br />\nActually, TypeScript will infer the return type, so yes, the code is broken in that &quot;func1()&quot; is no longer reliable. ;)<br />\n",
+    "PostedDate": "2014-07-03T18:49:56.913-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262634",
+    "ThreadId": "550490",
+    "Html": "Aha, didn't realize it will infer the return type.  I only started learning TypeScript a couple of days ago.<br />\n",
+    "PostedDate": "2014-07-03T18:52:30.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262639",
+    "ThreadId": "550490",
+    "Html": "First piece of advice then - don't take the C++/C# concepts with you and you'll do just fine. Many people keep getting in trouble with that. ;) Think &quot;JavaScript&quot; only.<br />\n",
+    "PostedDate": "2014-07-03T19:50:41.86-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

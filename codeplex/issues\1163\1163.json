@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Only numeric values for enum members are supported.\n\nFrom the spec:\nExpressions specified for computed members must produce values of type Any, the Number primitive type, or an enum type",
+    "ClosedDate": "2013-06-18T14:10:28.197-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "First off, congrats on the 0.9 release! The new features are awesome and we really appreciate all the hard work you guys have put in!\r\n\r\nI love the fact that enums can now hold arbitrary types. However, I've discovered a few bugs with them. \r\n\r\n1) The compiler complains about casting enums to their underlying types:\r\n\r\n``` TypeScript\r\nenum Dog{\r\n\tRover = 'My Dog',\r\n\tLassie = 'Your Dog'\r\n}\r\n\r\nalert(<string>Dog.Rover); //Compiler does not allow casting here even though the code will work fine\r\n```\r\n\r\n2) The compiler does not correctly order the definitions based on types used in enums:\r\n\r\n``` TypeScript\r\nenum Dog {\r\n\tRover = new Test('foo'),\r\n}\r\n\r\nclass Test {\r\n\tconstructor(public foo: string){}\r\n}\r\n```\r\n\r\nThe codegen for this is:\r\n\r\n``` TypeScript\r\nvar Dog;\r\n(function (Dog) {\r\n    Dog[Dog[\"Rover\"] = new Test('foo')] = \"Rover\";\r\n})(Dog || (Dog = {}));\r\n\r\nvar Test = (function () {\r\n    function Test(foo) {\r\n        this.foo = foo;\r\n    }\r\n    return Test;\r\n})();\r\n```\r\nAs you can see, the enum references the type Test before it is created.",
+    "LastUpdatedDate": "2013-06-18T14:10:28.197-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-18T13:59:37.553-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "New Enum Bugs",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1163
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

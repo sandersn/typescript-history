@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-30T15:07:59.577-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have encountered an issue relating to comment preservation.\r\n\r\nThe location of comments at the start of a TypeScript file changes when using chained module names. The header comments are moved into the body of the first module instead of remaining at the top of the file.\r\n\r\nTypeScript code:\r\n```\r\n//= require ./util.js\r\nmodule Outer.Inner {\r\n\texport var a = 0;\r\n}\r\n```\r\n\r\nExpected output:\r\n```\r\n//= require ./util.js\r\nvar Outer;\r\n(function (Outer) {\r\n    var Inner;\r\n    (function (Inner) {\r\n        Inner.a = 0;\r\n    })(Inner || (Inner = {}));\r\n})(Outer || (Outer = {}));\r\n```\r\n\r\nActual output:\r\n```\r\nvar Outer;\r\n(function (Outer) {\r\n    //= require ./util.js\r\n    (function (Inner) {\r\n        Inner.a = 0;\r\n    })(Outer.Inner || (Outer.Inner = {}));\r\n    var Inner = Outer.Inner;\r\n})(Outer || (Outer = {}));\r\n```\r\n\r\nNote that the comment now appears within the body of the `Outer` module instead of at the start of the file.\r\n\r\nI'm using Ruby Sprockets for dependency management which needs the `require` directives to be at the top of the compiled file - this issue breaks Sprockets dependency directives. This issue exists in both 0.8.3 and 0.9.0.alpha.\r\n\r\nLuckily, as a workaround, using nested module declarations (instead of chained) gives the correct output:\r\n```\r\n//= require ./util.js\r\nmodule Outer {\r\n\tmodule Inner {\r\n\t\texport var a = 0;\r\n\t}\r\n}\r\n```\r\n",
+    "LastUpdatedDate": "2013-08-13T09:35:33.97-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-26T01:46:55.817-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Comments moved in compiled scripts",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1070
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the feedback.  The behavior you outline above is by design currently, but could arguably go either way.  Currently we associate the comment with the with the nearest node and try to maintain this in the emitted file.  Arguably what you are declaring here is the Inner module (Outer just being a container for it that may already exist).  As you observe and as seems to be a usable workaround, if you separate the declaration or Outer and Inner, then the comment stays with which-ever node it is associated with.\n\nWe are also trying to land on a design where the initial comments in a file are preserved (e.g. license/copyright header info), but this isn't fully landed yet.  In the meantime, hopefully the explanation makes sense and the workaround is sufficient for you.",
+      "PostedDate": "2013-05-30T15:07:54.973-07:00",
+      "Id": 101716
+    },
+    {
+      "Message": "That makes sense as to why it handles it that way - I guess it depends on whether you're looking at the modules/nodes it inside-out or outside-in as to which one the node belongs to.\n\nThe workaround is sufficient for my situation. And, as you've noted, the change to the way initial comments are handled should sort this out for me anyway.\n\nThanks for the explanation :)",
+      "PostedDate": "2013-06-04T03:03:13.24-07:00",
+      "Id": 102028
+    }
+  ]
+}

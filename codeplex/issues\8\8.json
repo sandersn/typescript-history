@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reopen if you're having issues with this in 0.8.2.0. Thanks!",
+    "ClosedDate": "2013-01-28T17:18:03.91-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I tried to install the typescript tool for VS 2012 on a win 7 pro machine with VS 2010 pro and VS 2012 pro installed. On first launch of visual studio 2012 I get an error \"Exception has been thrown by the target of an invocation\" on the splash screen (and VS dies). The error goes away if I uninstall typescript, and reappears if I reinstall it again.",
+    "LastUpdatedDate": "2017-11-27T11:51:35.39-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T13:47:10.137-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Exception has been thrown by the target of an invocation",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 8
+  },
+  "FileAttachments": [
+    {
+      "FileId": 500155,
+      "FileName": "ActivityLog.xml",
+      "DownloadUrl": ".\\500155"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Hi cm2187,\nI've tried your configuration but I'm not getting any errors. I would like to make some further investigation on your problem. Is it possible for you to run the VS2012 with the log switch? (devenv.exe /log). This will create a log file under \"%APPDATA%\\Roaming\\Microsoft\\VisualStudio\\<version>\\ActivityLog.xml\". I would be glad if you can attach this log file here.\n\nThanks!",
+      "PostedDate": "2012-10-02T17:52:50.103-07:00",
+      "Id": 78368
+    },
+    {
+      "Message": "Sure, please find attached",
+      "PostedDate": "2012-10-02T23:12:24.033-07:00",
+      "Id": 78369
+    },
+    {
+      "Message": "Thanks cm2187!\nI looked at the log file and we need you to do two more steps to finalize our investigation. \nFirstly, I would like to look at the log file that's being generated from the TypeScript setup. In order to create that log file please open up CMD and install TypeScript by using the following command:\nMsiexec /I TypeScriptSetup.msi /l*v TypeScript.log \nThis will create the TypeScript.log file next to the setup once it's done. \n\nThe second is the error event file that's being generated once VS is crashing. Open run [windows + r] and type eventvwr.msc. On the left panel expand the Windows Logs. Click on the Application. You will see items with the red exclamation mark saying Error on the level. Select those items [ctrl + left mouse click] and once they all are selected right click on one of them and use \"Save Selected Events...\"\n\nI would greatly appreciate if you can send us these two files! Thanks a lot!",
+      "PostedDate": "2012-10-03T10:52:09.29-07:00",
+      "Id": 78453
+    },
+    {
+      "Message": "Hi cm2187,\nWe've looked at your log files and there seems to be several issues:\n\nFaulting application name: devenv.exe, version: 11.0.50727.1, time stamp: 0x5011ecaa\nFaulting module name: ntdll.dll, version: 6.1.7601.17725, time stamp: 0x4ec49b8f\nException code: 0xc0000374\nFault offset: 0x000ce6c3\nFaulting process id: 0x10a8\nFaulting application start time: 0x01cda1a3e093bc42\nFaulting application path: C:\\Program Files (x86)\\Microsoft Visual Studio 11.0\\Common7\\IDE\\devenv.exe\nFaulting module path: C:\\Windows\\SysWOW64\\ntdll.dll\n\nFaulting application name: devenv.exe, version: 11.0.50727.1, time stamp: 0x5011ecaa\nFaulting module name: KERNELBASE.dll, version: 6.1.7601.17651, time stamp: 0x4e211319\nException code: 0xe0434352\nFault offset: 0x0000b9bc\nFaulting process id: 0xff4\nFaulting application start time: 0x01cda1a41d4f225a\nFaulting application path: C:\\Program Files (x86)\\Microsoft Visual Studio 11.0\\Common7\\IDE\\devenv.exe\nFaulting module path: C:\\Windows\\syswow64\\KERNELBASE.dll\n\nLooks like there's something corrupted with your VS install in the first place.\nAlso the description for Event ID 8194 from source System Restore cannot be found. Either the component that raises this event is not installed on your local computer or the installation is corrupted. You can install or repair the component on the local computer.\n\nIf the event originated on another computer, the display information had to be saved with the event.\n\nThe following information was included with the event: \n\nC:\\Windows\\system32\\msiexec.exe /V\nInstalled TypeScript for Microsoft® Visual Studio® 2012\n\n..and..\n\nProduct: TypeScript for Microsoft® Visual Studio® 2012 -- Error 1305. Error reading from file C:\\Data\\Programming\\Libraries\\TypeScript\\TypeScriptSetup.0.8.0.msi.  System error 0. Verify that the file exists and that you can access it\n\nThe problem looks like it's on a lower level than TypeScript. \nSorry.",
+      "PostedDate": "2012-10-04T18:05:49.407-07:00",
+      "Id": 78636
+    },
+    {
+      "Message": "The access problem is unrelated. I was trying to install the msi from a private folder which for some reason worked with the gui, but not with the command line, even with administrative privileges.\n\nI completely uninstalled vs, rebooted, reinstalled vs, installed again typescript and got exactly the same error.\n\nThe only other thing I can think of is that I have just trace and ankhSVN installed.",
+      "PostedDate": "2012-10-05T12:06:55.6-07:00",
+      "Id": 78707
+    },
+    {
+      "Message": "Moving installer to Desktop folder and running installation from there resolved that issue for me.",
+      "PostedDate": "2012-10-20T02:56:15.107-07:00",
+      "Id": 80531
+    },
+    {
+      "Message": "I also ran into this issue, but I was able to resolve it.  It turns out that my computer's environment block was close to the 32767 limit.  Installing Typescript pushed it over the limit.  This corrupted the environment variables.  Namely, %WINDIR% was no longer recognized by the system.  I believe this was the cause of the \"Exception has been thrown by the target of an invocation\" error.  Uninstalling Typescript restored the environment block.  I removed some unnecessary environment variables, reinstalled Typescript, and everything worked fine.",
+      "PostedDate": "2012-12-12T17:26:23.653-08:00",
+      "Id": 84050
+    },
+    {
+      "Message": "I had the exact same issue on two different machines. I managed to fix it one one of them by trying every suggested way: Copying the setup to the desktop before installation, reducing the environment variables and repairing visual studio afterwards. Still struggling to get the second machine running again, since Visual Studio ist now unusable. I use Visual Studio 2013 and TypeScriptSetup.0.9.5.",
+      "PostedDate": "2014-02-07T12:29:03.96-08:00",
+      "Id": 132964
+    }
+  ]
+}

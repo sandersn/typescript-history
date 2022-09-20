@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1126231",
+    "ThreadId": "470370",
+    "Html": "Hi\r<br />\n<br />\nIt would appear the type definitions from NuGet for Kris Kowalski's Q promises library no longer works in TS 0.9.5 beta. It recognises the two declare function Q&lt;T&gt; overloads but it does not recognise any of the definitions that follow in the declare module Q below. So I get loads of errors saying that property defer or property resolve do not exist on value of type 'typeof Q'. Any advise on how the q.d.ts file must be updated for 0.9.5?\r<br />\n<br />\nmany thanks\r<br />\n<br />\nRemco<br />\n",
+    "PostedDate": "2013-11-18T13:44:54.41-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126242",
+    "ThreadId": "470370",
+    "Html": "When did you last pull the definition file?  I just grabbed the latest version from <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts</a> and I'm not seeing any problems with it.\r<br />\n<br />\nCan you provide a sample that shows the error you are experiencing?  Also, if you can log this over in the &quot;Issues&quot; rather than the &quot;Discussions&quot; section, we'll be able to track it easier.\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-11-18T14:07:44.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126244",
+    "ThreadId": "470370",
+    "Html": "The latest definitions I see from DefinitelyTyped don't have any errors in 0.9.5 for me. Can you link to exactly which one you're using?<br />\n",
+    "PostedDate": "2013-11-18T14:11:39.67-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126429",
+    "ThreadId": "470370",
+    "Html": "The issue was not with the q.d.ts file itself not compiling, but none of my code that referenced Q compiled. It appears by reintroducing \r<br />\n/// &lt;reference path=&quot;..\\lib\\q.d.ts&quot;/&gt;\r<br />\nat the top of each file solved the issue. I thought these references were no longer required. Perhaps its because my project is a SharePoint 2010 project. Is that something I should log over in 'Issues'?<br />\n",
+    "PostedDate": "2013-11-19T02:26:02.773-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126439",
+    "ThreadId": "470370",
+    "Html": "Hmm, spoke too soon perhaps. Every now and then the errors with Q reappear again, even with the reference paths, only to disappear again after a rebuild. I'll log an issue.<br />\n",
+    "PostedDate": "2013-11-19T02:33:43.453-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128952",
+    "ThreadId": "470370",
+    "Html": "As the guy who wrote the Q.d.ts definition and have spent two hours fighting these errors today, I can agree that there is some sort of bug but I think it's a typescript compiler error.<br />\n<br />\nThe errors are occurring not in the q.d.ts file but rather in any file that uses it.  The errors state that Q's functions, ie. Q.fcall don't exist as properties on the Q object.<br />\n<br />\nI defined the Q object in two different ways, first as two functions:<br />\ndeclare function Q&lt;T&gt;(value: T): Q.Promise&lt;T&gt;;<br />\ndeclare function Q&lt;T&gt;(promise: Q.IPromise&lt;T&gt;): Q.Promise&lt;T&gt;;<br />\n<br />\nThen Q is declared as a module with interfaces and functions.  (If there is a better way to declare such things on a function in a d.ts file, I'm unaware)  I think the compiler is only considering the function declarations and ignoring the module declaration.<br />\n<br />\nMy quickie fix is to move those two function declarations to after the module declaration.  I know that position should not matter but it makes a difference in this case.  I found that I also have to, at least temporarily, comment out the second function declaration as the TS compiler complains it is a duplicate.  Very strange.  As long as the second declaration is not used by your code, it will get you through.<br />\n<br />\nIn any event, I hope this helps someone.<br />\n",
+    "PostedDate": "2013-11-25T14:52:26.467-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128994",
+    "ThreadId": "470370",
+    "Html": "The issue tracking this is here <a href=\"https://typescript.codeplex.com/workitem/1910\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1910</a><br />\n",
+    "PostedDate": "2013-11-25T18:08:38.827-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130090",
+    "ThreadId": "470370",
+    "Html": "I've created a pull request to definatelytyped that eliminates the error.  It's not accepted yet but should be within the next day or two.  I had to refactor the declarations quite a bit, but it will work without any changes to code that uses it.<br />\n",
+    "PostedDate": "2013-11-28T13:15:31.403-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130948",
+    "ThreadId": "470370",
+    "Html": "I'm in a bit of a quandary now as my pull request has been rejected because it failed the tests on the definatelytyped build.  I believe it's failing because they're not using the 0.9.5 build.  Until that build is released, I don't think it will be accepted.  When I manually ran that test, I get some other weird errors that looks like there are further problems with 0.9.5.  So, I'm kindof in no man's land right now.  It is very possible that the original code will work once the workitem posted above is addressed, making the changes unnecessary.  Guess we'll see.<br />\n",
+    "PostedDate": "2013-12-02T08:16:34.817-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

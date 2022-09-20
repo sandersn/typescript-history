@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1056855",
+    "ThreadId": "447071",
+    "Html": "Why won't typescript compiler compile this code?<br />\n<br />\nexport module M {<br />\n<pre><code>export class C {\n    var1: string;\n\n    f1: (arg1: string) =&gt; string;\n\n    f2 = (arg2: string): string =&gt; {\n\n        //!!!!\n        //!!!! Keyword 'this' cannot be referenced in initializers in a class body, or in super constructor calls\n        //!!!!\n\n        return this.var1;\n    };\n\n    constructor() {\n        this.f1 = (arg1: string): string =&gt; {\n            return this.var1;\n        }\n    }\n}</code></pre>\n\n}<br />\n<br />\nin javascript will be the function f2 placed in the same scope as the function f1 so it must be possible to access 'this' context throug the _this variable<br />\n<br />\ndefine([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {<br />\n<pre><code>(function (M) {\n    var C = (function () {\n        function C() {\n            var _this = this;\n            this.f2 = function (arg2) {\n                // Keyword 'this' cannot be referenced in initializers in a class body, or in super constructor calls\n                return this.var1;\n                                };\n            this.f1 = function (arg1) {\n                return _this.var1;\n            };\n        }\n        return C;\n    })();\n    M.C = C;        \n})(exports.M || (exports.M = {}));\nvar M = exports.M;</code></pre>\n\n})<br />\n",
+    "PostedDate": "2013-06-14T05:47:59.003-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057128",
+    "ThreadId": "447071",
+    "Html": "\r\n<div dir=\"ltr\">This is an interesting problem... I want to say this is expected behavior. In the constructor assignment of the value, the context is taken from the constructor - i.e. it uses the this available from the constructor because lambdas have lexical\r\n this. The assignment of f2 hypothetically does not have this context because it is neither a class method nor assigned from within a context that has access to the instance `this`.\r\n<div><br>\r\n</div>\r\n<div style=\"\">I would actually think that the f2 lambda in your example should technically capture the global this, as lambdas are supposed to capture the lexical this. I'm not sure what lexical this is inside of a class declaration. What would ES.next say\r\n about the lexical environment of a default assignment for a lambda in a class?</div>\r\n</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-14T17:06:44.153-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057148",
+    "ThreadId": "447071",
+    "Html": "Andrew, you wrote f2 is not a class method. Are you sure? Consider this:<br />\n<pre><code>var c: C = new C();\nc.f2(&quot;arg&quot;);</code></pre>\n\nI think this will typescript compile, so it is a class method and compiler should be clever, recognize it and actually compile it the same way as the f1 function.<br />\n<br />\nOne practical example could be MVVM with knockoutjs. If the class C is designed to be a viewmodel and i will bind some event handler in my html markup to the function f2, then the function f2 must be defined in the constructor or within another method. It cannot be defined as class method because of the 'this' context. 'this' context in my event handler is boud to my underlying html element.<br />\n<br />\nPeter Backa<br />\n",
+    "PostedDate": "2013-06-14T22:18:24.317-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057525",
+    "ThreadId": "447071",
+    "Html": "For a class Foo, a class method is attached to Foo.prototype. Every single instance of Foo would have the same copy of f2 if it was attached to the class prototype. What you have created is a function instance that is unique to each instance of Foo. I.e. f2 will be a different function for each instance of Foo, rather than all pointing to the same function. Try creating a method using the standard syntax for class methods and see how the JavaScript implantation differs from your example.<br />\n",
+    "PostedDate": "2013-06-16T20:25:06.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057868",
+    "ThreadId": "447071",
+    "Html": "The restriction on 'this' access in initializers is there largely for historical reasons. We are planning to remove the restriction in an upcoming release (probably post-0.9.0). Doing so will go a long way towards addressing the common problem of having the wrong ‘this’ in an event handler. Current guidance is to use arrow expressions (lambdas) for event handlers, but it is often convenient to have the handlers be properties (methods) such that you can refer to them in subsequent unsubscribe operations. That currently requires you to declare a property (and manually spell out its function type) and then initialize the property in the constructor, which is cumbersome. But once we lift the restriction on ‘this’ access, you can just use properties with initializers that are lambdas. For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Tracker {\n    count = 0;\n    <span style=\"color:Blue;\">constructor</span>() {\n        window.addEventListener(<span style=\"color:#A31515;\">&quot;mousedown&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseDown);\n        window.addEventListener(<span style=\"color:#A31515;\">&quot;mouseup&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseUp);\n    }\n    mouseDown = (ev: MouseEvent) =&gt; {\n        window.addEventListener(<span style=\"color:#A31515;\">&quot;mousemove&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseMove);\n    }\n    mouseUp = (ev: MouseEvent) =&gt; {\n        window.removeEventListener(<span style=\"color:#A31515;\">&quot;mousemove&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseMove);\n    }\n    mouseMove = (ev: MouseEvent) =&gt; {\n        <span style=\"color:Blue;\">this</span>.count++;\n        console.log(<span style=\"color:Blue;\">this</span>.count);\n    }\n}\n<span style=\"color:Blue;\">new</span> Tracker();\r\n</pre></div>Here’s the JavaScript that will be emitted for the example above:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Tracker = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Tracker() {\n        <span style=\"color:Blue;\">var</span> _this = <span style=\"color:Blue;\">this</span>;\n        <span style=\"color:Blue;\">this</span>.count = 0;\n        <span style=\"color:Blue;\">this</span>.mouseDown = <span style=\"color:Blue;\">function</span> (ev) {\n            window.addEventListener(<span style=\"color:#A31515;\">&quot;mousemove&quot;</span>, _this.mouseMove);\n        };\n        <span style=\"color:Blue;\">this</span>.mouseUp = <span style=\"color:Blue;\">function</span> (ev) {\n            window.removeEventListener(<span style=\"color:#A31515;\">&quot;mousemove&quot;</span>, _this.mouseMove);\n        };\n        <span style=\"color:Blue;\">this</span>.mouseMove = <span style=\"color:Blue;\">function</span> (ev) {\n            _this.count++;\n            console.log(_this.count);\n        };\n        window.addEventListener(<span style=\"color:#A31515;\">&quot;mousedown&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseDown);\n        window.addEventListener(<span style=\"color:#A31515;\">&quot;mouseup&quot;</span>, <span style=\"color:Blue;\">this</span>.mouseUp);\n    }\n    <span style=\"color:Blue;\">return</span> Tracker;\n})();\n<span style=\"color:Blue;\">new</span> Tracker();\r\n</pre></div>It sort of already works today (with the 0.9 compiler) except for the errors we report on the ‘this’ accesses. The compiler actually generates the correct code.<br />\n",
+    "PostedDate": "2013-06-17T10:55:50.713-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

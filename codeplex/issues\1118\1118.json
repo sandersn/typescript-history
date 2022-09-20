@@ -1,0 +1,116 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch.",
+    "ClosedDate": "2013-07-31T09:26:33.753-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "I tried to test new beta release of Typescript 0.9\r\nI tried to convert my project available at https://github.com/BBGONE/jRIAppTS\r\nto use generics in collection.ts and db.ts modules. (I attached the project to the issue)\r\nThere were some issues when i tryed to do this, but the most critical\r\nis that the compiler crashes with internal error : Unable to get value of the property 'getType': object is null or undefined\r\n\r\nThe other issues are of types incompatability (although they are compatable)\r\nFor example in the collection.ts module \r\nthere's type declaration \r\n\r\n```\r\n  export class Collection<TItem extends CollectionItem> extends RIAPP.BaseObject \r\n```\r\nthis type includes field\r\n```\r\n _items: TItem[];\r\n```\r\nin the constructor there's a line\r\n```\r\nthis._items = <any>[];\r\n```\r\nIf you remove <any> casting the VS2012 designer shows error\r\nCan not convert TItem[][] to TItem[]\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-06T04:53:37.667-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "compiler crashes on project compilation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1118
+  },
+  "FileAttachments": [
+    {
+      "FileId": 690304,
+      "FileName": "jriappTSGenerics.zip",
+      "DownloadUrl": ".\\690304"
+    },
+    {
+      "FileId": 690681,
+      "FileName": "jriappTSGenerics2.zip",
+      "DownloadUrl": ".\\690681"
+    },
+    {
+      "FileId": 690720,
+      "FileName": "jriappTSGenerics3.zip",
+      "DownloadUrl": ".\\690720"
+    },
+    {
+      "FileId": 690935,
+      "FileName": "jriappTSGenerics4.zip",
+      "DownloadUrl": ".\\690935"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "What you are talking about is already attached to the issue.\nIt is a project, just use compile.bat to compile the project to jriapp.js.\nThe same you can do to open the attached project in VS2012 and try to compile it.\nThe compiler will crash. Is it not enougth for the repro?\nHow i can figure out what causes it if the compiler does not give an explanation what causes it in the code.\nCan you debug the compiler and see what is the problem in this particular situation?\nIs it normal behaviour for the compiler to crash on code compilation without giving any hint what had caused it?",
+      "PostedDate": "2013-06-06T23:16:51.343-07:00",
+      "Id": 102395
+    },
+    {
+      "Message": "Could you create a smaller repro for your first issue and re-open this? I have seen that sort of error in a few different situations.\n\nThe second issue you mention is a known bug we plan to fix.\n\r\n\r** Closed by danquirk 06/06/2013 4:47PM",
+      "PostedDate": "2013-06-06T16:47:54.13-07:00",
+      "Id": 102396
+    },
+    {
+      "Message": "I attached new simplified project (i removed some modules there).\r\nI can point the module which causes the error. It is db.ts.\r\nIf i remove then the project compiles. (althougth collection.ts also contains generics)\r\nThe compiler does not show any errors at design time, execept not meaningfull internal error,\r\nso i can not pinpoint the reason.\r\nAt least the compiler should not crash at this situation, and show where the error is and not leave the user scratching his head to understand the reason.",
+      "PostedDate": "2013-06-07T01:36:27.73-07:00",
+      "Id": 102408
+    },
+    {
+      "Message": "I have found the cause of the error.\r\nI attached new file  jriappTSGenerics3.zip.\r\nYou can try to compile it andd you will get error (that is in the issue)\r\nError\t1\tUnable to get value of the property 'getType': object is null or undefined\tC:\\DATA\\TEMP\\jriappTS\\jriappTS\\EXEC\tjriappTS\r\n\r\n\r\nLook at the db.ts file which contains declaration  at line 1086\r\n```\r\n export class DbSet<TItem extends Entity> extends collection.Collection<TItem> {\r\n                   private _dbContext: DbContext;\r\n```\r\nif you change it to \r\n```\r\n export class DbSet<TItem extends Entity> extends collection.Collection<TItem> {\r\n                   private _dbContext: any;\r\n```\r\nthen the project is compiled successfuly\r\n\r\nExpected \r\n1) to compile successfuly in both cases\r\n2) give meaningfull error description in case of error (without compiler crash)\r\n",
+      "PostedDate": "2013-06-07T04:26:28.853-07:00",
+      "Id": 102420
+    },
+    {
+      "Message": "Thanks for reducing the repro. We're taking a look.",
+      "PostedDate": "2013-06-07T10:50:32.31-07:00",
+      "Id": 102443
+    },
+    {
+      "Message": "Just wanted to add another example of this error.\r\nI extended previous version which can be compiled succsessfully (contains private _dbContext: any;)\r\nWhat i did, I had made DataQuery (db.ts file) class to be also generic class.\r\nAnd replaced everywhere nongeneric to generic versions.\r\nAnd now the project gives the same error - seems the compiler stumbles on generic types which are used in another generic types and mutually dependent. \r\nI can not give you simple (a couple of lines project to reproduce it), but this error occures in real world project.\r\nP.S.-\r\nAttached jriappTSGenerics4.zip which produces the same error as in above, but here i can not make it to compile - although the changes from jriappTSGenerics3.zip was trivial - one more generic class.",
+      "PostedDate": "2013-06-07T22:35:19.123-07:00",
+      "Id": 102528
+    },
+    {
+      "Message": "FYI the array issues you saw are now fixed. The other crashing issues are still active.",
+      "PostedDate": "2013-06-11T17:09:06.973-07:00",
+      "Id": 102813
+    },
+    {
+      "Message": "Any update on the \"compiler crashes with internal error : Unable to get value of the property 'getType': object is null or undefined\" bug? \n\nThis is still in the released 0.9 version and very annoying.",
+      "PostedDate": "2013-06-20T03:46:04.68-07:00",
+      "Id": 103591
+    },
+    {
+      "Message": "in new 0.9.0.0 release the compiler gives another error description\nError\t1\tUnable to get value of the property 'setHasGenericSignature': object is null or undefined\tC:\\DATA\\TEMP\\jriappTS\\jriappTS\\EXEC\tjriappTS\n",
+      "PostedDate": "2013-06-26T02:46:46.973-07:00",
+      "Id": 104186
+    },
+    {
+      "Message": "I'm getting this error on TypeScript 0.9.1\n\n  VSTSC : tsc.js(37893, 25) Microsoft JScript runtime error : Unable to get value of the property 'setHasGenericSignature': object is null or undefined\n",
+      "PostedDate": "2013-08-13T22:41:07.51-07:00",
+      "Id": 109787
+    },
+    {
+      "Message": "Please log a separate issue with the code that's causing the crash. Thanks!",
+      "PostedDate": "2013-08-14T09:22:32.343-07:00",
+      "Id": 109887
+    }
+  ]
+}

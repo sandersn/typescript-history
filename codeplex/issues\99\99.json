@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Sounds like Jonathan fixed this",
+    "ClosedDate": "2013-02-19T17:06:02.95-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I use the jQuery deferred object very often to create custom async promises in my application, ajax api calls, timers, animations, etc. I tried to convert some of my codes to TypeScript, and found that the jQuery.Deferred() constructor is missing from the jquery.d.ts declaration file. So I had to add:\r\n\r\ninterface JQueryStatic {\r\n    Deferred(): JQueryDeferred;\r\n}\r\n\r\nI also had to add a promise() method to the JQueryDeferred type which returns the same Deferred but with the JQueryPromise interface.\r\n\r\ninterface JQueryDeferred {\r\n    promise(target?: any): JQueryPromise;\r\n}\r\n\r\nFor more details see: http://api.jquery.com/category/deferred-object/\r\n\r\nRelated discussion: http://typescript.codeplex.com/discussions/398078",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 0.8.3",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T10:43:21.027-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "jQuery Deferred and Promise",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 99
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thank you for reporting this! I'll make sure that we fix this on our future releases.",
+      "PostedDate": "2012-10-04T12:36:56.387-07:00",
+      "Id": 78595
+    },
+    {
+      "Message": "I also noticed that the JQueryXHR does not include the JQueryPromise methods, which it should now since all those ajax things return a promise.\n\ninterface JQueryXHR extends XMLHttpRequest, JQueryPromise {\n",
+      "PostedDate": "2012-10-05T10:53:11.557-07:00",
+      "Id": 78686
+    },
+    {
+      "Message": "Update to the deffered()\n\njQuery.Deferred can be passed an optional function so deffered should look like this:\n\nDeferred(target?:any): JQueryDeferred;",
+      "PostedDate": "2012-10-22T06:04:16.947-07:00",
+      "Id": 80647
+    },
+    {
+      "Message": "Updated jQuery to have Deferred in 'develop'",
+      "PostedDate": "2013-02-06T13:26:42.68-08:00",
+      "Id": 88745
+    },
+    {
+      "Message": "I believe deferred.promise() is still missing, see:\nhttp://api.jquery.com/deferred.promise\n\nWorkaround:\n```\ninterface JQueryDeferred extends JQueryPromise {\n    promise() : JQueryPromise;\n}\n```\n\nOther than that everything seems to work!\n\nCheers,\n\n- Bernd",
+      "PostedDate": "2013-04-10T10:03:19.88-07:00",
+      "Id": 96606
+    },
+    {
+      "Message": "\nOops, forgot the parameter:\n\n```\npromise(target?:any) : JQueryPromise;\n```\n\nSorry about that!\n\n- Bernd",
+      "PostedDate": "2013-04-10T10:05:20.25-07:00",
+      "Id": 96607
+    },
+    {
+      "Message": "Another tiny thing: \ndeferred.then's failFilter parameter is optional:\n\n```\ndeferred.then( doneFilter [, failFilter ] [, progressFilter ] )\n```\nBut in jquery.d.ts it is required:\n\n```\nthen(doneCallbacks: any, failCallbacks: any, progressCallbacks?: any): JQueryDeferred;\n```\n\nIn my opinion it should read\n\n```\nthen(doneCallbacks: any, failCallbacks?: any, progressCallbacks?: any): JQueryDeferred;\n```\n\nThanks!\n\n- Bernd",
+      "PostedDate": "2013-04-10T10:52:00.113-07:00",
+      "Id": 96649
+    }
+  ]
+}

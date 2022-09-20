@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting. This is fixed in the develop branch.",
+    "ClosedDate": "2013-10-28T10:45:17.71-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I still working on type definitions for IxJS. And I've got another bug. So the reduced code:\r\n```\r\ndeclare module Ix {\r\n\texport interface EqualityComparer<TFirst, TSecond> {\r\n\t\t(first: TFirst, second: TSecond): boolean;\r\n\t}\r\n\texport interface Enumerable<T> {\r\n\t\tintersect<TSecond>(second: Enumerable<TSecond>, comparer: EqualityComparer<T, TSecond>): Enumerable<T>;\r\n\t}\r\n}\r\n\r\nvar ax: Ix.Enumerable<number>;\r\nvar bc: Ix.Enumerable<string>;\r\nvar ec_ab = (a: number, b: string) => a.toString() == b;\r\n\r\nax.intersect(bx, ec_ab);\r\n```\r\n[Link to Playground with the code](http://www.typescriptlang.org/Playground/#src=declare%20module%20Ix%20%7B%0A%09export%20interface%20EqualityComparer%3CTFirst%2C%20TSecond%3E%20%7B%0A%09%09(first%3A%20TFirst%2C%20second%3A%20TSecond)%3A%20boolean%3B%0A%09%7D%0A%09export%20interface%20Enumerable%3CT%3E%20%7B%0A%09%09intersect%3CTSecond%3E(second%3A%20Enumerable%3CTSecond%3E%2C%20comparer%3A%20EqualityComparer%3CT%2C%20TSecond%3E)%3A%20Enumerable%3CT%3E%3B%0A%09%7D%0A%7D%0A%0Avar%20ax%3A%20Ix.Enumerable%3Cnumber%3E%3B%0Avar%20bc%3A%20Ix.Enumerable%3Cstring%3E%3B%0Avar%20ec_ab%20%3D%20(a%3A%20number%2C%20b%3A%20string)%20%3D%3E%20a.toString()%20%3D%3D%20b%3B%0A%0Aax.intersect(bx%2C%20ec_ab)%3B)\r\n\r\nError on last line:\r\n```\r\nCould not select overload for 'call' expression.\r\nSupplied parameters do not match any signature of call target:\r\n Call signatures of types '(a: number, b: string) => boolean' and 'Ix.EqualityComparer<number, number>' are incompatible.\r\n```\r\n\r\nalso, type of the `intersect` method infered as `<TSecond>(second: Ix.Enumerable<TSecond>, comparer: Ix.EqualityComparer<TSecond, TSecond>): Ix.Enumerable<number>`\r\n\r\nThe issue on `comparer` parameter. As defined in module, it should by `Ix.EqualityComparer<T, TSecond> = Ix.EqualityComparer<number, string>`, but it shows as `Ix.EqualityComparer<TSecond, TSecond> = Ix.EqualityComparer<string, string>` and it isn't as defined.\r\n\r\nThe type `T` defined in same context infered correctly in return type but not correct in parameter type.",
+    "LastUpdatedDate": "2013-10-28T10:45:17.71-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-26T02:42:12.81-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Broken generic type substitution",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1841
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Ooops, was a misprint in my example (bc instead of bx). The fixed code ([Link](http://www.typescriptlang.org/Playground/#src=declare%20module%20Ix%20%7B%0A%09export%20interface%20EqualityComparer%3CTFirst%2C%20TSecond%3E%20%7B%0A%09%09(first%3A%20TFirst%2C%20second%3A%20TSecond)%3A%20boolean%3B%0A%09%7D%0A%09export%20interface%20Enumerable%3CT%3E%20%7B%0A%09%09intersect%3CTSecond%3E(second%3A%20Enumerable%3CTSecond%3E%2C%20comparer%3A%20EqualityComparer%3CT%2C%20TSecond%3E)%3A%20Enumerable%3CT%3E%3B%0A%09%09sequenceEqual%3CTSecond%3E(second%3A%20Enumerable%3CTSecond%3E%2C%20comparer%3A%20EqualityComparer%3CT%2C%20TSecond%3E)%3A%20boolean%3B%0A%09%7D%0A%7D%0A%0Avar%20ax%3A%20Ix.Enumerable%3Cnumber%3E%3B%0Avar%20bx%3A%20Ix.Enumerable%3Cstring%3E%3B%0Avar%20ec_ab%20%3D%20(a%3A%20number%2C%20b%3A%20string)%20%3D%3E%20a.toString()%20%3D%3D%20b%3B%0A%0Aax.intersect(bx%2C%20ec_ab)%3B%0Aax.sequenceEqual(bx%2C%20ec_ab)%3B)):\n```\ndeclare module Ix {\n\texport interface EqualityComparer<TFirst, TSecond> {\n\t\t(first: TFirst, second: TSecond): boolean;\n\t}\n\texport interface Enumerable<T> {\n\t\tintersect<TSecond>(second: Enumerable<TSecond>, comparer: EqualityComparer<T, TSecond>): Enumerable<T>;\n\t\tsequenceEqual<TSecond>(second: Enumerable<TSecond>, comparer: EqualityComparer<T, TSecond>): boolean;\n\t}\n}\n\nvar ax: Ix.Enumerable<number>;\nvar bx: Ix.Enumerable<string>;\nvar ec_ab = (a: number, b: string) => a.toString() == b;\n\nax.intersect(bx, ec_ab);\nax.sequenceEqual(bx, ec_ab);\n```\n\nI also added another function `sequenceEqual` and it works fine. That's strange.\nI've found the issue occures only on first such function definition. If I'll move the `sequenceEqual` definition under the `intersect` definition, error will occur on it.",
+      "PostedDate": "2013-10-26T03:10:50.77-07:00",
+      "Id": 119769
+    }
+  ]
+}

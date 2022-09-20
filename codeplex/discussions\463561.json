@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1112072",
+    "ThreadId": "463561",
+    "Html": "TypeScript aims to bring type annotation to javascript. But there are lot of situations where you still need to use string literal. One of such are frameworks for MVC, MVVM, where you have methods like get and set that accept string parameter for property name you wish to change.  But this is not refactoring friendly, because you don’t get any help from compiler. The same problem existed in C# before version 5, where you typically use lambda expressions to get current property name used to trigger notification event.\r<br />\n<br />\nKeyword nameof simply returns string literal name of variable, type. Something like this:<br />\n<pre><code>var a;\nnameof(a); // =&gt; &quot;a&quot;\n\ninterface IFoo {\n    func();\n}\nnameof(IFoo); // =&gt; &quot;IFoo&quot;\nnameof(IFoo.func); // =&gt; &quot;func&quot;</code></pre>\n\nFor getting current function name you could use nameof(.)<br />\n<pre><code>function move()\n{\n    var name = nameof(.); // returns &quot;move&quot;\n}</code></pre>\n\nFor getting full type path you use nameof(..)<br />\n<pre><code>module A {\n    class C {\n        move() {\n            var fullName = nameof(..); // returns &quot;A.C.move&quot;\n        }\n    }\n}</code></pre>\n\nThis can be very useful for logging:<br />\n<pre><code>function move() {\n  sys.throwNotImplemented(nameof(..));  \n           // throws NotImplemented exception with full orign name\n}</code></pre>\n\nThere are other countless situations where this can be used. And also generated javascript is clean, you generate only string literals.<br />\n",
+    "PostedDate": "2013-10-25T06:08:10.893-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1112196",
+    "ThreadId": "463561",
+    "Html": "Trying to understand the suggestion.  Looks like you want syntactic sugar for typing in a symbol name that is known statically, rather than dynamically.<br />\n\r<br />\nThis sounds helpful, though perhaps not strong enough value to put in the language itself.  We have a high bar for new expression types because we try to maintain a very close compatibility with ECMAScript, the standard behind JavaScript.  Introducing new expressions makes us incompatible in those cases.<br />\n",
+    "PostedDate": "2013-10-25T10:58:21.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1115007",
+    "ThreadId": "463561",
+    "Html": "It's not exactly what you're asking for, but you can extract some name information with this helper function: <br />\n<pre><code>function getName(ent: any): string {\n        if (typeof ent == &quot;string&quot;) return ent;\n\n        if (ent.constructor &amp;&amp; ent.constructor.name != &quot;Function&quot;) {\n            return ent.constructor.name || (ent.toString().match(/function (.+?)\\(/) || [, ''])[1];\n        } else {\n            return ent.name;\n        }\n    }</code></pre>\n\nIt works with class constructors and object instantiated via this class constructors:<br />\n<pre><code>module A {\n    export class Foo{}\n}\n\ngetName(A.Foo);         // =&gt; &quot;Foo&quot;\ngetName(new A.Foo());   // =&gt; &quot;Foo&quot;</code></pre>\n\n",
+    "PostedDate": "2013-10-31T06:38:19.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1117176",
+    "ThreadId": "463561",
+    "Html": "prohazko, thanks for reply. I’m completely aware that you can get the name of the function with some helper method, but this is not very concise solution. It has performances issues, portability is little tricky and most important I would like that generated js will have simple literal string.\r<br />\n<br />\nThe following ModelView class:<br />\n<pre><code>class Foo extends ModelView {\n    get name() {\n        return this.getProp(nameof(.));\n    }\n}</code></pre>\n\nwill be equal to writing this ts code (the name of the keyword is unimportant, I just use nameof(.), which returns current function name): <br />\n<pre><code>class Foo extends ModelView {\n    get name() {\n        return this.getProp(&quot;name&quot;);\n    }\n}</code></pre>\n\nTo summarize, there are lot of information that are known to compiler and it will be nice that some of them get there way to runtime, so that you can used them from ts code. For example I also miss line number, file name… which will give me tremendous power in debugging, logging scenarios, especially with bigger projects.<br />\n",
+    "PostedDate": "2013-11-04T06:36:10.183-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1117395",
+    "ThreadId": "463561",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nTrying to understand the suggestion.  Looks like you want syntactic sugar for typing in a symbol name that is known statically, rather than dynamically.<br />\n<br />\nThis sounds helpful, though perhaps not strong enough value to put in the language itself.  We have a high bar for new expression types because we try to maintain a very close compatibility with ECMAScript, the standard behind JavaScript.  Introducing new expressions makes us incompatible in those cases.<br />\n</blockquote>\n@jonturner Is that going to remain the case after ECMAScript 6 is finalized as well? It seems to me that after that point it will be impossible to maintain forward compatibility with a hypothetical future ECMAScript 7 without effectively ending TypeScript language design. You guys have stated repeatedly that you'd like to do <code>async</code>/<code>await</code>, which would mean a very fundamental syntax addition. I think the benefits <em>now</em> of what TypeScript is and could become should outweigh concerns over what a standards committee might do 5, 10 years down the road.\r<br />\n<br />\nRather than shutting down the language design; a far more sensible solution to me would be to do what some other mainstream languages do but MS has largely been hesitant to do- introduce breaking changes between major versions. That way you don't cripple your own language design efforts while still keeping the flexibility to change syntax if a future ECMAScript 7 has a collision.<br />\n",
+    "PostedDate": "2013-11-04T13:01:39.737-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1121944",
+    "ThreadId": "463561",
+    "Html": "@MgSam\r<br />\n<br />\nThat's why we keep the expression-side of the syntax fairly lightweight.  We'll probably only pull in things that have high value, and we'll do this in a way that the ECMAScript committee and the TypeScript community can work together.<br />\n\r<br />\nThat's not to say we won't put in features that make sense for TypeScript users, but we'll try do it in a way that always has an eye to compatibility.\r<br />\n<br />\nI'm uneasy about taking on breaking changes, as that's always a mixed bag when a major version causes incompatibility, and something most languages try to avoid.<br />\n",
+    "PostedDate": "2013-11-11T09:58:45.127-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210207",
+    "ThreadId": "463561",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nTrying to understand the suggestion.  Looks like you want syntactic sugar for typing in a symbol name that is known statically, rather than dynamically.<br />\n<br />\nThis sounds helpful, though perhaps not strong enough value to put in the language itself.  We have a high bar for new expression types because we try to maintain a very close compatibility with ECMAScript, the standard behind JavaScript.  Introducing new expressions makes us incompatible in those cases.<br />\n</blockquote>\nI would like to +1 this feature request. It is in keeping with the spirit of TypeScript, which is to enable application-scale JavaScript development. It is easy to generate the equivalent idiomatic JavaScript code because the compiler knows the name of the identifier at compile time.\r<br />\n<br />\nIn my case, I'm using Azure Mobile Services and I have DAO classes that pass the name of the identity primary key column to the super constructor so it can remove that column from the update method. I have matching type definitions for all my tables. For example:<br />\n<pre><code>declare module MyApp.Data.Model {\n    export interface IUserSession extends IEntity {\n        user_session_id?: number;\n        user_id: number;\n        jwt_token: string;\n        device_type: string;\n        device_token?: string;\n        start_time?: Date;\n        end_time?: Date;\n    }\n}</code></pre>\n\nIn my DAO, currently I have to pass the string <code>'user_session_id'</code> to the base DAO's constructor. I'd much rather pass <code>nameof(MyApp.Data.Model.IUserSession.user_session_id)</code> which the TypeScript compiler can easily resolve to <code>'user_session_id'</code>. It will give me code completion and refactoring support.\r<br />\n<br />\nThis is just one example. One of the big things about JavaScript that allows us to shoot ourselves in the foot is string-based APIs. The <code>nameof</code> operator/function would take care of a lot of these cases, thereby significantly improving static typing of TypeScript.<br />\n",
+    "PostedDate": "2014-02-18T18:44:04.757-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210364",
+    "ThreadId": "463561",
+    "Html": "A similar feature (but far more generic) is present in C# - expression trees - <a href=\"http://msdn.microsoft.com/en-us/library/bb882637.aspx\" rel=\"nofollow\">http://msdn.microsoft.com/en-us/library/bb882637.aspx</a>\r<br />\n<br />\nExpression trees make AST information available at runtime so it would be easy to implement nameof using them. The downside is of course increased compiler complexity.<br />\n",
+    "PostedDate": "2014-02-19T01:06:18.317-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210492",
+    "ThreadId": "463561",
+    "Html": "<strong>wiktork wrote:</strong><br />\n<blockquote>\nA similar feature (but far more generic) is present in C# - expression trees - <a href=\"http://msdn.microsoft.com/en-us/library/bb882637.aspx\" rel=\"nofollow\">http://msdn.microsoft.com/en-us/library/bb882637.aspx</a><br />\n<br />\nExpression trees make AST information available at runtime so it would be easy to implement nameof using them. The downside is of course increased compiler complexity.<br />\n</blockquote>\n@wiktork I think the idea is to have the information substituted at <em>compile time</em> rather than <em>run time</em>. The benefit of such is that the cost of implementation is far less and the cost of usage in your code is free. \r<br />\n<br />\nIMO, C# also needs more of this type of information available at compile time. See the <a href=\"http://blogs.msdn.com/b/ericlippert/archive/2009/05/21/in-foof-we-trust-a-dialogue.aspx\" rel=\"nofollow\">long-storied</a> <code>infoof</code> operator.<br />\n",
+    "PostedDate": "2014-02-19T05:25:57.337-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210853",
+    "ThreadId": "463561",
+    "Html": "I concur. Static type checking is in the sprit of TypeScript. Adding runtime features goes against what TypeScript is all about.<br />\n",
+    "PostedDate": "2014-02-19T18:10:50.96-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1211013",
+    "ThreadId": "463561",
+    "Html": "@MgSam Yes, you're right - it's more similar to the <code>infoof</code> operator than expression trees.\r<br />\n<br />\nReading the article that you've attached may explain why <code>nameof</code> is not implemented in TS and <code>infoof</code> in C#:<br />\n<blockquote>\n<strong>Eric:</strong> (...) we have a very limited time and money budget for design, implementation, testing, documentation and maintenance, so we want to make sure we’re spending it on the highest-value features. This one has never made it over that bar.<br />\n</blockquote>\n",
+    "PostedDate": "2014-02-20T01:53:21.987-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

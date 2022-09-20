@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The default value of all JavaScript values is 'undefined', which is what those properties will be at runtime. Initializing to some other value would be a major surprise to JS developers and would be considered a bug. You're correct that prototype value properties should generally be avoided for clarity's sake.",
+    "ClosedDate": "2012-11-13T11:20:47.497-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Following TypeScript code:\r\n\r\n----------------------------------------------------------------\r\nclass MyClass\r\n{\r\n\tmyString:string;\r\n\tmyBool:bool;\r\n\tmyNumber:number;\r\n\tmyObj:Object;\r\n\r\n\tconstructor(){}\r\n}\r\n\r\nWill compile into:\r\n----------------------------------------------------------------\r\nvar MyClass = (function () {\r\n    function MyClass() {\r\n    }\r\n    return MyClass;\r\n})();\r\n----------------------------------------------------------------\r\n\r\nWhen accessing properties from another TypeScript class or JavaScript we should instad have those properties initialized with the following:\r\n\r\n----------------------------------------------------------------\r\nvar MyClass = (function () {\r\n    function MyClass(){}\r\n    MyClass.prototype.myString = \"\";\r\n    MyClass.prototype.myBool = false;\r\n    MyClass.prototype.myNumber = 0;\r\n    MyClass.prototype.myObj = null;\r\n    return MyClass;\r\n})();\r\n----------------------------------------------------------------\r\n\r\nIt definitely seems a default of the language not to have properties automatically initialized to their «default value» on prototype (at least if EcmaScript recommends anything here, I think it may be initialized to null for all properties).\r\n",
+    "LastUpdatedDate": "2013-08-13T14:07:01.413-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-11T04:10:01.237-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Initialize class properties on prototype to their «default value»",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 401
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Note that if we use:\n----------------------------------------------------------------\nclass MyClass\n{\n        myString:string = \"\";\n        myBool:bool = false;\n        myNumber:number = 0;\n        myObj:Object = null;\n\n        constructor(){}\n}\n----------------------------------------------------------------\n\nThe generated code is:\n----------------------------------------------------------------\nvar MyClass = (function () {\n    function MyClass() {\n        this.myString = \"\";\n        this.myBool = false;\n        this.myNumber = 0;\n        this.myObj = null;\n    }\n    return MyClass;\n})();\n\n----------------------------------------------------------------\n\nWhich can finally cause a lot of unwanted code executed in the constructor each time the class is constructed when it can only be consumed at declaration time. As \"\", false, 0 and null cannot be modified over multiple instances of the same class as those properties are immutable I don't see any reason not to set it on the prototype directly by default.",
+      "PostedDate": "2012-11-11T11:17:55.58-08:00",
+      "Id": 82193
+    },
+    {
+      "Message": "I'd like to think this is more a discussion item than a bug or feature.\n\nWhile it's certainly true that there is overhead in defining properties on every instance (as opposed to defining them once on the prototype), after working on TypeScript for the last few weeks, I'm beginning to think that it is not really a good idea to support JavaScript's prototypal properties.\n\nThe alternatives are to use static methods, or singleton objects injected via the constructor.\n\nPlease also see:\n\nhttp://typescript.codeplex.com/discussions/400987\nhttp://typescript.codeplex.com/discussions/401464\nhttp://typescript.codeplex.com/discussions/402120",
+      "PostedDate": "2012-11-13T07:52:50.383-08:00",
+      "Id": 82362
+    },
+    {
+      "Message": "From what I remember in EcmaScript 4 as it was implemented by Adobe and Mozilla in Tamarin all properties were initialized to their default value as I reported in the issue. Did that changed in ES5/ES6?\n\nI agree that JavaScript developers will consider an unexisting property as undefined. But here we are talking about class properties defined on prototype. It has to be initialized. What about reflection on classes in the future of TypeScript if properties even do not appear on the prototype chain? A simple iteration on the class instance will not reveal class properties. Worst, we'll have to check for undefined, then null… etc.",
+      "PostedDate": "2012-11-13T12:19:51.24-08:00",
+      "Id": 82405
+    },
+    {
+      "Message": "Have a look at this issue, this could have been the fix for it : http://typescript.codeplex.com/workitem/384",
+      "PostedDate": "2012-11-14T03:15:32.287-08:00",
+      "Id": 82459
+    },
+    {
+      "Message": "With a lot of attributes and a lot of instances of the same object it's very memory wasteful not to use prototype for them.\n\nHaving it in the prototype, we can have pattern similar to copy-on-write. It's quite common in advanced JS development.\n\nAlso, please distinguish undefined property and property with an undefined value :)\n1) Foo.some_undefined\n2) Foo.bar === undefined\n\nSecond case is acceptable, and the first one won't exist when property is defined on a prototype.\n\nPlease consider reopening.",
+      "PostedDate": "2012-12-13T04:08:05.477-08:00",
+      "Id": 84060
+    },
+    {
+      "Message": "People are going to disagree on this. If you want it to be initialized to undefined, simply write `= undefined` after each member. If we make the default \"always initialize\", there will be no workaround for people who don't want that behavior.",
+      "PostedDate": "2013-08-13T14:07:01.413-07:00",
+      "Id": 109718
+    }
+  ]
+}

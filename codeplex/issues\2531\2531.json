@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yep, definitely something we want to try to address. Already covered by a couple existing issues you can upvote:\n\nhttps://typescript.codeplex.com/workitem/1085\nhttps://typescript.codeplex.com/workitem/1407",
+    "ClosedDate": "2014-05-30T12:21:34.203-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I'm using the CustomEvent polyfill from here:\r\nhttps://developer.mozilla.org/en/docs/Web/API/CustomEvent\r\n\r\nDOM4 specifies a CustomError constructor that takes a string type and an (optional) custom data object:\r\n\r\n    window.dispatchEvent(new CustomEvent('doStuff', { detail: 1 }));\r\n    \r\nIt seems that TypeScript will not allow this code to be compiled, it expects an argument-free constructor. I cannot figure out how to extend/replace CustomEvent to allow it. There's an answer on SO that seems to explain why:\r\n\r\nhttp://stackoverflow.com/questions/17571982/dispatching-custom-events\r\n\r\nit says: \r\n\r\n> If the CustomEvent definition was purely an interface, you would be able to extend it thus:\r\n> (blah)\r\n> But the CustomEvent constructor is actually defined in a variable declaration, which you can't extend\r\n\r\n \r\nMy codebase is currently only around 40 lines of JavaScript, and already I can't make it work in TypeScript :(\r\n\r\nI think TypeScript needs to be able to support things like this; Browsers will never have identical implementations and the specs are moving targets. We need to not have our hands tied by decelerations in lib.d.ts with the only way around them being to have a local hacked copy of lib.d.ts!\r\n\r\nNote: I actually think the current CustomEvent decleration in TypeScript is kinda useless because Chrome doesn't even allow you to call \"new CustomEvent()\"; it'll crash. Even removing it completely and forcing me to declare it seems a better option than what we have now :-/",
+    "LastUpdatedDate": "2014-05-30T12:52:52.123-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-30T05:21:44.277-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Add ability to extend/replace built-in constructor declerations (eg. CustomEvent)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2531
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I was able to get my code working with some slight hacks; posted details at the end of this thread:\n\nhttps://typescript.codeplex.com/discussions/546862#post1250649\n\nI do strongly believe there should be proper support for extending/replacing CustomEvent (and any others defined in the same way) though; especially when the default definition doesn't even work in many of the latest browser versions!",
+      "PostedDate": "2014-05-30T10:03:48.257-07:00",
+      "Id": 148404
+    },
+    {
+      "Message": "TS should have created static interfaces for the global vars, and not direct type literals. This could at least allow for adding new static methods, or new overloads.\n",
+      "PostedDate": "2014-05-30T11:10:14.893-07:00",
+      "Id": 148407
+    },
+    {
+      "Message": "BTW: A better title may be \"Ability to redeclare/redefine global types\", which covers a lot more than just constructors.",
+      "PostedDate": "2014-05-30T11:17:44.177-07:00",
+      "Id": 148408
+    },
+    {
+      "Message": "Ah, there it is! lol  I did a search for \"lib.d.ts\", as I thought I recalled something posted before, but alas, I guess '.' is not allowed in search terms (stripped out?). ;)",
+      "PostedDate": "2014-05-30T12:52:52.123-07:00",
+      "Id": 148420
+    }
+  ]
+}

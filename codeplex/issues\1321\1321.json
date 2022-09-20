@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. The compiler chooses which comments to preserve and where to place them in the resulting JavaScript based on which Typescript constructs they are associated with. For ambient declarations and interfaces they're attached to a piece of Typescript which is not going to be emitted so the comment is not either. More than likely your comments for elements of this type are going to describe what they're for, but now the JavaScript would have a bunch of free floating comments describing types and variables which are not present.",
+    "ClosedDate": "2013-07-11T17:52:37.673-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Comments are not being preserved by the TypeScript compiler when ambient declarations or interfaces are present in the file.  If you look at the enclosed zip you will find 4 files:\r\n\r\n* CommentsNotPreserved.ts - a TypeScript file with an ambient declaration and an interface included\r\n\r\n``` TS\r\n// @reference ~/bundles/core\r\n\r\n/// <reference path=\"../../../../typings/jquery/jquery.d.ts\" />\r\n\r\ndeclare var RandomDeclare: any;\r\n\r\ninterface RandomInterface {\r\n    Anything: number;\r\n}\r\n\r\n/*!\r\n * Initialise the page\r\n */\r\n$(document).ready(function () {\r\n\r\n    // Nothing to see here, move along\r\n});\r\n```\r\n\r\n* CommentsNotPreserved.js - the compiled output with \"//\" comments removed and only \"/* */\" comments preserved\r\n\r\n``` JS\r\n/*!\r\n* Initialise the page\r\n*/\r\n$(document).ready(function () {\r\n});\r\n```\r\n\r\n* CommentsPreserved.ts - the same as CommentsNotPreserved.ts but with ambient declaration and interface removed\r\n``` TS\r\n// @reference ~/bundles/core\r\n\r\n/// <reference path=\"../../../../typings/jquery/jquery.d.ts\" />\r\n\r\n/*!\r\n * Initialise the page\r\n */\r\n$(document).ready(function () {\r\n\r\n    // Nothing to see here, move along\r\n});\r\n```\r\n* CommentsPreserved.js - the compiled output with most \"//\" comments preserved (with one exception inside the $(document).ready\r\n``` JS\r\n// @reference ~/bundles/core\r\n/// <reference path=\"../../../../typings/jquery/jquery.d.ts\" />\r\n/*!\r\n* Initialise the page\r\n*/\r\n$(document).ready(function () {\r\n});\r\n\r\n```\r\nI've been able to get around this by moving comments that I absolutely need (eg \"// @reference \" comments which are necessary as I am using Cassette's Asset Referencing) until after the ambient declarations / interfaces.  Then the comments are preserved.\r\n\r\nThis seems a little on the quirky side though and it would be good if it could be addressed.  I have noticed comments also being stripped in other circumstances as well but I don't have repro details to hand right now.",
+    "LastUpdatedDate": "2013-08-14T09:25:00.433-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-09T04:41:55.32-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Comments not preserved by TypeScript Compiler",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1321
+  },
+  "FileAttachments": [
+    {
+      "FileId": 702463,
+      "FileName": "CommentsNotPreserved.zip",
+      "DownloadUrl": ".\\702463"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "By the way, you can demo the above issue in the TypeScript Playground.",
+      "PostedDate": "2013-07-10T04:56:50.14-07:00",
+      "Id": 105625
+    },
+    {
+      "Message": "Thanks for responding @danquirk\n\nI think I understand the logic behind that.  Essentially the rule that should be followed could be stated as:  If you want a comment preserved then don't place it before an ambient declaration or interface. \n\nI'll definitely bear this in mind as I'm structuring my TS from now on.  Is this documented anywhere that I could refer back to? I've had a quick look at the spec but don't see any mention of this.  If there is something to refer to then it might prevent me raising non-issues in future.\n\nBy the way, this behaviour may have some bearing on your comment of May 17 at 12:01 AM on https://typescript.codeplex.com/workitem/995 : \"*At the moment we don't intend to change the behavior here because some users rely on the /// reference being present in the JavaScript for some post processing by other tools.*\"\n\nEffectively the presence of an ambient declaration or interface after the /// reference comments will strip them from the compiled JavaScript which will impact those other users that you mention.  Maybe they're already aware of this behaviour but if not then perhaps they could be informed.\n\nAll the best,\nJohn\n",
+      "PostedDate": "2013-07-12T02:18:16.393-07:00",
+      "Id": 105822
+    },
+    {
+      "Message": "Thanks John, I opened a new work item here (https://typescript.codeplex.com/workitem/1507) to cover the last issue you mention. We have a more robust model for comment preservation that we hope to implement in the future but for now we've been doing targeted fixes where comment preservation issues crop up in impactful ways and this may be one. \n\nIn the future do log a new issue or post in the discussion section if you find other issues after we've closed one like this (assuming they're unrelated, otherwise you could re-open a closed bug). We'll notice it much faster as you can tell from this highly delayed comment :)",
+      "PostedDate": "2013-08-13T12:27:56.733-07:00",
+      "Id": 109683
+    },
+    {
+      "Message": "Will do Dan - thanks!",
+      "PostedDate": "2013-08-14T01:32:50.437-07:00",
+      "Id": 109817
+    }
+  ]
+}

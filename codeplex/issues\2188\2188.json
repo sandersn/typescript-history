@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.317-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Would it be possible to add simulation of getter/setter for ECMAScript 3 to TypeScript? I am writing code for non-browser use, and having this feature would be very beneficial.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-17T22:26:08.78-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Feature request: Simulation of accessors for ES3",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2188
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I guess it will not be possible, [mascara](http://www.mascaraengine.com/) for example do that, but that's result in horrible bug :\n\nWith emulation :\n```typescript\nclass A {\n  get value() {\n   //....\n  }\n}\n```\nwould translate to :\n```javascript\nfunction A() {\n}\nA.prototype.get_value = function() { \n  //...\n};\n```\nthe compiler could very easily detect that in this case :\n```typescript\nvar a = new A();\nconsole.log(a.value);\n```\nWhich would result in \n```javascript\nvar a = new A();\nconsole.log(a.get_value())\n```\n\nBut I don't see how it would be possible for the compiler to detect the transformation from `value` to `get_value()` when `a` is type casted: \n\n```typescript\nfunction logValue(obj : { value: any }) { \n  console.log(obj.value);\n}\n// then later\n\nvar a = new A();\nlogValue(a);\n``` \nwould give :\n\n```javascript\nfunction logValue(obj) { \n  console.log(obj.value);\n}\n// then later\n\nvar a = new A();\nlogValue(a); // always log undefined since a does not have property 'value' but a fake getter\n```\nIf the typescript team has others idea about that i would gladly hear them :p\n",
+      "PostedDate": "2014-02-18T05:40:57.893-08:00",
+      "Id": 133927
+    },
+    {
+      "Message": "The problem is solvable if there would be distinguished fields and properties in typescript.\nAt present properties are treated like fields which is wrong and does not permit to declare read only properties in interfaces. \nIt is impossible by wrong compiler design, not because the request to introduce this feature is wrong. ",
+      "PostedDate": "2014-02-18T22:35:27.84-08:00",
+      "Id": 134020
+    },
+    {
+      "Message": "Marking as a suggestion for the future. Changing code gen for old ES targets is generally an option we've just avoided it so far.",
+      "PostedDate": "2014-02-19T18:13:00.337-08:00",
+      "Id": 134140
+    }
+  ]
+}

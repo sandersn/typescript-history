@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:56.707-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "TypeScript integration with Visual Studio ( I do not know which component is culprit), is incorrectly interpreting the \"this\" keyword used in an $.ajax context to the type of the parent class instead of type any, representing an AjaxContext.  Consider the following code:\r\n\r\nmodule Test{\r\n   export class TestAjax{\r\n       getAgencies() {\r\n            var self = this;          \r\n            $.ajax(liveString + \"/Home/GetSupportedAgencies\",\r\n            {\r\n                type: \"GET\",\r\n                contentType: \"application/json; charset=utf-8\",\r\n                dataType: \"json\",\r\n                error: Utilities.Logger.displayAjaxError,\r\n                success: this.onGetAgenciesComplete\r\n            });\r\n        }\r\n       \r\n       onGetAgenciesComplete(agencies){  alert(agencies);  }\r\n   }\r\n}\r\n\r\nIf you hover over the \"this\" keyword used to assign the success callback to ajax, you will see TestAjax instead of any.  However, when the code is compiled to plain Javascript, this is not an instance of TestAjax but the ajax context.  \r\n\r\nAn acceptable workaround is to use the $.ajax method \"context\" to explicitly assign the context for callback.  See this StackOverflow post for reference.  http://stackoverflow.com/questions/13159189/typescript-interpretation-of-this-keyword-within-ajax",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-31T14:35:24.703-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "TypeScript interpretation of “this” keyword within $.ajax()",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 353
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is not a bug in TypeScript or Visual Studio. See my response: http://stackoverflow.com/questions/13159189/typescript-interpretation-of-this-keyword-within-ajax/13182027#13182027\n",
+      "PostedDate": "2012-11-01T10:04:43.577-07:00",
+      "Id": 81424
+    },
+    {
+      "Message": "Assigning to Jonathan who is managing our suggestions.",
+      "PostedDate": "2012-11-06T09:13:23.783-08:00",
+      "Id": 81777
+    },
+    {
+      "Message": "Here is my comment from SO, explaining why this request/suggestion is actually impossible:\n\n------------------------------------------\nAs far as any (including Intellisense) static analysis is concerned, the context of onGetAgenciesComplete is HomePageViewModelBase and always will be; except that at runtime, the context will be set dynamically, via explicit internal jQuery.ajax context binding. The only way Intellisense could determine that the context will change dynamically is to actually execute that code path, but even that results in ambiguity: which context is the right context?\n\nWhat if you \"borrow\" a method elsewhere, for a one-off call? Should Intellisense then use that call site to determine the context? Probably not...\n\nHomePage.prototype.onGetAgencies.call({ some other context }, ...);\n(Shortened for readability.)\n\n------------------------------------------",
+      "PostedDate": "2012-11-06T09:50:53.83-08:00",
+      "Id": 81785
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments. I'll make sure this gets added to our breaking changes list.",
+    "ClosedDate": "2013-11-21T08:48:06.843-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm seeing this issue on a lot of typescript definitions since 0.9.5, where the compiler infer the type \"{}\" when you pass \"any\" to an inferred type parameter.\r\n\r\nFor example:\r\n\r\n```ts\r\nfunction map<T>(list: T[], mapFn: (element: T) => any) { }\r\n\r\nvar anyList: any;\r\nmap(anyList, m => m.someFn());\r\n// The property 'someFn' does not exist on value of type '{}'.\r\n```  \r\n\r\nThis is causing lots of issues in existing code with utility libraries like underscore that have lots of methods that accept iterators.\r\n\r\nIn 0.9.1.1, it seems that any typed inferred from \"any\" produced \"any\", so the code worked. The current behavior of inferring \"{}\" is strange, as this type won't be compatible with anything.\r\n\r\nSo, something is off here: either the type of m is not being inferred correctly to \"any\" or the compiler is incorrectly accepting \"any\" when an array is expected, in that case, casting to \"any[]\" should work but the current code should give an error of invalid type on the first parameter.\r\n\r\n",
+    "LastUpdatedDate": "2013-11-22T09:51:47.26-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-21T06:01:06.123-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type flow issues - \"any\" vs. {}",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1935
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a breaking change related to how we treat generic type inference when we the function arguments provide no information with which to infer a type.\n\nIn this particular call, we allow `anyList` to be compatible with `T[]` because it's `any` (all types are compatible with `any`), but we have no other argument to the function that would provide a type for `T`.\n\nPreviously we would infer `any` for `T` in the absence of any candidate types. In practice this was found to be too loose, allowing invalid calls. The new behavior is to choose `{}` for `T`.\n\nSeveral fixes are possible:\n```\n// Option 1: make anyList an any[]\nvar anyList: any[];\n// Option 2: provide explicit type argument\nmap<any>(anyList, m => m.someFn());\n// Option 3: annotate callback parameter\nmap(anyList, (m: any) => m.someFn());\n```",
+      "PostedDate": "2013-11-21T08:47:40.153-08:00",
+      "Id": 123776
+    },
+    {
+      "Message": "Ok, that makes sense. I'll update the typings then.",
+      "PostedDate": "2013-11-21T09:10:48.383-08:00",
+      "Id": 123779
+    }
+  ]
+}

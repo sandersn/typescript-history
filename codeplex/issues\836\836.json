@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Glad you got it working. Please open a separate issue with repro steps if you're still having problems with VS freezing. Thanks!",
+    "ClosedDate": "2013-03-25T10:00:28.07-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "\r\n\r\nI'm compiling about 20-30 class-per-files into a single application.js using --out application.js flag in compiler.\r\n\r\nWhen I build the application I get:\r\n\r\nMyWebProject.csproj error MSB3073: The command \"tsc --sourcemap --target ES5 --module AMD --out application.js \"...filepaths\" exited with code 1\r\n\r\nTo make things worse, after getting this error VS 2012 hangs for so long  I've resorted to immediately closing it as soon as I see the error show up. I'm scared to build my solution...  \r\n\r\nIf I monitor my project root folder I can see my application.js file compiles when I build despite TSC throwing an error and visual studio hanging.\r\n\r\nSince that's the case I commented out my BeforeBuild tsc command and ran the application without re-compiling the file. I made major changes since I last ran the application so I expected some run time errors.\r\n\r\nAnd indeed there were some run time dependency problems that I traced down in the compiled application.js related to improper compilation order of the classes\r\n\r\nErrors like:\r\n\r\nApp.Core.Models is undefined\r\n\r\nand\r\n\r\nTypeError: b is undefined function __() { this.constructor = d; }\r\n\r\n\r\nI know the TypeError: b is undefined error precisely as I commonly encounter it. It happens when a child class is defined before it's base class. And indeed I can track one of my classes \"TableCoordinator\" being defined somewhere in the middle of the file and its base class \"BaseTableCoordinator\" somehow ends up as the last class defined all the way at the bottom of the file. This is very weird because I reference them one after the other!:\r\n\r\n__/// <reference path=\"../../App/Coordinators/BaseTableCoordinator.ts\" />\r\n/// <reference path=\"../../App/Coordinators/TableCoordinator.ts\" />__\r\n\r\n\r\nAnyways, I'll have to work these out manually and see if that solves my problem but this will be very time consuming because in order to test a change I have to:\r\n\r\n1. Build solution with change \r\n2. As soon as TSC compile error shows up close and re-open to avoid hang\r\n3. Comment out BeforeBuild in project file\r\n4. Build/Run solution without re-compiling the ts file\r\n5. Test change\r\n\r\nObviously very time consuming...\r\n\r\nTwo Questions:\r\n1. Is there any way to ensure the classes/files compile in the correct order without having to micro manage this? I'm currently using this approach:  (http://stackoverflow.com/a/13850286/1267778) but seems like it's not enough\r\n\r\n2. How to fix TSC from hanging visual studio in this case. ",
+    "LastUpdatedDate": "2013-03-25T10:00:28.07-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-21T03:05:07.887-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Compiler freezes visual studio during single file compilation",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 836
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Here's something interesting to add. \n\nWhen I build the solution, my typescript files actually still get compiled to my single application.js file (I can watch it appear in my project root when I compile) despite the compiler error and visual studio freezing... ",
+      "PostedDate": "2013-03-21T13:01:01.483-07:00",
+      "Id": 93931
+    },
+    {
+      "Message": "The order things are emitted depends on your build step, not your reference path ordering. Consider this setup:\r\na.ts:\r\n/// <reference path='refs.ts'/>\r\nclass Base {}\r\nb.ts:\r\n/// <reference path='refs.ts'/>\r\nclass Derived extends Base {}\r\nrefs.ts:\r\n/// <reference path='a.ts'/>\r\n/// <reference path='b.ts'/>\r\n\r\nNow if I compile tsc.exe a.ts b.ts --out o.js then in o.js I have Derived emitted before Base. If I compile tsc.exe b.ts a.ts --out o.js then I have Base emitted before Derived. Reversing the order of the reference paths in refs.ts has no effect.\r\n\r\nIt is hard to tell from your description what might be causing Visual Studio to hang. Note that you could always build from the command line when trying to solve an issue like this. Please re-open this if your issues persist and are you're able to nail down a specific repro we can try.\r\n\r\nAlso, Typescript will still produce JavaScript output even in the presence of errors. In particular, type errors (as opposed to parse errors) like the ones you're seeing will generally still allow the compiler to generate JavaScript (which may or may not work at runtime). That explains the behavior you noted in your comment.",
+      "PostedDate": "2013-03-22T18:35:31.837-07:00",
+      "Id": 94151
+    },
+    {
+      "Message": "Danquirk, can you please say more about the \"build step\" you speak off? \n\nYou say reversing the order of the reference paths has no effect, but then what determines the default order if I do not specify the order? How do I get the order right because it does manifest in a runtime error that my BaseTableCoordinator is defined last in the file while DerivedTableCoordinator is somewhere in the middle.\n\nIf I look at the order of the files from the error emitted BaseTableCoordinator.ts is actually first in line then DerivedTableCoordinator.ts.... So why does it throw the base to the end of the file and the derived to the middle. \n\nHow was this order even determined to begin with if I did not specify one and my references have no effect?\n",
+      "PostedDate": "2013-03-22T20:52:32.453-07:00",
+      "Id": 94153
+    },
+    {
+      "Message": "\"The order things are emitted depends on your build step, not your reference path ordering.\"\n\nTrying to verify this and it's simply wrong in my case. The order I place the references actually changes the order of the classes defined in my output file. \n\nI have ___references.ts__:\n\n```\n/// <reference path=\"Typings/Internal/_coordinators.dependencies.ts\" />\n/// <reference path=\"Typings/Internal/_charting.dependencies.ts\" />\n\n/// <reference path=\"AppMain.ts\" />\n```\n\n\nThen in ___coordinators.dependencies.ts__ : \n\n\n```\n\n/// <reference path=\"../../App/Coordinators/BaseTableCoordinator.ts\" />\n/// <reference path=\"../../App/Coordinators/DerivedTableCoordinator.ts\" />\n/// <reference path=\"../../App/Coordinators/UnrelatedCoordinator.ts\" />\n\n```\n\nThis compiles in this order:\n\n```\n(function (Coordinators) {  var DerivedTableCoordinator = (function (_super) { ... } .....\n(function (Coordinators) {  var UnrelatedCoordinator= (function () { ... } ....\n_....all the way at the bottom..._\n(function (Coordinators) { var BaseTableCoordinator= (function () { ... } ....\n```\n\n\nIf I push the UnrelatedCoordinator reference to the top: \n\n```\n/// <reference path=\"../../App/Coordinators/UnrelatedCoordinator.ts\" />\n/// <reference path=\"../../App/Coordinators/BaseTableCoordinator.ts\" />\n/// <reference path=\"../../App/Coordinators/DerivedTableCoordinator.ts\" />\n```\n\nI get the corresponding order change in the compiled single file: \n\n```\n(function (Coordinators) {  var UnrelatedCoordinator= (function () { ... } ....\n(function (Coordinators) {  var DerivedTableCoordinator= (function (_super) { ... } .....\n_....all the way at the bottom..._\n(function (Coordinators) { var BaseTableCoordinator= (function () { ... } ....\n```\n\n\nAs you can see the order is determined by the reference paths when using the --out flag. What baffled me at that point was that no matter where I put the __BaseTableCoordinator__ reference it always ended up as the last defined class in the file. \n\nGoing down that path made me wonder what is it actually compiling when my __BeforeBuild__ would execute:\n\n```\n    <Exec Command=\"tsc$(TypeScriptSourceMap) --target ES5 --module AMD --out application.js @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n\n```\n\nSince I'm specifying my desired build order in my ___references.ts__ file (that references other files that in turn reference my class files) I decided to try to set the ___references.ts__ file as my compilation target:\n\n```\n    <Exec Command=\"tsc$(TypeScriptSourceMap) --target ES5 --module AMD --out application.js &quot;C:\\MyProject\\Scripts\\_references.ts&quot; @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n\n```\n\nFinally I got the correct compilation order:\n\n```\n(function (Coordinators) {  var UnrelatedCoordinator= (function () { ... } ....\n(function (Coordinators) { var BaseTableCoordinator= (function () { ... } ....\n(function (Coordinators) {  var DerivedTableCoordinator= (function (_super) { ... } .....\n```\n\nWith my __BeforeBuild__ command commented out I can run the app and it works! This is great!\n\nUm, not really.... if I bring back my __BeforeBuild__ command the compiler still throws the error that hangs VS despite everything being perfectly fine now with the output file.\n\nI still don't know what's causing this but I did figure out a workaround and also have a clue to a potential lead...\n\n__Workaround__: Instead of closing VS immediately upon getting the error to prevent hang, it's sufficient to immediately switch away from the Error List pane the second the error comes up (I switched to the Output pane). This seems to prevent some kind of post error processing that causes VS to hang.\n\nAs a by product of having the Output view in my face I noticed right before the compiler chokes I get something like this:\n\nError reading file \"C:\\MyProject\\Scripts\\Typings\\Internal\\_models.deendencies.ts\": File not found\n__THEN COMPILER CHOKES__: error MSB3073: The command \"tsc --sourcemap --target ES5 --module AMD --out application.js \"...file paths\" exited with code 1\n\n__NOTICE__ how  ___models.dependencies__ is missing that \"p\" ... I checked, double checked, and triple checked, that I did not misspell this anywhere in my solution. \n\nFunny part is it's not even consistent. I cannot replicate but when I built a few times before it was the same error with a different file path with a randomly stripped letter. From memory it was this path:\n\nError reading file \"C:\\MyProject\\Scripts\\ypings\\Internal\\keymaster.d.ts\": File not found\n\nIt jacked the \"T\" in Typings folder! Quadruple checked and this is not my error either.\n\nApparently the compiler chokes immediately following this error so hoping to get this resolved...\n\n\n\n\n\n\n\n\n     ",
+      "PostedDate": "2013-03-22T23:43:02.15-07:00",
+      "Id": 94154
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 03/22/2013 6:35PM",
+      "PostedDate": "2013-03-22T18:35:35.347-07:00",
+      "Id": 94155
+    },
+    {
+      "Message": "__Major Update:__\n\nThe following build process allows me to compile without errors:\n\n```\n<Target Name=\"BeforeBuild\">\n    <WriteLinesToFile\n      File=\"typescriptcompiler.input\"\n      Lines=\"@(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\"\n      Overwrite=\"true\"\n      Encoding=\"Unicode\"/>\n    \n    <Exec Command=\"tsc$(TypeScriptSourceMap) --target ES5 --module AMD --out application.js @typescriptcompiler.input\" />\n  </Target>\n```\n\nIt dumps the code to a file to bypass the [buffer bug in the WScript library](http://typescript.codeplex.com/workitem/597). The fix attached by Ryan did not work for me and restoring the original (removing the fix) did not break it and I was still able to compile successfully.\n\nBUT the problem is then back to the compilation order I described in my previous comment. As the solution above dumps TypeScriptCompile to the file the order depends on the \"build-steps\" danquirk was talking about. However, I do not want to manage dependencies here because it forced me to unload the project each time and then on top of that I have to manage the references _anyways_ to get type checking. It is much preferably to compile the root _references.ts like I described in the previous comment and have it traverse the dependency chain. \n\nSo basically there's no way to get the benefit of the compiler traversing my reference paths from a root AND being able to use a file as the input. To do that the compiler would have to return a string that is the dependency chain after it traverses the file starting from the root given, then than string could be dumped to a file, then finally fed back into the compiler. \n\nThis is a compiler bug. \nThis current fix by Ryan does not work.\nThe fix proposed above is also not ideal.\n\nAs for VS hanging... that's an issue in itself. \n\n",
+      "PostedDate": "2013-03-23T03:05:41.13-07:00",
+      "Id": 94161
+    },
+    {
+      "Message": "Ok, finally solved this. This following build process compiles without error AND gets the compilation order right from traversing your reference paths starting for the root:\n\n```\n<Target Name=\"BeforeBuild\">\n<WriteLinesToFile\n  File=\"typescriptcompiler.input\"\n  Lines=\"&quot;C:\\MyProject\\Scripts\\_references.ts&quot;\"\n  Overwrite=\"true\"\n  Encoding=\"Unicode\"/>\n\n<Exec Command=\"tsc$(TypeScriptSourceMap) --target ES5 --module AMD --out application.js @typescriptcompiler.input\" />\n</Target>\n```\n\nNote: previous comment I accidentally posted incomplete answer. Mod can delete previous comment.",
+      "PostedDate": "2013-03-23T12:52:53.897-07:00",
+      "Id": 94194
+    }
+  ]
+}

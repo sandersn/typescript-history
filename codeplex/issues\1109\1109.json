@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please see this issue for a workaround and more information: https://typescript.codeplex.com/workitem/597\n\nThanks!",
+    "ClosedDate": "2013-06-05T10:02:01.803-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "We are using TypeScript in a Visual Studio C# Web project, and we utilize Microsoft.TypeScript.targets in the .csproj file to configure the typescript compiler arguments and to auto-compile all ts files that has a <TypeScriptCompile> entry in the project file at build time.\r\n\r\nWe now have more than 60 .ts files for compilation, and we recently found that the compiler started complaining.\r\n\r\nWe found that the tsc command executed through Microsoft.TypeScript.targets with all arguments including the full path to all the ts files, now exceed the max character limit of the windows command processor. \r\n\r\nMy findings indicate that the command processor accepts at most 8191 characters.\r\n\r\nThe way the Microsoft.TypeScript.targets works today, it is running tsc.exe only once with all the project's ts files as arguments. This becomes vulnerable in large projects with lots of ts files, as they will eventually exceed the max limit of the command processor.\r\n\r\nWe have found a temporary solution by modifying the Microsoft.TypeScript.targets file, so that it instead of passing the full path to each of the ts-files as arguments, it passes only the project-relative path. This works when the Exec entry uses the WorkingDirectory attribute. \r\n\r\nOriginal Exec statement in Microsoft.TypeScript targets:\r\n<Exec Command=\"tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\r\n\r\nModified version that makes the total command shorter:\r\n<Exec WorkingDirectory=\"$(ProjectDir)\" Command=\"tsc $(TypeScriptBuildConfigurations) @(TypeScriptCompile ->'&quot;%(Identity)&quot;', ' ')\" />\r\n\r\nThis temporary solution helps for now, but if we reach lets say about 180 ts-files, we will still get the same problem.\r\n\r\nSuggested solution:\r\nIf Microsoft.TypeScript.targets would run the tsc compiler one time for each ts-file, this would not be a problem. \r\n\r\nHoping for this to get fixed before the 0.9.0.0 release. as I concider this a rather critical issue.\r\nLooking forward to the 0.9.0.0 release with generics etc.!\r\n \r\n",
+    "LastUpdatedDate": "2013-06-05T10:02:01.803-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-05T07:02:58.287-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "TSC exceeds command maxlenght with typescript.targets",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1109
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

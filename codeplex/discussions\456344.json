@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1090576",
+    "ThreadId": "456344",
+    "Html": "<pre><code>interface X {\n    echo();\n}\n\nclass XA implements X {\n    public echo() { console.log(&quot;XA&quot;); }\n}\n\nclass XB implements X {\n    public echo() { console.log(&quot;XB&quot;); }\n}\n\nclass NOT_X {\n    public echo() { alert(&quot;TYPESCRIPT FAILED - NO ANY INTERFACE CHECK&quot;); }\n}\n\nfunction doEcho(who: X) { // input type has no check\n    who.echo(); \n}\n\nvar arr = [];\narr[0] = new XA();\narr[1] = new XB();\narr[2] = new NOT_X();\narr.forEach(function(v, i, a) { doEcho(v); });</code></pre>\n\n<a href=\"http://www.typescriptlang.org/Playground/#src=interface%20X%20{%0A%20%20%20%20echo%28%29%3B%0A}%0A%0Aclass%20XA%20implements%20X%20{%0A%09public%20echo%28%29%20{%20console.log%28%22XA%22%29%3B%20}%0A}%0A%0Aclass%20XB%20implements%20X%20{%0A%09public%20echo%28%29%20{%20console.log%28%22XB%22%29%3B%20}%0A}%0A%0Aclass%20NOT_X%20{%0A%09public%20echo%28%29%20{%20alert%28%22TYPESCRIPT%20FAILED%20-%20NO%20ANY%20INTERFACE%20CHECK%22%29%3B%20}%0A}%0A%0Afunction%20doEcho%28who%3A%20X%29%20{%20%2F%2F%20input%20type%20has%20no%20check%0A%09who.echo%28%29%3B%20%0A%09}%0A%0Avar%20arr%20%3D%20[]%3B%0Aarr[0]%20%3D%20new%20XA%28%29%3B%0Aarr[1]%20%3D%20new%20XB%28%29%3B%0Aarr[2]%20%3D%20new%20NOT_X%28%29%3B%0Aarr.forEach%28function%28v%2C%20i%2C%20a%29%20{%20doEcho%28v%29%3B%20}%29%3B\" rel=\"nofollow\">TEST THIS CODE HERE</a><br />\n",
+    "PostedDate": "2013-09-10T04:02:36.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1091386",
+    "ThreadId": "456344",
+    "Html": "TypeScript is purely a compile-time language. When you declare your array <code>var arr = []</code>, the type of the array is inferred as <code>any[]</code>. So this is equivalent to you having said <code>var arr: any[] = [];</code>. This means that when you later call <code>doEcho(v)</code>, the compiler has inferred the type of v to also be <code>any</code>. A type of <code>any</code> means the compiler is essentially shutting off the type system, thus you can pass a parameter of <code>any</code> to a function that accepts parameters of type <code>X</code>. This is legal TypeScript functioning the way it was designed to. TypeScript does not assert any runtime checks.<br />\n<br />\nTo get more compile-time safety, you could therefore assert the type of <code>arr</code> by changing it to <code>var arr: X[] = [];</code>. However, the code <em>still</em> compiles, because TypeScript is structurally typed. So even though <code>NOT_X</code> has not explicitly implemented <code>interface X</code> the compiler figures out that it is structurally equivalent to interface X and allows the assignment at <code>arr[2] = new NOT_X();</code>.<br />\n<br />\nIf you really want a runtime check on the type of an object, you'll have to insert one yourself.<br />\n",
+    "PostedDate": "2013-09-11T11:57:21.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1091573",
+    "ThreadId": "456344",
+    "Html": "Yes I understand that, the question is shall typescript support runtime checks like php or any languages that don't allow to put type A var to function taking type B var?<br />\n",
+    "PostedDate": "2013-09-12T00:49:50.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092447",
+    "ThreadId": "456344",
+    "Html": "Not having runtime overhead is a primary goal for TypeScript. Even if there were some notion of a runtime type system, the TypeScript type system is structural, not nominal like what you're showing here.\r<br />\n<br />\nYou can always add some sort of type metadata yourself:<br />\n<pre><code>interface X {\n    echo();\n    magic_cookie: number; // Must be 4!\n}\n\nclass XA implements X {\n    public echo() { console.log(&quot;XA&quot;); }\n    magic_cookie = 4;\n}\n\nclass XB implements X {\n    public echo() { console.log(&quot;XB&quot;); }\n    magic_cookie = 4;\n}\n\nclass NOT_X {\n    public echo() { alert(&quot;TYPESCRIPT FAILED - NO ANY INTERFACE CHECK&quot;); }\n}\n\nfunction doEcho(who: X) { // input type has no check\n    if(who.magic_cookie !== 4) throw new Error('Oh no!');\n    who.echo(); \n}</code></pre>\n\n",
+    "PostedDate": "2013-09-13T12:32:23.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

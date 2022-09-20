@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "943547",
+    "ThreadId": "403675",
+    "Html": "\r\n<p>I propose to make &quot;bind&quot; keyword for class methods. This way you can bind &quot;this&quot; keyword to current class instance.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Foo {\r\n    <span style=\"color:blue\">public</span> <span style=\"color:#0000ff\">bind</span> someMethod(): <span style=\"color:blue\">void</span> {\r\n        // Here .this is always current Foo instance\r\n    }\r\n}\r\n</pre>\r\n</div>\r\n<p>compiles to</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Foo = (function () {\r\n    function Foo() {\r\n        <span style=\"color:blue\">this</span>.someMethod = <span style=\"color:blue\">this</span>.someMethod.bind(<span style=\"color:blue\">this</span>);\r\n    }\r\n    Foo.prototype.someMethod = function () {\r\n    };\r\n    <span style=\"color:blue\">return</span> Foo;\r\n})();</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-11-18T07:00:51.817-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "944677",
+    "ThreadId": "403675",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/468\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-11-20T09:06:31.797-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "945148",
+    "ThreadId": "403675",
+    "Html": "\r\n<p>this is not required...</p>\r\n<p>you can simply use a &quot;delegate&quot; or lambda expression to do what you want:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Foo {\n\n    <span style=\"color:blue\">private</span> state: string;\n\n    constructor() {\n\n        $(<span style=\"color:#a31515\">'#someLinkID'</span>).bind(<span style=\"color:#a31515\">'click'</span>, (e: JQueryEventObject) =&gt; <span style=\"color:blue\">this</span>.handleClick(e))\n    }\n\n    <span style=\"color:blue\">private</span> handleClick(e: JQueryEventObject) {\n\n        <span style=\"color:blue\">this</span>.state = <span style=\"color:#a31515\">&quot;Clicked!&quot;</span>\n    }\n}\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-11-21T06:34:21.22-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983763",
+    "ThreadId": "403675",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>caroen wrote:</strong><br>\r\n<p>this is not required...</p>\r\n<p>you can simply use a &quot;delegate&quot; or lambda expression to do what you want:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Foo {\r\n\r\n    <span style=\"color:blue\">private</span> state: string;\r\n\r\n    constructor() {\r\n\r\n        $(<span style=\"color:#a31515\">'#someLinkID'</span>).bind(<span style=\"color:#a31515\">'click'</span>, (e: JQueryEventObject) =&gt; <span style=\"color:blue\">this</span>.handleClick(e))\r\n    }\r\n\r\n    <span style=\"color:blue\">private</span> handleClick(e: JQueryEventObject) {\r\n\r\n        <span style=\"color:blue\">this</span>.state = <span style=\"color:#a31515\">&quot;Clicked!&quot;</span>\r\n    }\r\n}&nbsp;</pre>\r\n</div>\r\n</blockquote>\r\n<p>Explained&nbsp;my view <a title=\"here\" href=\"http://typescript.codeplex.com/workitem/468\" target=\"_self\">\r\nhere</a></p>\r\n",
+    "PostedDate": "2013-01-07T06:50:20.97-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993742",
+    "ThreadId": "403675",
+    "Html": "\r\n<p>It works but the syntax is rather long. &nbsp;Why not have a keyword like 'self' that refers to this?&nbsp;</p>\r\n<p>I tried finding a shortcut to this. &nbsp;The limitation I am having is that normally in a native JS constructor I can set a member variable _this =this &nbsp;and then I can simply reference _this from within object methods. &nbsp;TypeScript forces you to use this.property\r\n to access a property of the current object but this is not the the current object. &nbsp;It's kind of a catch 22. &nbsp;</p>\r\n<p>The fact that TypeScript limits or modifies the scope of vars seems to go against the &quot;superset JavaScript&quot; mantra.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-29T09:25:27.627-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1000961",
+    "ThreadId": "403675",
+    "Html": "One suggestion for this feature is to follow the kotlin way to define extension methods. \r<br />\n<br />\nIn kotlin:<br />\n<pre><code>fun JQueryStatic.bind(eventName:String, handler: JQuery.(JQueryEventObject) -&gt; Unit);\n\n// using like above\n\n$(&quot;...&quot;).bind(&quot;event&quot;, { e -&gt; doSomethingWithJQueryElement(this); });\n</code></pre>\n\nSomething that in TS could have these definitions:\r<br />\n<br />\nby using interfaces:<br />\n<pre><code>interface JQueryStatic {\n  bind(eventName: string, handler: JQuery.(JQueryEventObject) =&gt; void);\n   \n  // or\n   \n  bind(eventName: string, handler: JQuery::(JQueryEventObject) =&gt; void); // remember C++\n\n  // or\n   \n  bind(eventName: string, handler: JQuery#(JQueryEventObject) =&gt; void); // remember kotlin paths\n}</code></pre>\n\nby using extension methods (like kotlin):<br />\n<pre><code>function JQueryStatic.bind(eventName: string, handler: JQuery.(JQueryEventObject) =&gt; void);\n\n// or \n\nfunction JQueryStatic :: bind(eventName: string, handler: JQuery :: (JQueryEventObject) =&gt; void);\n\n// or \n\nfunction JQueryStatic#bind(eventName: string, handler: JQuery#(JQueryEventObject) =&gt; void);</code></pre>\n\n",
+    "PostedDate": "2013-02-13T22:33:41.083-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

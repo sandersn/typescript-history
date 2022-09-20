@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing with the workaround provided.  Future work to improve build system should make further improvements also.",
+    "ClosedDate": "2013-02-19T17:30:02.14-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "The problem is that my project is in default visual studio path, which has relatively long path and when typescript compiler tries to compile my many source files the total length exceeds the cmd limit which is 8191 characters (http://support.microsoft.com/kb/830473).\r\n\r\nI don't want to move my project location because this limit will be exceeded in the future anyway. Is there a quick workaround for this?",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-03T06:15:50.83-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Compiler fails with many source files.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 694
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The compile command for TypeScript is located in the project file (*.jsproj for example):\n```\n<Target Name=\"BeforeBuild\">\n    <Message Text=\"Compiling TypeScript files\" />\n    <Message Text=\"Executing tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n    <Exec Command=\"tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" /> \n</Target>\n```\nThe last `<Exec>` tag specifies the CMD line to execute. The array of *.ts files `TypeScriptCompile` is built from a special `<ItemGroup>` section:\n```\n<ItemGroup>\n    <TypeScriptCompile Include=\"app.ts\" />\n</ItemGroup>\n```\n\nThere are only two solutions I'm thinking of:\n1. Create another special `<ItemGroup>` and a correspondending `<Exec>` command tag.\n\n2. Put the logic of compiling into an external script which actually splits the CMD line.\n\nIt would be (somewhat easily) possible to write a little PowerShell script for both tasks.",
+      "PostedDate": "2013-02-04T09:51:35.22-08:00",
+      "Id": 88192
+    },
+    {
+      "Message": "See work-around I just posted on http://typescript.codeplex.com/workitem/597 - let me know if this helps you",
+      "PostedDate": "2013-02-04T10:16:49.51-08:00",
+      "Id": 88196
+    },
+    {
+      "Message": "__@RyanCavanaugh:__\n\nI've just looked at your MSBuild file. Am I right that it writes the CMD line to a file and it then lets TypeScript read the input from the created file?\n\n_Nice solution!_",
+      "PostedDate": "2013-02-04T10:26:36.513-08:00",
+      "Id": 88199
+    },
+    {
+      "Message": "Yep, that's the idea.",
+      "PostedDate": "2013-02-04T10:55:40.773-08:00",
+      "Id": 88204
+    },
+    {
+      "Message": "I tried the workaround Ryan suggested, but since my project was created with 0.8.1.1 version I got back lots of following errors:\n\n1>------ Build started: Project: GlaciatePortal, Configuration: Debug Any CPU ------\n1>  Unknown extension for file: \"C:\\Users\\Erko\\Documents\\Visual\". Only .ts and .d.ts extensions are allowed.\n1>  Unknown extension for file: \"Studio\". Only .ts and .d.ts extensions are allowed.\n1>  Error reading file \"[removed]\": File not found\n...\n\nAny easy way to convert my project structure to 0.8.2.0 version?",
+      "PostedDate": "2013-02-04T11:03:08.77-08:00",
+      "Id": 88205
+    },
+    {
+      "Message": "I think the problem why the workaround didn't work for me is because I have spaces in path.",
+      "PostedDate": "2013-02-04T11:32:39.353-08:00",
+      "Id": 88213
+    },
+    {
+      "Message": "I forgot to quote the paths in the .targets file - please download the updated version.\n\nFor converting a pre-0.8.2.0 project to 0.8.2.0: Remove the \"BeforeBuild\" Target element. The bottom section of your project file should look like this. Everything else should be the same (I think).\n\n```\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\n    <TypeScriptTarget>ES3</TypeScriptTarget>\n    <TypeScriptIncludeComments>true</TypeScriptIncludeComments>\n    <TypeScriptSourceMap>true</TypeScriptSourceMap>\n  </PropertyGroup>\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">\n    <TypeScriptTarget>ES3</TypeScriptTarget>\n    <TypeScriptIncludeComments>false</TypeScriptIncludeComments>\n    <TypeScriptSourceMap>false</TypeScriptSourceMap>\n  </PropertyGroup>\n  <Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" />\n</Project>\n```",
+      "PostedDate": "2013-02-04T11:33:02-08:00",
+      "Id": 88214
+    },
+    {
+      "Message": "Did a quick test and it seemed to work, thank you.",
+      "PostedDate": "2013-02-04T21:19:24.743-08:00",
+      "Id": 88243
+    }
+  ]
+}

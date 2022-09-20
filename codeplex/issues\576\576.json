@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing per Bill's comments - this is by design",
+    "ClosedDate": "2013-01-03T13:15:20.787-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "If I try to iniatize a Date type using another Date as the constructor parameter, the compiler fails. In pure JavaScript this is possible:\r\nJS Code:\r\n\r\nvar date = new Date();\r\nvar newdate = new Date(date);\r\n\r\nTypescriptCode (fails):\r\n\r\n CreateNewDate(dt: Date): Date {\r\n        var returnDate = new Date(dt);\r\n        return returnDate;\r\n    }\r\n",
+    "LastUpdatedDate": "2013-01-03T13:15:20.787-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-27T18:35:43.137-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Date Initialization with another Date fails",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 576
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The Date constructor has some specific semantics here around attempting to coerce to a primitive, and then if the result is not a string, attempting to coerce that to a number (see http://es5.github.com/#x15.9.3.2 ) .  We have specific Date constructor typing for string & number params, and the other documented constructor signatures, anything else is an implicit conversion in JavaScript.\n\nJavaScript has many implicit conversions we give type errors on that will work fine in JavaScript (e.g. \"var x = 5 + true\").  Allowing them would hide the type of type errors TypeScript is trying to catch.  e.g. the below works fine in JavaScript due to the implicit conversions:\n\nnew Date( {a: 5, b: \"testing\", toString: function(){return \"1/2/3\";}} );\n  --> Thu Jan 02 2003 00:00:00 GMT-0800 (Pacific Standard Time)\n\nTo make your snippet compile without type errors, you could be explicit about the conversion (e.g. \"var newdate = new Date(date.valueOf());\"",
+      "PostedDate": "2012-12-28T13:39:03.43-08:00",
+      "Id": 85019
+    }
+  ]
+}

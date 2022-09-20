@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:16:29.183-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Before I could write \r\nvar html5Upload = (File && FileReader && FileList && Blob);\r\nto check if HTML5 uploads are supported. \r\n\r\nTypescript 1.0 gives an error on File & FileList 'Could not find symbol'\r\nIf I write\r\n```\r\nif (File) console.log(\"ok\");\r\n```\r\nin e.g. chrome console, this puts out \"ok\".",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-06T12:38:54.46-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Typescript 1.0 & File, FileList definition",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2395
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Quote: \"you can only use new File(name) when writing extensions\"\nSource: http://stackoverflow.com/questions/10132018/html5-and-javascript-opening-and-reading-a-local-file-with-file-api\n\n\"var file = File(...)\" is not valid in normal HTML5 web apps (for good security reasons).  I'm guessing it's for this reason there is no \"define var File: { ... }\" specified.\n\nThat said, since Chrome extensions and Gecko 8.0 XPCOM component code allows \"new File()\", then I would expect it should be allowed in TS.",
+      "PostedDate": "2014-04-06T13:37:03.853-07:00",
+      "Id": 140747
+    },
+    {
+      "Message": "```\nvar file = new File(...) \n```\nis not valid in HTML5..\n\nbut checking whether it is available IS\nin any browser I can execute \n```\nif (File) console.log(\"Ok\");\n```\nThis wil print Ok on all recent versions of chrome,firefox,IE",
+      "PostedDate": "2014-04-06T22:29:49.003-07:00",
+      "Id": 140767
+    },
+    {
+      "Message": "Note: You can add this easily yourself by just placing \"declare var File, FileList;\" before your test.\n\nThat said, your check is a bit error prone.  If any object doesn't exist, you'll get this:\n```\n\"ReferenceError: File is not defined\"\n```\nIf you want to prevent that, you should do this (or similar):\n```\nvar html5Upload = (this.File && this.FileReader && this.FileList && this.Blob);\n```",
+      "PostedDate": "2014-04-07T00:43:29.323-07:00",
+      "Id": 140774
+    },
+    {
+      "Message": "Workarounds posted so far are good advice.\r\n\r\nWe should add `File` to lib.d.ts at a minimum so that people don't accidently name-collide with it.",
+      "PostedDate": "2014-04-07T09:11:32.217-07:00",
+      "Id": 140823
+    },
+    {
+      "Message": "This is fixed in develop.\n\nThe following declarations are included into lib.d.ts.\nhttps://typescript.codeplex.com/SourceControl/latest#typings/dom.generated.d.ts",
+      "PostedDate": "2014-04-10T12:15:17.527-07:00",
+      "Id": 141411
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:54:02.467-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Why does the following code incorrectly infers the type of B2?\r\n\r\n```\r\ninterface ConstructorOf<T> {\r\n\tnew(...x:any[]): T;\r\n}\r\n\r\nclass Foo {\r\n\t\r\n}\r\n\r\nclass Bar {\r\n\tconstructor(x: string) {\r\n\t}\r\n}\r\n\r\n\r\nfunction constructorOf<T>(x: ConstructorOf<T>): ConstructorOf<T> {\r\n\treturn x;\t\r\n}\r\n\r\n// Works\r\nvar F1: ConstructorOf<Foo> = Foo;\r\nvar B1: ConstructorOf<Bar> = Bar;\r\n\r\nvar f1 = new F1();\r\nvar b1 = new B1(\"b1\");\r\n\r\n// F2 has correct type, but the type of B2 is infered to be ConstructorOf<{}>, instead of ConstructorOf<Bar>\r\nvar F2 = constructorOf(Foo);\r\nvar B2 = constructorOf(Bar);\r\n\r\nvar f2 = new F2();\r\nvar b2 = new B2(\"b2\");\r\n\r\n```\r\n\r\nNote that when changing the ConstructorOf interface into\r\n\r\n```\r\ninterface ConstructorOf<T> {\r\n\tnew(x: any): T;\r\n}\r\n```\r\n\r\nfixes the inference, but then the ```var f1 = new F1()``` and  ```var f2 = new F2()``` fail, because F1 and F2 have no arguments in its constructor.\r\n\r\nHow can I declare an interface in typescript that described 'any kind of constructor function'?\r\n\r\nThanks,\r\nPeter Verswyvelen\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-07-21T13:54:02.467-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-11T04:08:53.657-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Interface for any constructor function using varargs?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2616
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "While I'm not sure why it doesn't infer correctly, you can do this to fix it:\n\n```\nfunction constructorOf<T extends ConstructorOf<any>>(x: T): T {\n    return x;   \n}\n```",
+      "PostedDate": "2014-07-11T10:48:57.477-07:00",
+      "Id": 152116
+    }
+  ]
+}

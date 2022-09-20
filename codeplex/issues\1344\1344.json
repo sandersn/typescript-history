@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "TypeScript doesn't re-order anything based on semantics. The output is ordered according to the order you passed them on the command line, plus ordering according to dependencies inferred from reference tags.",
+    "ClosedDate": "2013-07-15T09:46:16.527-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I have file controllers.ts : \r\n```\r\nvar controllers = angular.module('controllers',[])\r\n```\r\nand another main.ts: \r\n```\r\nvar app = angular.module('demoApp',[controllers.name]);\r\n```\r\nThe generated javascript with ```--out``` parameter come out as : \r\n```\r\nvar app = angular.module('demoApp', [controller.name]);\r\nvar controllers = angular.module('controllers', [])\r\n```\r\nI think it should be : \r\n```\r\nvar controllers = angular.module('controllers', []);\r\nvar app = angular.module('demoApp', [controller.name]);\r\n```\r\nThe same way classes / modules are automatically ordered by typescript. \r\n\r\nTested in 0.9.0.1",
+    "LastUpdatedDate": "2013-08-27T09:41:03.387-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-13T23:50:47.553-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "--out not respecting variable order",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1344
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Similarly if I have a module definition split between files a: \n\n```\nmodule Directives{\n    export var mod =  angular.module('directives', []);        \n};\n```\nand b: \n```\nmodule Directives {\n    export function progressbarDirective(){       \n    }\n    mod.directive('progressbar', progressbarDirective);\n}\n```\nTypescript does not ensure that the compiled js for a is before b",
+      "PostedDate": "2013-07-14T00:51:35.483-07:00",
+      "Id": 105983
+    },
+    {
+      "Message": "Update: Having an explicit ```/// <reference``` to the file you want js-compiled before your file seems to do the trick. Is this behaviour planned or a lucky coincidence? ",
+      "PostedDate": "2013-07-14T01:25:42.07-07:00",
+      "Id": 105985
+    },
+    {
+      "Message": "lucky coincidence. ```/// <reference``` ordering does ___not___ force the generated js order. ",
+      "PostedDate": "2013-07-14T01:28:37.96-07:00",
+      "Id": 105986
+    },
+    {
+      "Message": "You are right and I am surprised, if I have a.ts: \n```\nclass A{}\n```\nand b.ts: \n```\nclass B extends A{}\n```\nThe following command line: \n```\ntsc b.ts a.ts --out out.js\n``` \nGenerates incorrect JS ___and___ doesn't give any compiler errors\n```\nvar __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\nvar B = (function (_super) {\n    __extends(B, _super);\n    function B() {\n        _super.apply(this, arguments);\n    }\n    return B;\n})(A);\nvar A = (function () {\n    function A() {\n    }\n    return A;\n})();\n```\n",
+      "PostedDate": "2013-07-15T16:26:12.65-07:00",
+      "Id": 106109
+    },
+    {
+      "Message": "It is a pity that this is being closed as feature. \n\nIn the manual (0.9.1.1) there multiple lines that suggest otherwise:\n\nChapter 11.1 \n\n> When a TypeScript program is compiled, all of the program’s source files are processed together. Statements and declarations in different source files can depend on each other, possibly in a circular \nfashion.\n\n\n\n\n\n...\n\n\n\n\n> \"Implementation .. source files ... form the single global module.\"\n\n\n\n\nChapter 11.1.1\n\n\n> \"The TypeScript compiler automatically determines a source file’s dependencies and includes those \ndependencies in the program being compiled.\"\n\n...\n\nThis causes a lot of source __file re-ordering headache__ and SHOULD definitiely be fixed in the compiler.",
+      "PostedDate": "2013-08-26T07:47:02.39-07:00",
+      "Id": 111141
+    },
+    {
+      "Message": "Since I raised this issue, I have come to agree with the compiler's implementation. Although I agree that the documentation is a bit misleading. Perhaps a single sentence about \"does not do symantic ordering\" or \"orders by the order the files are provided to the compiler + reference comments\" would be useful.\n\n@PSP2 I am actually using grunt to order my files and avoid any headaches : https://github.com/basarat/grunt-ts#javascript-generation-and-ordering",
+      "PostedDate": "2013-08-26T09:08:31.853-07:00",
+      "Id": 111153
+    },
+    {
+      "Message": "@basarat Very nice. Does your grunt plugin do actual dependency tree analysis or just simply concatenate every file as <reference>? (Where can we continue this discussion?)",
+      "PostedDate": "2013-08-26T22:50:08.417-07:00",
+      "Id": 111247
+    },
+    {
+      "Message": "@PSP2 simply concatenates each file in the order specified by reference.ts. \n\nActually its the typescript compiler that does this. If you pass `tsc` it just one file that contains just a bunch of `///<reference` comments and also pass in the `--out` argument, it will generate one js file whose contents are merged + ordered ( by the reference comments ). \n\nQuestions welcome here : https://github.com/basarat/grunt-ts/issues?state=open",
+      "PostedDate": "2013-08-26T23:18:47.693-07:00",
+      "Id": 111248
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:17:00.067-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "It is possible to declare modules, import them, reference items from such modules in a way that the generated java script code fails but the tsc compiles with no errors. The failure depends on the order in which the source files are passed into the tsc compiler.\r\n\r\n**How to reproduce**\r\nLet’s assume we have following files and dependencies.\r\n\r\nWe have a chart class which has a parameter.\r\n**chart.ts:**\r\n```\r\n///<reference path=\"parameter.ts\" />\r\n \r\nmodule SomeCompany.Charts.State {\r\n    import Parameters = SomeCompany.Charts.Parameters;\r\n    export class StateChart {\r\n        public Parameter: Parameters.Parameter;\r\n    }\r\n}\r\n```\r\nThe import is required to access Parameter and the alias is Parameters.\r\n\r\nWe of course have the parameter\r\n**parameter.ts:**\r\n```\r\nmodule SomeCompany.Charts.Parameters {\r\n    export class Parameter {\r\n    }\r\n}\r\n```\r\n\r\nWe also want to have the serie and serietest classes:\r\n**serie.ts:**\r\n```\r\nmodule SomeCompany.Charts.Parameters {\r\n    export class Serie {\r\n        public FooFromSerie() {\r\n            alert('ok. This is foo called from serie');\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nwhere serietest extends the serie\r\n**testserie.ts:**\r\n```\r\n///<reference path=\"serie.ts\" />\r\n\r\nmodule SomeCompany.Charts.State {\r\n    export class SerieTest extends Parameters.Serie {\r\n        constructor() {\r\n            super();\r\n            super.FooFromSerie();\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThe above 4 will compile but the java script may fail on:\r\n```\r\nvar test = new SomeCompany.Charts.State.SerieTest();\r\n```\r\nThe Serie can be *undefined*\r\n\r\nThe js code **fails if and only if** the source files are passed into the tsc compiler in the following order:\r\n```\r\ntsc --sourcemap \"chart.ts\" \"parameter.ts\" \"serie.ts\" \"testserie.ts\"\r\n```\r\nIf you change the order and for example pass chart.ts at the end then different code is created for testserie and java script runs fine.\r\n\r\nPlease note also that if we change the \r\n```\r\nimport Parameters = SomeCompany.Charts.Parameters;\r\n```\r\nfrom the **chart.ts** into the alias different than the Parameters the code will work fine all the time.\r\nObviously the aliased import is mixed with module name from **serie.ts**\r\n\r\n**Complete Sample**\r\nThe complete sample is in the attachment. It is the Visual Studio 2012 project. In the sample testserie.ts is renamed to stateserie. The rest is the same.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Medium",
+      "Severity": 100,
+      "Id": 2
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-17T11:10:45.253-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Emitted JavaScript Code Fails due to Incorrect Resolution of Module/Ref Name",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 616
+  },
+  "FileAttachments": [
+    {
+      "FileId": 604352,
+      "FileName": "TypeScriptHTMLApp5.zip",
+      "DownloadUrl": ".\\604352"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thank you for reporting this, marking it 'active'. We'll be looking into fixing this issue.",
+      "PostedDate": "2013-01-17T14:21:06.937-08:00",
+      "Id": 86406
+    }
+  ]
+}

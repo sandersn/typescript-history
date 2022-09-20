@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.487-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "When adding a dependency reference with the following notation the reference is not properly resolved in VS.\r\n///<reference path='./Reference'>\r\n\r\nIf you do not use a file extension on the reference file the reference should first be resolved as a .ts file.\r\nIf that file does not exist it should resolve to a d.ts file.\r\nIn Visual Studio 2012 with typescript plugin and web essentials installed this is not done.\r\nIn the stand alone typescript compiler (TSC) the reference is properly resolved.\r\n\r\n**How to reproduce:**\r\nreference a file with\r\n///<reference path='./Reference'/>\r\n\r\n**Expected result:**\r\n* If the file ./Reference.ts is found that file should be used.\r\n* If the file ./Reference.ts is not found but ./Reference.d.ts is that file should be used.\r\n* If none of ./Reference.ts or ./Reference.ts is found the reference should be marked as incorrect.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-14T02:47:41.35-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Source reference resolving inconsistent in VS vs. TSC",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 609
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Okay you might be right on that. But how comes the compiler compiles everything as expected but the VS-plugin does not?\n\nWould still be nice if you changed this.\nPlease reopen.",
+      "PostedDate": "2013-01-14T12:32:35.13-08:00",
+      "Id": 86118
+    },
+    {
+      "Message": "The spec has three bullets in section 9.1.\n\nThe first refers to how resolution of reference tags is done.\n\nThe second and third refer to how import declarations (e.g. import x = module(\"./x\") are resolved.\n\nThe module resolution algorithm is not used to resolve reference tags.\n\r\n\r** Closed by RyanCavanaugh 01/14/2013 11:03AM",
+      "PostedDate": "2013-01-14T11:03:01.187-08:00",
+      "Id": 86150
+    },
+    {
+      "Message": "This is still an inconsistency against the compiler and should be changed. It also impedes me in my endeavor of creating a maven typescript plugin for build and dependency management",
+      "PostedDate": "2013-01-15T00:26:08.723-08:00",
+      "Id": 86151
+    },
+    {
+      "Message": "@potmo - What exactly is the behavior you are seeing that seems wrong?  When you say \"should be used\", how are you seeing that it is not being used?  Note that the WebEssentials functionality to compile on save is not correct in general, so you should not turn this off if you are seeing problems.  We are working on built-in support for that scenario that correctly understands dependencies between TS files.  But perhaps what you are observing is not related to that compile on save behavior?",
+      "PostedDate": "2013-01-15T12:43:02.627-08:00",
+      "Id": 86188
+    },
+    {
+      "Message": "@LukeH\n\nThis builds in tsc and in Visual Studio but the reference gets a red wiggly line.\nI have turned off build on save.\nPlease note that the reference path is Reference not Reference.ts\n\nTest.ts\n```\n///<reference path='Reference'/>\nmodule test\n{\n\texport class Test\n\t{\n\t\tconstructor()\n\t\t{\n\t\t\tvar aReference:reference.Reference = new reference.Reference();\t\n\t\t}\n\t\t\n\t}\n}\n```\n\nReference.ts\n```\nmodule reference\n{\n\texport class Reference\n\t{\n\t\tconstructor()\n\t\t{\n\t\t\t\n\t\t}\n\t}\n}\n```\n\n\nThe actual reason this is important for me is that if I can use references without the file extension in VS I can have a d.ts file that is replaced with a ts file in a pre-compilation step. Some heavy loading stuff I'd like to do in continuous integration but not in VS.\n\nI'm creating a maven plugin/mojo that builds typescript projects. Maven is usually used with Java code but it works great with other codebases as well. The maven mojo uses tsc directly and works very good but the code can not be edited in VS since the references. The maven mojo needs to compile modules with .d.ts references sometimes and .ts sometimes depending on if its compiling libraries or applications.\nI don't want to parse the source code files and replace the references.",
+      "PostedDate": "2013-01-16T02:15:20.333-08:00",
+      "Id": 86223
+    },
+    {
+      "Message": "Assigning to Jonathan - should we make /// <reference> allow to resolve to .ts *or* .d.ts, depending?",
+      "PostedDate": "2013-02-25T16:04:39.297-08:00",
+      "Id": 91494
+    }
+  ]
+}

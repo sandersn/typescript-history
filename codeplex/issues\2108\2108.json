@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I'm not sure what you mean with 'the output file is built correctly', but when I compile with the latest compiler in the develop branch. I get the following error:\n\n\"error TS2188: Module 'a' cannot merge with previous declaration of 'a' in a different file 'app.ts'.\"\n\nThis works as defined in the spec 10.5:\n\n\"When merging a non-ambient function or class declaration and a non-ambient internal module declaration, the function or class declaration must be located prior to the internal module declaration in the same source file.\"",
+    "ClosedDate": "2014-01-17T11:55:20.707-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "For the past 24+ hours I've been trying to merge classes/functions and modules  in VS2012... \r\n\r\n---file1.ts\r\n````\r\nfunction a(){\r\n}\r\nmodule a {\r\n}\r\n````\r\n\r\n---file2.ts\r\n````\r\nmodule a {\r\n    export class child {}\r\n}\r\n````\r\n\r\nThe output file is built correctly, but the damned VS2012 keeps crying\r\n\r\nModule 'a' cannot merge with previous declaration of 'a' in a different file\r\n\r\nWhat's going on? :(",
+    "LastUpdatedDate": "2014-03-31T16:09:18.033-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-17T07:54:57.34-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Module 'x' cannot merge with previous declaration of 'x' in a different file",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2108
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi Paul,\n\nSo, the only way I can achieve that is writing my whole library in one file ? or is it there any work around?\n\nI wanted to refactor my js library using typescript and so far that's the only thing stopping my progress with that :-/",
+      "PostedDate": "2014-01-17T12:37:43.567-08:00",
+      "Id": 130734
+    },
+    {
+      "Message": "I'm having the same problem here. No furhter answer? Just closed by design and thats it?",
+      "PostedDate": "2014-03-10T01:19:12.653-07:00",
+      "Id": 136363
+    },
+    {
+      "Message": "clopez2156 We have worked it arround, perhaps it helps.\n\nOur problem has to create TypeScript definition for existing Javascript Code. We have modules and classes with the same names (which is valid in Javascript) for example:\n\nvar some = MyModuleAndClass.some();\nvar someClass = MyModuleAndClass.MyOtherClass.some();\n\nSolution was using functions in modules:\n\nmodule MyModuleAndClass{\n\n      export function some(){\n           // some stuff\n      }\n\n      export class MyOtherClass{\n            // class stuff;\n      }\n}\n\nWe actually used the declare module keyword in our case, because we are creating new TypeScript code but by now we are still going to use a lot of old Javascript code.\n\nHope it helps",
+      "PostedDate": "2014-03-10T05:27:58.99-07:00",
+      "Id": 136385
+    },
+    {
+      "Message": "ERRATA:\n\nthe sample Javascript code might be confusing. I meant;\n\n// using MyModuleAndClass as a class with a static method\nvar some = MyModuleAndClass.some();\n// using MyModuleAndClass as a module (with a class with a static method)\nvar someotherValue = MyModuleAndClass.MyOtherClass.some();",
+      "PostedDate": "2014-03-10T05:29:49.987-07:00",
+      "Id": 136386
+    }
+  ]
+}

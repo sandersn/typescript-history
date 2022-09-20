@@ -1,0 +1,114 @@
+[
+  {
+    "Id": "1097160",
+    "ThreadId": "458594",
+    "Html": "Hello,\r<br />\n<br />\nI'm wondering if there's currently any supported way to query the type information about user-generated interfaces/classes/etc from within TypeScript itself. \r<br />\n<br />\nIt looks like the &quot;services&quot; code in the TypeScript distribution provides some of this, but it's mostly geared for providing tooling. I'm more interested in &quot;reflection-like&quot; capabilities, although it doesn't really need to be reflection in the sense of runtime type information, and I'm aware that the language team doesn't want to add anything that would degrade the resulting JS files (like &quot;proper/runtime&quot; reflection). Compile/build type support would be sufficient.\r<br />\n<br />\nMaybe something analogous to the compiler emitting a declarations (.d.ts)-like file that generated real JS objects that could be used within JS/TypeScript?  I'm sure I could write a parser/preprocessor step for this myself, but I don't want to reinvent anything if it's already available, etc.<br />\n\r<br />\nThanks.<br />\n",
+    "PostedDate": "2013-09-20T12:11:04.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098260",
+    "ThreadId": "458594",
+    "Html": "I'm not sure I'm following what exactly you want. Can you describe what you're trying to accomplish that isn't traditional JavaScript style reflection or akin to the language service/compiler APIs asking for type information?<br />\n",
+    "PostedDate": "2013-09-23T16:19:16.767-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098341",
+    "ThreadId": "458594",
+    "Html": "You're right in that I'm asking about capabilities that are akin to the language services, specifically retrieving the type hints for a specified class/interface, etc.<br />\n<br />\nI browsed through the &quot;Services&quot; code, and from what I can tell it's really geared towards tooling (eg, it seems to have a heavy emphasis on querying given a POSITION in a file instead of a specific TYPE name). What I would like is the ability to query by class/interface/type name instead. I think I could achieve what I want by have some build-time step to translate the generated *.d.ts files to .js files containing JSON representations for them. I just wanted to make sure that there isn't a more &quot;supported&quot; or &quot;acceptable&quot; solution.<br />\n",
+    "PostedDate": "2013-09-23T21:06:42.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098428",
+    "ThreadId": "458594",
+    "Html": "We have a similar requirement, namely to generate concrete JavaScript objects from interface declarations, so that they can be used for testing.\r<br />\n<br />\nI opened <a href=\"https://typescript.codeplex.com/workitem/706\" rel=\"nofollow\">a ticket for this some time ago</a> and it got an &quot;assigning to X or Y who handles suggestions&quot; (which I believe in internal TS speak means &quot;ignore&quot;!).\r<br />\n<br />\nI can also see further use-cases, for instance for use in runtime dependency injection.\r<br />\n<br />\nWe'd really like to see some support for this.\r<br />\n<br />\nNote that this is certainly not about a TypeScript <strong><em>runtime</em></strong> at all, rather it is about generating JavaScript files for some of the information that the compiler strips away and discards.<br />\n",
+    "PostedDate": "2013-09-24T02:01:15.637-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098469",
+    "ThreadId": "458594",
+    "Html": "If only this Typescript code<br />\n<pre><code>module foo{\n    export class A{\n        public x1:number = 10;\n        public x2 = 20;\n        \n        public s1: string = &quot;&quot;;\n    }\n}\n\nvar typeName      = getType(foo.A).getName();\nvar numericFields = getType(foo.A)\n                    .getFields()\n                    .filter(f=&gt; f.getType() == numeric)\n                    .map(f=&gt; f.getName());</code></pre>\n\ncould be compiled to something like this:<br />\n<pre><code>var foo;\n(function (foo) {\n    var A = (function () {\n        function A() {\n            this.x1 = 10;\n            this.x2 = 20;\n            this.s1 = &quot;&quot;;\n        }\n        return A;\n    })();\n    foo.A = A;\n})(foo || (foo = {}));\n\nvar typeName = &quot;foo.A&quot;;\nvar numericFields = [&quot;x1&quot;, &quot;x2&quot;];</code></pre>\n\nthat would be really cool, I think. <br />\nHere function &quot;getType&quot; exists only in compile time and emits type information as JS objects.<br />\n",
+    "PostedDate": "2013-09-24T04:09:18.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098477",
+    "ThreadId": "458594",
+    "Html": "That will generate quite a bit of metadata that needs to be pushed over the wire to clients.\r<br />\nMost of this data will never be used by anyone.\r<br />\n<br />\nI do love reflection, but I doubt you will see this in TypeScript for the above reason.<br />\n",
+    "PostedDate": "2013-09-24T04:18:30.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098849",
+    "ThreadId": "458594",
+    "Html": "Yes, the examples that prohazko gave illustrate my original request very well, and would add basically no overhead to the generated JS (something that I know is a design goal). It keeps all of the new functionality strictly as build-time compiler steps and the code gets stripped away to the bare CONSTANTS that can easily be processed at runtime.\r<br />\n<br />\nI definitely give this concept a &quot;+1&quot; in case any of the language designers are listening!<br />\n",
+    "PostedDate": "2013-09-24T21:14:53.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106946",
+    "ThreadId": "458594",
+    "Html": "We could define a meta-data export-annotation for this?\r<br />\n<br />\nA new context keyword maybe, or something comment-based, like the references. \r<br />\n<br />\nYou'd put it before the line of the type for which you want to export meta-data, so you can control what is exported.<br />\n<pre><code>/// &lt;describe-type&gt;\ninterface MyType  {\n    ...</code></pre>\n\nIt'd create a little object structure describing all the type info and export it (somewhere without runtime dependencies.. but where?). It'd be nice if it could refer to other exported types (if applicable).\r<br />\n<br />\nSomebody with time to spend could venture to do this externally and use the TypeScript parser to get a source-tree and walk the nodes.\r<br />\n<br />\nFind the annotations, transform the local data and export as JSON somewhere it can be loaded again. Or maybe do it a pre-processor to generate (typed) code to get compiled into the main code unit, that could be cool (meta-codeception :D).\r<br />\n<br />\nBonus-points if it can do json-schema. \r<br />\n<br />\nAlmost same thing right? Put some more detailed validation annotations in the code, export to details schemas and use existing schema validators on your objects during testing. Also use json-schema based stub/mock generators.\r<br />\n<br />\nIf I didn't had have a big project already I'd go for it. For inspiration look at TSLint (different thing but also a TypeScript tree walker).<br />\n",
+    "PostedDate": "2013-10-13T16:02:17.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107045",
+    "ThreadId": "458594",
+    "Html": "just wanted to note that prohazko's example is within the limits of the JS reflection system (only JS types, all properties initialized; nothing bad happening in the constructor):<br />\n<pre><code>module foo{\n    export class A{\n        public x1:number = 10;\n        public x2 = 20;\n        \n        public s1: string = &quot;&quot;;\n        constructor(public x = true) {}\n    }\n}\n\nfunction listProperties(o, isClass?) {\n    var props = [];\n    console.log(&quot;name:&quot;,o[&quot;name&quot;]);\n    var tmp = isClass ? new o : o;\n    for (var p in tmp)\n      console.log(p,typeof tmp[p]);\n}\nlistProperties(foo.A,true);</code></pre>\n\nprints<br />\n<pre><code>name: A\nx boolean\nx1 number\nx2 number\ns1 string</code></pre>\n\n<code>.name</code> is already available (eg, in v8), and is going to be standard in ES6.<br />\n",
+    "PostedDate": "2013-10-14T02:04:18.75-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107069",
+    "ThreadId": "458594",
+    "Html": "One concrete feature suggestion that would be helpful: a language service method for getting declaration-style information about a type. We can get the type of an expression, we can jump to a definition (which may be an interface declaration or an implementation), we can list completions, but I don't think there is a way to get an interface description.\r<br />\n<br />\nCurrently, the <code>declarationEmitter</code> is part of the compiler, and it works syntactically, by walking a single source file/AST in question. But interfaces can be extended over many modules, and it would be useful to have a semantic query: what is the interface represented by this type name (at this source position in a project).<br />\n",
+    "PostedDate": "2013-10-14T02:54:00.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107191",
+    "ThreadId": "458594",
+    "Html": "@ClausReinke, \r<br />\n<br />\nThe assumption &quot;nothing bad happening in the consctructor&quot; is not very realistic with respect to object oriented code.\r<br />\n<br />\nIt wouldn't be possible to write <code>new o</code> without passing in constructor arguments, and constructing a new object simply to get its meta data seems wrong.\r<br />\n<br />\nFurthermore this will need to work for interfaces, which is personally my primary requirement, because we would like to mock up TypeScript interfaces for our test harness.\r<br />\n<br />\nIn short, the meta data provision needs to be based on the <strong><em>static</em></strong> analysis of the code - not its runtime representation.\r<br />\n<br />\nRegarding an output format, my preference is that the meta data should be compiled into a separate file ( a &quot;myproj.meta&quot; file, one file per project) rather than the <code>getType</code> construct that @prohazko suggests.<br />\n",
+    "PostedDate": "2013-10-14T07:47:47.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107401",
+    "ThreadId": "458594",
+    "Html": "As far as tooling goes: language service completions (intellisense support) seem to have most of the information you are asking for. So you could use the language service to make that information available to JS code, by pretending to complete something typed to the interface you are interested in. Or you could employ my <code>typescript-tools</code> project ( <a href=\"https://github.com/clausreinke/typescript-tools\" rel=\"nofollow\">https://github.com/clausreinke/typescript-tools</a> ) to get the same information from the commandline, in JSON format.\r<br />\n<br />\nTaking my code from above, in file <code>reflection.ts</code>, pipe commands into <code>tss</code> (typescript service server) to: <br />\n<ul>\n<li>add (in memory only) a line (<code>update</code>) to be completed (<code>var XXX:foo.A;XXX.</code>), </li>\n<li>ask for completions after the dot (<code>completions</code>), </li>\n<li>\nslightly reformat the JSON output (<code>sed</code>)<br />\n</li>\n</ul>\n<pre><code>$ (echo &quot;update 1 19-19 reflection.ts&quot;;\n&gt; echo &quot;var XXX:foo.A;XXX.&quot;;\n&gt; echo &quot;completions true 19 19 reflection.ts&quot;) |\n&gt; tss reflection.ts |\n&gt; sed 's/,&quot;/,\\n&quot;/g'\n&quot;loaded c:/javascript/typescript/reflection.ts, TSS listening..&quot;\n&quot;updated lines 19-19 in c:/javascript/typescript/reflection.ts, (1/0) errors&quot;\n{&quot;maybeInaccurate&quot;:false,\n&quot;isMemberCompletion&quot;:true,\n&quot;entries&quot;:[{&quot;name&quot;:&quot;x1&quot;,\n&quot;kind&quot;:&quot;property&quot;,\n&quot;kindModifiers&quot;:&quot;public&quot;,\n&quot;type&quot;:&quot;number&quot;,\n&quot;fullSymbolName&quot;:&quot;foo.A.x1&quot;,\n&quot;docComment&quot;:&quot;&quot;},{&quot;name&quot;:&quot;x2&quot;,\n&quot;kind&quot;:&quot;property&quot;,\n&quot;kindModifiers&quot;:&quot;public&quot;,\n&quot;type&quot;:&quot;number&quot;,\n&quot;fullSymbolName&quot;:&quot;foo.A.x2&quot;,\n&quot;docComment&quot;:&quot;&quot;},{&quot;name&quot;:&quot;s1&quot;,\n&quot;kind&quot;:&quot;property&quot;,\n&quot;kindModifiers&quot;:&quot;public&quot;,\n&quot;type&quot;:&quot;string&quot;,\n&quot;fullSymbolName&quot;:&quot;foo.A.s1&quot;,\n&quot;docComment&quot;:&quot;&quot;},{&quot;name&quot;:&quot;x&quot;,\n&quot;kind&quot;:&quot;property&quot;,\n&quot;kindModifiers&quot;:&quot;public&quot;,\n&quot;type&quot;:&quot;boolean&quot;,\n&quot;fullSymbolName&quot;:&quot;foo.A.x&quot;,\n&quot;docComment&quot;:&quot;&quot;}]}\n&quot;TSS closing&quot;</code></pre>\n\n",
+    "PostedDate": "2013-10-14T15:38:18.957-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1348887",
+    "ThreadId": "458594",
+    "Html": "Hello,\r<br />\n<br />\nYou might find this project interesting: <a href=\"https://github.com/artifacthealth/tsreflect-compiler\" rel=\"nofollow\">https://github.com/artifacthealth/tsreflect-compiler</a>.<br />\n",
+    "PostedDate": "2015-02-04T03:34:05.753-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1349831",
+    "ThreadId": "458594",
+    "Html": "Thanks, I'll check that out.<br />\n<br />\nAlso worth mentioning is Google's AtScript, which adds runtime type information similar to what I was asking about in my initial question: <a href=\"https://docs.google.com/document/d/11YUzC-1d0V1-Q3V0fQ7KSit97HnZoKVygDxpWzEYW0U/edit\" rel=\"nofollow\">https://docs.google.com/document/d/11YUzC-1d0V1-Q3V0fQ7KSit97HnZoKVygDxpWzEYW0U/edit</a><br />\n",
+    "PostedDate": "2015-02-06T12:33:51.9-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

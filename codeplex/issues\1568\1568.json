@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch.",
+    "ClosedDate": "2013-09-09T11:19:32.16-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "The following code works:\r\n```\r\nclass SimpleBaseClass<T> {\r\n    public Val: T;\r\n}\r\n\r\nclass SimpleSubClass extends SimpleBaseClass<number> {\r\n    public WriteTo(buffer: DataView, offset: number): void {\r\n        buffer.setUint16(offset, this.Val);\r\n    }\r\n}\r\n```\r\nWhen using a function with the generic type parameter in the base class it does not:\r\n```\r\nclass BaseClass<T> {\r\n    public _getValue: { (): T; };\r\n}\r\n\r\nclass SubClass extends BaseClass<number> {\r\n    public WriteTo(buffer: DataView, offset: number): void {\r\n        buffer.setUint16(offset, this._getValue());\r\n    }\r\n}\r\n```\r\nThe compiler cannot infer that the call to _this._getValue()_ returns a number. _Type T_ cannot be resolved here. Is there a reason for that behavior?\r\n\r\n([Link to the code in the Typescript Playground](http://www.typescriptlang.org/Playground/#src=class%20SimpleBaseClass%3CT%3E%20%7B%0D%0A%20%20%20%20public%20Val%3A%20T%3B%0D%0A%7D%0D%0A%0D%0Aclass%20SimpleSubClass%20extends%20SimpleBaseClass%3Cnumber%3E%20%7B%0D%0A%20%20%20%20public%20WriteTo(buffer%3A%20DataView%2C%20offset%3A%20number)%3A%20void%20%7B%0D%0A%20%20%20%20%20%20%20%20buffer.setUint16(offset%2C%20this.Val)%3B%0D%0A%20%20%20%20%7D%0D%0A%7D%0D%0A%0D%0Aclass%20BaseClass%3CT%3E%20%7B%0D%0A%20%20%20%20public%20_getValue%3A%20%7B%20()%3A%20T%3B%20%7D%3B%0D%0A%7D%0D%0A%0D%0Aclass%20SubClass%20extends%20BaseClass%3Cnumber%3E%20%7B%0D%0A%20%20%20%20public%20WriteTo(buffer%3A%20DataView%2C%20offset%3A%20number)%3A%20void%20%7B%0D%0A%20%20%20%20%20%20%20%20buffer.setUint16(offset%2C%20this._getValue())%3B%0D%0A%20%20%20%20%7D%0D%0A%7D))",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T13:42:44.807-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "function with type parameter in generic base class",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1568
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Looks like just a bug when using that type syntax. If you declare _getValue with the below syntax, it should work.  (I believe we already have a bug on this, but can't seem to find it right now).\n\n```typescript\npublic _getValue: () => T;\n```\n\nIf this is a simplified repro and the type is more complex, and named interface type rather than a type literal should workaround the issue also.",
+      "PostedDate": "2013-08-22T22:29:33.297-07:00",
+      "Id": 110863
+    },
+    {
+      "Message": "Thank you, that works ;)",
+      "PostedDate": "2013-08-23T02:05:59.717-07:00",
+      "Id": 110886
+    },
+    {
+      "Message": "Taking a look.",
+      "PostedDate": "2013-08-23T11:06:51.547-07:00",
+      "Id": 110942
+    }
+  ]
+}

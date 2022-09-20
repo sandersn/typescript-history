@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.52-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The typescript compiler automatically dumps all references into the outputted javascript file when using the *--out* argument. There have been multiple questions on stackoverflow around this topic:\r\n\r\nhttp://stackoverflow.com/questions/15899671/excluding-references-from-typescript-compilation\r\nhttp://stackoverflow.com/questions/15740653/how-can-typescript-generate-single-one-javascript-file-without-reference-typescr\r\nhttp://stackoverflow.com/questions/13461758/referencing-typescript-file-includes-whole-file-in-output\r\n\r\nThis causes problems for larger applications which have re-usable components, so for example if you had a large project which consisted of a data, business logic and front end layer. You would probably carry out the following steps when building your project:\r\n\r\n\r\n1. Compile all the *.ts files within your data layer into **data-layer.js**\r\n2. Reference all the *.ts files within the data layer into your business layer\r\n3. Compile all the *.ts files within the business layer into **business-layer.js**\r\n4. Reference all the *.ts files within the business layer in your ui layer\r\n5. Compile all the *.ts files within the ui layer into **ui-layer.js**\r\n\r\nIn this example using the current Typescript Compiler (0.8.3) it will output the file **data-layer.js** correctly with only the files for the data layer. However in stage 3 it will create the **business-layer.js** file which ALSO includes all the data from the data layer, so the outputted **business-layer.js** is basically all the files from both layers, then the same on the final one, so the **ui-layer.js** ends up containing all files from other layers.\r\n\r\nIn my current scenario I have multiple pages which all use the same data and business layer, but often use different ui layers, depending upon if it is a mobile, web, compact, tablet front end. So I am effectively pumping out the same files 3 times in some cases, as the data layer would be included within the business layer and the ui layer.\r\n\r\nThis alone may seem like something that you can manage by using *.d.ts files for your references rather than just using the *.ts files as references, but you will still need to compile against the *.ts references at some point to generate the **data-layer.d.ts** for example, so its chicken and egg problem... As all of this compilation and building is managed via a build script (rake) it would be a pain if I had to do a 2 step compilation like this:\r\n\r\n\r\n1. Compile all layers against *.ts references with --out and --declaration arguments\r\n2. Compile all layers against outputted *.d.ts references with --out argument\r\n\r\nSo although there are workarounds it seems that it should just be something that typescript should just have fixed in the compiler.\r\n\r\n__The proposed solution to this issue:__\r\n\r\nI would suggest that the typescript compiler ONLY output files which are explicitly included within the file list when calling the compiler as default behaviour. If someone wishes the behaviour to include all the references as it currently does then a new argument should be added to the compiler to allow this, such as **--includerefs**.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-19T02:46:11.76-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Typescript compiler including all references when using --out argument",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 9,
+    "Id": 923
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks, assigning this to Jon, who looks at the suggestions.",
+      "PostedDate": "2013-04-19T16:14:15.54-07:00",
+      "Id": 97528
+    },
+    {
+      "Message": "There is an experimental flag called --noresolve that does the opposite of what you suggest, by excluding the files linked to with references.  \n\nWe're also looking into splitting the --out into --out and --outdir which would allow you to compile multiple files into a single external module, without having to come up with a workaround.",
+      "PostedDate": "2013-04-22T14:16:27.633-07:00",
+      "Id": 97733
+    },
+    {
+      "Message": "That sounds great, thanks for putting this in!",
+      "PostedDate": "2013-04-23T00:17:47.637-07:00",
+      "Id": 97791
+    },
+    {
+      "Message": "Have just tried using the --noresolve in the latest download version, and I get some strange behaviour where it just complains that it cannot find references. So I presume it does more than just exclude the reference files from the compilation to JS and excludes them from the internal TS -> JS phase?\n\nI don't know how the internals of the compiler work but I presume it has the following steps:\n\n- Collate all references\n- Verify all dependencies on given *.ts input file\n- Convert the TS objects in the input file to JS object\n- Output the JS object to *.js output file\n\nNow assuming it does something like this for each file,(I assume if you are using the --out flag it just appends each output to a single file) is it excluding the references from the dependency tree building approach or something to that effect? as my understanding was that it would still use the references in its compilation stage to verify the objects within the input files, it would just only output the objects explicitly contained within the input *.ts file not any of the related *.ts files.",
+      "PostedDate": "2013-04-25T03:33:12.407-07:00",
+      "Id": 98426
+    },
+    {
+      "Message": "Hi, What about resolving this issue? I have the same problem in my app.",
+      "PostedDate": "2014-03-31T03:11:25.347-07:00",
+      "Id": 140038
+    }
+  ]
+}

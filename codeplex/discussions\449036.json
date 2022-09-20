@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1064414",
+    "ThreadId": "449036",
+    "Html": "Hello,\r<br />\n<br />\nI was wondering if it will be possible in the future to create class aliases? For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">static</span> GreeterClass: <span style=\"color:Blue;\">typeof</span> Greeter;\r\n</pre></div>This way you can have static variables that point to classes, and those classes can be overridden during the program (e.g. by specifying the class in a .ini file and having it changed at program start).\r<br />\n<br />\nI understand that the problem would be with static variables and functions not being available should the class be overridden by a derived class, but that could be a compile-time warning or a red squiggly?\r<br />\n<br />\nThoughts?\r<br />\n<br />\nGriffork.<br />\n",
+    "PostedDate": "2013-07-04T00:39:26.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065711",
+    "ThreadId": "449036",
+    "Html": "It may be possible to do this with a 'typeof' functionality at the type level.  Kinda curious, is this for some kind of configurability of the classes in scope?  What are you trying to do with it?<br />\n",
+    "PostedDate": "2013-07-08T11:27:43.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065897",
+    "ThreadId": "449036",
+    "Html": "Related to feature request <a href=\"https://typescript.codeplex.com/workitem/246\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/246</a> and discussion <a href=\"https://typescript.codeplex.com/discussions/403602\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/403602</a>.<br />\n",
+    "PostedDate": "2013-07-08T20:00:53.903-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065935",
+    "ThreadId": "449036",
+    "Html": "The reason being that we have spawners, which are responsible for spawning objects of a particular class.<br />\n<br />\nThese spawners can be overridden to spawn different (new) classes by specification in a .ini file, so there is a parameter in the spawner which holds the current configurations' selected class.<br />\n<br />\nIt would be nice to be able to specify:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Spawner {\n    <span style=\"color:Blue;\">static</span> spawnclass: <span style=\"color:Blue;\">typeof</span> Spawn;\n}\r\n</pre></div>instead of:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Spawner {\n    <span style=\"color:Blue;\">static</span> spawnclass: <span style=\"color:Blue;\">new</span>(a: <span style=\"color:Blue;\">string</span>, b: <span style=\"color:Blue;\">string</span>, c: { foo(somethingelse: <span style=\"color:Blue;\">string</span>, anotherparam: <span style=\"color:Blue;\">int</span>), anotherfoo(someotherparam: <span style=\"color:Blue;\">string</span>) }, a: someinterface, optional? <span style=\"color:Blue;\">boolean</span>) =&gt; Spawn;\n}\r\n</pre></div>Particularly since we have a number of these spawners (potentially with different parameters) and setting them up is a pain in the head.<br />\nAlso reading that code is more  difficult than it needs to be.<br />\n<br />\n<br />\n:)<br />\n",
+    "PostedDate": "2013-07-08T23:26:16.257-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066236",
+    "ThreadId": "449036",
+    "Html": "If you're curious, and don't mind living on the bleeding edge, the current compiler in 'develop' can use the typeof in the type position.  This seems to be working with the latest bits:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Greeter {\n  <span style=\"color:Blue;\">static</span> y: <span style=\"color:Blue;\">number</span>;\n  <span style=\"color:Blue;\">constructor</span>(<span style=\"color:Blue;\">public</span> x: <span style=\"color:Blue;\">number</span>) { }\n}\n\n<span style=\"color:Blue;\">class</span> Spawner {\n  spawnClass: <span style=\"color:Blue;\">typeof</span> Greeter;\n\n  <span style=\"color:Blue;\">constructor</span>() {\n    <span style=\"color:Blue;\">this</span>.spawnClass = Greeter;\n    <span style=\"color:Blue;\">var</span> x = <span style=\"color:Blue;\">new</span> <span style=\"color:Blue;\">this</span>.spawnClass(3);\n  }\n}\r\n</pre></div>",
+    "PostedDate": "2013-07-09T11:06:16.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066354",
+    "ThreadId": "449036",
+    "Html": "Nice!\r<br />\nAlthough I am using Typescript at work, so I'll wait for the VS plugin.\r<br />\n<br />\nThanks a lot!\r<br />\n<br />\nGriffork.<br />\n",
+    "PostedDate": "2013-07-09T17:18:16.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

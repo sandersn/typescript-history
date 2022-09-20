@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-21T16:18:35.737-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "There seems to be a problem with instantiating nested generic types. I can't exactly pinpoint the problem, but this is the best example I've been able to come up with.\r\n\r\n```\r\nmodule Module {\r\n    export class Generic<T> {\r\n        constructor(value: T) { }\r\n    }\r\n\r\n    export class NestedGeneric<T> extends Generic<NestedGeneric<T>> {\r\n        constructor(value: NestedGeneric<T>) {\r\n            super(value);\r\n        }\r\n    }\r\n}\r\n\r\n//Compiles fine up to here.\r\nvar nestedGeneric = new Module.NestedGeneric(null);\r\n\r\n//Fails to compile with this line of code\r\nvar nestedGeneric = new Module.NestedGeneric<string>(null);\r\n\r\n//Here are the compiler errors:\r\n/*\r\nerror TS2134: Subsequent variable declarations must have the same type.Variable 'nestedGeneric' must be of type 'NestedGeneric<any>' , but here has type 'NestedGeneric<string>'\r\nerror TS2000: Duplicate identifier 'nestedGeneric'.\r\n*/\r\n```",
+    "LastUpdatedDate": "2013-05-21T16:18:35.737-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-20T20:44:26.163-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Problem with instatiating nested generics",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1056
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "```new Module.NestedGeneric<string>(null);``` calls NestedGeneric with type parameter T = string, passing null as value parameter to the constructor, which is of type \n\nThe constructor ",
+      "PostedDate": "2013-05-21T09:10:57.993-07:00",
+      "Id": 100763
+    },
+    {
+      "Message": "I'm not sure I understand, but I think you are noting that the constructor for a NestedGeneric<T> takes a NestedGeneric<T>?\n\nIf so, this is not a strange pattern in general. A constructor for a TreeNode might very well take a TreeNode[].\n\nAs for the code above, the constructor for NestedGeneric<string> needs to take a NestedGeneric<string>, and null is a reasonable value to fulfill that contract.\n\nAm I wrong that this case should be supported by the generic system? ",
+      "PostedDate": "2013-05-21T09:59:35.14-07:00",
+      "Id": 100767
+    },
+    {
+      "Message": "In the current version of the compiler in the 0.9.0 branch this line is no longer valid:\n````\nvar nestedGeneric = new Module.NestedGeneric(null);\n\n````\nYou now have to specify all type parameters in a generic class. \nThe only error you now get is 'Duplicate Identifier' on the second nestedGeneric var.",
+      "PostedDate": "2013-05-21T16:18:30.29-07:00",
+      "Id": 100810
+    }
+  ]
+}

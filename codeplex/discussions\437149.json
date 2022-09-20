@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1017456",
+    "ThreadId": "437149",
+    "Html": "Is there a way to flag or make a particular snippet of code to be ignored or compiled as is?  Basically I want to access the &quot;name&quot; property of the &quot;constructor&quot; function.  So in this instance &quot;this.constructor&quot; gives me a &quot;The property 'constructor' does not exist on value of type 'MyType'&quot;.\r<br />\n<br />\nOf course that's totally valid error in typescript but it's valid javascript.  I thought maybe ambients would help somehow but I couldn't figure it out.  I've got a workaround where I declare a static method on a helper class that gets me what I want but still, for academic purposes...<br />\n<pre><code>module CustomUI {\n    export class Control {        \n        toString() {\n            // alert(this.constructor.name);        // throws error.\n            CustomUI.ControlHelper.className(this);\n        }\n    }\n\n    export class ControlHelper {\n        static className(obj) {\n            alert(obj.constructor.name);\n        }\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-03-18T21:27:10.81-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017548",
+    "ThreadId": "437149",
+    "Html": "It should have been possible to do the following:<br />\n<pre><code>toString() {\n  alert((&lt;Object&gt;this).constructor.name);\n}</code></pre>\n\nBut it looks like the constructor property is missing from the definition for Object - a bug IMO.\r<br />\n<br />\nA workaround is to access the property dynamically:<br />\n<pre><code>toString() {\n  alert(this[&quot;constructor&quot;].name);\n}</code></pre>\n\nBut then one loses compile-time safety.<br />\n",
+    "PostedDate": "2013-03-19T02:54:20.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017801",
+    "ThreadId": "437149",
+    "Html": "Thanks, I had tried a cast and it didn't work so I thought I was missing something but you're right, the code complete shows other object members, just not constructor, or for that matter any of the proto members (like &quot;<strong>proto</strong>&quot;).\r<br />\n<br />\nRamblings =&gt; \r<br />\n<br />\nIn my real implementation I recursively dig through each level of the prototype chain until I reach Object, appending the name to a string so that I end up with something like Object.Control.UI.Button (AssignedID).\r<br />\n<br />\nIt certainly seems that constructor should be a member of Object, however maybe the idea is that by hiding constructor it makes it harder for someone to manually invoked the function.  Not that it would typically have any affect with the way the javascript is generated from the typescript.  Meh, I'm just thinking about why it might be hidden on purpose.<br />\n",
+    "PostedDate": "2013-03-19T10:06:00.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

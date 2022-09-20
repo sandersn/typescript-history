@@ -1,0 +1,186 @@
+[
+  {
+    "Id": "1082153",
+    "ThreadId": "453820",
+    "Html": "I try to get my project compiling with 0.9.1 (previously 0.8.3.1), but that appears not to be easy :-(.\r<br />\nI get several falsy errors:<br />\n<ul>\n<li>Operator '&lt;' cannot be applied to types 'number' and 'number'</li>\n<li>above error also seen for &gt; and == operators</li>\n<li>Function 'xxx' declared a non-void return type, but has no return expression. (But the function has a void return type in the signature: function xxx() : void {})</li>\n<li>Constructors for derived classes must contain a 'super' call (But that call is in fact in place).</li>\n<li>\nLots of errors on types in lib.d.ts saying: &quot;All named properties must be subtypes of string indexer type 'any'&quot; <br />\n</li>\n</ul>\nVery weird.<br />\n",
+    "PostedDate": "2013-08-19T06:20:39.543-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082302",
+    "ThreadId": "453820",
+    "Html": "Do you have a repro for the issues above? <br />\n<ul>\n<li>I just tried out #1, #2, and #3 in the playground and don't seem to see the same issues.</li>\n<li>\nThere are a number of changes in lib.d.ts between 0.8.3.1 and 0.9.1.  Are you using the 0.9.1 version?<br />\n</li>\n</ul>\n",
+    "PostedDate": "2013-08-19T11:27:44.37-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082754",
+    "ThreadId": "453820",
+    "Html": "<ul>\n<li>\n&quot;Constructors for derived classes must contain a 'super' call (But that call is in fact in place).<br />\n</li>\n</ul>\nHappens for me as well. Copied a perfectly functioning class within a huge a project. Stripped it clean and renamed it. This will not sound logical at all, but within my project the error seems to be produced by calling a get-property of childitem within the constructor. Funnily enough, this will also produce the same error on all other constructors following the one with the false error.<br />\n<br />\nApp.Data.Vessels is <br />\n  public get Vessels(): someType[] { }<br />\n<br />\nApp and Data are both instantiated Classes, the later exposed as a get-Property within App.<br />\n<br />\nas soon as i add<br />\n  var list = App.Data.Vessels;<br />\nanywhere within my classes constructor (after super() of course), i get the false error. <br />\n<br />\nThe icing on the cake being: If i wrap the call within an anonymous function or a member function within the class i can call that function from within the constructor without the error being thrown....<br />\n",
+    "PostedDate": "2013-08-20T09:18:00.137-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082798",
+    "ThreadId": "453820",
+    "Html": "@hswolfmathes - do you have an example class (or pair of classes) it stopped working for?\r<br />\n<br />\nI know that we did tighten things down with getters with 0.9.1, since you can't call the getter of a parent class.  <br />\n",
+    "PostedDate": "2013-08-20T11:10:22.24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082886",
+    "ThreadId": "453820",
+    "Html": "Also seeing lots of errors being generated related to lib.d.ts:<br />\n<pre><code>Error   5   Rest parameters must be array types.    lib.d.ts    398 12  shell.ts\nError   2   Duplicate overload construct signature. lib.d.ts    250 5   shell.ts\nError   15  All named properties must be subtypes of string indexer type 'number'.  lib.d.ts    476 5   shell.ts\nError   70  All named properties must be subtypes of string indexer type 'any'. lib.d.ts    1692    5   shell.ts\n...\nError   101 More than 100 errors in program, remaining errors not displayed.    lib.d.ts    1   1   shell.ts\n</code></pre>\n\nErrors seem to appear randomly after some time of working within the VS2012 editor. Restarting VS2012 causes the errors to disappear. Not sure exactly how to repro yet.\r<br />\n<br />\nEnvironment: VS 2012 Update 3, TS 0.9.1.0 (Auto compile TS file which are part of a project - Enabled), WE 2.9 (Compile on Save and on Build - Disabled; Show Preview Window - Disabled)<br />\n",
+    "PostedDate": "2013-08-20T14:53:55.127-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082984",
+    "ThreadId": "453820",
+    "Html": "As RWHepburn says, it seems indeed to appear after some time of working in VS2012.\r<br />\n<br />\nAfter a fresh start of VS2012 I get this very helpful error:\r<br />\n<br />\nError\t1\tUnable to get property 'kind' of undefined or null reference\tC:\\Dev\\XFramework\\Main\\Xperit.Framework.Web.NAV.Site\\VSTSC\tXperit.Framework.Web.NAV.Site\r<br />\n<br />\nThe command line compiler gives the same error:\r<br />\ntsc.js(40468, 28) JavaScript runtime error: Unable to get property 'kind' of undefined or null reference\r<br />\n<br />\nI have no clue where to start finding the error in my code (if any)\r<br />\n<br />\n10 times rebuilding the project in VS, does not give the falsy errors.\r<br />\nSo I think it has to do with the implicit compiling when editing the code and using intellisense.\r<br />\n<br />\nBTW: I have the same environment as RWHepbrun.<br />\n",
+    "PostedDate": "2013-08-21T00:41:42.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082995",
+    "ThreadId": "453820",
+    "Html": "I was able to reproduce the error with the following 2 files. Putting the code into a single file will not throw the error<br />\n<br />\napp.ts<br />\n<pre><code>class Main {\n    public get Sub(): any {\n        //return 42;\n        //return &quot;Bob&quot;;\n        return null;\n    }     \n}\n\nvar App = new Main();</code></pre>\n\nbroken.ts<br />\n<pre><code>/// &lt;reference path=&quot;app.ts&quot; /&gt;\n\nclass SomeBase {\n    constructor() {\n\n    }\n}\n\nclass BrokenClass extends SomeBase {\n    constructor() {\n        super();\n        var list = App.Sub;\n    }\n}</code></pre>\n\nEDIT: Environment is VS2012 60610.01 with TS 0.9.1 and Web Essentials 2.9<br />\n",
+    "PostedDate": "2013-08-21T01:21:26.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083242",
+    "ThreadId": "453820",
+    "Html": "Were you seeing the same compiler crash mentioned above?\r<br />\n<br />\ntsc.js(40468, 28) JavaScript runtime error: Unable to get property 'kind' of undefined or null reference \r<br />\n<br />\nIn the current bits in the develop branch the code above compiles without error for me.<br />\n",
+    "PostedDate": "2013-08-21T11:42:43.687-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083308",
+    "ThreadId": "453820",
+    "Html": "Things seem to have stabilized now that I have installed today's 0.9.1.1 release but I haven't had much time today to evaluate the hotfix these problems. Initial impression is that the problems are fixed in 0.9.1.1. I'd suggest you upgrade and see if that helps.<br />\n",
+    "PostedDate": "2013-08-21T13:55:15.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083519",
+    "ThreadId": "453820",
+    "Html": "I installed 0.9.1.1. I have not yet seen any falsy errors, but I have not yet spend much time editing typescript in VS.\r<br />\n<br />\nIt didn't solve the &quot;tsc.js(40468, 28) JavaScript runtime error: Unable to get property 'kind' of undefined or null reference &quot; error.\r<br />\nBut I spend some hours compile my typescript files with tsc, adding them one by one to the project, until I found the offending line.\r<br />\n<br />\nIf I add a file with this code to my project, the compiler crashes:<br />\n<pre><code>module mymodule {\n    export class ScrollTable {\n        private _content: JQuery;\n\n        public horzScrollVisible() {\n            return this._content[0].scrollHeight &gt; this._content[0].offsetHeight;\n        }\n    }\n}</code></pre>\n\nThe error is cause by the return statement. If I change that line to &quot;return false;&quot; or &quot; return this.i &gt; this.j&quot; (declaring i and j as number), then the error does not occur.\r<br />\n<br />\nBut this does <strong>not</strong> occur when this is the only file in my project, but it occurs when I add it to my project containing 19 typescript files with about total 2800 lines of code and using 4 d.ts files (Kendo, JQuery, Modernirz, SignalR (last 3 from DefinitelyTyped))\r<br />\nSo it is not reproducible in a small project. Maybe you have now some hints to search for the problem.\r<br />\n<br />\n(If the helps you to reproduce, I can sent my files by e-mail to somebody of the team)<br />\n",
+    "PostedDate": "2013-08-22T01:59:27.8-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084670",
+    "ThreadId": "453820",
+    "Html": "<strong>JaapM wrote:</strong><br />\n<blockquote>\nI try to get my project compiling with 0.9.1 (previously 0.8.3.1), but that appears not to be easy :-(.<br />\nI get several falsy errors:<br />\n<ul>\n<li>Operator '&lt;' cannot be applied to types 'number' and 'number'</li>\n<li>above error also seen for &gt; and == operators</li>\n<li>Function 'xxx' declared a non-void return type, but has no return expression. (But the function has a void return type in the signature: function xxx() : void {})</li>\n<li>Constructors for derived classes must contain a 'super' call (But that call is in fact in place).</li>\n<li>\nLots of errors on types in lib.d.ts saying: &quot;All named properties must be subtypes of string indexer type 'any'&quot; <br />\n</li>\n</ul>\nVery weird.<br />\n</blockquote>\nI've had every single one of those errors (and more!) and I can assure you that each of those errors are completely bogus. Do not waste any of your time trying to eliminate them or debug them, they are NOT genuine errors at all. Basically the tsc compiler has crapped out on something completely and utterly unrelated to the above, and those are just the cascading pile of errors that are served in the wake of the compiler bail out.\r<br />\n<br />\nThere are some debugging suggestions from the TS team in my original thread where I talk about the above issues too, but it requires compiling via node.js instead. Even so, might be useful to read: <a href=\"https://typescript.codeplex.com/discussions/453115\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/453115</a><br />\n",
+    "PostedDate": "2013-08-25T09:28:44.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084787",
+    "ThreadId": "453820",
+    "Html": "@PhotonStorm: I didn't spend any time on finding the cause of that error messages. It was clear that they could not be genuine errors at all.\r<br />\nAs I wrote in my previous message, I already found the real problem, so my project is not compiling fine.<br />\n",
+    "PostedDate": "2013-08-25T23:39:44.71-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093550",
+    "ThreadId": "453820",
+    "Html": "Is anyone else still experiencing this issue?\r<br />\n<br />\nVS2012, just upgraded TypeScript to 0.9.1.1\r<br />\n<br />\nAfter a random amount of time, 100+ lib.d.ts errors appear. Things like 'All named properties must be subtypes of string indexer type 'any'.\r<br />\n<br />\nRestarting VS makes them go away - for a while.<br />\n",
+    "PostedDate": "2013-09-17T07:16:02.45-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093854",
+    "ThreadId": "453820",
+    "Html": "I think this is related to the way VStudio compiles/caches results.<br />\n<br />\nThis seems to be a repro (untested in isolation) for me:<br />\n<ul>\n<li>Have file A.ts</li>\n<li>Have file B.ts that references A.ts</li>\n<li>Break something in A.ts</li>\n<li>In some cases, B.ts will recompile and give the appropriate compiler errors while A.ts is broken but won't refresh when A.ts is saved with the fixed code</li>\n<li>\nThe errors appear falsey because the code is not really broken, but it was at the point in time that TS recompiled<br />\n</li>\n</ul>\nPlease investigate, this is the #1 TS hazard for me right now.<br />\n",
+    "PostedDate": "2013-09-17T22:09:36.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093946",
+    "ThreadId": "453820",
+    "Html": "Am I right in thinking that\r<br />\n<br />\n/// &lt;reference ...\r<br />\n<br />\nis no longer required and that TS handles it automatically? I removed all references in my project in the optimistic hope that it would solve this issue. It <em>seemed</em> to for a little bit. Not any more!\r<br />\n<br />\nThe compiler still compiles. I just see lots of non-existent errors in the list.<br />\n",
+    "PostedDate": "2013-09-18T03:41:10.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094144",
+    "ThreadId": "453820",
+    "Html": "I didn't know about implicit referencing but I think the problem can occur in the way I describe regardless of implicit or explicit referencing.\r<br />\nIt seems to be related to some sort of caching.<br />\n",
+    "PostedDate": "2013-09-18T10:59:28.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1097958",
+    "ThreadId": "453820",
+    "Html": "Is anyone looking into this? It's getting quite annoying :S<br />\n",
+    "PostedDate": "2013-09-23T03:21:47.143-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104923",
+    "ThreadId": "453820",
+    "Html": "<strong>thebrentflood wrote:</strong><br />\n<blockquote>\nIs anyone else still experiencing this issue?<br />\n<br />\nVS2012, just upgraded TypeScript to 0.9.1.1<br />\n<br />\nAfter a random amount of time, 100+ lib.d.ts errors appear. Things like 'All named properties must be subtypes of string indexer type 'any'.<br />\n<br />\nRestarting VS makes them go away - for a while.<br />\n</blockquote>\nI have the exact same problem here. Makes working with TS 0.9 very impractical. :(<br />\n",
+    "PostedDate": "2013-10-08T02:47:55.667-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104925",
+    "ThreadId": "453820",
+    "Html": "Do you have Web Essentials installed? Disabling it made it go away - not sure if completely but definitely less frequent<br />\n",
+    "PostedDate": "2013-10-08T02:53:33.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104930",
+    "ThreadId": "453820",
+    "Html": "Yes, I'm using WebEssentials 2.9. I will try disabling it and/or upgrading with the latest version with no TS support.<br />\n",
+    "PostedDate": "2013-10-08T02:56:08.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104932",
+    "ThreadId": "453820",
+    "Html": "And if it seems to go away, we need to report the bug to the creator<br />\n",
+    "PostedDate": "2013-10-08T02:58:25.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106447",
+    "ThreadId": "453820",
+    "Html": "If removing WebEssentials doesn't fix the issue, please let us know by filing an issue in the issue tracker.  <br />\n",
+    "PostedDate": "2013-10-11T08:29:55.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106455",
+    "ThreadId": "453820",
+    "Html": "It keeps happening for me too - open an issue here: <a href=\"https://typescript.codeplex.com/workitem/1780\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1780</a><br />\n",
+    "PostedDate": "2013-10-11T08:44:32.82-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

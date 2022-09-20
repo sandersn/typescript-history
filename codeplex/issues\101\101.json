@@ -1,0 +1,140 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.063-07:00",
+    "CommentCount": 20,
+    "Custom": null,
+    "Description": "With arrays being an important part of JavaScript, it's always been frustrating that iterating one requires a for loop. Would it be possible to add a foreach construct which would essentially transform into a for loop? or into an ES5 function call?\r\n depending on compiler option.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T15:49:12.603-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "for..of support",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 106,
+    "Id": 101
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Nice!",
+      "PostedDate": "2012-10-04T16:40:58.587-07:00",
+      "Id": 78629
+    },
+    {
+      "Message": "And if you do implement this, use the proper for (x=0;x<len;x++) and not for (x in y) like the Script# guys.",
+      "PostedDate": "2012-10-05T11:41:00.78-07:00",
+      "Id": 78698
+    },
+    {
+      "Message": "This is already available. ",
+      "PostedDate": "2012-10-05T13:03:05.883-07:00",
+      "Id": 78728
+    },
+    {
+      "Message": "Sorry, I should've included an example\n\n[1,2,3,4].forEach(function( val ) {\n  console.log( val );\n});\n",
+      "PostedDate": "2012-10-05T16:48:10.313-07:00",
+      "Id": 78765
+    },
+    {
+      "Message": "I would have expected a cleaner syntax like this:\n\nforeach( var val in [1,2,3,4] )\n{\n     console.log( val );\n}\n",
+      "PostedDate": "2012-10-06T03:57:37.283-07:00",
+      "Id": 78797
+    },
+    {
+      "Message": "ES6 will introduce for-of, which is what you're looking for",
+      "PostedDate": "2012-10-06T15:21:56.51-07:00",
+      "Id": 78861
+    },
+    {
+      "Message": "Ah. Yes! Why not go ahead and add ES6 for/of as described here: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/for...of",
+      "PostedDate": "2012-10-07T11:10:55.31-07:00",
+      "Id": 78916
+    },
+    {
+      "Message": "As Rick mentions, if we were to add a feature to support this, we would align with the ES6 for...of statement.  'for...of' in it's full generality relies on ES6 iterators, and in particular on many built-ins having pre-defined iteration behavior, to be practically useful.  Some of this is harder to simulate in a clean way when targeting ES3/ES5.  But we'll take a look at what options we might have here.",
+      "PostedDate": "2012-10-08T15:05:04.587-07:00",
+      "Id": 79067
+    },
+    {
+      "Message": "Am I missing something, isn't this already present for arrays?\n\nvar people = [\"Bill\", \"Steve\", \"Larry\"];\n\npeople.forEach(\n\t(person: string, index: number, array: string[]) {\n\t\tdocument.write(\"<p>Welcome to \" + person +\"</p>\");\n\t}\n)\n",
+      "PostedDate": "2012-10-16T14:41:57.107-07:00",
+      "Id": 80157
+    },
+    {
+      "Message": "I think the forEach behaviour is a bit weird in TypeScript context.\nExample:\nclass Foo {\n\tprefix: string = \"number: \";\n\tnumbers: number[] = [1, 2, 3];\n\n\tlogNumbers() { \n\t\tthis.numbers.forEach(this.logNumber);\n\t}\n\n\tlogNumber(num: number) {\n\t\tconsole.log(this.prefix, num);\n\t}\n}\n\nvar foo = new Foo();\nfoo.logNumbers();\n\nIt will output:\nundefined 1\nundefined 2\nundefined 3\n\nSo it will be nice to have some syntax sugar, e.g. for..of :)",
+      "PostedDate": "2012-11-11T08:31:12.72-08:00",
+      "Id": 82190
+    },
+    {
+      "Message": "@JanVoracek \n\nThis works just fine... Thing is you should use this.numbers.forEach((n)=>{this.logNumber(n)}); instead so you get into the right context, AFAIK this is not a TypeScript thing, but rather a JavaScript thing.\n\nThe snippet below has to ways of showing the same output, modified it to output into the document so it is easier to demonstrate using the playground... (Well you can obviously just bring up the console instead)...\n\nclass Foo {\n\tprefix: string = \"number: \";\n\tnumbers: number[] = [1, 2, 3];\n\t\n\tconstructor(public bodyElm: HTMLElement,\n\t public document: Document){}\n\t\n\tlogNumbers() { \n\t\tthis.numbers.forEach((n)=>{\n\t\t\tvar elm = document.createElement('div');\n\t\t\telm.innerHTML = this.prefix + n;\n\t\t\tthis.bodyElm.appendChild(elm);\n\t\t})\n\t}\n\t\n\tlogNumbers2() { \n\t  this.numbers.forEach((n)=>{this.logNumber(n);});\n\t}\n\n\tlogNumber(num: number) {\n\t\tvar elm = document.createElement('div');\n\t\telm.innerHTML = this.prefix +num;\n\t\tthis.bodyElm.appendChild(elm);\n\t}\n\n}\n\nvar button = document.createElement('button')\nbutton.innerText = \"Say Hello\"\nbutton.onclick = function() {\n\tvar foo = new Foo(document.body,document);\n\tfoo.logNumbers();\n\tfoo.logNumbers2();\t\n}\n\ndocument.body.appendChild(button)",
+      "PostedDate": "2012-11-12T01:41:46.47-08:00",
+      "Id": 82228
+    },
+    {
+      "Message": "@jmelgaard:\nThanks, I know how it works etc. but I just mentioned that standard JS behaviour of Array.forEach may be a bit confusing :)",
+      "PostedDate": "2012-11-12T01:58:02.62-08:00",
+      "Id": 82229
+    },
+    {
+      "Message": "@JanVoracek\n\nFair enough, you just wrote TypeScript and not JavaScript, so I didn't know if you knew it was actually rooted in JavaScript it self, and not just the way TypeScript translates :)...",
+      "PostedDate": "2012-11-12T05:22:38.037-08:00",
+      "Id": 82236
+    },
+    {
+      "Message": "forEach could be implemented if not present:\n\nhttps://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/forEach\n\nso there is no need to generate a different code, and when the browser will support the forEach, it will have the gain from the native implementation.\n\nProbably a solution is to add a switch into TypeScript to generate missing methods like forEach\n\n",
+      "PostedDate": "2012-11-23T13:40:42.84-08:00",
+      "Id": 82940
+    },
+    {
+      "Message": "Re-titling to more clearly track the work that we would consider doing in TypeScript.  \r\n\r\nArray.prototype.forEach is available as a library solution today that can be polyfilled if needed.  'for..of' support is the new ES6 syntax that TypeScript may consider compiling to ES3/ES5 in the future.",
+      "PostedDate": "2012-12-02T22:32:30.403-08:00",
+      "Id": 83437
+    },
+    {
+      "Message": "@jmelgaard side note... this: \n\n  this.numbers.forEach((n)=>{this.logNumber(n)});  \n\ncan actually be written smaller, as: \n\n  this.numbers.forEach(n=>this.logNumber(n)); \n\n:)\n\n\n@LukeH... exciting!",
+      "PostedDate": "2012-12-03T05:24:37.063-08:00",
+      "Id": 83445
+    },
+    {
+      "Message": "This may be part of our next ES6 alignment, so I'll file it for 1.x when we're slated to incorporate more ES6 features.",
+      "PostedDate": "2013-01-24T12:20:54.33-08:00",
+      "Id": 87164
+    },
+    {
+      "Message": "I don't like many things of PHP\nBut PHP has the best foreach I meet.\nBecause you can get the value and key of all items in very simple way\nEx:\nfor iterating simple arrays\n```\nforeach(items as item){ doAnything(item); }\n```\nand this way if you are iterating a map and you need the keys\n```\nforeach(items as item=>key){ doAnything(item,key); }\n```\nI don't like to do this because of performance:  this.numbers.forEach(n=>this.logNumber(n));\nAnd i think have a foreach control structure would be better.\n\nActually i simulate foreachs in javascript this way\n```\nvar items = document.getElementsByTagName('div');\nfor (var i = 0, item; item = items [i]; i++) {\n    doAnything(item);\n}\n```\nand this way if i am iterating a map and i need the keys\n```\nvar map = {a:'',b:''};\nfor (var key in map) {\n    var item = map[key];\n    doAnything(item);\n}\n```",
+      "PostedDate": "2013-03-02T13:53:01.217-08:00",
+      "Id": 92094
+    },
+    {
+      "Message": "For simply iterating over properties, we have `for..in` in regular JA - what I would really like to see, is an actual control structure designed to work with things that have a `length` property, such as (of course) Array, but also other array-like things, such as `arguments` and the DOM `HTMLCollection`, as these are a real chore to work with.\n\nFor example:\n\n    var nodes = document.getElementById('foo').childNodes;\n    foreach (nodes as key, value) {\n        ...\n    }\n\nWould compile into:\n\n    var nodes = document.getElementById('foo').childNodes;\n    for (var key=0; key<nodes.length; key++) {\n        var value = nodes[key];\n        ...\n    }\n\nThis provides easy, direct access to both keys and values - when values aren't needed, `foreach (nodes as key)` should probably work too.\n\nAs someone pointed out above, php's foreach construct is really useful that way.",
+      "PostedDate": "2013-09-07T17:37:51.87-07:00",
+      "Id": 112779
+    },
+    {
+      "Message": "foreach doesn't have the ability to break. That's the feature I would want most, is the ability to break or continue.",
+      "PostedDate": "2014-06-13T14:25:08.937-07:00",
+      "Id": 149699
+    }
+  ]
+}

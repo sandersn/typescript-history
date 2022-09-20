@@ -1,0 +1,121 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing pending repro info",
+    "ClosedDate": "2013-01-23T10:52:18.393-08:00",
+    "CommentCount": 15,
+    "Custom": null,
+    "Description": "In the TS editor window, my class/method navigation bar dropdowns are in a state of permanently refreshing. This may be relating to my editor freezing for 20 seconds at a time, quite randomly yet at a frequency of one or two minutes. \r\n\r\nAdditionally, turning off the navigation bar in text editor options - both globally and at the typescript level - has no effect. I have tried both closing the editor window (which once led to a crash - see below) and also restarting VS. Regardless of my settings, the navigation bar persists and remains in a \"(refreshing...)\" state. \r\n\r\nThe call stack in my ActivityLog.xml is as follows:\r\n\r\n```\r\n  <entry>\r\n    <record>1180</record>\r\n    <time>2013/01/17 17:31:01.210</time>\r\n    <type>Error</type>\r\n    <source>Editor or Editor Extension</source>\r\n    <description>System.Runtime.InteropServices.COMException (0x80004005): Unspecified error (Exception from HRESULT: 0x80004005 (E_FAIL))\r\n   at System.Runtime.InteropServices.Marshal.ThrowExceptionForHRInternal(Int32 errorCode, IntPtr errorInfo)\r\n   at Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(Int32 hr)\r\n   at TypeScriptLanguageService.ScriptContext.KnownBuffersCollection.GetTextLines(Object docData)\r\n   at TypeScriptLanguageService.ScriptContext.KnownBuffersCollection.GetTextBuffer(RunningDocumentInfo docInfo)\r\n   at TypeScriptLanguageService.ScriptContext.KnownBuffersCollection.CollectBuffersFromRunningDocumentTable()\r\n   at TypeScriptLanguageService.ScriptContext.KnownBuffersCollection.get_Buffers()\r\n   at TypeScriptLanguageService.ScriptContext.DefaultScriptContextProvider.RefreshOpenDocumentList(Action callback, Nullable`1 delay)\r\n   at TypeScriptLanguageService.ScriptContext.DefaultScriptContextProvider.OnTextViewClosed(ITextView textView)\r\n   at TypeScriptLanguageService.ScriptContext.VsTextViewCreationListener.<>c__DisplayClass2.<VsTextViewCreated>b__1(Object sender, EventArgs e)\r\n   at Microsoft.VisualStudio.Text.Utilities.GuardedOperations.RaiseEvent(Object sender, EventHandler eventHandlers)</description>\r\n  </entry>\r\n```\r\n\r\nI am using Windows 8,  VS 2012 Ultimate/Update 1, ASP.NET 2012.2 RC, Web Essentials 2.3.2 (new today), ReSharper 7.1, TypeScript 0.8.1.1.",
+    "LastUpdatedDate": "2014-03-31T12:26:45.803-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-17T09:48:36.357-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Navigation Bar in permanent state of \"(refreshing...)\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 615
+  },
+  "FileAttachments": [
+    {
+      "FileId": 604338,
+      "FileName": "ts_editor_navigation_bar.png",
+      "DownloadUrl": ".\\604338"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Ok, it froze completely so I attached WinDbg to see what's going on and I'm getting a constant output of the following messages when the process is resumed:\n\n```\n#1: Background thread queue added to, now has 1 items: TypeScriptLanguageService.CompilerServices.SimpleTypeScriptLanguageServicesTask\n#DefaultQ: Background thread queue starting work item \"TypeScriptLanguageService.CompilerServices.SimpleTypeScriptLanguageServicesTask\"\n#DefaultQ: Background thread queue completed work item in 0 msec (1 msec waiting time)\n#DefaultQ:    Running times (percentiles): sample size=100, min=0, 25th=0, med=0, 75th=0, 90th=0, max=0\n#DefaultQ:    Completion times (percentiles): sample size=100, min=0, 25th=0, med=0, 75th=1, 90th=3, max=14\n#1: Background thread queue added to, now has 1 items: TypeScriptLanguageService.CompilerServices.SimpleTypeScriptLanguageServicesTask\n#DefaultQ: Background thread queue starting work item \"TypeScriptLanguageService.CompilerServices.SimpleTypeScriptLanguageServicesTask\"\n#DefaultQ: Background thread queue completed work item in 0 msec (1 msec waiting time)\n#DefaultQ:    Running times (percentiles): sample size=100, min=0, 25th=0, med=0, 75th=0, 90th=0, max=0\n#DefaultQ:    Completion times (percentiles): sample size=100, min=0, 25th=0, med=0, 75th=1, 90th=3, max=14\n```\nThe above messages are repeated in a loop. This has been going on now for 40 minutes. Any ideas? ",
+      "PostedDate": "2013-01-17T10:19:56.39-08:00",
+      "Id": 86375
+    },
+    {
+      "Message": "Thank you for reporting this issue, we are unable to reproduce this. Does this issue reproduce when you un-install \"Web Essentials\" ?\n\nIf it does please re-activate.\n\r\n\r** Closed by paulb 01/17/2013 2:23PM",
+      "PostedDate": "2013-01-17T14:23:26.06-08:00",
+      "Id": 86481
+    },
+    {
+      "Message": "Re-opening, as disabling (then uninstalling) web essentials has no effect: It is still stuck \"refreshing.\" I have also disabled resharper, dottrace, dotperf etc to no effect. ",
+      "PostedDate": "2013-01-18T07:24:10.057-08:00",
+      "Id": 86482
+    },
+    {
+      "Message": "This smells like some nasty lingering MEF / Extensions lying around in some AppData folder. I am probably going to completely uninstall VS plus all SDKs etc and rebuild this weekend, but it would be nice to be able to fix this now. ",
+      "PostedDate": "2013-01-18T08:08:52.68-08:00",
+      "Id": 86492
+    },
+    {
+      "Message": "Ok, just to preempt, I just tried:\n\n\n1) disabling all 3rd party extensions\n2) uninstall typescript 8.1.1\n3) running devenv.exe /ResetUserData\n4) start devenv\n5) repair broken extensions in add/remove due to /ResetUserData\n6) install typescript 8.1.1\n7) open devenv\n\nIt's still borked. Navigation bar does not function. Nor does it respond to being disabled through options > text editor > typescript > uncheck nav bar.\n\nIdeas?\n",
+      "PostedDate": "2013-01-18T09:23:32.977-08:00",
+      "Id": 86500
+    },
+    {
+      "Message": "I am not able to reproduce this issue, in either an ASP.net app or a standalone file.\n\nDo you experience this on ts files of all sizes and only on ts files?\n\nCan you try devenv /setup to clean up the vs state.\n\nWe are taking a look at the issue, that you can not disable the navigation bar for typescript files.",
+      "PostedDate": "2013-01-18T11:23:36.917-08:00",
+      "Id": 86518
+    },
+    {
+      "Message": "\nHaving looked at your screenshot this is typically what happens when there are duplicate declarations somewhere.\n\nThere was a discussion that seemed to suggest it was to do with Web Essentials http://typescript.codeplex.com/discussions/428909\n\nBut may be a TypeScript problem.",
+      "PostedDate": "2013-01-18T12:05:36.22-08:00",
+      "Id": 86522
+    },
+    {
+      "Message": "With WinDbg attached, I watched a bit closer what was happening. Apparently it's along the \"Highlight Occurrences\" code path that is causing it to lock up. Once I click any variable or other identifier, a dozen or so background tasks get queued up from the TypeScript language service (as shown below.) It will return after twenty or so seconds the first time, but subsequent clicks bump the number of tasks being queued by what seems an order of magnitude. So after about 5 or 6 clicks, it's completely hosed. \n\nI completely uninstalled VS 2012 today, update 1, resharper, SDKs, the whole lot - then deleted my appdata folders for vs11.0, and also killed HKLM/HKCU hives for vs11.0 - overkill probably, but this is f**king ruining my week.\n\n",
+      "PostedDate": "2013-01-18T13:34:13.557-08:00",
+      "Id": 86539
+    },
+    {
+      "Message": "It wasn't web essentials, but after merging my external .d.ts file into my main .ts file, the navigation bar resumed functioning. I presume this is some bug in the language service.\n\n",
+      "PostedDate": "2013-01-18T20:29:52.223-08:00",
+      "Id": 86596
+    },
+    {
+      "Message": "Oh, and randomly it's back. I'm starting to think it may be the complexity of several external .d.ts files I'm using from DefinitelyTyped. I wonder if there's some duplication (as mentioned below) in some of the definitions....",
+      "PostedDate": "2013-01-19T12:52:04.193-08:00",
+      "Id": 86633
+    },
+    {
+      "Message": "Merging my definition files into my main .ts file seems to have settled everything down. I'll put it down to external file parsing and caching bugs?",
+      "PostedDate": "2013-01-21T16:36:59.813-08:00",
+      "Id": 86813
+    },
+    {
+      "Message": "Oisin. We haven't been able to repro; can you share your project with me, either on here or via email?\n\npaul.van.brenk (at) Microsoft.com",
+      "PostedDate": "2013-01-22T15:23:24.41-08:00",
+      "Id": 86903
+    },
+    {
+      "Message": "I've been spending half the morning battling this exact same problem.  I tried uninstalling/reinstalling Typescript, removing all my typescript files from the project and then adding them, disabling extensions, removing all my DefinitelyTyped packages, all to no avail.\n\nWhat fixed it for me was actually closing all the open code tabs - I had a huge number of VS2012 code tabs open.  Once I did that, the Typescript Intellisense started working just fine.\n\nI'm using Typescript 0.8.3.1, running on VS2012 Update 2.",
+      "PostedDate": "2013-05-30T10:39:53.443-07:00",
+      "Id": 101684
+    },
+    {
+      "Message": "I used the same action as Nate82 and I worked for me.",
+      "PostedDate": "2013-09-09T15:13:13.657-07:00",
+      "Id": 112912
+    },
+    {
+      "Message": "This might be the same as https://typescript.codeplex.com/workitem/2253.\n",
+      "PostedDate": "2014-03-31T12:26:45.803-07:00",
+      "Id": 140089
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We won't fix this.  As per rwaldron's comment, we want to avoid breaking code.  We may support privates if they are part of a future ECMAScript version.  Until then, private is just a typesystem-level concept, and doesn't have any codegen effect.",
+    "ClosedDate": "2013-02-06T13:29:02.933-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Using the \"private\" decorator should create a captured local (which is truly private) rather than using a member (which is not).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T12:51:05.037-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "\"private\" should use a captured local, not a member",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 7
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That would slow down the code, however...",
+      "PostedDate": "2012-10-01T13:05:03.213-07:00",
+      "Id": 78198
+    },
+    {
+      "Message": "Well, perhaps a different term. \"private\" indicates a captured local, and if you really want something that's hidden from TypeScript's type system but technically accessible, use something like \"hidden\"?\n\nI definitely expect private to produce a captured local since that is the accepted way to create truly private member variables.",
+      "PostedDate": "2012-10-01T14:33:08.533-07:00",
+      "Id": 78209
+    },
+    {
+      "Message": "If you're worried about the speed of closures, then JavaScript is not the language you're looking for. :)",
+      "PostedDate": "2012-10-01T17:03:54.837-07:00",
+      "Id": 78231
+    },
+    {
+      "Message": "I don't believe captured locals is the correct solution. They are inefficient, but more importantly consume  more memory. Lets be honest, most languages don't really support truly private members (reflection APIs). Private by convention is IMO a better solution, its easier to debug, supported in many tools, e.g. web storm. Lets not forget, EMCA 6 will support private properties using a \"static\" key mechanism.",
+      "PostedDate": "2012-10-01T17:17:51.73-07:00",
+      "Id": 78232
+    },
+    {
+      "Message": "\"If you're worried about the speed of closures, then JavaScript is not the language you're looking for. :)\" \n\nLaughed out loud just a bit at that one. I like the idea of using \"hidden\" or \"local\" to signify captured vars in the class function.",
+      "PostedDate": "2012-10-06T23:22:43.937-07:00",
+      "Id": 78880
+    },
+    {
+      "Message": "I would be happy with an generated private name.  For instance, prefix the private name with the class name.  This keeps shadowed privates in subclasses from conflicting (see issue Private members on subclasses do not shadow same-named members on superclasses, http://typescript.codeplex.com/workitem/49) and it wold be more efficient than closures.  Prefixing with an underscore would be adequate to let consumers of the Javascript know that they should not use the private member.  So;\n\nclass foo {\n\tprivate bar = \"bar\";\n\tgetBar() { return this.bar; };\n}\ncould generate this javascript\n\nvar foo = (function () {\n    function foo() {\n        this._foo_bar = \"bar\";\n    }\n    foo.prototype.getBar = function () {\n        return this._foo_bar;\n    };\n    return foo;\n})();\n\nThe code is very understandable and avoids a closure.\n\nI'm with those that believe it is NOT necessary to make the private member truly private.  I think it is ok to use a naming convention to do this (C++ coders don't worry about the lack of truly private variables in the generated assembly code).",
+      "PostedDate": "2012-11-04T10:54:35.977-08:00",
+      "Id": 81612
+    },
+    {
+      "Message": "This would break any code that relied on dynamic property name access",
+      "PostedDate": "2012-11-04T11:41:14.47-08:00",
+      "Id": 81617
+    }
+  ]
+}

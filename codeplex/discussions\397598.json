@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "920201",
+    "ThreadId": "397598",
+    "Html": "\r\n<p>How does runtime module resolution work? How are modules defined after compilation takes place in the case where the browser is the target and AMD is needed? Can I plugin requirejs or is there a built-in module loader that is&nbsp;exclusively&nbsp;used?</p>\r\n",
+    "PostedDate": "2012-10-01T13:48:30.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920243",
+    "ThreadId": "397598",
+    "Html": "<p>You can find a complete description of how module resolution works in the <a href=\"http://go.microsoft.com/fwlink/?LinkId=267121\">language spec</a>&nbsp;section 9.4.1, but in brief: when you want to import \"./foo\", the compiler will look for foo.ts in the same directory as the file that referenced it.</p>\r\n<p>The compiler will only emit the modules themselves (either AMD or CommonJS). If you're targeting the browser, you will still need to include an AMD-compatible module loader. RequireJS works great for this!</p>",
+    "PostedDate": "2012-10-01T14:59:27.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920273",
+    "ThreadId": "397598",
+    "Html": "<p>I am really, really happy about this :)</p>",
+    "PostedDate": "2012-10-01T16:12:56.82-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920528",
+    "ThreadId": "397598",
+    "Html": "\r\n<p>I've been trying to compile the mankala sample for use with an amd loader. No matter what compiler options I specify, it does not generate anything with amd define calls. Can you give me an example of what I'm supposed to give the compiler?</p>\r\n",
+    "PostedDate": "2012-10-02T05:13:14.237-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920574",
+    "ThreadId": "397598",
+    "Html": "<p>Ok. Now that I've gone and read the language spec on modules ;)....I understand why it's doing what it's doing. I'll play around with some of my own code and see if I can get it to do what I want.</p>",
+    "PostedDate": "2012-10-02T06:45:42.363-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920661",
+    "ThreadId": "397598",
+    "Html": "\r\n<p>To get my samples working with AMD, I&nbsp;downloaded the&nbsp;latest require.js file and added the following script reference to my HTML file:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">&lt;</span><span style=\"color:#a31515\">script</span> <span style=\"color:red\">src</span><span style=\"color:blue\">=</span><span style=\"color:blue\">&quot;lib/require.js&quot;</span> <span style=\"color:red\">data-main</span><span style=\"color:blue\">=</span><span style=\"color:blue\">&quot;src/app&quot;</span><span style=\"color:blue\">&gt;</span><span style=\"color:blue\">&lt;/</span><span style=\"color:#a31515\">script</span><span style=\"color:blue\">&gt;</span></pre>\r\n</div>\r\n<p>I also had to modify my tsc command-line as follows:</p>\r\n<pre>tsc --module AMD</pre>\r\n",
+    "PostedDate": "2012-10-02T08:48:25.483-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920665",
+    "ThreadId": "397598",
+    "Html": "<p>Yeah. I figured that out eventually...the problem was that the sample I was trying to compile wasn't written with external modules.</p>",
+    "PostedDate": "2012-10-02T08:58:16.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920670",
+    "ThreadId": "397598",
+    "Html": "\r\n<p>It seems like we have 3 options for modules:</p>\r\n<ol>\r\n<li>If we're using node and import/module syntax, then we must use CommonJS modules (--module CommonJS)\r\n</li><li>If we're using the browser and import/module syntax, then we must use AMD modules (--module AMD)\r\n</li><li>If we use ///&lt;reference&gt; directives, but not import/module syntax, then we can use a single JS file in either node or the browser (--out file.js)\r\n</li></ol>\r\n<p>This is all nice, but I would also love it if we could have support for #2&nbsp;(import/module syntax in the browser) without requiring an external AMD loader (i.e. RequireJS).</p>\r\n<p>This is similar to what <a href=\"https://github.com/substack/node-browserify\" target=\"_blank\">\r\nbrowserify </a>does for node, allowing node modules to be run directly in the browser. The require function works because the dependencies were detected at build time and included in the build output file. It seems like TypeScript is very close to being able\r\n to do this as well.</p>\r\n",
+    "PostedDate": "2012-10-02T09:05:39.89-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920679",
+    "ThreadId": "397598",
+    "Html": "<p>Do you mean by including a minimalistic loader script in the final build? That's probably a good idea as long as there's still an option to provide your own.</p>",
+    "PostedDate": "2012-10-02T09:24:19.153-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920710",
+    "ThreadId": "397598",
+    "Html": "\r\n<p>Yes, basically the build output would detect and &quot;bundle&quot; all dependencies in the output file, plus would include an implementation of the\r\n<code>require</code> function which would provide the required modules directly (i.e. without looking in the file system or making an http request, etc).</p>\r\n<p>This is what browserify/browserbuild/ender all do for node modules in order to get them to work without modification in the browser.</p>\r\n<p>I want to be able to write one syntax (e.g.&nbsp;<code>import my = module(&quot;./my&quot;);)</code> and have it work in both node and the browser without having to worry about AMD, RequireJS, or compiler options.</p>\r\n",
+    "PostedDate": "2012-10-02T10:10:22.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920722",
+    "ThreadId": "397598",
+    "Html": "<p>That sounds good to me. I think a lot of people would find that to be a natural usage and expected output. I'd be all for that...though on the condition that you can apt to supply your own amd loader like you can today....for those of us that are using loader plugins and doing other....interesting things...</p>",
+    "PostedDate": "2012-10-02T10:16:43.023-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

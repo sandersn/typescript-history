@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The newest version of TypeScript (please update Web Essentials if you're a WE user!) should fix this. Please reopen if you're still seeing issues. Thanks!",
+    "ClosedDate": "2013-01-30T14:12:23.547-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "(Crosspost from: http://stackoverflow.com/questions/13453048/module-error-extends-is-not-defined-after-upgrading-to-typescript-0-8-1)\n\nI have a modular TypeScript application, using RequireJS. This morning I had a problem with WebEssentials where all the .js files generated on compilation were empty. The only fix I found for this was to apply a patch that the author provided for another issue and to upgrade from TypeScript 0.8.0 to 0.8.1. \n\nNow, I'm getting JS compiled again, but have an error in some of my modular files:\n\n    Uncaught ReferenceError: __extends is not defined pe.modules:24\n    (anonymous function) pe.modules:24\n    pe.modules.pe.modules pe.modules:30\n    exports.pe.exports.pe pe.modules:85\n    (anonymous function) pe.modules:85\n    h.execCb require.js:30\n    U.check require.js:20\n    (anonymous function) require.js:24\n    (anonymous function) require.js:7\n    (anonymous function) require.js:25\n    t require.js:7\n    U.emit require.js:25\n    U.check require.js:21\n    U.enable require.js:25\n    U.init require.js:18\n    y require.js:16\n    h.completeLoad require.js:29\n    h.onScriptLoad require.js:31\n    Uncaught ReferenceError: __extends is not defined \n\nIn TS, the offending class looks like this:\n\n    import c = module('classes/pe.components')\n    \n    export class ModuleLoader extends c.pe.components.ComponentLoader {\n      // Class body\n    }\n\n... and I have confirmed that `classes/pe.components` exists.\n\nThe JS output looks like this:\n\n    define([\"require\", \"exports\", 'classes/pe.components', 'classes/pe.trace', 'classes/pe.dialogs'], function(require, exports, __c__, __t__, __d__) {\n        /// <reference path=\"../dts/jquery.d.ts\"/>\n        /// <reference path=\"../dts/require.d.ts\"/>\n        var c = __c__;\n    \n        var t = __t__;\n    \n        \n        var d = __d__;\n    \n        \n        (function (pe) {\n            (function (modules) {\n                var ModuleLoader = (function (_super) {\n                    __extends(ModuleLoader, _super);\n                    function ModuleLoader() {\n                        _super.apply(this, arguments);\n    \n                    }\n                    // Class content\n                    return ModuleLoader;\n                })(c.pe.components.ComponentLoader);\n            }\n        }\n    }",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-19T03:46:16.093-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Error in JS output: \"__extends is not defined\" after upgrading to 0.8.1",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 451
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I discovered that this is because the compiler is not generating the __extends function at the beginning of the file, as described in the Language Specification #8.5.2, p.73",
+      "PostedDate": "2012-11-19T04:36:55.377-08:00",
+      "Id": 82707
+    },
+    {
+      "Message": "I'm not able to reproduce this on 0.8.1.0. Can you post some code and the exact commandline you were using?\n\na.ts:\nimport bb = module('./b');\n\nclass Derived extends bb.Test { }\n\nb.ts:\nexport class Test { }\n\ntsc a.ts\n\na.js:\nvar __extends = this.__extends || function (d, b) {\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\ndefine([\"require\", \"exports\", './b'], function(require, exports, __bb__) {\n    var bb = __bb__;\n\n    var Derived = (function (_super) {\n        __extends(Derived, _super);\n        function Derived() {\n            _super.apply(this, arguments);\n\n        }\n        return Derived;\n    })(bb.Test);    \n})\n",
+      "PostedDate": "2012-11-26T16:41:01.543-08:00",
+      "Id": 83074
+    },
+    {
+      "Message": "@Ryan - I think this was actually a bug in WebEssentials 2012 (or at least a conflict between the version of WE that I had and the TS compiler.). I am now running 0.8.1.0 and a more recent version of WE2012, and the issue has disappeared.",
+      "PostedDate": "2012-12-17T06:32:17.617-08:00",
+      "Id": 84407
+    },
+    {
+      "Message": "I'm not using web essentials at all and encountered this bug too: __extends method randomly generated when you have several files and they reference each other. Unfortunately due to unpredictable behaviour I couldn't construct a sample.",
+      "PostedDate": "2013-01-07T16:16:04.013-08:00",
+      "Id": 85531
+    },
+    {
+      "Message": "BTW, i'm using TS v0.8.1.1 for VS 2012",
+      "PostedDate": "2013-01-07T16:17:57.797-08:00",
+      "Id": 85532
+    }
+  ]
+}

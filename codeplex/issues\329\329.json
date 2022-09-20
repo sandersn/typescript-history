@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This behavior is by design. Types are propagated 'up' in function calls (return types are inferred), but not 'down' (we don't infer parameter types through their use, as you're suggesting we do for 'n' here on the second line). Attempting to infer parameter types through their use is very problematic.",
+    "ClosedDate": "2012-11-05T16:36:00.747-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "TypeScript is supposed to allow for gradual typing, but in practice the very local type inference means very limited benefits to gradual typing. Once you make a function call with a typed value it loses its typing. Users are now forced to do a lot of up front work to add type annotations throughout every possible function call tree, preventing TypeScript from introducing a lot of value into existing projects without spending a lot of up-front time on types.\r\n\r\n\r\nvar addInner = (n:number):number => n + 2\r\nvar add = function(n):number { return addInner(n) }\r\nadd(5)\r\nadd(\"str\")\r\n\r\n\r\nThe compiler would detect that addInner(\"str\") is incorrect. However, with one function call in the way the types no longer work. Desired behavior is that the types of the add function are inferred to be the same as addInner. There is a similar case where the outer function is typed and the inner is not.",
+    "LastUpdatedDate": "2013-08-13T14:00:51.787-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-25T08:08:36.273-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Types are not propagated through function  calls.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 329
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I really think you should strive for this in a future version. I was shocked that TypeScript never attempts to do this for me, I was really expecting modern type inference (which is how it seemed to be advertised).\n\nThe explanation of type inference by using terms like \"propogate up or down through leaves\" is confusing. Please change the documentation to have more clarity. It is much simpler to state: typescript infers types inside a function. It will not infer types through function parameters. The above code combined with the below would explain it well.\n\n// a is typed as a number because it is using a typed function\nvar a  = addInner(5)\n// a still typed as number because there is a very simple function wrapper in the way\nvar a  = (function(){return addInner(5)})()\n// a is typed as any because we are now a function call parameter away from the using the typed function.\nvar add = function(a):number { return addInner(a) }",
+      "PostedDate": "2012-11-06T07:03:47.86-08:00",
+      "Id": 81769
+    }
+  ]
+}

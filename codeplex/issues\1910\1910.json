@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed, you should see the 0.9.5 release performing correctly here.",
+    "ClosedDate": "2013-12-13T15:43:49.96-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "It appears with TypeScript 0.9.5 beta my project has difficulties finding type definition files. It specifically complains a lot about the Q.d.ts type definition file for Kris Kowalski's Q promise library. I see errors saying that property defer or property resolve do not exist on value of type 'typeof Q'. By reintroducing reference paths at the top of each file like \r\n/// <reference path=\"..\\lib\\q.d.ts\"/>\r\nthese particular errors disappear again on compiling. But occasionally when opening files I see these errors appear again. A compile makes them disappear again.\r\nI did not think these reference paths were required anymore. Perhaps it's because my project is a SharePoint 2010 project. \r\nI've emailed Dan Quirk with a link to my project to investigate. \r\n\r\n",
+    "LastUpdatedDate": "2014-03-31T16:20:25.42-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-19T02:52:36.94-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "type definitions for Q and TypeScript 0.9.5 beta",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1910
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "that version is exactly the same as the version I use, so no, that does not fix it.",
+      "PostedDate": "2013-11-19T12:14:15.66-08:00",
+      "Id": 123560
+    },
+    {
+      "Message": "Can you see if the updated Q.d.ts fixes this? https://github.com/guiserrato/DefinitelyTyped/tree/db74d6815565b034f5cff5f9aa9bfd4aae02c138\n\r\n\r** Closed by RyanCavanaugh 11/19/2013 9:30AM",
+      "PostedDate": "2013-11-19T09:30:04.437-08:00",
+      "Id": 123590
+    },
+    {
+      "Message": "I haven't seen the errors appear and disappear but I suspect it's just related to the core bug that is the module member not being resolved correctly. That is, this pattern\r\n\r\nfile1.ts\r\n \r\ndeclare function Q<T>(value: T): string;\r\ndeclare module Q {\r\n    interface Promise<T> {\r\n        foo: string;\r\n    }\r\n    export function defer<T>(): string;\r\n}\r\n \r\nfile2.ts\r\n \r\nfunction promiseWithCancellation<T>(promise: Q.Promise<T>) {\r\n    var deferred = Q.defer<T>();\r\n}\r\n\r\ndoesn't compile correctly. Once this is fixed we will double check whether there is still any flakiness in how the errors are reported.",
+      "PostedDate": "2013-11-20T15:02:14.703-08:00",
+      "Id": 123713
+    },
+    {
+      "Message": "No idea why my formatting is getting mangled...",
+      "PostedDate": "2013-11-20T15:02:26.917-08:00",
+      "Id": 123714
+    },
+    {
+      "Message": "I'm still seeing this problem.  References to knockout, jQuery work fine but attempting import Q results in \"unable to resolve external module 'Q'\" compiler error.  \n\nUsing Q 1.0.0, Q.d.ts 0.2.4, TypeScript 0.9.5, VS2013.1.",
+      "PostedDate": "2014-01-27T12:26:16.99-08:00",
+      "Id": 131773
+    },
+    {
+      "Message": "Switched to revised Q typings here: [TEXT](https://github.com/borisyankov/DefinitelyTyped/pull/1497).\n\nStill same compiler error.",
+      "PostedDate": "2014-01-27T12:33:59.657-08:00",
+      "Id": 131777
+    },
+    {
+      "Message": "Hi zmorris,\n\nI'm the author of the amended typings - we're using them successfully in our project using TS 0.9.5 and both Visual Studio 2012 and 2013.\n\nFeel free to get in contact if you'd like some help.",
+      "PostedDate": "2014-01-27T14:11:33.423-08:00",
+      "Id": 131792
+    },
+    {
+      "Message": "Thanks Johnny, I will get in touch.",
+      "PostedDate": "2014-01-28T09:02:22.867-08:00",
+      "Id": 131893
+    }
+  ]
+}

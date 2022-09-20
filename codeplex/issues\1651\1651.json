@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We believe this is fixed in the current develop branch.",
+    "ClosedDate": "2013-10-18T16:06:12.67-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "In my language service client and server, I have a test case that started failing with this TS develop branch commit:\r\n```\r\n$ git log -1 v0.9.1-369-gd93cb1b\r\ncommit d93cb1b9c042921dc598d0e6b9d9e3be11c5e973\r\nAuthor: Cyrus Najmabadi <...>\r\nDate:   Tue Aug 27 17:10:40 2013 -0700\r\n\r\n    Don't assume the top level decl for a file has any children.\r\n```\r\n\r\nI don't know what \"the dynamic module\" is, but the assumption in the source comment that it will be the only child seems wrong. After this commit, such situations will truncate the return value to `sentinelEmptyArray` instead of returning the first child.\r\n\r\nIn my test case, this means the language service no longer gives me information about external module imports after the importing module source has been updated. Changing the condition introduced in this commit\r\n```\r\nchildDecls.length === 1\r\n```\r\nto \r\n```\r\nchildDecls.length >= 1\r\n```\r\nrestores former behaviour (so I can get external module information again). Strictly speaking, this change returns all child decls where -before the patch- only the first was returned, but that does not seem to make a difference.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-06T07:35:29.31-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "language service regression: no info on external module after updateScript",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1651
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "downstream issue (includes my workaround and test coverage):\nhttps://github.com/clausreinke/typescript-tools/issues/15",
+      "PostedDate": "2013-09-06T08:42:05.743-07:00",
+      "Id": 112678
+    },
+    {
+      "Message": "Thanks for reporting, we're taking a look.",
+      "PostedDate": "2013-09-06T15:13:52.743-07:00",
+      "Id": 112730
+    }
+  ]
+}

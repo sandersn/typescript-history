@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch, commit 2070cedb84f8a3d8219007cb6",
+    "ClosedDate": "2013-08-15T11:02:36.233-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "`getImplementorsAtPosition` keeps failing for me (`develop` branch). I was trying to find implementors of `ILanguageService.getCompletionsAtPosition`\r\n\r\nCause:  file `src/services/pullLanguageService.ts`, method `getImplementorsAtPosition`, in the final `for` loop: `typesToSearch` is iterated over, but is not guaranteed to be initialized.\r\n\r\nBtw, after fixing this, I get an empty list of implementors for the search, and `getReferencesAtPosition` or `getOccurrencesAtPosition` do not help, either. Is there any way to use the LanguageService to find the/an  implementation (in this case, in `src/services/pullLanguageService.ts`), given a call to `getCompletionsAtPosition`? `getDefinitionAtPosition` only brings me to the interface.",
+    "LastUpdatedDate": "2013-08-15T11:02:36.233-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-12T09:27:26.757-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "getImplementorsAtPosition fails: 'forEach' of undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1494
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this. Can you re-open (use the link at the top of this form) with the code that's causing this method to fail?\n\r\n\r** Closed by RyanCavanaugh 08/12/2013 3:55PM",
+      "PostedDate": "2013-08-12T15:55:46.77-07:00",
+      "Id": 109577
+    },
+    {
+      "Message": "I encountered this while working on my `typescript-tools` project, `testing_v0.9` branch.\r\n\r\n1. clone `git@github.com:clausreinke/typescript-tools.git`\r\n2. checkout `testing_v0.9` branch\r\n3. modify `bin/tss.js`, line 63156:\r\n  `            var typesToSearch; // = [];`\r\n4. run tss on its own source (absolute paths will differ on your system, just copy the path from the \"loaded\" message into your \"implementors\" command):\r\n```\r\n$ node bin/tss.js tss.ts\r\n\"loaded c:/javascript/typescript/0.9/typescript-tools/tss.ts, TSS listening..\"\r\n\r\nimplementors 390 8 c:/javascript/typescript/0.9/typescript-tools/tss.ts\r\n\"TSS command processing error: TypeError: Cannot call method 'forEach' of undefined\"\r\n\r\nlastError\r\n{\"msg\":\"TypeError: Cannot call method 'forEach' of undefined\",\"stack\":\"TypeError\r\n: Cannot call method 'forEach' of undefined\\n    at LanguageService.getImplement\r\norsAtPosition (c:\\\\javascript\\\\typescript\\\\0.9\\\\typescript-tools\\\\bin\\\\tss.js:63\r\n188:31)\"}\r\n\r\nquit\r\n\"TSS closing\"\r\n```",
+      "PostedDate": "2013-08-13T02:16:01.14-07:00",
+      "Id": 109578
+    },
+    {
+      "Message": "direct project url: https://github.com/clausreinke/typescript-tools/tree/testing_v0.9",
+      "PostedDate": "2013-08-13T02:20:03.69-07:00",
+      "Id": 109579
+    }
+  ]
+}

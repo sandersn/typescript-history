@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "External modules introduce a new scoping level, so String here shadows the String at the global scope. You'll need to put that interface in a .d.ts to make a global extension.",
+    "ClosedDate": "2013-07-29T09:49:44.057-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following compiles fine: \r\n```\r\ninterface String {\r\n    endsWith(suffix: string): boolean;\r\n}\r\nString.prototype.endsWith = function (suffix) {\r\n    return this.indexOf(suffix, this.length - suffix.length) !== -1;\r\n};\r\nconsole.log(\"asdf\".endsWith(\"f\"));\r\n```\r\n\r\nHowever as soon as I do a module export it complains that endsWith does not exist on value of type String: \r\n```\r\ninterface String {\r\n    endsWith(suffix: string): boolean;\r\n}\r\nString.prototype.endsWith = function (suffix) {\r\n    return this.indexOf(suffix, this.length - suffix.length) !== -1;\r\n};\r\n\r\nconsole.log(\"asdf\".endsWith(\"f\"));\r\n\r\nfunction test(){}\r\nexport = test;\r\n```\r\n[Try It](http://www.typescriptlang.org/Playground/#src=interface%20String%20%7B%0A%20%20%20%20endsWith(suffix%3A%20string)%3A%20boolean%3B%0A%7D%0AString.prototype.endsWith%20%3D%20function%20(suffix)%20%7B%0A%20%20%20%20return%20this.indexOf(suffix%2C%20this.length%20-%20suffix.length)%20!%3D%3D%20-1%3B%0A%7D%3B%0A%0Aconsole.log(%22asdf%22.endsWith(%22f%22))%3B%0A%0Afunction%20test()%7B%7D%0Aexport%20%3D%20test%3B) ",
+    "LastUpdatedDate": "2013-07-29T09:49:44.057-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-27T17:28:17.327-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "interface stops working when you do a module export",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1404
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Your `String` here is an interface, not a class, which means you can't call prototype on it. In fact, are invisible in the compiled javascript (like type annotations), they are helpful only on compile time.\nWhat you probably meant to do ist create a `IString` interface and then a `String` class that implements it.\n\nI tried to change you code accordingly.\n\n```\ninterface IString {\n    endsWith(suffix: string) : boolean;\n}\nclass String implements IString {\n\tconstructor(public content : string){}\n\tendsWith = function(suffix : string) : boolean {\n\t\tvar str = this.content;\n\t\treturn str.indexOf(suffix, str.length - suffix.length) !== -1;\n\t}\n}\n\nconsole.log(new String(\"asdf\").endsWith(\"f\"));\n\n```",
+      "PostedDate": "2013-07-28T07:36:33.373-07:00",
+      "Id": 107720
+    },
+    {
+      "Message": "@tkrugg I am extending the built in type \"String\" not creating my own :) The syntax I used is the one recommended for extending built-in types with new features. ",
+      "PostedDate": "2013-07-28T17:03:24.633-07:00",
+      "Id": 107737
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1207027",
+    "ThreadId": "531406",
+    "Html": "Hi,\r<br />\n<br />\nAm working on a web app using TypeScript on Visual Studio 2012. I am able to add a new resource file (resx) to the TypeScript HTML project using Visual Studio. However cannot figure out how to use the strings in the resource file in the .ts files.\r<br />\n<br />\nWould appreciate some pointers towards using the resource files in TypeScript project.\r<br />\n<br />\nThanks,\r<br />\nSesha<br />\n",
+    "PostedDate": "2014-02-11T15:25:00.75-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1207790",
+    "ThreadId": "531406",
+    "Html": "@Sesha, you need to ask yourself: &quot;How would I make this work with JavaScript?&quot;.\r<br />\n<br />\nTypeScript is not a runtime or framework. It simply adds static typing to JavaScript and compiles into plain vanilla JavaScript. \r<br />\n<br />\nIf you are writing server-side code then you might have to read and parse the resource file. If you need the resource file in the browser then you need to get your HTTP server to serve the file up.<br />\n",
+    "PostedDate": "2014-02-13T02:16:38.653-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208043",
+    "ThreadId": "531406",
+    "Html": "\r\n<div dir=\"ltr\" style=\"font-family:'Calibri','Segoe UI','Meiryo','Microsoft YaHei UI','Microsoft JhengHei UI','Malgun Gothic','sans-serif'; font-size:12pt\">\r\n<div>Thanks. In that case should there be an “Add Resource File” option when one right clicks the project in Visual Studio?</div>\r\n<div><br>\r\n</div>\r\n<div>Would be great if the TypeScript compiler can compile down the resource file (those that contain only strings) into JavaScript functions with the strings in arrays.</div>\r\n<div><br>\r\n</div>\r\n<div>Thanks,</div>\r\n<div>Sesha</div>\r\n<div><br>\r\n</div>\r\n<div style=\"padding-top:5px; border-top-color:rgb(229,229,229); border-top-width:1px; border-top-style:solid\">\r\n<div><font face=\" 'Calibri', 'Segoe UI', 'Meiryo', 'Microsoft YaHei UI', 'Microsoft JhengHei UI', 'Malgun Gothic', 'sans-serif'\" style=\"line-height:15pt; letter-spacing:0.02em; font-family:\"><b></b></font></div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2014-02-13T10:55:49.18-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208134",
+    "ThreadId": "531406",
+    "Html": "I have created a T4 Template that processes a resx file to create a TypeScript file containing the strings.  Any 'format' strings (containing {0}, etc) are converted into functions taking the correct number or parameters.  It's not bulletproof yet, but does the job in our projects.  Let me know if you would like the source.<br />\n",
+    "PostedDate": "2014-02-13T14:57:28.77-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208139",
+    "ThreadId": "531406",
+    "Html": "I took the same approach - T4 template:\r<br />\n<br />\n&lt;#@ template debug=&quot;false&quot; hostspecific=&quot;true&quot; language=&quot;C#&quot; #&gt;\r<br />\n&lt;#@ assembly name=&quot;System.Core&quot; #&gt;\r<br />\n&lt;#@ assembly name=&quot;System.Xml&quot; #&gt;\r<br />\n&lt;#@ import namespace=&quot;System.Linq&quot; #&gt;\r<br />\n&lt;#@ import namespace=&quot;System.Text&quot; #&gt;\r<br />\n&lt;#@ import namespace=&quot;System.Collections.Generic&quot; #&gt;\r<br />\n&lt;#@ import namespace=&quot;System.Xml&quot; #&gt;\r<br />\n&lt;#@ import namespace=&quot;System.Xml.XPath&quot; #&gt;\r<br />\n&lt;#@ output extension=&quot;.ts&quot; #&gt;\r<br />\n&lt;#<br />\n<pre><code>    var doc = new XPathDocument(this.Host.ResolvePath(@&quot;Strings.resx&quot;));\n    var root = doc.CreateNavigator();\n\n    var ns = new XmlNamespaceManager(root.NameTable);\n    ns.AddNamespace(&quot;xsd&quot;, &quot;http://www.w3.org/2001/XMLSchema&quot;);\n\n    this.Write(&quot;var strings = {&quot;);\n\nforeach (XPathNavigator node in root.SelectDescendants(&quot;data&quot;, &quot;&quot;, true))\n{\n    var name = node.GetAttribute(&quot;name&quot;, &quot;&quot;);\n    node.MoveToChild(&quot;value&quot;, &quot;&quot;);\n    this.Write(&quot;'{0}' : '{1}',&quot;, name, node.Value);\n}\n#&gt;</code></pre>\n\n};\r<br />\nexport function getLocalizedString(val: string): string {<br />\n<pre><code>if (!val) return val;\nvar res = strings[val];\nif (res == null) return val;\nreturn res;</code></pre>\n\n}\r<br />\n<br />\nIt converts strings from .RESX to something like this:\r<br />\n<br />\nvar strings = {'key1' : 'value1','key2' : 'value2'}; // and more ...\r<br />\nexport function getLocalizedString(val: string): string {<br />\n<pre><code>if (!val) return val;\nvar res = strings[val];\nif (res == null) return val;\nreturn res;</code></pre>\n\n}<br />\n",
+    "PostedDate": "2014-02-13T15:21:43.807-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208140",
+    "ThreadId": "531406",
+    "Html": "Yes, would be great if you can share the code.\r<br />\n<br />\nThanks,\r<br />\nSesha<br />\n",
+    "PostedDate": "2014-02-13T15:32:05.613-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1208155",
+    "ThreadId": "531406",
+    "Html": "I've tried to make this fairly generic, in that it can use a resx file specified in another project (just specify the relative path), at the cost of not 'automatically' generating the TS code.  Just right click the tt file and &quot;Run Custom Tool&quot;.  Also, this should cope with single quotes being used in the string, and produces a function for parameterised strings (although format specifiers are not handled).  It outputs the strings into a single, global variable, eg<br />\n<pre><code>var Strings = {\n    string1: 'Hello World',\n    string2: 'Goodbye World',\n    paramString: (val1)=&gt; { return 'Hello ' + val1 + ', how are you?'; }\n}</code></pre>\n\nFeel free to use what you want and modify or discard the rest.<br />\n<pre><code>&lt;#@ template  debug=&quot;true&quot; hostSpecific=&quot;true&quot; #&gt;\n&lt;#@ output extension=&quot;.ts&quot; #&gt;\n&lt;#@ Assembly Name=&quot;System.Core&quot; #&gt;\n&lt;#@ assembly name=&quot;System.Xml&quot; #&gt;\n&lt;#@ assembly name=&quot;System.Xml.Linq&quot; #&gt;\n&lt;#@ import namespace=&quot;System&quot; #&gt;\n&lt;#@ import namespace=&quot;System.IO&quot; #&gt;\n&lt;#@ import namespace=&quot;System.Linq&quot; #&gt;\n&lt;#@ import namespace=&quot;System.Xml&quot; #&gt;\n&lt;#@ import namespace=&quot;System.Xml.Linq&quot; #&gt;\n&lt;#@ import namespace=&quot;System.Collections.Generic&quot; #&gt;\n&lt;#@ import namespace=&quot;System.Text.RegularExpressions&quot; #&gt;\n&lt;#\n    var resxFileName = Host.ResolvePath(@&quot;&lt;path to&gt;\\ClientStrings.resx&quot;);\n\n    if (!File.Exists(resxFileName)) {\n        this.Error(&quot;Unable to find RESX file. Please check T4 variable. Current path is '&quot; + resxFileName + &quot;'&quot;);\n    }\n    else\n    {\n#&gt;\nvar &lt;#= Path.GetFileNameWithoutExtension(Host.TemplateFile) #&gt; = {\n&lt;#\n        this.PushIndent(&quot;    &quot;);\n        foreach (var el in GetElements(resxFileName, &quot;data&quot;))\n        {\n            OutputElement(this, el);\n        }\n        this.PopIndent();\n#&gt;\n};\n&lt;#\n    }\n#&gt;\n&lt;#+\n    static void OutputElement(GeneratedTextTransformation tt, XElement el)\n    {\n        var name = el.Attribute(&quot;name&quot;).Value;\n        var value = el.Element(&quot;value&quot;).Value;\n\n        bool dblquote = false;\n        if (value.Contains(&quot;'&quot;))\n        {\n            dblquote = true;\n        }\n\n        var matches = Regex.Matches(value, @&quot;\\{[0-9]+\\}&quot;);\n        var variables = new List&lt;string&gt;();\n        foreach (Match match in matches)\n        {\n            var param = match.Value;\n            var paramIndex = Int32.Parse(param.Substring(1, param.Length - 2));\n            var paramName = string.Format(&quot;val{0}&quot;, paramIndex);\n\n            if (!variables.Contains(paramName))\n            {\n                variables.Add(paramName);\n                value = value.Replace(param, string.Format(&quot;{0} + {1} + {0}&quot;, dblquote ? &quot;\\&quot;&quot; : &quot;'&quot;, paramName));\n            }\n        }\n\n        if (variables.Any())\n        {\n            tt.WriteLine(&quot;{0}: ({1})=&gt; {{&quot;, name, string.Join(&quot;, &quot;, variables.ToArray()));\n            tt.PushIndent(&quot;    &quot;);\n            tt.WriteLine(&quot;return {0}{1}{0};&quot;, dblquote ? &quot;\\&quot;&quot; : &quot;'&quot;, value);\n            tt.PopIndent();\n            tt.WriteLine(&quot;},&quot;);\n        }\n        else\n        {\n            tt.WriteLine(&quot;{0}: {1}{2}{1},&quot;, name, dblquote ? &quot;\\&quot;&quot; : &quot;'&quot;, value);\n        }\n    }\n\n    static IEnumerable&lt;XElement&gt; GetElements(string inputFile, string elementName)\n    {\n        using (var reader = XmlReader.Create(inputFile))\n        {\n            reader.MoveToContent();\n            while (reader.Read())\n            {\n                if (reader.NodeType == XmlNodeType.Element)\n                {\n                    if (reader.Name == elementName)\n                    {\n                        XElement el = XNode.ReadFrom(reader) as XElement;\n                        if (el != null)\n                        {\n                            yield return el;\n                        }\n                    }\n                }\n            }\n        }\n    }\n#&gt;</code></pre>\n\n",
+    "PostedDate": "2014-02-13T16:29:07.5-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-02-13T19:18:43.787-08:00"
+  },
+  {
+    "Id": "1208186",
+    "ThreadId": "531406",
+    "Html": "Thanks all the help!\r<br />\n<br />\n-Sesha<br />\n",
+    "PostedDate": "2014-02-13T19:18:28.093-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

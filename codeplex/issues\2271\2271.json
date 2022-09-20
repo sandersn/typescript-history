@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The reason they need to have the same type, is because they share a single property on the type. Consider the following simplified typescrtipt and generated javascript\n\n````\nTS:\nclass Rect  {\n\tget topleft(){\n\t\treturn 0;\n\t}\n\n\tset topLeft(point: number) {}\n}\n````\n````\nJS\nvar Rect = (function () {\n    function Rect() {\n    }\n    Object.defineProperty(Rect.prototype, \"topleft\", {\n        get: function () {\n            return 0;\n        },\n        enumerable: true,\n        configurable: true\n    });\n\n    Object.defineProperty(Rect.prototype, \"topLeft\", {\n        set: function (point) {\n        },\n        enumerable: true,\n        configurable: true\n    });\n    return Rect;\n})();\n````\n\nAs you can see there is only one property generated: \"topLeft\", with a separate getter and setter function. \n\nFurther the definition of the type Rect (i.e. the interface is defined as follows):\n````\nclass IRect {\n\t\n\ttopleft: number;\n}\n````\n",
+    "ClosedDate": "2014-03-06T18:17:23.397-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Consider the following example which does not compile:\r\n\r\n```TypeScript\r\nclass Rect implements IRect {\r\n\r\n        <snip>\r\n    \r\n        get topLeft(): Point { \r\n            return new Point(this.x, this.y);\r\n        }\r\n\r\n        set topLeft(point: IPoint) {\r\n            this.x = point.x;\r\n            this.y = point.y; \r\n        }\r\n\r\n}\r\n```\r\n\r\nThis generates the error \"'get' and 'set' accessor must have the same type\".\r\n\r\nIMHO this condition shouldn't be enforced, since it prevents this kind of upcasting and coercion.\r\n\r\n(please remove attachment - it has a typo)\r\n",
+    "LastUpdatedDate": "2014-03-31T17:24:56.163-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-06T14:33:09.497-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Get/Set accessors should not require identical types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2271
+  },
+  "FileAttachments": [
+    {
+      "FileId": 810567,
+      "FileName": "tsgs.png",
+      "DownloadUrl": ".\\810567"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I realize it compiles to a single property on the prototype. But the property nevertheless describes two operations: get and set. You are operating under the assumption that whatever you assign during 'set' will be the same thing you get back during 'get'. This doesn't need to be the case. Using a setter to coerce from several different types to some canonical type is an often-used pattern in dynamic languages. \n\nIf you are going to enforce the types to be the same, then the syntax is redundant. IMHO the consruct below (or something like it) more accurately reflects the current behavior.\n\ntopLeft: number {\n    get {\n        ....\n    }\n    \n    set {\n        ...\n    }\n}\n",
+      "PostedDate": "2014-03-07T06:19:45.39-08:00",
+      "Id": 136165
+    },
+    {
+      "Message": "This would be better off in the forums at this point. You didn't address how this would look in a .d.ts. That the types must be identical is definitely distinct from having/requiring an explicit type annotation at all.",
+      "PostedDate": "2014-03-31T17:24:56.163-07:00",
+      "Id": 140121
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We use 32-bit hosts when creating those objects, so if 32-bit Stream is broken on your machine, the compiler is definitely not going to work.\n\nWe don't own those components and don't really know what would cause them to break. Installing IE11 might help; you can also use the node version of the tools instead. Unfortunately there's not much we can do from our end to fix the underlying problem.",
+    "ClosedDate": "2014-02-24T11:00:05.837-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "TSC fails basic compile with:\r\n\r\nerror TS5012: Cannot read file 'C:/temp/test.ts': error TS5012: Cannot read file\r\n 'C:/temp/test.ts': Automation server can't create object\r\nerror TS5012: Cannot read file 'C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\r\n\\0.9\\lib.d.ts': error TS5012: Cannot read file 'C:\\Program Files (x86)\\Microsoft\r\n SDKs\\TypeScript\\0.9\\lib.d.ts': Automation server can't create object\r\nC:/temp/test.js(1,1): error TS5011: Emit Error: Automation server can't create o\r\nbject.\r\n\r\n\r\nThis happens from the command line as well as from within Visual Studio 2013 for me.  It is failing on the creation of the ADODB.Stream object, but this object can be created just fine from a VBS script, so not sure what's happening.   TypeScript simply won't work for me.\r\n\r\nI have other team members with pretty much the exact same setup who do __not__ have this problem.\r\n\r\n\r\nThe weird thing I have found out is this:   with VS, you get a 32-bit and 64-bit version of OLE VIEWER, and my 64-bit version can \"create instance\" of ADODB.Stream, but my 32-bit cannot.   My other team members are able to instantiate in BOTH versions of OLE VIEWER.  So there SEEMS to be a problem with 32-bit access to the object??   I have no idea if that makes any sense though.\r\n\r\n\r\n\r\n\r\n__Technical Info:__\r\nWindows 7 SP 1 (English) 64-bit\r\nIE 10\r\nVisual Studio 2013 Ultimate\r\n",
+    "LastUpdatedDate": "2014-05-02T14:36:23.487-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-20T12:09:56.86-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compile Errors: Cannot read file",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2202
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Which version of IE do you have installed?",
+      "PostedDate": "2014-02-20T13:41:22.32-08:00",
+      "Id": 134252
+    },
+    {
+      "Message": "IE 10",
+      "PostedDate": "2014-02-20T15:20:01.753-08:00",
+      "Id": 134263
+    },
+    {
+      "Message": "Which version of windows (and language) are you on... do you have another machine you can try this on?\n\nWhat's the contents of test.ts?\n\nPlease re-open using the button on top, when you've added the info.\n\r\n\r** Closed by paulb 02/21/2014 2:11PM",
+      "PostedDate": "2014-02-21T14:11:56.547-08:00",
+      "Id": 134572
+    },
+    {
+      "Message": "We found that the hard coded string to the 32-bit masado15.dll was wrong in the registry. \n<insert your favorite warning about how important it is not to muck about in the registry if you don't know what you're doing here>\n \nOf course, back up the registry setting first (right click.>Export)\n\n[HKEY_CLASSES_ROOT\\Wow6432Node\\CLSID\\{00000566-0000-0010-8000-00AA006D2EA4}]\\InprocServer32\n\nChange (Default) to %CommonProgramFiles(x86)%\\System\\ado\\msado15.dll\n\nGood luck!",
+      "PostedDate": "2014-05-02T14:36:23.487-07:00",
+      "Id": 145431
+    }
+  ]
+}

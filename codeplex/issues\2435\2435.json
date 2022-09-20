@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "`a`: In a structural type system, the empty type is a supertype of all types. By what rule would this be made an error?\n\n`i`: It's typical in JavaScript to have array-like things that still have non-numeric fields. For example, `Array` has a `length` property; it would be absurd to not allow an array to be assignable to the type `{[index: number]: any}`",
+    "ClosedDate": "2014-04-14T09:20:37.853-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "If my assumptions below are correct then we have a bug:\r\n\r\n```typescript\r\nvar a: any = { id: 1 }; // OK\r\nvar b: any = [1, 2, 3]; // OK\r\nvar c: {} = { id: 1 }; // OK\r\nvar d: {} = [1, 2, 3]; // This should give error like j\r\nvar e: any[] = { id: 1 }; // Error as expected\r\nvar f: any[] = [1, 2, 3]; // OK\r\nvar g: {[index: number]: any} = [1, 2, 3]; // OK\r\nvar h: {[index: string]: any} = { id: 1 }; // OK\r\nvar i: {[index: number]: any} = { id: 'a' }; // This should give error like e\r\nvar j: {[index: string]: any} = [1, 2, 3]; // Error as expected\r\n```",
+    "LastUpdatedDate": "2014-04-14T14:43:09.163-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-14T07:02:22.623-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Compiler ignoring incompatible indexer",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2435
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This issue may be related: https://typescript.codeplex.com/workitem/2417",
+      "PostedDate": "2014-04-14T07:03:39.61-07:00",
+      "Id": 141742
+    },
+    {
+      "Message": "*d:*  I think \"{ }\" declares a base indexable type (using a number or string).  I don't see why this should be an error.  \"d['1']\" would be valid.\n\n*i:* Do you know why 'e' is an error?  It's *not* because if the indexing.  It's because a basic object ({ }) doesn't have any array functions (hence the error message).  So, that taken out of the equation, I think then \"var i\" does make sense.  While you cannot set an array type with just \"{ }\", you CAN set an *object* type to an array without issues.",
+      "PostedDate": "2014-04-14T14:39:41.31-07:00",
+      "Id": 141799
+    },
+    {
+      "Message": "BTW: I do realize that you are implying that \"[index: number]\" should \"deny\" any string-based indexers, but as I mentioned, it IS also valid to use a number in string form ([\"1\"]), so I'm guessing that is why.",
+      "PostedDate": "2014-04-14T14:43:09.163-07:00",
+      "Id": 141800
+    }
+  ]
+}

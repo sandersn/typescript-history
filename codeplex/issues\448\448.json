@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We can't seem to reproduce this. If you could attach a project file (and set of associated files) that reproduces this problem and reactivate, that'd be very helpful. Thanks!",
+    "ClosedDate": "2012-11-29T11:08:08.04-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "TypeScript v0.8.1.0\r\nVS 2012\r\n\r\nWhen building the project, the TSC compiler checks every TS files (.ts, .d.ts) even those not included in the project.\r\nI dont know if this is by design or if it is a bug.\r\n\r\nIf one of the excluded file contains an error, it is sometime difficult to understand why the project build fails because the compiler doesnt provide feedback on where the error is.\r\nBut as the file isnt included in the project it is sometimes difficult to understand why the build failed.\r\n",
+    "LastUpdatedDate": "2012-11-29T11:08:08.04-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-18T09:11:00.663-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Build event compiles excluded project TS files",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 448
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you check the TSC command that is being executed?  My guess would be perhaps that the VS project file includes something like the below, which looks for every .ts file under the project path and passes it to the compiler, rather than passing each (and only) every project file specifically.\n\n<ItemGroup>\n    <TypeScriptCompile Include=\"$(ProjectDir)\\**\\*.ts\" />\n/ItemGroup>",
+      "PostedDate": "2012-11-18T10:32:38.683-08:00",
+      "Id": 82676
+    },
+    {
+      "Message": "Here is my project BuildEvent :\n\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\n    <TypeScriptSourceMap> --sourcemap</TypeScriptSourceMap>\n  </PropertyGroup>\n  <Target Name=\"BeforeBuild\">\n    <Message Text=\"Compiling TypeScript files\" />\n    <Message Text=\"Executing tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n    <Exec Command=\"tsc$(TypeScriptSourceMap) @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')\" />\n  </Target>\n\n\nReading your answer i assume the issue i reported isn't a bug and may a side problem related to my solution ?\n\nDo you confirm that ?",
+      "PostedDate": "2012-11-20T05:34:52.88-08:00",
+      "Id": 82762
+    },
+    {
+      "Message": "I forgot to add that .csproj contains only the included files with one TypeScriptCompile for each included TS file :\n\n<TypeScriptCompile Include=\"directory1\\directory2\\directory3\\filename.ts\" />",
+      "PostedDate": "2012-11-20T05:38:37.247-08:00",
+      "Id": 82763
+    }
+  ]
+}

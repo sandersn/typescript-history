@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:58:16.797-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "On the following typescript file:\r\n\r\n```\r\nmodule M\r\n{\r\n  export module N { };\r\n  var x = N ;\r\n};\r\n```\r\n\r\nThe typescript compiler (0.9) crashes with:\r\n\r\n```\r\nTypeError: Cannot call method 'getType' of null\r\n    at PullTypeChecker.typeCheckBoundDecl (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43990:89)\r\n    at PullTypeChecker.typeCheckAST (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43678:33)\r\n    at PullTypeChecker.typeCheckList (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43925:22)\r\n    at PullTypeChecker.typeCheckAST (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43674:33)\r\n    at PullTypeChecker.typeCheckVariableDeclaration (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:45557:18)\r\n    at PullTypeChecker.typeCheckAST (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43835:33)\r\n    at PullTypeChecker.typeCheckVariableStatement (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:45563:18)\r\n    at PullTypeChecker.typeCheckAST (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43838:33)\r\n    at PullTypeChecker.typeCheckList (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43925:22)\r\n    at PullTypeChecker.typeCheckAST (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:43674:33)\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-24T06:53:34.417-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Typescript crash: Cannot call method 'getType' of null",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1219
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting we're taking a look",
+      "PostedDate": "2013-06-24T11:53:43.343-07:00",
+      "Id": 103953
+    },
+    {
+      "Message": "I encountered a similar 'getType' error (in both 0.9.0 and 0.9.1):\n```\n tsc.js(44059, 21) Microsoft JScript runtime error: Unable to get value of the property 'getType': object is null or undefined\n```\n\nThese 'getType' errors seem to show up when modules are assigned to variables. \nIn the code example, this happens in the following line:\n```\nvar x = N ;\n```\nSince TypeScript 0.9 the module keyword no longer creates a type:\n\n\n> #__The ‘module’ keyword no longer creates a type__\n>\n> __Description:__ In 0.9.0, a clearer distinction is made between roles of namespaces, types, and values. \n> Modules now contribute only to namespaces and values and will no longer contribute a type. \n> __Reason:__ This simplification of the role of modules allow modules to now extend classes and functions \n> more easily.\n> Source: [Known breaking changes between 0.8 and 0.9](https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9)\n\n\nSo now the compiler works as designed (you can't assign nothing to a variable), but the error message isn't clear enough.\n\nI myself use AMD modules as output, because I use RequireJS. When I need underscore (or lodash) and for example underscore.string (which extends underscore with String functions) as a dependency for my code. I used to code something like:\n\n```\nimport underscore = module(\"underscore\");\nimport underscoreString = module(\"underscore.string\");\n\nvar _: Underscore = <any>underscore;\nvar dependencies = underscoreString;\n```\nI have to add the last line, otherwise the 'underscore.string' doesn't get added to the 'define' function as a dependency in the compiled code:\n\n```\ndefine([\"require\", \"exports\", \"underscore\", \"underscore.string\"], function(require, exports, __underscore__, __underscoreString__) {\n```\nIf the underscore.string.d.ts only contains an interface, you'll get the 'getType' error. To avoid this error add a cast to any to it, like so:\n```\nvar dependencies = <any>underscoreString;\n```\n",
+      "PostedDate": "2013-07-09T15:29:48.63-07:00",
+      "Id": 105588
+    }
+  ]
+}

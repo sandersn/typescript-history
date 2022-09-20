@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in 0.9",
+    "ClosedDate": "2013-04-02T15:59:34.227-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I define an interface:\r\n\r\n    interface MyInterface\r\n    {\r\n        x: number;\r\n        method() : number;\r\n    };\r\n\r\nand, as expected, I can generate implementations inline like this:\r\n\r\n    var i : MyInterface = {\r\n        x: 13,\r\n        method: function() { return this.x; }\r\n    };\r\n\r\nor return implementations from functions:\r\n\r\n    var makeInterface = function a() : MyInterface\r\n    {\r\n        return {\r\n            x: 14,\r\n            method: function() { return this.x; }\r\n        };\r\n    };\r\n\r\nwith no problems.  However, if I try to define the same 'makeInterface' function inside a class method, I get an error:\r\n\r\n    class MyObj\r\n    {\r\n        i : MyInterface;\r\n\r\n        create() : MyObj\r\n        {\r\n            var makeInterface = function a() : MyInterface\r\n            {\r\n                return {\r\n                    x: 14,\r\n                    method: function() { return this.x; }  // <===== ERROR HERE\r\n                };\r\n            };\r\n            var obj = new MyObj();\r\n            obj.i = makeInterface();\t\t\r\n            return obj;\r\n        };\r\n\r\n    };\r\n\r\nInside the 'method' function, the compiler complains that \"The property 'x' does not exist on value of type 'MyObj' (handle: MyObj.any, bounds: MyObj.any) => MyObj.any\".\r\n\r\nHowever, what is unusual is that if I remove the return-type decl from 'makeInterface', i.e.:\r\n\r\n            var makeInterface = function a()\r\n\r\nthen the compiler does not generate an error.  \r\n\r\nI'm using version '0.8.1-1', and this is all reproducible in the playground.\r\n\r\nIs this a bug, or am I doing something wrong here?\r\nThanks.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-02T17:35:55.047-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Wrong 'this' when defining interface methods in local functions",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 590
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi. \n\nvar makeInterface = function a(): MyInterface {\n    return {\n        x: 14,\n        method: function () { return this.x; }\n    };\n};\n\nThe above works because the context of this is not known at compile time, so its type is inferred as *any*. This allows you to say\n\nmethod: function () { return this.ICantWaitForTheNewArrestedDevelopmentSeason; } \n\nAnd have TS not produce a compiler error. \n\nYou can control the context by using the arrow function syntax and TS will emit a  var _this = this line in your function, so that the returned closure has the proper reference to this regardless of its executing context:\n\nmethod: () => { return this.x; }   // now references the actual MyInterface\n\nAs for the class, well, that hopefully isn't a something you'd do in production code, however, I think it's not behaving properly. Let me play around with this for a bit and see if something flips a switch.\n\n",
+      "PostedDate": "2013-01-03T04:36:29.207-08:00",
+      "Id": 85285
+    },
+    {
+      "Message": "Please ignore my comment, this issue isn't what it seemed at first. ",
+      "PostedDate": "2013-01-03T05:00:43.433-08:00",
+      "Id": 85286
+    },
+    {
+      "Message": "The anonymous object created with the return { } object literal has a this context of window regardless of the function declaration method. \n\nIf you capture the object before returning it, you'll have a context of the actual object created:\n\nfunction a(): MyInterface {\n\tvar r ={\n        x: 14,\n        method: function (){ \n            return this; // reference to the captured object\n        }\n    };\n\treturn r;\n}\n\nDoing the same thing in you class will make it work:\n\n\ninterface MyInterface {\n    x: number;\n    method(): number;\n}\n\nclass MyObj {\n    i: MyInterface;\n\n    create(): MyObj {\n        var makeInterface = function a(): MyInterface {\n            var r = \n            {\n                x: 14,\n                method: function () { return this.x; } \n            };\n            return r;\n        };\n        var obj = new MyObj();\n        obj.i = makeInterface();\n        return obj;\n    };\n\n};\n\n\nvar o = new MyObj().create();\nconsole.log(o.i.method());\n",
+      "PostedDate": "2013-01-03T05:09:06.703-08:00",
+      "Id": 85287
+    },
+    {
+      "Message": "Thanks for reporting this! Marking 'active'",
+      "PostedDate": "2013-01-03T09:50:39.637-08:00",
+      "Id": 85298
+    },
+    {
+      "Message": "I believe this is a similar issue. I am trying to extend the build in String class by adding a prototype. The compiler is emitting 'var _this = this' outside of my prototype which is causing 'this' to refer to the wrong thing. I have the following TS code:\n\n\tinterface String {\n\t\tStartsWith(match: string): bool;\n\t}\n\n\tString.prototype.StartsWith = (match: string): bool => {\n\t\tif (this.length < match.length)\n\t\t\treturn false;\n\n\t\treturn match == this.substring(0, match.length);\n\t};\n\nwhich emits:\n\n\tvar _this = this; // <-------- problem here\n\tString.prototype.StartsWith = function (match) {\n\t\tif(_this.length < match.length) { // <----- and here. It should be this.length\n\t\t\treturn false;\n\t\t}\n\t\treturn match == _this.substring(0, match.length); // <----- and here\n\t};",
+      "PostedDate": "2013-01-15T17:14:11.103-08:00",
+      "Id": 86208
+    },
+    {
+      "Message": "I believe this is a similar issue. I am trying to extend the build in String class by adding a prototype. The compiler is emitting 'var _this = this' outside of my prototype which is causing 'this' to refer to the wrong thing. I have the following TS code:\n\n\tinterface String {\n\t\tStartsWith(match: string): bool;\n\t}\n\n\tString.prototype.StartsWith = (match: string): bool => {\n\t\tif (this.length < match.length)\n\t\t\treturn false;\n\n\t\treturn match == this.substring(0, match.length);\n\t};\n\nwhich emits:\n\n\tvar _this = this; // <-------- problem here\n\tString.prototype.StartsWith = function (match) {\n\t\tif(_this.length < match.length) { // <----- and here. It should be this.length\n\t\t\treturn false;\n\t\t}\n\t\treturn match == _this.substring(0, match.length); // <----- and here\n\t};",
+      "PostedDate": "2013-01-15T17:14:58.807-08:00",
+      "Id": 86209
+    }
+  ]
+}

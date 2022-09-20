@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is resolved by some changes in how modules work in 0.8.2\n\nimport now has to be a top level declaration and you no longer can export an import. ",
+    "ClosedDate": "2013-01-25T11:25:37.467-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Let's assume that we have got the three files (they are attached to the issue):\n1) some.d.ts - declares the \"some\" module.\n2) a.ts - contains the \"A\" class of the \"Test\" module, references \"some.d.ts\", uses one of its functions (the \"setAwesome\" function for example) and makes \"import some = module('some');\".\n3) b.ts - contains the \"B\" class of the \"Test\" module, references \"some.d.ts\" and makes \"export import some = module('some');\"\n\nIt is a correct code and it can be successfully compiled but the result code tries to call Test.some.setAwesome() in the \"A\" class without assigning of Test.some to something meaningful in the \"B\" class.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-10T13:42:50.233-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "0.8.1.1: \"import export\" inside same module leads to \"Cannot call method of undefined\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 550
+  },
+  "FileAttachments": [
+    {
+      "FileId": 561395,
+      "FileName": "source.zip",
+      "DownloadUrl": ".\\561395"
+    },
+    {
+      "FileId": 577705,
+      "FileName": "sample.zip",
+      "DownloadUrl": ".\\577705"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Oh, I just tried to exclude all insignificant details from my sample so actually I didn't expected my sample work. It was an abstraction of error (\"Test.some\" object is used in produced result but it is never assigned). I've prepared detailed sample that I'd expected to work. I get the \"            res.end(MyApp.http.STATUS_CODES[404]);\r\n                              ^\r\nTypeError: Cannot read property 'STATUS_CODES' of undefined\" exception when I run it under node.\r\n\r\nThank you!",
+      "PostedDate": "2012-12-15T07:11:31.387-08:00",
+      "Id": 84245
+    },
+    {
+      "Message": "I don't understand what you expect to work here, since there's nothing providing a definition for 'some'. When I run result.js under node, I just get the expected error (Cannot find module 'some'). Can you post something more complete that you'd expect to work, but doesn't? Thanks\n\r\n\r** Closed by RyanCavanaugh 12/10/2012 2:46PM",
+      "PostedDate": "2012-12-10T14:46:47.58-08:00",
+      "Id": 84246
+    },
+    {
+      "Message": "Could you please take a look at \"sample.zip\"?",
+      "PostedDate": "2012-12-15T07:12:53.173-08:00",
+      "Id": 84247
+    },
+    {
+      "Message": "I noticed the same. Basically the compiler works correctly, but the emitter doesn't generate the correct JavaScript code. It does actually make two mistakes:\n\n1. It doesn't bind the imported module to current module. In the sample below it should generate something like: \n         Foo.path = require(\"path\"); \n \nInstead it generates:\n\n         var path = require(\"path\");\n\n2. If an imported module is also exported, it should NOT be removed if not used within the module. \n\n\nAnother sample that demonstrates the issue:\n==============================================\n\n///<reference path=\"node.d.ts\" />\n\nmodule Foo {\n        export import path = module(\"path\");\n\n        export function sep() {\n                // Without the following line, the emitter doesn't generate any code for the import.\n                // this should not happen for an exported module\n                console.log(path.sep);\n        }\n}\n\n// Following works as expected\nFoo.sep(); \n\n// Compiles fine but generates a run-time error\nconsole.log(Foo.path.sep); \n\n",
+      "PostedDate": "2012-12-15T08:53:56.41-08:00",
+      "Id": 84265
+    },
+    {
+      "Message": "OK, confirmed. Marking 'active'.",
+      "PostedDate": "2012-12-18T10:05:19.023-08:00",
+      "Id": 84517
+    }
+  ]
+}

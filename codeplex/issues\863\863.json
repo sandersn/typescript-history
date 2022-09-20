@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You are correct.  Our current design is that we determine the portion of the source paths common to all inputs, remove this, and use the remaining relative path as a suffix to the output dir for the generated files.\n\nWe did experiment with many designs and had many discussions before landing on this.  No solution was perfect, but we felt this was the best compromise in terms of usefulness and understandability.\n\nIf you have an alternate proposal you believe is a better solution for general usage that maintains a level of simplicity, we'd love to hear it!  Please reopen with details and how it would work in common use cases (e.g. source and output on different drives, etc...).  Thanks.",
+    "ClosedDate": "2013-04-03T11:08:57.76-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "When using \"tsc --out [dir]\" the output directory will contain the output js files starting in the directory level of the outer most ts source file but the surrounding folders are stripped.\r\n\r\nThe problem is that when there are new source files in the surrounding folders the inner folder will suddenly appear in the output structure. This is somewhat indeterministic and prevents build automation.\r\n\r\nExample:\r\n  app\\sub\\main.ts\r\n  app\\sub\\model\\model.ts\r\n\r\ntsc --out ..\\target app\\main.ts app\\model\\model.ts\r\n\r\nwill product output:\r\n  ..\\target\\main.js\r\n  ..\\target\\model\\model.js\r\n\r\nthe original \"app\\sub\" directory structure is gone\r\n\r\nWhen a new source file is introduced\r\n  app\\other.ts\r\n\r\ntsc --out ..\\target app\\sub\\main.ts app\\sub\\model\\model.ts app\\other.ts\r\n\r\nwill product output:\r\n  ..\\target\\sub\\main.js\r\n  ..\\target\\sub\\model\\model.js\r\n  ..\\target\\other.js\r\n\r\nThis output suddenly introduces a variant directory structure.\r\n",
+    "LastUpdatedDate": "2013-10-04T11:51:50.25-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-03T06:47:59.727-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Keep surrounding folder when compiling with tsc into output folder",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 863
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "There should be an option to output each file's absolute path, nested within the specified directory.\n\n/Users/x/dev/foo\n/Users/x/dev/foo/bar\n\ntsc --outDir /tmp --outDirAbsolute\n\n/tmp/Users/x/dev/foo\n/tmp/Users/x/dev/foo/bar\n\nThis lets an external tool always know where to find a file. The current way is unpredictable. If you are to reference a new file one directory up, it will throw your whole project out of whack.\n\nI am working on the `typescript-require` project for Node.js and this is causing a lot of pain.",
+      "PostedDate": "2013-10-01T10:20:27.327-07:00",
+      "Id": 116114
+    },
+    {
+      "Message": "@reckoner\n\nThanks for the suggestion, I created a new bug which we'll consider for a future version.\n\nhttps://typescript.codeplex.com/workitem/1756",
+      "PostedDate": "2013-10-04T11:51:50.25-07:00",
+      "Id": 117497
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1042241",
+    "ThreadId": "443339",
+    "Html": "Hi,\r<br />\n<br />\nThis is a question related to project organization and build practices.\r<br />\n<br />\nCurrently I have tried 2 ways of creating web apps with typescript. For both of them, I have used a specific folder for all my &quot;app code&quot;, like &quot;~/App&quot;, and did the following ways:<br />\n<ol>\n<li>\nCompile each .ts file to correspondent .js file, and use Bundles to merge them together adding &quot;~/App/*.js&quot; to the bundle. I saw that this approach allows me to specify certain files first in the bundle, so the startup code can run in a specific order while executing the script. The problem with this approach is that I can accidentally leave an outdated .js file that wasn't added to the project for some reason, and this will be included into the bundle. This already cost me some debug time to find out why some event was running and was because a TS file I deleted left a corresponding .JS in the folder but wasn't in the project. Once you notice this its not hard to avoid though.<br />\n</li>\n<li>\nCompile all the .ts marked with TypeScriptCompile to a single file using the BeforeBuild action, and add that specific file to the bundle. This approach has the benefit the project defining which file will be included in the build, since you can remove a file from the bundle by setting the BuildAction to None. The problem I have noticed with this approach is that I cannot determine the order of the build, so I avoid any executing code into the files, and have only one &quot;Startup.ts&quot; that runs on &quot;document ready&quot; function calling the general startup code in the right order.<br />\n</li>\n</ol>\nFor both approaches I have used bundles. Still cannot see any benefits in modules for applications, as I'll need to load all the code at some point anyway, its better to load everything minified at once.\r<br />\n<br />\nA third option would be to have a custom build tool, but I don't think its worth doing that for now.\r<br />\n<br />\nSeems to me that the latter will be more aligned to some &quot;typescript project&quot; that is supposed to come up when\r<br />\n<br />\nI'd like to know how people are doing this in their projects, and if there is any point in using modules instead of bundling everything together.\r<br />\n<br />\nThanks,<br />\n",
+    "PostedDate": "2013-05-11T06:19:25.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042397",
+    "ThreadId": "443339",
+    "Html": "If you are using Node.js my builder tool might help for now though it is in rapid development (I am testing it and some things are changing due to ease of use and because of 0.9 release) - project isn't published yet and no documentation is available for now:\r<br />\n<a href=\"https://github.com/jzvelc/typescript-builder\" rel=\"nofollow\">https://github.com/jzvelc/typescript-builder</a>\r<br />\n<br />\nCopy &quot;node-mvc&quot; example from examples folder and run:<br />\n<pre><code>npm install\nnode app.js</code></pre>\n\n",
+    "PostedDate": "2013-05-12T02:23:51.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042457",
+    "ThreadId": "443339",
+    "Html": "Been struggling entire weekend with trying to compile to a single file properly.\r<br />\nHave tried every combination including the undocumented amd-dependency option, import module, reference paths, etc.\r<br />\nEvery option failed in my scenario.\r<br />\n<br />\nHere's how I finally solved how to compile a single external module file from many separate files with classes.\r<br />\nFiles are separated during development (no module inside the file, just a class not marked external).\r<br />\n<br />\nWhen compiling, this script doing these steps:<br />\n<ol>\n<li>run &quot;cat&quot; to combine all files into 1, pipe &quot;sed&quot; to remove all reference paths</li>\n<li>run &quot;sed&quot; to change &quot;class xxx&quot; to &quot;export class xxx&quot;</li>\n<li>run tsc to compile</li>\n<li>\nother post processing such as closure compiler etc.<br />\n</li>\n</ol>\nThe reason for this is, I want to have a single TS and JS file which is easily distributed for other devs to use.\r<br />\nI hope I didn't miss something obvious :) This would be great if it was supported by default.\r<br />\n<br />\nBR,\r<br />\nVictor<br />\n",
+    "PostedDate": "2013-05-12T08:32:05.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042464",
+    "ThreadId": "443339",
+    "Html": "Logotype this builder I have provided is doing just that. By specifying input folder or separate files and one output file (.ts or .js) it generates one single merged file.\r<br />\n<br />\n.ts:\r<br />\nIt reads all .ts files, fixes reference and import paths and writes all the code into one concatenated file (type check is available on every input file before concat).\r<br />\n<br />\n.js:\r<br />\nIt does same as .ts and after concatenation compiles the .ts file to .js.\r<br />\n<br />\nI have following build structure for my temper project:\r<br />\n/builds: core.json, temper.json, utility.json (all build scripts)\r<br />\n/cache: cached builds\r<br />\n/lib: compiled js files\r<br />\n/src: concatenated core.ts and utility.ts files\r<br />\n/src/core: source core .ts files\r<br />\n/src/utility: source utility .ts files\r<br />\n/tsb.json (build script which is linked to temper.json, usually executes /lib/...js file after compilation when needed)\r<br />\n<br />\ntemper.json:\r<br />\nlinks: &quot;builds/utility.json&quot;, &quot;builds/core.json&quot;\r<br />\ninput: &quot;src/*.ts&quot; (all concatenated files inside src)\r<br />\noutput: &quot;lib&quot;\r<br />\n<br />\ncore.json:\r<br />\ninput: &quot;src/core&quot; (all files recursively in folder)\r<br />\noutput: &quot;src/core.ts&quot;\r<br />\n<br />\nutility.json\r<br />\ninput: &quot;src/utility&quot; (all files recursively in folder)\r<br />\noutput: &quot;src/utility.ts&quot;\r<br />\n<br />\nOutput:\r<br />\n/lib/core.js\r<br />\n/lib/core.d.ts\r<br />\n/lib/utlity.js\r<br />\n/lib/utility.d.ts\r<br />\n<br />\nNote that core.ts is dependent on utility.ts and it imports concatenated /src/utility.ts file to access its classes.\r<br />\n<br />\nTake a look of this example and you will get the idea:\r<br />\n<a href=\"http://www.example.com\" rel=\"nofollow\">https://github.com/jzvelc/typescript-builder/tree/master/examples/node-mvc</a>\r<br />\n<br />\nDocumentation is coming soon and many improvements and new features which will allow your projects to copy .d.ts files into your project fixing its paths (some things may change until I publish it on npm, on git I will create additional branches for further releases).\r<br />\nYou mentioned that you are using external modules and step 2 you are adding export prefix (external modules should have that already?).\r<br />\n<br />\nThough it would be nice that tsc would supported step 1 out of the box. Keep in mind that module.exports support is coming which will allow you to export your classes directly but I think that concatenation should still be there.<br />\n",
+    "PostedDate": "2013-05-12T09:16:59.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042487",
+    "ThreadId": "443339",
+    "Html": "jzvelc, cool! Will have a look.\r<br />\n<br />\nMy project (including the build script) is located here:\r<br />\n<a href=\"https://github.com/logotype/LeapMotionTS\" rel=\"nofollow\">https://github.com/logotype/LeapMotionTS</a>\r<br />\n<br />\nRegarding step 2, i had to change the &quot;external&quot; when combined, because it caused some errors when the files were separated.\r<br />\n<br />\nThanks!!<br />\n",
+    "PostedDate": "2013-05-12T10:44:37.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042497",
+    "ThreadId": "443339",
+    "Html": "<strong>nvivo wrote:</strong><br />\n<blockquote>\nStill cannot see any benefits in modules for applications, as I'll need to load all the code at some point anyway, its better to load everything minified at once.<br />\n</blockquote>\nFew words on why do I use AMDs...<br />\n<ol>\n<li>\nPopular libs like jquery could easily be cached by browser in between web pages... those only have to reference same uri (and header...) such as:<br />\n//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js<br />\nNot mentioning that such CDN services are usually much faster than other options.<br />\n</li>\n<li>\nLoad on demand - which is essential to bigger, scalable, &quot;really modular&quot; webapps.<br />\nDon't take me wrong here. With AMD you still would prefer to bundle some of your modules to lower request fragmentation.<br />\n</li>\n<li>\nMuch cleaner, safer global namespace.<br />\n</li>\n<li>\nCleaner dependency management.<br />\n</li>\n</ol>\nPS. RequireJS supports jQuery AMD and jQuery is AMDable... knockout as well. Thats a pity current declarations for those libs do not deal with AMD. (I know it is not hard to extend those... I am doing that myself).<br />\n",
+    "PostedDate": "2013-05-12T11:46:01.177-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042520",
+    "ThreadId": "443339",
+    "Html": "jzvelc,\r<br />\n<br />\nI looked over grunt for this, but for now I was just using msbuild pre/post build tasks as they fit what I need.\r<br />\n<br />\nSeems you got a simplified grunt specific for typescript, is that right? I'll take a look.\r<br />\n<br />\n<br />\narek_bal, \r<br />\n<br />\nI understand that for libraries that is great, but as I said, I cannot see any benefits for applications, like a commercial app or a single page app website. I guess I'm still learning what they are meant for.<br />\n",
+    "PostedDate": "2013-05-12T13:01:24.05-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042544",
+    "ThreadId": "443339",
+    "Html": "Yes actually it is similar to grunt but it supports many features specific to typescript and many will be added. The best thing of all is that\r<br />\ncompile process can be made totally transparent by using code like this:<br />\n<pre><code>require('typescript-builder').build('./tsb.json', process.argv, function (err) {\n    require('./lib/somefile').somefunction(process.argv.length, process.argv);\n});</code></pre>\n\nThis way every time you run your application with following command only the parts that were changed since last build will be automatically recompiled:<br />\n<pre><code>node app.js</code></pre>\n\nThis will even work great when you install it via. npm install if you have following code in package.json:<br />\n<pre><code>&quot;scripts&quot;: {\n    &quot;postinstall&quot;: &quot;tsb build --npm&quot;\n}</code></pre>\n\nDocumentation and publish will be done with 0.9.0 stable release (some things will change).<br />\n",
+    "PostedDate": "2013-05-12T15:31:46.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

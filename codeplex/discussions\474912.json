@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1138277",
+    "ThreadId": "474912",
+    "Html": "Since modules become types by <code>typeof Module</code> (what is good), impossible define a function with same name. It was possible to define like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> My {\n  <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> C { ... }\n  <span style=\"color:Blue;\">export</span> smth();\n}\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> My(x: <span style=\"color:Blue;\">number</span>): My.C;\n\n<span style=\"color:Blue;\">var</span> c: My.C = My(10); <span style=\"color:Green;\">//usage</span>\r\n</pre></div>But now it's incorrect. Meantime it's useful scenario in many existing JS libraries.<br />\nIs it possible to introduce defining call signatures for module itself?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> My {\n  <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> C { ... }\n  <span style=\"color:Blue;\">export</span> smth();\n  (x: <span style=\"color:Blue;\">number</span>): My.C;\n}\n\n<span style=\"color:Blue;\">var</span> c: My.C = My(10); <span style=\"color:Green;\">//usage</span>\r\n</pre></div><em>pleeease =)</em><br />\n",
+    "PostedDate": "2013-12-19T08:44:21.143-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1138549",
+    "ThreadId": "474912",
+    "Html": "The concept in your first example is still allowed, you just have unrelated errors in it. This works:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> My {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> C { foo: <span style=\"color:Blue;\">string</span>; }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> smth();\n}\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> My(x: <span style=\"color:Blue;\">number</span>): My.C;\n\n<span style=\"color:Blue;\">var</span> c: My.C = My(10); <span style=\"color:Green;\">//usage</span>\nconsole.log(c.foo);\r\n</pre></div>The details for the rules are in section 10.5 Declaration Merging in the language specification.<br />\n",
+    "PostedDate": "2013-12-19T12:24:04.28-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1139782",
+    "ThreadId": "474912",
+    "Html": "Yes, you right. I was wrong in my description. It works <strong>if only one function signature</strong> provided.\r<br />\nSo, if I want create overloads of function, the error <code>Duplicate identifier</code> produced:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> My {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> C { foo: <span style=\"color:Blue;\">string</span>; }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> smth();\n}\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> My(x: <span style=\"color:Blue;\">number</span>): My.C;\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> My(y: <span style=\"color:Blue;\">boolean</span>): My.C; <span style=\"color:Green;\">// fail</span>\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> My: { <span style=\"color:Green;\">// this fail too</span>\n ()L My.C;\n (x: <span style=\"color:Blue;\">number</span>): My.C;\n};\r\n</pre></div>And it was worked in 0.9.1.<br />\n",
+    "PostedDate": "2013-12-19T15:00:29.46-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1139803",
+    "ThreadId": "474912",
+    "Html": "Ah, I see. It looks like this works correctly as long as you put the function overloads before the module. This is normally required when writing non-ambient code but not necessary when writing ambient declarations. Hopefully that at least gives you a viable workaround until we fix this.<br />\n<br />\nAlso note that the version with a var of a function type has never worked and is not intended to.<br />\n",
+    "PostedDate": "2013-12-19T15:11:32.5-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1139806",
+    "ThreadId": "474912",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/2038\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-12-19T15:13:46.553-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1140210",
+    "ThreadId": "474912",
+    "Html": "@danquirk, thanks!\r<br />\nActually the reason it was not work (<a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/sammyjs/sammyjs.d.ts\" rel=\"nofollow\">Sammy library typings</a>) is another. <a href=\"https://typescript.codeplex.com/workitem/2039\" rel=\"nofollow\">I filed the new bug</a>.<br />\n",
+    "PostedDate": "2013-12-20T00:37:13.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

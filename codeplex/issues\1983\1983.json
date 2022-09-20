@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in the develop branch.",
+    "ClosedDate": "2013-12-09T08:52:11.737-08:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "I have an interface that defines a generic method, that returns a generic instance. For type safety I put some retractions to the type of the returned instances.\r\n\r\nHere is some sample code:\r\n\r\n```\r\nclass Animal {\r\n}\r\n\r\nclass Dog extends Animal {\r\n    name: string;\r\n}\r\n\r\ninterface IGreeter {\r\n    greet<T extends Animal>(): T;\r\n}\r\n\r\nclass Greeter implements IGreeter {\r\n    greet<T extends Animal>(): T {\r\n        return new Dog();\r\n    }\r\n}\r\n\r\nvar dog = new Greeter().greet<Dog>();\r\ndog.name = \"Poochie\";\r\n```\r\n\r\nThe code above does not compile because of the error stated below. But I don't find the root cause of the error from the message, I suspect is something related to the spec, but the error message is not helpful and I can't find the response in the spec documents.\r\n\r\nHere is the error that I get for the Greeter class:\r\n\r\n```\r\nClass Greeter declares interface IGreeter but does not implement it:\r\nTypes of property 'greet' of types 'Greeter' and 'IGreeter' are incompatible:\r\nCall signatures of types '<T extends Animal>() => T' and\r\n                         '<T extends Animal>() => T' are incompatible.\r\n```\r\n\r\nFinally, this code is a simplified version of a complex structure I have on a larger solution, the code worked on TypeScript 0.9.1.1 but broke after upgrading to 0.9.5.\r\n\r\nAt the end I found a way to make it somehow-work, replacing T by Animal in the interface declaration, but I can't find why this implementation is wrong.\r\n\r\n[Live version of the error in the playground](http://www.typescriptlang.org/Playground/#src=class%20Animal%20%7B%0A%7D%0A%0Aclass%20Dog%20extends%20Animal%20%7B%0A%09name%3a%20string;%0A%7D%0A%0Ainterface%20IGreeter%20%7B%0A%09greet%3CT%20extends%20Animal%3E%28%29%3a%20T;%0A%7D%0A%0Aclass%20Greeter%20implements%20IGreeter%20%7B%0A%09greet%3CT%20extends%20Animal%3E%28%29%3a%20T%20%7B%0A%09%09return%20new%20Dog%28%29;%0A%09%7D%0A%7D%0A%0Avar%20dog%20=%20new%20Greeter%28%29.greet%3CDog%3E%28%29;%0Adog.name%20=%20%22Poochie%22;)",
+    "LastUpdatedDate": "2014-04-01T12:58:43.303-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-07T04:31:53.583-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Interface declaration with generics not working in TypeScript 0.9.5",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1983
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for fixing this quickly! There are plans to release this soon (like in a couple days)? \nI'm asking because we really need the fixes in 0.9.5 but this bug is a show stopper for us. If not releasing this soon I guess we will have to grab the dev branch sources until you do.\n\nThanks in advance,\nAndrés.",
+      "PostedDate": "2013-12-10T05:17:40.077-08:00",
+      "Id": 126766
+    },
+    {
+      "Message": "Any update on the plans for release would be appreciated greatly.",
+      "PostedDate": "2014-01-13T10:24:19.867-08:00",
+      "Id": 130297
+    },
+    {
+      "Message": "I don't believe this has been fixed properly yet.  I have an interface very similar to the above and when compiling the class which implements it alone I get no errors.  However, when building the full project I get:\n\n\"Class Greeter declares interface <my interface>but does not implement it\"\n\nWith no further details.  The only way to get rid of this error is to remove all generics from the definition and implementation.  I am running with the latest development version of typescriptservices.",
+      "PostedDate": "2014-01-15T07:12:31.067-08:00",
+      "Id": 130496
+    },
+    {
+      "Message": "I would have to agree with KFR42 that things are messed up, even on develop branch. This code has multiple errors:\n\n```ts\ninterface IFoo {\n\tcreate<T, U>():IBar<T, U>;\n}\n\ninterface IBar<T, U> {\n\tbaz():T;\n}\n\nclass Bar<T, U> implements IBar<T, U> {\n\tvalue:T;\n\tbaz():T {\n\t\treturn this.value;\n\t}\n}\n\nclass Foo implements IFoo {\n\tcreate<T, U>() {\n\t\treturn new Bar<T, U>();\n\t}\n}\n\ninterface IBarConstructor {\n\tnew <T, U>():IBar<T, U>;\n}\n\nfunction acceptCtor(Ctor:IBarConstructor) {}\n\nacceptCtor(Bar);\n```\n\nResults in:\n\n```\n1983.ts(16,7): error TS2137: Class Foo declares interface IFoo but does not implement it:\n\tTypes of property 'create' of types 'Foo' and 'IFoo' are incompatible:\n\t\tCall signatures of types '<T, U>() => Bar<T, U>' and '<T, U>() => IBar<T, U>' are incompatible:\n\t\t\tTypes of property 'baz' of types 'Bar<{}, {}>' and 'IBar<T, U>' are incompatible:\n\t\t\t\tCall signatures of types '() => {}' and '() => T' are incompatible.\n1983.ts(28,1): error TS2082: Supplied parameters do not match any signature of call target:\n\tConstruct signatures of types 'typeof Bar' and 'IBarConstructor' are incompatible:\n\t\tTypes of property 'baz' of types 'Bar<{}, {}>' and 'IBar<T, U>' are incompatible:\n\t\t\tCall signatures of types '() => {}' and '() => T' are incompatible.\n1983.ts(28,1): error TS2087: Could not select overload for 'call' expression.\n```",
+      "PostedDate": "2014-01-19T22:32:25.727-08:00",
+      "Id": 130855
+    },
+    {
+      "Message": "@csnover\n\nIf you add explicit return type to \"create\" method one of the errors disappear:\n``` TypeScript\nclass Foo implements IFoo {\n    create<T, U>(): IBar<T, U> {\n        return new Bar<T, U>();\n    }\n}\n```\n\nAnd you're left with this one:\n```\nConstruct signatures of types 'typeof Bar' and 'IBarConstructor' are incompatible:\n     Types of property 'baz' of types 'Bar<{}, {}>' and 'IBar<T, U>' are incompatible:\n          Call signatures of types '() => {}' and '() => T' are incompatible.\n```\n\nI suppose it's because Bar type doesn't have method with this signature: new <T, U>():IBar<T, U>; it only has one with new(): Bar; (default constructor). But that's just my guess.\n\n(Tested in compiler from develop branch)",
+      "PostedDate": "2014-01-20T01:12:06.547-08:00",
+      "Id": 130861
+    },
+    {
+      "Message": "I bisected to determine when this stopped working between 0.9.1 and 0.9.5:\n\n```\na2721f6e73cc899b1ed78987433c8bf622546e43 is the first bad commit\ncommit a2721f6e73cc899b1ed78987433c8bf622546e43\nAuthor: Joe Pamer <jopamer@microsoft.com>\nDate:   Thu Oct 31 13:16:28 2013 -0700\n\n    Take first step towards addressing over-instantiation of generic signatures\n\n:040000 040000 c061b542bde37db61a49cdf6435817d87e53b7ff b8e76cf1773a97c38fdf98fc7eb3f96f7ab43d28 M\tsrc\n:040000 040000 d4fc31b0617977a43f4e3bd1f620427078369049 2fb1e46b31c4df482d576a95c80edb786db771bb M\ttests\n```",
+      "PostedDate": "2014-01-20T07:26:24.32-08:00",
+      "Id": 130891
+    },
+    {
+      "Message": "Either I made an error or there is some funny business here. I could not successfully build a2721f6e, so I walked forward a few commits until the branch wasn’t broken again, built, and found that things were still working. Bisected again in a narrower range and received a different result. Confirmed that the previous commit works and this commit does not work:\n\n```\n38ffe2b730585b49e4792d20468be2cf7f227784 is the first bad commit\ncommit 38ffe2b730585b49e4792d20468be2cf7f227784\nAuthor: Joe Pamer <jopamer@microsoft.com>\nDate:   Thu Oct 31 17:16:22 2013 -0700\n\n    Signatures are already added to the comparison cache as soon as we perform a relationship check, so in the contextual instantiation case we need to be careful not to check if the signatures in question are both root signatures.\n    (If they are, then checking the comparison cache for thier prescence will result in a false-positive.)\n\n:040000 040000 8b8d62542d27d5d176c91a4a8635f5c106a7f2b6 a44b8bcf67686c7e832aa5c4059704a93e2d8bd2 M\tsrc\n:040000 040000 205fd836007d1715a6989a2b861bb39455eca99e e6d51350ae9ec3140c1a08fcc841c37b8c58dc12 M\ttests\n```\n\nConfirmed that a compiler built from 38ffe2b7 does not work",
+      "PostedDate": "2014-01-20T08:02:42.177-08:00",
+      "Id": 130892
+    },
+    {
+      "Message": "I assume this is related to the “Default type for type arguments is {} not any” change, but I don’t see any workaround or change that can be made to code to make it not break.",
+      "PostedDate": "2014-01-20T11:02:58.2-08:00",
+      "Id": 130918
+    },
+    {
+      "Message": "Any news on this issue? It`s quite important to be fixed as classes couldn`t implement interface`s generic methods. ",
+      "PostedDate": "2014-02-16T07:53:16.003-08:00",
+      "Id": 133705
+    },
+    {
+      "Message": "Everything here appears to be working as intended now. The original report only has a single error due to trying an invalid assignment to T. csnover's repro in the comments has no errors anymore.",
+      "PostedDate": "2014-04-01T12:58:43.303-07:00",
+      "Id": 140209
+    }
+  ]
+}

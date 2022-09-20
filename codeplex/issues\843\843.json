@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-03-27T11:19:39.603-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Here is a bit of code that correctly infers types when using a function declaration, but gives an error when given the same code as an inline function expression (very common for this kind of code).\r\n\r\nSorry that it's not a smaller reduction, I tried!\r\n\r\nVersion: 87cf65a36848977530f715e49a25d73636c94414\r\n\r\n```\r\n// A simplification of promises.\r\ninterface Promise<T> {\r\n  then<V>(f:(t:T) => V): Promise<V>;\r\n  then<V>(f:(t:T) => Promise<V>): Promise<V>;\r\n  val: T;\r\n}\r\n\r\n// Takes a value and returns the trivial promise.\r\nfunction P<V>(v:V):Promise<V> {\r\n  return {\r\n    then: function(f) {\r\n      var result = f(v);\r\n      if ('then' in result) {\r\n        return result;\r\n      }\r\n      return P(result);\r\n    },\r\n    val: v\r\n  }\r\n}\r\n\r\n// This typechecks just fine.\r\nfunction f(num) {return P(\"hi \" + num)}\r\nvar v1 : String = P(123).then(f).val;\r\n\r\n// This fails to typecheck - error TS111: Cannot convert 'V' to 'String'\r\nvar v2 : String = P(123).then(function f(num) {return P(\"hi \" + num)}).val;\r\n```\r\n\r\n(P.S. this generics work is awesome!)",
+    "LastUpdatedDate": "2013-08-13T09:54:11.227-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-25T21:44:18.38-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "generics error using function expressions",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 843
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  I tried this morning with the latest bits and it appears to be working now.  Could you pull, try again, and reopen if you still see issues.  Thanks!",
+      "PostedDate": "2013-03-27T11:19:35.283-07:00",
+      "Id": 94559
+    },
+    {
+      "Message": "Cool, it works on my local copy too. Thanks :D",
+      "PostedDate": "2013-03-27T17:33:06.31-07:00",
+      "Id": 94603
+    }
+  ]
+}

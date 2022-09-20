@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This should be working correctly in the latest bits in the develop branch. The comments will end up above the appropriate get/set keys inside Object.defineProperty.",
+    "ClosedDate": "2013-10-18T15:56:08.857-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following TypeScript\r\n\r\n    /**\r\n     * @type {number}\r\n     */\r\n    get bar(): number {\r\n        return this._bar;\r\n    }\r\n\r\nresults in the following JavaScript.\r\n\r\n    Object.defineProperty(Foo.prototype, \"bar\", {\r\n        get: /**\r\n        * @type {number}\r\n        */\r\n        function() {\r\n            return this._bar;\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n\r\nThe comment should be before the \"Object.defineProperty\". This is especially important for JSDoc comments because JSDoc processors require property comments to be before the \"Object.defineProperty\" to be able to make sense of it.\r\n\r\nEdit: From trial and error, it seems Closure Compiler wants the annotation as follows:\r\n\r\n    Object.defineProperty(Foo.prototype, \"bar\", {\r\n        /**\r\n         * @type {number}\r\n         */\r\n        get: function() {\r\n            return this._bar;\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n\r\ni.e., inside the object literal but on the \"get\" key instead of the function value. For other positions (including the one I suggested above and thought would be correct) it gives the error \"JSC_MISPLACED_TYPE_ANNOTATION: Type annotations are not allowed here. Are you missing parentheses?\"",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-25T00:19:47.963-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Comments on getters/setters are positioned incorrectly in the output",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1722
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, we'll see about getting that fixed.",
+      "PostedDate": "2013-09-26T11:03:15.543-07:00",
+      "Id": 115740
+    },
+    {
+      "Message": "Confirmed. Thanks.",
+      "PostedDate": "2013-10-18T23:17:16.503-07:00",
+      "Id": 118907
+    }
+  ]
+}

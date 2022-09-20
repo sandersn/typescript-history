@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-26T15:23:56.49-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "While porting my codebase from 0.9.5 to 1.0RC i have the following error :\r\n\r\n```typescript\r\nvar obj: { [index: string] :string } = {} // Here typescript is able to understand that {} is { [index: string] :string }\r\ndeclare var anObject: any\r\nvar obj = Object.keys(anObject).reduce(\r\n\t(obj: {[key: string]: string}, key: string) => {\r\n\t    obj[key] = this.map[key];\r\n\t    return obj;\r\n\t}, {}); // in this case I have an error until I manualy typescast {} with { [index: string] :string }\r\n```",
+    "LastUpdatedDate": "2014-03-31T16:06:10.957-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-25T23:26:04.057-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type Inferance of reduce",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2217
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This looks like it's working correctly to me. What I see:\n\nMultiple declarations of a variable must have exactly the same type, not just assignable types. Your declarations of obj have type { index: string]: string } and then {}, these are not identical so you cannot declare obj twice, even if the types are assignable. This is why your cast removes the error, it makes the second declaration also of exactly the same type.\n\nThe empty object type is only assignable to a type T with an indexer when it is contextually typed by T. See section 4.5 Object Literals of the language spec for how this works with {} and 4.19 for more general contextual typing rules. In your first declaration of obj the assignment of {} is contextually typed because the right hand side is an object literal and the left hand side is a type with a type annotation. In the other case if we remove the 'var' (to remove the aforementioned error above) and just assign the result of the call to reduce to the existing obj declaration then the function call is not contextually typed because the type of the left hand side is not a function type. As a result, we try to assign {} to a type with an indexer and {} does not satisfy that indexer. Consider:\n\n```TypeScript```\nvar x: { [idx: string]: string; }\nx = {}; // we know this is safe\nvar other = {};\nx = other; // we do not know if this is safe because what if:\nother = { a: 1 }\nx = other;\nvar r: string = x['a']; // would be no error, but assigned a number to a string\n```\n\nThe contextual typing rules are designed to make the behavior above work as you'd expect here.\n\nThe reason that the call to reduce is returning {} in the first place is because of the second argument you provided. In trying to infer a generic type T for reduce you've provided the compiler a candidate type {} for T with that argument. This ends up being the final choice for T so reduce returns that type.",
+      "PostedDate": "2014-02-26T15:23:53.277-08:00",
+      "Id": 134962
+    },
+    {
+      "Message": "What I wanted to show here is the fact that in the type inference in the reduce call is falsy.\nWhen I look at the function declaration : \n```typescript\nreduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;\n```\nand at my callback : \n```\nreduce(\n    (obj: {[key: string]: string}, key: string) => {\n        obj[key] = this.map[key];\n        return obj;\n    }, {});\n```\nobj the first parameter of the callback is explicitly  typed to ` {[key: string]: string}` so the compiler should infer ` {[key: string]: string}` for U and should understand tht `{}` is ` {[key: string]: string}` in the same way than in the following piece of code: \n```typescript\nvar obj: { [index: string] :string } = {}\n```\n\nAnd it was the case in 0.9.5\n",
+      "PostedDate": "2014-02-27T01:05:57.93-08:00",
+      "Id": 135253
+    }
+  ]
+}

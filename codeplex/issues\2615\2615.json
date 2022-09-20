@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T17:18:44.727-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "(Before posting this, I found [this](https://typescript.codeplex.com/discussions/434852) but it hasn't received a reply. And since I'm reporting an actual bug, I chose not to just reply to that.)\r\n\r\nConsidering the following TypeScript:\r\n\r\n```ts\r\nclass Foo{\r\n\tstatic x() {\r\n\t\treturn 'Foo';\r\n\t}\r\n}\r\n\r\nclass Bar extends Foo{\r\n\tstatic x() {\r\n\t\treturn super.x() + 'Bar'\r\n\t}\r\n}\r\n```\r\n\r\nThe outputted javascript is:\r\n\r\n```js\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Foo = (function () {\r\n    function Foo() {\r\n    }\r\n    Foo.x = function () {\r\n        return 'Foo';\r\n    };\r\n    return Foo;\r\n})();\r\n\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function Bar() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    Bar.x = function () {\r\n       return _super.prototype.x.call(this) + 'Bar';\r\n    };\r\n    return Bar;\r\n})(Foo);\r\n```\r\n\r\nBut the expected output of `Bar.x` is:\r\n\r\n```js\r\nBar.x = function () {\r\n    return _super.x.call(this) + 'Bar';\r\n};\r\n```\r\n\r\nNow that:\r\n\r\n```js\r\nfor (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n```\r\n\r\nhas been added to the `__extends` function, shouldn't the compiler take static method calls from inherited classes into consideration?\r\n\r\n__Currently, the outputted javascript generates an error__, as `x` is not on the `prototype` and we are attempting to invoke `call` on it.",
+    "LastUpdatedDate": "2014-07-21T17:18:44.727-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-10T11:04:22.88-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Static method calls on super",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2615
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Um ... \"super.\" is a reference to the parent prototype for parent *instance* functions, not static ones.  You should just be calling \"Foo.x()\" or \"Bar.x()\".",
+      "PostedDate": "2014-07-11T11:27:16.597-07:00",
+      "Id": 152123
+    }
+  ]
+}

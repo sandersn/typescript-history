@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1105917",
+    "ThreadId": "461752",
+    "Html": "<a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/39c52483369ccab79874b08c3f69397245dad3d9/underscore.string/underscore.string.d.ts\" rel=\"nofollow\">underscore.string</a> module is defined as follows:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&#39;underscore.string&#39;</span> {\n  <span style=\"color:Blue;\">function</span> isBlank(str: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n}\r\n</pre></div>While <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/39c52483369ccab79874b08c3f69397245dad3d9/underscore/underscore.d.ts\" rel=\"nofollow\">underscore.d.ts</a> declares:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;underscore&quot;</span> {\n    <span style=\"color:Blue;\">export</span> = _;\n}\r\n</pre></div>How can I use it from my code ?\r<br />\nI've tried:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nunderscore.<span style=\"color:Blue;\">string</span>.isBlank(<span style=\"color:#A31515;\">&quot;&quot;</span>);\r\n</pre></div>But tsc complains that:<br />\n<blockquote>\nerror TS2095: Could not find symbol 'underscore'.<br />\n</blockquote>\n",
+    "PostedDate": "2013-10-10T03:31:25.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106046",
+    "ThreadId": "461752",
+    "Html": "When you declare a module name as a string that's declaring an AMD module that you would load with require.  So this would work:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&#39;underscore.string&#39;</span> {\n  <span style=\"color:Blue;\">function</span> isBlank(str: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n}\n\n<span style=\"color:Blue;\">import</span> us = require(<span style=\"color:#A31515;\">&#39;underscore.string&#39;</span>);\nus.isBlank(<span style=\"color:#A31515;\">&quot;&quot;</span>);\r\n</pre></div><a href=\"http://www.typescriptlang.org/Playground/#src=declare%20module%20%27underscore.string%27%20{%0D%0A%20%20function%20isBlank%28str%3A%20string%29%3A%20boolean%3B%0D%0A}%0D%0A%0D%0Aimport%20us%20%3D%20require%28%27underscore.string%27%29%3B%0D%0Aus.isBlank%28%22%22%29%3B\" rel=\"nofollow\">playground</a>\r<br />\nThat's assuming you have a module loader like requirejs available and the underscore.string module is located where it can find it.\r<br />\n<br />\nIf you're not using modules but objects loaded into the global namespace you can <strong>almost</strong> do this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> underscore.<span style=\"color:Blue;\">string</span> {\n  <span style=\"color:Blue;\">function</span> isBlank(str: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n}\n\nunderscore.<span style=\"color:Blue;\">string</span>.isBlank(<span style=\"color:#A31515;\">&quot;&quot;</span>);\r\n</pre></div><a href=\"http://www.typescriptlang.org/Playground/#src=declare%20module%20underscore.string%20{%0D%0A%20%20function%20isBlank%28str%3A%20string%29%3A%20boolean%3B%0D%0A}%0D%0A%0D%0Aunderscore.string.isBlank%28%22%22%29%3B\" rel=\"nofollow\">playground</a>\r<br />\n<br />\nI say almost because <code>string</code> can't be a legal module name.  If it was another word like &quot;foo&quot; then it would work.<br />\n",
+    "PostedDate": "2013-10-10T08:35:44.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106058",
+    "ThreadId": "461752",
+    "Html": "Yeah, I forgot to mention that I don't use module loader :(\r<br />\n<br />\nI was hoping for some way of creating global alias:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> us = underscore.<span style=\"color:Blue;\">string</span>; <span style=\"color:Green;\">// or</span>\n<span style=\"color:Blue;\">import</span> us = <span style=\"color:#A31515;\">&#39;underscore.string&#39;</span>;\r\n</pre></div>but neither works.<br />\n",
+    "PostedDate": "2013-10-10T08:55:30.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106196",
+    "ThreadId": "461752",
+    "Html": "Nope if you don't want to use a module loader it's up to the script files you're loading to put everything in the global namespace.<br />\n<br />\nI haven't tested this but glancing through the Underscore.string source it looks pretty smart.  If it's not loaded as a CJS or AMD module it will do the right thing and install itself in the global _.string.  If the module name wasn't string you could strip out the quotes to make it <code>declare module underscore.string</code> and that would just work.  That doesn't work because string is reserved so we need to get a little fancier.<br />\n<br />\nI turned the module into an interface and made it a member of _.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> UnderscoreString {\n    <span style=\"color:Green;\">/**\n     * Determine if a string is &#39;blank.&#39;\n     * @param str\n     */</span>\n    isBlank(str: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n\n    <span style=\"color:Green;\">// ... and so on</span>\n\n}\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> _ {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> <span style=\"color:Blue;\">string</span>: UnderscoreString;\n}\n\n_.<span style=\"color:Blue;\">string</span>.isBlank(<span style=\"color:#A31515;\">&quot;ggdsdfg&quot;</span>);\r\n</pre></div>I'd like to link the full Playground example to you but it's more characters than this forum will let me enter.  I can't even find a url shortener that will allow it.<br />\n<br />\n<strong>Edit</strong>: here's a <a href=\"http://pastebin.com/bA3dq7BM\" rel=\"nofollow\">pastebin</a>.<br />\n",
+    "PostedDate": "2013-10-10T14:04:01.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106220",
+    "ThreadId": "461752",
+    "Html": "I took a less invasive approach and simply renamed module to <code>_</code> since I'm mixing <code>_.string</code> into <code>_</code>.\r<br />\nModules are the weakest part of typescript, causing only problems and confusion :(<br />\n",
+    "PostedDate": "2013-10-10T16:05:58.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

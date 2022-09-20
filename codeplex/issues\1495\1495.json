@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.19-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "If I use the languageService, `getCompletionsAtPosition` at a position where there is a prefix of the item to be completed, I would expect only to get suggestions that match the prefix. Example (cursor at `_`)\r\n\r\n```\r\nvar x = {adam:1,eve:2};\r\nx.ad_ // completions include both adam and eve\r\n```\r\n\r\nInstead, I always get back a complete list of (non-)members, even if most of them are useless because they do not match the prefix. In the example above, it is just one superfluous suggestion but in real projects, there can be hundreds of such junk suggestions, especially for non-member completions.\r\n\r\nIf prefix-aware completions cannot be the default, there should be a way to enable them. Meanwhile, as a workaround, perhaps you can suggest a method by which I can extract the prefix (`ad` in the example) from the language service storage to do my own filtering before passing the result to external (non-JS) clients?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-12T09:47:58.737-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "getCompletionsAtPosition should respect prefix",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1495
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "getCompletions is designed to retrieve all possible completions, this way the host has all possible entries, and can adapt as the user is typing, so that you do not have to call getCompltions on every character the user types. \n\nSo the matching host implementation would call getCompletions on some trigger points (after \".\", or ctr+space in VS) then cache all the results, the host then filters based on the current user input after the trigger point, and only show relevant completions, this filtering will be done every time the user types, or deletes a character. the host then abandoned the list once the identifier name is complete.\n\nA possible change to add the current dot location to the result of the completion list. though it should be fairly simple to find the dot before your location if getCompletions returns isMemberCompletion set to true.",
+      "PostedDate": "2013-08-12T15:49:24.623-07:00",
+      "Id": 109536
+    },
+    {
+      "Message": "Yes, I understand the point of not having to call `getCompletions` repeatedly.\n\nMy usage context is slightly more complex, though: I've implemented a commandline server (tss) that accesses the TS language services; editor plugins (for Vim, Emacs, ..) can start this server as a subprocess to inform their own completion UI (which just narrows/widens the filter for a single list, based on user edits). \n\nhttps://github.com/clausreinke/typescript-tools/tree/testing_v0.9\n\nCurrently, that means that the whole `getCompletions` result has to be stringified, transported, and parsed, then the editor plugin does the filtering. No problem so far for my Vim plugin, but an Emacs plugin author has  reported having performancs problems with parsing large JSON responses (https://github.com/clausreinke/typescript-tools/pull/6).\n\nIt just feels wrong to send so much data that is known to be useless, and if I pre-filter the response in my server, then I have to re-implement part of what `getCompletions` does. I will have to do so now, probably copying some code from `getCompletions`, but it seemed to make more sense to get `getCompletions` itself improved.",
+      "PostedDate": "2013-08-13T02:01:16.583-07:00",
+      "Id": 109576
+    },
+    {
+      "Message": "I do not think you need to re-implement getCompletions, all you need is filtering. so after calling getCompletionsAtPosition you will need to find the substring, which should be a simple search from the current position on the text, until you find the first non-identifier character on the left. this will give you the substring that the user has typed. use that to filter the list of entries on the completionsList object, then send the data over to your clients.\n\nA helpful trick: you need to do that only if isMemberCompletion == false; as this is a global completion request and will include all identifiers visible at this location, this contains all DOM objects and types for instance. if isMemberCometion == true this is a \"identifier.\" sort of situation, and usually these are not too big, though your scenarios might be different.\n\nagain I think it would be helpful if the completion list returns the offset of the replaced text (i.e. the partial text the user has entries, so that your filter logic is simpler.) I think we can add this sometime soon.",
+      "PostedDate": "2013-08-13T09:14:34.103-07:00",
+      "Id": 109616
+    },
+    {
+      "Message": "The filtering is not the problem, I just don't want to duplicate the definition of what a JS identifier is. So, yes, getting the start position of the currently completed fragment would solve the issues quite neatly, while leaving the language knowledge responsibility in the language service routines. \n\nYes, member==false is the main problem, though I have no influence on the code users of our tools write, so member==true might also be long for deep hierarchies.",
+      "PostedDate": "2013-08-13T12:55:04.947-07:00",
+      "Id": 109698
+    },
+    {
+      "Message": "Btw, why are `TypeScript.Scanner` and its methods `isIdentifierStart`, `isIdentifierPart` not exposed (preferably as `static public`)? Then I could just loop backwards from current position.",
+      "PostedDate": "2013-08-15T02:26:55.847-07:00",
+      "Id": 109995
+    },
+    {
+      "Message": "I'm now using this as a workaround:\n```\nvar idPart   = p => /[0-9a-zA-Z_$]/.test(source[p])\n                 || TypeScript.Unicode.isIdentifierPart(source.charCodeAt(p),languageVersion);\nvar idStart  = p => /[a-zA-Z_$]/.test(source[p])\n                 || TypeScript.Unicode.isIdentifierStart(source.charCodeAt(p),languageVersion);\n```\nThat should do it, until you expose the fragment start postion in the `getCompletions` result.",
+      "PostedDate": "2013-08-15T03:13:34.73-07:00",
+      "Id": 109999
+    }
+  ]
+}

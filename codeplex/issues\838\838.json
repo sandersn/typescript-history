@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.907-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Traits, as \"compile-time\" partial classes, would perfectly fit with TS ideology and resolve problems of multiple inheritance/mixins.\r\n\r\nTraits in Scala: http://en.wikibooks.org/wiki/Scala/Traits\r\nTraits in PHP: http://php.net/trait\r\n\r\nI propose minimal traits similar to PHP implementation.\r\n\r\n```\r\ntrait FooTrait {\r\n   // same as class definition, but no constructor allowed, e.g.:\r\n   public foo() {\r\n       return \"foo\";\r\n   }\r\n   private bar() {\r\n       return \"bar\";\r\n   }\r\n}\r\n\r\nclass Foo {\r\n    import FooTrait; //not insisting on exact keyword and syntax, just smth to start with\r\n\r\n    // ...\r\n}\r\n\r\nclass Bar {\r\n    // rename methods:\r\n    import FooTrait(foo => tfoo, bar => tbar);\r\n\r\n    // and to include another trait, there is another import line:\r\n    // import BarTrait;\r\n\r\n    // ...\r\n}\r\n```\r\n\r\nThe code above could be compiled to JS below (can be optimized, just showing the main idea):\r\n```\r\nvar FooTrait = (function () {\r\n    function FooTrait() {\r\n        throw \"Cannot instantiate trait FooTrait\";\r\n    }\r\n    FooTrait.prototype.foo = function () {\r\n        return \"foo\";\r\n    };\r\n    FooTrait.prototype.bar = function () {\r\n        return \"bar\";\r\n    };\r\n    return FooTrait;\r\n})();\r\n\r\nvar Foo = (function (_super, FooTrait) {\r\n    function Foo() { }\r\n    Foo.prototype.foo = FooTrait.prototype.foo;\r\n    Foo.prototype.bar = FooTrait.prototype.bar;\r\n    return Foo;\r\n})(undefined, FooTrait);\r\n\r\nvar Bar = (function (_super, FooTrait) {\r\n    function Bar() { }\r\n    Bar.prototype.tfoo = FooTrait.prototype.foo;\r\n    Bar.prototype.tbar = FooTrait.prototype.bar;\r\n    return Bar;\r\n})(undefined, FooTrait);\r\n```\r\nUnresolved name conflicts should raise a compile time error.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-22T02:31:56.73-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Feature Request / Proposal: Traits",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 16,
+    "Id": 838
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Details of the implementation may be discussed, but I do second this. I've been using these kind of techniques almost everywhere possible, including languages that are entirely based on non supporting them like Java (using AspectJ) .\n\nIt can be implemented in a number of ways. The prototype chain may be altered to include required traits, with proper ordering in respect to the real super class (there is quite some literature on this). Or it could be implemented as simple syntactical sugar with automatic delegation, where the trait is an interface, indicating a \"default implementation\", and classes using that trait have implicitly defined methods that delegate to an instance of the default implementation.",
+      "PostedDate": "2013-06-11T08:46:32.353-07:00",
+      "Id": 102774
+    },
+    {
+      "Message": "This would make me cry for joy.",
+      "PostedDate": "2013-08-31T12:43:08.97-07:00",
+      "Id": 111791
+    },
+    {
+      "Message": "+1 I would also like to see this feature added.",
+      "PostedDate": "2013-10-15T05:45:45.423-07:00",
+      "Id": 118467
+    },
+    {
+      "Message": "Will this be implemented? I think it would be a great advance for the language. But the proposal has more than one year made ​​and has not yet been implemented.",
+      "PostedDate": "2014-07-08T18:51:35.277-07:00",
+      "Id": 151876
+    },
+    {
+      "Message": "I think this would be a great edition!\n\nI think TypeScript should utilize the flexibility of the prototype system to allow more powerful abstractions than just \"interface\". It doesn't seem like the JavaScript required to do this wouldn't be too complex.\n\nWe shouldn't encourage developers to use the typesystem, only to give them a head ache when they want to mix some implementation with interface in one type. I think TypeScript can and should have a more flexible typesystem than big enterprise languages without having to give up type-safety entirely.\n\nAlso, I don't think this would make it harder for JS developers to debug code produced by TSC. If you are debugging this code, you should notice the pattern (and maybe you'll like the pattern and adopt it).",
+      "PostedDate": "2014-10-15T13:32:11.847-07:00",
+      "Id": 162349
+    }
+  ]
+}

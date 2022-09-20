@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "(refer to http://stackoverflow.com/questions/15844043/typescript-amd-module-not-returning-anything)",
+    "ClosedDate": "2013-04-08T12:57:50.54-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Suppose I define a simple \"log.ts\" file:\r\n\r\n```\r\n    export function message(s : string) {\r\n        console.log(s);\r\n    }\r\n```\r\n\r\nAnd in the same directory, a \"MyController.ts\" file, which imports log.ts:\r\n\r\n```\r\n import log = module(\"./log\");\r\n    class MyController {\r\n    \r\n        a : string = \"aaa\";\r\n    \r\n        constructor () {\r\n            log.message(\"hello world\");\r\n        }\r\n    }\r\n```\r\n\r\nI compile with --module AMD and get the following:\r\n\r\n```\r\n   define([\"require\", \"exports\", \"./log\"], function(require, exports, __log__) {\r\n        var log = __log__;\r\n    \r\n        var MyController = (function () {\r\n            function MyController() {\r\n                this.a = \"aaa\";\r\n                log.message(\"hello world\");\r\n            }\r\n            return MyController;\r\n        })();    \r\n    })\r\n    //@ sourceMappingURL=MyController.js.map\r\n```\r\n\r\nBecause the define function returns nothing, the callback inside the following call to require does not get the expected controller parameter passed to it:\r\n\r\n```\r\n       require([\"MyController\"], function (controller) {\r\n                        theRoute.controller = controller;\r\n                        defer.resolve();\r\n                        $rootScope.$apply();\r\n                    });\r\n```\r\n\r\nIf I add \"return MyController\" to the require call inside of MyController.js, then this callback correctly gets the controller parameter.\r\n\r\nIt is unclear to me this is either human error, a bug in TS, or something that I can configure.",
+    "LastUpdatedDate": "2013-04-08T12:57:50.54-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-05T14:46:29.283-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "AMD modules do not return anything inside of the define function",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 871
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

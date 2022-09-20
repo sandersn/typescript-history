@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1048657",
+    "ThreadId": "444975",
+    "Html": "Currently when using Backbone with TypesScript, I must do this:<br />\n<pre><code>class User extends Backbone.Model {\n    constructor(args?, options?) {\n    \n        this.idAttribute = &quot;...&quot;;\n        \n        this.url = &quot;...&quot;;\n        \n        this.defaults = { \n            id: null,\n            name: &quot;&quot;\n        }\n    \n        super(args, options);\n    }\n}</code></pre>\n\nThis is because the parent constructor must be called only after you set the class attributes. This mimics Backbone's .extend behavior, where it calls _.extend(this, options) first, then finishes the constructor execution.\r<br />\n<br />\nBut it would be much nicer if we could write this:<br />\n<pre><code>class User extends Backbone.Model {\n\n    idAttribute = &quot;...&quot;;\n    \n    url = &quot;...&quot;;\n    \n    defaults = { \n        id: null,\n        name: &quot;&quot;\n    };\n}</code></pre>\n\nThe only thing preventing this is how TypeScript generates the constructor. Currently, the super() is always called before everything unless you set all the class properties in the constructor. This is the expected behavior for most OO languages, but if there was a way to change this, this scenario would be allowed while allowing to set new properties to the class without errors like &quot;TS2104: A 'super' call must be the first statement in the constructor when a class contains initialized properties or has parameter properties.&quot;.\r<br />\n<br />\nI understand how many things this would break if it was set by default, as this prevents the class to control its own creation process. \r<br />\n<br />\nBut this pattern is already used everywhere and the order of the parent constructor call is already controllable in javascript. I believe TS could at least have a modifier that compiled the constructor this way. \r<br />\n<br />\nMaybe a hint to the extends clause like:<br />\n<pre><code>class User extends propfirst Backbone.Model { ... }</code></pre>\n\nOr an triple-slash hint/c#-like attribute:<br />\n<pre><code>///&lt;constructor propertyFirst=&quot;true&quot; /&gt;\nclass User extends Backbone.Model { ... }</code></pre>\n\nThe change itself is quite simple and would make code like this simpler and more elegant to write.<br />\n",
+    "PostedDate": "2013-05-25T09:13:53.503-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129223",
+    "ThreadId": "444975",
+    "Html": "Yeah, I am not currently a fan of this TS2104 restriction. What is the difference between these two pieces of code?:<br />\n<pre><code>class Foo extends SuperFoo {\n  thinger:Object = {};\n\n  constructor(kwArgs:Object) {\n    super(this.addDefaults(kwArgs));\n  }\n\n  // ...\n}</code></pre>\n\n<pre><code>class Foo extends SuperFoo {\n  thinger:Object;\n\n  constructor(kwArgs:Object) {\n    this.thinger = {};\n    super(this.addDefaults(kwArgs));\n  }\n\n  // ...\n}</code></pre>\n\nThe difference is that the first one doesn’t work because of a compiler restriction. (And actually causes a “TS2097: 'this' cannot be referenced in current location.” error, though it becomes the TS2104 error if the <code>this.addDefaults</code> call is split out to its own statement like <code>kwArgs = this.addDefaults(kwArgs); super(kwArgs);</code>.)<br />\n",
+    "PostedDate": "2013-11-26T08:39:25.797-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129249",
+    "ThreadId": "444975",
+    "Html": "The restrictions here are trying to help point people in the right directions for initialization order.  I agree it can be a bit tedious, but the warnings are trying to enforce that you call super() first so that you the super bits are initialized first, and then the current class's initializers.<br />\n\r<br />\nSome languages may infer this call to super.  Here, we're using the ES6 explicit super call.  This leaves the user with manually managing the initialization order.   \r<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> SuperFoo {\n    <span style=\"color:Blue;\">constructor</span>(x) { }\n}\n\n<span style=\"color:Blue;\">class</span> Foo <span style=\"color:Blue;\">extends</span> SuperFoo {\n    thinger: Object;\n\n    addDefaults(x) { }\n\n    <span style=\"color:Blue;\">constructor</span>(kwArgs: Object) {\n        <span style=\"color:Blue;\">var</span> kwArgs = <span style=\"color:Blue;\">this</span>.addDefaults(kwArgs)\n        <span style=\"color:Blue;\">super</span>(kwArgs);\n        <span style=\"color:Blue;\">this</span>.thinger = {};\n    }\n\n    <span style=\"color:Green;\">// ...</span>\n}\r\n</pre></div>I'm curious how the &quot;addDefaults&quot; call works, as it wouldn't be working with an initialized object at that point.  The general idea, though, is to thread an object through that gets initialized super-first and then your local initializations in a way that's predictable.  <br />\n",
+    "PostedDate": "2013-11-26T09:54:25.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

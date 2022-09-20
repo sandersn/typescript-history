@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:09.22-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "As in the title, and as discussed extensively [here](https://typescript.codeplex.com/discussions/436348), it would be very helpful to allow enums of types other than `number`. At the very least, if allowing arbitrary types is too much work, string enums should be allowed. The current codegen for enums actually works with strings as-is, the compiler just flags errors. \r\n\r\nConsider:\r\n``` TypeScript \r\nenum Dog{\r\n\tRover = 'My Dog',\r\n\tLassie = 'Your Dog'\r\n}\r\n\r\nalert(Dog.Rover);\r\n```\r\nAs of 0.9, this gets to compiled to:\r\n``` TypeScript\r\nvar Dog;\r\n(function (Dog) {\r\n    Dog[Dog[\"Rover\"] = 'My Dog'] = \"Rover\";\r\n\r\n    Dog[Dog[\"Lassie\"] = 'Your Dog'] = \"Lassie\";\r\n})(Dog || (Dog = {}));\r\n\r\nalert(Dog.Rover);\r\n```\r\nwhich is 100% functioning JavaScript that works as you expect it to.\r\n\r\nIn addition, the whole concept of \"overloads on constants\" would be a lot cleaner with a string-based enum:\r\n\r\n``` TypeScript\r\ninterface Document {\r\n    createElement(TagName.Canvas): HTMLCanvasElement;\r\n    createElement(TagName.Div): HTMLDivElement;\r\n    createElement(TagName.Span): HTMLSpanElement;\r\n}\r\n\r\nenum TagName{\r\n    Canvas = \"canvas\",\r\n    Div = \"div\",\r\n    Span = \"span\"\r\n}\r\n\r\nvar a = createElement(TagName.Canvas); //a is of type HTMLCanvasElement\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-24T05:35:38.007-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Allow enums of types other than number",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 21,
+    "Id": 1217
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the input, assigning to Jon who handles our suggestions.",
+      "PostedDate": "2013-06-24T11:39:49.06-07:00",
+      "Id": 103950
+    },
+    {
+      "Message": "Yes, string enums seem to be supported, but the compiler still copmains.  Go to the playground and enter this:\n\n```\nenum Somethings {\n\tA = 1,\n\tB = 2,\n\tW = \"World\"\n}\n```\n\nThe \"W\" line will give a compiler error, but STILL compiles.  This error seems to be ignored in the playground, but Visual Studio will see the error and complain.  This however seems to work:\n\n```\nenum Somethings {\n\tA = 1,\n\tB = 2,\n\tW = <Somethings><any>\"World\"\n}\n```\n\nBut that is a work-around, not something I'd expect to have to do all the time.\n",
+      "PostedDate": "2013-08-06T13:09:45.49-07:00",
+      "Id": 108695
+    },
+    {
+      "Message": "I doubt we'll support this.  Enumerations are compatible with numbers and much of how they work is bound to that.  With a little bit of extra work, you can get specialized names:\n\n```TypeScript\nenum Tag { Canvas, Div, Span };\nvar TagNames = [\"canvas\", \"div\", \"span\"];\n```\n\nIn TypeScript, though, we already support just getting back to the string of the enum.  The above could be written like this instead:\n\n```TypeScript\nenum Tag { canvas, div, span };\n// then, to access:\nvar t = Tag[Tag.canvas]; // \"canvas\"\n```\n",
+      "PostedDate": "2013-10-29T16:49:43.617-07:00",
+      "Id": 120124
+    },
+    {
+      "Message": "\"a little bit of extra work\" is what I think some people are trying to avoid. ;)  Besides, I routinely have situations where I might use \"enum A {B,C}\" where B = \"some-kind-of-text\", preventing your last code posted above from being of any use ('-' is in invalid _identifier_ char).  This may be an enumerated list of css class tags, for example - and yes, a class with static properties could work also, but that doesn't work when you need the type for function parameters.\n\nI do understand that enumerations are usually number based, but all I can say is it is very useful to have a list of string items that are ALL of a \"special\" type (instead of just \"string\").  This would allow only a fixed list of strings to be passed to a particular function.  In fact, I do this often now in TS already, using my work around above, for an API I'm working on.  I have a bunch of various functions with typed parameters expecting strings only from a special enum list.\n\nhttps://en.wikipedia.org/wiki/Enumeration: \"An enumeration is a collection of items that is a complete, ordered listing of all of the items in that collection.\"\n\nI think a collection of strings in \"the order I choose\" fits that definition as well. ;)  Besides, I could un-order the enum with \"enum X { C=3, B = 1, A = 2 }. ;)  Anyway, the point of TS is to help add typing to aid in finding errors early for large scale apps, and this all works together towards that same goal. If not \"enum\", then call it something else. 8)",
+      "PostedDate": "2013-10-29T19:12:21.127-07:00",
+      "Id": 120136
+    },
+    {
+      "Message": "@jonturner I agree with jamesnw. Using enums as an index into a separate array is ugly and not intuitive. To pass around a strongly typed set of strings that you reference by name you need string enums. \n\nCould you elaborate on the difficultly in supporting this? The compiler __already__ emits valid JavaScript to support string enums. The fact that they \"are compatible with numbers\" is an implementation detail, and it shouldn't cripple the potential of this feature. The only additional work that I can see is making the compiler check if the enum has non-`number` members, and if so, disallowing bitwise operations. ",
+      "PostedDate": "2013-10-31T13:32:15.683-07:00",
+      "Id": 120344
+    },
+    {
+      "Message": "Exactly - and did I mention I'm doing this now already with the work around? ;) As MgSam stated, the playground compiler outputs the correct code already - all I have to do is trick the compiler by casting the string as \"any\", then the expected type. Choosing not to support it would not prevent me or others from doing it anyway; albeit less clean. :)",
+      "PostedDate": "2013-10-31T15:46:31.347-07:00",
+      "Id": 120368
+    },
+    {
+      "Message": "I have posted a new suggestion about string enums [here](https://typescript.codeplex.com/discussions/549207). I hope there would be more discussion about this topic.",
+      "PostedDate": "2014-06-20T22:11:17.897-07:00",
+      "Id": 150382
+    },
+    {
+      "Message": "Automatic definition may be also helpful for string type enums.\n\n\toptions Tags {\n\t\tCanvas,//implicitly, \"canvas\"\n\t\tTable,//\"table\"\n\t\tDiv//\"div\"\n\t}\n\n...as one would conventionally name those \"options.\"",
+      "PostedDate": "2014-06-27T20:46:42.713-07:00",
+      "Id": 151028
+    },
+    {
+      "Message": "I agree, this is needed, very helpful to create a typed set of options, default value based on the name may be a possibility, but being able to set it would be better. (in case of change!)",
+      "PostedDate": "2015-04-17T01:42:40.757-07:00",
+      "Id": 182983
+    }
+  ]
+}

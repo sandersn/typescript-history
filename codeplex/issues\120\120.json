@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We likely won't support this because of the complexity it puts into the type system.  \n\nThere are a couple workarounds.  Function overloads allow you to type arguments that can be multiple types.  As mentioned in the thread, there will also be workarounds once we have generics.",
+    "ClosedDate": "2013-02-06T13:34:26.797-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Here is the original thread where the idea came from: \r\nhttp://typescript.codeplex.com/discussions/397683\r\n\r\nWe can only specify one type at the moment, for example:\r\n\r\n\r\ninterface Test {\r\n  data: string\r\n}\r\n\r\n\r\nBut what should we do if we want to allow multiple types? A common use case is allowing either a string or an object as an option. We can take another interface for the object but we can't\r\nmix it!\r\n\r\nI could imagine something like this:\r\n\r\n\r\ninterface TestOptions {\r\n  nr1: number;\r\n  nr2: number;\r\n}\r\n\r\n// Some syntax proposals for\r\n// multiple type specifiers\r\n\r\ninterface Test {\r\n  // JSON style\r\n  data: [string, TestOptions],\r\n\r\n  data: string | TestOptions;\r\n\r\n  data: string, TestOptions;\r\n\r\n  data: string + TestOptions\r\n}\r\n\r\nfunction test(data: [string, TestOptions]) {}\r\n\r\nfunction test(data: string | TestOptions) {}\r\n\r\nfunction test(data: string, TestOptions) {}",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-05T11:46:44.017-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Suggestion: specifying sum types",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 7,
+    "Id": 120
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I have seen this happen in the real world for event handlers, where 'e' can be either an event object or a string.\n",
+      "PostedDate": "2012-10-05T12:09:36.057-07:00",
+      "Id": 78709
+    },
+    {
+      "Message": "I think these are absolutely essential for supporting idiomatic use of JavaScript.\n\nThe closure compiler supports these in its type language: using the syntax (A|B).  See\n\n   https://developers.google.com/closure/compiler/docs/js-for-compiler\n\nThese are also called union types.",
+      "PostedDate": "2012-10-09T04:50:53.203-07:00",
+      "Id": 79130
+    },
+    {
+      "Message": "i definately would love to see this sort of \"union\" where something can be this or that. I have specific use cases i'd use it.",
+      "PostedDate": "2012-10-09T15:39:49.387-07:00",
+      "Id": 79250
+    },
+    {
+      "Message": "Union types is something we've considered adding on several occasions.  We haven't so far because of two things:\n1) Several cases where union types are used can be modeled with overloading in TypeScript. \n2) One of the questions that comes up is what should be legal to do with a variable of type \"a | b\".  Should completion lists show the union of members of both types?  Or only the intersection of the members?\n\nThat said, the use cases where union types are used for types of properties in objects is something that can't be modeled fully in TypeScript currently.  I do expect we'll reconsider this again.  If you have concrete examples of JS APIs that could be better captured in the TS type system with union types - please do share.",
+      "PostedDate": "2012-10-10T08:44:55.41-07:00",
+      "Id": 79322
+    },
+    {
+      "Message": "The Google Maps has quite a number of uses of union types.  You can find them by searching for \"|\" on this page:\n\n https://developers.google.com/maps/documentation/javascript/reference\n\nAnother very important case where I would imagine using union types is null; but TypeScript is already using another approach to handle this. Instead of viewing null as a subtype of other types, you could use a union type to explicitly say when null is allowed. For example, string? might be a shorthand for string|null.  I think this would be more expressive and robust than the current approach.\n\nI don't understand your point 2. Why isn't it obvious that the answer is for completion lists to show the union of members? This happens all the time in XML, where union types are basic...\n\n",
+      "PostedDate": "2012-10-11T18:00:39.13-07:00",
+      "Id": 79565
+    },
+    {
+      "Message": "No, we don't really need \"Union\" here. Generic is missing. What we need is generic, assume we have C#-like generic in TypeScript, it is easy to \"union\" two types.\n\nclass Either<T1, T2>{\n    IsRight: bool;\n    _Left: T1;\n    _Right:T2;\n    Constructor(left: T1){ IsRight = false; _Left = left; }\n    Constructor(right: T2){ IsRight = right; _Right=right; }\n    Left() : T1 { return _Left; }\n    Right() : T2 { return _Right; }\n}\n",
+      "PostedDate": "2012-10-15T00:45:08.57-07:00",
+      "Id": 79732
+    },
+    {
+      "Message": "Hi jonturner,\n\nthanks for your response, I can understand that this would require a lot of work for an opensource project.\n\nBut I had the idea to simplify it to *semantic sugar*, i.e. that the compiler allows a syntax mentioned above but doesn't do anything with it (treats it as 'any').\n\nThese 'annotations' would inform a reader about the types being used. Of course, this could lead some people to think that the compiler will throw a warning/error if an incompatible type is used.\n\nWhat do you think?\n",
+      "PostedDate": "2013-02-19T10:18:17.783-08:00",
+      "Id": 90807
+    }
+  ]
+}

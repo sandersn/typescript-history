@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "990343",
+    "ThreadId": "430443",
+    "Html": "\r\n<p>This code compiled fine in .8.1 but in .8.2 there seem to be a problem with getters with the same name as a type you are trying to use within the getter:</p>\r\n<p>class TimeSpan<br>\r\n{<br>\r\n&nbsp;&nbsp;&nbsp; _mMS = 0;</p>\r\n<p>&nbsp;&nbsp;&nbsp; constructor(x:number)<br>\r\n&nbsp;&nbsp;&nbsp; {<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this._mMS = x;<br>\r\n&nbsp;&nbsp;&nbsp; }<br>\r\n}</p>\r\n<p><br>\r\nclass Test<br>\r\n{<br>\r\n&nbsp;&nbsp;&nbsp; public get TimeSpan() { return new TimeSpan(1000); }&nbsp;&nbsp;&nbsp; // .8.2 compiler complains on &quot;new TimeSpan(1000)&quot; params do not match</p>\r\n<p><br>\r\n&nbsp;&nbsp;&nbsp; public get XTimeSpan() { return new TimeSpan(1000); }&nbsp;&nbsp;&nbsp; // works in .8.2 compiler</p>\r\n<p>&nbsp;&nbsp;&nbsp; constructor()<br>\r\n&nbsp;&nbsp;&nbsp; {<br>\r\n&nbsp;&nbsp;&nbsp; }<br>\r\n}</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-22T07:31:23.277-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990346",
+    "ThreadId": "430443",
+    "Html": "\r\n<p>Just found out that it's somewhat even worse. The problem above I can get around by prefixing TimeSpan with the module but the same issue surfaces with system types like Date:</p>\r\n<p>public get Date():Date<br>\r\n{<br>\r\n&nbsp;&nbsp;&nbsp; return new Date(this._mInput.value);&nbsp; // doesn't compile in .8.2<br>\r\n}</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-22T07:35:07.133-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990356",
+    "ThreadId": "430443",
+    "Html": "\r\n<p dir=\"ltr\">The easy solution/workaround here is to use camelCase for your property names, which is the JavaScript way anyway.</p>\r\n<div>On 22 Jan 2013 15:35, &quot;BjornBacklund&quot; &lt;<a href=\"mailto:notifications@codeplex.com\">notifications@codeplex.com</a>&gt; wrote:<br type=\"attribution\">\r\n<blockquote style=\"margin:0 0 0 .8ex; border-left:1px #ccc solid; padding-left:1ex\">\r\n<div>\r\n<p>From: BjornBacklund</p>\r\n<div>\r\n<p>Just found out that it's somewhat even worse. The problem above I can get around by prefixing TimeSpan with the module but the same issue surfaces with system types like Date:</p>\r\n<p>public get Date():Date<br>\r\n{<br>\r\nreturn new Date(this._mInput.value); // doesn't compile in .8.2<br>\r\n}</p>\r\n<p></p>\r\n<p></p>\r\n</div>\r\n<div>\r\n<p>Read the <a href=\"http://typescript.codeplex.com/discussions/430443#post990346\" target=\"_blank\">\r\nfull discussion online</a>.</p>\r\n<p>To add a post to this discussion, reply to this email (<a href=\"mailto:typescript@discussions.codeplex.com?subject=[typescript:430443]\" target=\"_blank\">typescript@discussions.codeplex.com</a>)</p>\r\n<p>To start a new discussion for this project, email <a href=\"mailto:typescript@discussions.codeplex.com\" target=\"_blank\">\r\ntypescript@discussions.codeplex.com</a></p>\r\n<p>You are receiving this email because you subscribed to this discussion on CodePlex. You can\r\n<a href=\"https://typescript.codeplex.com/subscriptions/thread/project/edit\" target=\"_blank\">\r\nunsubscribe or change your settings</a> on codePlex.com.</p>\r\n<p>Please note: Images and attachments will be removed from emails. Any posts to this discussion will also be available online at\r\n<a href=\"http://codeplex.com\" target=\"_blank\">codeplex.com</a></p>\r\n</div>\r\n</div>\r\n</blockquote>\r\n</div>\r\n",
+    "PostedDate": "2013-01-22T07:53:22.197-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990446",
+    "ThreadId": "430443",
+    "Html": "\r\n<div style=\"font-family:Calibri,'Segoe UI',Meiryo,'Microsoft YaHei UI','Microsoft JhengHei UI','Malgun Gothic','Khmer UI','Nirmala UI',Tunga,'Lao UI',Ebrima,sans-serif; font-size:16px\">\r\n<div>Yes indeed but we have decided to stick with C# coding/naming style - half the project is done in C# and half in TS and switching between the environments seems to be easier if you keep the coding style. We also have lots of types that exist in both sides,\r\n so it makes sense naming them the same way.</div>\r\n<div></div>\r\n<div>This compiler issue also caused a nasty stack overflow bug: the code below is using a utility method GetEnum that takes the name of the Enum class as the first argument. Worked fine in 8.1 but will of course cause a stack overflow in 8.2 since Gender now\r\n refers to the getter function.</div>\r\n<div></div>\r\n<div>public get Gender() { return this.GetEnum( Gender, “Gender” ); }</div>\r\n<div></div>\r\n<div>---bjorn</div>\r\n<div>\r\n<div></div>\r\n<div></div>\r\n</div>\r\n<div style=\"border-top-color:rgb(225,225,225); border-top-width:1px; border-top-style:solid\">\r\n<strong>From:</strong> markrendle<br>\r\n<strong>Sent:</strong> ‎January‎ ‎22‎, ‎2013 ‎7‎:‎53‎ ‎AM<br>\r\n<strong>To:</strong> bjorn@backlund.org<br>\r\n<strong>Subject:</strong> Re: 0.8.2 compiler issue?: getter with same name as type [typescript:430443]<br>\r\n</div>\r\n<div></div>\r\n<p>From: markrendle</p>\r\n<div id=\"ThreadNotificationPostBody\">\r\n<p dir=\"ltr\">The easy solution/workaround here is to use camelCase for your property names, which is the JavaScript way anyway.</p>\r\n<div>On 22 Jan 2013 15:35, &quot;BjornBacklund&quot; &lt;<a tabindex=\"-1\" href=\"mailto:notifications@codeplex.com\">notifications@codeplex.com</a>&gt; wrote:<br>\r\n<blockquote style=\"margin:0px 0px 0px 0.8ex; padding-left:1ex; border-left-color:rgb(204,204,204); border-left-width:1px; border-left-style:solid\">\r\n<div>\r\n<p>From: BjornBacklund</p>\r\n<div>\r\n<p>Just found out that it's somewhat even worse. The problem above I can get around by prefixing TimeSpan with the module but the same issue surfaces with system types like Date:</p>\r\n<p>public get Date():Date<br>\r\n{<br>\r\nreturn new Date(this._mInput.value); // doesn't compile in .8.2<br>\r\n}</p>\r\n<p></p>\r\n<p></p>\r\n</div>\r\n<div>\r\n<p>Read the <a tabindex=\"-1\" href=\"http://typescript.codeplex.com/discussions/430443#post990346\" target=\"_blank\">\r\nfull discussion online</a>.</p>\r\n<p>To add a post to this discussion, reply to this email (<a tabindex=\"-1\" href=\"mailto:typescript@discussions.codeplex.com?subject=[typescript:430443]\" target=\"_blank\">typescript@discussions.codeplex.com</a>)</p>\r\n<p>To start a new discussion for this project, email <a tabindex=\"-1\" href=\"mailto:typescript@discussions.codeplex.com\" target=\"_blank\">\r\ntypescript@discussions.codeplex.com</a></p>\r\n<p>You are receiving this email because you subscribed to this discussion on CodePlex. You can\r\n<a tabindex=\"-1\" href=\"https://typescript.codeplex.com/subscriptions/thread/project/edit\" target=\"_blank\">\r\nunsubscribe or change your settings</a> on codePlex.com.</p>\r\n<p>Please note: Images and attachments will be removed from emails. Any posts to this discussion will also be available online at\r\n<a tabindex=\"-1\" href=\"http://codeplex.com\" target=\"_blank\">codeplex.com</a></p>\r\n</div>\r\n</div>\r\n</blockquote>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2013-01-22T10:08:31.97-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990463",
+    "ThreadId": "430443",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/636\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2013-01-22T10:48:18.753-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990470",
+    "ThreadId": "430443",
+    "Html": "\r\n<p>Yep, this is a bug.</p>\r\n",
+    "PostedDate": "2013-01-22T10:53:22.403-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "990633",
+    "ThreadId": "430443",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>BjornBacklund wrote:</strong><br>\r\n<div style=\"font-family:Calibri,'Segoe UI',Meiryo,'Microsoft YaHei UI','Microsoft JhengHei UI','Malgun Gothic','Khmer UI','Nirmala UI',Tunga,'Lao UI',Ebrima,sans-serif; font-size:16px\">\r\n<div>Yes indeed but we have decided to stick with C# coding/naming style - half the project is done in C# and half in TS and switching between the environments seems to be easier if you keep the coding style. We also have lots of types that exist in both sides,\r\n so it makes sense naming them the same way...</div>\r\n<div id=\"ThreadNotificationPostBody\">\r\n<div>\r\n<blockquote style=\"margin:0px 0px 0px 0.8ex; padding-left:1ex; border-left-color:#cccccc; border-left-width:1px; border-left-style:solid\">\r\n<div>\r\n<div></div>\r\n</div>\r\n</blockquote>\r\n</div>\r\n</div>\r\n</div>\r\n</blockquote>\r\n<p>Just remember not to use K&R indent style like the C# industry standard. There is a good reason why Allman is the industry standard for JavaScript - ASI. That's one element of JavaScript code style that isn't as subjective as casing.</p>\r\n",
+    "PostedDate": "2013-01-22T18:13:03.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "991787",
+    "ThreadId": "430443",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>Qube wrote:</strong><br>\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>BjornBacklund wrote:</strong><br>\r\n<div style=\"font-family:Calibri,'Segoe UI',Meiryo,'Microsoft YaHei UI','Microsoft JhengHei UI','Malgun Gothic','Khmer UI','Nirmala UI',Tunga,'Lao UI',Ebrima,sans-serif; font-size:16px\">\r\n<div>Yes indeed but we have decided to stick with C# coding/naming style - half the project is done in C# and half in TS and switching between the environments seems to be easier if you keep the coding style. We also have lots of types that exist in both sides,\r\n so it makes sense naming them the same way...</div>\r\n<div id=\"ThreadNotificationPostBody\">\r\n<div>\r\n<blockquote style=\"margin:0px 0px 0px 0.8ex; padding-left:1ex; border-left-color:#cccccc; border-left-width:1px; border-left-style:solid\">\r\n<div></div>\r\n</blockquote>\r\n</div>\r\n</div>\r\n</div>\r\n</blockquote>\r\n<p>Just remember not to use K&R indent style like the C# industry standard. There is a good reason why Allman is the industry standard for JavaScript - ASI. That's one element of JavaScript code style that isn't as subjective as casing.</p>\r\n</blockquote>\r\n<p>Correction. It actually looks like the compiler converts brace placement to Allman style for blocks. But literals (arrays, objects etc.) are compiled as provided, so:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> doSomething\r\n{\r\n    <span style=\"color:blue\">return</span>\r\n    {\r\n        intoThe: <span style=\"color:#a31515\">'void'</span>\r\n    };\r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>Is compiled to:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> doSomething() {\r\n    <span style=\"color:blue\">return</span>;\r\n {\r\n        intoThe:\r\n<span style=\"color:#a31515\">'void'</span>\r\n    }\r\n    ;\r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2013-01-24T14:11:30.907-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

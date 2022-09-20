@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-19T18:10:14.93-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nHere's how to reproduce:\r\n\r\nEDIT: Wrong code snippet - it does compile. Please keep reading the thread for the issue though. (Thread title edited)\r\n\r\n```\r\ndeclare module M\r\n{\r\n    export class Engine\r\n    {\r\n        getSystem<TSystem extends System>(systemClass: typeof System): TSystem;\r\n    }\r\n\r\n    export class System { }\r\n}\r\n\r\nclass RenderSystem extends M.System { }\r\n\r\nvar engine:M.Engine = new M.Engine();\r\nengine.getSystem(RenderSystem);\r\n```\r\n\r\nThe last line triggers the following error:\r\n> error TS2086: Type '{}' does not satisfy the constraint 'M.System' for type parameter 'TSystem extends M.System'.\r\n\r\nIf I use typeof TSystem (my real intent), then I also get the following error:\r\n> error TS2095: Could not find symbol 'TSystem'.\r\n\r\n\r\nAm I doing something wrong or is it a bug ?\r\n\r\n\r\nI also have this bug with recursive generics, i.e. a case where System would be declared as System<T extends System<T>>. But let's keep it simple for now, I guess :)\r\n\r\nA few related issues claim that this problem or a similar one is fixed in 0.9.5, but it is not the case in my situation:\r\n[typeof issue](https://typescript.codeplex.com/workitem/1759)\r\n[More typeof](https://typescript.codeplex.com/discussions/403602)\r\n[Recursive generics issue](https://typescript.codeplex.com/workitem/1860)\r\n[Commit where the recursive generics problem was supposedly fixed](https://typescript.codeplex.com/SourceControl/changeset/c3e110ccfa17e24ec68ba016588158522e65e4de)\r\n\r\n",
+    "LastUpdatedDate": "2014-02-19T18:10:14.93-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-18T13:29:43-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Issue with <T extends MyClass> and typeof T. Also about child class constructor signature limitation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2189
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Ok, I got half of it to work with:\n```\nengine.getSystem<RenderSystem>(RenderSystem);\n```\n\nI did try that but it didn't work. I suppose it's due to WebStorm and the TypeScript task not being in sync or something. It worked when I restarted WebStorm.\n\nAnyway ! I still have the TS2095 error with typeof TSystem. So currently I just set the getSystem declaration so that the parameter doesn't specify a type.\n\n\nI guess this is not a compiler bug though. Still an advice would be welcome on how to make that \"systemClass: typeof TSystem\" work :)\n\nThanks!",
+      "PostedDate": "2014-02-18T14:04:58.92-08:00",
+      "Id": 133994
+    },
+    {
+      "Message": "That's interesting as I've been able to build your original code in tsc 0.9.1, 0.9.5 and the develop version with no errors.\n\nI used this code:\n``` TypeScript\ndeclare module M\n{\n    export class Engine\n    {\n        getSystem<TSystem extends System>(systemClass: typeof System): TSystem;\n    }\n\n    export class System { }\n}\n\nclass RenderSystem extends M.System { }\n\nvar engine:M.Engine = new M.Engine();\nengine.getSystem(RenderSystem);\n```\n\nIt produces the following code and NO errors:\n``` JavaScript\nvar __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\nvar RenderSystem = (function (_super) {\n    __extends(RenderSystem, _super);\n    function RenderSystem() {\n        _super.apply(this, arguments);\n    }\n    return RenderSystem;\n})(M.System);\n\nvar engine = new M.Engine();\nengine.getSystem(RenderSystem);\n```\n\nCan you check the compiler version and the file you're building?",
+      "PostedDate": "2014-02-19T01:13:43.153-08:00",
+      "Id": 134043
+    },
+    {
+      "Message": "Yeah this works - I apparently failed to make a correct simplified scenario :)\nAnd because now I worked around the issue, I probably can't generate the same situation easily again. I bumped into other errors with that specific bit of code which mostly underlines two limitations:\n\n1- You can't overload a constructor, and a child class cannot have a different signature as its parent for the constructor, even if the super() call is correct. Other strongly typed languages allow this.\n2- typeof T does not work. It's possibly a misuse of generics but then, what is the right way to achieve this ?\n\n\nI'd like to fix or get around both issues. To come back to my specific situation:\n1- Allowing a child class constructor to have a different signature as its parent's would be handy because there can be many types of Systems and it's nice to inject different things in their constructors.\n2- typeof TSystem instead of typeof System, I should be able to access RenderSystem-specific functions without specifying the generic type on engine.getSystem<RenderSystem>(RenderSystem). (i.e. get rid of the <> on calls)",
+      "PostedDate": "2014-02-19T10:02:11.197-08:00",
+      "Id": 134080
+    },
+    {
+      "Message": "For the generics issues: when the type {} (empty object) appears this is a sign that type inference was not able to infer anything more specific. This is why you were able to get the code to work by explicitly specifying a type argument type (<RenderSystem>). Generally this happens when you don't have an argument that uses the generic type as is the case here. Type inference tries to relate between types you provide (ie the type of the passed argument RenderSystem) to parameter types, but your function has no parameters that use the generic type TSystem, so no inferences can be made. This leads to an inference of {}. If you instead type your function argument as ```systemClass: TSystem``` rather than ```typeof System``` you'll find inference works as you expect and doesn't require explicit type arguments to be passed.\n\nYou can overload constructors just like functions:\n\n```TypeScript```\nclass A {\n\tfoo: string;\n\tconstructor(x: number);\n\tconstructor(x: string);\n\tconstructor(x: any) {}\n}\n\nvar a = new A(1);\nvar a2 = new A(\"\");\nvar a3 = new A(true); // error\n```\n\nThe derived type's constructor also does not need to match the base class signature. I'm not sure what issue you're seeing here.\n\n```TypeScript```\nclass A {\n    constructor(x: string) { }\n}\n\nclass B extends A {\n    constructor(x: number) { super(''); }\n}\n```\n\nYou cannot use 'typeof T' because the typeof operator only operates on values while T is a type. The primary purpose of typeof in type annotations is to allow you to explicitly type a variable to something whose type name is normally anonymous (ex a module, the static side of a class).",
+      "PostedDate": "2014-02-19T18:10:08.313-08:00",
+      "Id": 134138
+    }
+  ]
+}

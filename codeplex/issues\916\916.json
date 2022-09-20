@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-04-18T10:41:04.39-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Certain classes contain static members that we need to declare in our definition file e.g. in BreezeJS \r\nhttps://github.com/borisyankov/DefinitelyTyped/blob/master/breeze/breeze.d.ts we have Validator class that has a number of static members: \r\n\r\n```\r\n class Validator {\r\n        static messageTemplates: any;\r\n        // Truncated \r\n```\r\n\r\nIt is defined as a class since we cannot have static members in an interface i.e. the following is invalid: \r\n\r\n```\r\ninterface Validator  {\r\n    static messageTemplates: any;\r\n}\r\n```\r\n\r\nUsing classes for static makes them closed-ended and we cannot add new members to Validator without modifying the original file. ",
+    "LastUpdatedDate": "2013-08-13T09:55:53.733-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-16T16:59:47.893-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Allow static members in an interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 916
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Could you do something like the below, where you define both the static and instance side with an interface, which you can reopen and add to later (as I've done below - with)\n\n\n```\ninterface Validator { // Validator instances\n    x: string;\n    y: number;\n}\n\ninterface ValidatorFn { // Validator constructor and statics\n    new (): Validator;\n    prototype: Validator;\n    parse(val: string): Validator;\n}\n\ndeclare var Validator: ValidatorFn;\n\nvar v1 = new Validator();\nv1.x;\nvar v2 = Validator.parse(\"test\");\nv2.y;\n\ninterface ValidatorFn { // Put a new static on the constructor\n    validate(inst: Validator): bool;\n}\n\nvar result = Validator.validate(v1);\n```\n\nPlease reopen if I've misunderstood or this doesn't solve the issue.",
+      "PostedDate": "2013-04-18T10:40:43.627-07:00",
+      "Id": 97378
+    },
+    {
+      "Message": "That's a fascinating workaround. Should be a design pattern. Thanks. ",
+      "PostedDate": "2013-04-18T18:17:25.037-07:00",
+      "Id": 97451
+    },
+    {
+      "Message": "Documented for my reference : http://basarat.github.io/TypeScriptDeepDive/#/modellingstatics",
+      "PostedDate": "2013-04-28T01:31:55.777-07:00",
+      "Id": 98712
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+[
+  {
+    "Id": "991752",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>I have a large project which, similar to the TypeScript compiler itself, is all emitted to a single out file via the --out parameter of tsc. I used to have imports inside the module declaration, but now in 0.8.2 that throws an error. But moving them out\r\n also throws an error about &quot;dynamic modules&quot;.</p>\r\n<p>Fails with &quot;Import declaration of external module is permitted only in global or top level dynamic modules&quot; for --out:</p>\r\n<p></p>\r\n<pre>///&lt;reference path='node.d.ts' /&gt;\r\n\r\nmodule MyModule {\r\n    import assert = module('assert');\r\n\r\n    function doSomething() {\r\n        assert.equal(1, 2, 'Fail!');\r\n    }\r\n}</pre>\r\n<p></p>\r\n<p>And this fails with &quot;Cannot compile dynamic modules when emitting into single file&quot;:</p>\r\n<p></p>\r\n<pre>///&lt;reference path='node.d.ts' /&gt;\r\n\r\nimport assert = module('assert');\r\n\r\nmodule MyModule {\r\n\r\n    function doSomething() {\r\n        assert.equal(1, 2, 'Fail!');\r\n    }\r\n}</pre>\r\nIs this regression intentional or a bug? Right now I am having to do &quot;export var assert = require('assert');&quot; and lose my type checking because of this issue.\r\n<p></p>\r\n",
+    "PostedDate": "2013-01-24T12:57:25.923-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "992167",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>This is intentional. &nbsp;The change in --out helps separate out the two ways of compiling a TypeScript application.</p>\r\n<p>If you didn't use external modules and wanted to concatenate your sources, then you can use --out with a filename. &nbsp;<span style=\"font-size:10pt\">If you did use external modules, you likely want to control where they are compiled to, so we now support --out\r\n with a directory.</span></p>\r\n<p>Does using --out with a directory help in this case?</p>\r\n",
+    "PostedDate": "2013-01-25T09:32:05.923-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "992291",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>I need to specify a single file for all my TypeScript. I compile my single JS file the same way tsc.js is compiled. Now I see (after looking at io.ts) that I need to be literally calling require('nodemodule') to a var instead of what I previously did with\r\n import even though import saved my typing.</p>\r\n<p>I guess my question is why the restriction? What is the harm of using external modules in a single emitted js?</p>\r\n",
+    "PostedDate": "2013-01-25T17:53:24.557-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "992586",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>It could easily be done ... I am currently working on a builder which allows you to bundle your commonjs modules into a single file. It concatenates outputted js files and fixes require calls. Also merged declarations need some attention (duplicated references\r\n and paths). Maybe such feature should be implemented in compiler itself ...</p>\r\n",
+    "PostedDate": "2013-01-27T00:37:49.1-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "992811",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>You can find this very easy to do with compiler, it's easy to add source units of text which are parsed on add and give a result script. Then run type check on the compiler. Then get the scripts and run them through the emitter. I have created my own emitter\r\n for another project I am working on. Extending the compiler is very easy. I've even extended the error reporter to swallow errors that are bugs in the current issue tracker. My biggest problem is working w/ the VS plugin which has supposedly been given some\r\n level of extensibility in 0.8.2, but nobody is providing details (ref: http://typescript.codeplex.com/discussions/429115).</p>\r\n",
+    "PostedDate": "2013-01-27T15:50:33.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993118",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@cretz - we're planning on putting up a blog shortly discussing how to replace the language service for the VS plugin for users who are building from source.&nbsp; Hopefully it will be up this week.</p>\r\n<p>Also, to your question about external modules in a single file.&nbsp; External modules assume that you're using a module loader.&nbsp; In this case, you'd want your modules to be built into separate source files so that they can be loaded via the module loader.&nbsp; Building\r\n all the modules into one .js file is counter to how these tools work.</p>\r\n<p>I could see wanting to build external modules out of multiple source files, though we don't currently support this and might be a good feature request for the issue tracker, if it's not there already.</p>\r\n",
+    "PostedDate": "2013-01-28T08:30:01.55-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993268",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>Thanks Jon, awesome answer. I look forward to the blog post.</p>\r\n<p>As for the external module issue, another option would be to let me do type assertions on modules, so I could var fs = &lt;fs&gt;require('fs'); which would allow me to resolve my typing issues. Sometimes I am on the end of the package manager where I am using\r\n dependencies and not necessarily publishing or making a package, so being able to leverage the module loader does help. So I don't necessarily want to build an external module, just a application that leverages them. I'm not so sure it warrants an issue in\r\n the tracker, as I see in src/compiler/io.ts y'all opt to use require(NAME) instead of module(NAME) for nodejs modules too.</p>\r\n<p>Thanks again for the update.</p>\r\n",
+    "PostedDate": "2013-01-28T13:15:38.067-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993559",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@<a href=\"http://www.codeplex.com/site/users/view/jonturner\">jonturner</a></p>\r\n<p><em>&quot;External modules assume that you're using a module loader.&nbsp; In this case, you'd want your modules to be built into separate source files so that they can be loaded via the module loader.&nbsp; Building all the modules into one .js file is counter\r\n to how these tools work.&quot;</em></p>\r\n<p>I think the assumption you are making here is not correct in all cases. For example, If I developed a library in typescript that may be divided in many classes, which I for convenience put in different files, I may want to compile it in one single .js file\r\n as well as also making it capable of being loaded via an AMD loader, and I may besides want to load dependencies of my library via AMD.</p>\r\n<p>As a matter of fact we are currently developing a web framework in Typescript. The framework consists of a few dozen files, and is very modular and nice, but our release for javascript users is one single js file that is less than 15Kb, but that depends\r\n on &quot;curl&quot; and &quot;underscore&quot;. Curl is the AMD loader itself, while underscore is loaded dynamically by our framework... I do not think we are doing things in such an ortodox manner, in fact we want to do it addering to common best practices as much as possible.\r\n So please reconsider the possibility of having single output files &#43; support for AMD.</p>\r\n<p>kind regards,</p>\r\n<p>Manuel.</p>\r\n",
+    "PostedDate": "2013-01-29T03:58:35.897-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993616",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@jonturner</p>\r\n<p>After a quick discussion with my partner, I can add another argument to why this is incorrect:</p>\r\n<p>Normally, when developing a web application using AMD modules, you keep them as separate modules during\r\n<strong>development</strong>, but you create one single file when <strong><span style=\"color:#000000\">deploying</span></strong>, for performance reasons. In this scenario, it is quite common that your web app depends on both external AMD modules and also global\r\n modules. With the new restriction that you are imposing in the typescript compiler you are making this kind of development pattern much more difficult (or imposible, since I have yet not found a workaround for this...).</p>\r\n",
+    "PostedDate": "2013-01-29T05:40:12.347-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993621",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@jonturner</p>\r\n<p>ok, so for what is worth, the workaround we found is just to import the external dependencies as globals. So if your typescript library depends on underscore, in nodejs something like this will work:</p>\r\n<p>_ = require('underscore');</p>\r\n<p>Quite hackish but it works...</p>\r\n<p>regards,</p>\r\n<p>&nbsp;</p>\r\n<p>Manuel.</p>\r\n",
+    "PostedDate": "2013-01-29T05:48:31.323-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993784",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@manast - thanks for all the feedback, that's helpful. &nbsp;You're right in that there are cases you might want to create one external module from multiple files.</p>\r\n<p>We've been viewing the TypeScript compiler as just one of the tools you'll need in your toolchain. &nbsp;Like you say, you might have a module loader and a few more libraries that you may load dynamically. &nbsp;When you're in development you want to build things\r\n one way and another way when doing a release. &nbsp;</p>\r\n<p>Being able to handle the variety of build styles isn't something we'd want to build into the compiler. &nbsp;Instead, making a concatenation a separate part of your toolchain is probably a better idea. &nbsp;Such a tool could optionally take the .js files output by\r\n the TS compiler, concatenate them into the same .js file, and potentially also doing minification and/or obfuscation. &nbsp;</p>\r\n",
+    "PostedDate": "2013-01-29T10:42:04.937-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993811",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@jonturner</p>\r\n<p>Actually we already implemented the concept that you are proposing, i.e., ts compilation, concatenation using requirejs, minimization with uglifyjs and zlib compression, it is implemented on our open source static file server\r\n<a href=\"https://github.com/OptimalBits/cabinet\">Cabinet</a>.</p>\r\n<p>Still, we encounter some problems in how the module system is implemented in typescript. We have found some inconsistencies that makes things more difficult than they should be, for example, you need to use /// references if you want to take advantage of\r\n the modules system (yes you can use import, but modules will not be open anymore, you cannot span the same module across different files). And as soon as you use /// references you cannot compile typescript to generate AMD compatible modules... so it is a\r\n bit of a chicken and egg problem. Before 0.8.2 we could do workarounds, now the workarounds start to look like hacks (such as being forced to use global variables to expose external modules).</p>\r\n<p>I think we<span style=\"font-size:10pt\">&nbsp;may require a separate, more complete discussion, and I would certainly want to have it with you if you have time.</span></p>\r\n<p><span style=\"font-size:10pt\">regards,</span></p>\r\n<p>&nbsp;</p>\r\n<p><span style=\"font-size:10pt\">Manuel.</span></p>\r\n<p><span style=\"font-size:10pt\"><br>\r\n</span></p>\r\n",
+    "PostedDate": "2013-01-29T11:59:36.087-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994165",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>I fully agree with manast.&nbsp;&nbsp;&nbsp; I also struggle with /// &lt;reference &gt; versus&nbsp; import.&nbsp;&nbsp; I want to be able to split a library into several .ts files and compile to .js that can be used by requirejs.&nbsp; When I use compilation with --out to single file, then I\r\n cannot even write &quot;export&quot; without getting the &quot;dynamic modules&quot; error. My only solution so far is to do postprocessing of the .js file (that breaks the sourcemap feature since it adds&nbsp; some lines at the beginning and end:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>define([<span style=\"color:#a31515\">&quot;require&quot;</span>, <span style=\"color:#a31515\">&quot;exports&quot;</span>], <span style=\"color:blue\">function</span>(require, exports) {\r\n\r\n<span style=\"color:green\">// -- output of typescript compilation --</span>\r\n<span style=\"color:blue\">var</span> Main = (<span style=\"color:blue\">function</span> () {\r\n  <span style=\"color:green\">//....</span>\r\n}\r\n\r\n<span style=\"color:green\">// -- end of output of typescript compilation</span>\r\n\r\nexports.Main = Main;\r\n})<br><br>&nbsp;</pre>\r\n</div>\r\n<p>Is there any smarter way to do this?</p>\r\n",
+    "PostedDate": "2013-01-30T06:56:31.23-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994323",
+    "ThreadId": "430782",
+    "Html": "\r\n<p>@wme</p>\r\n<p>&nbsp;</p>\r\n<p>The workaround we found to solve the problem you have is to create a .ts file with all the dependent modules, and after all the references we added a shim that makes the resulting javascript code compatible with both AMD and CommonJS (nodejs), so here is\r\n how it looks like in our framework, where Gnd is our root module (note as well the windowOrGlobal hack we had to do because of the new restriction in typescript 0.8.2 of not letting us using the this pointer in modules anymore...):</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">/// &lt;reference path=&quot;./lib/server.ts&quot; /&gt;</span>\r\n<span style=\"color:green\">/// &lt;reference path=&quot;./lib/storage/socket-backend.ts&quot; /&gt;</span>\r\n<span style=\"color:green\">/// &lt;reference path=&quot;./lib/storage/mongoose-backend.ts&quot; /&gt;</span>\r\n\r\ndeclare <span style=\"color:blue\">var</span> define;\r\ndeclare <span style=\"color:blue\">var</span> exports;\r\ndeclare <span style=\"color:blue\">var</span> window; <span style=\"color:green\">// Browser</span>\r\ndeclare <span style=\"color:blue\">var</span> global; <span style=\"color:green\">// Node.js</span>\r\n\r\n<span style=\"color:blue\">var</span> windowOrGlobal;\r\n<span style=\"color:blue\">if</span>(<span style=\"color:blue\">typeof</span> window === <span style=\"color:#a31515\">'undefined'</span>){\r\n  windowOrGlobal = global;\r\n}<span style=\"color:blue\">else</span>{\r\n  windowOrGlobal = window;\r\n}\r\n\r\n(<span style=\"color:blue\">function</span> (root, factory) {\r\n  <span style=\"color:blue\">if</span> (<span style=\"color:blue\">typeof</span> exports === <span style=\"color:#a31515\">'object'</span>) {\r\n    <span style=\"color:blue\">for</span>(<span style=\"color:blue\">var</span> k <span style=\"color:blue\">in</span> factory()){\r\n      exports[k] = factory()[k];\r\n    }\r\n  } <span style=\"color:blue\">else</span> <span style=\"color:blue\">if</span> (<span style=\"color:blue\">typeof</span> define === <span style=\"color:#a31515\">'function'</span> && define.amd) {\r\n    <span style=\"color:green\">// AMD. Register as an anonymous module.</span>\r\n    define(factory);\r\n  } <span style=\"color:blue\">else</span> {\r\n    <span style=\"color:green\">// Browser globals (root is window)</span>\r\n    root.returnExports = factory();\r\n  }\r\n}(windowOrGlobal, <span style=\"color:blue\">function</span> () {\r\n    <span style=\"color:blue\">return</span> Gnd;\r\n}));\r\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2013-01-30T12:32:13.383-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994533",
+    "ThreadId": "430782",
+    "Html": "Thanks for the advice.  So I can do without postprocessing by simply adding the define at the end of my main .ts file. This still seems like a workaround for simply writing &quot;export&quot;.<br />\n<pre><code>/*export*/ class Main {\n}\n\ndefine([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {\n  exports.Main = Main;\n})\n</code></pre>\n\n",
+    "PostedDate": "2013-01-30T22:53:18.67-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1006630",
+    "ThreadId": "430782",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\n@cretz - we're planning on putting up a blog shortly discussing how to replace the language service for the VS plugin for users who are building from source.&nbsp; Hopefully it will be up this week. Also, to your question about external modules in a single file.&nbsp; External modules assume that you're using a module loader.&nbsp; In this case, you'd want your modules to be built into separate source files so that they can be loaded via the module loader.&nbsp; Building all the modules into one .js file is counter to how these tools work. <strong>I could see wanting to build external modules out of multiple source files, though we don't currently support this and might be a good feature request for the issue tracker, if it's not there already.</strong><br />\n</blockquote>\n<a href=\"http://typescript.codeplex.com/workitem/759\" rel=\"nofollow\">Feature request added.</a><br />\n",
+    "PostedDate": "2013-02-25T18:15:57.75-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

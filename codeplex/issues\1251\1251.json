@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "BBGONE is right, this is just how fat arrow functions work at the moment, there's no special casing for a scenario like this, you can just use a traditional function expression.",
+    "ClosedDate": "2013-06-27T16:34:10.54-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "TypeScript 0.9.0 code:\r\n\r\n```\r\ninterface Number {\r\n    toPreferredStringFormat: () => string;\r\n}\r\n\r\nNumber.prototype.toPreferredStringFormat = () => {\r\n    return this.toString() + \" preferred!\";\r\n};\r\n\r\nalert(\"Number: \" + Date.length.toPreferredStringFormat());\r\n```\r\n\r\ncompiles to JavaScript:\r\n\r\n```\r\nvar _this = this;\r\nNumber.prototype.toPreferredStringFormat = function () {\r\n    return _this.toString() + \" preferred!\";\r\n};\r\n\r\nalert(\"Number: \" + Date.length.toPreferredStringFormat());\r\n```\r\n\r\nSo, pure JavaScript 'this' keyword is changed to '_this' witch references to Window object. Displayed result is not \"Number: 7 preferred!\" but \"Number: [object Window] prefered!\".\r\n\r\nExecuting JavaScript code produces 'this' that references to Number. There should be way to get pure JavaScript 'this' keyword in TypeScript\r\n",
+    "LastUpdatedDate": "2013-06-27T16:34:10.54-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-26T11:05:12.25-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "this keyword in prototype",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1251
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a problem with typescript specs (or this feature its implementation).\nIn lambda function 'this' is always replaced to _this.\nWhen you are using simple function, then it uses 'this' as is.\n\nBetter to use \nNumber.prototype.toPreferredStringFormat = function(){\n    return this.toString() + \" preferred!\";\n};\nthen the 'this' is unchanged",
+      "PostedDate": "2013-06-26T15:23:26.713-07:00",
+      "Id": 104271
+    },
+    {
+      "Message": "Lamda expressions! I missed that. Thank You for help.\n\nKuba",
+      "PostedDate": "2013-06-26T23:08:27.33-07:00",
+      "Id": 104302
+    }
+  ]
+}

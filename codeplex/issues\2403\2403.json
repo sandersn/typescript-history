@@ -1,0 +1,101 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-20T17:33:49.987-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "The declaration for IAsyncAction in winrt.d.ts appears to be wrong.\r\n\r\nAt runtime, functions declared to return an ```IAsyncAction``` such as [storageFile.deleteAsync](http://msdn.microsoft.com/en-us/library/windows/apps/br227200.aspx) return a Promise-like object which behaves like a ```WinJS.Promise``` or a ```Windows.Foundation.IPromise<void>```, not the ```IAsyncInfo``` object defined in winrt.d.ts:\r\n```typescript\r\n       export interface IAsyncAction extends Windows.Foundation.IAsyncInfo {\r\n           completed: Windows.Foundation.AsyncActionCompletedHandler;\r\n           getResults(): void;\r\n       }\r\n```\r\n\r\nis there anything which prevents the replacement of this declaration with \r\n```typescript\r\n       export interface IAsyncAction extends Windows.Foundation.IPromise<void> { }\r\n```\r\n?",
+    "LastUpdatedDate": "2014-05-20T17:33:49.987-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-08T12:44:03.273-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "IAsyncAction declaration in winrt.d.ts wrong (?)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2403
+  },
+  "FileAttachments": [
+    {
+      "FileId": 825786,
+      "FileName": "Screenshot.png",
+      "DownloadUrl": ".\\825786"
+    },
+    {
+      "FileId": 825787,
+      "FileName": "Screenshot.png",
+      "DownloadUrl": ".\\825787"
+    },
+    {
+      "FileId": 825788,
+      "FileName": "Screenshot.png",
+      "DownloadUrl": ".\\825788"
+    },
+    {
+      "FileId": 825789,
+      "FileName": "Screenshot.png",
+      "DownloadUrl": ".\\825789"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Hm, I'm not sure I follow. The definition in winrt.d.ts looks correct to me based on the docs you linked. If it doesn't behave nicely with the other IPromise types that seems like an API issue. Are the linked docs incorrect? This is confusing me (from the deleteAsync page):\n\n```\nReturn value\nType: IAsyncAction \nNo object or value is returned by this method when it completes.\n```\n\nI did think most of their async functions returned IAsyncOperation (which is basically an IPromise with a member of type IAsyncAction).",
+      "PostedDate": "2014-04-08T20:35:54.71-07:00",
+      "Id": 141142
+    },
+    {
+      "Message": "It's not that it doesn't behave nicely at runtime.  It behaves fine at runtime.  This is only a mismatch between what a function declared to return a IAsyncAction returns and what it _actually_ returns.\r\n\r\nPlease see attached screenshot.\r\n\r\nNote that the runtime behavior of IAsyncOperation is analogous.  If you think that IAsyncAction is correct then we ought to replace IAsyncOperation with\r\n```typescript\r\nexport interface IAsyncOperation<T> extends Windows.Foundation.IAsyncInfo {\r\n    completed: Windows.Foundation.AsyncOpertationCompletedHandler<T>;\r\n    getResults(): T;\r\n}\r\n```\r\nbecause that's what the runtime type really looks like.  ( ```createFileAsync(...).operation``` )\r\n\r\nbut then we need to update the typeinfo for every interface to be correct:\r\n```typescript\r\nexport interface IAsyncPromise<T, ActionT> extends Windows.Foundation.IPromiseT {\r\n    operation: ActionT;\r\n}\r\n\r\nexport interface IAsyncActionPromise extends IAsyncPromise<void, IAsyncAction<void>> {\r\n}\r\n\r\nexport interface IAsyncOperationPromise<T> extends IAsyncPromise<T, IAsyncOperation<T>> {\r\n}\r\n\r\nmodule Windows.Storage {\r\n    export interface IStorageFile extends Windows.Storage.IStorageItem, Windows.Storage.Streams.IRandomAccessStreamReference, Windows.Storage.Streams.IInputStreamReference {\r\n        contentType: string;\r\n        fileType: string;\r\n        openAsync(accessMode: Windows.Storage.FileAccessMode): IAsyncOperationPromise<Windows.Storage.Streams.IRandomAccessStream>;\r\n        openTransactedWriteAsync(): IAsyncOperationPromise<Windows.Storage.StorageStreamTransaction>;\r\n        copyAsync(destinationFolder: Windows.Storage.IStorageFolder): IAsyncOperationPromise<Windows.Storage.StorageFile>;\r\n        copyAsync(destinationFolder: Windows.Storage.IStorageFolder, desiredNewName: string): IAsyncOperationPromise<Windows.Storage.StorageFile>;\r\n        copyAsync(destinationFolder: Windows.Storage.IStorageFolder, desiredNewName: string, option: Windows.Storage.NameCollisionOption): IAsyncOperationPromise<Windows.Storage.StorageFile>;\r\n        copyAndReplaceAsync(fileToReplace: Windows.Storage.IStorageFile): IAsyncActionPromise;\r\n        moveAsync(destinationFolder: Windows.Storage.IStorageFolder): IAsyncActionPromise;\r\n        moveAsync(destinationFolder: Windows.Storage.IStorageFolder, desiredNewName: string): IAsyncActionPromise;\r\n        moveAsync(destinationFolder: Windows.Storage.IStorageFolder, desiredNewName: string, option: Windows.Storage.NameCollisionOption):IAsyncActionPromise;\r\n        moveAndReplaceAsync(fileToReplace: Windows.Storage.IStorageFile): IAsyncActionPromise;\r\n    }\r\n}\r\n```\r\n\r\nWhich I think is a little bit much (and doesn't match the published documentation).",
+      "PostedDate": "2014-04-09T09:39:40.693-07:00",
+      "Id": 141201
+    },
+    {
+      "Message": "Screenshot here.",
+      "PostedDate": "2014-04-09T09:40:09.57-07:00",
+      "Id": 141202
+    },
+    {
+      "Message": "Trying again with the screenshot (I'm in IE11).",
+      "PostedDate": "2014-04-09T09:40:39.24-07:00",
+      "Id": 141203
+    },
+    {
+      "Message": "Trying again with the screen shot (in Google Chrome now...)",
+      "PostedDate": "2014-04-09T09:41:26.383-07:00",
+      "Id": 141204
+    },
+    {
+      "Message": "Here (sigh):\n\nhttps://www.flickr.com/photos/-adam/13741357673/",
+      "PostedDate": "2014-04-09T09:43:06.833-07:00",
+      "Id": 141205
+    },
+    {
+      "Message": "The winrt.d.ts is just modeling the types already presented to us through their docs/APIs. It sounds like your issue is really with the WinRT API not being as specific as it could about the runtime result right? In which case we should really have them update their API and then we could change the winrt.d.ts to reflect that. Having winrt.d.ts not match the documented WinRT APIs is problematic for various reasons.",
+      "PostedDate": "2014-04-17T18:38:27.753-07:00",
+      "Id": 142295
+    },
+    {
+      "Message": "Good point: the documented WinRT APIs are also wrong.  ^_^\n\nThis isn't about \"being specific\".  This is about the reality (runtime behavior) and the docs not matching up at all (there is zero intersection).\n\n# One more time\nLet me try again by showing you how winrt.d.ts already doesn't match the docummented WinRT APIs for a related interface:\n\nLook at the docs for IAsyncOperation:\n   http://msdn.microsoft.com/en-us/library/windows/apps/br206598.aspx\n\nCompare with winrt.d.ts (typescript/master)\n```typescript\n        export interface IAsyncOperation<TResult> extends Windows.Foundation.IPromise<TResult> {\n            operation: {\n                completed: Windows.Foundation.AsyncOperationCompletedHandler<TResult>;\n                getResults(): TResult;\n            }\n        }\n```\nOn MSDN, it says there is a ```completed``` property and a ```getresults``` method, but the only declared members of IAsyncOperation is ```operation``` and those inherited from IPromise.\n\nAnyway, I'm tired of being captain obvious.  You can close this because Ryan has already pointed out ( https://typescript.codeplex.com/workitem/2404 ) that Microsoft's typing files are on the path of deprecation.\n\nSo feel free to keep being wrong!\n\n![Image](http://imgs.xkcd.com/comics/duty_calls.png) ",
+      "PostedDate": "2014-04-18T12:35:07.72-07:00",
+      "Id": 142354
+    }
+  ]
+}

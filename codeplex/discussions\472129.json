@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1132550",
+    "ThreadId": "472129",
+    "Html": "About import declarations, spec 10.3:<br />\n<blockquote>\nAn EntityName consisting of a single identifier... The resulting local alias references the given internal module and is itself classified as an internal module.<br />\nAn EntityName consisting of more than one identifier... The resulting local alias has all the meanings and classifications of the referenced entity or entities. (As many as three distinct meanings are possible for an entity name—namespace, type, and member.) In effect, it is as if the imported entity or entities were declared locally with the local alias name.<br />\n</blockquote>\nSpec doesn't make it clear if &quot;three distinct meanings&quot; are used simultaneously or depending on the type of imported entity (for example, is module instantiated or not). I tried to check it using &quot;duplicate identifier&quot; test and failed miserably. Neither example 1, nor example 2 gives me any error about duplicating identifiers. Is this some kind of bug? How imported aliases should be treated?\r<br />\n<br />\nExample 1 <br />\n<pre><code>module M {\n  export interface I {}\n  export var F;\n}\n\n// var M: number; would indeed trigger an error\n \nimport m = M; // or M.F - no error\nvar m: number;\ninterface m {}</code></pre>\n\nExample 2<br />\n<pre><code>module M {\n  export interface I { }\n}\n\nimport m = M; // or M.I\nvar m: number;\ninterface m {}</code></pre>\n\n",
+    "PostedDate": "2013-12-06T09:02:53.087-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132589",
+    "ThreadId": "472129",
+    "Html": "One way to think of it:\r<br />\n<br />\nThe three distinct meanings are three separate places the same name can be used.  A name can be a namespace, a type, and a value/member and any combination of the three.\r<br />\n<br />\nNamespaces can be used to qualify names, like so:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x: A.B.C;\r\n</pre></div>Where A and B represent namespaces.\r<br />\n<br />\nTypes, of course, are just types, like the interface I below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> I {\n  x: <span style=\"color:Blue;\">number</span>;\n  y: <span style=\"color:Blue;\">number</span>;\n}\r\n</pre></div>and values/member, like 'x' below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = 3;\nx + 1;\r\n</pre></div>Some declarations, like class C actually create entries for 'C' as both a type and as a value (for the constructor function).  Modules create a namespace and a value.<br />\n\r<br />\nThe 'import' keyword lets you access all three places the name can be, and bring the definitions into scope.  Taking a simple example:<br />\n<pre><code>module SimpleMod {\n    export interface Point {\n        x: number;\n        y: number;\n    }\n    export var Origin: Point = {x: 0, y: 0};\n}\n\nvar smVar = SimpleMod;\n\nimport smImport = SimpleMod;\n\nvar x: smVar.Point;\nvar y: smImport.Point;</code></pre>\n\nYou'll notice there's an error when using smVar.Point.  The reason is that the 'import' is pulling in the namespace and type information related to the name 'SimpleMod', whereas using just 'var' will access only the value side.\r<br />\n<br />\nIt's a little subtle, and takes a little playing with.  Once this is clear, how other parts of the system work, including export=, will also be clear.<br />\n",
+    "PostedDate": "2013-12-06T10:43:56.58-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132733",
+    "ThreadId": "472129",
+    "Html": "Thanks, I understand everything. But why no error about duplicate identifier?<br />\n",
+    "PostedDate": "2013-12-07T03:13:57.997-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

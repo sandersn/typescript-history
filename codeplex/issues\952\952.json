@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is actually a duplicate of https://typescript.codeplex.com/workitem/159\n\nThe issues here (with many constructs that share a name with their containing module) are in the process of being fixed.",
+    "ClosedDate": "2013-05-03T13:58:22.883-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "``` TypeScript\r\nmodule Some {\r\n\texport class Some {\r\n\t\tconstructor(public fake: string) { }\r\n\t}\r\n}\r\n\r\nvar ASome = new Some.Some('Really fake'); // This is not working in JS\r\n```\r\n\r\nSuch a code should either be prohibited or compiled into something that works.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-25T09:11:53.22-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Module containing class with the same name compiles badly",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 952
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yep, I agree with your sentiments. Thanks for the report, marked as active.",
+      "PostedDate": "2013-04-25T12:27:28.47-07:00",
+      "Id": 98495
+    },
+    {
+      "Message": "Nice catch. \n\n```\nvar Some;\n(function (Some) {\n    var Some = (function () {\n        function Some(fake) {\n            this.fake = fake;\n        }\n        return Some;\n    })();\n// This is the troublesome line. \n// Some here is the class not the module. So Some.Some is class.Some \n// instead of module.Some\n    Some.Some = Some;   \n})(Some || (Some = {}));\nvar ASome = new Some.Some('Really fake');\n```",
+      "PostedDate": "2013-04-27T19:40:39.26-07:00",
+      "Id": 98699
+    },
+    {
+      "Message": "Actually module containing any thing with same name as module compiles badly: \n\n```\nmodule Test{\n\tvar Test;\n\texport var foo=10;\n}\n```\ncompiles to: \n```\nvar Test;\n(function (Test) {\n    var Test;\n    Test.foo = 10;\n})(Test || (Test = {}));\n\n```",
+      "PostedDate": "2013-04-29T23:05:20.38-07:00",
+      "Id": 98892
+    },
+    {
+      "Message": "I'm having the same trouble in my project. I guess the simplest fix would be to add a compile-time error to prevent using the same name inside the module, so others don't spend five minutes looking through their code for such an error.",
+      "PostedDate": "2013-04-30T05:53:07.723-07:00",
+      "Id": 98913
+    }
+  ]
+}

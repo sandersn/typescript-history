@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1050928",
+    "ThreadId": "445528",
+    "Html": "Hi,\r<br />\n<br />\nLet's say I have some code like this.<br />\n<pre><code>class MyClass {\n  myString: string = &quot;blah&quot;;\n  func1() {\n    someFunctionThatTakesACallback(this.func2);\n  }\n  func2(paramA: string, paramB: string, paramC: string): string {\n    return this.myString;\n  }\n}</code></pre>\n\nWhen func2() gets called 'this' is undefined. I know I could do something like this to fix the issue but I was wondering if there is a better (less verbose) solution.<br />\n<pre><code>someFunctionThatTakesACallback((paramA, paramB, paramC) =&gt; {\n  this.func2(paramA, paramB, paramC);\n});</code></pre>\n\n",
+    "PostedDate": "2013-05-30T17:31:54.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050971",
+    "ThreadId": "445528",
+    "Html": "\r\n<div dir=\"ltr\">One option is to call it like: <span style=\"white-space:pre-wrap\">\r\nsomeFunctionThatTakesACallback</span><span style=\"white-space:pre-wrap\">(this.func2.bind(this)) - if your environment supports bind that is. Bind basically returns a function like what you proposed as an alternate solution. I'm not sure if bind is guaranteed\r\n in ES3 browsers.</span>\r\n<div><span style=\"white-space:pre-wrap\"><br>\r\n</span></div>\r\n<div style=\"\"><span style=\"white-space:pre-wrap\">A shim for bind in non-ES5 browsers is available in Mozilla's documentation:\r\n</span><a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind\">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind</a></div>\r\n</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-05-30T20:30:50.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050970",
+    "ThreadId": "445528",
+    "Html": "<pre><code>func1() {\nsomeFunctionThatTakesACallback.call(this, this.callback);\n}</code></pre>\n\n",
+    "PostedDate": "2013-05-30T20:30:58.52-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1050973",
+    "ThreadId": "445528",
+    "Html": "Andrew: Thanks for the info. I'll look into browser compatibility for bind.\r<br />\n<br />\nPhotonStorm: Thanks, that works too. The only downside is that TypeScript doesn't know what the return type of call() is.<br />\n",
+    "PostedDate": "2013-05-30T20:50:31.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051126",
+    "ThreadId": "445528",
+    "Html": "<pre><code>func1() {\nvar result: CustomType = &lt;CustomType&gt; someFunctionThatTakesACallback.call(this, this.callback);\n}</code></pre>\n\n:)<br />\n",
+    "PostedDate": "2013-05-31T03:46:17.467-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

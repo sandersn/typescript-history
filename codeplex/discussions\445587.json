@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1051283",
+    "ThreadId": "445587",
+    "Html": "Hi,\r<br />\n<br />\nI am trying to compile my file in node.js and I am getting the error FATAL ERROR: CALL_AND_RETRY_2 Allocation failed - process out of memory. The file size is rather small.\r<br />\n<br />\nThis is happening on version 0.8.3\r<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2013-05-31T09:46:09.293-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051327",
+    "ThreadId": "445587",
+    "Html": "Can you post some code that exhibits this issue?<br />\n",
+    "PostedDate": "2013-05-31T11:47:47.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051396",
+    "ThreadId": "445587",
+    "Html": "This is the code<br />\n<pre><code>import express = module('express');\nvar http = require('http');\nvar a = &quot;http://localhost:1337/ScheduledTasks/88888888/5-22-2013/5-29-2013?authentication=server&quot;;\n\n//var objt = JSON.parse(result);\n////     console.log(object);\n//var dates = [];\n//for (var i in objt) {\n//    var d = new Date(objt[i].date);\n//    dates.push(d);\n//}\n//ObserveDateArray(dates).subscribe(function (f) { console.log(&quot;FIre&quot;, f); });\n\nfunction ObserveUrl(url) {\n    var observable = Rx.Observable.create(function (observer) {\n        http.get(url, function (res) {\n            var result = &quot;&quot;;\n            res.on('data', function (chunk) {\n                result += chunk;\n            });\n            res.on('end', function () {\n                observer.onNext(result);\n                observer.onCompleted();\n            });\n        }).on('error', function (e) {\n            observer.onError(e);\n        });\n        // Return the dispose function \n        return function dispose() {\n            // Do nothing\n        };\n    });\n    return observable;\n};\n\n\n\n\nvar Rx = require('rxjs');\n\nvar ObserveDateArrayFromArrayObservable = function (arrayObservable, dateSelector: (any) =&gt; Date) {\n\n    var observable = Rx.Observable.create(function (observer) {\n        //var subject = new Rx.Subject();\n        var currentDisposable = null;\n        //subject.subscribe(observer);\n\n        var ourObserver = Rx.Observer.create(\n            function onNext(array) {\n                var observableForThisArray = ObserveDateArray(array, dateSelector);\n                if (currentDisposable != null) {\n                    console.log(&quot;dei&quot;);\n                    // No need to listen on old array\n                    currentDisposable.dispose();\n                    currentDisposable = null;\n                }\n                currentDisposable = observableForThisArray.subscribe(\n                    function (item) {\n                        observer.onNext(item);\n                    },\n                    function (error) {\n                        // Ignore errors in array items\n                    },\n                    function () {\n                        // Ignore completion in array items\n                    });\n            },\n\n            function onError(error) {\n                observer.onError(error);\n            },\n            function onCompleted() {\n                // We do not kill the child stream on completion as it will wait for the timers to happen (We will never provide an onCompleted\n            }\n        );\n        var ourObservation = arrayObservable.subscribe(ourObserver);\n\n        // Return the dispose function \n        return function dispose() {\n            if (currentDisposable != null) {\n                currentDisposable.dispose();\n                currentDisposable = null;\n            }\n            ourObservation.dispose();\n        };\n    });\n\n    return observable;\n};\n\nvar ObserveDateArray = function (array: any[], dateSelector: (any) =&gt; Date): any {\n    var subject = new Rx.Subject();\n    var subscribers = 0;\n    var timerDisposable = null;\n    array = array.sort(function (a, b) { return dateSelector(a).getTime() - dateSelector(b).getTime(); });\n    var fireNext = function () {\n        console.log(array.length);\n        if (array.length &gt; 0) {\n            var first = array.shift();\n            console.log(&quot;waiting for&quot;, first);\n            if (timerDisposable != null) {\n                timerDisposable.dispose();\n                timerDisposable = null;\n            }\n            if (subscribers &gt; 0) {\n                timerDisposable = Rx.Observable.timer(dateSelector(first)).subscribe(function (f) {\n                    subject.onNext(first);\n                    fireNext();\n                });\n            }\n        }\n        else {\n            subject.onCompleted();\n        }\n    };\n\n    var fireFirst = function () {\n        var now = new Date();\n        // Skip times from the past\n        while (array.length &gt; 0 &amp;&amp; dateSelector(array[0]).getTime() &lt; now.getTime()) {\n            array.shift();\n        }\n        fireNext();\n    }\n    var observableResult = Rx.Observable.create(function (observable) {\n        var subjectDisposable = subject.subscribe(observable);\n\n        subscribers++;\n        if (subscribers == 1) {\n            // THis is the first subscriber lets invoke the timer\n            fireFirst();\n        }\n        // Should return the dispose function\n        return function dispose() {\n            subscribers--;\n            if (subscribers == 0) {\n                if (timerDisposable != null) {\n                    timerDisposable.dispose();\n                    timerDisposable = null;\n                }\n            }\n            subjectDisposable.dispose();\n        };\n    });\n    return observableResult;\n}\n\n\nvar getScheduleFromResult = function (result) {\n    var objt = JSON.parse(result);\n    var dates = [];\n    for (var i in objt) {\n        objt[i].date = new Date(objt[i].date);\n        dates.push(objt[i]);\n    }\n    return dates;\n};\n\n//var arrayObservable = ObserveUrl(&quot;http://localhost:1337/ScheduledTasks/88888888/5-22-2013/5-29-2013?authentication=server&quot;).select(function (result) {\n//    return getScheduleFromResult(result);\n//});\n\nvar observeAllScheduledTasks = function (baseUrl, urlSuffix) {\n    var observableResult = Rx.Observable.create(function (observer) {\n        var currentObserveUrlDisposable = null;\n        var now = new Date();\n        var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);\n        var dayInMiliseconds = 60 * 1000; //60 * 60 * 1000 * 24;\n        var timerDisposable = Rx.Observable.timer(midnight, dayInMiliseconds).subscribe(\n            function onNext() {\n                var now = new Date();\n                console.log(&quot;Refreshing scheduled tasks&quot;, now);\n                var todayString = (now.getMonth() + 1) + &quot;-&quot; + now.getDate() + &quot;-&quot; + now.getFullYear();\n                now.setDate(now.getDate() + 14);\n                var twoWeeksString = (now.getMonth() + 1) + &quot;-&quot; + now.getDate() + &quot;-&quot; + now.getFullYear();\n                var url = baseUrl + todayString + &quot;/&quot; + twoWeeksString + urlSuffix;\n                console.log(url);\n                if (currentObserveUrlDisposable != null) {\n                    currentObserveUrlDisposable.dispose();\n                    currentObserveUrlDisposable = null;\n                }\n                currentObserveUrlDisposable = ObserveUrl(url).subscribe(\n                        function onNext(response) {\n                            observer.onNext(getScheduleFromResult(response));\n                        }\n\n                        // We ignore errors and completion as the sub URL will get a constant stream of them\n                    );\n            },\n            function onError(error) {\n                console.log(&quot;Error from timer&quot;, error);\n            },\n            function onCompleted() {\n                console.log(&quot;Timer done&quot;);\n            });\n        return function dispose() {\n            if (currentObserveUrlDisposable != null) {\n                console.log(&quot;disposed&quot;);\n                currentObserveUrlDisposable.dispose();\n                currentObserveUrlDisposable = null;\n            }\n            timerDisposable.dispose();\n        };\n    });\n    return observableResult;\n};\n\nvar arrayObservable = observeAllScheduledTasks(&quot;http://localhost:1337/ScheduledTasks/88888888/&quot;, &quot;?authentication=server&quot;);\n\nvar ob = ObserveDateArrayFromArrayObservable(arrayObservable, function (o) { return o.date });\nvar fiveMoreMinutes = new Date();\nfiveMoreMinutes.setSeconds(fiveMoreMinutes.getSeconds() + 10);\n\nvar fiveMoreMinutes2 = new Date(fiveMoreMinutes.getTime());\nfiveMoreMinutes2.setSeconds(fiveMoreMinutes.getSeconds() + 10);\n\nvar f = new Date(fiveMoreMinutes.getTime());\nf.setSeconds(fiveMoreMinutes.getSeconds() - 30);\n//\n//d.dispose();\nvar disposable = null;\ndisposable = ob.subscribe(function (f) { console.log(f); });\n//var timerDisposable = Rx.Observable.timer(fiveMoreMinutes).subscribe(function () { disposable = ob.subscribe(function (f) { console.log(f); }); } );\nvar timerEnd = null;\ntimerEnd = Rx.Observable.timer(fiveMoreMinutes2).subscribe(function (f) { console.log(&quot;disposing&quot;); disposable.dispose(); timerEnd.dispose() });\n\n\n//var a = Rx.Observable.timer(fiveMoreMinutes).select(function (f) { return &quot;Yair&quot;; });\n//a.subscribe(function (f) { console.log(&quot;A&quot;, f); });\n//var b = Rx.Observable.timer(fiveMoreMinutes).select(function (f) { return &quot;Moriya&quot;; });\n//b.subscribe(function (f) { console.log(&quot;b&quot;, f); });\n//a.merge(b).subscribe(function (f) { console.log(&quot;Merged&quot;, f); });\n\n\n//d.dispose();</code></pre>\n\n",
+    "PostedDate": "2013-05-31T15:36:09.08-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051400",
+    "ThreadId": "445587",
+    "Html": "\r\n<div>\r\n<p><span style=\"font-size:11.0pt; font-family:\">Note that this code is my playground so ignore coding style</span></p>\r\n<p><span style=\"font-size:11.0pt; font-family:\"></span></p>\r\n<div>\r\n<div style=\"border:none; border-top:solid #E1E1E1 1.0pt; padding:3.0pt 0in 0in 0in\">\r\n<p><b><span style=\"font-size:11.0pt; font-family:\"></span></b></p>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2013-05-31T15:47:50.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1051664",
+    "ThreadId": "445587",
+    "Html": "I made a deep dive and I think I know what the issue is.\r<br />\n<br />\nWhen I add names to anonymous functions I get this failure. So in the code above the failure came from <br />\n<pre><code>        var timerDisposable = Rx.Observable.timer(midnight, dayInMiliseconds).subscribe(\n            function ____onNext____() {\n                var now = new Date();\n                console.log(&quot;Refreshing scheduled tasks&quot;, now);\n                var todayString = (now.getMonth() + 1) + &quot;-&quot; + now.getDate() + &quot;-&quot; + now.getFullYear();\n                now.setDate(now.getDate() + 14);\n                var twoWeeksString = (now.getMonth() + 1) + &quot;-&quot; + now.getDate() + &quot;-&quot; + now.getFullYear();\n                var url = baseUrl + todayString + &quot;/&quot; + twoWeeksString + urlSuffix;\n                console.log(url);\n                if (currentObserveUrlDisposable != null) {\n                    currentObserveUrlDisposable.dispose();\n                    currentObserveUrlDisposable = null;\n                }\n                currentObserveUrlDisposable = ObserveUrl(url).subscribe(\n                        function onNext(response) {\n                            observer.onNext(getScheduleFromResult(response));\n                        }\n\n                        // We ignore errors and completion as the sub URL will get a constant stream of them\n                    );\n            },\n            function ____onError____(error) {\n                console.log(&quot;Error from timer&quot;, error);\n            },\n            function ____onCompleted____() {\n                console.log(&quot;Timer done&quot;);\n            });\n</code></pre>\n\n",
+    "PostedDate": "2013-06-01T22:05:20.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103369",
+    "ThreadId": "445587",
+    "Html": "I have the same kind of error. I can't anymore compile my library (<a href=\"https://github.com/srenault/immutable.ts\" rel=\"nofollow\">https://github.com/srenault/immutable.ts</a>).\r<br />\nFor info, I use the last commit this day (0bbee3396b1e082a45951204900c7079fb11901d) of the develop branch. \r<br />\nIs there someone help me ?<br />\n",
+    "PostedDate": "2013-10-03T13:56:01.303-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103525",
+    "ThreadId": "445587",
+    "Html": "Have your tried 0.9.1.1, ?\r<br />\n<br />\nI had a project I started with 0.8.3 and it worked fine with 0.9.1.1,  I think support for 0.8 might be limited now that 0.9 has been out for a while.\r<br />\n<br />\nThe main change I think with 0.9 was the change of bool to boolean, but the compiler does have the --allowbool option to make compiling 0.8 code easer.<br />\n",
+    "PostedDate": "2013-10-04T01:18:28.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103662",
+    "ThreadId": "445587",
+    "Html": "Sorry but I don't use the 0.8 version of Typescript but the current branch 'develop' of the typescript repository. So, I have the last changes. However, I'm facing up the same issue above: &quot;Allocation failed - process out of memory&quot;<br />\n",
+    "PostedDate": "2013-10-04T08:14:11.68-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103841",
+    "ThreadId": "445587",
+    "Html": "Is this still an issue?  If so, would you mind filing an issue in the issue tracker so we can look into it further?<br />\n",
+    "PostedDate": "2013-10-04T14:32:33.867-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103935",
+    "ThreadId": "445587",
+    "Html": "Ok I will fill an issue.<br />\n",
+    "PostedDate": "2013-10-05T03:02:17.067-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

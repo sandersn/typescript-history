@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This should be addressed now with the check-in http://typescript.codeplex.com/SourceControl/changeset/270a0ac3a40efeb4d37323a1d29be67805ef7077",
+    "ClosedDate": "2013-07-30T13:04:46.397-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "```\r\nclass foo<T>\r\n{\r\n\tbar(): foo2<T> { return null; }\r\n}\r\n\r\nclass foo2<T> extends foo<T> { }\r\n```\r\n\r\ncompiles OK.  However:\r\n\r\n```\r\nclass foo<T>\r\n{\r\n\tbar(): foo2<T[]> { return null; }\r\n}\r\n\r\nclass foo2<T> extends foo<T> { }\r\n```\r\n\r\ngenerates the error \"A generic type may not reference itself with a wrapped form of its own type parameters.\"\r\n\r\nNotice that I explicitly avoided this with a dummy class \"foo2\".\r\n\r\n```\r\nclass foo<T>\r\n{\r\n\tbar(): foo2<T> { return null; }\r\n}\r\n\r\nclass foo2<T> extends foo<T> { }\r\n\r\nvar test = new foo<string>();\r\n```\r\n\r\ncompiles fine.  However:\r\n\r\n```\r\nclass foo<T>\r\n{\r\n\tbar(): foo2<T[]> { return null; }\r\n}\r\n\r\nclass foo2<T> extends foo<T> { }\r\n\r\nvar test = new foo<string>();\r\n```\r\n\r\nruns out of stack space.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-17T23:33:28.627-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Issues with generic array type argument",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1160
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The spec (3.5.2) states (bolding mine)\n\nSpecifically, within a generic type G < T1 , T2 , … , Tn > __and the types referenced by it__, it is an error to reference G with a type argument that wraps any of G’s own type parameters (i.e. a type argument that wraps any Tx). A type parameter is said to be wrapped by a particular type when it is referenced, directly __or indirectly__, within that type\n\nWhen you write \"foo2<T[]>\", you are effectively saying \"foo2<Array<T>>\".  As this is in foo, which references foo2, which references foo, with T references in the type arg <Array<T>>, this is breaking the wrapping rule outlined above.\n\nAdding the extra line at the end of the final snippet definitely shouldn't crash the compiler though!  So we'll take a look into this.  Thanks for reporting!",
+      "PostedDate": "2013-06-19T00:51:41.633-07:00",
+      "Id": 103386
+    },
+    {
+      "Message": "Thanks!\n\nI discovered that there are much more hidden traps in this \"wrapping\" business...\n\nA related issue: seems like *using* a type referring to itself with a wrapped type parameter within one of the type's methods is also not OK!\n\nWhich means that:\n\n```\ninterface SomeType<T>\n{\n    someMethod() {\n        var r = new AnotherType<T[]>();\n    }\n}\n```\n\nIf AnotherType<T> refers to SomeType<T>, it still throws the \"wrapped form of its own type parameters\" error!\n\nSo not only must a generic type not have any method or field signature that refers to itself with wrapped type parameters, it cannot even use such types within method implementations!\n",
+      "PostedDate": "2013-06-19T05:03:16.48-07:00",
+      "Id": 103407
+    },
+    {
+      "Message": "A more detailed example of my point above: why does the following fail?\n\n```\nclass foo<T>\n{\n\tbaz() {\n\t\tvar n : bar<T[]>;\t\t// Error: why?\n\t}\n}\n\ninterface bar<T>\n{\n\tsomeFunction() : foo<T>;\n}\n```\n\nThe class \"foo\" has *not* referenced \"bar<T[]>\".  It uses it in one of its method implementations.\n",
+      "PostedDate": "2013-06-20T07:31:38.99-07:00",
+      "Id": 103618
+    }
+  ]
+}

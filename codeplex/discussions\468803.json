@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1123929",
+    "ThreadId": "468803",
+    "Html": "According to TypeScript spec, section 2.4:\r<br />\n&quot;The scope of a non-exported entity declared within an internal module declaration is the body of that internal module declaration.&quot;\r<br />\n<br />\nSeems logical for me that module is also &quot;entity&quot; here.\r<br />\nBut TypeScript in playground gives me an error about duplicating identifiers for a code sample below. Please note that adding &quot;export&quot; before &quot;module C&quot; cures the error. Is this bug in the compiler or in the spec? <br />\n<pre><code>module A {\nexport module B {\n  module C {\n      export function a() {}    \n  }\n}\n}\n\nmodule A {\nexport module B {\nmodule C {\nexport function a() {}\n}\n}</code></pre>\n\n",
+    "PostedDate": "2013-11-15T07:23:36.25-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1124177",
+    "ThreadId": "468803",
+    "Html": "This is working as intended but the spec wording there probably does need to be updated to be a bit more precise. In this case your two declarations for A.B.C are being merged per section 10.5 (Declaration Merging) of the spec. When you make one of the module C's exported they are no longer merged because they no longer have the same qualified name relative to a common root. <br />\n",
+    "PostedDate": "2013-11-15T11:55:43.62-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1124197",
+    "ThreadId": "468803",
+    "Html": "Thanks for clearing that up! There is no mention in the spec about how qualified name is composed in relation to exported/not exported modules. Could we assume that qualified name is composed from the names of all internal parent modules from the root module downwards, but for non-exported modules something like &quot;(not exported)&quot; is added, so that function a in the example above would have full name like &quot;A.B.C(not exported).a&quot;?<br />\n",
+    "PostedDate": "2013-11-15T13:03:51.027-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1124240",
+    "ThreadId": "468803",
+    "Html": "I believe the concepts you want to look for in the spec related to this are root module (specifically in 2.2 and 2.3) and common root. Specifically:\r<br />\n<br />\n_The root module of an entity is defined as follows:\r<br />\n•\tThe root module of a non-exported entity is the entity’s parent module.\r<br />\n•\tThe root module of an exported entity is the root module of the entity’s parent module._\r<br />\n<br />\nYou're talking about moving 'down' from a root module to find a particular declaration that isn't actually visible which conceptually doesn't really make sense. As you can see there, the root module is defined in terms of moving 'up' from a particular declaration. What exactly would you be using this sort of description for?<br />\n",
+    "PostedDate": "2013-11-15T14:28:40.067-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

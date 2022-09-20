@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:24.517-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "How about allowing enums to carry data like algebraic datatypes (sum types) found in functional languages?\r\n\r\n```\r\nenum Option {\r\n  Some: <any>;\r\n  None: ();\r\n}\r\n```\r\n\r\nMaybe this would need pattern matching to be useful, or some other kind of destructuring mechanism.",
+    "LastUpdatedDate": "2014-07-28T15:17:24.517-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-27T15:47:30.57-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Enum carrying data (algebraic data types)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2584
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You mean like this: https://typescript.codeplex.com/workitem/1217\n;)",
+      "PostedDate": "2014-06-27T16:22:03.18-07:00",
+      "Id": 151012
+    },
+    {
+      "Message": "Not really. Once defined, an enum should be able to carry new data, like so:\n\n```\nvar s1 = Some 1;\nvar s2 = Some \"A string\";\n```",
+      "PostedDate": "2014-06-27T16:29:48.66-07:00",
+      "Id": 151013
+    },
+    {
+      "Message": "Do we have some more examples? I think we can just use interface or something...",
+      "PostedDate": "2014-06-27T20:17:22.92-07:00",
+      "Id": 151027
+    },
+    {
+      "Message": "Interfaces are structurally typed, algebraic data types would not be.\n\nA classic example ([from Wikipedia](http://en.wikipedia.org/wiki/Algebraic_data_type)) is the list data type, assuming you can define recursive types:",
+      "PostedDate": "2014-06-28T07:28:09.77-07:00",
+      "Id": 151046
+    },
+    {
+      "Message": "```\nenum List {\n  Nil: (),\n  Cons: (<any>, List)\n}\n```",
+      "PostedDate": "2014-06-28T08:10:25.47-07:00",
+      "Id": 151050
+    },
+    {
+      "Message": "Here also assuming tuples. Maybe they should be like:\n\n```\n  Cons: [<any>, List]\n```",
+      "PostedDate": "2014-06-28T08:13:14.153-07:00",
+      "Id": 151051
+    },
+    {
+      "Message": "There would be no direct translation of sum-types to JavaScript, so if implemented they would have to be done using some design pattern. Choosing the right design pattern is a subject for many trade-off. You won't be able to pick an implementation that equality good for everyone. For example if you target the performance you will have to minimize the number of run-time verifications and the error reporting will suffer. So instead, I wish TypeScript designers added a way to generate the code based on the code model, so that one could pick any design pattern they want and let the compiler generate the boilerplate code for it.",
+      "PostedDate": "2014-06-30T06:54:03.57-07:00",
+      "Id": 151132
+    },
+    {
+      "Message": "Feature request for the code generators: https://typescript.codeplex.com/workitem/2591",
+      "PostedDate": "2014-06-30T07:03:22.097-07:00",
+      "Id": 151133
+    },
+    {
+      "Message": "A possible translation (used by a JSON translator in OCaml) is simply arrays:\n\n```\n[\"None\"]\n[\"Some\", 10]\n[\"Some\", \"a string\"]\n[\"Cons\", 10, [\"Cons\", 9, [\"Nil\"]]]\n```\n\nNot sure run-time verifications will be needed. Shouldn't the type-system make sure on compile time that everything is OK?",
+      "PostedDate": "2014-06-30T12:07:28.623-07:00",
+      "Id": 151170
+    },
+    {
+      "Message": "Destructuring itself seems to be supported later somehow by TS as ES6 supports it: https://typescript.codeplex.com/discussions/549557\nSum types (union) is now being discussed here: https://typescript.codeplex.com/workitem/1364\n\nWe have to wait and see to get those two, but I think this can be helpful as typedef is: https://typescript.codeplex.com/workitem/119",
+      "PostedDate": "2014-06-30T21:05:49.673-07:00",
+      "Id": 151209
+    },
+    {
+      "Message": "> Not sure run-time verifications will be needed. Shouldn't the type-system make sure on compile time that everything is OK?\n\nRuntime verification is important when you do casting.\n\nvar a : any = true';\nvar b : string | number = a;\nb = true; // <---- what do you expect here?\n",
+      "PostedDate": "2014-07-01T06:21:04.057-07:00",
+      "Id": 151240
+    }
+  ]
+}

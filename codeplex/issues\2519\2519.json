@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once it's possible) and log an issue on the GitHub site if it still reproduces",
+    "ClosedDate": "2014-07-21T11:51:44.727-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I was refactoring some code to use external modules and I accidentally created a situation where the compiler blows the node.js stack in a recursion error:\r\n\r\nSmall section:\r\n\r\n````\r\n    at PullTypeResolver.resolveDeclaredSymbol (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40443:25)\r\n    at PullTypeResolver.resolveExportAssignmentStatement (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:41633:18)\r\n    at PullTypeResolver.resolveFirstExportAssignmentStatement (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40710:26)\r\n    at PullTypeResolver.resolveSourceUnit (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40530:18)\r\n    at PullTypeResolver.resolveAST (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:44539:33)\r\n    at PullTypeResolver.resolveDeclaredSymbolWorker (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40486:43)\r\n    at PullTypeResolver.resolveDeclaredSymbol (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40443:25)\r\n    at PullTypeResolver.resolveExportAssignmentStatement (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:41633:18)\r\n    at PullTypeResolver.resolveFirstExportAssignmentStatement (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40710:26)\r\n    at PullTypeResolver.resolveSourceUnit (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40530:18)\r\n    at PullTypeResolver.resolveAST (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:44539:33)\r\n    at PullTypeResolver.resolveDeclaredSymbolWorker (C:\\Users\\Bart\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:40486:43)\r\n````\r\n\r\nThis was both on latest node 0.10.x (where it throws a recursion RangeError but doesn't show the stack) and latest node 0.11.x (that was improved to show stacks on recursion errors).\r\n\r\nThe compiler is the commandline compiler from npm,  v1.0.1.0\r\n\r\nI pushed the code that throws this to Github: https://github.com/Bartvds/DefinitelyTyped/tree/stackerror\r\n\r\nThere is a .bat file with the options we use: https://github.com/Bartvds/DefinitelyTyped/blob/stackerror/_infrastructure/tests/compile-runner.bat\r\n\r\nI have no idea if the code I'm compiling is good or not: I was in the middle of a refactoring and tried to compile to check my progress.\r\n\r\nEarlier attempts (in node 0.10) had some compiler errors before the RangeError happens, I fixed those but was left with this. Then I updated to node 0.11 to see the actual stack and created this ticket.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-22T11:57:46.423-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler recursion error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2519
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "FTFY\n\nhttps://github.com/Bartvds/DefinitelyTyped/pull/9\n",
+      "PostedDate": "2014-05-26T21:35:05.933-07:00",
+      "Id": 147964
+    },
+    {
+      "Message": "Ha, nice catch. Thanks for the fix. \n\nI expected it to be something like that. I think a usable error message with a pointer to the offending file (line) would be helpful locating these mistakes.",
+      "PostedDate": "2014-05-27T00:05:29.227-07:00",
+      "Id": 147974
+    },
+    {
+      "Message": "Yeah we certainly don't intend to be throwing stacks at you ;) Marked as active, we'll fix up the actual compiler issue, glad you got unblocked though.",
+      "PostedDate": "2014-05-30T13:14:16.04-07:00",
+      "Id": 148431
+    }
+  ]
+}

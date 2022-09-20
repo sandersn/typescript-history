@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1059800",
+    "ThreadId": "447858",
+    "Html": "Looking at BackboneJS (and some other large libraries as well), it uses some conventions where a single property may be of two different types. Most properties may be either of type X or a function that returns X, or sometimes a constructor of X.\r<br />\n<br />\nFor example, <a href=\"http://backbonejs.org/#Model-urlRoot\" rel=\"nofollow\">Model.urlRoot</a> may be a string, or a function that returns that string. <a href=\"http://backbonejs.org/#Collection-model\" rel=\"nofollow\">Collection.Model</a> may be a model class itself or a function that constructs a model of that type.\r<br />\n<br />\nCurrently, all those properties must be mapped as &quot;any&quot;, as there is no way to replace them for something more meaninful for error checking.\r<br />\n<br />\nIt seems that interfaces partially support this where you can use them to declare a function signature, but it only works for a single one. There is no way to declare a list of possible functions or constructors or types.\r<br />\n<br />\nSomething like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> CollectionModel&lt;T&gt; {\n    T;\n    (): T;\n}\n<span style=\"color:Blue;\">class</span> Collection&lt;T&gt; {\n    model : CollectionModel&lt;T&gt;;\n}\n\n<span style=\"color:Blue;\">interface</span> ModelUrlRoot {\n    <span style=\"color:Blue;\">string</span>;\n    (): <span style=\"color:Blue;\">string</span>;\n}\n<span style=\"color:Blue;\">class</span> Model {\n    urlRoot: ModelUrlRoot;\n}\n\n<span style=\"color:Green;\">// or even </span>\n\n<span style=\"color:Blue;\">class</span> Model {\n    urlRoot: { <span style=\"color:Blue;\">string</span>; (): <span style=\"color:Blue;\">string</span>; }\n}\r\n</pre></div>Of course that this could only be used in declarations, but would be great to improve error checking.\r<br />\n<br />\nAre there any plans to support some kind of &quot;property overloading&quot; like this?<br />\n",
+    "PostedDate": "2013-06-21T14:57:53.75-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1060461",
+    "ThreadId": "447858",
+    "Html": "We've talked about union types, like being able to say number|string, a few times on the forums, though I can't seem to find the threads at the moment.<br />\n\r<br />\nIt turns out that allowing disjunction adds some complication to the type system.  On the type inference side, you may get into cases where you infer union types the user didn't intend, making for potentially unreadable error messages.  Also, if a union type is used as the type of a function parameter, like below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> useX(x: <span style=\"color:Blue;\">number</span>|<span style=\"color:Blue;\">string</span>) {\n  <span style=\"color:Blue;\">return</span> x;\n}\r\n</pre></div>If the user then hits '.' after the x, what would the autocomplete list contain?  Only members common to both number and string (probably won't have many in this case), members of both number and string (nothing would be able to do all from both).  It's not straight-forward, and would require some more syntactic and type system support to get to a usable state.\r<br />\n<br />\nInstead, we opted to keep things simple by just going to 'any' instead.  In the future, as the type system matures, we can re-explore the areas we just go to 'any' now.<br />\n",
+    "PostedDate": "2013-06-24T09:16:51.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

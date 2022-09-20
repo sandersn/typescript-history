@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This intended. There is no guarantee what you'll get back from indexing an enum:\n\n```\nvar s = \"0\"; \nvar n = ABC[s]; // n is a string.\n```\n\nYou can add an indexer to Object as suggested if you want to proceed without the warning.",
+    "ClosedDate": "2014-02-27T11:24:37.763-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "String to enum seems to be broken in 1.0RC / 0.9.7.\r\n\r\nIn 0.9.5, the following code was working. It accesses an enum constant using a string.\r\n\r\nenum ABC {\r\n  A, B, C\r\n}\r\n\r\nABC[\"C\"]\r\n\r\nvar s = \"C\";\r\nABC[s]\r\n\r\nin 0.9.7, the last line (ABC[s]) reports an error:\r\nIndex signature of object type implicitly has an 'any' type.",
+    "LastUpdatedDate": "2014-03-31T16:13:50.783-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-26T23:58:25.41-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "String to Enum - Index signature of object type implicitly has an 'any' type.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2232
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You need to declare an indexer on Object. See: https://typescript.codeplex.com/discussions/535628",
+      "PostedDate": "2014-02-27T01:58:10.357-08:00",
+      "Id": 135260
+    },
+    {
+      "Message": "To @nabog\nABC is of enum type. It should return an number type from this usage.",
+      "PostedDate": "2014-02-27T08:00:16.49-08:00",
+      "Id": 135283
+    },
+    {
+      "Message": "So there is absolutely no way to convert a String to an enum constant without the Object interface workaround in combination with explicit typing or type casting?\nConverting a string to an enum constant is so common...\n\nIf I do the following:\n\ninterface Object {\n    [idx: string]: any;\n}\n\nenum ABC {\n\tA,B,C\n}\n\nI can access the enum constant with a string, but it will always return any (I could live with that) but it also allows accessing properties of all Objects via a string, which I don't like at all.\n\nIs there any way to apply this workaround only to enums, not to all Objects?",
+      "PostedDate": "2014-02-28T00:44:57.303-08:00",
+      "Id": 135371
+    },
+    {
+      "Message": "I found two possible workarounds documented here:\nhttps://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9\n\nThe first is to explicitly handle the typing of the indexing expression:\n\nenum Color { Red, Green, Blue };\nvar redString = \"Red\";\nvar redEnumVal: Color = (<any>Color)[redString]; // no longer warns\n\n\nIf the use of indexing of enums is more prevalent in an area of code, it may be more helpful to use an intermediary value that provides this indexer:\n\nenum Color { Red, Green, Blue };\nvar redString = \"Red\";\nvar Color2: { [idx: string]: Color; } = <any>Color;\nvar redEnumVal2 = Color2[redString];\n\n\nThe first workaround seems to do the trick for now.\n\nI will open a separate issue to ask for an improvement on enums.",
+      "PostedDate": "2014-02-28T00:57:58.167-08:00",
+      "Id": 135373
+    }
+  ]
+}

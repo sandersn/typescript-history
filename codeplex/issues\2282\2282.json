@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Again, same thing. Base is a subtype of Derived, so the function argument is bivariant. If Derived had a member 'v2', you would see a compiler error here.",
+    "ClosedDate": "2014-03-12T11:00:37.853-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "The following code should be an error, but isn't detected by the compiler: \r\n\r\n```typescript\r\ninterface ComicBookCharacter {\r\n    name: string;\r\n    fight: (nemisis: ComicBookCharacter) => void;\r\n}\r\n\r\nclass Civilian{} // Does not implement ComicBookCharacter\r\n\r\nclass SuperHero implements ComicBookCharacter {    \r\n    name:string;\r\n    // Civilian is not compatible with Comic book character. Should be an error\r\n    fight = (villian: Civilian) => {}; \r\n}\r\n```\r\n\r\nRelated SO : http://stackoverflow.com/a/22276304/390330 ",
+    "LastUpdatedDate": "2014-03-31T17:25:17.223-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-08T15:16:47.84-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Interface not implemented error missing",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2282
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That is slightly different. See : https://typescript.codeplex.com/discussions/535912#PostDetailsCell_1221670 \n\n```typescript\nclass Base {\n  v1 = \"Hi!\";\n}\nclass Derived  {\n}\n\nclass SampleA {\n  method(value: Base): Base {\n    return value;\n  }\n}\n\nclass SampleB extends SampleA {\n  method(value: Derived): any { // Parameter value is not compatible with `Base`\n    return value;\n  }\n}\n```",
+      "PostedDate": "2014-03-11T18:38:08.833-07:00",
+      "Id": 136573
+    },
+    {
+      "Message": "See https://typescript.codeplex.com/discussions/535912\n\r\n\r** Closed by RyanCavanaugh 03/10/2014 10:01AM",
+      "PostedDate": "2014-03-10T10:01:10.897-07:00",
+      "Id": 136574
+    },
+    {
+      "Message": "Correct me if I'm wrong but the above example should compile because Derive is missing v1.\nnote, Derive doesn't extend base.\n\nsame for the first example in the Ts. Civilian is missing name and the fight method.",
+      "PostedDate": "2014-03-12T12:43:37.567-07:00",
+      "Id": 136666
+    },
+    {
+      "Message": "Sorry, I meant should NOT compile",
+      "PostedDate": "2014-03-12T12:45:09.667-07:00",
+      "Id": 136668
+    },
+    {
+      "Message": "Also see example below, it doesn't compile at first but after removing the class A.test function it does.\n(Tested on playground)\n\n```\ninterface InterfaceA {\n\tname: string;\n\tfight: (t: InterfaceA) => void;\n} \n\nclass A  { \n//remove this method and now it compiles again\n\tpublic test(): string {\n\t\treturn null;\n\t}\n}\n\nclass B implements InterfaceA {\n\tname: string;\n\t\n\tpublic fight(a: A) {\n\t\t\n\t}\n}\n```",
+      "PostedDate": "2014-03-12T12:55:47.48-07:00",
+      "Id": 136669
+    },
+    {
+      "Message": "I do not know why it was closed again. \nThis Issue looks bug should be fixed for me.\n@DvdBrink 's sample code is very easy to understand.",
+      "PostedDate": "2014-03-13T04:03:09.5-07:00",
+      "Id": 136734
+    },
+    {
+      "Message": "@vvakame  `A is bivariant with B` (if and only if) `A is subtype of B OR B is subtype of A`. ---- this is based on my observation of what Ryan pointed out. I cannot find __bivariant__ in the TypeScript spec.\n\nParameters are `bavariant` for inheritance compatability. @DvdBrink's code compiles as without anything in `class A` it is compatible with *everything* including `interface interfaceA`. \n\nFor one direction compatability example see what ryan said (and I like this decision): \n\n```typescript\n// Library\nfunction on(eventName: string, handler: (e: Event) => void) { ... }\n\n// User code\non('mousemove', (e: MouseEvent) => { console.log('Mouse at ' + e.position; });\n```\nFor the other direction it is reasonable e.g. : \n\n```typescript\n// Library\nfunction on(eventName: string, handler: (e: MouseEvent) => void) { ... }\n\n// User code\non('mousemove', (e: Event) => { console.log('Mouse at ' + e.position; });\n```\n\nIf the user doesn't care about the additional properties of MouseEvent, we shouldn't prevent it, as everything needed from Event is already there in MouseEvent (is typesafe)\n\nHence bivariance. ",
+      "PostedDate": "2014-03-13T22:35:02.013-07:00",
+      "Id": 136807
+    }
+  ]
+}

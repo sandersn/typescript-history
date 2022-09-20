@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I can't reproduce the problem in the case where the files have correct `reference` tags (the other cases are unsupported at this time).\n\nIf you're still having problems with compile-on-save when the files have correct reference tags, can you post a comment with a concise description of what you're doing? This will need to be fairly exact -- the order in which you opened the files and which you have open are potentially a factor here. Thanks!",
+    "ClosedDate": "2013-09-16T17:31:27.113-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "From: https://typescript.codeplex.com/discussions/456585\r\nPossibly related to: https://typescript.codeplex.com/workitem/913 \r\n\r\nI'd like to note for the dev team that there are issues with regular inheritance, not only with circular references.\r\n\r\nI saw paulb's comments that some things are by design, but this doesn't seem like it.\r\n\r\nMy code is quite simple, A extends B, C extends B, but depending on which folder the files are, they are compiled in the wrong order and this keeps changing depending on which file I change later.\r\n\r\nThis seems to happen only if you have classes in different directories, and makes it impossible to use single file output for anything other than samples.\r\n\r\n",
+    "LastUpdatedDate": "2014-04-01T13:16:17.537-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-14T07:43:04.023-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Wrong output order for single file compilation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1686
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, we need a little more information here.\n\nDoes this happen in Visual Studio with Compile on Save, or when doing a build? Does this happen when doing a command line compile? If so what is the exact command line you use?",
+      "PostedDate": "2013-09-14T10:36:19.2-07:00",
+      "Id": 113579
+    },
+    {
+      "Message": "Sorry about the long comment, it took me sometime to understand how to reproduce this in all cases I saw.\n\nHere is the setup:\n\nHad \"Compile on Save\" enabled on VS, created a new TypeScript HTML project, delete everything and replace the TS project settings with:\n\n```xml\n<PropertyGroup>\n  <TypeScriptTarget>ES5</TypeScriptTarget>\n  <TypeScriptOutFile>$(WebProjectOutputDir)\\Out.js</TypeScriptOutFile>\n</PropertyGroup>\n```\n\nReload the project and create a structure like this:\n\nC.ts -> type \"class C {}\" and save\nB.ts -> type \"class B extends C {}\" and save\nA\\A.ts -> type \"class A extends B {}\" and save\n\nWe can already see the problem at Out.js:\n\n```js\nvar __extends = ...;\nvar A = (function() { ... })(B);\nvar B = (function() { ... })(C);\nvar C = (function() { ... })();\n```\n\nI called TSC manually and it seems TSC just follows the order the files are passed to it, and VS must be passing in alphabetic order\n\nCalling \"tsc -out Out.js A\\A.ts B.ts C.ts\" produces the same output (B, C, A).\nCalling \"tsc -out Out.js C.ts B.ts A\\A.ts\" produces it in the correct order (C, B, A)\n\nNow, I tried adding the references clause to the files so it knows the dependencies, and there are some odd issues.\n\nAdded references to both files in this order and saved them right after adding the references:\n\n```ts\n/// <reference path=\"C.ts\" />\nclass B extends C { }\n```\nOut.js will have A, C, B. Then I added:\n```ts\n/// <reference path=\"../B.ts\" />\nclass A extends B { }\n```\n\nOut.js will remain A, C, B even though the file was recompiled for sure. I did it slowly one after another, and gave it time to show the \"file was changed\" alert. Now, saving any of the files again will compile them in the correct order (C, B, A).\nAt this point, calling TSC in any order outputs the files correctly, so it seems something related to VS incremental compilation.\n\nNow, I decided to change the references to point to a single _references.ts in the root, because this is how I usually work having lots of references:\n\n```ts\n_references.ts have:\n/// <reference path=\"A/A.ts\" />\n/// <reference path=\"B.ts\" />\n/// <reference path=\"C.ts\" />\n```\nAfter saving each file in any order, the output remains \"A, B, C\", as the order of references in _references.ts.\n\nNow, if I do a Ctrl+Shift+B, it turns into \"B, C, A\". Saving any file later goes back to \"A, B, C\". This seems to be the issue I noticed about the ordering changing depending on what I did in VS.\n\nCompiling with TSC at this point produces all kinds of ordering\n\n``` \ntsc -out Out.js A\\A.ts B.ts C.ts -> B, C, A\ntsc -out Out.js B.ts A\\A.ts C.ts -> A, C, B\ntsc -out Out.js C.ts B.ts A\\A.ts -> C, A, B\ntsc -out Out.js B.ts C.ts A\\A.ts -> A, C, B\ntsc -out Out.js A\\A.ts C.ts B.ts -> B, C, A\ntsc -out Out.js C.ts A\\A.ts B.ts -> C, B, A\n```\nIt seems to me that without automatic file reordering, the only way to order the files correctly in single output in a sane way is to not add any references to any file, and call tsc manually passing the files in order. Anything else currently will get anyone crazy. But this makes VS integration useless when compiling to a single file.\n\nI don't think TSC should reorder file contents, but it should at least try to order the files the best it can without caring about the order the references are added.",
+      "PostedDate": "2013-09-16T08:21:14.317-07:00",
+      "Id": 113679
+    },
+    {
+      "Message": "Why is this closed? nvivo made impressive work on explaining the issue, jet the reason it was closed, is 'Need more info'. Seems still relevant to me.",
+      "PostedDate": "2014-03-10T02:54:34.693-07:00",
+      "Id": 136375
+    },
+    {
+      "Message": "This should have been remedied by _references.ts support in VS. That allows you to control the file order to tsc. If there are still issues here with the latest TypeScript please re-open this or file a new issue and we can track down what's happening.",
+      "PostedDate": "2014-04-01T13:16:17.537-07:00",
+      "Id": 140214
+    }
+  ]
+}

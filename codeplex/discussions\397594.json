@@ -1,0 +1,322 @@
+[
+  {
+    "Id": "920184",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>One of the biggest pains of writing Asynchronous JS code is not having the &quot;await&quot; keyword and syntax sugar of .NET</p>\r\n<p>I would love to get support of await for promises and functions taking a callback as last argument in TypeScript that would desugar in &quot;.then(...)&quot; or &quot;callAsync(args, ...)&quot;. Functions using &quot;await&quot; would automatically morph into Promise(Of ...)-returning\r\n functions (to allow chaining).</p>\r\n<p>I know this is not so easy, but that would be very nice actually.</p>\r\n",
+    "PostedDate": "2012-10-01T13:03:52.237-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920194",
+    "ThreadId": "397594",
+    "Html": "<p>Thanks for a great suggestion! As a C# designer, I love the fact that you already consider working without \"await\" a pain! :-)</p>\r\n<p>We did consider \"await\" for TypeScript (as you can imagine with Anders and I on the design team) and definitely note your feedback to add it. One thing that concerns us is that there is no good corresponding JavaScript idiom to compile to, so the resulting JavaScript would not be as beautiful and straightforward as what we generate for modules and classes. In fact if you look at the IL we generate for await in C# and VB, it is something no one would want to write on their own!</p>\r\n<p>Arguably the job of a language <em>is </em>to write the ugly stuff for you. So far however we've avoided generating ugly stuff with TypeScript, and the approachability of the generated JavaScript is really valuable, e.g. for in-browser debugging.</p>\r\n<p>A difficult trade-off! We are really looking forward to hearing folk's thoughts on \"await\".</p>",
+    "PostedDate": "2012-10-01T13:41:54.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920204",
+    "ThreadId": "397594",
+    "Html": "<p>It has certainly become a pain since the WinRT framework require one call over two to be asynchronous ;-) Before, it was a similar pain, but occured so much less often we didn't notice.</p>\r\n<p>On the JS side, I think premises introduced by the WinJS framework are nice and to the job properly. Adding the \"rest function\" as a last callback of a function is also needed to support the \"old\" Asynchronous paradigm.</p>\r\n<p>It's clear that you'll probably not be able to support on the same level as on .NET (where try/catch can trap exceptions nested from async calls) using those simple&nbsp;tricks, but it's not as if we used try{} blocks a lot in JS (I don't say it's good, it's just how code is usually written).</p>",
+    "PostedDate": "2012-10-01T13:53:03.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920220",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>I absolutely think that you guys should add &quot;async/await&quot; support to the language. JavaScript, being primarily a client-side language, is a language where asynchronous requests (or AJAX requests that\r\n<em>should</em> be asynchronous) happen <strong>all the time</strong>, far more often than in server-side C#. Writing complicated asynchronous code by hand in JavaScript can quickly turn into a nightmare of callback pyramids and continuations that is hard to\r\n reason about and even harder to maintain.</p>\r\n<p>I think TameJS (link: http://tamejs.org/), and thus Iced CoffeeScript (link: http://maxtaco.github.com/coffee-script/ ) both do a great job of introducing a clean, easier to understand &quot;await&quot; syntax into JavaScript. It is true that it can complicate debugging,\r\n but Tame/ICS deal with this by keeping their own &quot;fake&quot; callstack that is passed around to the continuation functions. I think the benefits of easier to write, easier to understand, and thus easier to maintain code far outweigh the disadvantage of having some\r\n ugly compiler-generated code.</p>\r\n<p>Right now, the sad truth is that many JavaScript developers simply avoid writing asynchronous code because they find it too hard to reason about. They instead make synchronous AJAX requests, which in a web browser is a really bad idea. An otherwise great\r\n library that I use which commits this sin is the very popular SPServices (link: http://spservices.codeplex.com/). Microsoft's could do a great service to the web by making asynchronous code more accessible via a TypeScript &quot;async/await&quot;.</p>\r\n",
+    "PostedDate": "2012-10-01T14:24:41.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920237",
+    "ThreadId": "397594",
+    "Html": "<p>Another thing to consider is that the ES6&nbsp;generators proposal could be used in conjunction with promises to give an experience close to await. See ﻿http://﻿﻿﻿﻿﻿﻿﻿﻿taskjs.org as an example of this.</p>",
+    "PostedDate": "2012-10-01T14:46:52.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920248",
+    "ThreadId": "397594",
+    "Html": "<p>I truly believe that adding an await feature would be a massive selling point to the language. &nbsp;Callback hell can happen very quickly and having an await feature would make the code a LOT cleaner. &nbsp;Also, source maps will go a long way toward hiding the complexity of the generated code.</p>",
+    "PostedDate": "2012-10-01T15:12:06.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920321",
+    "ThreadId": "397594",
+    "Html": "<p>Here was an&nbsp;interesting&nbsp;approach by a library called \"synchronize.js\" I ran across few days back.&nbsp;http://alexeypetrushin.github.com/synchronize/docs/index.html</p>\r\n<p>The beautify of it is that it does not require any transcompliations of the source code and works in plain javascript without any language modifications. It does require that libraries follow nodejs standards of passing errors as first parameter of the callback.</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> sync = require(<span style=\"color: #a31515;\">'synchronize'</span>);\r\nsync(fs, <span style=\"color: #a31515;\">'readFile'</span>);\r\n\r\nsync.fiber(<span style=\"color: blue;\">function</span>(){\r\n  <span style=\"color: blue;\">try</span> {\r\n    <span style=\"color: blue;\">var</span> data = fs.readFile(<span style=\"color: #a31515;\">'invalid'</span>, <span style=\"color: #a31515;\">'utf8'</span>)\r\n  } <span style=\"color: blue;\">catch</span> (err) {\r\n    console.log(err)\r\n  }\r\n\r\n});\r\n\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-01T18:48:13.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920623",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>Mads, I'd suggest your team stop focusing on preserving clean JavaScript idioms, and instead focus on powerful TypeScript debugging capabilities within Visual Studio.</p>\r\n<p>As a CoffeeScript user, I know from experience that the desire to remain <em>&quot;just javascript&quot;</em> hampers innovation. And while it's nice to say, &quot;Hey, the compiled JS code will look kinda-sorta like your TypeScript!&quot;, the reality is that debugging compiled\r\n JS in browser is a painful experience, even in languages which try to preserve JS idioms.&nbsp;</p>\r\n<p>What we really need is to be able to debug in our source language -- something we've been doing in the Java and .NET world for\r\n<em>decades</em>. Debugging generated JavaScript should be as rare an event as debugging compiled assembler.</p>\r\n<p>Instead of focusing on generating clean JS, focus on powerful debugging tools for TS. Debugging TS in Visual Studio. That's what we need. Not only does this give us a much more powerful, productive way to debug our code, but it also frees up the TS team\r\n to add powerful language features like await, LINQ, generics, etc.</p>\r\n",
+    "PostedDate": "2012-10-02T07:56:04.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920658",
+    "ThreadId": "397594",
+    "Html": "<p>+1 for adding await support as syntactic sugar around promises.</p>\r\n<p>+1 for be able to debug TS source files directly. @judahgabriel is right, having to set breakpoints in the generated javascript is&nbsp;like&nbsp;having to debug&nbsp;binary code&nbsp;(ok, not quite, but it's analogous).</p>\r\n<p>+1 for adding LINQ-style queries and richer collection support.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-02T08:43:11.713-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920692",
+    "ThreadId": "397594",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>billyzkid wrote:</strong>\r\n<p>&#43;1 for adding LINQ-style queries and richer collection support.</p>\r\n<p>&nbsp;</p>\r\n</blockquote>\r\n<p>LINQ does not actually require language-level support (despite what the acronym stands for).&nbsp;<a href=\"http://linqjs.codeplex.com/\">http://linqjs.codeplex.com/</a></p>\r\n",
+    "PostedDate": "2012-10-02T09:44:41.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920729",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>Yes, language integration isn't required for list comprehensions and queries, but language support for list comprehensions is a very nice-to-have. LINQ =\r\n<strong>language-integrated</strong> query, after all.</p>\r\n<p>And it's not just C# folks. Python and CoffeeScript also have language level support for list comprehensions, granting much developer happiness. It'd be very welcomed -- and familiar -- to the folks using TypeScript.</p>\r\n",
+    "PostedDate": "2012-10-02T10:23:30.38-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920744",
+    "ThreadId": "397594",
+    "Html": "<p>If TypeScript is ever going to add syntactic sugar of LINQ expressions, I think it should do it in a way that looks like JS, not C#. For example:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">let</span> query =\r\n   <span style=\"color: blue;\">for</span> element of array\r\n   <span style=\"color: blue;\">if</span> element &gt; 0\r\n   <span style=\"color: blue;\">let</span> square = element * element\r\n   <span style=\"color: blue;\">yield</span> square - element;\r\n</pre>\r\n</div>\r\n<p>I think that what could make TypeScript successful where CoffeeScript and Script# remained (relatively) fewly used is that it feels like JavaScript but still brings a sufficient amount of new features that *EVERY DEVELOPER* do love and that will most probably land in plain JS someday. TypeScript isn't made to make C#-ers feel home in JS, but for JS devs to feel home in Visual Studio. This is a whole different story.</p>\r\n<p>What makes TypeScript different is his ability to \"forward polyfill\" JavaScript, not his ability to be another language. We already have \"other languages\" that compile to JS, Script# included.</p>",
+    "PostedDate": "2012-10-02T10:46:07.49-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920760",
+    "ThreadId": "397594",
+    "Html": "<p>Agreed, TypeScript should implement query expressions in a JavaScript idiomatic way, rather than a C#, LINQ-like way.&nbsp;</p>",
+    "PostedDate": "2012-10-02T11:10:47.983-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920991",
+    "ThreadId": "397594",
+    "Html": "<p>Please don't give he clean emitted javascript too easily for the sake of adding more powerful language features.</p>\r\n<p>I really like that TypeScript seems to be compiling to commonly used patterns in JavaScript that I can drop down to and understand.</p>\r\n<p>I think clean JavaScript output should remain as one of the design goals.</p>\r\n<p>Maybe some helper libraries to hide the nastiness in a single included js file could help add more powerful features, but keep the code gen clean.</p>",
+    "PostedDate": "2012-10-02T18:58:11.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921254",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>Async/await would be loved, indeed.</p>\r\n",
+    "PostedDate": "2012-10-03T07:09:28.227-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921282",
+    "ThreadId": "397594",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>billyzkid wrote:</strong><br />\r\n<p>+1 for adding await support as syntactic sugar around promises.</p>\r\n<p>+1 for be able to debug TS source files directly. @judahgabriel is right, having to set breakpoints in the generated javascript is&nbsp;like&nbsp;having to debug&nbsp;binary code&nbsp;(ok, not quite, but it's analogous).</p>\r\n<p>+1 for adding LINQ-style queries and richer collection support.</p>\r\n<p>&nbsp;</p>\r\n</blockquote>\r\n<p>billyzkid summed it up.</p>\r\n<p>Three great ideas, +1 for each</p>",
+    "PostedDate": "2012-10-03T07:52:08.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "927913",
+    "ThreadId": "397594",
+    "Html": "<p>As a JS dev i dont think the await keyword is a good idea. Thats a thing you have to handle by yourself and if you can't just compile C# do JS. Lets keep TypeScript as close to JS as possible, adding only the most important missing part which are optional types.</p>",
+    "PostedDate": "2012-10-17T02:53:17.57-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928054",
+    "ThreadId": "397594",
+    "Html": "<p>Interesting. There really seems to be 2 camps of TS users here: those who say TS should be \"JavaScript + types\", and those who say TS should care about powerful language features more than JS compatibility.</p>\r\n<p>As a CoffeeScript user, I find the JS compatibility to be stifling. So, I'm leaning towards the 2nd camp: give me powerful language features over JS compat.</p>",
+    "PostedDate": "2012-10-17T07:28:27.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928349",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>FWIW, I have an experimental support of typescript in streamline.js.This may be a stopgap solution until MS comes up with a solution (if they do).</p>\r\n<ul>\r\n<li>streamline's tutorial converted to typescript (compiles and runs :-) but you need the latest TypeScript code, not 0.8.0):\r\n<a href=\"https://github.com/Sage/streamlinejs/blob/typescript/tutorial/tuto8-all.ts\">\r\nhttps://github.com/Sage/streamlinejs/blob/typescript/tutorial/tuto8-all.ts</a> </li><li>the readme (search for typescript): <a href=\"https://github.com/Sage/streamlinejs/tree/typescript \">\r\nhttps://github.com/Sage/streamlinejs/tree/typescript </a></li></ul>\r\n",
+    "PostedDate": "2012-10-17T13:55:34.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928405",
+    "ThreadId": "397594",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>judahgabriel wrote:</strong><br />\r\n<p>Interesting. There really seems to be 2 camps of TS users here: those who say TS should be \"JavaScript + types\", and those who say TS should care about powerful language features more than JS compatibility.</p>\r\n<p>As a CoffeeScript user, I find the JS compatibility to be stifling. So, I'm leaning towards the 2nd camp: give me powerful language features over JS compat.</p>\r\n</blockquote>\r\n<p>People just need to get over the \"keep it close to JavaScript\" mentality. &nbsp;It's a fact that JS is the assembly language of the web. &nbsp;We have a whole array of languages that already compile to JS including crazy things like emscripten. &nbsp;We need the browser vendors to fully embrace source maps and make them work even better than they already do. &nbsp;Source maps are basically pdb files for the browser platform. &nbsp;Source maps give us developers choice. &nbsp;And I for one, am not a fan of having only a single language choice to write web applications in. &nbsp;Anyone who says that we don't need anything other than JS is basically saying that we should write everything in assembly and that we don't need technology to advance.</p>",
+    "PostedDate": "2012-10-17T14:51:42.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928456",
+    "ThreadId": "397594",
+    "Html": "<p>The real problem here is the evolution of JavaScript.&nbsp; I think it's&nbsp;a good goal and principle that regular JavaScript is also&nbsp;valid TypeScript.&nbsp; If TypeScript adds too many constructs then there is a risk that the paths of the two languages will diverge - and it will be impossible to maintain base level language parity.</p>\r\n<p>That said, back to the original point of the post, the value of an 'await' keyword that could leverage a duck-typed IPromise interface (or even a callback parameter pattern) would be incredibly useful.&nbsp;</p>",
+    "PostedDate": "2012-10-17T16:28:51.467-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928463",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>So this is certainly no replacement for language based 'await' support but I thought I'd offer up a bit of TypeScript code I wrote that provides a strongly typed alternative to traditional promises.</p>\r\n<p>Promises are currently the defacto standard for async programming in JavaScript and when compared with the traditional callback approach to async programing there's no doubt they're superior.&nbsp; What I don't like about promises though is:</p>\r\n<ol>\r\n<li>error handling is optional.&nbsp;&nbsp;Since the done &amp; fail callbacks are seperate nothing forces you to actually implement error handling.\r\n</li><li>if you do implement error handling you never know what you're going to get as there's no forced consistancy around how errors are returned.\r\n</li><li>when it comes to TypeScript its cumbersome at best to strongly type the return value of a promise.\r\n</li></ol>\r\n<p>With the&nbsp;<strong>Result </strong>pattern below I set out to adress the above while maintaining compatability with the existig promise model of async programming.&nbsp;</p>\r\n<p>The code below starts by defining standard <strong>IPromise </strong>&amp; <strong>\r\nIDeferred </strong>interfaces that will duck type to both jQuery and WinJS concepts of a promise.&nbsp; Then I define a new class called a\r\n<strong>Result </strong>that implements a simplified <strong>IResult </strong>interface.&nbsp; This\r\n<strong>IResult </strong>interface can be easily strongly typed through interface inheritance and I provide a few typings for the built in data types.&nbsp; Following that is a usage&nbsp;example which I'll break down after the code jump:</p>\r\n<div style=\"background-color:white; color:black\">\r\n<pre><span style=\"color:green\">// Standard Promise &amp; Deferred interfaces</span>\r\n<span style=\"color:blue\">interface</span> IPromise {\r\n\tdone(onDone: () =&gt; <span style=\"color:blue\">void</span>): IPromise;\r\n\tthen(onDone: () =&gt; <span style=\"color:blue\">void</span>, onFail: () =&gt; <span style=\"color:blue\">void</span>): IPromise;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IDeferred <span style=\"color:blue\">extends</span> IPromise {\r\n    reject(...args: any[]): <span style=\"color:blue\">void</span>;\r\n    rejectWith(context, args?: any[]): <span style=\"color:blue\">void</span>;\r\n\r\n    resolve(...args: any[]): <span style=\"color:blue\">void</span>;\r\n    resolveWith(context, args?: any[]): <span style=\"color:blue\">void</span>;\r\n}\r\n\r\n\r\n<span style=\"color:green\">// Result class for simplyfied async communication (with added Promise support)</span>\r\n<span style=\"color:blue\">class</span> Result <span style=\"color:blue\">implements</span> IResult {\r\n    <span style=\"color:green\">// Private member vars</span>\r\n    <span style=\"color:blue\">private</span> val = <span style=\"color:blue\">null</span>;\r\n    <span style=\"color:blue\">private</span> handlers: { (result: IResult): <span style=\"color:blue\">void</span>; }[] = [];\r\n    <span style=\"color:blue\">private</span> err: Error = <span style=\"color:blue\">null</span>;\r\n    <span style=\"color:blue\">private</span> resolved = <span style=\"color:blue\">false</span>;\r\n\r\n    <span style=\"color:green\">// Public methods</span>\r\n\r\n    <span style=\"color:blue\">public</span> value(val?: any): any {\r\n        <span style=\"color:blue\">if</span> (!<span style=\"color:blue\">this</span>.resolved) {\r\n            <span style=\"color:blue\">this</span>.val = val;\r\n            <span style=\"color:blue\">this</span>.resolve();\r\n        } <span style=\"color:blue\">else</span> <span style=\"color:blue\">if</span> (<span style=\"color:blue\">this</span>.err != <span style=\"color:blue\">null</span>) {\r\n            <span style=\"color:blue\">throw</span> <span style=\"color:blue\">this</span>.err;\r\n        }\r\n        <span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>.val;\r\n    }\r\n\r\n    <span style=\"color:blue\">public</span> wait(onDone: (result: IResult) =&gt; <span style=\"color:blue\">void</span>): IResult {\r\n        <span style=\"color:blue\">if</span> (<span style=\"color:blue\">this</span>.resolved) {\r\n            onDone(<span style=\"color:blue\">this</span>);\r\n        } <span style=\"color:blue\">else</span> {\r\n            <span style=\"color:blue\">this</span>.handlers.push(onDone);\r\n        }\r\n        <span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>;\r\n    }\r\n\r\n    <span style=\"color:blue\">public</span> error(err?: Error): Error {\r\n        <span style=\"color:blue\">if</span> (!<span style=\"color:blue\">this</span>.resolved) {\r\n            <span style=\"color:blue\">this</span>.err = err;\r\n            <span style=\"color:blue\">this</span>.resolve();\r\n        }\r\n        <span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>.err;\r\n    }\r\n\r\n    <span style=\"color:green\">// Private methods</span>\r\n    <span style=\"color:blue\">private</span> resolve() {\r\n        <span style=\"color:blue\">this</span>.resolved = <span style=\"color:blue\">true</span>;\r\n        <span style=\"color:blue\">for</span> (<span style=\"color:blue\">var</span> i = 0; i &lt; <span style=\"color:blue\">this</span>.handlers.length; i&#43;&#43;) {\r\n            <span style=\"color:blue\">try</span> {\r\n                <span style=\"color:blue\">this</span>.handlers[i](<span style=\"color:blue\">this</span>);\r\n            } <span style=\"color:blue\">catch</span> (e) {\r\n            }\r\n        }\r\n    }\r\n\r\n    <span style=\"color:green\">// Static methods</span>\r\n    <span style=\"color:blue\">static</span> error(err?: Error): IResult {\r\n        <span style=\"color:blue\">var</span> result = <span style=\"color:blue\">new</span> Result();\r\n        result.error(err || <span style=\"color:blue\">new</span> Error());\r\n        <span style=\"color:blue\">return</span> result;\r\n    }\r\n\r\n    <span style=\"color:blue\">static</span> value(val?: any): IResult {\r\n        <span style=\"color:blue\">var</span> result = <span style=\"color:blue\">new</span> Result();\r\n        result.value(val);\r\n        <span style=\"color:blue\">return</span> result;\r\n    }\r\n\r\n    <span style=\"color:blue\">static</span> wait(promise: IPromise, onDone: (result: IResult) =&gt; <span style=\"color:blue\">void</span>, errorMsg?: string): IResult {\r\n        <span style=\"color:blue\">return</span> wrap(promise, errorMsg).wait(onDone);\r\n    }\r\n\r\n    <span style=\"color:blue\">static</span> wrap(promise: IPromise, errorMsg?:string): IResult {\r\n        <span style=\"color:blue\">var</span> result = <span style=\"color:blue\">new</span> Result();\r\n        promise.then(<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:green\">// Signal success</span>\r\n            <span style=\"color:blue\">var</span> val = arguments.length &gt; 0 ? (arguments.length == 1 ? arguments[0] : arguments) : <span style=\"color:blue\">null</span>;\r\n            result.val(val);\r\n        }, <span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">var</span> msg = errorMsg ? errorMsg : (arguments.length &gt; 0 ? arguments[0] : <span style=\"color:#a31515\">''</span>);\r\n            <span style=\"color:blue\">switch</span>(<span style=\"color:blue\">typeof</span> msg) {\r\n                <span style=\"color:blue\">case</span> <span style=\"color:#a31515\">'error'</span>:\r\n                    result.error(&lt;any&gt;msg);\r\n                    <span style=\"color:blue\">break</span>;\r\n                <span style=\"color:blue\">case</span> <span style=\"color:#a31515\">'string'</span>:\r\n                    result.error(<span style=\"color:blue\">new</span> Error(&lt;any&gt;msg));\r\n                    <span style=\"color:blue\">break</span>;\r\n                <span style=\"color:blue\">default</span>:\r\n                    result.error(<span style=\"color:blue\">new</span> Error());\r\n                    <span style=\"color:blue\">break</span>;\r\n            }\r\n        });\r\n        <span style=\"color:blue\">return</span> result;\r\n    }\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IResult {\r\n    wait(onDone: (result: IResult) =&gt; <span style=\"color:blue\">void</span> ): IResult;\r\n    value(val?: any): any;\r\n    error(err?: Error): Error;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IBoolResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: IBoolResult) =&gt; <span style=\"color:blue\">void</span> ): IBoolResult;\r\n    value(val?: bool): bool;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IDateResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: IDateResult) =&gt; <span style=\"color:blue\">void</span> ): IDateResult;\r\n    value(val?: Date): Date;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IFunctionResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: IFunctionResult) =&gt; <span style=\"color:blue\">void</span> ): IFunctionResult;\r\n    value(val?: (...args: any[]) =&gt; any): (...args: any[]) =&gt; any;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> INumberResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: INumberResult) =&gt; <span style=\"color:blue\">void</span> ): INumberResult;\r\n    value(val?: number): number;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IStringResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: IStringResult) =&gt; <span style=\"color:blue\">void</span> ): IStringResult;\r\n    value(val?: string): string;\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> IVoidResult <span style=\"color:blue\">extends</span> IResult {\r\n    wait(onDone: (result: IVoidResult) =&gt; <span style=\"color:blue\">void</span> ): IVoidResult;\r\n    value(): <span style=\"color:blue\">void</span>;\r\n}\r\n\r\n\r\n<span style=\"color:green\">// Usage example</span>\r\n\r\n<span style=\"color:blue\">function</span> getDelayedValue(error: bool): IStringResult {\r\n\t<span style=\"color:blue\">var</span> result: IStringResult = <span style=\"color:blue\">new</span> Result();\r\n\tsetTimeout(<span style=\"color:blue\">function</span> () {\r\n\t\t<span style=\"color:blue\">if</span> (error) {\r\n\t\t\tresult.error(<span style=\"color:blue\">new</span> Error(<span style=\"color:#a31515\">'something went wrong'</span>));\r\n\t\t} <span style=\"color:blue\">else</span> {\r\n\t\t\tresult.value(<span style=\"color:#a31515\">'hello world'</span>);\r\n\t\t}\r\n\t}, 100);\r\n\t<span style=\"color:blue\">return</span> result;\r\n}\r\n\r\n<span style=\"color:blue\">for</span> (<span style=\"color:blue\">var</span> i = 0; i &lt; 2; i&#43;&#43;) {\r\n\tgetDelayedValue(i &gt; 0).wait(<span style=\"color:blue\">function</span> (result) {\r\n\t\t<span style=\"color:blue\">try</span> {\r\n\t\t\t<span style=\"color:blue\">var</span> message = result.value();\r\n\t\t\talert(message);\r\n\t\t} <span style=\"color:blue\">catch</span> (e) {\r\n\t\t\talert(e.message);\r\n\t\t}\r\n\t});\r\n}\r\n</pre>\r\n</div>\r\n<p>So the easiest way to understand how this works is to look at the example usage above.&nbsp; A\r\n<strong>Result </strong>is really designed to model the 80%&nbsp;case of invoking a method and&nbsp;asynchronously waiting on a result.&nbsp; &nbsp;Lets first look at how this works from the&nbsp;callees perspective.</p>\r\n<p>We have a function called <strong>getDelayedValue()</strong> which is strongly typed to return an\r\n<strong>IStringResult</strong>. Basically this function is asynchronosly going to return a string to the caller.&nbsp;&nbsp;Within the function we create a new\r\n<strong>Result</strong> object (same way you'd create a new <strong>Deferred</strong> in jQuery) and strongly type it to be an instance of\r\n<strong>IStringResult</strong>.&nbsp; We then do our async thing and return the resultant value to the caller using the strongly typed\r\n<strong>result.value()</strong> call.&nbsp; If an error occurs we can pass that to the caller as a new Error instance via a call to\r\n<strong>result.error()</strong>.&nbsp; That's it for the callee side.</p>\r\n<p>On the caller side we invoke <strong>getDelayedValue() </strong>and what we get back is an\r\n<strong>IStringResult </strong>that we can call the now strongly typed <strong>wait()\r\n</strong>method on.&nbsp; The callback for <strong>wait()</strong> always takes a single argument which is a stringly typed\r\n<strong>Result</strong> object.&nbsp; To get the returned value you simply say &quot;var x = result.value();&quot; but you'll want to do that within a try { } catch() { } because an exception will be raised if an error occured.</p>\r\n<p>What's nice about this pattern is that there's only one thing you can do with a result, which is call\r\n<strong>wait()</strong>, and that call takes a single parameter callback that can be&nbsp;easily type checked by the compiler.&nbsp; You're then forced to handle errors which I feel is a weakness of promises.&nbsp; There's then a standardized format for reporting\r\n errors so you can more easily create a common UI for displaying errors&nbsp;(If you're not familiar with the Error class this is how built in exceptions get reported.)&nbsp; And with the above&nbsp;code I've built in support for wrapping&nbsp;a traditional\r\n Promise so interoperating with existing libraries is straight forward.</p>\r\n<p>As a side note... I could have broken IResult into&nbsp;seperate caller &amp; callee pieces which would resulted in the caller\r\n<strong>only</strong> seeing a wait() method returned from the callee but that would mean having to derive from two different interfaces when you want to stringly type things which i felt was cumbersome.&nbsp; So the above code is what I consider the good enough\r\n implementation until support for generics comes along...&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-17T16:57:43.75-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929540",
+    "ThreadId": "397594",
+    "Html": "<p>Now that we know you guys are supporting source maps with TypeScript, I see zero reason not to do this feature. The benefits are huge, and the cost is very low with proper browser support of source maps (which is only getting better and better in Chrome/FireFox).&nbsp;</p>",
+    "PostedDate": "2012-10-19T10:50:13.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931425",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>I am <em>await</em>ing the new operator. :P But seriously, I'd love to have await in TypeScript. And I recall you mentioning that there is no idiom for which the await operator would compile to, meaning that the underlying code would be messy, or ugly -\r\n but really, who cares? Javascript, in my opinion is already a pretty ugly-looking language to begin with.</p>\r\n",
+    "PostedDate": "2012-10-23T20:24:57.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931564",
+    "ThreadId": "397594",
+    "Html": "<p>For now you could use the <a href=\"https://github.com/caolan/async\">Async.js</a> library which provides a number of control flow functions like series, parallel, waterfall and more.</p>",
+    "PostedDate": "2012-10-24T03:38:03.793-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931580",
+    "ThreadId": "397594",
+    "Html": "<p>Generators are the way to go (<span>ES6 proposal).</span></p>",
+    "PostedDate": "2012-10-24T04:11:46.033-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931749",
+    "ThreadId": "397594",
+    "Html": "<p>There's no need to speculate, if you want async/await/yield &ndash; just go implement it. The source code is in the open.&nbsp;</p>",
+    "PostedDate": "2012-10-24T07:20:49.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931751",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>duplicate</p>\r\n",
+    "PostedDate": "2012-10-24T07:21:11.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931752",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>duplicate&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-24T07:21:11.667-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "948028",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>+1 ES6 generators</p>\r\n<p>The big 3 (IE, Chrome, & Firefox) have made&nbsp;significant&nbsp;progress towards implementing the same standard. &nbsp;With out getting on a tangent about the pros & cons of standars and inovation... We should continue to give them a browsers the chance to&nbsp;proceed&nbsp;down\r\n the standards path. &nbsp;The goal shouldn't be to diminish javascript as the assembler of the web while focusing on making an all powerful higher level language. Can't we use the typescripts & IcedCoffees of the web as stop gaps until &nbsp;we get a universally better\r\n web via much improved javascript?</p>\r\n<p>@<a href=\"http://www.codeplex.com/site/users/view/ickman\">ickman</a>&nbsp;Great Code - I'm guessing in a pre ES6&nbsp;implementation, any typescript&nbsp;implementation&nbsp;would use a similar model underneath the&nbsp;syntactical&nbsp;sugar. &nbsp;Similar to LINQ syntax using System.Enumerable\r\n and IQueryable under the covers of from/select/where etc...</p>\r\n",
+    "PostedDate": "2012-11-27T16:54:14.55-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "956546",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>Async code is readily handled by external libraries; I use jQuery and <a href=\"http://www.codeplex.com/site/users/view/ickman\">\r\nickman</a> has given a TypeScript implementation above. The model for TypeScript appears to be Turbo Pascal and we managed to build some pretty decent application back then. I would vote to keep TypeScript to the essentials: modules and classes make large javascript\r\n applications manageable, variable typing and compile time error detection are a huge time saver. Anything else should be hived off into the equivalent of a run-time library. TypeScript is a community project, anyone want to make a start on TSlib?</p>\r\n",
+    "PostedDate": "2012-12-15T16:33:36.173-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "956650",
+    "ThreadId": "397594",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>stanthomas wrote:</strong><br>\r\n<p>Async code is readily handled by external libraries; I use jQuery and <a href=\"http://www.codeplex.com/site/users/view/ickman\">\r\nickman</a> has given a TypeScript implementation above. The model for TypeScript appears to be Turbo Pascal and we managed to build some pretty decent application back then. I would vote to keep TypeScript to the essentials: modules and classes make large javascript\r\n applications manageable, variable typing and compile time error detection are a huge time saver. Anything else should be hived off into the equivalent of a run-time library. TypeScript is a community project, anyone want to make a start on TSlib?</p>\r\n</blockquote>\r\n<p>Have you ever used async/await in C# or await in TameJS/IcedCoffeeScript? My guess from your post would be not. async/await are not for\r\n<em>replacing</em>&nbsp;Promise-based libraries, they are for&nbsp;<em>complementing them. </em>\r\n</p>\r\n<p><em></em>With async/await, you can write code essentially as if it were synchronous code. It is impossible for any library to accomplish the same, no matter how good. You inevitably end up transforming the structure and flow control of your code to match\r\n the asynchronous behavior requirements, which in turn means even the slightest change in the way you want to structure asynchronous calls means large transformations to your code base. It also is harder to follow the logic of code written in this way.</p>\r\n<p>I myself use JQuery's Deferred object extensively. It is definitely far better than writing my own library or my own primitive code to handle asynchrony, but it is no where near as elegant as it would be with language-level support for async/await. A great\r\n example of this in C# would be the TPL (task-parallel library) from .NET 4.0. It could do asynchrony (<strong>Task</strong>s are Promise-like objects very similar to JQuery's Deferred), but it became\r\n<em>much</em>&nbsp;easier to use and therefore much more useful once async/await were introduced with C# 5/.NET 4.5.</p>\r\n",
+    "PostedDate": "2012-12-16T08:31:06.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "956684",
+    "ThreadId": "397594",
+    "Html": "\r\n<p>Just noticed someone created a pull request for TypeScript to support ES6 generators (and some other ES6 goodies).</p>\r\n<p>Right now the generated JS code would only run on Firefox as that is the only platform supporting generators far as I know. But at least it opens up the door to create an await like library in TypeScript and see how it works out.</p>\r\n<p>// Peter</p>\r\n",
+    "PostedDate": "2012-12-16T13:13:44.73-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "957238",
+    "ThreadId": "397594",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>MgSam wrote:</strong><strong></strong></blockquote>\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\nHave you ever used async/await in C# or await in TameJS/IcedCoffeeScript? My guess from your post would be not. async/await are not for\r\n<em>replacing</em>&nbsp;Promise-based libraries, they are for&nbsp;<em>complementing them. </em>\r\n</blockquote>\r\n<p>You guess correctly. I'm a C++ guy (and Pascal / C in the dark mists of time before that) but this forum isn't the place for my views on C#.</p>\r\n<p>My view remains that there is a readily available library-based approach to this problem and TypeScript's simple elegance should not be complicated by throwing the kitchen sink at it. I don't have a problem with async code that looks like async code.</p>\r\n",
+    "PostedDate": "2012-12-17T13:25:26.453-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151590",
+    "ThreadId": "397594",
+    "Html": "Plus 1 on await keyword.  I did not think I would have needed in c# either, but I love it now.\r<br />\nThanks.<br />\n",
+    "PostedDate": "2014-01-09T17:31:15.823-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1162400",
+    "ThreadId": "397594",
+    "Html": "I am also strongly in the camp of people who no longer care (much) about the ugliness of the javascript output as long as there is support for source maps. It really doesn't matter much anymore for most development. I wouldn't say you should go completely crazy with the output, but I think converting async/await into a function using promises is straightforward enough to pass under the cost/benefit threshold with room to spare. <br />\n<br />\nI would recommend that you support the Promise/A specification (compatible with the Angular and Q implementations), or perhaps optionally (as in a compiler flag) a different specification if needed for WinJS/JQuery promises (sorry, not as familiar with these myself). Note that a single application might have to support two or more conventions, but in that case I would say either pick one and have us write our own adapters, or else have some additional syntax to specify the convention when &quot;awaiting&quot; an operation or defining an async function.<br />\n<br />\nPromise chains in the output would not be too difficult to read relative to the original async/await code. They both have generally the same &quot;shape&quot;, with the javascript version just being slightly more verbose. To me, this is on the same level of transformation as, say, converting an ES6 class to a constructor function, or converting multi-level TypeScript modules to AMD modules. <br />\n<br />\nOne limitation might be that we wouldn't be able to support code that requires the compiler to create a new promise. I can't think of a good example where this would be needed, however.<br />\n<br />\nThat being said, here is a simplified example of what async/await in TypeScript might look like, and what I would expect the output might be when using angular promises (in this case the generator doesn't need to produce a new promise):<br />\n<pre><code>        async getDataAsync(): ng.IPromise&lt;Item[]&gt; {\n            var response = await this.$http.get(&quot;/api/data&quot;);\n            return _.map(_response.data, function (item: { firstName: string; lastName: string }): Item {\n                return new Item(item.firstName, item.lastName);\n            });\n        }</code></pre>\n\nAnd here would be the generated output. Not too bad for a simple example, though some name munging might be required:<br />\n<pre><code>            MyDataService.prototype.getData = function () {\n                var response = this.$http.get(&quot;/api/data&quot;);\n                return response.then(function (_response) {\n                    return _.map(_response.data, function (item) {\n                        return new Item(item.firstName, item.lastName);\n                    });\n                });\n            };</code></pre>\n\nHere, TypeScript only needs to assume that the expression to the right of await conforms to the Promises/A specification in order to produce the right transformation. It could be any implementation that conforms to this interface. In this case, we're using Angular's promise implementation. <br />\n<br />\nHere is an example showing two awaits, showing the need for some analysis on closure values to determine what to output:<br />\n<br />\nExample 1: Callback for second await is not registered until the first await resolves successfully<br />\n<pre><code>        async getDataAsync(): ng.IPromise&lt;{ data: Item[]; foo any; status: number }&gt; {\n            var response = await this.$http.get(&quot;/api/data&quot;);\n            var data = _.map(response.data, function (item: { firstName: string; lastName: string }): Item {\n                return new Item(item.firstName, item.lastName);\n            });\n            var fooResponse = await this.$http.get(&quot;/api/foo&quot;);\n            return {\n                data: data,\n                foo: fooResponse.data,\n                status: response.status \n            };\n        }\n\n// expected output:\n            MyDataService.prototype.getData = function () {\n                var response = this.$http.get(&quot;/api/data&quot;);\n                return response.then(function (_response) {\n                    var data = _.map(_response.data, function (item) {\n                        return new Item(item.firstName, item.lastName);\n                    });\n                    return this.$http.get(&quot;/api/foo&quot;).then(function (_fooResponse) {\n                        return {\n                            foo: _fooResponse.data,\n                            data: data,\n                            status: _response.status\n                        };\n                    });\n                });\n            };</code></pre>\n\nExample 2: callbacks for both awaits can be registered immediately<br />\n<pre><code>        async getDataAsync(): ng.IPromise&lt;{ data: Item[]; foo: any }&gt; {\n            var response = await this.$http.get(&quot;/api/data&quot;);\n            var data = _.map(response.data, function (item: { firstName: string; lastName: string }): Item {\n                return new Item(item.firstName, item.lastName);\n            });\n            var fooResponse = await this.$http.get(&quot;/api/foo&quot;);\n            // we don't anything from response above, just the return value of the previous promise\n            return {\n                foo: fooResponse.data,\n                data: data\n            };\n        }\n\n// expected output:\n            MyDataService.prototype.getData = function () {\n                var response = this.$http.get(&quot;/api/data&quot;);\n                return response.then(function (_response) {\n                    var data = _.map(_response.data, function (item) {\n                        return new Item(item.firstName, item.lastName);\n                    });\n                    return data;\n                }).then(function (data) {\n                    return this.$http.get(&quot;/api/foo&quot;).then(function (_fooResponse) {\n                        // note how we have to wait to register this callback so we can close over data above\n                        return {\n                            foo: _fooResponse.data,\n                            data: data\n                        };\n                    });\n                });\n            };</code></pre>\n\nAnother topic is try/catch/finally. This is supported by by the conventions and interface of the Promises/A spec. The transformation would in most cases be straightforward. Here's a simple example:<br />\n<pre><code>        async processData(): ng.IPromise&lt;any&gt; {\n            this.loading = true;\n            var item: Item;\n            try {\n                item = await this.getData();\n                this.$log.info(&quot;Success! here's a firstName: &quot; + item.firstName);\n            } catch (error: any) {\n                this.$log.error(&quot;Oops! Logged an error: &quot; + error.toString());\n                throw error;\n            } finally {\n                this.loading = false;\n            }\n        }</code></pre>\n\nAnd here is the expected output, more or less:<br />\n<pre><code>            MyDataService.prototype.processData = function () {\n                var _this = this;\n                var response = this.getDataImpl();\n                this.loading = true;\n                var ret = response.then(function (item) {\n                    _this.$log.info(&quot;Success! here's a firstName: &quot; + item.firstName);\n                }, function (error) {\n                    _this.$log.error(&quot;Oops! Logged an error: &quot; + error.toString());\n                    throw error;\n                }).finally(function () {\n                    _this.loading = false;\n                });\n                return ret;\n            };</code></pre>\n\nSo, obviously more complicated examples will have more complicated transformations, but what I've tried to demonstrate is that in most cases, the transformation from async/await to Promises is pretty straightforward and the output is still relatively readable and has the same basic structure of the original.<br />\n",
+    "PostedDate": "2014-01-13T13:18:49.853-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1164242",
+    "ThreadId": "397594",
+    "Html": "Note that this piece:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n                }).<span style=\"color:Blue;\">finally</span>(<span style=\"color:Blue;\">function</span> () {\n                    _this.loading = <span style=\"color:Blue;\">false</span>;\n                });\r\n</pre></div>should be:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n                }).then(<span style=\"color:Blue;\">function</span> () {\n                    _this.loading = <span style=\"color:Blue;\">false</span>;\n                });\r\n</pre></div>As this function will be called regardless of the promise status (resolved/rejected).\r<br />\n<br />\nYou suggestion of using Promises has the advantage of automatically working with all promises implementations as long as we use 'then' method (promises return 'thenable' objects <a href=\"http://promises-aplus.github.io/promises-spec/\" rel=\"nofollow\">http://promises-aplus.github.io/promises-spec/</a> ).\r<br />\n<br />\nI think a bigger problem would be rewriting loop constructs:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> results = [], result: <span style=\"color:Blue;\">any</span>;\n<span style=\"color:Blue;\">while</span>(condition()) {\n  result = await fun();\n  results.push(result);\n}\n<span style=\"color:Blue;\">return</span> results;\r\n</pre></div>Of course this can be done as demonstrated by C#'s yields but I wonder if it will ever be implemented by TypeScript team as ES6 generators (that are already available in Firefox and Chrome behind a flag) solve exactly the same issue. See: <a href=\"http://taskjs.org/\" rel=\"nofollow\">http://taskjs.org/</a>\r<br />\n<br />\nNot that I wouldn't like this feature to be implemented - having await and being able to target older browsers would be really nice!<br />\n",
+    "PostedDate": "2014-01-14T01:02:43.643-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1165272",
+    "ThreadId": "397594",
+    "Html": "I believe finally is the more correct choice. Here, the promise returned by finally doesn't modify the return value of the target promise. Also, finally can indeed be called regardless of the promise status - resolved/rejected. Here is what finally might look like if all you had is 'then', assuming that 'then' can be called multiple times to register multiple callbacks in the promise implementation:<br />\n<pre><code>var getTransformedValuePromise = function() {\n  // normal operation\n  var transformValue = function(value) { return value + 1; }\n  var ret = getPromise().then(transformValue);\n\n  // simulating a finally\n  var finallyCallback = function() { return doCleanup(); }\n  ret.then(finallyCallback, finallyCallback);\n\n  // the returned promise resolves to the return value of transformValue, not finallyCallback\n  return ret;\n};</code></pre>\n\nGood point about await within logical structures. I would be ok with a &quot;version 1&quot; that didn't include support for await within a loop/conditional/etc.... However, if implemented, there would need to be an ES5 fallback implementation for some years yet. Compiling await to yield+promises (or ES5 fallback) would, however, be much less similar to the original code than my examples above. This wouldn't matter to me personally - I don't really mind having some complicated transformations happening behind the scenes when it's useful and predictable, as it is in this case. <br />\n",
+    "PostedDate": "2014-01-14T07:26:13.753-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1178256",
+    "ThreadId": "397594",
+    "Html": "I found an article describing how to connect promises and generators for await/async-like workflow:<br />\n<br />\n<a href=\"http://www.html5rocks.com/en/tutorials/es6/promises/\" rel=\"nofollow\">http://www.html5rocks.com/en/tutorials/es6/promises/</a><br />\n<br />\nChapter: &quot;Bonus round: Promises and Generators&quot;<br />\n",
+    "PostedDate": "2014-01-18T13:06:28.83-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263484",
+    "ThreadId": "397594",
+    "Html": "<strong>FremyCompany wrote:</strong><br />\n<blockquote>\nIf TypeScript is ever going to add syntactic sugar of LINQ expressions, I think it should do it in a way that looks like JS, not C#. <br />\n.<br />\n</blockquote>\n.<br />\nMaking LINQ syntax collection-focused in C# was a huge mistake. The collection-oriented syntax makes it really awkward to leverage for other monads.<br />\nPlease don't repeat this mistake in TypeScript and make it look like what it really is - monadic comprehension.<br />\n<br />\nFor example:<br />\n<pre><code>var query = do {\n   x &lt;- array\n   when( x &gt; 0 )\n   y &lt;- anotherArray\n   z &lt;- getThirdArray( x, y )\n   var w = someFunc( z + x )\n   w + x + z\n};</code></pre>\n\n(yes, I do love me some Haskell, but I'm open to other syntactic alternatives, as long as they are generic like that)<br />\n<br />\nBonus - generic monadic syntax works just as well for async computations:<br />\n<pre><code>var resultingPromise = do {\n  tpl &lt;- loadTemplate( &quot;http://some.site.com/whatever.template.html&quot; )\n  when( tpl != null )\n  rendered &lt;- renderAsynchronously( tpl, someContext )\n  var element = document.createElement(&quot;div&quot;)\n  element.innerHTML = renreded\n  element\n};</code></pre>\n\n",
+    "PostedDate": "2014-07-07T17:12:49.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

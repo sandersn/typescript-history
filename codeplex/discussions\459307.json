@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1099478",
+    "ThreadId": "459307",
+    "Html": "How would I inform the TypeScript compiler about the following JavaScript construct:<br />\n<pre><code>var foo = {\n   Image: Image\n   KeyboardEvent: KeyboardEvent\n}\n// usage:\nvar i:number = foo.KeyboardEvent.DOM_KEY_LOCATION_RIGHT;\nvar e:foo.KeyboardEvent;\ne.preventDefault();</code></pre>\n\nThis is in a browser environment, so <code>Image</code> and <code>KeyboardEvent</code> refer to the built-in types (declared in lib.d.ts).\r<br />\n<br />\nReason: Create a namespace for global types to allow for referencing these types from within a module that hides the global types because of a Type declaration with the same name(s).<br />\n",
+    "PostedDate": "2013-09-25T22:04:20.997-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099728",
+    "ThreadId": "459307",
+    "Html": "Your code should work as-is since TypeScript will use type inference on foo.\r<br />\n<br />\nIf, however, you need to create an interface for foo (so that you can say <code>var foo: FooInterface</code>) then I think you have to get a bit trickier.<br />\n<pre><code>var _ImageVar: typeof Image;\nvar _KeyboardEventVar: typeof KeyboardEvent;\ninterface FooInterface {\n    Image: typeof _ImageVar;\n    KeyboardEvent: typeof _KeyboardEventVar;\n}\n</code></pre>\n\nYou can't say <code>Image: typeof Image</code> because your typeof expression will not refer to the global <code>Image</code> class; it'll refer to the <code>Image</code> field within your interface.  TypeScript will guess that the type is <code>any</code>.  That's why I used _ImageVar and _KeyboardEventVar to create local &quot;aliases&quot; of those two types.  This will generate two unused variables in your source code, but a JavaScript minifier can remove them.<br />\n",
+    "PostedDate": "2013-09-26T09:08:55.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099983",
+    "ThreadId": "459307",
+    "Html": "Thx for your response.\r<br />\n<br />\nThis almost works as expected. I can do<br />\n<pre><code>declare var foo:FooInterface;\nvar event = new foo.KeyboardEvent();\n\nevent.preventDefault(); // OK\nevent.xxx(); // Error =&gt; OK\nevent.DOM_KEY_LOCATION_RIGHT; // OK</code></pre>\n\n<strong>But there is - understandably - no type being created:</strong><br />\n<pre><code>var event:foo.KeyboardEvent; // Error\n\nvar event:typeof _KeyboardEventVar = new foo.AlKeyboardEvent(); // Cast Error</code></pre>\n\nIt is also important that the solution is type-identical to the original <code>KeyboardEvent</code> class. E.g.<br />\n<pre><code>declare function addListener(event:KeyboardEvent); \n\naddListener(new foo.KeyboardEvent()); // OK - no cast required</code></pre>\n\nIn my efforts I was focusing on creating a module declaration that uses declaration merging and <code>export=</code> but to no avail. Do you have any ideas?\r<br />\n<br />\nWhat I basically need is to access the global KeyboardEvent type from within a module that defines its own KeyboardEvent type (class).\r<br />\n<br />\nThx<br />\n",
+    "PostedDate": "2013-09-27T00:54:11.57-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100267",
+    "ThreadId": "459307",
+    "Html": "I think I may have figured it out, although it's a bit messy.<br />\n<br />\nfoo.ts:<br />\n<pre><code>// foo module, allowing access to KeyboardEvent under a different name.\nimport __aliases__foo = require('__aliases__foo');\nexport interface KeyboardEvent extends __aliases__foo.__alias__KeyboardEvent {};\nexport var KeyboardEvent = __aliases__foo.__alias__KeyboardEvent;\n</code></pre>\n\n__aliases__foo.ts:<br />\n<pre><code>// Intermediary module, used only by the foo module.\nexport interface __alias__KeyboardEvent extends KeyboardEvent {};\nexport var __alias__KeyboardEvent = KeyboardEvent;\n</code></pre>\n\nAnd now you can use <code>foo.KeyboardEvent</code> just like you'd expect:<br />\n<pre><code>import foo = require('foo');\nevent: KeyboardEvent = new foo.KeyboardEvent();\n</code></pre>\n\nDoes this solve the problem, or did I miss some details again?<br />\n",
+    "PostedDate": "2013-09-27T12:48:54.923-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is a duplicate of https://typescript.codeplex.com/workitem/11 where we're covering the more general issue of not stomping on user provided names with compiler generated ones.",
+    "ClosedDate": "2013-08-08T18:13:42.497-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hi...\r\n\r\nGiven the following piece of code.\r\n\r\nPath(org: string, repl: string, ...arguments: string[]): string[] {\r\n  var result = [];\r\n  for (var i = 0; i < arguments.length; i++)\r\n    result.push(arguments[i].replace(org, repl));\r\n  return result;\r\n}\r\n\r\nI first named arguments as i did to keep it close to js... Thought that would only be natural...\r\nBut this results in the compiled function:\r\n\r\nfunction (org, repl) {\r\n  var arguments = [];\r\n  for (var _i = 0; _i < (arguments.length - 2); _i++) {\r\n    arguments[_i] = arguments[_i + 2];\r\n  }\r\n  var result = [];\r\n  for(var i = 0; i < arguments.length; i++) {\r\n    result.push(arguments[i].replace(org, repl));\r\n  }\r\n  return result;\r\n}\r\n\r\nSee what happened there?...\r\nThe easy fix is to name arguments differently... so i used args... but it took a while before i discovered it.\r\nWould be nice with a compiler error or something..\r\n\r\nQUESTION:...\r\nRelated to: http://typescript.codeplex.com/workitem/66\r\n\r\nAlso, is there a good reason for using:\r\n\r\nvar arguments = [];\r\n  for (var _i = 0; _i < (arguments.length - 2); _i++) {\r\n    arguments[_i] = arguments[_i + 2];\r\n  }\r\n\r\nRather than:\r\n  var name=arguments.splice(x,arguments.lenght-x); ???\r\n\r\nAlternative;\r\n  arguments.splice(0,x);\r\n  var name = arguments;\r\n\r\nAs rwaldron wrote Sun at 10:21 PM, this should instead be:\r\n  var args = Array.prototype.slice.call(arguments, 2); \r\n\r\n\r\nThat would make it work even if we use the name arguments as far as I can tell",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-21T04:11:29.733-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "...arguments get overwritten in compiled output",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 303
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Duplicate. http://typescript.codeplex.com/workitem/66\n\n\nThe \"arguments\" object doesn't have a splice method, and that's not what you want anyway. Ideally:\n\nfunction foo( a, b, ...args ) {\n return a + b; \n}\n\nWould compile to:\n\n\nfunction foo(a, b) { \n  var args = Array.prototype.slice.call(arguments, 2); \n  return a + b; \n}",
+      "PostedDate": "2012-10-21T13:21:03.383-07:00",
+      "Id": 80607
+    },
+    {
+      "Message": "I wouldn't call that issue a duplicate, the main issue here (which I see as a bug) is that if you use \"arguments\" as the name for that parameter, we overwrite the content completely leaving it empty... (Then tries to copy it)... \n\nThe other part was merely a \"Question\", and that is actual what the other Issue covers though your comment (true enough)...\nAnd I only added that since It could be a solution which also made the JS more clear.\nBut the core thing here is that it leaves us with code that doesn't work.\n\nGood point on the arguments though, I was clearly submitting that question in a rush...\nBut yes... I agree that ideally it should compile to your example then...\n\nfunction foo(a, b) { \n  var args = Array.prototype.slice.call(arguments, 2); \n  return a + b;\n}\n\nAfter all that should also take care of this, as even if we would use \"arguments\" as a name, it wouldn't overwrite it before it had pulled out the values... So... \n\nfunction foo(a, b) { \n  var arguments = Array.prototype.slice.call(arguments, 2); \n  return a + b; \n}\n\nWould still work.",
+      "PostedDate": "2012-10-21T23:07:26.047-07:00",
+      "Id": 80618
+    },
+    {
+      "Message": "Thanks for reporting this - we definitely shouldn't just mess up the array if the argument is named 'arguments'.",
+      "PostedDate": "2012-10-22T14:42:09.953-07:00",
+      "Id": 80693
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1241525",
+    "ThreadId": "544315",
+    "Html": "There is a error in the code below with the lots of lines of text. When I change the Y parameter of the generic in the arrow marked line to the type such as  number or string all is ok, no error after compilation<br />\n<br />\nQuestion 1 - is it a compiler bug ?<br />\nQuestion 2 - how to fix the error ?<br />\n<pre><code>class channel&lt;S,Y&gt;{\n     \n    public merge(...channels:channel&lt;any, Y&gt;[]) {\n\n        var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;(); // &lt;---\n\n        var result = ch.flatMap(x =&gt; x);\n\n        return result;\n    }\n     \n    public flatMap&lt;R&gt;(projector: (data: Y) =&gt; channel&lt;any, R&gt;): channel&lt;Y, R&gt; {\n        return null;\n    }\n }</code></pre>\n\nexpected type of result is channel&lt;any, Y&gt;, but the compiler infers something different<br />\n",
+    "PostedDate": "2014-05-05T06:22:56.093-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1241566",
+    "ThreadId": "544315",
+    "Html": "The error message<br />\n<br />\nError\t1\tSupplied parameters do not match any signature of call target:<br />\n<pre><code>Call signatures of types '(x: channel&lt;any, channel&lt;any, Y&gt;&gt;) =&gt; channel&lt;any, channel&lt;any, Y&gt;&gt;' and \n                         '(data: channel&lt;any, channel&lt;any, Y&gt;&gt;) =&gt; channel&lt;any, Y&gt;' are incompatible:\n    Types 'channel&lt;any, channel&lt;any, Y&gt;&gt;' and 'channel&lt;any, Y&gt;' originating in infinitely expanding type reference have incompatible type arguments.    \n</code></pre>\n\nTo me looks like it a compiler bug, but I'm not sure<br />\n",
+    "PostedDate": "2014-05-05T07:43:36.523-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1241633",
+    "ThreadId": "544315",
+    "Html": "Supplying the cross-post link: <a href=\"http://stackoverflow.com/questions/23474209/wrong-type-inference-with-generics\" rel=\"nofollow\">http://stackoverflow.com/questions/23474209/wrong-type-inference-with-generics</a><br />\n",
+    "PostedDate": "2014-05-05T09:27:40.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1241697",
+    "ThreadId": "544315",
+    "Html": "Thanks !<br />\n<br />\nI found better description of the problem<br />\n<pre><code>class channel&lt;S,Y&gt; {\n\nstatic flatMapImpl&lt;T,R&gt;(self: channel&lt;any, T&gt;, projector:(t:T) =&gt; channel&lt;T,R&gt;) {\n    var ch = new channel&lt;T, R&gt;();\n\n    return ch;  \n}\n\npublic flatMap&lt;R&gt;(projector: (data: Y) =&gt; channel&lt;Y, R&gt;) {\n    return channel.flatMapImpl(this, projector);\n}\n\npublic merge2(...targets: channel&lt;any, Y&gt;[]) {\n    var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n    var r = channel.flatMapImpl(ch, x =&gt; x);\n\n    return r;\n}\n\npublic merge(...targets: channel&lt;any, Y&gt;[]) {\n    var ch = new channel&lt;void, channel&lt;any, Y&gt;&gt;();\n    var result = ch.flatMap(x =&gt; x); // &lt;-- compilation error\n\n    return result;\n}\n}</code></pre>\n\nThe question is - why merge written via member function can't be compiled and how to fix it ?<br />\n<br />\nOf course, I can set some annotation such as &lt;any&gt;, but, actually, the member function is the main use case,. That means that I will have to put annotations or etc. to every call.<br />\n",
+    "PostedDate": "2014-05-05T11:06:19.687-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

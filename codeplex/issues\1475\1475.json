@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This doesn't really make sense in a structural type system; there's no deterministic way to 'go back' to the class type given an arbitrary object.",
+    "ClosedDate": "2013-08-12T08:53:28.3-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Is there a reason why the new typeof operator doesn't work with generics?\r\nIt would be incredibly useful if we could do something like...\r\n\r\n```\r\nfunction GetType<T>(arg: T): typeof T\r\n{\r\n\treturn (<any>arg).constructor;\r\n}\r\n\r\nclass Foo\r\n{\r\n\tstatic Property = 0;\r\n}\r\n\r\nGetType(new Foo()).Property;\r\n```\r\n\r\nI don't see any reason why the compiler can't just flow the types through...",
+    "LastUpdatedDate": "2013-08-13T12:33:39.413-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-09T19:28:38.837-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generics + typeof Operator",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1475
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "> there's no deterministic way to 'go back' to the class type given an arbitrary object.\n\nIsn't that exactly the point of the `\"constructor\"` property, for objects that were instantiated from a class? Only that, before TS supported generics, it couldn't be typed properly, so we had to access it via untyped workarounds?\n\nIt seems we still cannot quite type it, because of variable constructor parameter signatures, but this seems close enough to get completion:\n\n```\nclass C {m() {console.log(\"hi\")}};\n\n(new ((new C())[\"constructor\"])).m(); // completion doesn't work here\nvar c = C; // new()=>C\n\nfunction getConstructor<T>(t:T): new()=>T {\n\treturn t[\"constructor\"]\n}\n(new (getConstructor(new C()))).m(); // completion works here\n```\n\nSo: can we have `constructor` supported directly, please?",
+      "PostedDate": "2013-08-12T10:36:12.96-07:00",
+      "Id": 109464
+    },
+    {
+      "Message": "FWIW, my current solution is to place a special \"Static\" method on the types that need static access to a type, given an instance of said type:\n\n```\nclass Type\n{\n    static Static(t: Type): typeof Type\n    {\n        return (<any>t).constructor;\n    }\n\n    static Property = 0;\n}\n\nvar t = new Type();\nType.Static(t).Property; // Works\n```\n\nSomewhat hacky, but at least it's working.",
+      "PostedDate": "2013-08-12T11:33:15.11-07:00",
+      "Id": 109484
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "Update: better repro in response to RyanCavanaugh's comments.\r\n\r\nAs of 0.9.1.1:\r\n\r\n``` TypeScript\r\nclass Wrapper<T> {\r\n\tcat: string;\r\n}\r\n\r\nclass Bar {\r\n\tdog: number;\r\n}\r\n\r\nfunction foo(): Wrapper<Bar[]> {\r\n\tvar a = new Wrapper<Bar>();\r\n\t\r\n\treturn a; //This passes without error\r\n}\r\n```\r\n\r\nThis is definitely an error, because the compiler flags this as an error:\r\n``` TypeScript\r\nclass Bar {\r\n    dog: number;\r\n}\r\n\r\nfunction foo(): Bar[] {\r\n    var a = new Bar();\r\n    \r\n    return a; //Error here\r\n}\r\n```\r\n[Playground](http://www.typescriptlang.org/Playground/#src=class%20Wrapper%3CT%3E%20%7B%0A%09cat%3A%20string%3B%0A%7D%0A%0Aclass%20Bar%20%7B%0A%09dog%3A%20number%3B%0A%7D%0A%0Afunction%20foo()%3A%20Wrapper%3CBar%5B%5D%3E%20%7B%0A%09var%20a%20%3D%20new%20Wrapper%3CBar%3E()%3B%0A%09%0A%09return%20a%3B%0A%7D)\r\n\r\nOnce again, apologies if this was already reported and/or fixed. A canary build, or making the Playground have an option to host nightly builds, would help a lot.",
+    "LastUpdatedDate": "2013-11-19T15:57:39.933-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-05T10:45:57.15-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic return types not validated",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1866
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "TypeScript's type system is structural. A string is a subtype of Wrapper because it has all of Wrapper's members (which is to say, none). If you add a member to Wrapper, you'll get an error here.\n\r\n\r** Closed by RyanCavanaugh 11/05/2013 10:52AM",
+      "PostedDate": "2013-11-05T10:52:13.197-08:00",
+      "Id": 121867
+    },
+    {
+      "Message": "@RyanCavanaugh True, that was not a good repro. I've updated it. I believe this should be an error as non-generic equivalent produces an error, no?",
+      "PostedDate": "2013-11-05T11:21:09.997-08:00",
+      "Id": 121868
+    },
+    {
+      "Message": "This is still by design. Wrapper<Bar> is a subtype of Wrapper<Bar[]> because it has all of the members of Wrapper<Bar[]> ('cat: string'). If Wrapper used T in a member, this would report an error.",
+      "PostedDate": "2013-11-05T12:02:03.743-08:00",
+      "Id": 121884
+    },
+    {
+      "Message": "@RyanCavanaugh If the generic arguments don't come into play for the purposes of structural comparison then you lose a great deal of type checking. Clearly the code in my example is a bug and I can't think of any instance where it would not be. Would it cause problems elsewhere in the type system to take generic arguments into consideration?",
+      "PostedDate": "2013-11-05T13:06:35.097-08:00",
+      "Id": 121907
+    },
+    {
+      "Message": "The code as written makes no sense -- why do you have a generic type parameter if it's not used in any member? If your type was realistic and actually consumed its type argument anywhere in its definition, you would see an error here, as you expected.\n\nIt doesn't make sense from a language design perspective to say \"We have a structural type system wherein two types are compatible iff their members are compatible, OR if any unused generic type arguments don't match, they aren't compatible\". The addition of the second clause only helps code that is nonsensical in the first place. Don't have unused generic type arguments.",
+      "PostedDate": "2013-11-05T13:41:55.467-08:00",
+      "Id": 121916
+    },
+    {
+      "Message": "@RyanCavanaugh The example was trying to illustrate what I perceived to be the issue. Here is an example closer to what I'm actually experiencing:\n\n``` TypeScript\ninterface Promise<T> {\n    done<U>(callback: (T) => void): void;\n}\n\nclass Bar {\n    dog: number;\n}\n\nfunction foo(): Promise<Bar[]> {\n    var a: Promise<Bar> = null;\n    \n    return a; //This passes without error\n}\n```\n\nAs you can see, the generic type parameter _is_ used. Just not for the type of a member proper.",
+      "PostedDate": "2013-11-05T14:20:30.787-08:00",
+      "Id": 121928
+    },
+    {
+      "Message": "Sorry, scratch that last example, it has a typo (if only I could edit on this website...) I'm actually having trouble now reproducing the exact situation I was seeing in my code but I'll update this if I'm able to make a simple repro.",
+      "PostedDate": "2013-11-05T14:23:35.707-08:00",
+      "Id": 121929
+    },
+    {
+      "Message": "Generics seem fundamentally barfed in TypeScript, with \"named\" structural types being the fundamental mismatching concepts. (Maybe there's a well-behaved set of idioms where generics are actually useful, but after 2 months of use I'm still struggling to find it.)",
+      "PostedDate": "2013-11-16T06:10:39.987-08:00",
+      "Id": 123272
+    },
+    {
+      "Message": "I'm not sure where you're inferring that generics are nominal in normal use. The only case where we do something that would be considered nominal is in infinitely-expanding self-referential generics where there isn't an alternative.",
+      "PostedDate": "2013-11-19T15:57:39.933-08:00",
+      "Id": 123596
+    }
+  ]
+}

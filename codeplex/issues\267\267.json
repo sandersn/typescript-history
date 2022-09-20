@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing now.  Last comment seems to cover it.  Also, duplicate of http://typescript.codeplex.com/workitem/191 .\n\n - Bill",
+    "ClosedDate": "2012-12-28T12:41:51.263-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "On TypeScript Definitions... (and 3rd Party JS libraries such as knockoutjs, expressjs, etc)...\r\n\r\nI'm finding that it's a mess out in the wild... This project (https://github.com/borisyankov/DefinitelyTyped) hopes to bring things together, but\r\n there is a fundamental flaw in this approach... Firstly it's a project not a portal, and second, there is no version correlation between the published library and the definition file. I've raised the latter as an issue here: https://github.com/borisyankov/DefinitelyTyped/issues/2\r\n\r\nThis needs to be addressed by MS fast and a coordinated open source repository needs to be set up, much like npmjs.org (not NuGet because that is MS specific) so that people can contribute the definitions in one place...\r\n\r\nFor now, however, it is quite difficult to figure out what version of a library a definition refers to. For example have a look at the express.d.ts in the (DefinitelyTyped)\r\n project. This was copied from the MS samples but defines the 2.x express lib. We use the 3.x version... Also, there are at least 3 variants for the knockoutjs d.ts all of which define the library differently!\r\n\r\nSo... making sure we are using the correct/best defined d.ts is taking time!!!",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 0.9.0",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-16T09:18:47.103-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "On TypeScript Definitions... We Have A Problem!",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 16,
+    "Id": 267
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "There are a number of considerations to take into account for file name versioning that points to abstracting module dependencies.\n\nFor example the express.d.ts from the MS sample includes a reference to node.d.ts at the head of the file which introduces an implied dependency between the express.d.ts and node.d.ts.\n\nAdding version numbering to the file names, for example a reference to node.0.8.x.d.ts in the header of an express.3.x.d.ts would create a 'hard' dependency to a specific version of the nodejs definition.\n\nNodejs uses package.json files with a 'dependencies' entry that has a very nice/flexible way of expressing dependency versions.  Something like that for definitions may work be great...\n\ne.g. (note that path was removed because the source of the dependency may not reside in a fixed location for all use cases)\n&lt;reference module='node' ver='>=0.8.0' />\n&lt;reference module='express' ver='3.x' />\n&lt;reference module='underscore' src='https://github.com/alvivi/typescript-underscore/blob/master/underscore.d.ts' />\netc.\n",
+      "PostedDate": "2012-10-17T00:28:05.76-07:00",
+      "Id": 80180
+    },
+    {
+      "Message": "I have another repository with some more definitions but just for node.js.\n\nhttps://github.com/soywiz/typescript-node-definitions\n\nIf you end creating a repository of definitions, you could use the missing ones from there so all that work is resued. They are for the lastest versions of modules as for 2012/10/18.",
+      "PostedDate": "2012-10-18T04:35:02.937-07:00",
+      "Id": 80323
+    },
+    {
+      "Message": "I think an npm based solution makes sense.  As long as \"npm link\" works on Windows so that the .d.ts files could be made available to the client side scripts without digging into the node_modules directory structures.",
+      "PostedDate": "2012-10-18T08:37:21.797-07:00",
+      "Id": 80332
+    },
+    {
+      "Message": "I agree with original poster.\n\nFor now: One single github repo. People need to stop making their own and doing what others are already doing.\nLater: Official repo at www.typescriptlang.org or something",
+      "PostedDate": "2012-10-19T03:32:52.29-07:00",
+      "Id": 80432
+    },
+    {
+      "Message": "This thread is bang on so I thought I'd chime in on this topic too...\n\nOne of the biggest issues I have had when using JavaScript libraries (e.g. KnockoutJS) with TypeScript is that the TypeScript Definition Files (d.ts) fall out of sync with the current release of the JS library. Often this is caused because the Definition File is not distributed as an official artifact of the JS library's release process and is left up to the community to maintain and catch up. Also, maintainers of these Definition Files don't always make it clear which version the JS library the Definition File supports. \n\nSome painful examples:\n\n* When using Knockout, the Definitely Typed file in the GitHub repository is version 2.2, which currently matches the latest release of Knockout. However, if you happen to be using any of the community contributed add-on libraries like Knockout-Validation, you will quickly find that there is NO version of knockout referenced in the knockout.validation.d.ts file. If you use the Knockout Mapping project, it's typescript d.ts version is only \"2.0\". This makes it __very__ hard to know if the d.ts file is being actively maintained and is current.\n\n* The current TypeScript Definition File for JQuery indicates it works for JQuery version 1.9.x, however JQuery version 2.0 is out now. Since the JQuery 2.0 API is apparently the same as version 1.9.x, the Definition File really should be updated to indicate it also works for both JQuery 1.9.x and 2.0.x\n\nGenerally speaking, JS libs that have high-adoption have Definitely Typed files that are much better maintained but this isn't always the case. I really wonder what will happen when TypeScript 0.9 releases it's many breaking changes onto all those open source JS libraries out there that have a Definitely Typed file available? How long will it take for all of those libs to get caught up? How many developers who bet on TypeScript will be put into a situation where they can't update their library dependencies or typescript version because not __ALL__ of their library dependencies have made updated d.ts files available? \n\nI realize this is not the responsibility of these JS libraries to supply TypeScript Definition Files, but many people are now using TypeScript in their projects and it seems to be gaining momentum. This is imposing extra pressure on these open source projects to firstly provide d.ts files and secondly keep up with the fast release cycles of TypeScript itself all while trying to iterate their own project.\n\nI'd really like to see high profile JS projects like Knockout, JQuery, etc... __officially__ contribute Definition Files to a central repository (or whatever gets decided) that are kept up to date with the current release. BreezeJS does this and it really makes things easy because you can trust you have the latest Definition file when you update to a new version of Breeze.\n\nFor TypeScript to become successful, these types of maintenance hassles need to be addressed quickly. It's a difficult problem to solve. Perhaps better guidance and focus on education around creating d.ts files is needed? Either way, better awareness of these problems is needed by creators of d.ts files. Perhaps better tooling to help with the creation of and validation of TypeScript files could help.\n\nTypeScript is a fantastic language so I hope these issues can be resolved soon.\n\nThanks and keep up the good work!\n\nRichard",
+      "PostedDate": "2013-06-18T13:03:24.917-07:00",
+      "Id": 103329
+    },
+    {
+      "Message": "Please see a proposed solution here: https://typescript.codeplex.com/discussions/461449",
+      "PostedDate": "2013-10-07T12:25:22.073-07:00",
+      "Id": 117687
+    }
+  ]
+}

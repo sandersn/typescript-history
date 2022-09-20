@@ -1,0 +1,170 @@
+[
+  {
+    "Id": "1107574",
+    "ThreadId": "462195",
+    "Html": "I don't understand why you can't do:<br />\n<pre><code>get&lt;T&gt;(type: typeof T): T;</code></pre>\n\nYou can do this in java<br />\n<pre><code>&lt;T&gt; get(Class&lt;T&gt;: clazz): T</code></pre>\n\nSo why is typescript designed to have such limitation?<br />\n",
+    "PostedDate": "2013-10-15T04:27:53.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107685",
+    "ThreadId": "462195",
+    "Html": "I think you're misunderstanding what the <code>typeof</code> operator does.\r<br />\n<br />\nThis is perfectly legal TypeScript code:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo&lt;T&gt; {\n     <span style=\"color:Blue;\">private</span> _contents: T;\n\n     <span style=\"color:Blue;\">static</span> unwrap&lt;T&gt;(holder: Foo&lt;T&gt;): T {\n           <span style=\"color:Blue;\">return</span> holder._contents;\n     }\n}\r\n</pre></div>See <a href=\"https://typescript.codeplex.com/discussions/456796\" rel=\"nofollow\">this</a> for more details on <code>typeof</code>.\r<br />\n<br />\nAre you specifically trying to use generics with the getter syntax? That doesn't seem to be supported currently.<br />\n",
+    "PostedDate": "2013-10-15T07:01:00.08-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107715",
+    "ThreadId": "462195",
+    "Html": "It has nothing to do with getters, its normal method just named get, sorry for confusion. I know that generics work in typescript. I don't understand whats the point of your code snippet\r<br />\n<br />\nAs in original post I am using <strong>typeof T</strong> as <strong>Class&lt;T&gt;</strong> in java (in C# there is really no equivalent but its like <strong>Type</strong>). Am I using it wrong?\r<br />\n<br />\nSince code above doesn't work i use this code:<br />\n<pre><code>get&lt;T extends MyClass&gt;(type: typeof MyClass): T;\nvar a = get&lt;MySubClass&gt;(MySubClass);</code></pre>\n\nand I have to write <em>&quot;&lt;MySubClass&gt;&quot;</em> everywhere, because I can't pass T as argument and type can't be infered. So question is Why can't i replace typeof MyClass with typeof T?<br />\n",
+    "PostedDate": "2013-10-15T07:55:15.89-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107722",
+    "ThreadId": "462195",
+    "Html": "Ah ok, I think I understand now. It looks like you want return type covariance on generic parameters. From a quick check in the playground, it looks like TypeScript supports return type covariance, but as you've found apparently not this scenario with generics. I'd open an issue on the tracker if you want people to vote on this type of support.<br />\n",
+    "PostedDate": "2013-10-15T08:10:07.133-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107731",
+    "ThreadId": "462195",
+    "Html": "Well I've created an issue \r<br />\n<a href=\"https://typescript.codeplex.com/workitem/1786\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1786</a>\r<br />\nBut I didn't realize I can't even make typeof T parameter, and as it was closed as by design so I wonder if there is something that prevents it from working like in java that I'm missing.<br />\n",
+    "PostedDate": "2013-10-15T08:22:03.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107748",
+    "ThreadId": "462195",
+    "Html": "Have you seen this thread? <a href=\"https://typescript.codeplex.com/discussions/456796\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/456796</a><br />\n",
+    "PostedDate": "2013-10-15T08:45:43.447-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107750",
+    "ThreadId": "462195",
+    "Html": "Yes I have, and if all my types inheriting from MyClass had parameterless constructor I might have used your approach. Ok I could maybe do something like new (...any[]) =&gt; T; And that could work, but I thought that typeof could be nicer replacement for hacks like this.<br />\n<br />\nIs my understanding of what typeof (as method argument) is wrong? Is it something different then Class&lt;T&gt; in Java?<br />\n",
+    "PostedDate": "2013-10-15T08:54:02.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107756",
+    "ThreadId": "462195",
+    "Html": "When used in a type position, <code>typeof</code> produces the type of an expression. It doesn't do anything else.\r<br />\n<br />\nI think the thing to realize is that in TypeScript, the constructor function <em>is</em> the class object. Modeling this isn't a hack, it's reality! In JavaScript, there isn't a one-to-one mapping of constructor functions to types like there is in Java or C#. You could easily have an external library where <code>new Foo()</code> and <code>new Bar()</code> both returned objects of type <code>Qua</code>, so you can't just take an object of type <code>Qua</code> and go back to <code>Foo</code>/<code>Bar</code>.\r<br />\n<br />\nIndeed, this works fine:<br />\n<pre><code>class NoArgs {\n    private n;\n    constructor() { }\n}\nclass SomeArgs {\n    private m;\n    constructor(n: string, y: number) { }\n}\n\nfunction foo&lt;T&gt;(type: new(...args: any[]) =&gt; T): T {\n    if(type === NoArgs) { /* ... */ }\n}\n\nvar a = foo(NoArgs); // a: NoArgs\nvar b = foo(SomeArgs); // b: SomeArgs</code></pre>\n\n",
+    "PostedDate": "2013-10-15T09:06:34.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107781",
+    "ThreadId": "462195",
+    "Html": "<blockquote>\nthe constructor function is the class object.<br />\n</blockquote>\nI understand this.<br />\n<br />\n<br />\nBut I dont understand whats the difference between <br />\n<pre><code>foo&lt;T&gt;(type: typeof MyClass) </code></pre>\n\nand <br />\n<pre><code>foo&lt;T&gt;(type: new() =&gt;MyClass)</code></pre>\n\n<ul>\n<li>\nI understand that the difference is that second statement takes only one constructor, but the first one takes &quot;any&quot; constructor (I realize that there can be only one constructor per class)<br />\n</li>\n</ul>\nWhats the reason behind having &quot;typeof MyClass&quot;? Is it not that you can pass MyClass regardless of what kind of constructor the class has?<br />\nAnd if thats the reason, why can't we have &quot;typeof T&quot; for the same reason?<br />\n",
+    "PostedDate": "2013-10-15T09:57:18.71-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107827",
+    "ThreadId": "462195",
+    "Html": "One difference is that the constructor function type includes the entire static side of the class. So in your first definition for foo if MyClass had any static members then they would be accessible from the argument named <code>type</code> within foo. In your second definition of foo you are allowing a more general set of constructor functions and not requiring a particular set of static members. \r<br />\n<br />\nEither way it doesn't affect why 'typeof T' is not valid. T is not a value, it is only a type, and one which doesn't exist at runtime. What would the compiler emit to make this work? Consider this similar case without generics which is also invalid:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> I {\n    <span style=\"color:Blue;\">new</span> (): MyClass;\n}\n\n<span style=\"color:Blue;\">function</span> f(x: <span style=\"color:Blue;\">typeof</span> I) { <span style=\"color:Green;\">// error</span>\n    <span style=\"color:Blue;\">var</span> r = <span style=\"color:Blue;\">new</span> x();\n}\r\n</pre></div>The interface doesn't exist in the emitted JavaScript, so what could the compiler emit here that would work and make sense?<br />\n",
+    "PostedDate": "2013-10-15T11:38:12.503-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107856",
+    "ThreadId": "462195",
+    "Html": "I don't understand how is this different from java.<br />\n<br />\n<br />\n<br />\nI guess i want generated code to look like it does in this case<br />\n<pre><code>interface I {\n    new (): MyClass;\n}\n\nfunction f(x: () =&gt; I) { // ok\n    var r = new x();\n}\n\n//into js\n\nfunction f(x) {\n   ...\n}\n</code></pre>\n\nSo I don't get why I can't do this either.<br />\n<br />\n<br />\nIts only tool for compile time &quot;safety&quot;, i dont want anything special at runtime.<br />\n<br />\n<br />\nYes T is not a value, thats why i cant do<br />\n<pre><code>foo&lt;T&gt;() {\n   new T();\n}</code></pre>\n\nBecause this information is lost at runtime, but when i pass the type its no longer just a type its some kind of value.<br />\n<br />\n<br />\nI really don't get what I am missing here.<br />\n",
+    "PostedDate": "2013-10-15T12:08:04.72-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107952",
+    "ThreadId": "462195",
+    "Html": "The reasoning for why <code>typeof</code> exists is fully explained in the linked post. I'm unclear on what the question is here. Are you asking why <code>typeof T</code> isn't a shorthand for <code>{ new(...args: any[]): T; }</code> ?<br />\n",
+    "PostedDate": "2013-10-15T12:45:04.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107956",
+    "ThreadId": "462195",
+    "Html": "I guess I am asking why can't this:<br />\n<pre><code>foo&lt;T&gt;(type: typeof T) {\n}</code></pre>\n\nbe translated into<br />\n<pre><code>function foo(type) {\n}</code></pre>\n\nAnd why can't there be all static checks done by compiler that has type information. For not passing stuff that is not T, and infering T from that parameter.<br />\n<br />\nIn the linked post, you explain why you can't have foo&lt;T&gt;() and access T inside such method, which is obvious. And its obviously not possible in java either.<br />\n",
+    "PostedDate": "2013-10-15T12:50:01.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107966",
+    "ThreadId": "462195",
+    "Html": "You can already do all those things without using typeof.<br />\n",
+    "PostedDate": "2013-10-15T13:29:08.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107975",
+    "ThreadId": "462195",
+    "Html": "And if I want to do:<br />\n<pre><code>class MyClass {\n   static stuff() {}\n}\n\nfoo&lt;T extends MyClass&gt;(type: typeof T) {\n   type.stuff();\n}</code></pre>\n\nSo typeof is ONLY for having access to static methods?<br />\n<br />\n<br />\nAnd if I want to store a &quot;class reference&quot; I should use the constructor syntax? Isnt that kind of unintuitive?<br />\n",
+    "PostedDate": "2013-10-15T13:40:18.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1108884",
+    "ThreadId": "462195",
+    "Html": "For what you're trying to do, think of T as a structural type rather than a particular name.  If you want to pass in something that invokes .stuff, you would need to pass the static piece of MyClass:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> MyClass {\n   <span style=\"color:Blue;\">static</span> stuff() {}\n}\n\n<span style=\"color:Blue;\">interface</span> Stuffable {\n   stuff();\n}\n\nfoo&lt;T <span style=\"color:Blue;\">extends</span> Stuffable&gt;(t: T) {\n   t.stuff();\n}\n\nfoo(MyClass);\r\n</pre></div>You don't use typeof to try to get at the types passed into generic functions.  You can't see those, and that's intentional.  You can only see the structure that the function sets provides in the constraint on the generic.<br />\n",
+    "PostedDate": "2013-10-17T10:30:39.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1109143",
+    "ThreadId": "462195",
+    "Html": "<blockquote>\nIf you want to pass in something that invokes .stuff, you would need to pass the <strong>static piece of MyClass</strong>:<br />\n</blockquote>\nI thought that thats what typeof is for (when used as variable type).<br />\n<br />\n<br />\nI would hope that there is a way that you can force user to pass just MyClass and not new MyClass() too. Because there is if I wouldn't use generics, since without genrics I can use typeof exactly as I want to. It just doesn't work with typeof T, and I still don't understand the reason why not.<br />\n<br />\n<em>Maybe I am just too used to normal languages where new MyClass() doesn't behave as MyClass in any situation. And where you can't call static method using object instance, but I guess thats the cost of being in javascript world.</em><br />\n<blockquote>\nYou don't use typeof to try to get at the types passed into generic functions. You can't see those, and that's intentional. <br />\n</blockquote>\nI don't think I understand what you are saying. There is typeof T that is used as declaring type of variable. And there is typeof operator that does runtime stuff - you can use T there since it's not runtime, I get that and I've never talked about that.<br />\n<blockquote>\nYou can only see the structure that the function sets provides in the constraint on the generic.<br />\n</blockquote>\nYeah, I know, thats why in my example I used T extends.<br />\n",
+    "PostedDate": "2013-10-18T04:00:54.143-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114151",
+    "ThreadId": "462195",
+    "Html": "<strong>Kikaimaru wrote:</strong><br />\n<blockquote>\nI don't understand why you can't do:<br />\n<pre><code>get&lt;T&gt;(type: typeof T): T;</code></pre>\n\n</blockquote>\nYou should be able to do :<br />\n<pre><code>get&lt;T&gt;(type: T): T;</code></pre>\n\n'T' is not an instance of a type, it IS a type.  You don't need to dereference it with &quot;typeof&quot;.<br />\n",
+    "PostedDate": "2013-10-30T07:09:56.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114932",
+    "ThreadId": "462195",
+    "Html": "Because I don't want to pass parameter of type T, but a parameter holding type T.<br />\n<pre><code>class Person {\n}\n\nclass Student extends Person {\n}\n\nfoo&lt;T extends Person&gt;(type: typeof T) {}\n\n\nfoo(new Student()); // Passing value that is __of__ type T\nfoo(Student); // Passing type that is type T</code></pre>\n\nObviously your example will work even with passing just &quot;Student&quot; (even though I don't know why, I dont think that type Student is of type Student), but I don't want to be able to pass new Student()<br />\n<br />\n<br />\nAs I've said I want same logic that java provides with Class&lt;T&gt;<br />\n",
+    "PostedDate": "2013-10-31T00:34:05.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1121933",
+    "ThreadId": "462195",
+    "Html": "Kikaimaru, \r<br />\n<br />\nTypeScript doesn't have the equivalent of a templating system where you can actually reference the types being used to instantiate the generic.  Generics are autonomous, and can only see what the constraints say is visible.\r<br />\n<br />\nThe 'typeof' argument is only used to get the type of an expression and can't be used against types or type variables.\r<br />\n<br />\nThis is because type checking is modular, allowing you to type-check code in isolation.  This becomes important when creating and working with .d.ts files, where we needed to produce correct types before we've ever seen how they were used.<br />\n",
+    "PostedDate": "2013-11-11T09:45:42.523-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129149",
+    "ThreadId": "462195",
+    "Html": "<strong>RyanCavanaugh wrote:</strong><br />\n<blockquote>\nIndeed, this works fine:<br />\n<pre><code>class NoArgs {\n    private n;\n    constructor() { }\n}\nclass SomeArgs {\n    private m;\n    constructor(n: string, y: number) { }\n}\n\nfunction foo&lt;T&gt;(type: new(...args: any[]) =&gt; T): T {\n    if(type === NoArgs) { /* ... */ }\n}\n\nvar a = foo(NoArgs); // a: NoArgs\nvar b = foo(SomeArgs); // b: SomeArgs</code></pre>\n\n</blockquote>\nSo this code no longer works with 0.9.5 beta. Since SomeArgs constructor would have to have signature (n?: string, y?: number)<br />\n<br />\nIs there currently a workaround to use instead of typeof T in 0.9.5?<br />\n",
+    "PostedDate": "2013-11-26T04:52:55.807-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-06T14:41:10.787-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have a project with some legacy javascript and some typescript. The plan was to put vsdoc comments in the TypeScript (type annotations included) so that intellisense worked for javascript code calling into the typescript code. During the debug build, I tell the TypeScript compiler to keep the comments in the output, and for the most part this works just fine - intellisense in javascript files lights up for typescript classes and functions.\r\n\r\nHowever, in some cases, the typescript compiler will add a line to a function for _this. The problem is that it adds this line *before* the vsdoc comments in the function. Visual Studio's javascript intellisense engine, however, requires that those vsdoc xml comments be the *first* thing in the function.\r\n\r\nSo, for example, this typescript class:\r\n```\r\nmodule App {\r\n\texport class TestFile {\r\n\t\tconstructor(private name: string) { }\r\n\t\tfoo(message: string): () => string {\r\n\t\t\t/// <summary>Test summary</summary>\r\n\t\t\t/// <param name=\"message\" type=\"String\" />\r\n\t\t\t/// <returns type=\"Function\" />\r\n\t\t\treturn () => message + this.name;\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nResults in this javascript output:\r\n```\r\nvar App;\r\n(function (App) {\r\n    var TestFile = (function () {\r\n        function TestFile(name) {\r\n            this.name = name;\r\n        }\r\n        TestFile.prototype.foo = function (message) {\r\n            var _this = this;\r\n            /// <summary>Test summary</summary>\r\n            /// <param name=\"message\" type=\"String\" />\r\n            /// <returns type=\"Function\" />\r\n            return function () {\r\n                return message + _this.name;\r\n            };\r\n        };\r\n        return TestFile;\r\n    })();\r\n    App.TestFile = TestFile;\r\n})(App || (App = {}));\r\n//# sourceMappingURL=TestFile.js.map\r\n```\r\n\r\nIn order for javascript intellisense to work properly, it needs to look like this:\r\n```\r\nvar App;\r\n(function (App) {\r\n    var TestFile = (function () {\r\n        function TestFile(name) {\r\n            this.name = name;\r\n        }\r\n        TestFile.prototype.foo = function (message) {\r\n            /// <summary>Test summary</summary>\r\n            /// <param name=\"message\" type=\"String\" />\r\n            /// <returns type=\"Function\" />\r\n            var _this = this;\r\n            return function () {\r\n                return message + _this.name;\r\n            };\r\n        };\r\n        return TestFile;\r\n    })();\r\n    App.TestFile = TestFile;\r\n})(App || (App = {}));\r\n//# sourceMappingURL=TestFile.js.map\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-10T13:10:10.893-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "var _this = this; inserted before vsdoc comments, breaking them",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2090
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Note: there is a workaround for this issue, but it requires using the standard anonymous function syntax as opposed to the lambda syntax. For instance, this typescript:\n\n```\nmodule App {\n\texport class TestFile {\n\t\tconstructor(private name: string) { }\n\t\tfoo(message: string): () => string {\n\t\t\t/// <summary>Test summary</summary>\n\t\t\t/// <param name=\"message\" type=\"String\" />\n\t\t\t/// <returns type=\"Function\" />\n\t\t\tvar _this = this;\n\t\t\treturn function () { return message + _this.name; };\n\t\t}\n\t}\n}\n```\n\nResults in this output, which works properly with javascript intellisense when referenced:\n\n```\nvar App;\n(function (App) {\n    var TestFile = (function () {\n        function TestFile(name) {\n            this.name = name;\n        }\n        TestFile.prototype.foo = function (message) {\n            /// <summary>Test summary</summary>\n            /// <param name=\"message\" type=\"String\" />\n            /// <returns type=\"Function\" />\n            var _this = this;\n            return function () {\n                return message + _this.name;\n            };\n        };\n        return TestFile;\n    })();\n    App.TestFile = TestFile;\n})(App || (App = {}));\n//# sourceMappingURL=TestFile.js.map\n\n```",
+      "PostedDate": "2014-01-10T13:13:15.987-08:00",
+      "Id": 130118
+    },
+    {
+      "Message": "This should be resolved now with the checkin at https://typescript.codeplex.com/SourceControl/changeset/91711fedff269e85df99624fb5407b7d9e9f5226.\n\nNote: in order for this to work as desired, you will need to put a newline between the comment and the return statement.  This 'detaches' the comment from teh statement, and causes us to treat it as a prologue for the method body. i.e.\n\n```typescript\nmodule App {\n    export class TestFile {\n        constructor(private name: string) { }\n        foo(message: string): () => string {\n            /// <summary>Test summary</summary>\n            /// <param name=\"message\" type=\"String\" />\n            /// <returns type=\"Function\" />\n\n            return () => message + this.name;\n        }\n    }\n}\n```\n",
+      "PostedDate": "2014-02-06T14:41:04.987-08:00",
+      "Id": 132877
+    }
+  ]
+}

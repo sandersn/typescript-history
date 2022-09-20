@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1126752",
+    "ThreadId": "470506",
+    "Html": "From <a href=\"http://www.typescriptlang.org/Playground/#ex5\" rel=\"nofollow\">Example 5</a>, I found that there is not explicit relationship between Person and Student, as I would expect from a strong-typed programming language:<br />\n<pre><code>class Student implements Person { ... etc ... }</code></pre>\n\nThe provided example works as is (without the explicit interface co-relation), meaning that the interface is inferred somehow at the moment the <em>Student</em> object is passed to the greeter() argument.\r<br />\nI think this goes against the whole purpose of having a strong typed programming language. it means that the type is evaluated based on member-set name matching, not on explicit type declarations.\r<br />\nI can figure out several scenarios where this is inconvenient for maintainability (my main reason for adopting TypeScript). Two classes can share the same signature at some moment and then &quot;accepted&quot; by the <em>greeter()</em> method, but later the field names can be changed. \r<br />\nExaggerating a bit: I can declare <em>the</em> Pet class to have <em>firstname</em> and <em>lastname</em>, but later decide to change to <em>nickname</em>. That implies that an <em>Pet</em> instance can be passed to <em>greeter()</em> in my initial implementation although conceptually pets cannot be persons.\r<br />\nBesides the philosophical discussion, this kind of inference wouldn't be allowed in C# or other similar language. <br />\n",
+    "PostedDate": "2013-11-19T13:30:28.37-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126817",
+    "ThreadId": "470506",
+    "Html": "One way to think about the interfaces is as a way to define a specific API.  If you implement that API, then you pass the test.<br />\n\r<br />\nYou can also enforce something stricter by using how private members work in TypeScript.  For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Person {\n    <span style=\"color:Blue;\">private</span> id;   <span style=\"color:Green;\">// this private is unique, so only subclasses will </span>\n                  <span style=\"color:Green;\">// pass checks that require &quot;Person&quot;</span>\n}\n\n<span style=\"color:Blue;\">class</span> Student <span style=\"color:Blue;\">extends</span> Person { \n    name: <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">function</span> checkPerson(p: Person) { }\n\ncheckPerson({name: <span style=\"color:#A31515;\">&quot;bob&quot;</span>}); <span style=\"color:Green;\">// errors because object literal isn&#39;t a subtype of Person</span>\r\n</pre></div>",
+    "PostedDate": "2013-11-19T16:20:56.367-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127323",
+    "ThreadId": "470506",
+    "Html": "Many strongly typed programming languages use a structural type system (which is what TypeScript uses) and not a nominal one (like C#), for example some of the ML family of functional languages (which have served as inspiration for a number of recent C# features). There is nothing inherently weaker about it. The interface is not inferred at the callsite, the callsite simply checks whether you have the required set of properties it claims to need. As Jonathan notes, declaring a class heritage specification with an interface serves as an explicit statement of a contract about your type. It does not preclude other types from also fulfilling that contract at some other point. \r<br />\n<br />\nWhile you are correct that C# would not allow certain patterns like this, the converse is that there are a number of useful patterns which C# doesn't easily allow because things which are functionally equivalent do not match only because their name and heritage are different. The structural typing is an important part of modeling how JavaScript is used today. \r<br />\n<br />\nIf I'm asking for the string version of your name then why do I care if you're a person or a dog? You have a name, just tell me it. <br />\n",
+    "PostedDate": "2013-11-20T16:15:54.52-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127346",
+    "ThreadId": "470506",
+    "Html": "Since everyone's chiming in :)\r<br />\n<br />\nEven nominally-typed type systems can fall prey to the problem that semantics are not necessarily implied by the type system. Witness the <code>ICloneable</code> interface in .NET - some types implemented <code>Clone</code> as a deep copy, some as a shallow copy, and some as something else entirely. If someone gave you an <code>ICloneable</code>, you'd have no idea what the exact result of calling <code>Clone</code> was. Today the guidance is &quot;Don't use ICloneable&quot;. There's no magic bullet for this sort of problem, and structural type systems seem to better model common JavaScript programming practices than nominal system.<br />\n",
+    "PostedDate": "2013-11-20T17:37:04.65-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1004315",
+    "ThreadId": "433879",
+    "Html": "I'm using TypeScript 0.8.2 plugin in Visual Studio 2012 Express. When I try the following code I get this error: &quot;Supplied parameters do not match any signature of call target&quot;, but this error is not produced in TypeScript Playground.<br />\n<pre><code>class A {\n    constructor(a) {\n    }\n}\n\nclass B extends A {\n}\n\nvar b = new B(&quot;input&quot;);</code></pre>\n\nI could only pass the error if constructor is explicitly defined in class B.<br />\n<pre><code>class B extends A {\n    constructor(a) {\n        super(a);\n    }\n}</code></pre>\n\nAm I supposed to get this error?<br />\n<br />\nThanks,<br />\nOmid<br />\n",
+    "PostedDate": "2013-02-20T16:13:02.367-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004325",
+    "ThreadId": "433879",
+    "Html": "The behavior you see in the playground is the intended behavior -- the constructor should be getting automatically defined. I don't see this with the latest sources from the develop branch, so you should see this fixed in the next release (0.8.3.0).<br />\n",
+    "PostedDate": "2013-02-20T16:47:06.81-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004331",
+    "ThreadId": "433879",
+    "Html": "You're right, the code above does not reproduce it. But it reproduces when bringing initialization before class definitions.<br />\n<pre><code>var b = new B(&quot;input&quot;);\n\nclass A {\n    constructor(a) {\n    }\n}\n\nclass B extends A {\n}</code></pre>\n\nI know why this would fail in JS, but it would be great if TS could reorder the calls in the order of dependencies, or at least produce a more helpful error message in this case.<br />\n",
+    "PostedDate": "2013-02-20T17:12:34.76-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004338",
+    "ThreadId": "433879",
+    "Html": "The error in the above code snippet looks like to be a bug because the following works just fine:<br />\n<pre><code>var b = new B(&quot;input&quot;);\n\nclass A {\n    constructor(a) {\n    }\n}\n\nclass B extends A {\n    constructor(a) {\n        super(a);\n    }   \n}</code></pre>\n\n",
+    "PostedDate": "2013-02-20T17:27:23.53-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004883",
+    "ThreadId": "433879",
+    "Html": "I opened an issue for this: <a href=\"http://typescript.codeplex.com/workitem/749\" rel=\"nofollow\">http://typescript.codeplex.com/workitem/749</a><br />\n",
+    "PostedDate": "2013-02-21T12:41:12.557-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

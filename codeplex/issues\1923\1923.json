@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-20T14:29:09.57-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "With 0.95 version of typescript i now getting a lot of errors of this kind\r\n Error\t161\tCannot convert '{ d1: string; d2: string; cod: string; }' to '{ [name: string]: string; }':\r\n\tIndex signatures of types '{ d1: string; d2: string; cod: string; }' and '{ [name: string]: string; }' are incompatible.\tC:\\DATA\\NEW_SVM\\jriappTS\\jriappTS\\user_modules2\\accountDB.ts\t238\t17\tjriappTS\r\n\r\nNow i can not assign an object (which in javascript is also a map) to a property which has an indexer type.\r\n\r\nWhy???",
+    "LastUpdatedDate": "2013-11-20T14:29:09.57-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-20T02:50:02.597-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TS 0.95 Index signatures of types '{ d1: string; d2: string; cod: string; }' and '{ [name: string]: string; }' are incompatible",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1923
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "But as an afterthought i think that for the sake of speed of the compiler it is better to leave this as it is now.\nBecause that checking can take considerable computation power and will slower intellisense, which is very fast in ts 0.95 version.\n",
+      "PostedDate": "2013-11-20T10:08:21.81-08:00",
+      "Id": 123672
+    },
+    {
+      "Message": "0.9.5 has tightened the rules around index signatures. When an object literal is contextually typed by a type with an index signature then the index signature is 'pushed' into the object literal which makes the subsequent assignment valid. In a situation where the assignment occurs without contextual typing then this pushing of index signatures into the object literal does not occur and thus an error is generated. In practice this is what you'll see:\n\n```TypeScript\nclass A {\n    foo: string;\n}\nvar test: { [key: string]: A; };\ntest = { x: new A() }; // ok because the object literal is contextually typed by the type of bindings\nvar test2 = { x: new A() };\ntest = test2; // error because we don't contextually type in this situation\nvar bindings: { [key: string]: A; } = test2; // error\nvar bindings: { [key: string]: A; } = { x: new A() }; // ok\n```\n\nAs an example of the type of invalid code 0.9.1.1 allowed because of not enforcing this:\n\n```TypeScript\nclass Base {\n    test: { [key: string]: A; };\n}\n\nclass Derived extends Base {\n    test: {\n        [key: string]: A;\n        x: A;\n    }; \n}\n\nvar b = new Base();\nb.bindings['thing'] = 1; // error, number does not match A\nvar d = new Derived();\nd.bindings['thing'] = 2; // ok, no indexer constraint on properties in Derived\nb = d;\nvar x: A = b.test['thing'];\nx.foo; // runtime exception\n```\n\nIn 0.9.5 the declaration for Derived is now an error because of the test properties not matching due to index signatures.\n\n",
+      "PostedDate": "2013-11-20T14:29:05.403-08:00",
+      "Id": 123705
+    }
+  ]
+}

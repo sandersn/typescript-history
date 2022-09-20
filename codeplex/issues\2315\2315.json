@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.673-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "It would be nice to use TypeQueries in TypeReferences, for instance I would to be able to do the following:\r\n\r\n```\r\nclass A {\r\n  static x: number;\r\n}\r\n\r\nclass B implements typeof A {\r\n  x: number;\r\n}\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-14T14:27:28.47-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Supporting \"implements typeof A\".",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2315
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "ES6 will allow extending expressions which may get closer to what you want. Could you explain in more detail exactly what types of scenarios you're envisioning here? This code example here doesn't really make it clear the types of things you're hoping to enable.",
+      "PostedDate": "2014-03-14T14:49:22.037-07:00",
+      "Id": 136882
+    },
+    {
+      "Message": "I need to express a class A whose typeof A is compatible with itself. In other words:\n\n```\nclass A implements typeof A {\n  static x: number;\n  x: number;\n}\n\nclass B extends A {\n  ...\n}\n\nfunction f(o: typeof A) {\n  o.x ...\n}\n\nf(new A());\nf(A);\nf(B);\n```\n\nThis may seem a little bizarre, ... but what I'm doing is building a VM for another language: ActionScript3 (AS3). I'm mapping the AS3 type hierarchy to TS, which mostly works but I need a way to express that all AS3 Class objects themselves are instances of the AS3 Class class. So:\n\n```\nclass Object {\n  static x: number;\n}\n\nclass Class extends Object {\n  // inherits static x: number;\n  x: number;\n}\n\nclass A extends Object {\n  // inherits static x: number;\n}\n\n// All these assignments should type check.\nvar o: typeof Class;\no = Object;\no = Class;\no = A;\no = new Class(); // Dynamically constructed classes.\n```\n\nThese subtype relations should hold:\n\ntypeof Object <: Class\ntypeof Class <: Class\ntypeof A <: Class\ntypeof new Class() <: Class\n\nThroughout the system, the type of a AS3 Class object would be `typeof Class`, if I could mark:\n\n```\nclass Class extends Object implements typeof Class {}\n```\n\nthen I could get some type checking help, as long as I make sure that the static members of the object Class are compatible with the instance members of the Class class.\n\nA bit convoluted, I know.\n\n\n\n",
+      "PostedDate": "2014-03-14T15:31:27.067-07:00",
+      "Id": 136892
+    },
+    {
+      "Message": "Instances of `A` do not have the construct signature that `typeof A` has, and there's no way to add it. From a runtime perspective, it's unimplementable.\n\nIn theory we could have some other syntax that means \"the static side of A without its construct signatures\", but that would be different from `typeof A`",
+      "PostedDate": "2014-03-17T08:07:40.253-07:00",
+      "Id": 137074
+    }
+  ]
+}

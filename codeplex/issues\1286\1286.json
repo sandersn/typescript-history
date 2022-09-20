@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:34:37.92-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "\r\nTypeScript adds duplicates to the \"names\" list of the source map, which causes errors when that source map is parsed using the standard [source-map library](https://github.com/mozilla/source-map).  The problem appears to be caused by the TypeScript compiler using a list for adding names, where the Mozilla source-map library uses an ArraySet, which removes the duplicates, thus causing issues with index lookup of the names (as indicated in the comments by Naav in [work item 1032](https://typescript.codeplex.com/workitem/1032)).\r\n\r\nIn the abovementioned work item the problem is shown to happen with multiple files, but it is a more general problem that can be reproduced with a single file, especially with anonymous functions, as follows.  The fact that it happens within a single file also means that one cannot work around the issue by generating separate JavaScript files for each TypeScript file and then combining them with another library.\r\n\r\nblog.ts:\r\n```\r\ndeclare var angular: any;\r\n\r\nangular.module('App')\r\n    .run(function ($animator, $sniffer) {\r\n        $animator.enabled($sniffer.transitions);\r\n    })\r\n    .config(function ($locationProvider) {\r\n        $locationProvider.html5Mode(true);\r\n    });\r\n```\r\n\r\nblog.js.map generated from blog.ts by the TypeScript 0.9.0 compiler:\r\n```\r\n{\"version\":3,\"file\":\"blog.js\",\"sources\":[\"blog.ts\"],\"names\":[\"\",\"\"],\"mappings\":\"AAEA,OAAO,CAAC,MAAM,CAAC,KAAK,CAAA,CACf,GAAG,CAAC,UAAU,SAAS,EAAE,QAAQ;IAC9BA,SAASA,CAACA,OAAOA,CAACA,QAAQA,CAACA,WAAWA,CAAAA,CAAEA;AAC5CA,CAACA,CAAA,CACA,MAAM,CAAC,UAAU,iBAAiB;IAC/BC,iBAAiBA,CAACA,SAASA,CAACA,IAAIA,CAAAA,CAAEA;AACtCA,CAACA,CAAA,CAAE\"}\r\n```\r\nPlease note the duplicate \"\" names above.\r\n\r\nRun the following in node, which just tries to read the source map file:\r\n```\r\nvar SourceMapConsumer = require('source-map').SourceMapConsumer;\r\nnew SourceMapConsumer(require('fs').readFileSync('blog.js.map', 'utf8'));\r\n```\r\nThe above results in an error being thrown, namely: \"No element indexed by 1\"\r\n\r\nIt is relevant that this is an issue with the Mozilla source-map library, because that is the library used by various other libraries - such as [UglifyJS2](https://github.com/mishoo/UglifyJS2) - to consume source maps, thus this issue breaks those libraries indirectly as well.\r\n\r\nThe use of anonymous functions is a very common pattern for various callbacks used by JavaScript libraries, so this issue is very likely to happen.  The workaround, naming all functions, is also rather onerous, so I would appreciate it if this issue could be fixed soon.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-01T00:36:00.777-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Invalid source maps generated: duplicate names",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1286
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We are fixing[0] the bug in the source-map lib, but the whole point of the names array is to compress the file format further by not repeating the names in each mapping. TypeScript should follow the spirit of the format, at least until we can update the spec to forbid duplicates.\n\n[0] https://github.com/mozilla/source-map/pull/72/files",
+      "PostedDate": "2013-08-21T17:16:13.037-07:00",
+      "Id": 110696
+    },
+    {
+      "Message": "TypeScript source maps are currently unusable because of this bug. A fix would be greatly appreciated and would allow us to move from version 0.8.3 to 0.9.x",
+      "PostedDate": "2013-08-27T03:20:53.39-07:00",
+      "Id": 111264
+    },
+    {
+      "Message": "update: looks like the latest source-map lib fixes this issue on their side. Big thank you to mozilla.",
+      "PostedDate": "2013-08-27T03:24:57.843-07:00",
+      "Id": 111265
+    },
+    {
+      "Message": "We are working on the meteor-typescript integration (https://github.com/orefalo/meteor-typescript-compiler) and this issue has been a show stopper for proper sourcemap generations.",
+      "PostedDate": "2013-09-09T17:32:31.74-07:00",
+      "Id": 112927
+    }
+  ]
+}

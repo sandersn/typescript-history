@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:29.16-07:00",
+    "CommentCount": 10,
+    "Custom": "bind",
+    "Description": "Seems like there is a problem with the Function declaration when i do :\r\nclass Test {\r\n\ttest(event):void {\r\n\t\talert(\"event\");\r\n\t}\r\n}\r\nvar t:Test = new test();\r\ndocument.addEventListener(\"click\",t.test.bind(t));\r\n\r\nthe compiler complain about it :\r\n\r\nUsers/kapit/Sites/typescript/tsml/binding.ts(51,18): The name 'test' does not exist in the current scope\r\n/Users/kapit/Sites/typescript/tsml/binding.ts(52,1): Supplied parameters do not match any signature of call target:\r\n\tType 'EventListener' requires a call signature, but Type 'Function' lacks one",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-06T06:56:10.947-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Function and EventListener",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 133
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "mb?\n\n{{ var t:Test = new Test() }}\n\nbut  \"Supplied parameters do not match any signature of call target: Type 'EventListener' requires a call signature, but Type 'Function' lacks one\" is actual.\n",
+      "PostedDate": "2012-10-06T10:36:07.427-07:00",
+      "Id": 78830
+    },
+    {
+      "Message": "Sorry the example had an little error, however i wanted to point here that addEventListener does not accept the 'Function'  returned from bind.",
+      "PostedDate": "2012-10-06T14:11:21.56-07:00",
+      "Id": 78852
+    },
+    {
+      "Message": "It looks like the function object that gets returned by the call to t.test.bind(t) has lost the call signature.",
+      "PostedDate": "2012-10-06T17:02:23.623-07:00",
+      "Id": 78874
+    },
+    {
+      "Message": "lib.d.ts says:\nbind(thisArg: any, ...argArray: any[]): Function;\nSo when you call .bind(whatever) you are basically stripping the signature you defined in Test.test",
+      "PostedDate": "2012-10-07T01:43:15.57-07:00",
+      "Id": 78884
+    },
+    {
+      "Message": "A workaround:\n\n\nclass Test {\n  test(event: Event): void {\n    console.log( event.type );\n  }\n}\nvar t:Test = new Test();\n\ndocument.addEventListener(\"click\", event => t.test(event), false);\n\n\nSee also: https://gist.github.com/f96904b788065e621a54\n",
+      "PostedDate": "2012-10-07T08:48:48.133-07:00",
+      "Id": 78904
+    },
+    {
+      "Message": "We've changed the typing of 'bind' to have a return-type of 'any', which should fix this issue.  (The fix is already checked into the develop branch.)  Moving forward, we may consider a more sophisticated type specialization mechanism on 'Function' to address this in a more type-safe manner.\r\n\r\nThanks!",
+      "PostedDate": "2012-10-07T21:41:52.007-07:00",
+      "Id": 78946
+    },
+    {
+      "Message": "It will be interesting to see how much API becomes \"any\" over time",
+      "PostedDate": "2012-10-08T05:51:56.26-07:00",
+      "Id": 78983
+    },
+    {
+      "Message": "Is there any thought about adding something similar to this.type in scala?\n\nThe idea would be that any declaration could be written like this:\n    class Animal\n    {\n      private children = [];\n      getChildren():this.type[] {\n        return children;\n      }\n      addChild(child:this.type){\n        children.push(child)\n      }\n    }\n    \n    class Dog extends Animal{}\n    class Cat extends Animal{}\n    \n    var c = new Cat();\n    c.addChild(new Dog()); //error\n    \nThis could then be used for builder patterns, the bind method, etc...\n\nWithout this sort of annotation, the typical solution is to use generics (which works, but seems less elegant to me...) :\n\n    class Animal<T>\n    {\n      private children = [];\n      getChildren():T[] {\n        return children;\n      }\n      addChild(child:T){\n        children.push(child)\n      }\n    }\n    \n    class Dog extends Animal<Dog>{}\n    class Cat extends Animal<Cat>{}\n    \n    var c = new Cat();\n    c.addChild(new Dog()); //error",
+      "PostedDate": "2012-11-29T10:18:01.3-08:00",
+      "Id": 83253
+    },
+    {
+      "Message": "Assigning Jonathan/Active -- this should get fixed with generics in 0.9.x",
+      "PostedDate": "2013-02-25T16:38:24.877-08:00",
+      "Id": 91507
+    },
+    {
+      "Message": "It is kind of weird to me that the type `Function` “lacks” a call signature but `() => any` does not. I’m not sure it’s right to presume that a generic `Function` type will match any call signature, but wouldn’t it at least make sense to treat it like `() => any` for these purposes?\n\nTo wit:\n\n```ts\nfunction a(callback:(na:boolean, nanana:string, katamari:number) => number):void {}\n\nvar b:Function;\n\na(b); // TS2082\na(<() => any> b); // OK\n```",
+      "PostedDate": "2013-12-26T19:52:52.097-08:00",
+      "Id": 128480
+    }
+  ]
+}

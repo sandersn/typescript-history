@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-29T17:15:32.09-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "__reopen details (20130828):__\r\n\r\nthis is still happening in 0.9.1.1.   as a workaround i switched to use node --stack_size=4096  --max-stack-size=4096 tsc.js path\\to\\myFile.ts  and it compiles fine.\r\n\r\ni'd say a repro would be to take your most complex nested generics files, and compile with a very small stack and see where it explodes.\r\n\r\nfyi my generics fail when i have a generic class that returns itself in a callback, example:\r\n\r\n```\r\nclass myClass<TParent>{\r\nconstructor(parent:TParent, callback : (_this:myClass<TParent>)=>TParent){\r\ncallback(this);\r\n}\r\n}\r\n```\r\nwhen i use this, the .ts file that instantiates myClass is the one with maxstack compile errors\r\n__edit:__  actually, it only compiles fine using commonjs.   when i use amd, i still get maxstack errors.\r\n\r\n__original issue:__\r\nwhen using the visualstudio plugin and updating my tsc.js, typescript.js, typescriptservices.js to either the develop or 0.9.1.1 branch LKG,  or using the 0.9.0.1 installer, I get the following error when building a small typescript file that references two complex typescript files:\r\n\r\n```\r\ntsc.js(34444, 9) JavaScript runtime error : Out of stack space\r\n```\r\n\r\nif each referenced file is built one-at a time, that error does not occur.  only with the file that references both.\r\n\r\n\r\nto help you better understand the code characteristics (complex generics in both dependencies) here is the code from the file that causes the out-of-stack-space error\r\n\r\n```\r\n/// <reference path=\"../novaleaf/browser/common-dependencies.ts\"/>\r\n/// <amd-dependency path=\"../novaleaf/browser/common-dependencies\" />\r\n\r\nimport corelib = require(\"../novaleaf/core-lib\");\r\nimport smooth = require(\"../novaleaf/browser/angular-smooth\");\r\n\r\n\r\ninterface IModel {\r\n\thello: string;\r\n}\r\n\r\nvar __ = corelib.__;\r\nvar logger = corelib.logger;\r\n\r\nvar app = new smooth.Module(\"app\", []);\r\n\r\nvar controller = new smooth.Controller<IModel>(\"controller\",app,(thisCtrl)=>{thisCtrl.$scope.hello=__.format(\"world {0}!\",2);});\r\n```\r\n__UPDATE:__\r\ni was able to stop the error from occuring by removing the generic parameter to the Controller class (removing the <IModel> from the code above)\r\n\r\nso it looks like this is due to deeply nested generic types   (my code has maybe nested generic types 5 or 6 levels deep in various combinations)",
+    "LastUpdatedDate": "2013-08-29T17:15:32.09-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T21:20:33.51-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "0.9.1.x bug: out of stack space (nested generics)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1466
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I was able to mitigate the issue by truncating the nested generic flow, by having my internal class use something like this:\n\n```\nclass MyType<T>{\npublic var1:NestedType<MyType<any>>;\n}\n\n```\ninstead of something like this which causes the overflow\n```\nclass MyType<T>{\npublic var1:NestedType<MyType<T>>;\n}\n\n```",
+      "PostedDate": "2013-08-08T22:34:00.697-07:00",
+      "Id": 109147
+    },
+    {
+      "Message": "Thanks for reporting this issue. Unfortunately I have not been able to reproduce it with the information you provided.\n\nHowever we did fix an issue in the last 2 days with the same stack as you're reporting in the release 0.9.1.1 branch.\n\nIf you can include more information in the bug and re-open the bug (button on top), we can try to reproduce this again.\n\r\n\r** Closed by paulb 08/09/2013 12:47PM",
+      "PostedDate": "2013-08-09T12:47:32.303-07:00",
+      "Id": 111373
+    },
+    {
+      "Message": "I am wondering if my usage  (see my update thoughts on a repo, in the description)  leads to the compiler getting stuck in an infinite loop.\n\ni have generic classes that create an instance of an internal helper generic class,   and that takes in the first class as a constructor parameter and returns it in a callback.....  i could see how that could be very confusing to a compiler.   \n\nthough i tried creating a simple repro and haven't been able to, if you want my codebase for a repro i can supply it, but unfortunatly i'd an NDA signed so that's why my codebase hasn't been supplied yet.\n\nPS: my mitigation was to remove generics from my internal helper class declaration.   logic is still the same and everything works.   \n",
+      "PostedDate": "2013-08-28T22:22:15.567-07:00",
+      "Id": 111506
+    },
+    {
+      "Message": "I'm not able to reproduce this in the develop branch with your newer snippet, though I do believe there's probably still at least one issue of this variety lurking somewhere. I've tried a few different permutations of generic classes to provide as the TParent type in your snippet but haven't seen any unusual errors. If you're able to check your project against the develop branch it's possible the issue has already been fixed since the 0.9.1.1 release. Alternatively, if you'd like to share the full project with us privately that's also an option, you can direct message me on Codeplex and we can try to sort it out. Please re-open this if you're able to narrow it down any further or discover any other helpful information, these types of bugs are definitely a high priority for us to fix.",
+      "PostedDate": "2013-08-29T17:15:27.473-07:00",
+      "Id": 111614
+    }
+  ]
+}

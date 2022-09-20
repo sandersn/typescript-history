@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1070067",
+    "ThreadId": "450489",
+    "Html": "I'm doing an experiment porting Backbone to TypeScript just to see how it would go: <a href=\"https://github.com/nvivo/backbone-ts/blob/bf23446710e586bf7870cfdebdc008455b481762/src/Backbone.ts\" rel=\"nofollow\">https://github.com/nvivo/backbone-ts/blob/bf23446710e586bf7870cfdebdc008455b481762/src/Backbone.ts</a><br />\n<br />\nOne thing I'd like to do is to split the code into multiple files, but it gets to a problem where the main scope has a lot of methods, aliases and variables that are accessed through closures everywhere in the code.<br />\n<br />\nBecause of this, I cannot break the code into multiple files without moving them to some place that can be accessed from other files, like an &quot;config&quot; or &quot;utility&quot; module.<br />\n<br />\nI could compile the files individually first, then merge them in the right places using an external builder like grunt, but this would make most of typescript type checks useless, as I would need a lot of &quot;declare&quot; statements at the top of each file to compensate for things not being where they should during development.<br />\n<br />\nSince JavaScript has no concept of internal classes or protected properties, we need to use closures to avoid exposing some internals. But since Typescript has no way to merge code into the same scope, I'm finding that either we have everything public or we have everything in the same file.<br />\n<br />\nSo, are there any plans for 1.0 or after that to support compiling multiple files to the same scope, similar to how partial classes work in C#? Something like:<br />\n<br />\nFile1.ts<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\npartial <span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">var</span> x = 1;\n}\r\n</pre></div>File2.ts: <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\npartial <span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">function</span> doSomething() {\n        <span style=\"color:Blue;\">int</span> count = x;\n    }\n} \r\n</pre></div>This would get merge to something like this during compilation:<br />\n<br />\nFile1: <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">var</span> x = 1;\n    <span style=\"color:Blue;\">function</span> doSomething() {\n        <span style=\"color:Blue;\">int</span> count = x;\n    }\n}\r\n</pre></div>It would be nice to see how the developers envision this kind of scenarios, if something will be baked into the language or if the idea is to have this into the build process.<br />\n<br />\nAlso, please le me know if I'm overcomplicating this. If there is a better solution already, please let me know.<br />\n",
+    "PostedDate": "2013-07-18T08:18:51.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070704",
+    "ThreadId": "450489",
+    "Html": "Internal module declarations already merge when multiple declarations are included in the same compilation (see 10.5 Declaration Merging in the language specification). Likewise for interfaces (see 7.2). Merging external modules presents some additional challenges which we have discussed but are not currently supported.<br />\n",
+    "PostedDate": "2013-07-19T16:09:47.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070709",
+    "ThreadId": "450489",
+    "Html": "Thankd Dan.\r<br />\n<br />\nI'm talking about merging the actual code, not declarations.\r<br />\n<br />\nThis is just an idea, but I think it would be good to take closures between files into consideration after 1.0 somehow.<br />\n",
+    "PostedDate": "2013-07-19T16:32:46.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1071483",
+    "ThreadId": "450489",
+    "Html": "The actual code is merged, you just need to do a little more work to handle circularity like this. For example:\r<br />\n<br />\na.ts:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> x = 1;\n}\r\n</pre></div>b.ts:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> Foo { <span style=\"color:Green;\">// alternatively this could be a referenced .d.ts for a.ts</span>\n    <span style=\"color:Blue;\">var</span> x: <span style=\"color:Blue;\">number</span>; <span style=\"color:Green;\">// this is necessary for the compiler to not complain about Foo.x below</span>\n}\n\n<span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> doSomething() {\n        <span style=\"color:Blue;\">var</span> count = Foo.x;\n    }\n} \r\n</pre></div>tsc a.ts b.ts --out m.js results in this m.js:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo;\n(<span style=\"color:Blue;\">function</span> (Foo) {\n    Foo.x = 1;\n})(Foo || (Foo = {}));\n<span style=\"color:Blue;\">var</span> Foo;\n(<span style=\"color:Blue;\">function</span> (Foo) {\n    <span style=\"color:Blue;\">function</span> doSomething() {\n        <span style=\"color:Blue;\">var</span> count = Foo.x;\n    }\n    Foo.doSomething = doSomething;\n})(Foo || (Foo = {}));\r\n</pre></div>Note that the order of emit is based on the command line order of files so you need to manage circularity yourself. Now you'd want a .d.ts file for the combined module definition so that another file could say /// &lt;reference path='m.d.ts'/&gt; and get the full strongly typed module definition, and for a concat tool to merge m.js with your file that references its implementation code. \r<br />\n<br />\nObviously there are a few extra steps that you have to deal with but it does work. We have talked in the past about things like a 'partial' keyword. If you want to file a Codeplex suggestion for any particular scenarios in this area feel free.<br />\n",
+    "PostedDate": "2013-07-22T13:20:56.603-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1071521",
+    "ThreadId": "450489",
+    "Html": "Hi Dan,<br />\n<br />\nI'm talking about really merging the files, nothing to do with the declarations.<br />\n<br />\nIn order to make this work as closures, this would need to be built into the same scope:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo;\n(<span style=\"color:Blue;\">function</span> (Foo) {\n    <span style=\"color:Green;\">// contents of file 1</span>\n    <span style=\"color:Blue;\">var</span> x = 1;\n\n    <span style=\"color:Green;\">// contents of file 2</span>\n    <span style=\"color:Blue;\">function</span> doSomething() {\n        <span style=\"color:Blue;\">var</span> count = x;\n    }\n    Foo.doSomething = doSomething;\n})(Foo || (Foo = {}));\r\n</pre></div>I'm asking if the development team have a plan to map the closure pattern between files to typescript.<br />\n<br />\nI have been porting some code to TypeScript, but in order to make functions accessible to other files, I had to move them from closures to modules and make them &quot;visible&quot; to the outside world as you did.  Sometimes this is not desirable, as closures are the only way to have real &quot;private&quot; members in javascript.<br />\n<br />\nThe current solution I found was to create the closures in a different &quot;project&quot;, declare them again like you did in a .d.ts, and compile the 2 sets of files independently, then use a tool like grunt to merge the files and add an outer closure, so the code would look like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n(<span style=\"color:Blue;\">function</span>() {\n   <span style=\"color:Green;\">// contents of helper methods and variables accessed through closures</span>\n   <span style=\"color:Green;\">// the rest of the project merged after compilation</span>\n})();\r\n</pre></div>This would also be needed to create something like &quot;noConflict&quot; that almost every library uses.<br />\n<br />\nSo, is there a way or is there a plan to support this in the future, or the direction would be to use external tools to create libraries like we have today in javascript?<br />\n",
+    "PostedDate": "2013-07-22T14:55:19.203-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1072019",
+    "ThreadId": "450489",
+    "Html": "Ah, I see, you want to share privates/non-exported members. I suspect plans to address this particular scenario in a more seamless way in the future may be predicated on how ECMAScript 6 ends up handling private names and any potential alignment with that. <br />\n",
+    "PostedDate": "2013-07-23T17:00:37.447-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1055434",
+    "ThreadId": "446695",
+    "Html": "ES modules seem to be stabilizing (see 4.10 in the <a href=\"https://mail.mozilla.org/pipermail/es-discuss/2013-June/030958.html\" rel=\"nofollow\">May tc39 meeting notes</a>, as well as the updated wiki links in there), though sadly with lexical modules delayed to ES7.<br />\n<ol>\n<li>What are your plans for aligning the TS and ES6/7 module systems?</li>\n<li>Have the practical issues encountered by TS users been addressed in the ES6 design?</li>\n</ol>\n",
+    "PostedDate": "2013-06-11T08:18:20.21-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055461",
+    "ThreadId": "446695",
+    "Html": "We had hoped to see modules converge in TC39 sooner so that we could align fully with the ES6 proposals in 1.0.  However, given the current state of the ES6 modules proposal and our desire to stabilize TypeScript 1.0, our current plan is:<br />\n<ol>\n<li>\nTypeScript 1.0 will continue to have internal modules, which are no longer part of ES6.  These may be related to future ES7 lexical modules, but it's speculative to say at this point.  They are a sugar for IIFE patterns in JavaScript that is important in practice in TypeScript for aligning value and type namespacing in a declarative way. <br />\n</li>\n<li>\nTypeScript 1.0 will have external modules using the &quot;import http = require('http')&quot; syntax that is currently in the TypeScript specification.  In 0.9, we have updated this to handle &quot;export =&quot; patterns so that TypeScript can conveniently express AMD/CommonJS patterns using statically checked declarative syntax.  This is semantically very close to ES6 modules, but the import syntax has some differences.  TypeScript is more closely aligned with AMD/CommonJS, as it codegens to target these loaders instead of to a separate loader with different behavior as is the case for ES6.  As pointed out in the TC39 notes you linked above, I continue to be concerned about the &quot;export default&quot; divergence from AMD/CommonJS, which is of course also a divergence from what TypeScript 1.0 will offer.<br />\n</li>\n<li>\nTypeScipt 1.0 will support the &quot;module 'foo' { ... }&quot; syntax from ES6 only in &quot;declare module&quot;s used for typing JavaScript components.  This syntax in ES6 is primarily motivated by being a target for concatenation tools, and so is not needed in TypeScript (concatenation works at the level of the JavaScript code using AMD/CommonJS in TypeScript).  This part of the ES6 design is also the least proven so far.<br />\n</li>\n<li>\nTypeScript post-1.0 will support ES6 module syntax once it has fully stabilized.  Similar to other ES6 features, we will be layering in increasing pieces of ES6 syntax, and allowing many of them to be used targeting ES3/5 where the code generation can be done in a simple and clean way.  Where it can't we will only allow use of the constructs when targeting ES6, as is done for &quot;get/set&quot; accessors in TypeScript today for ES5.  Given &quot;export default&quot;, ES6 modules may unfortunately not be compilable to ES3/5 in a simple and clean way.<br />\n</li>\n</ol>\n",
+    "PostedDate": "2013-06-11T09:34:30.553-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055859",
+    "ThreadId": "446695",
+    "Html": "Thanks for the info! I understand that the delays and redesigns of ES6 modules -not to mention the parts now postponed to ES7- have made it difficult to match ES6 while making progress with TS. Could you elaborate on why <code>export default</code> causes more compilation trouble than <code>export =</code> (the meeting notes suggest static checking is a problem, but your point 2 includes &quot;statically checked&quot;, and TS has more static interface info than other implementations)?\r<br />\n<br />\nNevertheless, it seems odd to have a TS1.0 (the first post-preview release) with incompatible module syntax for the parts shared between ES6 and TS. Is there no hope of aligning the syntax in time for TS1.0? It sounds as if you are not confident about ES6 module syntax stability yet.\r<br />\n<br />\nAlso, since ES6 seems to focus on loaders and configuration over lexical modules, what are your plans for supporting those aspects of ES6?<br />\n",
+    "PostedDate": "2013-06-12T07:29:58.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057896",
+    "ThreadId": "446695",
+    "Html": "<strong>clausreinke wrote:</strong><br />\n<blockquote>\nCould you elaborate on why <code>export default</code> causes more compilation trouble than <code>export =</code> (the meeting notes suggest static checking is a problem, but your point 2 includes &quot;statically checked&quot;, and TS has more static interface info than other implementations)?<br />\n</blockquote>\nIMO, 'export = ' is more flexible than <code>export default</code> (I suspect you meant it would be used in statement like this: export default class Foo{}, that mean to export the class Foo from the module) as you`re able to export an instance of any class, not just a class reference.<br />\n",
+    "PostedDate": "2013-06-17T12:19:54.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058160",
+    "ThreadId": "446695",
+    "Html": "<ol>\n<li>\nI'm a little concerned about &quot;This syntax in ES6 is primarily motivated by being a target for concatenation tools, and so is not needed in TypeScript&quot;.<br />\n</li>\n</ol>\nCan you elaborate on why it's not needed?<br />\n<br />\nMy impression is that it would be easier to know how to 'load' that resource both by the browser or by a compiler like TypeScript, examples here:<br />\n<a href=\"https://gist.github.com/wycats/51c96e3adcdb3a68cbc3\" rel=\"nofollow\">https://gist.github.com/wycats/51c96e3adcdb3a68cbc3</a><br />\n<br />\nOr these here:<br />\n<a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples\" rel=\"nofollow\">http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples</a><br />\n<br />\nEither way, I'm starting to be utterly confused by the changes to the modules spec even if I've read the discussions, <br />\n<br />\nWhat I use right now is:<br />\n<br />\n/// &lt;reference path=&quot;classes/misc/color.ts&quot; /&gt;<br />\n/// &lt;reference path=&quot;classes/html/dom.ts&quot; /&gt;<br />\n<br />\nSo while I'm loving TypeScript, dealing with the modules system to organize my code is a PITA.<br />\n<br />\n// Specific import declarations are nice:<br />\nimport { events } from 'classes/html/dom';<br />\nimport { Color } from 'classes/misc/color.ts';<br />\n<br />\n// loading from a URL<br />\nmodule JSON from '<a href=\"http://json.org/modules/json2.js';\" rel=\"nofollow\">http://json.org/modules/json2.js';</a><br />\n<br />\nThat's about the only syntax I'm tempted to use.<br />\nThere seems to be a strong desire to avoid namespaces and polluting the global scope at the cost of unnecessary complexity.<br />\n<br />\nI do agree with &quot;This part of the ES6 design is also the least proven so far.&quot;<br />\n",
+    "PostedDate": "2013-06-18T05:40:03.503-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1059517",
+    "ThreadId": "446695",
+    "Html": "First of all, really like how the type system turned out. The 0.9 release with the generics added to it really makes it ready for everyday use in my opinion, great job.\r<br />\n<br />\nBut I was hoping we would also get such an &quot;improvement iteration&quot; that would fix the current module approach. So improve it before we would get a final 1.0 version. Right now I often get the feeling that the module system is more of a burden than a help. And because of that it doesn't really encourage or promote writing modular code. \r<br />\n<br />\nWhat I would see as main areas for improvement:\r<br />\n<br />\n1) Don't differentiate between internal and external modules at language level. Just use everywhere the external module syntax.\r<br />\n<br />\nMake it a compiler/package option when people want to package multiple modules/files into a single file (like most languages do).\r<br />\nAlso when you develop a module that could be reused by other developers, you don't have to make two versions of it. We might of course have to give up on the &quot;open&quot; nature of internal modules, but at least a price I'm willing to pay.\r<br />\n<br />\n2) Allow directly to specify what to import, something along the lines of:<br />\n<pre><code>            import {sum, pi} from 'math';\n</code></pre>\n\nThis makes using modules much more elegant and not everywhere in your code you have to use prefixes (Math.pi) or define aliases (pi = Math.pi).\r<br />\n<br />\nWith these two items fixed, I would say much of the current issues I'm having with modules would be gone (not sure that is the case for others as well).<br />\n",
+    "PostedDate": "2013-06-21T01:04:41.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1060447",
+    "ThreadId": "446695",
+    "Html": "I would have liked to get some more improvements into the module system before 0.9 went out the door, but we ultimately opted to keep things generally the same.  I suspect we'll do shorthand like you suggest (which is, or at least was, part of the ES6 proposal) that allows you to import a few symbols from a module.<br />\n\r<br />\nOne thing we may support is a way to alias imports, like you suggest.  Something like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> pi = Utils.Math.pi;\r\n</pre></div>It didn't make it into 0.9.0, but may be in for 0.9.1.\r<br />\n<br />\nAs for not differentiating between internal and external modules - we're being conservative here because we'd like to have a design that works well with ES6 as ES6 matures instead of coming up with a design that may directly conflict.  If they work together, we can just support additional syntax in the future that plays well with the existing TypeScript syntax.<br />\n",
+    "PostedDate": "2013-06-24T08:52:03.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1249811",
+    "ThreadId": "446695",
+    "Html": "Any update on this after the typescript 1.0 ? If not, what alternatives do you have when you use typescript but don't want the coupling to the module system/build tools?<br />\n",
+    "PostedDate": "2014-05-26T18:34:41.523-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250118",
+    "ThreadId": "446695",
+    "Html": "We're still planning to align with the ES6 module system when it lands.  The external module system in TypeScript is fairly decoupled from the rest of the language in that it's a pretty clear opt-in.  For ES6 modules, we'd likely add it to the language without replacing the existing system.  They fill different roles.  The external modules that TypeScript currently supports target RequireJS and CommonJS, which isn't the focus of ES6 modules.  <br />\n",
+    "PostedDate": "2014-05-27T09:41:27.227-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

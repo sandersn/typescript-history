@@ -1,0 +1,122 @@
+[
+  {
+    "Id": "1040432",
+    "ThreadId": "442828",
+    "Html": "Hi,\r<br />\n<br />\nI'm using the LKG for 0.9 and I'm noticing that the compilation time is taking a long time.\r<br />\n<br />\nI did a test creating a file with &quot;class Test {}&quot; and call &quot;tsc test.ts&quot; - the process starts and goes to 100% CPU for about 5 seconds in a i5 2.4GHz cpu.\r<br />\n<br />\nI know its in alpha, but is this expected? 0.8 used to be almost instantaneous.<br />\n",
+    "PostedDate": "2013-05-07T08:28:10.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1040847",
+    "ThreadId": "442828",
+    "Html": "I can confirm this behaviour.<br />\n",
+    "PostedDate": "2013-05-08T06:13:12.213-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1040890",
+    "ThreadId": "442828",
+    "Html": "Yeap, this is a known issue.  We just finished up with the rewrite of the language service and compiler to make them much faster when doing interactive editing.  Since we're just wrapping up the switch now, we haven't had time yet to go back and optimize.  We're looking into it.<br />\n",
+    "PostedDate": "2013-05-08T07:25:57.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041902",
+    "ThreadId": "442828",
+    "Html": "This is one of the biggest problems at the moment.\r<br />\n<br />\nSince upgrading to 0.9, project compilation times in Visual Studio have increased dramatically.\r<br />\n<br />\nI'm not sure what interactive editing means, but we're not seeing any improvements in the overall user experience.\r<br />\n<br />\nThe workflow I have in mind is: edit &quot;foo.ts&quot; then build the project via Shift + F6.<br />\n",
+    "PostedDate": "2013-05-10T07:46:26.2-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042117",
+    "ThreadId": "442828",
+    "Html": "Interactive editing basically means the Visual Studio experience, i.e., the speed with which accurate completion lists are displayed, the speed with which you can get Quick Info for an object, etc (or in theory other tools which build on our language service). These things should all be massively faster and more accurate than they were in 0.8.3. \r<br />\n<br />\nIf you're not seeing that be the case we'd be interested to see whatever project structure you have which is not improved. <br />\n",
+    "PostedDate": "2013-05-10T15:48:33.773-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042430",
+    "ThreadId": "442828",
+    "Html": "@danquirk, \r<br />\n<br />\nInteractive editing defined in that way is certainly much faster in 0.9. That was noticeable almost straight away.\r<br />\n<br />\nI'm glad that has been fixed, because with 0.8.3 it was at times quicker to type out ILongAndUnwieldyName than having to wait for the completion list.\r<br />\n(There are a number of places where the completion lists don't show up at all. We will report these cases if they still exist after the stable 0.9 is out.)\r<br />\n<br />\nMy personal workflow is most often a quick edit and build. Rarely do I spent more than two minutes editing a file without building. One reason for this workflow is that many script errors are just not picked up by the Visual Studio real-time error underlining mechanism (the red squiggly line). Furthermore, with 0.9 there are many occurrences of spurious red squigglies popping up - often this seems to be a due to some stickiness, where the error does not go away after a related file has been corrected.\r<br />\n<br />\nIn the light of this mismatch between the code and real-time feedback, the best way to catch out errors is to actually build the project.\r<br />\n<br />\nAt present a project with 8 TypeScript files takes about 7-8 seconds to compile.<br />\n",
+    "PostedDate": "2013-05-12T06:13:18.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1042438",
+    "ThreadId": "442828",
+    "Html": "Hopefully compile times will be dramatically improved in 0.9.0 stable release ...<br />\n",
+    "PostedDate": "2013-05-12T07:15:25.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1043103",
+    "ThreadId": "442828",
+    "Html": "@nabog\r<br />\n<br />\nHopefully you will see the speed and correctness of squiggles improve as we get closer to a final release and feel more confident in relying on them. There have certainly been a number of issues in the 0.9 transition with incorrect errors 'sticking' as you mention (particularly with generics and generic specializations). We've been making an effort to clean up all these cases as best we can, we certainly don't want you to feel the need to build to get reliable error reporting. In general I have felt the squiggles are fairly reliable with recent bits, if you have any cases that repro bad behavior do file issues.\r<br />\n<br />\n@jzvelc\r<br />\n<br />\nYes we are intending to invest in performance improvements for batch compilation as we get closer to final.<br />\n",
+    "PostedDate": "2013-05-13T15:30:06.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1043313",
+    "ThreadId": "442828",
+    "Html": "@danquirk, glad to see you guys are on top of these issues.\r<br />\n<br />\nThe bugs with the Visual Studio real-time error reporting mechanism are rather difficult to reproduce, because most of the time they crop up when one is working on a file with a &lt;reference&gt; include that is importing types from multiple projects.\r<br />\n<br />\nI've tried reporting a couple but they've generally been closed with a peremptory &quot;Can't reproduce&quot;.\r<br />\n<br />\nIf the TypeScript compiler itself were organised into multiple projects then it is more likely that these problems that bedevil real-world projects will be more easily picked up internally.\r<br />\n<br />\nAlso thought I'd let you know that we think a great job has been done with the generics.\r<br />\nThere is a critical bug that is preventing wider adoption in large projects: <a href=\"https://typescript.codeplex.com/workitem/974\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/974</a>. Because the compiled .d.ts files are faulty they cannot be referenced in other projects. We have had to remove the --declarations option and manually maintain the .d.ts files at present.  I hope this will be fixed with the stable release.<br />\n",
+    "PostedDate": "2013-05-14T04:48:43.133-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1043556",
+    "ThreadId": "442828",
+    "Html": "Yep, trust me I know how painful it is to try to get good repros for some of these editing related issues :)\r<br />\n<br />\nIt's useful to know you're seeing it particularly with /// references and multiple projects, I'll try to take a look at some cases like that. Glad you've been finding generics working well overall though.\r<br />\n<br />\nAs far as that declaration file bug goes, it should be fixed quite soon. <br />\n",
+    "PostedDate": "2013-05-14T14:22:55.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1044121",
+    "ThreadId": "442828",
+    "Html": "@nabog FYI 974 is fixed as of this morning, in case you aren't subscribed to updates on the issue.<br />\n",
+    "PostedDate": "2013-05-15T14:28:56.067-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1044289",
+    "ThreadId": "442828",
+    "Html": "Are there any instructions available how to use the lastest code from the develop branch for the VS Plugin and for the tsc command line compiler?<br />\n",
+    "PostedDate": "2013-05-15T23:50:34.687-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1044323",
+    "ThreadId": "442828",
+    "Html": "@danquirk, thanks! (hopefully that will make it into the LKG before long.)\r<br />\n<br />\n@TobiasHei, instructions are to be found here: <a href=\"http://blogs.msdn.com/b/typescript/archive/2013/01/29/trying-the-latest-typescript-build.aspx\" rel=\"nofollow\">http://blogs.msdn.com/b/typescript/archive/2013/01/29/trying-the-latest-typescript-build.aspx</a>\r<br />\n<br />\n(The folder for typescriptServices.js doesn't seem to be right as specified in the post - just search for the file in Common7/IDE)<br />\n",
+    "PostedDate": "2013-05-16T01:11:36.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1044656",
+    "ThreadId": "442828",
+    "Html": "How does one compile TS into an exe (tsc.exe)? The Jakefile only seems to have instructions for generating the tsc.js.\r<br />\n<br />\nWe'd like to try out 0.9.0 and use the new version (since the released alpha takes about 3 minutes to compile our code - compared to 20 seconds in 0.8.3), but we use the .exe as part of msbuild to do the compilation.<br />\n",
+    "PostedDate": "2013-05-16T11:08:28.027-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1046061",
+    "ThreadId": "442828",
+    "Html": "Like you say, the Jakefile outputs the tsc.js, which you can run with any ES3-compatible JS engine.  When we ship the .exe, we build it in-house and ship with a Microsoft JS engine.  You could think of the .exe as the same as the tsc.js, except we pick the engine for you.<br />\n",
+    "PostedDate": "2013-05-20T08:56:49.977-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

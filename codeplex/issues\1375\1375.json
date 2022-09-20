@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.003-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Currently the Visual Studio TypeScript build target requires the TypeScript compiler to be installed on your system via the MSI. This poses a problem, because it means that adding the build target to the project file would cause the build to break, because the build server does not have the MSI installed. \r\n\r\nInstead of requiring an MSI to be installed, how about a portable version of the compiler and build targets that can use a local copy of the compiler and support files (definitions, etc...)? As a bonus, how about creating a NuGet package that copied the TypeScript compiler, build target files, and support files/definitions into the solution's local /packages directory, and have the build target reference *that* instead of a globally installed typescript?\r\n\r\nThe visual studio extension would then become optional for building the project. But, it would have to be cognizant of compiler versioning and use the project's referenced version of TypeScript for intellisense/compiler errors and side-by-side view. \r\n\r\nThis solves three problems: first, it means the solution can build on the build server without asking for an MSI to be installed on the build server (a tough sell, I assure you). Second, it allows us more fine grained control over TypeScript compiler versioning across multiple projects/solutions. Finally, third party NuGet packages that use TypeScript would then be able to take a dependency on the typescript compiler in order to indicate compiler version requirements. For instance, if this were implemented now, then a third party typescript library could indicate that it requires version 0.9 of the compiler or above because it makes use of generics.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-21T17:49:24.943-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Install-free .targets file + NuGet package",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 6,
+    "Id": 1375
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Marking as suggestion",
+      "PostedDate": "2013-07-22T09:51:29.607-07:00",
+      "Id": 106937
+    },
+    {
+      "Message": "We would be really gratefull, if you can do this.",
+      "PostedDate": "2013-11-04T09:06:51.047-08:00",
+      "Id": 121712
+    },
+    {
+      "Message": "I think this is a fantastic suggestion.  \n\nSo that we were able to add the TypeScript build bits and pieces to the csproj file we've had to find a way to disable the TypeScript build on the build server (essentially by only enabling the build in DEBUG mode - details [here](http://icanmakethiswork.blogspot.co.uk/2013/10/getting-typescript-compile-on-save-and-continous-integration-to-play-nice.html))\n\nA longer term solution as suggested here would be fantastic.  NuGet FTW!",
+      "PostedDate": "2013-11-05T01:32:47.637-08:00",
+      "Id": 121815
+    },
+    {
+      "Message": "My workaround was as follows: \n\n1. Copy the installed TypeScript compiler and MSBuild target files into TFS in a /Tools/TypeScript directory. I had to support both VS2012 and VS2013 simultaneously, but I don't recommend it.\n2. I then had to modify the .csproj .target file reference to point to the TypeScript target file in /Tools/TypeScript. \n3. I also had to modify the reference to the default TypeScript arguments file at the top of the .csproj file.\n4. Then, I modified the TypeScript MSBuild target in /Tools/TypeScript - changing any references to the globally installed TypeScript compiler or MSBuild files to instead point to the version in /Tools/TypeScript.\n\nThis works with or without TypeScript installed on the build server. I was able to get both compile on save and compile on build to work locally, and additionally I was able to get WebDeploy working with the .js output files.\n\nThis is pretty much what I would expect the .NuGet package to do (well, except using packages/TypeScript instead of Tools/TypeScript), except that it would, additionally:\n1. Modify the existing TypeScript .target references in the .csproj, or add them if they aren't there, upon installing the NuGet package (I have no idea how to do this. Would appreciate help with this, if anyone's interested).\n2. [Optional] Modify the Visual Studio TypeScript language service to use the TypeScript compiler from NuGet to compile on save, rather than the globally installed one. This is optional/low-priority because you would presumably already need to keep the language service and the NuGet package in sync version wise, and the language service is able to read the same configuration properties from the .csproj file as the MSBuild target, so they produce the same output.\n\nIf someone with NuGet packaging and scripting experience wants to collaborate on this, I could provide my modified MSBuild files, and you could package it up in a NuGet package with the right .csproj file modifications/additions to reference the locally installed version of the TS compiler.",
+      "PostedDate": "2014-02-06T23:34:49.763-08:00",
+      "Id": 132903
+    },
+    {
+      "Message": "I decided to take a look at doing something like this.\n\nI did it really quick and it probably won't work all that great on first try.  I didn't get a chance to test on a build server or anything, but it might be something that is worth looking at.\n\n[Typescript.Build Project on Github](https://github.com/aaboyd/typescript.Build/)\n\nThe README.md and source code explains things more thoroughly.  Any / all feedback is welcome.\n\n_NOTE : It is not uploaded to nuget, because of the limited testing._",
+      "PostedDate": "2014-03-05T23:08:40.98-08:00",
+      "Id": 136007
+    }
+  ]
+}

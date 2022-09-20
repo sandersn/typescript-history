@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "```\r\nclass Animal {\r\n}\r\n\r\nclass Greeter {\r\n\tgreet<T extends Animal>(): T {\r\n\t\tvar thing:Animal = new Animal();\r\n\t\treturn thing;\r\n\t}\r\n}\r\n\r\nvar animal = new Greeter().greet<Animal>(new Animal());\r\n```\r\n\r\nThe previous code returns the error \"Type Animal is not assignable to type T\". The following code, however, does not cause any compiler errors.\r\n\r\n```\r\nclass Animal {\r\n}\r\n\r\nclass Greeter {\r\n\tgreet<T extends Animal>(thing:T): T {\r\n\t\treturn thing;\r\n\t}\r\n}\r\n\r\nvar animal = new Greeter().greet<Animal>(new Animal());\r\n```\r\n\r\nLink to Playground: http://www.typescriptlang.org/Playground#src=class%20Animal%20%7B%0A%7D%0A%0Aclass%20Greeter%20%7B%0A%09greet%3CT%20extends%20Animal%3E(thing%3AT)%3A%20T%20%7B%0A%09%09thing%20%3D%20new%20Animal%0A%09%09return%20thing%3B%0A%09%7D%0A%7D%0A%0Avar%20animal%20%3D%20new%20Greeter().greet%3CAnimal%3E(new%20Animal())%3B",
+    "LastUpdatedDate": "2015-04-19T13:09:11.147-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2015-04-18T14:54:24.947-07:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Returning With Generic Type Not Correctly Inferring Types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2665
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This looks correct to me. T is constraint to Animal, so that means that T is assignable to A, but does not imply that Animal is assignable to T.\n\n```\ngreet<T extends Animal>(thing:T): T {\n   var a: Animal = thing; // OK\n   var t: T = new Animal(); // Error;\n}\n```\n\nthis makes sense as T can be something else other than Animal, in fact it is most properlly is:\n\n```\nclass Dog extends Animal {\n    woff: number;\n}\n\nvar a = new Animal();\nvar dog = new Dog(); \n\na = dog;  // OK a Dog is an Animal\ndog = a;  // Error a does not have woff\n```\n\nif you are sure that your Animal is assignable to T, you can cast it:\n\n```\ngreet<T extends Animal>(thing:T): T {\n    thing = <T> new Animal();\n    return thing;\n}\n```\n\nAlso please note that TypeScript has moved to [github](https://github.com/Microsoft/TypeScript). for new issues please file them on the TypeScript [github issue tracker](https://github.com/Microsoft/TypeScript/issues).",
+      "PostedDate": "2015-04-19T13:09:11.147-07:00",
+      "Id": 183113
+    }
+  ]
+}

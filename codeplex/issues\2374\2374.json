@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Consider the case where you *did* change common.ts. You'd clearly want common.d.ts recompiled and for a.ts to see the changes in common.ts.\n\nIf you want separate compilation, you can use a third-party build system that might have support for this, or set up your .d.ts files to emit to a different folder.\n\nFeel free to log a suggestion bug with more details if you think you have a proposal that would be straightforward to implement without complicating the actually-changed-the-referent scenario. I'd be happy to take a look. Thanks!",
+    "ClosedDate": "2014-04-03T14:02:43.063-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "tsc does more work than it needs to when compiling a file which references external modules.\r\n\r\n\r\nGiven two external modules: a.ts and common.ts\r\n\r\n```\r\n// a.ts\r\nimport common = require('common');\r\nexport var name: string = common.decorate('external module a');\r\n```\r\n\r\n```\r\n// common.ts:\r\nexport function decorate(s: string): string {\r\n    return '<' + s + '>';\r\n}\r\n```\r\n\r\nCompiling common.ts via `tsc -m amd -d common.ts` will write to `common.js` and `common.d.ts`. This is expected.\r\n\r\nCompiling a.ts via `tsc -m amd -d a.ts` will write to `a.js` and `a.d.js` **as well as** `common.js` and `common.d.ts`. This is unexpected since all that tsc should need to compile `a.ts` is `common.d.ts`.\r\n\r\nBesides the obvious inefficiency (common.ts is recompiled as many times as it is referenced), it also makes tsc incompatible with build tools (like tup) that enforce repeatable builds. They make the assumption that an output file is produced by exactly one unique build step.\r\n\r\n\r\nUnfortunately, it appears that this behavior is codified in the spec: Section 11.1.1, bullet point 2 of the spec reads:\r\n\r\n\"An external import declaration that specifies a relative external module name (section 11.2.1) \r\nresolves the name relative to the directory of the containing source file. If a source file with the \r\nresulting path and file extension ‘.ts’ exists, that file is added as a dependency. Otherwise, if a \r\nsource file with the resulting path and file extension ‘.d.ts’ exists, that file is added as a \r\ndependency.\"\r\n\r\nCould we switch the ordering around such that either `.d.ts` is checked *before* the corresponding `.ts` or that we only use `.ts` if the file's modification time is more recent than `.d.ts`'s?",
+    "LastUpdatedDate": "2014-04-03T19:39:49.46-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-02T23:03:03.52-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "redundant compilation of referenced external modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2374
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "In the case where common.ts was changed, using the file's modification time would solve that use case seamlessly.",
+      "PostedDate": "2014-04-03T19:39:49.46-07:00",
+      "Id": 140492
+    }
+  ]
+}

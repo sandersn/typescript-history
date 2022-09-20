@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:36:20.833-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "looks like window.onerror has wrong handler definition:\r\n```\r\nonerror: ErrorEventHandler;\r\ninterface ErrorEventHandler {\r\n    (event: Event, source: string, fileno: number, columnNumber: number): void;\r\n}\r\n```\r\nShould be:\r\n```\r\ninterface ErrorEventHandler {\r\n    (message: string, source: string, fileno: number): void;\r\n}\r\n```\r\nsee\r\nhttp://msdn.microsoft.com/en-us/library/ie/cc197053%28v=vs.85%29.aspx\r\nhttps://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers.onerror",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T15:52:02.467-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "window.onerror has invalid definition",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 6,
+    "Id": 1570
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We're following the design as implemented in IE 11 and documented here:\n\nhttp://www.whatwg.org/specs/web-apps/current-work/#runtime-script-errors\n\r\n\r** Closed by paulb 08/23/2013 11:11AM",
+      "PostedDate": "2013-08-23T11:11:25.11-07:00",
+      "Id": 110946
+    },
+    {
+      "Message": "this is still icorrect definition. See\r\nhttp://www.whatwg.org/specs/web-apps/current-work/#onerroreventhandlernonnull",
+      "PostedDate": "2013-08-23T11:22:04.907-07:00",
+      "Id": 110947
+    },
+    {
+      "Message": "You reference WHATWG spec, but there onerror has following signature:\n```\ncallback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long column, optional any error);\n```\nSo declaration should looks like that to handle legacy (used by majority of browsers) and new contract:\n```\n(event: any, source?: string, lineno?: number, column?: number, error?: any): void;\n```\n",
+      "PostedDate": "2013-08-23T14:47:05.803-07:00",
+      "Id": 111007
+    },
+    {
+      "Message": "Because we don't allow overloads on fields we chose to implement the version we have. \n\nCan you specify what you think is wrong?\n\r\n\r** Closed by paulb 08/23/2013 1:28PM",
+      "PostedDate": "2013-08-23T13:28:55.217-07:00",
+      "Id": 111008
+    },
+    {
+      "Message": "Added contents of https://typescript.codeplex.com/workitem/1954 here as the workitem is still open.  \n\nHi Guys,\n\nI think that the ErrorEventHandler interface in lib.d.ts is possibly mis-defined.  It is currently defined as:\n\n```ts\ninterface ErrorEventHandler {\n    (event: Event, source: string, fileno: number, columnNumber: number): void;\n}\n```\n\nRunning with IE 10 (haven't tried 11) the definition appears to be more accurately defined as:\n\n```ts\ninterface ErrorEventHandler {\n    (error: string, source: string, lineNumber: number, columnNumber: number): void;\n}\n```\n\nAnd this seems to be backed up by this:\n\nhttp://msdn.microsoft.com/en-us/library/ie/cc197053(v=vs.85).aspx\n\nI'm guessing that ```fileno``` is just a typo and meant to be ```lineNumber``` or ```lineno```.  What's more relevant to me is that ```error```/```event``` appears to always be a ```string```; and never an ```Event```.\n\nI realise this has been raised already with: https://typescript.codeplex.com/workitem/1570 but it doesn't seem to have been satisfactorily resolved.\n\nAre there any further thoughts on this?\n\nFor now I'm getting round it by casting like this:\n\n```ts\nwindow.onerror = function (event: Event, source: string, lineNumber: number, columnNumber: number) {\n    var error = <string><any>event;\n}\n```\n\nWhich seems a bit wrong...",
+      "PostedDate": "2013-11-28T08:43:46.283-08:00",
+      "Id": 125557
+    }
+  ]
+}

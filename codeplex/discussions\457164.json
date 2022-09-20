@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1093464",
+    "ThreadId": "457164",
+    "Html": "Hi,\r<br />\ntake a look at this simple example:<br />\n<pre><code>enum ProcessStatus {\n    Starting,\n    Started\n}\n\ninterface IProcess {\n    getStatus(): ProcessStatus;\n}\n\nclass Process implements IProcess {\n    getStatus(): ProcessStatus {\n        return ProcessStatus.Started;\n    }\n}\n\nvar process = new Process();\nconsole.log(ProcessStatus[process.getStatus()] + &quot;:&quot; + process.getStatus());\n</code></pre>\n\nNow I would like to move enum and interface definition to .d.ts file, like this:\r<br />\n<br />\ntest.d.ts<br />\n<pre><code>declare enum ProcessStatus {\n    Starting,\n    Started\n}\n\ninterface IProcess {\n    getStatus(): ProcessStatus;\n}</code></pre>\n\ntest.ts<br />\n<pre><code>/// &lt;reference path=&quot;test.d.ts&quot; /&gt;\nenum ProcessStatus {\n    Starting,\n    Started\n}\n\nclass Process implements IProcess {\n    getStatus(): ProcessStatus {\n        return ProcessStatus.Started;\n    }\n}\n\nvar process = new Process();\nconsole.log(ProcessStatus[process.getStatus()] + &quot;:&quot; + process.getStatus());\n</code></pre>\n\nbut this doesn't compile. I have  tried to change the code in different ways, but I was not able to make it compile and run as expected.... So how to correctly define enum in d.ts file?\r<br />\n<br />\nthanks<br />\n",
+    "PostedDate": "2013-09-17T03:45:14.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093552",
+    "ThreadId": "457164",
+    "Html": "@EdvinV, I don't believe there is a simple solution for this. You may have to do the following:\r<br />\n<br />\nYou will need three compilation units.<br />\n<ul>\n<li>Put your enum code into the first compilation unit. Do not create a declaration for the enum. Simply compile with the TypeScriptGeneratesDeclarations set to true.</li>\n<li>Put your interface into the second. Add a reference to the generated enum.d.ts.</li>\n<li>\nPut your class into the third compilation unit. Add a reference to interface.d.ts (there is no need to refence enum.d.ts).<br />\n</li>\n</ul>\nThere may be an easier way to do this - if so I'd be interested.\r<br />\n<br />\nBut the problem is one cannot declare as well as define a type within site of each other.<br />\n",
+    "PostedDate": "2013-09-17T07:21:58.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093565",
+    "ThreadId": "457164",
+    "Html": "I'm assuming here that you want to split your code into separate compilation units (i.e. projects in Visual Studio). If they are all in the same project then you can simply omit the <code>declare enum</code> and it should work.<br />\n",
+    "PostedDate": "2013-09-17T07:53:37.84-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094233",
+    "ThreadId": "457164",
+    "Html": "@EdvinV, remember that /// &lt;reference /&gt; is special in that it tells your tools that &quot;Even though you currently don't see this code, treat it as if the browser/runtime environment already has it loaded.&quot;  When you do that with a .d.ts file, it's still effectively the same idea - the type information provided by the .d.ts file is enough to provide the shape of the objects that are loaded in the runtime environment.\r<br />\n<br />\nAs a result, when you /// &lt;reference path=&quot;test.d.ts&quot; /&gt;, and then you include the enum in the referencing file, you're effectively redeclaring the enum, which is why the compiler is issuing the error.\r<br />\n<br />\nWhat you can do is:<br />\n<pre><code>test.ts: Compile with -d\nenum ProcessStatus {\n    Starting,\n    Started\n}\n\ninterface IProcess {\n    getStatus(): ProcessStatus;\n}</code></pre>\n\nuser.ts:<br />\n<pre><code>/// &lt;reference path=&quot;test.d.ts&quot; /&gt;\n\nclass Process implements IProcess {\n    getStatus(): ProcessStatus {\n        return ProcessStatus.Started;\n    }\n}</code></pre>\n\nWhen you're trying to use it in a browser, you need to ensure that you're referencing both files:<br />\n<pre><code>&lt;script src=&quot;test.js&quot;&gt;&lt;/script&gt;\n&lt;script src=&quot;user.js&quot;&gt;&lt;/script&gt;</code></pre>\n\nThat should work for you.<br />\n",
+    "PostedDate": "2013-09-18T15:03:01.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

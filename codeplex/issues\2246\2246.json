@@ -1,0 +1,101 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:34:39.593-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "After upgrading to TS 1.0RC, we now get this error during the build of a fairly large project (150+ files) that compiled without error or warning under 0.9.5:\r\n\r\nVSTSC : tsc.js(38802, 25) JavaScript runtime error : Object doesn't support property or method 'getCallSignatures'\r\n\r\nI haven't yet been able to narrow the problem down any further.  Running on VS2013 Pro with SP1.\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-01T11:21:44.117-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Compiler error: tsc.js(38802, 25) JavaScript runtime error : Object doesn't support property or method 'getCallSignatures'",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2246
+  },
+  "FileAttachments": [
+    {
+      "FileId": 808904,
+      "FileName": "build.edited.zip",
+      "DownloadUrl": ".\\808904"
+    },
+    {
+      "FileId": 809759,
+      "FileName": "tsc.logs.zip",
+      "DownloadUrl": ".\\809759"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I should add that this is the only output from the compiler in the VS Output Window; no indication as to what phase of the compilation or what file is being compiled.",
+      "PostedDate": "2014-03-01T11:23:27.437-08:00",
+      "Id": 135527
+    },
+    {
+      "Message": "Can you compile from the Visual Studio command line with detailed logs and attach those?\n\nmsbuild /v:diag <proj files>",
+      "PostedDate": "2014-03-01T15:51:55.47-08:00",
+      "Id": 135541
+    },
+    {
+      "Message": "Please find attached an edited build log with lines from unrelated projects removed.  Let me know if there's any addition info I can provide.",
+      "PostedDate": "2014-03-01T17:41:58.947-08:00",
+      "Id": 135545
+    },
+    {
+      "Message": "Can you copy the line which says: \n````\n C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.9\\tsc.exe  --noImplicitAny --declaration --module AMD --out \"lib\\Axon.js\" --sourcemap --target ES5 <lot of ts files>\n````\nand run it from the command line, and attach the output.\n\nThanks",
+      "PostedDate": "2014-03-03T14:13:51.477-08:00",
+      "Id": 135702
+    },
+    {
+      "Message": "I've attached logs as requested.  I've included the batch file that contains the command, the output from 0.9.7, and the output from 0.9.5.  \r\n\r\nIn both cases (0.9.7 and 0.9.5), the output from the program seems to indicate the command line from the batch file is being truncated, and both are reporting \"error TS5007: Cannot resolve referenced file: 'D:\\dev\\Synaptive\\dev\\Trunk\\xon\\JavaScript\\Axon\\Rpc\\RpcError.ts'.\"\r\n\r\nDespite the error message (which is never reported in the IDE) 0.9.5 seems to successfully compile the whole Axon.js file with all of the correct types.  For example, in the attachment you'll find a fragment of RpcError.ts compiled in to Axon.js by the 0.9.5 compiler, even though it reported error TS5007.\r\n\r\n0.9.7 aborts with the previously reported error message \"tsc.js(38802, 25) JavaScript runtime error: Object doesn't support property or method 'getCallSignatures'\"\r\n\r\nSo there seems to be errors in both compilers, but in 0.9.5 it doesn't seem to have any effect.  Is there a better way to compile so many files which doesn't result in a truncated command line?  Is it possible to use a response file that contains the list of .ts files to compile instead of passing them all on the command line?\r\n\r\n\r\n",
+      "PostedDate": "2014-03-03T15:51:27.703-08:00",
+      "Id": 135716
+    },
+    {
+      "Message": "To be clear, was this a typo of some sort in your post or is this actually in the batch file?\n\n\"error TS5007: Cannot resolve referenced file: 'D:\\dev\\Synaptive\\dev\\Trunk\\xon\\JavaScript\\Axon\\Rpc\\RpcError.ts'.\" \n\nthis should be ...\\Trunk\\Axon\\JavaScript right? That would explain why the IDE is resolving files correctly and the batch file is missing this one that otherwise looks perfectly fine.\n\nA response file is worth trying. You can use the @file directive to tsc (see tsc --help for an example).\n\nIf you can use node.js to compile your project we'll be able to get an actual call stack out of this compiler crash. Just install node and then the typescript npm package and build your project with that.",
+      "PostedDate": "2014-03-04T13:54:00.97-08:00",
+      "Id": 135838
+    },
+    {
+      "Message": "I see this error also.\n\nBelow is sample code that illustrates the problem. Below that is the node stack dump I get.\n\n-------------------------------\n\nclass BugExhibition<T> { // Take out the \"<T>\" and all is fine (except my real code needs it)\n\n    constructor() {\n        this._functionQueue = [];\n    }\n\n    public exhibitBug() {\n\n        var localFunction1 = function( arg: any ) {\n            // ...\n        }\n\n        function localFunction2( arg : any ) {\n            // ...\n        }\n\n        // queue a function execution\n        this._functionQueue.push( localFunction2 );   // Workaround: localFunction1 works ok here\n    }\n\n    private _functionQueue: { ( arg: any ) : void }[];\n\n}\n\n-------------------------------\n\n     [exec] /usr/lib/node_modules/typescript/bin/tsc.js:38802\n     [exec]                         signatures = currentType.getCallSignatures();\n     [exec]                                                  ^\n     [exec] TypeError: Object localFunction2(arg: any): void has no method 'getCallSignatures'\n     [exec]     at PullTypeEnclosingTypeWalker.walkSignature (/usr/lib/node_modules/typescript/bin/tsc.js:38802:50)\n     [exec]     at PullTypeResolutionContext.walkSignatures (/usr/lib/node_modules/typescript/bin/tsc.js:39344:39)\n     [exec]     at PullTypeResolver.signatureGroupIsRelatableToTarget (/usr/lib/node_modules/typescript/bin/tsc.js:48614:29)\n     [exec]     at PullTypeResolver.sourceCallSignaturesAreRelatableToTargetCallSignatures (/usr/lib/node_modules/typescript/bin/tsc.js:48462:27)\n     [exec]     at PullTypeResolver.sourceIsRelatableToTargetWorker (/usr/lib/node_modules/typescript/bin/tsc.js:48201:23)\n     [exec]     at PullTypeResolver.sourceIsRelatableToTarget (/usr/lib/node_modules/typescript/bin/tsc.js:48173:36)\n     [exec]     at PullTypeResolver.sourceIsSubtypeOfTarget (/usr/lib/node_modules/typescript/bin/tsc.js:47929:25)\n     [exec]     at PullTypeResolver.overloadIsApplicableForArgumentHelper (/usr/lib/node_modules/typescript/bin/tsc.js:48909:57)\n     [exec]     at PullTypeResolver.overloadIsApplicableForOtherArgument (/usr/lib/node_modules/typescript/bin/tsc.js:48903:25)\n     [exec]     at PullTypeResolver.overloadIsApplicableForArgument (/usr/lib/node_modules/typescript/bin/tsc.js:48844:29)\n     [exec]     at PullTypeResolver.overloadIsApplicable (/usr/lib/node_modules/typescript/bin/tsc.js:48811:52)\n     [exec]     at PullTypeResolver.resolveOverloads (/usr/lib/node_modules/typescript/bin/tsc.js:48744:42)\n     [exec]     at PullTypeResolver.computeInvocationExpressionSymbol (/usr/lib/node_modules/typescript/bin/tsc.js:46938:34)\n     [exec]     at PullTypeResolver.resolveInvocationExpression (/usr/lib/node_modules/typescript/bin/tsc.js:46714:31)\n     [exec]     at PullTypeResolver.resolveExpressionWorker (/usr/lib/node_modules/typescript/bin/tsc.js:44587:33)\n     [exec]     at PullTypeResolver.resolveExpressionAST (/usr/lib/node_modules/typescript/bin/tsc.js:44548:41)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44371:29)\n     [exec]     at PullTypeResolver.resolveExpressionStatement (/usr/lib/node_modules/typescript/bin/tsc.js:46701:22)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44490:33)\n     [exec]     at PullTypeResolver.resolveList (/usr/lib/node_modules/typescript/bin/tsc.js:43523:26)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44386:33)\n     [exec]     at PullTypeResolver.resolveBlock (/usr/lib/node_modules/typescript/bin/tsc.js:43911:22)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44511:33)\n     [exec]     at PullTypeResolver.typeCheckAnyFunctionDeclaration (/usr/lib/node_modules/typescript/bin/tsc.js:42701:18)\n     [exec]     at PullTypeResolver.resolveFunctionDeclaration (/usr/lib/node_modules/typescript/bin/tsc.js:43191:22)\n     [exec]     at PullTypeResolver.resolveMemberFunctionDeclaration (/usr/lib/node_modules/typescript/bin/tsc.js:42823:25)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44466:33)\n     [exec]     at PullTypeResolver.resolveList (/usr/lib/node_modules/typescript/bin/tsc.js:43523:26)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44386:33)\n     [exec]     at PullTypeResolver.typeCheckClassDeclaration (/usr/lib/node_modules/typescript/bin/tsc.js:40923:18)\n     [exec]     at PullTypeResolver.resolveClassDeclaration (/usr/lib/node_modules/typescript/bin/tsc.js:40888:22)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44404:33)\n     [exec]     at PullTypeResolver.resolveList (/usr/lib/node_modules/typescript/bin/tsc.js:43523:26)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44386:33)\n     [exec]     at PullTypeResolver.resolveSourceUnit (/usr/lib/node_modules/typescript/bin/tsc.js:40343:18)\n     [exec]     at PullTypeResolver.resolveAST (/usr/lib/node_modules/typescript/bin/tsc.js:44392:33)\n     [exec]     at Function.PullTypeResolver.typeCheck (/usr/lib/node_modules/typescript/bin/tsc.js:49225:26)\n     [exec]     at TypeScriptCompiler.getSemanticDiagnostics (/usr/lib/node_modules/typescript/bin/tsc.js:55372:41)\n     [exec]     at CompilerIterator.moveNextSemanticsPhase (/usr/lib/node_modules/typescript/bin/tsc.js:56001:45)\n     [exec]     at CompilerIterator.moveNextInternal (/usr/lib/node_modules/typescript/bin/tsc.js:55951:33)\n     [exec]     at CompilerIterator.moveNext (/usr/lib/node_modules/typescript/bin/tsc.js:55926:25)\n     [exec]     at BatchCompiler.compile (/usr/lib/node_modules/typescript/bin/tsc.js:62276:20)\n     [exec]     at BatchCompiler.batchCompile (/usr/lib/node_modules/typescript/bin/tsc.js:62115:22)\n     [exec]     at TypeScript (/usr/lib/node_modules/typescript/bin/tsc.js:62789:11)\n     [exec]     at Object.<anonymous> (/usr/lib/node_modules/typescript/bin/tsc.js:62790:3)\n     [exec]     at Module._compile (module.js:456:26)\n     [exec]     at Object.Module._extensions..js (module.js:474:10)\n     [exec]     at Module.load (module.js:356:32)\n     [exec]     at Function.Module._load (module.js:312:12)\n     [exec]     at Module.require (module.js:364:17)\n     [exec]     at require (module.js:380:17)\n     [exec]     at Object.<anonymous> (/usr/lib/node_modules/typescript/bin/tsc:2:1)\n     [exec]     at Module._compile (module.js:456:26)\n     [exec]     at Object.Module._extensions..js (module.js:474:10)\n     [exec]     at Module.load (module.js:356:32)\n     [exec]     at Function.Module._load (module.js:312:12)\n     [exec]     at Function.Module.runMain (module.js:497:10)\n     [exec]     at startup (node.js:119:16)\n     [exec]     at node.js:902:3\n",
+      "PostedDate": "2014-03-10T05:43:04.157-07:00",
+      "Id": 136387
+    },
+    {
+      "Message": "Simplified as short as we can get it...\n\n```\nclass BugExhibition<T> {\n    public exhibitBug() {\n        function localFunction2() { }\n        var x: { (): void; };\n        x = localFunction2;\n    }\n}\n```",
+      "PostedDate": "2014-03-10T09:23:12.74-07:00",
+      "Id": 136407
+    },
+    {
+      "Message": "@danquirk  'D:\\dev\\Synaptive\\dev\\Trunk\\xon\\JavaScript\\Axon\\Rpc\\RpcError.ts' was my typo in the post.  Sorry for the confusion.",
+      "PostedDate": "2014-03-10T13:26:00.037-07:00",
+      "Id": 136430
+    },
+    {
+      "Message": "I have exactly the same error in version 0.9.7 (so the bug was introduced between 0.9.5 and 0.9.7).\n\n[The stack trace can be found here.](http://paste2.org/nZtNMLLt) (Would've included it in the post, but that makes it go over the 10000 character limit.)\n\nThe code it refers to:\n```\nexport module Collections {\n    export interface ITreeNode<T, TContent> {\n        children: ITreeNode<T, TContent>[];\n        value: T;\n        content?: TContent;\n    }\n\n    export interface ILength {\n        length: number;\n    }\n\n    export class Tree<T extends ILength, TEntry, TContent> {\n        private root: ITreeNode<TEntry, TContent>[] = [];\n\n        constructor(private retriever: (item: T, index: number) => TEntry, private convertor: (entryList: TEntry[]) => T) { }\n\n        Add(item: T, content: TContent) {\n            if (typeof content === 'undefined') content = null;\n            var ret = this.retriever;\n            var scope = this.root;\n\n            itemLoop:\n            for (var entryIndex = 0; entryIndex < item.length; entryIndex++) {\n                var entry = ret(item, entryIndex);\n                for (var i = 0; i < scope.length; i++) {\n                    if (scope[i].value === entry) {\n                        if (entryIndex === item.length - 1) scope[i].content = content;\n                        scope = scope[i].children;\n                        continue itemLoop;\n                    }\n                }\n                // Entry is not yet in the current scope\n                scope.push({ children: [], value: entry });\n                if (entryIndex === item.length - 1) scope[scope.length - 1].content = content;\n                scope = scope[scope.length - 1].children;\n            }\n        }\n\n        GetLongestMatch(item: T): { match: T; content: TContent; } {\n            var ret = this.retriever;\n            var res: TEntry[] = [];\n            var scope = this.root;\n\n            var lastStopIndex = null;\n            var lastContent = null;\n\n            itemLoop:\n            for (var entryIndex = 0; entryIndex < item.length; entryIndex++) {\n                var entry = ret(item, entryIndex);\n                for (var i = 0; i < scope.length; i++) {\n                    if (scope[i].value === entry) {\n                        res.push(entry);\n                        if (typeof scope[i].content !== 'undefined') {\n                            lastStopIndex = res.length;\n                            lastContent = scope[i].content;\n                        }\n                        scope = scope[i].children;\n                        continue itemLoop;\n                    }\n                }\n                // Not found\n                break itemLoop;\n            }\n\n            return lastStopIndex === null ? null\n                : { match: this.convertor(res.slice(0, lastStopIndex)), content: lastContent };\n        }\n\n        Dump(): ITreeNode<TEntry, TContent>[] {\n            function deepCopy(arr: ITreeNode<TEntry, TContent>): ITreeNode<TEntry, TContent> {\n                var copy: ITreeNode<TEntry, TContent> = { children: <ITreeNode<TEntry, TContent>[]>arr.children.map(deepCopy), value: arr.value };\n                if (typeof arr.content !== 'undefined') copy.content = arr.content;\n                return copy;\n            }\n            return <ITreeNode<TEntry, TContent>[]>this.root.map(deepCopy);\n        }\n\n        Restore(dump: ITreeNode<TEntry, TContent>[]) {\n            this.root = dump;\n        }\n    }\n}\n```\n\nA fix would be appreciated, since I can no longer compile my application now. Anybody knows how to downgrade the TSC that is integrated in VS?",
+      "PostedDate": "2014-03-26T06:07:33.17-07:00",
+      "Id": 138863
+    }
+  ]
+}

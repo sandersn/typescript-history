@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-14T09:53:33.053-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hello,\r\nI have a very simple Windows Store app using TypeScript. I defined one module (MyModule.ts) containing the following code:\r\n\r\n```\r\nmodule MyModule {\r\n    export class Test {\r\n        print(msg: string) { }\r\n    }\r\n}\r\n```\r\n\r\nthen in default.ts I am using it:\r\n\r\n```\r\n///<reference path=\"MyModule.ts\" />\r\nmodule Default {\r\n    \"use strict\"; \r\n\r\n    WinJS.Application.addEventListener(\"activated\",\r\n        (args: WinJS.Application.ApplicationActivationEvent) => {\r\n            if (args.detail.kind === Windows.ApplicationModel.Activation.ActivationKind.launch) {\r\n                if (args.detail.previousExecutionState !== Windows.ApplicationModel.Activation.ApplicationExecutionState.terminated) {\r\n                // TODO: This application has been newly launched. Initialize\r\n                // your application here.\r\n            } else {\r\n                // TODO: This application has been reactivated from suspension.\r\n                // Restore application state here.\r\n            }\r\n\r\n            var mt = new MyModule.Test();\r\n\r\n            args.setPromise(WinJS.UI.processAll().then(function () { }));\r\n        };\r\n    });\r\n\r\n    WinJS.Application.oncheckpoint = function (args) {\r\n        // TODO: This application is about to be suspended. Save any state\r\n        // that needs to persist across suspensions here. If you need to \r\n        // complete an asynchronous operation before your application is \r\n        // suspended, call args.setPromise().\r\n    };\r\n\r\n    WinJS.Application.start();\r\n}\r\n```\r\n\r\nIt compiles fine, but at runtime I get an exception on \r\n\r\n```\r\nvar mt = new MyModule.Test();\r\n```\r\n\r\n0x800a1391 - JavaScript runtime error: 'MyModule' is undefined\r\n\r\nThe js generated looks fine:\r\n\r\n```\r\nvar MyModule;\r\n(function (MyModule) {\r\n    var Test = (function () {\r\n        function Test() {\r\n        }\r\n        Test.prototype.print = function (msg) {\r\n        };\r\n        return Test;\r\n    })();\r\n    MyModule.Test = Test;\r\n})(MyModule || (MyModule = {}));\r\n```\r\n\r\nWhat do I miss?\r\n\r\nThanks,\r\nPedro\r\n",
+    "LastUpdatedDate": "2014-04-14T09:53:33.053-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-10T21:12:49.61-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Undefined type in Windows Store app",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2418
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I forgot to mention I am using VS 2013 RC 2",
+      "PostedDate": "2014-04-10T21:24:52.51-07:00",
+      "Id": 141452
+    },
+    {
+      "Message": "Problem resolved. I was missing the js reference in my html page.",
+      "PostedDate": "2014-04-10T22:32:17.593-07:00",
+      "Id": 141458
+    }
+  ]
+}

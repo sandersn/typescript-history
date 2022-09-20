@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.627-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Smaller JavaScript Code with following Example,\r\n\r\nWorking Link: http://jsfiddle.net/s97nV/2/\r\n\r\nThis code is smaller, it works perfect with inheritance. You don't need to reference prototype anywhere.\r\n\r\nLess size of code, that means less overhead for lexical analysis.\r\n\r\n```\r\n\r\n// n = Name\r\n// b = baseClass Function\r\n// c = Constructor Function\r\n// p = prototype object\r\n\r\nfunction createClass(n, bp, c, p){\r\n   var b = bp ? bp.constructor : null;\r\n\r\n   if(b){\r\n\r\n      // derived constructor\r\n      var d = c;\r\n\r\n      // We recreate new function\r\n      c = function(){\r\n\r\n          // we automatically call base class constructor\r\n          // without explicitly calling in at each function call\r\n          // this way user does not need to remember to make\r\n          // call to base class first....\r\n          b.apply(this,arguments);\r\n          d.apply(this,arguments);\r\n      };\r\n\r\n      // copy prototype function\r\n      // since evaluating prototype chain\r\n      // takes longer, I prefer copying all members\r\n      // of base class to current class unless it is already\r\n      // defined (overriden methods)\r\n      for(var k in bp){\r\n         // if same named member exists in current \r\n         // class, then ignore\r\n         if(p[k]) continue;\r\n         p[k] = bp[k];\r\n      }\r\n\r\n      // just for debugging purpose\r\n      c.__baseType = b;\r\n   }\r\n\r\n   // just for debugging purpose\r\n   c.__typeName = name;\r\n   c.prototype = p;\r\n   c.prototype.constructor = c;\r\n\r\n   // you can omit this if you plan to create \r\n   // private classes in namespaces...\r\n   window[n] = c;\r\n\r\n   // return newly created function\r\n   return c;\r\n}\r\n\r\n\r\nvar Shape = (function(name,base){\r\n   return createClass(name,base,\r\n       function(){\r\n               console.log(\"Shape Constructor\");\r\n       },{\r\n            show: function(){\r\n               console.log(\"Shape\");\r\n            }\r\n       });\r\n})(\"Shape\");\r\n\r\nvar Circle = (function(name,baseType){\r\n\r\n   return createClass(name,base,\r\n       function(){\r\n               console.log(\"Circle Constructor\");\r\n       },{\r\n            show: function(){\r\n               // see the smaller syntax...\r\n               baseType.show.apply(this,arguments);\r\n               console.log(\"Circle\");\r\n            }\r\n       });\r\n})(\"Circle\",Shape.prototype);\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-20T11:20:28.873-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generate Shorter Class Declaration",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 302
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The example you gave is not equivalent—assigning a plain object as the prototype will change the prototype's constructor, so you'd need to explicitly define it as a property (which your example doesn't do)\n\nAlso...\n\n\"And the later code will run faster too.\"\n\n...is a bold claim.",
+      "PostedDate": "2012-10-21T13:00:21.03-07:00",
+      "Id": 80603
+    },
+    {
+      "Message": "Yes the proposed solution with assignment of plain object is incorrect.\nBut this is a problem, and it should be solve, because the consumers of the compiler must be sure that generated javascript is optimized for its size. ",
+      "PostedDate": "2012-10-22T09:17:18.56-07:00",
+      "Id": 80658
+    },
+    {
+      "Message": "> @rwaldron, very insulting statement \"And the later code will run faster too.\" ...is a bold claim.\n\n\nHere is correct smaller working code, I was just pointing a good hit, that wasn't really a working example.\n\nWorking Link : http://jsfiddle.net/s97nV/\n\n```\n\n// n = Name\n// b = baseClass Function\n// c = Constructor Function\n// p = prototype object\n\nfunction createClass(n, b, c, p){\n\n   if(b){\n\n      // derived constructor\n      var d = c;\n      c = function(){\n          b.apply(this,arguments);\n          d.apply(this,arguments);\n      };\n\n      for(var k in b){\n         if(p[k]) continue;\n         p[k] = b[k];\n      }\n   }\n   \n   c.prototype = p;\n   window[n] = c;\n}\n\n\n(function(name,base){\n   createClass(name,base,\n       function(){\n               console.log(\"Shape Constructor\");\n       },{\n            show: function(){\n               console.log(\"Shape\");\n            }\n       });\n})(\"Shape\");\n\n(function(name,base){\n\n   var _super = base.prototype;\n\n   createClass(name,base,\n       function(){\n               console.log(\"Circle Constructor\");\n       },{\n            show: function(){\n               _super.show.apply(this,arguments);\n               console.log(\"Circle\");\n            }\n       });\n})(\"Circle\",window.Shape);\n\n\n```",
+      "PostedDate": "2013-09-11T04:05:18.213-07:00",
+      "Id": 113149
+    }
+  ]
+}

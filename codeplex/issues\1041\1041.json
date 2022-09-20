@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "What size of project (number of files and size of files) are you using and can you share a common pattern you see this happen with?",
+    "ClosedDate": "2013-05-15T11:21:00.46-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Tried out the new 0.9 alpha.\r\n\r\nThe Visual Studio interface has a tendency to hang and consume increasing amounts of memory, eventually causing the computer to run out of memory.\r\n\r\nThe first few changes to a TS file are usually OK, but after more changes, then the error checking gets slower and slower.  After a while, there will one time when the error checking process will hang, consuming all the CPU of one core, while memory usage escalates.  That error checking process will never complete.\r\n",
+    "LastUpdatedDate": "2013-08-13T10:00:11.01-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-15T02:48:36.437-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "TypeScript 0.9 alpha and out-of-memory",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1041
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Large files.  Small files do have this behavior, but only after a very long time.  So I think somewhere something is leaking memory.\n\nThe hanging issue happens with a file with loads of generics.  Actually, I was \"generic-izing\" linq.js (which I ported to TypeScript 0.8 a while ago) when it keeps happening.  Files with only a few generics seldom hang, but I've seen it once or twice.\n\nThe thing is, it doesn't happen with the stand-alone compiler, only with Visual Studio, and never on the first save/change.  It only happens after changing the file a few times.\n\nIt looks like Visual Studio is spawning a copy of the compiler for syntax/type checking after every text editor change (which makes sense).  Visual Studio slows to a halt after a number of rapid editor changes, and then hangs while consuming all the CPU of a single core and all the memory.  I suspect multiple copies of the syntax/type checker have been spawned and fighting for resources, while dead-locking each other...\n\n",
+      "PostedDate": "2013-05-15T19:18:18.177-07:00",
+      "Id": 100302
+    },
+    {
+      "Message": "One more piece of info: closing the TS file window in Visual Studio after every change and reopening it avoids the problem.  This is in sync with the behavior that the hanging never happens during the first few changes right after opening the file.\n",
+      "PostedDate": "2013-05-15T20:35:37.263-07:00",
+      "Id": 100304
+    },
+    {
+      "Message": "We've tracked this one down (linq.d.ts was indeed problematic) and are working on a fix; there's a different work item tracking this one. Thanks for the report.",
+      "PostedDate": "2013-08-13T10:00:11.01-07:00",
+      "Id": 109633
+    }
+  ]
+}

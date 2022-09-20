@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:20:24.78-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "When compiling using the --module amd option, i'm specifying a single typescript file and an absolute (not relative) module to load. However, instead of just compiling 'a.ts', the compiler incorrectly also compiles 'b.ts'. \r\n\r\nOur build system tracks inappropriate file accesses, making this an adoption blocker for us.\r\n\r\nIdeally, I'd like to require(\"./b\"), and *ONLY* compile the source files listed on the command line.\r\n````\r\n    // a.ts\r\n    ///<reference path=\"b.d.ts\" />\r\n    import b = require(\"b\");\r\n    var a = 2;\r\n    export = a;\r\n\r\n    // b.d.ts\r\n    declare module \"b\" { \r\n        var instance: any;\r\n        export = instance;\r\n    }\r\n   \r\n    // b.ts\r\n    export var a;\r\n    export = a\r\n````\r\ninvoked using: tsc --module amd --target ES5 --nolib a.ts\r\n\r\n[expected]\r\ncompiles a.ts, producing a.js\r\n\r\n[actual]\r\ncompiles a.ts AND b.ts, producing two js files. ",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-28T11:20:28.777-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiling with --module amd looks at wrong files",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 2245
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We're taking a look",
+      "PostedDate": "2014-02-28T12:45:04.89-08:00",
+      "Id": 135442
+    },
+    {
+      "Message": "So it looks like there is a couple things going on.\n\nFirst, we now correctly pick the .ts over the .d.ts.  Having both the reference and the require will mean that in the first pass where we gather the files needed in the compilation context, we'll end up loading both and setting them as additional files that need to be compiled later.\n\nWe used to pick the .d.ts first, but this wasn't spec-aligned, hence the fix.  \n\nOnce these files are loaded, the ambient module will take precedence, so it's the one that will dictate the shape of the module for the import line.  Codegen of a.ts would use the ambient.  \n\nThe compile doesn't strictly comply with the spec in that it also will load (and later compile) b.ts, even though there is an ambient module.  We'll document this as a known issue and attempt to address it after the 1.0 release, which will take some compiler refactoring to be more lazy about how we handle imports so we don't go load files that already have ambient definitions.\n",
+      "PostedDate": "2014-03-06T09:15:42.527-08:00",
+      "Id": 136059
+    }
+  ]
+}

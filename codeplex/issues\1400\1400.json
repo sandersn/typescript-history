@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-14T17:09:17.94-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hello, I've completed rewritting my javascript framework in typescript. Now I'm trying to use these files in many other web projects. \r\n\r\nI've tried linking (Linked File) them into the web project. First thing I noticed, I can't change the Build Action to \"TypeScriptCompile\". .ts files are compiled in their source folder, not where they are linked. The problem is that when creating a new file .ts file in web project, it doesn't see the linked files and I get a TypeScript error. \r\n\r\nAlso, everytime I try to build a project with Linked TypeScript Files, it crashes Visual Studio. \r\n\r\nDoes anyone have any idea ?\r\n\r\nHere's a link to the same question on StackOverflow: \r\nhttp://stackoverflow.com/questions/17900825/typescripts-linked-files-are-unseen-by-current-projects-typescript-files\r\n\r\nThanks !",
+    "LastUpdatedDate": "2013-08-14T17:09:17.94-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-27T10:51:45.3-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Linked Files are compiled in the original path and unseen by other unlinked files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1400
+  },
+  "FileAttachments": [
+    {
+      "FileId": 711686,
+      "FileName": "LinkFilesTypeScript.Library.zip",
+      "DownloadUrl": ".\\711686"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Hello again, please find attached s sample project. There's 2 images inside: \r\n1. When you link TS files (they don't exist locally yet and you get an error)\r\n2. After the files are copied inside the project (shadow files) it works. \r\n\r\n** Also, linked files shows sub items (js, js.maps ...) and it's confusing. \r\n\r\nI use a script to copy the files automatically on each BUILD by adding this to my project. You can try it in the solution, and by resaving APP.TS, it will then work ...\r\n  <!-- ======================== -->\r\n  <!-- http://consultingblogs.emc.com/jamesdawson/archive/2008/06/03/using-linked-files-with-web-application-projects.aspx?CommentPosted=true#commentmessage -->\r\n  <Target Name=\"_CopyLinkedContentFiles\">\r\n    <!-- Remove any old copies of the files -->\r\n    <Delete Condition=\" '%(Content.Link)' != '' AND Exists('$(WebProjectOutputDir)\\%(Content.Link)') \" Files=\"$(WebProjectOutputDir)\\%(Content.Link)\" />\r\n    <!-- Copy linked content files recursively to the project folder -->\r\n    <Copy Condition=\" '%(Content.Link)' != '' \" SourceFiles=\"%(Content.Identity)\" DestinationFiles=\"$(WebProjectOutputDir)\\%(Content.Link)\" />\r\n  </Target>\r\n  <!-- Override the default target dependencies to -->\r\n  <!-- include the new _CopyLinkedContentFiles target. -->\r\n  <PropertyGroup>\r\n    <PrepareForRunDependsOn>\r\n      $(PrepareForRunDependsOn);\r\n      _CopyWebApplication;\r\n      _CopyLinkedContentFiles;\r\n      _BuiltWebOutputGroupOutput\r\n    </PrepareForRunDependsOn>\r\n  </PropertyGroup>\r\n  <PropertyGroup>\r\n    <!-- <PostBuildEvent>$(MSBuildBinPath)\\msbuild.exe \"$(ProjectDir)_build\\site.xml\"</PostBuildEvent> -->\r\n  </PropertyGroup>\r\n  <!-- ======================== -->\r\n\r\n\r\nThanks !",
+      "PostedDate": "2013-07-30T13:46:38.223-07:00",
+      "Id": 107955
+    },
+    {
+      "Message": "This seems to work for me. Can you upload a small project that reproduces the problem? Thanks!\n\r\n\r** Closed by RyanCavanaugh 07/29/2013 9:57AM",
+      "PostedDate": "2013-07-29T09:57:45.44-07:00",
+      "Id": 109665
+    },
+    {
+      "Message": "Are you sure your project files are working as intended? I don't see any Typescript related tasks in there. I can add error causing code to your Typescript files and the solution still compiles successfully. This might explain why you're not seeing the TypescriptCompile action do what you think. \n\nI changed your 'module' to 'require' in app.ts and now the linked lib\\library.ts file is being resolved correctly and I get the Intellisense experience I expect even without the /// reference. I also am not seeing any Visual Studio crashes. Please re-open this if you think I've missed something or there's other information that's relevant.",
+      "PostedDate": "2013-08-14T17:09:13.523-07:00",
+      "Id": 109959
+    }
+  ]
+}

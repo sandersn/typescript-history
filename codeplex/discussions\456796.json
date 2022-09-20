@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1092287",
+    "ThreadId": "456796",
+    "Html": "Can someone please explain &quot;typeof&quot; for me? I am having trouble understanding the difference between...\r<br />\n<br />\nvar b: A;\r<br />\n<br />\nand\r<br />\n<br />\nvar b: typeof A;\r<br />\n<br />\nHow exactly is typeof to be used and for what senarios?<br />\n",
+    "PostedDate": "2013-09-13T06:16:45.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092409",
+    "ThreadId": "456796",
+    "Html": "The easiest way to understand <code>typeof</code> is that it represents the type of the supplied value. In other words, for all <code>X</code>, these two declarations are equivalent from a type perspective:<br />\n<pre><code>var p1 = X; // p1 infers its type from X\nvar p2: typeof X; // p2 has the same type as X and is identical to p1</code></pre>\n\nThis gets weird for classes, which create two different things that have the same name. When you define a class, a <em>type</em> name is defined that refers to the shape of an <em>instance</em> of that class. You also define a <em>value</em> of the same name that represents the constructor function object along with any static members. We casually refer to that second name as the &quot;static&quot; side of the class, and the type of that value is normally anonymous. <code>typeof</code> lets you grab that anonymous type.\r<br />\n<br />\nExample:<br />\n<pre><code>class A {\n    static x: number;\n    y: string;\n}\n\nvar instance = new A(); // instance: { y: string; }\nvar t1 = A; // t1: { x: number; new() =&gt; A; }\nvar t2: typeof A; // t2 is identical to t1</code></pre>\n\nFinally, generics. It's very tempting to try to do this:<br />\n<pre><code>function create&lt;T&gt;() {\n    var x: typeof T = /* ..???... */;\n    return new x();\n}\n// Cannot possibly work because types are erased, but let's try anyway\nvar p = create&lt;MyClass&gt;();</code></pre>\n\nThis does not work because <code>T</code> is <em>not a value</em>, it's a type. Remember that <code>typeof</code> operates on values and produces types (somewhat confusingly, the exact opposite of what the C# <code>typeof</code> operator does). What you want to do instead is this (note that <code>typeof</code> is not needed):<br />\n<pre><code>function create&lt;T&gt;(ctor: { new (): T; }) {\n    return new ctor();\n}\nvar c = create&lt;MyClass&gt;(MyClass); // c: MyClass</code></pre>\n\nThe guidance on when to use <code>typeof</code> is: If you find yourself needing the type of a value that is otherwise anonymous, use it. Otherwise, don't worry about it.<br />\n",
+    "PostedDate": "2013-09-13T10:33:45.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092813",
+    "ThreadId": "456796",
+    "Html": "<strong>Use case one</strong>: When the static-side of a class needs to be passed to a function.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo {\n    <span style=\"color:Blue;\">static</span> bar(){\n        console.log(<span style=\"color:#A31515;\">&quot;bar&quot;</span>);\n    }\n}\n    \n<span style=\"color:Blue;\">function</span> doClass(f:Foo){\n    f.bar(); <span style=\"color:Green;\">// Error: Static member cannot be accessed off an instance variable</span>\n}\n\n<span style=\"color:Blue;\">function</span> doClassTwo(f:<span style=\"color:Blue;\">typeof</span> Foo){\n    f.bar(); <span style=\"color:Green;\">// okay</span>\n}\r\n</pre></div><strong>Use case two</strong>: When a module needs to be passed to a function<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> foo {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> bar(){\n        console.log(<span style=\"color:#A31515;\">&quot;bar&quot;</span>);\n    }\n}\n\n<span style=\"color:Green;\">// Error: Type reference cannot refer to container foo</span>\n<span style=\"color:Blue;\">function</span> doModule(f: foo){\n  f.bar();\n}\n\n<span style=\"color:Green;\">// Okay</span>\n<span style=\"color:Blue;\">function</span> doModuleTwo(f: <span style=\"color:Blue;\">typeof</span> foo){\n  f.bar();\n}\r\n</pre></div>Note that this is purely a compile-time rule enforced by TypeScript. In the compiled JavaScript a module is simply yet another variable, and hence can be referenced directly. Similarly, a class is just a function, and as we know, in JavaScript, functions are first class objects.\r<br />\n<br />\nIn fact all the following have identical behaviour at runtime:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\ndoClass(Foo);\ndoClassTwo(Foo);\ndoModule(foo);\ndoModuleTwo(foo);\r\n</pre></div>TypeScript simply has a more rigorous approach - although I'm not entirely convinced about the need for this distinction.<br />\n",
+    "PostedDate": "2013-09-15T05:32:18.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093079",
+    "ThreadId": "456796",
+    "Html": "Thank you @RyanCavanaugh and <a href=\"mailto:@nabog\" rel=\"nofollow\">@nabog</a>. Both of your examples and explanations helped.<br />\n",
+    "PostedDate": "2013-09-16T05:54:47.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

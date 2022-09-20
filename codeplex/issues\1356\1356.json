@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-17T13:55:21.253-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "It seems we have found a compiler bug in TypeScript - this became apparent when we starting to test the classes we have converted to typescript. \r\n\r\nA lot of the classes in our partition and entities modules have this bug:\r\n\r\nhttps://github.com/away3d/away3d-core-ts\r\nhttps://github.com/away3d/away3d-core-ts/blob/master/tests/ManagersTest.ts\r\n\r\nWe have also created a __simple test case__ to isolate the bug:\r\n\r\nhttp://kurst.co.uk/samples/awayts/CyclicDependenciesError/\r\nhttp://kurst.co.uk/samples/awayts/CyclicDependenciesError/CyclicDependenciesError.zip\r\n\r\nThese classes in question all have dependant resources the compiler cannot resolve, the resulting / exported JavaScript will fail. Reason being the compiler __extends and references an undefined prototype chain for an object that has not yet been defined. Which is what this little helper does : \r\n\r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype; //Uncaught TypeError: Cannot read property 'prototype' of undefined <----- Error Occurs here.\r\n    d.prototype = new __();\r\n};\r\n```\r\nSo, for example, if class FooA extends Base… and FooC extends FooA - whichever code block gets placed first in the JS will cause an extend error - this is because JS injects the proto chain to extend and that object is not yet defined. \r\n\r\nIt seems a 'best fix' would be to change the compiler to extend classes after they have all been initialised using a deferred token based initialisation system. Please advise if there is a fix with the current system.\r\n ",
+    "LastUpdatedDate": "2013-11-19T16:27:01.517-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-16T01:17:54.72-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Circular dependencies - Prototype extend fails.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1356
+  },
+  "FileAttachments": [
+    {
+      "FileId": 704966,
+      "FileName": "Away3D.zip",
+      "DownloadUrl": ".\\704966"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I re-created your project in Visual Studio and it compiled and ran without error after changing 1 line, but the bug I had was with a maximum call stack overflow, not the extends issue above.\r\n\r\nI've attached my VS project for you.\r\n\r\nThe one thing I didn't see above or in your zip was how you're compiling the files, i.e. what the command-line being passed to tsc was. Because VS will resolve dependancy issues like this for you _before_ it sends the files to tsc. I'm 99% certain tsc itself doesn't do any resolution of its own, it expects the files to be fed to it in the correct order.\r\n\r\nI have had this exact same error numerous times before though, mostly when moving files around the project file structure and VS forgets to update its references properly. But I've always managed to fix it by hand-editing the csproj. I suspect something similar is going on here.",
+      "PostedDate": "2013-07-16T03:07:46.89-07:00",
+      "Id": 106145
+    },
+    {
+      "Message": "Thank you for taking the time to look at this, to compile this project we are using the following command line:\n\n--sourcemap $ProjectFileDir$/tests/CyclicDependencyBug.ts --target ES5 --comments --out $ProjectFileDir$/tests/CyclicDependencyBug.js\n\nfrom php / web storm... will try the solution you sent and report back.\n\nThanks again...",
+      "PostedDate": "2013-07-16T03:18:59.17-07:00",
+      "Id": 106146
+    },
+    {
+      "Message": "We walk the references first and push files that _aren't already_ in the compilation list to the front of the emit order.  These means dependencies are generally in order _except_ where there is a circular reference - otherwise obviously you'd have an infinite loop and/or files included multiple times when you have a circular reference.\n\nThis is effectively what you have here in your simplified repro.  FooA.ts references FooC.ts, and FooC.ts references FooA.ts.  The ordering of your referencing and the resolution algorithm means the code for FooC is emitted before the code for FooA.  As FooC extends FooA, then the call to super with FooA (which doesn't exist yet) results in a \"Cannot read property 'prototype' of undefined\".\n\nGenerally this is a hard problem to solve.  In many situations is it perfectly valid to have circular references in the code, but the correct order of execution is critical.  If you compile one TS -> one JS and load them all in a web page, then you need to order your script tags correctly yourself. When compiling many -> one there is only one output JavaScript file, and you need to (currently) ensure that the /// references are structured in a way that the input files are encountered in the order you want them in the output file.\n\nWe are looking into future improvements in this area, but for V1 when compiling at the command-line to a single output by following references in the input, getting the above right is the only solution. To compile your project correctly you need Base and FooA defined before FooC, thus passing FooC.ts as the first source file will ensure it's references to FooA and Base are resolved first and emitted first.  The below command line works for me in producing one correctly ordered output:\n\n```\ntsc ts\\FooC.ts CyclicDependencyBug.ts --sourcemap --target ES5 --out CyclicDependencyBug.js\n```\n\nAs for the stack overflow once this ordering is correct, this is because in FooA you have an initializer that creates a new FooC (on the private member).  FooC extends FooA, thus when you create a new FooC, the FooA constructor runs as part of the new FooC.  As just described, the FooA constructor creates a new FooC... and so on.  So you have an infinitely recursive loop here.\n\nPlease open this issue if I have misunderstood the problem.  Thanks!",
+      "PostedDate": "2013-07-17T13:55:06.79-07:00",
+      "Id": 106343
+    },
+    {
+      "Message": "We have currently implemented a global definition file holding all the references for our project - that solved our issue. This has been beneficial as we now have a full reference exported classes, and better control over what will go in our final build.  \n\nThank you for your time.",
+      "PostedDate": "2013-07-17T15:01:55.333-07:00",
+      "Id": 106358
+    },
+    {
+      "Message": "Man, I've lost a ton of hours on this, can any of you help?\n\nI have a project with two classes in two separate files - one has a method that returns an instance of the other, and vice-versa.\n\nIn other words, I have a direct cyclic dependency between the two classes.\n\nI have tried everything I can think of - I can not find a way to compile these files, and it does not seem to matter how I order the `<reference>` tags... if the compiler hits file A first, it complains about missing B - if it hits file B first, it complains about missing A.\n\nIs there any way to work around this issue?\n",
+      "PostedDate": "2013-11-06T19:18:11.737-08:00",
+      "Id": 122080
+    },
+    {
+      "Message": "I posted an example [here](https://gist.github.com/mindplay-dk/e807608e2af305aae74b) - try adjusting the order of the `<reference>` tags yourself, I couldn't find any way to make this simple example compile...\n",
+      "PostedDate": "2013-11-06T19:31:13.587-08:00",
+      "Id": 122081
+    },
+    {
+      "Message": "Hello ! \n\nOur solution was to have all TS files reference a \"_definitions\" file that contains ALL the references for the project. This fixed issues where the extend functionality was trying to reference classes not yet defined, and let us specify the exporting order in the resulting JS which solved out bug. \n\nThat was our fix: \nhttps://github.com/away3d/away3d-core-ts/blob/master/src/away/_definitions.ts\n",
+      "PostedDate": "2013-11-07T00:05:05.92-08:00",
+      "Id": 122090
+    }
+  ]
+}

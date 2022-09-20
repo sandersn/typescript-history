@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Same issue as https://typescript.codeplex.com/workitem/1490",
+    "ClosedDate": "2013-08-12T10:57:22.387-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "TypeScript 0.9.1\r\n\r\nTest method\r\n\r\n```\r\n    Join(): void\r\n    {\r\n        // FAILS\r\n        var joinedSimple = [1].AsLinq<number>().Join([1], o => o, i => i, (o, i) => { return { Outer: o, Inner: i } });\r\n        Assert.AreEqual(1, joinedSimple.Count(), \"Element count is wrong.\");\r\n        Assert.AreEqual(1, joinedSimple.First().Outer);\r\n        Assert.AreEqual(1, joinedSimple.First().Inner);\r\n\r\n        // WORKS\r\n        var joined = [{ ID: 1, Value: 1 }].AsLinq()\r\n            .Join([{ ID: 1, Value: 2 }]\r\n                , o => o\r\n                , i => i\r\n                , (o, i) => { return { Outer: o.Value, Inner: i.Value } }\r\n                , {\r\n                    Equals: (x, y) => x.ID == y.ID,\r\n                    GetHashCode: (obj) => obj.ID\r\n                }\r\n            );\r\n        Assert.AreEqual(1, joined.Count(), \"Element count with comparer is wrong.\");\r\n        Assert.AreEqual(1, joined.First().Outer);\r\n        Assert.AreEqual(2, joined.First().Inner);\r\n    }\r\n```\r\n\r\n`joinedSimple` receives the type `TSLinq.Linq<{}>` instead of `TSLinq.Linq<{ Outer, Inner }>`.\r\n\r\n`joined` receives the correct type `TSLinq.Linq<{ Outer, Inner }>`.\r\n\r\nVisual Studio 2012 on intellisense sometimes shows the return type of what it should be and sometimes shows the other, but when I compile it always fail.\r\n\r\nWhen I call `First` from `joinedSimple` the type `T` is not propagated, while in `joined` it did propagate.\r\n\r\nOne is a simple type `number` and the other is `{ ID: any; Value: any; }`, it seems that the `number` is not propagating correctly.\r\n\r\nFull source https://github.com/brunolm/TSLinq/tree/master/TSLinq\r\n- __Linq.ts__: lib\r\n- __Linq.test.ts__: test methods for the lib\r\n- __UnitTest.ts__: test helper\r\n\r\nNote: It worked on 0.9.0.1",
+    "LastUpdatedDate": "2013-08-12T10:57:22.387-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-10T14:44:33.697-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Wrong return type with Generics, normal and anonymous types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1480
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

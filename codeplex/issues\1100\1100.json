@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.487-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Say I have an awesomely cool library:\r\n```\r\nexport function createMyCoolObject( someArg ): MyCoolObject;\r\n\r\nexport interface MyCoolObject {\r\n    func1(): void;\r\n    func2( x: number ): string;\r\n}\r\n```\r\n\r\nAnd it's so cool that I want people to be able to extend it.\r\nSo I add an extension point:\r\n```\r\nexport function createMyCoolObject( someArg ): MyCoolObject;\r\n\r\n// Extension point:\r\nexport var fn: MyCoolFunctions;\r\n\r\nexport interface MyCoolObject extends MyCoolFunctions {}\r\n\r\nexport interface MyCoolFunctions {\r\n    func1(): void;\r\n    func2( x: number ): string;\r\n}\r\n```\r\n\r\nAnd now anybody can extend it like this:\r\n```\r\nimport lib = module(\"MyCoolLib\");\r\n\r\nlib.fn.extFunc = function( whatever ) { }\r\n```\r\n\r\nExcept this does not extend the type information. I cannot just do something like:\r\n```\r\nexport interface lib.MyCoolFunctions {\r\n    extFunc( whatever ) { }\r\n}\r\n```\r\n(trust me, I've tried; you may start laughing now :-)\r\n\r\nSo instead, in order to make my library extensible, I have to split it into declaration (in the form of .d.ts) and implementation:\r\n```\r\n// MyCoolLib.d.ts:\r\nmodule MyCoolLib {\r\n    export interface MyCoolFunctions {\r\n        func1(): void;\r\n        func2( x: number ): string;\r\n    }\r\n}\r\n\r\n\r\n// MyCoolLib.ts:\r\n/// <reference path=\"MyCoolLib.d.ts\" />\r\nexport function createMyCoolObject( someArg ): MyCoolObject;\r\nexport var fn: MyCoolFunctions;\r\nexport interface MyCoolObject extends MyCoolLib.MyCoolFunctions {}\r\n```\r\n\r\nAnd then everybody who wants to extend my library has to do the same.\r\nJust like the good old C/C++ days! Makes you feel young again, doesn't it? :-))\r\n\r\nBut that's not the end of the PITA.\r\nIn addition to all the extenders having to split their extensions, all the users also now have two ways for referencing my library - one for type info, the other for implementation. Check this out:\r\n```\r\nimport lib = module(\"MyCoolLib\");\r\n\r\nvar x: MyCoolLib.SomeType = lib.createCoolObject( 1 ).someFunc();\r\n```\r\n\r\nSee how I have two prefixes here? One is \"__MyCoolLib__\", the other - \"__lib__\".\r\nBut it gets weirder. Turns out interfaces can be in the .d.ts file, but classes must be in the .ts file, because they're implementation. So now I have to sometimes write __\"var x = MyCoolLib.SomeType\"__ and other times write __\"var x = lib.SomeType\"__, depending on what \"SomeType\" is.\r\n\r\nIn real applications, this gets complicated very quickly.\r\nCheck out this [almost] real piece of code using Rx:\r\n```\r\nclass C {\r\n   _d: Rx.IDisposable;\r\n\r\n   constructor( e: X ) {\r\n       this._d = rx.Disposable.create( () => e.destroy() );\r\n   }\r\n}\r\n```\r\n\r\nSo the bottom line here is, we have to have an ability to extend interfaces coming from another module. At the very least something like this:\r\n```\r\nimport lib = module(\"MyCoolLib\");\r\n\r\ninterface lib.MyCoolFunctions {\r\n   extFunc: ( whatever ) => void;\r\n}\r\n\r\nlib.fn.extFunc = (whatever) => { };\r\n```\r\n\r\nYes, I do have to write the name and the signature of the function twice, but at least it works.\r\nIdeally, though, I'd like to be able to write it once. Sort of like I do with C# extension methods.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-03T09:54:48.573-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Ability to extend interfaces declared in ambient modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1100
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

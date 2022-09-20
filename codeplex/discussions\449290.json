@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1065496",
+    "ThreadId": "449290",
+    "Html": "So the v0.9 syntax for loading external modules is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> moduleAlias = require(<span style=\"color:#A31515;\">&quot;../path/to/module&quot;</span>);\r\n</pre></div>My issue is I'd like to be able to import modules installed in node_modules of the current node package using the same syntax as JavaScript. I always include a definition file in my node module packages. Unfortunately, unless you use the syntax where a module is declared with a string literal for a name, there is no way to import without providing a path like: &quot;node_modules/module_name/module_name&quot; or including the definition file in the same directory as the file that takes a dependency on the module.\r<br />\n<br />\nNode will automatically alias the node_modules directory for require calls. It would be awesome if there were someway to do one of the following:<br />\n<ol>\n<li>When using the -d flag in tsc, be able to tell the compiler to wrap the contents in a <code>declare module &quot;module_name&quot; { }</code> wrapper, where module_name is the package name specified in package.json. This way, any reference to the .d.ts file would allow for <code>require(&quot;module_name&quot;)</code> instead of <code>require(&quot;node_modules/module_name/module_name&quot;)</code>.</li>\n<li>Automatically look in each installed module in the nearest parent node_modules folder for a .d.ts file where the file name matches the module name. If one exists, allow for <code>require(&quot;module_name&quot;)</code> without providing a module reference at the head of the dependent file.</li>\n</ol>\n",
+    "PostedDate": "2013-07-08T03:14:06.23-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065804",
+    "ThreadId": "449290",
+    "Html": "These are good suggestions but I did want to point out a workaround for <strong>number 1</strong>.  Let tsc generate your declare file using internal modules via the -d flag.  Then create a separate .node.d.ts file which references the generated file and exports the internal module as an external module using the new <code>exports =</code> syntax.<br />\n\r<br />\nSo lets say you compile <code>tsc -d foo.ts</code> which generates the <code>foo.d.ts</code> file below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> foo {\n     <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">function</span> bar();\n}\r\n</pre></div>Create a file called <code>foo.node.d.ts</code> with the code below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&#39;foo.d.ts&#39;/&gt;</span>\n\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;foo&quot;</span> {\n     <span style=\"color:Blue;\">export</span> = foo;\n}\r\n</pre></div>You'll still need to add a reference to &quot;node_modules/foo/foo.node.d.ts&quot; in your files that consume the module but at least you'll be able to import it without an absolute path. So:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&#39;node_modules/foo/foo.node.d.ts&#39;/&gt;</span>\n\n<span style=\"color:Blue;\">import</span> foo = require(<span style=\"color:#A31515;\">&#39;foo&#39;</span>);\n \r\n</pre></div>",
+    "PostedDate": "2013-07-08T14:31:57.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065822",
+    "ThreadId": "449290",
+    "Html": "Ah! Awesome. Thanks for the suggestion! I would still love for a supported way in the compiler to make this process easier, but this will definitely do for now.\r<br />\n<br />\nAnother possible solution would be an alias attribute in the reference XML element:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&#39;node_modules/foo/foo.d.ts&#39; alias=&#39;foo.d.ts&#39; /&gt;</span>\n\n<span style=\"color:Blue;\">import</span> foo = require(<span style=\"color:#A31515;\">&#39;foo&#39;</span>);\r\n</pre></div>",
+    "PostedDate": "2013-07-08T15:05:51.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

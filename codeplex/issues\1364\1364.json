@@ -1,0 +1,235 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:21.313-07:00",
+    "CommentCount": 39,
+    "Custom": null,
+    "Description": "There are many new APIs that are being proposed as part of ES6 and DOM that are not easy to reproduce in a structurally typed language like TypeScript. For example, the proposed ES6 loader API (http://wiki.ecmascript.org/doku.php?id=harmony:module_loaders) contains a number of functions that expect one of two possible return types.  Another example is the proposed Promise API (http://wiki.ecmascript.org/doku.php?id=strawman:promises or http://dom.spec.whatwg.org/#promises) that take a callback that is either a value (which would be a generic T), or a promise (which would be a generic Promise<T>).\r\n\r\nIn TypeScript, this can require a large number of overloads (in the case where the parameters to a method signature can differ) as in the Promise API, or is ambiguous (in the case where two similar method signatures only differ by the return type) as in the Loader API.\r\n\r\nI'd like to see type annotations provide some support for a type union. For example:\r\n\r\n### ES6 Promise\r\n```ts\r\nclass Promise<T> {\r\n  // ...\r\n  static any<TResult>(...values: union { Promise<T>; T; }[]): Promise<T>;\r\n  static every<TResult>(...values: union { Promise<T>; T; }[]): Promise<T[]>;\r\n  static some<TResult>(...values: union { Promise<T>; T; }[]): Promise<T>;\r\n  then(resolve?: (value: T) => union { Promise<T>; T; }, reject?: (value: any) => union { Promise<T>; T; }): Promise<T>;\r\n  // ...\r\n}\r\n```\r\n\r\n### ES6 Loader\r\n```ts\r\nclass Loader<T> {\r\n  // ...\r\n  normalize(name: string, referer?: Referer): union { string; { normalized: string; metadata?: any }; };\r\n  resolve(normalized: string, options?: { referer: Referer; metadata: any; }): union { string; { address: string; extra?: string[]; }; };\r\n  // ...\r\n}\r\n```\r\n\r\nWhen static type checking is performed, it is possible to have some type issues when explicitly providing generic type arguments and having the wrong type chosen, but this exists today without supporting type unions.  \r\n\r\nThe other open issue is what to do with a local that is a type union: should it act as an `any`, a type that contains all of the members of both (or all) types in the union, or a type that only contains the members that are the same in both (or all) types in the union.  \r\n\r\nAn implicit or explicit type cast from a type union to one of the union types would pass without the need to perform an intermediate cast to <any>, and an explicit type cast to a more specific type for any of the union types would likewise succeed without an intermediate cast.\r\n\r\nAssignment to a local or field that is a type union would succeed as if it were either of the types (e.g. implicit or explicit type cast from a more specific type to a less specific type specified in the type union).\r\n\r\nThere is also a question on how to properly handle the intellisense for a symbol that uses a type union. It could either be represented as a number of overloads (similar to what would have to be typed today), or preserve the type union definition.\r\n\r\n## Union Declaration\r\n\r\nProviding a typedef-like syntax for unions would also be useful to define a reusable definition:\r\n```ts\r\nunion Ref<T> {\r\n  Promise<T>;\r\n  T;\r\n}\r\n```\r\n\r\nThis is roughly analogous to an interface that defines multiple call signatures:\r\n\r\n```ts\r\n// as an interface with call signatures...\r\ninterface ResolveCallback<T> {\r\n  (value: Promise<T>): void;\r\n  (value: T): void;\r\n  (): void;\r\n}\r\n\r\n// ...and as a union with function types\r\nunion ResolveCallback<T> {\r\n  (value: Promise<T>) => void;\r\n  (value: T) => void;\r\n  () => void;\r\n}\r\n```\r\n\r\n## Static Analysis\r\nAdding type unions would require changes to the static type information to be supported. The primary goal of adding type unions is to help the compiler determine the best matching type for a call expression or return type expression. The following sections discuss various ways of handling static analysis of type unions.\r\n\r\n### Assigning to a Type Union\r\nWhen assigning to an identifier that is annotated with a type union, passing a value as an argument to a function for a parameter that is a type union, returning a value from a function with a type union in its return type annotation, or type-casting a value to a type union, the type of the value being assigned or returned must be compatible (as either an exact match or a superset of type information) with one of the types defined in the type union.\r\n\r\nFor example:\r\n```ts\r\n// assign to variable\r\nvar value: union { Promise<number>; number; };\r\nvalue = 1; // legal\r\nvalue = Promise.resolve<number>(1); // legal\r\nvalue = new Date(); // static error\r\n\r\n// type-cast to union\r\ndeclare var n: number;\r\ndeclare var p: Promise<number>;\r\ndeclare var a: any;\r\ndeclare var d: Date;\r\n<union { Promise<number>; number; }>n; // legal\r\n<union { Promise<number>; number; }>p; // legal\r\n<union { Promise<number>; number; }>a; // legal\r\n<union { Promise<number>; number; }>d; // legal\r\n\r\n// union in return value\r\nfunction func(type: string): union { Promise<number>; number; } {\r\n  switch (type) {\r\n    case \"number\":\r\n      return 1; // legal\r\n\r\n    case \"promise\":\r\n     return Promise.resolve<number>(1); // legal\r\n\r\n    case \"date\":\r\n     return new Date(); // static error  \r\n  }\r\n}\r\n\r\n// union in invocation expression\r\ndeclare function func(promiseOrValue: union { Promise<number>; number; }): void;\r\ndeclare var n: number;\r\ndeclare var p: Promise<number>;\r\ndeclare var a: any;\r\ndeclare var d: Date;\r\n\r\nfunc(n); // legal\r\nfunc(p); // legal\r\nfunc(a); // legal\r\nfunc(d); // static error\r\n```\r\n\r\n### Assigning from a Type Union\r\nWhen assigning to another value from a type union or type-casting from a type union, the type of the value must be compatible (as either an exact match or a subset of type information) with one of the types in the union.\r\n\r\nFor example:\r\n```ts\r\n// assignment\r\ndeclare var value: union { Promise<number>; number; };\r\nvar n: number;\r\nvar p: Promise<number>;\r\nvar a: any;\r\nvar d: Date;\r\n\r\nn = value; // legal\r\np = value; // legal\r\na = value; // legal\r\nd = value; // static error\r\n\r\n// type-cast\r\n<Promise<number>>value; // legal\r\n<number>value; // legal\r\n<any>value; // legal\r\n<Date>value; // static error\r\n```\r\n\r\n### Member Access or Indexers on a Type Union\r\nWhen a value that is a type union is part of either a member access or indexer expression, it is treated as `any`, and would only return a static error if --noImplicitAny is set.\r\n\r\n### Type Unions and Intellisense\r\nThe easiest approach to handling Intellisense on a value that is a type union is to treat it as `any`. To get more specific type information would require a type-cast to a more specific type.\r\n\r\n### Type Unions and Heritage clauses\r\nA Type Union can only be used in a type annotation and cannot be used in the position of a heritage clause in a class or interface (e.g. it cannot follow an `extends` or `implements` clause).\r\n\r\n### Type Unions and Generics\r\nA Type Union can contain a generic type parameter. When a best matching type is determined, the types are compared in definition order from top to bottom, as with overloads. For example:\r\n```ts\r\n// this...\r\ndeclare function resolve<T>(value: union: { Promise<T>; T; }): Promise<T>;\r\n\r\n// is equivalent to this...\r\ndeclare function resolve<T>(value: Promise<T>): Promise<T>;\r\ndeclare function resolve<T>(value: T): Promise<T>;\r\n```\r\n\r\n### Type Unions and Generic Constraints\r\nA Type Union can be used as part of a generic constraint. For example:\r\n```ts\r\ndeclare function log<T extends union { string; Message; }>(message: T): void;\r\n```\r\n\r\n### Type Unions and Recursive Generic Types\r\nOne of the goals for this proposal was to provide better typing for ES6 JavaScript built-ins, such as Promise. There is a problem with this proposal, however. It fails to address a quirk of ES6 Promises in that it is possible to have static type information for a recursively-nested Promise (i.e. `Promise<Promise<T>>`), while ES6 Promises adopt the state of any Promise passed to their resolution procedure (e.g., it is not possible to have a Promise for a Promise).  This represents a possible foot-gun for users where they could provide explicit static typing for a Promise that cannot match the actual state of the promise.\r\n\r\nOne solution to this is to add an additional `not` keyword to the heritage clause of a generic constraint. This would allow you to provide an exclusion list of types that *cannot* be used as part of the parameter. For example, this would be the type declaration for an ES6 Promise that supports its actual operation:\r\n\r\n```ts\r\ndeclare class Promise<TValue not Promise<any>> {\r\n  constructor(init: (resolve: (value?: union { Promise<TValue>; TValue; }) => void, reject: (reason: any) => void);\r\n\r\n  then<TResult not Promise<any>>(\r\n    resolve?: (value: TValue) => union { Promise<TResult>; TResult; },\r\n    reject?: (value: any) => union { Promise<TResult>; TResult; }\r\n  ): Promise<TResult>;\r\n\r\n  catch(\r\n    reject: (value: any) => union { Promise<TValue>; TValue; }\r\n  ): Promise<TValue>;\r\n\r\n  resolve<T not Promise<any>>(value: union { Promise<T>; T; }): Promise<T>;\r\n  resolve(): Promise<void>;\r\n\r\n  reject<T not Promise<any>>(error: any): Promise<T>;\r\n  reject(reason: any): Promise<void>;\r\n\r\n  all<T not Promise<any>>(values: union { Promise<T>; T; }[]): Promise<T[]>;\r\n  race<T not Promise<any>>(values: union { Promise<T>; T; }[]): Promise<T>;\r\n}\r\n```\r\n\r\n__Edit:__ Switched to `union` syntax for proposal, removed other alternatives, added more depth into how to handle (at least some of) the static analysis and intellisense issues, and added a proposed `not` constraint to generic constraints for better typing of Promise.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-18T15:19:27.79-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Add support for type unions",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 72,
+    "Id": 1364
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion. This is something we've considered in the past and may revisit in the future. Assigned to Jonathan.",
+      "PostedDate": "2013-07-19T11:14:40.747-07:00",
+      "Id": 106656
+    },
+    {
+      "Message": "this is a great idea.Because lot variables will behave at run time depending on the type.  ",
+      "PostedDate": "2013-08-06T01:11:43.17-07:00",
+      "Id": 108633
+    },
+    {
+      "Message": "I think the following is also possible:\n\n```typescript\nvar a: number|string|function = 3;\n```",
+      "PostedDate": "2013-09-13T13:00:28.21-07:00",
+      "Id": 113525
+    },
+    {
+      "Message": "Not clear why they cannot be supported the same way function overloading is: \n```typescript\n// Union types not allowed\nvar foo:{\n\tx:number;\n\tx:string;\n\tx:any; \n}\n// Overloading in functions is allowed \nfunction bar(x:number);\nfunction bar(x:string);\nfunction bar(x:any){}\n```\nHowever I very much ***prefer*** the following proposed syntax: \n```typescript\n// Proposed syntax: \nvar foo{\n\tx:number|string;\n} \nfunction bar(x:number|string);\n```\nAs it can even give us further restrictions: \n```TypeScript\n// The following should be an error: \nbar(true); // Not a number or a string \n```\nThere are a lot of definitions on DefinitelyTyped where the options bags are littered with `any` only because of lack of this support.  e.g.  [Jquery UI](https://github.com/borisyankov/DefinitelyTyped/blob/master/jqueryui/jqueryui.d.ts#L12)\n\n```TypeScript\n  interface AccordionOptions {\n        active?: any; // boolean or number\n```\nBut there is simply no way to enforce that type safety right now without this feature. And eventually people need to look at the type definition to find out what is allowed when the compiler could easily enforce it. ",
+      "PostedDate": "2013-09-29T00:22:22.057-07:00",
+      "Id": 115930
+    },
+    {
+      "Message": "Union types add complexity to type inference and tooling.  For example:\n\n```TypeScript\nfunction bar(x: number|string) {\n  x.  // <-- what do we show here?\n}\n```\n\nThe completion list for the above, should it show all of the members of both number or string, the interaction, or only one of them?  \n\nI do think they add value, and I'm sure we can find reasonable solutions to some of the engineering questions, but I'm not sure if the added complexity to the type system, type inference, and tooling is worth the benefit of slightly better type safety.  \n\nIn the initial Promise example, I believe those can be written today using overloads.  I'd like to see a strong motivating example for union types that tip the scales and show that it's worth the added complexity.",
+      "PostedDate": "2013-10-29T10:16:41.87-07:00",
+      "Id": 120058
+    },
+    {
+      "Message": "@jonturner Overloads definitely do _not_ solve the issue. Look at some of the definition files on Definitely Typed and you will see __tons__ of `any`s all over the place (JQuery anyone?), and it's almost entirely because of the lack of type unions. \n\nThe completion list issue is simple to solve- only show the members common to both types. Doing anything else would violate the type safety TypeScript works to achieve. If the user needs to access members unique to the type, they have to cast it. \n\nIMO, if TypeScript never gets type unions it will fall far short of its goal of fully describing the JavaScript type system. ",
+      "PostedDate": "2013-10-29T10:36:28.81-07:00",
+      "Id": 120065
+    },
+    {
+      "Message": "I'll +1 MgSam's comments.\n\nAngularJS severely needs union to have a complete TS definition.\n\nExample:\n\nWith reference\n```\nvar directive: ng.IDirective = { \n   controller: 'name of controller'\n };\n```\n\nor inline\n\n```\ncontroller: function(injectedServiceA) {\n}\n```\nor minify-safe array notation\n```\ncontroller: ['injectedServiceA', function(injectedServiceA) { }]\n```\n\nIt's full of these. Another example, also in ng.IDirective\n\n```\nrequire: 'single string'\n```\nor\n```\nrequire: ['string1', 'string2']\n```\nKeep the tooling simple if you must, it's better than using `any` after all\n",
+      "PostedDate": "2013-10-29T14:52:42.467-07:00",
+      "Id": 120104
+    },
+    {
+      "Message": "I don't think there are ___any___ js projects of significant size that don't need union types for their option bags.",
+      "PostedDate": "2013-10-29T15:25:51.573-07:00",
+      "Id": 120109
+    },
+    {
+      "Message": "I mean just right now: https://github.com/borisyankov/DefinitelyTyped/pull/1193/files#r7275357",
+      "PostedDate": "2013-10-29T15:35:37.023-07:00",
+      "Id": 120113
+    },
+    {
+      "Message": "already mentioned : https://github.com/borisyankov/DefinitelyTyped/pull/1198",
+      "PostedDate": "2013-10-29T17:44:57.65-07:00",
+      "Id": 120130
+    },
+    {
+      "Message": "another example : https://github.com/borisyankov/DefinitelyTyped/pull/1238/files",
+      "PostedDate": "2013-11-08T00:32:29.053-08:00",
+      "Id": 122277
+    },
+    {
+      "Message": "Another report : https://typescript.codeplex.com/workitem/1893",
+      "PostedDate": "2013-11-15T09:19:06.967-08:00",
+      "Id": 123190
+    },
+    {
+      "Message": "Continuing here from twitter - I also think this is an important part of JavaScript's type system and should be supported in TypeScript. I'd also like to offer some suggestions for some concerns that have been brought up here.\n\nRegarding syntax, I prefer this if possible, because of simplicity and clarity:\n``` TypeScript\nvar x:number|string;\n```\n\nI also think there should be some sort of syntax to name a type union. I think the word `union` is a good fit, although it would be nice to not have to introduce another keyword. My preference on syntax would be the following:\n``` TypeScript\nunion Server = http.Server | myApp.Server;\n```\n\nThere are a couple big problems with overloads right now.\n* They only work with function parameters. As others pointed out above, there are several cases where the lack of type unions for variables makes type safety impossible.\n* Type safety with overloads is only enforced when calling a function. This works well for libraries written in JS, but there should be a way of guaranteeing type safety while authoring a function in TypeScript. This can be fixed, but in order to do it properly, you're basically introducing the type union concept anyways.\n\nHere is an example that shows how type safety can be broken. In a large project, this is the type of mistake that could be easy to make but hard to track down, which TypeScript is supposed to prevent, but currently does not.\n``` TypeScript\nclass A {\n  x: number = 0;\n  y: string = 'g not called yet';\n}\n\nclass B {\n  x: boolean = false;\n  y: string = 'g not called yet';\n}\n\n// f accepts A|number\nfunction f(value: A);\nfunction f(value: number);\nfunction f(value: any) {\n  // This code looks safe based on how I've defined f.\n  if (typeof value === 'number') {\n    console.log(value);\n  } else {\n    // It must be A, based on the definition of f.\n    console.log(value.x);\n    value.x = -1; // reset it to some value.\n  }\n}\n\n// g accepts A|B\nfunction g(value: A);\nfunction g(value: B);\nfunction g(value: any) {\n  value.y = 'value of type ' + value.constructor.name + ' passed to g().';\n  // Oops, I forgot that value can't be type B when calling f().\n  f(value);\n}\n\nvar a = new A;\nvar b = new B;\n\nconsole.log(a.y);\nconsole.log(a.x);\n\nconsole.log(b.y);\nconsole.log(b.x);\n\ng(a);\ng(b);\n\nconsole.log(a.y);\nconsole.log(a.x);\n\nconsole.log(b.y);\nconsole.log(b.x); // TypeScript thinks this is a Number, but it is now a Boolean.\n```\n\nIf a type union concept existed, I would imagine that type `A` could be passed as type `A|number`, but type `A|B` could not. I imagine you would need to explicitly cast type `A|B`, which would make you think about writing some checks, like I did in the `f` function, but \"forgot\" in `g`.\n\nThe last thing I'd like to suggest is, as in my example, if all types in a type union share a property with the same name and type, it should be accessible without casting. So in my example, in function `g`, `value.y` should be accessible without a cast, because it is always the same type, but `value` would need to be cast to `A` or `B` before its `x` property can be accessed. So we are essentially creating a type that is the intersection of all the members of the types in the union. This also answers the question of what the IDE should suggest when you write `value.`.\n\nI hope this helps in the decision making process, and I'd be glad to answer any questions or discuss this feature more in depth.",
+      "PostedDate": "2013-11-19T20:41:34.39-08:00",
+      "Id": 123617
+    },
+    {
+      "Message": "Speaking of syntax, rather than union keyword I would prefer generalized type aliasing:\n\n```\ntype Server = http.Server | myApp.Server;\ntype Z = x.y.Z;\n```\n\nand maybe even\n```\ntype IFooBar = IFoo & IBar;\n```",
+      "PostedDate": "2013-11-20T02:06:30.31-08:00",
+      "Id": 123631
+    },
+    {
+      "Message": "Also needed for requireJS where `require` can be either `Require` or `RequireConfig`. See : https://github.com/borisyankov/DefinitelyTyped/issues/1716",
+      "PostedDate": "2014-02-20T14:40:59.1-08:00",
+      "Id": 134259
+    },
+    {
+      "Message": "Hi @jonturner\n\nI'd say there's a lot of evidence of use cases for type unions; mainly to support the creation of type definitions for existing JS libraries.\n\nSince this issue is still only at \"proposed\" it's clearly not going to be part of TS v1 but I'd love to hear if you guys are thinking of working on it after that?  Would you be able to give an update on what the TypeScript teams thoughts are on supporting type unions?\n",
+      "PostedDate": "2014-02-21T01:07:25.043-08:00",
+      "Id": 134297
+    },
+    {
+      "Message": "Any news on this?",
+      "PostedDate": "2014-03-06T06:30:53.037-08:00",
+      "Id": 136038
+    },
+    {
+      "Message": "@stijnherreman I wouldn't count on any for quite some time. They're not even going to consider new features until after the 1.0 release which could be a while away still given all the bug reports about 0.9.7.",
+      "PostedDate": "2014-03-06T07:01:32.533-08:00",
+      "Id": 136043
+    },
+    {
+      "Message": "We're on to 1.0 so time for a +1 and a re-evaluation? Stuff like this keeps coming by at DT. \n\nWorst-case I'm aware of is an overload with 8 overloads (!!) for bluebird, it is a bit crazy.",
+      "PostedDate": "2014-04-07T05:27:33.947-07:00",
+      "Id": 140800
+    },
+    {
+      "Message": "As a fellow DT contributor I'd +100 this if I could! I'm far more interested in this than async await etc because I see this as one of the weak parts of TypeScript at present. The lack of this feature leads to an absence of useful type information in many typing files (since the any type is not much of a guide as to the actually accepted types)",
+      "PostedDate": "2014-04-07T07:25:42.32-07:00",
+      "Id": 140809
+    },
+    {
+      "Message": "I just ran across a use case for this while configuring Durandal. The routes in durandal can be configured like so:\n\nexport function activate() {\n    return router_.map([\n        { route: ['', 'search'], moduleId: 'viewmodels/search', title: 'Search', nav: true },\n        { route: 'handsFree', moduleId: 'viewmodels/handsFree', title: 'Hands Free', nav: true }\n    ]).buildNavigationModel()\n        .activate();\n}\n\nThis allows the default/empty route \"\" to be mapped to the viewmodels/search module. The objects being created are instances of DurandalRouteConfiguration which defines the route parameter as \"route?: string\". Therefore, the search route is invalid because the route parameter we're supplying is an array. In this case, it would be useful to define route as \"route?: string | string[]\".",
+      "PostedDate": "2014-05-19T03:25:06.033-07:00",
+      "Id": 147028
+    },
+    {
+      "Message": "I like this idea. In Haskell you can define a type by enumerating other types:\n\n```\ndata Bool = False | True\n```\n\nShould the same ability be added to interfaces in TypeScript so as not to add another keyword? Maybe (referencing the Loader issue with promises)...?\n\n```\ninterface Eventual<T> = T | Promise<T>;\n```\n\nAbout the issue with code completion, should it be disabled until the programmer dealt with the type ambiguity?",
+      "PostedDate": "2014-05-24T08:41:23.163-07:00",
+      "Id": 147619
+    },
+    {
+      "Message": "Also note that enumerated types as in `interface Foo = Bar` also allow for much more natural definitions of function types:\n\n```\ninterface MyFun = (string) => boolean;\n\n// vs\n\ninterface MyFun {\n  (string): boolean;\n}\n```",
+      "PostedDate": "2014-05-24T09:05:19.58-07:00",
+      "Id": 147620
+    },
+    {
+      "Message": "I would imagine a better method would be to support existing semantics for extending interfaces.\n\n```\ninterface Eventual<T> extends T | Promise<T>;\ninterface MyFun extends (string) => boolean;\n```\n\nAnd by \"Better\", I mean \"easier to support quickly\" (interfaces are not objects/values like modules and classes, so I'm guessing '=' would not work in the design).  IMHO just removing the need to declare a body for types may be all that is needed, such as my request here: https://typescript.codeplex.com/workitem/2475\n",
+      "PostedDate": "2014-05-24T18:19:03.15-07:00",
+      "Id": 147629
+    },
+    {
+      "Message": "I ran into the need for union types a lot when creating a definition for Sequelize. \n\nhttps://github.com/samuelneff/DefinitelyTyped/blob/sequelize/sequelize/sequelize.d.ts\n\nThere are a lot of options objects that take a property which can be a string or a more elaborate object.\n\nThanks,\n\nSam\n",
+      "PostedDate": "2014-06-13T06:50:54.647-07:00",
+      "Id": 149641
+    },
+    {
+      "Message": "We definitely need this. Without this support, currently using `any` in the numerous projects type definitions that use option bags, including jQuery and AngularJS, which makes the whole practise of defining types at all pointless.  \n\nIt's almost a year since this issue was raised and the practise of using option bags with overloading of the accepted type is becoming more prevalent in JavaScript projects, with still no support from TypeScript. Is there any feedback on this?",
+      "PostedDate": "2014-06-29T03:06:53.437-07:00",
+      "Id": 151081
+    },
+    {
+      "Message": "> Union types add complexity to type inference and tooling. For example:\n>\n>     function bar(x: number|string) {\n>       x.  // <-- what do we show here?\n>     }\n>\n>The completion list for the above, should it show all of the members of both number or string, the >interaction, or only one of them?\n\nHow about this way? I sometimes want this when I make overloads.\n\n    function bar(x: number|string) {\n\t  if (typeof x === \"number\") {\n\t    declare x: number; // Let's declare x as number in this block\n        x. // Now we know what to show\n\t  }\n\t  else {\n\t  }\n    }",
+      "PostedDate": "2014-06-30T09:24:32.563-07:00",
+      "Id": 151149
+    },
+    {
+      "Message": "__Edit:__ Switched to `union` syntax for proposal, removed other alternatives, added more depth into how to handle (at least some of) the static analysis and Intellisense issues, and added a proposed `not` constraint to generic constraints for better typing of Promise.",
+      "PostedDate": "2014-06-30T12:38:40.947-07:00",
+      "Id": 151176
+    },
+    {
+      "Message": "> jonturner wrote:\n>\n> Union types add complexity to type inference and tooling. For example:\n> [snip]\n> The completion list for the above, should it show all of the members of both number or string, the interaction, or only one of them?\n\n \nI've amended the suggestion with a possible approach to handling type inference. Generally, I would treat any member access/indexer as `any` and allow rules such as `--noImplicitAny` to catch errors. If you want more specific typing, you would type cast (which you would have to do with `any` today anyways).\n\nThere are three major values of type unions (and the `not` constraint as defined above):\n* Ability to limit the return value of a function/method to a restricted list of allowed types (which supports Promise, Loader, etc). This is not possible today in TypeScript (other than using `any`).\n* Ability to properly infer a generic type parameter for a callback when there are multiple possible return values. This is only partly possible today in TypeScript using multiple overloads, and still only if the function supplied to the callback only returns _one_ of those types.\n* Ability to properly type complex ES6 built-ins like Promise, which do things like adopt promise state when resolving with a promise). There are a lot of cases where this breaks using TypeScript today.",
+      "PostedDate": "2014-06-30T12:49:16.43-07:00",
+      "Id": 151179
+    },
+    {
+      "Message": "Until union types are supported by TypeScript compiler, let's promote a convention of commenting those `not-so-any` types. My proposal is like below, borrowing partially from Closure Compiler annotations.\n\n```TypeScript\ninterface DatepickerOptions {\n    /**\n     * Beginning of time.\n     * @type {Date} | {string}\n     */\n    startDate?: any;\n\n    /**\n     * End of time.\n     * @type {Date} | {string}\n     */\n    endDate?: any;\n}\n```\n",
+      "PostedDate": "2014-07-02T16:07:12.117-07:00",
+      "Id": 151429
+    },
+    {
+      "Message": "Better yet, use actual closure/jsdoc syntax: `@type {(Data|string)}`",
+      "PostedDate": "2014-07-02T16:47:27.34-07:00",
+      "Id": 151437
+    },
+    {
+      "Message": "@omidkrad looks good: \n![Image](http://i.imgur.com/NTOHULI.png)",
+      "PostedDate": "2014-07-02T16:47:33.5-07:00",
+      "Id": 151438
+    },
+    {
+      "Message": "@omidkrad : @mwisnicki 's syntax is better : http://usejsdoc.org/tags-type.html (see \"type union\") \n\nIn either case TS doesn't care about `@types` and just displays it as a part of the jsdoc string.\n\nI wonder if its just easier to go with `@type Date|string` \n\nie : \n\n\n```typescript\ninterface DatepickerOptions {\n/**\n* Beginning of time.\n* @type Date|string\n*/\nstartDate?: any;\n\n/**\n* End of time.\n* @type Date|string\n*/\nendDate?: any;\n}\n```\n\nIts easier to type / update. \n\n![Image](http://i.imgur.com/kNwF1uR.png)",
+      "PostedDate": "2014-07-02T17:22:44.793-07:00",
+      "Id": 151440
+    },
+    {
+      "Message": "Thank you @mwisnicki and @basarat.\n\nI'd go with Closure Compiler's syntax just because there is a spec for it. I like using a well defined annotation syntax over a simple comment because if we ever get TypeScript support for union types, then it would be possible to develop tools to help with the conversion.",
+      "PostedDate": "2014-07-03T14:31:35.95-07:00",
+      "Id": 151565
+    },
+    {
+      "Message": "Why on earth would it be legal to typecast a Date variable to a union, as in the example above (and below):\n\n```\ndeclare var d: Date;\n<union { Promise<number>; number; }>d; // legal\n```\n\nShouldn't there be static checking on typecasts, making sure you only typecast in the right direction in the object hierarchy? That is, to a more general type.",
+      "PostedDate": "2014-07-07T07:02:40.427-07:00",
+      "Id": 151732
+    },
+    {
+      "Message": "+1 for @mwisnicki's generalization. Two great features for the price of one keyword!",
+      "PostedDate": "2014-07-16T20:10:45.73-07:00",
+      "Id": 152654
+    },
+    {
+      "Message": "I agree with __@ollehar__, I think `<union { Promise<number>; number; }><any>d;` should be possible but not `<union { Promise<number>; number; }>d;`.",
+      "PostedDate": "2014-07-21T01:17:06.48-07:00",
+      "Id": 153032
+    },
+    {
+      "Message": "Moved to https://github.com/Microsoft/TypeScript/issues/14",
+      "PostedDate": "2014-08-02T02:39:20.78-07:00",
+      "Id": 154228
+    },
+    {
+      "Message": "FYI, Facebook just announced Flow language, and it supports Union Types.\n\nhttps://github.com/Microsoft/TypeScript/issues/14#issuecomment-63526679\n",
+      "PostedDate": "2014-11-18T11:19:20.643-08:00",
+      "Id": 166030
+    }
+  ]
+}

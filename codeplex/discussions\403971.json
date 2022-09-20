@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "944650",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Hi, i've try to get sugar.js working with TypeScript. I found a type definition file&nbsp;https://github.com/borisyankov/DefinitelyTyped/blob/master/sugar/sugar-1.3.d.ts which extends the Date interface like that.</p>\r\n<p>Date.now().format();</p>\r\n<p>But whats missing currently are this:</p>\r\n<p>Date.create(&quot;now&quot;);</p>\r\n<p>So how to extends the static objects? It seems simple to extend the interfaces. But I had no luck yet to extend the global variables.</p>\r\n",
+    "PostedDate": "2012-11-20T08:30:14.143-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "944863",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>I think there might be a bug/issue, if you look into lib.d.ts you will see Date has some static functions declared using &quot;declare var Date&quot; rather than the interface. &nbsp;So I tried this for sugar.d.ts, using &quot;X&quot; as the identifier the compiler will recognize\r\n this and X.create() is a valid function. &nbsp;However using Date the typescript compiler does not recognize the declare and says Date.create() is not defined.</p>\r\n<pre><div style=\"color:black; background-color:white\"><pre>declare <span style=\"color:blue\">var</span> X: {\n\tcreate(locale?: string): Date;\n\tcreate(d: string, locale?: string): Date;\n\tcreate(year: number, month: number, day: number, locale?: string): Date;\n}\n\nX.create(<span style=\"color:#a31515\">&quot;january 11th 2008&quot;</span>);\n\ndeclare <span style=\"color:blue\">var</span> Date: {\n\tcreate(locale?: string): Date;\n\tcreate(d: string, locale?: string): Date;\n\tcreate(year: number, month: number, day: number, locale?: string): Date;\n}\n\nDate.<span style=\"color:#ff0000\">create</span>(<span style=\"color:#a31515\">&quot;january 11th 2008&quot;</span>);\n</pre>\n</div>\n<br></pre>\r\n<p>Specifically the error I get is:</p>\r\n<p>&quot;Error 1 The property 'create' does not exist on value of type '{ prototype: Date; parse(s: string): number; UTC(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number; now(): number; (): string;\r\n new(): Date; new(value: number): Date; new(value: string): Date; new(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date; }' C:\\some\\path\\sugar.d.ts\\test.ts 9 6 test.ts&quot;</p>\r\n<p>And here is what lib.d.ts declares for Date:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// static</span>\ndeclare <span style=\"color:blue\">var</span> Date: {\n    <span style=\"color:blue\">new</span> (): Date;\n    <span style=\"color:blue\">new</span> (value: number): Date;\n    <span style=\"color:blue\">new</span> (value: string): Date;\n    <span style=\"color:blue\">new</span> (year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;\n    (): string;\n    prototype: Date;\n    parse(s: string): number;\n    UTC(year: number, month: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number;\n    now(): number;\n}\n\n<span style=\"color:green\">// prototype</span>\n<span style=\"color:blue\">interface</span> Date {\n    toString(): string;\n    toDateString(): string;\n    toTimeString(): string;\n...\n...\n}\n</pre>\r\n</div>\r\n<p>Now finally if I do:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">export declare</span> <span style=\"color:blue\">var</span> Date: {\n    create(locale?: string): Date;\n}\n</pre>\r\n</div>\r\n<p>Then the typescript compiler will overwrite the lib.d.ts definitions of Date and the only function that appears is Date.create(). &nbsp;There is no way to 'mixin' or add functions statically as far as I can tell without wiping out the previous definitions.</p>\r\n",
+    "PostedDate": "2012-11-20T16:33:28.363-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "944947",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Ah thx the export keyword did the trick.</p>\r\n<p>I think if they would use a DateStatic interface like the JQuery type def use, inside of the lib.d.ts instad of an Object. Then this stuff would be possible.</p>\r\n",
+    "PostedDate": "2012-11-20T21:01:35.417-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "945288",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Ah that dose not work. The compile dose not say anything about hat. But if you put it in a .d.ts file. Its still not available. :(</p>\r\n",
+    "PostedDate": "2012-11-21T10:37:37.5-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946741",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>This indeed seems like a bug to me too, will someone on the TypeScript team fix this?</p>\r\n<p>I would really like to be able to add some custom static functions to the Date object.</p>\r\n",
+    "PostedDate": "2012-11-25T12:17:12.027-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946750",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Ive added an change request which could help fix this. But no reaction yet.</p>\r\n<p>http://typescript.codeplex.com/workitem/482</p>\r\n",
+    "PostedDate": "2012-11-25T12:52:31.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946751",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>&quot;voted&quot;, hope it will get the attention it deserves :)</p>\r\n",
+    "PostedDate": "2012-11-25T12:59:45.273-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "947004",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>This is one of those early issues that has not yet been fixed:</p>\r\n<p>http://typescript.codeplex.com/discussions/400979</p>\r\n<p>https://typescript.codeplex.com/workitem/176</p>\r\n<p>&nbsp;</p>\r\n<p>I guess the TS team has become tired of saying &quot;we're working on it&quot; when they aren't really :-)</p>\r\n<p>&nbsp;</p>\r\n<p>Our strategy at the moment has been to define a temporary type say Date2:&nbsp;</p>\r\n<p>class Date2 {&nbsp; &nbsp; public static create() {&nbsp; &nbsp; }}</p>\r\n<p>Then once the fix is in place it should be a straightforward find-and-replace &quot;Date2&quot; with &quot;Date&quot;.</p>\r\n",
+    "PostedDate": "2012-11-26T05:11:04.79-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "947112",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Seems like a good workaround for now, thanks for finding the previous issue nabog.</p>\r\n",
+    "PostedDate": "2012-11-26T09:29:19.277-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "956596",
+    "ThreadId": "403971",
+    "Html": "\r\n<p>Oh nice, the state of my issue has changed to verify http://typescript.codeplex.com/workitem/482</p>\r\n",
+    "PostedDate": "2012-12-16T00:53:43.237-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1138057",
+    "ThreadId": "403971",
+    "Html": "I've created a quick gist with my current workaround/solution for using Sugar.js's static extensions.  I'm still pretty new to TypeScript, so I'm sure its not the best solution, but I did not see a workaround example in my own search so maybe this will help someone.<br />\n<ul>\n<li><a href=\"https://gist.github.com/vmadman/8034329\" rel=\"nofollow\">https://gist.github.com/vmadman/8034329</a></li>\n</ul>\n",
+    "PostedDate": "2013-12-18T20:27:47.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1311010",
+    "ThreadId": "403971",
+    "Html": "Related issue tracking on GitHub: <a href=\"https://github.com/Microsoft/TypeScript/issues/182\" rel=\"nofollow\">https://github.com/Microsoft/TypeScript/issues/182</a><br />\n",
+    "PostedDate": "2014-10-06T20:33:41.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1311235",
+    "ThreadId": "403971",
+    "Html": "For the record, I simply redefine the primitive types I need in a separate ts file, within the root of my namespace, and copy over the lib.d.ts declarations.  Then, after the declaration, I &quot;stitch up&quot; the actual code for it using typical JS:<br />\n<pre><code>declare function __extends(d:{}, b:{});\n// (note: the above only exists when you extend classes naturally,\n//  otherwise you need to define it manually)\ndeclare module NativeTypes {\n    export interface IDate extends Date { }\n    /*...etc...*/ \n}\ndeclare module NativeStaticTypes {\n    export var StaticDate : typeof Date; \n    /*...etc...*/ \n}\ninterface IStaticGlobals extends Window {\n    Date: typeof NativeStaticTypes.StaticDate;\n    /*...etc...*/ \n}\nmodule MyApp {\n    export var global: IStaticGlobals = (function () { return function () { }.constructor(&quot;return this&quot;); })(); \n    export declare class Date implements NativeTypes.IDate {\n        constructor();\n        constructor(value: number); \n        constructor(dateString: string); \n        constructor(year, month, day, hour, minute, second, millisecond);\n        /*... copy declarations from lib.d.ts (including static ones) ...*/\n    }\n    \n    (function(){\n        MyApp.Date = &lt;any&gt;function(/*...*/) {\n            /*...*/\n        };\n        __extends(MyApp.Date, global.Date)\n    })();\n}\n</code></pre>\n\nThen within my own namespace, Date becomes extendable, and <code>instanceof Date</code> also works as expected.  While I could have created say &quot;DateEx&quot; or something, I can only rename my own code later, and not my API users, so this way, if TS later supports extending primitive types, I just remove this one file. ;)<br />\n",
+    "PostedDate": "2014-10-07T09:20:36.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

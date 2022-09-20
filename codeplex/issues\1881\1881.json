@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "External modules (files with a top-level 'import' or 'export') have all their declarations in a new anonymous namespace. So, in this case, app.ts's \"foo\" is actually \"app.ts\".foo, whereas foo.d.ts's \"foo\" is a global \"foo\". They don't contribute to the same object.",
+    "ClosedDate": "2013-11-11T08:38:08.537-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "For example: \r\n\r\nI have a TypeScript external definition file (foo.d.ts):\r\n```\r\n//foo definitions\r\n\r\ndeclare module foo {\r\n    export interface IFoo {\r\n        some(): void;\r\n    }\r\n}\r\n```\r\n\r\nThen I use it like this (in app.ts):\r\n```\r\n/// <reference path=\"foo.d.ts\" />\r\n\r\nimport some = require(\"some/some.ts\"); //without this, all be OK\r\n\r\nmodule foo {\r\n    export function create(): IFoo {  //error TS2095: Could not find symbol 'IFoo'.\r\n        return null;\r\n    }\r\n}\r\n\r\nexport = foo; //without this, all be OK\r\n```\r\n\r\nAnd build this with: _tsc app.ts --module AMD_\r\nAnd I get a compile error: TS2095.\r\n\r\nImport and export keyword do not allow to build the example without error.",
+    "LastUpdatedDate": "2013-11-19T15:48:49.347-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-10T11:51:04.657-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Could not extend interfaces described in declaration files if 'export' used.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1881
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a very strange decision. The modules are especially effective in large applications where it is necessary to break the code into multiple parts.  And you forbid use a common namespace. Especially because in terms of javascript there are no limits for this. I hope that these restrictions will be removed in a future release.",
+      "PostedDate": "2013-11-12T01:22:24.923-08:00",
+      "Id": 122732
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the latest bits in the develop branch. I'm seeing < 400mb of memory used by VS when editing this file in a project now.",
+    "ClosedDate": "2013-10-21T16:59:52.327-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I posted this already in a frustrated review, but I'll repeat here for tracking purposes. As of upgrading to 0.9.1.1 I cannot compile my solution at all anymore via VS, and now get:\r\n\r\n``` TypeScript\r\n/*\r\n\r\nCompile Error. \r\nSee error list for details\r\n tsc.js(34565, 9) Microsoft JScript runtime error: Out of stack space\r\n\r\n*/\r\n```\r\n\r\nEDIT:\r\nI think I've found the offending file. See my comment below.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T06:02:04.65-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.1.1 out of stack space",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1564
+  },
+  "FileAttachments": [
+    {
+      "FileId": 721218,
+      "FileName": "linq-2.2.d.ts",
+      "DownloadUrl": ".\\721218"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Ok, I think I've localized the file that's causing the issue. It's the definition file I made for linq.js 2.2. I've attached it to this issue.\r\n\r\nI think the culprit may actually be the self-referencing generic types (such as with GroupBy). Note, the file may have syntax errors- I've never been able to get the compiler to not crash when parsing it. ",
+      "PostedDate": "2013-08-23T14:14:17.163-07:00",
+      "Id": 111000
+    },
+    {
+      "Message": "I feel your pain but there's not much we can do without something that can repro this. We've definitely been making any performance issues a priority so we'd love to get to the bottom of this if you're able to share anything that can help. Please re-open if you can provide some more info to help us narrow this down. If you have a project you can only share privately we can also try to debug it without sharing it with the rest of the world.\n\nWe do a significant amount of stress testing to try to uncover issues like this. Generally these types of bugs are not nearly as simple as a single function calling itself recursively over and over and never terminating. The stack trace is generally a much more complex series of repeated calls and walks through AST nodes that are not really practical to constantly trace. There are specific algorithms where we can do this kind of thing and do (ex the recent lifting of the generative recursive types restrictions).\n\r\n\r** Closed by danquirk 08/22/2013 2:52PM",
+      "PostedDate": "2013-08-22T14:52:23.64-07:00",
+      "Id": 111001
+    },
+    {
+      "Message": "Thanks for narrowing it down, much appreciated. With the most recent bits in the develop branch this doesn't cause a crash anymore. We recently implemented the code to lift the restriction on previously illegal recursive generic types so it's definitely possible that it was fixed. I'm going to go through and fix some of the errors and make sure that's completely true though. That said, I'm seeing really bad performance in VS while editing this file which I want to make sure we investigate. ",
+      "PostedDate": "2013-08-23T14:51:33.117-07:00",
+      "Id": 111009
+    },
+    {
+      "Message": "I'm getting this issue again with current develop bits, but with a slightly different configuration that involves several .d.ts files.\nI've opened another issue for this - [1681](https://typescript.codeplex.com/workitem/1681).",
+      "PostedDate": "2013-09-12T13:24:37.183-07:00",
+      "Id": 113396
+    }
+  ]
+}

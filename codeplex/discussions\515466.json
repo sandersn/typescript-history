@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1185490",
+    "ThreadId": "515466",
+    "Html": "I've developed a site <a href=\"http://typescript.io/\" rel=\"nofollow\">http://typescript.io/</a> that sorta acts as a fiddler for typescript. One of the bugs I've run into when using the js version of the script is that 'var _this = this;' is not being output when appropriate.<br />\n<br />\nHere is a gist of the compiler <a href=\"https://gist.github.com/Buildstarted/8531393\" rel=\"nofollow\">https://gist.github.com/Buildstarted/8531393</a><br />\n<br />\nI haven't been able to find any settings that would allow me to force using _this. Is there something else I'm missing? From what I can understand reading the source is that the script itself defines that it should be capture 'this'. I wonder if maybe PullElementFlags.MustCaptureThis is not defined properly on my end.<br />\n<br />\nHere's a sample prototype that fails - the code is copied from the typescriptlang.org playground for the raytracer.<br />\n<br />\n<a href=\"http://typescript.io/JWZGDSXk0Ag\" rel=\"nofollow\">http://typescript.io/JWZGDSXk0Ag</a><br />\n<br />\nAnd here's another bare-bones sample <a href=\"http://typescript.io/sPJew07k0Ag\" rel=\"nofollow\">http://typescript.io/sPJew07k0Ag</a><br />\n",
+    "PostedDate": "2014-01-20T15:21:40.463-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1185536",
+    "ThreadId": "515466",
+    "Html": "At a minimum you need to be calling getSemanticDiagnostics - this is what does all the typechecking that internally sets the flags so the emitter knows whether or not to emit var _this = this;. I think doing that should be enough to get it fixed. You definitely shouldn't be trying to set PullElementFlags yourself.<br />\n",
+    "PostedDate": "2014-01-20T16:35:45.487-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1185554",
+    "ThreadId": "515466",
+    "Html": "I should add that you can refer to the 'HarnessCompiler' class in src\\harness\\harness.ts (see near line 1050 in the develop branch) as a reference for how to invoke the compiler. It's not pretty but it is what we use internally to compile all the test baselines, so it's a good enough implementation for this sort of webpage where you don't need to host file I/O.\r<br />\n<br />\nYou can also check 'BatchCompiler' in src\\compiler\\tsc.ts which is a complete implementation (and guaranteed to match the commandline behavior, since that's the actual backing class for tsc.exe), but it's more code to wade through.<br />\n",
+    "PostedDate": "2014-01-20T16:42:45.67-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1185720",
+    "ThreadId": "515466",
+    "Html": "Ah!!!! I see what you mean about getSemanticDiagnostics. It makes sense now. Added that and it works perfectly now. So in essence that was a sort of preprocessor to mark each node and it's type information.\r<br />\n<br />\nThanks a ton for your help. It's been bugging me so much. I've been scouring the source for typescript and didn't realize the connection there.<br />\n",
+    "PostedDate": "2014-01-20T17:55:12.873-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

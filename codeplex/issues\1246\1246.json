@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-27T12:33:23.623-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "for ts 0.9.0.0\r\n\r\nI have code in attached zip  archive (also available at https://github.com/BBGONE/jRIAppTS)\r\n-at file binding.ts\r\nline number 413\r\n\r\n```\r\n set target(v:BaseObject) {\r\n                    if (!!this._state) {\r\n                        this._state.target = v;\r\n                        return;\r\n                    }\r\n                    if (this._target !== v) {\r\n                        var tgtObj = this._targetObj;\r\n                        if (!!tgtObj && !tgtObj._isDestroyCalled) {\r\n                            this._ignoreTgtChange = true;\r\n                            try {\r\n                                this.targetValue = null;\r\n                            }\r\n                            finally {\r\n                                this._ignoreTgtChange = false;\r\n                            }\r\n                        }\r\n                        this._checkBounded(null, 'target', 0, this._tgtPath);\r\n                        if (!!v && !utils.check.isBaseObj(v))\r\n                            throw new Error(RIAPP.ERRS.ERR_BIND_TARGET_INVALID);\r\n                        this._target = v;\r\n                        this._bindToTarget();\r\n                        if (!!this._target && !this._targetObj)\r\n                            throw new Error(utils.format(RIAPP.ERRS.ERR_BIND_TGTPATH_INVALID, this._tgtPath.join('.')));\r\n                    }\r\n                }\r\n```\r\n\r\nlook at the code:    var tgtObj = this._targetObj;\r\n\r\nit is compiled to\r\n```\r\nthis.tgtObj = this._targetObj;;\r\n```\r\n\r\nexpected to compile to \r\n\r\n```\r\n  var tgtObj = this._targetObj;\r\n\r\n```",
+    "LastUpdatedDate": "2013-06-27T12:33:23.623-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-26T03:29:29.55-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "the compiler compiles code in the wrong way adding this. scope to var variables",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1246
+  },
+  "FileAttachments": [
+    {
+      "FileId": 697026,
+      "FileName": "jriappTS.zip",
+      "DownloadUrl": ".\\697026"
+    },
+    {
+      "FileId": 697041,
+      "FileName": "jriappTS2.zip",
+      "DownloadUrl": ".\\697041"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Please, use for checking the second attached zip file",
+      "PostedDate": "2013-06-26T04:38:55.003-07:00",
+      "Id": 104197
+    },
+    {
+      "Message": "but wait, there's more!!!\nlook at the code in listbox.ts line 466\n```\n set dataSource(v) {\n                    var self = this;\n                    if (this._dataSource !== v) {\n                        this._dataSource = v;\n                        if (!!this._listBox)\n                            this._listBox.destroy();\n                        this._listBox = null;\n                        if (!!this._dataSource) {\n                            this._listBox = new ListBox(<HTMLSelectElement>this._el, this._dataSource, this._options);\n                            this._listBox.addOnDestroyed(function () {\n                                self._listBox = null;\n                            }, this.uniqueID);\n                            this._listBox.addOnPropertyChange('*', function (sender, args) {\n                                self.raisePropertyChanged(args.property);\n                            }, this.uniqueID);\n                        }\n                        self.invokePropChanged('listBox');\n                    }\n                }\n```\nit is compiled to\n\n```\n    set: function (v) {\n                        this.self = this;;\n                        if (this._dataSource !== v) {\n                            this._dataSource = v;\n                            if (!!this._listBox)\n                                this._listBox.destroy();\n                            this._listBox = null;\n                            if (!!this._dataSource) {\n                                this._listBox = new ListBox(this._el, this._dataSource, this._options);\n                                this._listBox.addOnDestroyed(function () {\n                                    self._listBox = null;\n                                }, this.uniqueID);\n                                this._listBox.addOnPropertyChange('*', function (sender, args) {\n                                    self.raisePropertyChanged(args.property);\n                                }, this.uniqueID);\n                            }\n                            self.invokePropChanged('listBox');\n                        }\n                    },\n```\nthe answer is - why it compiled?\n  var self = this;\nto\nthis.self = this;;\n",
+      "PostedDate": "2013-06-26T05:04:24.08-07:00",
+      "Id": 104198
+    },
+    {
+      "Message": "the same error in dataform.ts file at line 384\nit compiles the self variable in the same wrong way as above.\n\nthis version of the compiler is absolutely unusable now.\nit creates wrong code not only with generics, but with the plain javascript code.",
+      "PostedDate": "2013-06-26T05:14:17.34-07:00",
+      "Id": 104199
+    },
+    {
+      "Message": "also look in datagrid.ts at line 1881\n```\n   set currentRow(row) {\n                    var ds = this._dataSource, old = this._currentRow, isChanged = false;\n```\nis compiled to\n```\nset: function (row) {\nthis.ds = this._dataSource;;this.old = this._currentRow;;this.isChanged = false;; \n```",
+      "PostedDate": "2013-06-26T05:24:38.99-07:00",
+      "Id": 104201
+    },
+    {
+      "Message": "P.S.- i tried to reduce the problem, but very simple examples compile normaly.\nThis bug arises selectively at some places of a large code base.",
+      "PostedDate": "2013-06-26T15:45:26.333-07:00",
+      "Id": 104275
+    },
+    {
+      "Message": "Yes, this was an unfortunate bug we didn't catch.  This was already logged at https://typescript.codeplex.com/workitem/1167 and is already fixed by http://typescript.codeplex.com/SourceControl/changeset/f4fbbb68674791e03a8702b49ea012ecad29c002 .  We hope to push out a fixed package with this soon.",
+      "PostedDate": "2013-06-27T12:33:14.297-07:00",
+      "Id": 104393
+    }
+  ]
+}

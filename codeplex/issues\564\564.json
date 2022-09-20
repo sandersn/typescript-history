@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.41-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Several Javascript libraries use the concept of 'default options' that may be passed to as constructor parameter. The constructor then uses a set of default parameters, but overrides all properties for which the given object has a value.\n\nThe following sample illustrates this pattern:\n\nvar canvas = new fabric.Canvas('c', {  hoverCursor: 'pointer',  selection: false});\nFor handling this case right now I need the following TypeScript code:\n\n \n\ndeclare var Canvas: {\n        new (element: string, options: {\n            containerClass?: string;\n            defaultCursor?: string;\n            freeDrawingColor?: string;\n            freeDrawingLineWidth?: number;\n            hoverCursor?: string;\n            interactive?: bool;\n            moveCursor?: string;\n            perPixelTargetFind?: bool;\n            rotationCursor?: string;\n            selection?: bool;\n            selectionBorderColor?: string;\n            selectionColor?: string;\n            selectionDashArray?: number[];\n            selectionLineWidth?: number;\n            targetFindTolerance?: number;\n        }): Canvas;\n    }\n \n\n \n\nThus, we need to duplicate the fields which are available on a specific class, as they are also set on the actual class definition itself (without the '?'):\n\n \n\ninterface Canvas extends StaticCanvas {\n   \n        // constructors\n        (element: Element): Canvas;\n        (element: string): Canvas;\n\n        // fields\n        containerClass: string;\n        defaultCursor: string;\n        freeDrawingColor: string;\n        freeDrawingLineWidth: number;\n        hoverCursor: string;\n        interactive: bool;\n        moveCursor: string;\n        perPixelTargetFind: bool;\n        rotationCursor: string;\n        selection: bool;\n        selectionBorderColor: string;\n        selectionColor: string;\n        selectionDashArray: number[];\n        selectionLineWidth: number;\n        targetFindTolerance: number;\n        ...\n}   \n \n\n \n\n \n\nI think it would be nice to\n\na.) store such literal types using a name, so they can be re-used across multiple methods and b.) provide a way to prevent duplication at all, for example by mapping the actual type to a \"shadow type\" which is only used for initialization (see code sample\n below)\n\n\n\nnew (element: string, options*: Canvas);\n\n// should allow the following use\nvar canvas = new fabric.Canvas('c', {\n  hoverCursor: 'pointer',\n  selection: false\n});\n\n\nI have seen the same pattern not only at fabric.js but also at other popular javascript libraries. Jquery is also such an example - in this case the predefined type defintion file for Jquery makes heavy use of 'any' so that all usages are allowed.\n\nKind Regards,\nOliver",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-18T08:48:40.147-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Better type annotation support for object initialization via \"options\" parameter in form of object literal",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 564
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "926088",
+    "ThreadId": "399209",
+    "Html": "\r\n<p>I expected the following code to compile fine. When I put the two method signatures in the class declaration it all goes fine (the multiple signatures, one implementation rule).&nbsp;But when I put them in a separate interface, the compiler complains about\r\n incompatible types.</p>\r\n<p>interface ITest {<br>\r\n&nbsp; &nbsp; foo(a:number,b:number) : number; <br>\r\n&nbsp; &nbsp; foo(a:string,b:string) : string;<br>\r\n}</p>\r\n<p>class Test implements ITest {<span> <br>\r\n</span>&nbsp; &nbsp; &nbsp;foo(a:any,b:any):any {&nbsp;<span> <br>\r\n</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;return null;<span> <br>\r\n</span>&nbsp; &nbsp; &nbsp; }<br>\r\n}</p>\r\n<p>Can anyone shed some light?</p>\r\n<p>--Peter</p>\r\n",
+    "PostedDate": "2012-10-13T00:06:59.06-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926170",
+    "ThreadId": "399209",
+    "Html": "<p>Here's how to write it:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> ITest {\r\n    foo(a: number, b: number): number;\r\n    foo(a: string, b: string): string;\r\n}\r\n\r\n<span style=\"color: blue;\">class</span> Test <span style=\"color: blue;\">implements</span> ITest {\r\n    foo(a: number, b: number): number;\r\n    foo(a: string, b: string): string;\r\n    foo(a: any, b: any): any {\r\n        <span style=\"color: blue;\">return</span> <span style=\"color: blue;\">null</span>;\r\n    }\r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>When you implement an interface the compiler checks that your class is a subtype of that interface. That wasn't the case in your original example, specifically because { (a: any, b: any): any; } is not a subtype of { (a: number; b: number): number; (a: string; b: string): string; }.</p>\r\n<p>Anders</p>",
+    "PostedDate": "2012-10-13T10:14:25.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926196",
+    "ThreadId": "399209",
+    "Html": "<p>Thanks for the reply.</p>\r\n<p>Still a small question remaining.&nbsp;The compiler knows that&nbsp;&nbsp;(a: any, b: any): any; } is the implementation of&nbsp;{ (a: number; b: number): number; (a: string; b: string): string; }. So why would I have to repeat the two methods in my class definition?</p>\r\n<p>When I just use the following code, the compiler also understands that&nbsp;&nbsp;(a: any, b: any): any; } implements the two other methods.</p>\r\n<p>\r\n<pre>class Test  {\r\n    foo(a: number, b: number): number;\r\n    foo(a: string, b: string): string;\r\n    foo(a: any, b: any): any {\r\n        return null;\r\n    }\r\n}</pre>\r\n</p>\r\n<p>So why when I factor out those two \"abstract\" methods into an Interface, I have to repeat them again in the class if the compiler clearly already understands this relationship? I would have thought if my class \"implements\" the interface it would be enough (it doesn't have to be a formal subclass).</p>\r\n<p>&nbsp;</p>\r\n<p>BTW, done some&nbsp;re-factoring&nbsp;of existing JS code into TypeScript, and it is really nice how gradually you can add typing-info to your code to assist you in findings possible issues. Didn't expect such smooth ride.</p>\r\n<p>&nbsp;</p>\r\n<p>--Peter</p>",
+    "PostedDate": "2012-10-13T11:39:11.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926226",
+    "ThreadId": "399209",
+    "Html": "\r\n<p>When you list an interface in the implements clause of a class you're instructing the compiler to verify that your class is a proper implementation of the interface. In type system terms, a proper implementation is one that is a subtype of the interface,\r\n so that's what the compiler checks. Now { (a: any, b: any): any; }&nbsp;is not a subtype of&nbsp;{ (a: number, b: number): number; (a: string, b: string): string; } because an 'any' function result could be anything and not just a number or string as the contract\r\n requires. This means someone might call your interface implementation and get a result they're not prepared to deal with. So, you're required to implement an overloaded function where you explicitly state that you are aware of the contract. Being a static\r\n type system we can't actually check that you're doing what you're supposed to in the implementation, but at least you have been warned.</p>\r\n<p>BTW, in your original example, a Test&nbsp;is actually assignable to ITest. This is because in assignments we basically view type 'any' as a wildcard. However, the 'implements' clause is a stricter check that verifies a proper subtype relationship.</p>\r\n<p>Hope this helps.</p>\r\n<p>Anders</p>\r\n",
+    "PostedDate": "2012-10-13T14:05:57.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926325",
+    "ThreadId": "399209",
+    "Html": "<p>Thanks for the detailed explanation, it does indeed help.</p>\r\n<p>At first I&nbsp;thought&nbsp;that \"assignable\" should be good enough for&nbsp;determining&nbsp;whether a class implements an interface.&nbsp;But after some more&nbsp;careful&nbsp;considerations I can see the benefits of the more stricter \"sub-type\" check.</p>\r\n<p>Now when I add a new method to the interface, lets say:</p>\r\n<p>\r\n<pre>foo(a:bool,b:bool): bool;</pre>\r\n</p>\r\n<p>the compiler will now complain about my class not implementing all of the interface. In the way I had envisioned it to work, the compiler would be happy and I would have not have known that I might need to update my class due to this interface change.<br /><br />-- Peter</p>",
+    "PostedDate": "2012-10-14T04:37:36.637-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

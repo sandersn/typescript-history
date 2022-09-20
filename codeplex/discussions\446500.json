@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1054634",
+    "ThreadId": "446500",
+    "Html": "I've started testing TypeScript and migrating a bit of code.<br />\n<br />\nI'm used to using bind() instead of the 'arrow' function, see code here:<br />\n<img src=\"https://gz8loa.bn1.livefilestore.com/y2pNRcCoa2Qc3wElagFRA0kCDPbUow2qQjGf6aFc-wGjCt_N-m9p9u5sIv5BobLdSsykKwygBFF-CMluiY66B5mQyFaerBwF8WPkcsLXRCzIls/TypeScript-bind.png?psid=1\" alt=\"Image\" /><br />\n<br />\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind\" rel=\"nofollow\">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind</a><br />\n<br />\nWould it be possible to add auto-completion when using bind(this)? <br />\n<br />\nI'm still not a huge fan of the syntax () =&gt; {} <br />\n",
+    "PostedDate": "2013-06-09T14:35:10.423-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054641",
+    "ThreadId": "446500",
+    "Html": "More generally, could there be a way of specifying the type of <code>this</code> using a generic? I can’t really think of a good syntax for doing this, but I don’t really like the idea of giving bind special treatment.  Maybe a little directive like in the “eventListener” function could be used at the top of a function: <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo { \n     <span style=\"color:Blue;\">constructor</span>() {\n          <span style=\"color:Blue;\">this</span>.eventListener = <span style=\"color:Blue;\">function</span>(event) { \n               &lt;Foo&gt;<span style=\"color:Blue;\">this</span>;\n               <span style=\"color:Green;\">// code … </span>\n          }.bind(<span style=\"color:Blue;\">this</span>); \n     }\n}\r\n</pre></div>Not really ideal, I suppose, but it would get the job done.         <br />\n",
+    "PostedDate": "2013-06-09T15:00:47.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054647",
+    "ThreadId": "446500",
+    "Html": "Thanks for the tip.\r<br />\n<br />\nI think I'll use arrow functions, this helped convince me:\r<br />\n<a href=\"http://www.yuiblog.com/blog/2012/03/30/what-is-the-meaning-of-this/\" rel=\"nofollow\">http://www.yuiblog.com/blog/2012/03/30/what-is-the-meaning-of-this/</a><br />\n<ul>\n<li>\nUsing the function keyword, readability is pretty good:\r<br />\nfunction(evt) =&gt; {}<br />\n</li>\n<li>\nTurns out that bind() is much slower.<br />\n</li>\n</ul>\nThere's still some cases where bind is useful and would be a 'nice to have' feature if the compiler can detect bind() and set the scope. \r<br />\nBut not at the cost of making the compiler slower and more complex.<br />\n",
+    "PostedDate": "2013-06-09T16:06:37.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054660",
+    "ThreadId": "446500",
+    "Html": "That wasn't a tip, just a feature proposal. :P I'm pretty sure it doesn't work that way right now.\r<br />\n<br />\nBut yeah, just use arrow functions, they're cooler. :)<br />\n",
+    "PostedDate": "2013-06-09T17:41:14.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054817",
+    "ThreadId": "446500",
+    "Html": "Ahh ok, the hint partly works, you can do:<br />\n<pre><code>class Foo { \n     constructor() {\n          this.eventListener = function(event) { \n                var foo = &lt;Foo&gt;this;\n                \n               // code … \n          }.bind(this); \n     }\n}</code></pre>\n\nBut not :<br />\n<pre><code>class Foo { \n     constructor() {\n          this.eventListener = function(event) { \n               this = &lt;Foo&gt;this; // can't left assign this\n               &lt;Foo&gt;this;\n\n          }.bind(this); \n     }\n}</code></pre>\n\nUnderstanding bind() would be more elegant.<br />\n",
+    "PostedDate": "2013-06-10T05:20:33.883-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054991",
+    "ThreadId": "446500",
+    "Html": "Andrew,\r<br />\n<br />\nAn idea for that would be if the arrow function could accept a &quot;this&quot; parameter:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n(e) =&gt; {}\r\n</pre></div>turns into<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n(<span style=\"color:Blue;\">this</span> : Foo, e) =&gt; {}\r\n</pre></div>That means, if the first parameter was named &quot;this&quot;, it would get the type from the parameter list. And Both would compile to <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span>(e) {}\r\n</pre></div>And you could just remove the type of this by writing:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n(<span style=\"color:Blue;\">this</span>) =&gt; {}\r\n</pre></div>That would be the same as:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n() =&gt; {\n   <span style=\"color:Blue;\">var</span> that = &lt;<span style=\"color:Blue;\">any</span>&gt; <span style=\"color:Blue;\">this</span>;\n}\r\n</pre></div>That would make it impossible to define a parameter called &quot;this&quot; (I'm not even sure what happens today if you do), but I don't think this would be any sacrifice for anyone.\r<br />\n<br />\nAlso, this would be kinda similar to how extension methods work in C# which is a great feature, and since it doesn't cause any confusion there, shouldn't cause any here.<br />\n",
+    "PostedDate": "2013-06-10T10:44:37.99-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

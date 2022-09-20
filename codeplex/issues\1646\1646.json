@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "In your first example the compiler has no idea how the parameter handler relates to the TypeParameter T.\n\nYour second example works if you replace \"typeof T\" with new () => T\n\n````\nfunction genericHandler<T extends Handler>(handler: new()=> T): T {\n    return new handler();\n}\n````",
+    "ClosedDate": "2013-09-06T13:50:47.593-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "```\r\nclass Handler {}\r\nclass DerivedHandler extends Handler {}\r\n\r\nfunction genericHandler<T extends Handler>(handler: typeof Handler): T {\r\n    return new handler();\r\n}\r\n\r\ngenericHandler(DerivedHandler).barf(); //No compile error. Seems to effectively be \"any\"\r\ngenericHandler<DerivedHandler>(DerivedHandler).barf(); //Correctly shows a compile error\r\n```\r\n\r\nIn the above example, even when compiling with \"-noImplicitAny\", the result of the first call to genericHandler seems to be treated as an \"any\" type. It doesn't care what comes next.\r\n\r\nIf I call it using the generic parameter explicitly, it does the right thing.\r\n\r\nWhat I really want is something like this:\r\n\r\n```\r\nfunction genericHandler<T extends Handler>(handler: typeof T): T {\r\n    return new handler();\r\n}\r\n\r\ngenericHandler(DerivedHandler); //Typescript knows this is of type DerivedHandler\r\n```",
+    "LastUpdatedDate": "2013-09-06T15:20:14.397-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-05T15:24:52.893-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic method & noImplicitAny problem",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1646
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Also take a look at the issue here: \n\nhttps://typescript.codeplex.com/workitem/1498\n\nwhich is very similar to yours.",
+      "PostedDate": "2013-09-06T13:51:59.773-07:00",
+      "Id": 112712
+    },
+    {
+      "Message": "Thanks for the suggestion! That was very helpful and takes care of my problem.\n\nIs it a problem that my original code doesn't fail when compiling under \"-noImplicitAny\"?",
+      "PostedDate": "2013-09-06T15:00:50.81-07:00",
+      "Id": 112728
+    },
+    {
+      "Message": "noImplicitAny currently doesn't check for when type parameters are inferred to be 'any.' It's something we'd like to add in the future but it's not in there at the moment.",
+      "PostedDate": "2013-09-06T15:20:14.397-07:00",
+      "Id": 112732
+    }
+  ]
+}

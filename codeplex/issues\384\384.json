@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing per previous comment.",
+    "ClosedDate": "2013-02-24T15:21:54.417-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Hi, here is an example that demonstrates the problem:\r\n\r\n \r\n\r\n\r\n\r\n\r\n\"use strict\";\r\n\r\nclass Surly {\r\n\t\r\n\tprivate grumble: string;\r\n\t\r\n\tconstructor (message: string) {\r\n\t\t\r\n\t\tif(message){\r\n\t\t\tthis.grumble = message;\r\n\t\t}\r\n\t}\r\n\t\r\n\tupdate(message:string){\r\n\t\tthis.grumble = message;\r\n\t}\r\n}   \r\n\r\nvar surly = new Surly(undefined);\r\n\r\nObject.seal(surly);\r\n\r\nsurly.update(\"Cheer up, sausage!\"); // Can't add property grumble, object is not extensible \r\n\r\n\r\n\r\n\r\n \r\n\r\nIt does not seem correct from a reading of the Surly class that the property grumble would not exist at runtime.\r\n\r\nOf course this can be easily fixed by setting:\r\n\r\nprivate grumble = undefined;\r\n\r\nBut then we are requiring further discipline on the part of the developer.\r\n\r\nThanks.\r\n\r\nNoel",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-07T07:26:18.963-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Conditional statements in constructor could prevent property definitions",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 384
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think this is due to the fact TypeScript does not write class properties into the prototype. This is dicussed in this issue : http://typescript.codeplex.com/workitem/4 \n\nPlease vote for it and add a link to the current issue in a comment. It will add one more reason on why adding class properties onto prototype.",
+      "PostedDate": "2012-11-09T04:20:31.377-08:00",
+      "Id": 82111
+    },
+    {
+      "Message": "Hi, Tekool, the problem here will not be resolved by adding the property to the prototype.\n\nThis is because we are sealing the instance, which does not have the property.\n\nSo when we call update(...)  this will attempt to set this.grumble = message, and since the property does not exist on the instance it cannot create it because the instance is sealed.\n\nI propose that the property be added to the instance - even though this creates an overhead.",
+      "PostedDate": "2012-11-14T01:33:53.017-08:00",
+      "Id": 82450
+    },
+    {
+      "Message": "It does work by setting => private grumble: string; to its default value :\n\n----------------------------------------------------------------------------\n\"use strict\";\n\nclass Surly {\n\t\n\tprivate grumble: string = \"\";\n\t\n\tconstructor (message: string) {\n\t\t\n\t\tif(message){\n\t\t\tthis.grumble = message;\n\t\t}\n\t}\n\t\n\tupdate(message:string){\n\t\tthis.grumble = message;\n\t}\n}   \n\nvar surly = new Surly(undefined);\n\nObject.seal(surly);\n\nsurly.update(\"Cheer up, sausage!\"); // We can add property grumble, object is now extensible \n----------------------------------------------------------------------------\n\n",
+      "PostedDate": "2012-11-14T03:12:38.597-08:00",
+      "Id": 82457
+    },
+    {
+      "Message": "This is the right way to do things in any other languages like Java, C# I so have asked to initialize automatically classes properties to their default value in this issue, but someone closed it : http://typescript.codeplex.com/workitem/401",
+      "PostedDate": "2012-11-14T03:15:04.817-08:00",
+      "Id": 82458
+    },
+    {
+      "Message": "Just to be clear, what I believe to be the best solution is for the TypeScript code to compile into the following:\n\n// TS\nprivate grumble: string;  \n\n// JS\nthis.grumble = undefined;\n\nIn the closed work item (#401) there is a request to add the property to the **prototype**, which I don't think is a good idea; and also won't solve this problem.",
+      "PostedDate": "2012-11-15T12:08:41.757-08:00",
+      "Id": 82558
+    },
+    {
+      "Message": "Assigning to Luke for clarification",
+      "PostedDate": "2013-02-19T17:07:35.577-08:00",
+      "Id": 90863
+    },
+    {
+      "Message": "The current TypeScript behavior here is something that was intentional, and I'm not sure that the proposed change is the right thing to do by default.\n\nFirst, this is of course easy to address in user code if you want to make sure properties are initialized which might not be definitely initialized in other construction logic - just put \"private grumble: string = undefined\".  \n\nAs for making this \"undefined\"-initialization the default:  TypeScript broadly aims to add as little additional runtime semantics as possible over top of the JavaScript runtime object model.  In the present case, there is no explicit request for properties to be initialized, so TypeScript does not emit this.  As elsewhere, type annotations are simply static compile time information, not something that changes runtime semantics.\n\nAnother practical concern would be avoiding overhead of unnecessarily initializing all fields to undefined in the constructor immediately before developer-authored code initialized fields to real values.  We would want to be able to remove unnecessary re-initializations, as without it, the generated JavaScript would look (and perform) very different from hand-authored JavaScript.  But doing so correctly would require non-local static analysis that could not reasonably be done accurately (what if a function is called early in the constructor before some fields are initialized, and it transitively calls seal on the \"this\" from the original constructor call).   \n\nSo at least in the near term, the solution is to manually include initialization to undefined if this is a required part of your API semantics.",
+      "PostedDate": "2013-02-24T15:20:57.727-08:00",
+      "Id": 91387
+    }
+  ]
+}

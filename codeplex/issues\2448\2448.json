@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.877-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "If a require statement has a non-relative path (eg. require('mymod') ) then tsc will search all directories from the container of the requiring file all the way up to the file system root for a corresponding source file.\r\n\r\nThis can result in the require pulling in a completely unexpected source file.\r\n\r\nIn my scenario I had the following files:\r\n\r\n1) /home/user/myproject/crypto.ts\r\n2) /home/user/myproject/typings/DefinitelyTyped/node/node.d.ts\r\n3) /home/user/myproject/lib/test.ts\r\n\r\ntest.ts uses a '<reference>' directive to reference the Node.js typings. The node.d.ts file happens to have an 'import crypto = require('crypto')' statement in it to get Node.js' crypto module.\r\n\r\nWhen tsc was invoked in the 'lib' directory with 'tsc test.ts' and it encountered the node.d.ts file reference, it ended up looking for:\r\n\r\n/home/user/myproject/typings/DefinitelyTyped/node/crypto.ts\r\n/home/user/myproject/typings/DefinitelyTyped/crypto.ts\r\n/home/user/myproject/typings/crypto.ts\r\n...\r\n/crypto.ts\r\n\r\nSince I happened to have a file with this name in one of these parent directories, tsc ended up trying to compile that code.\r\n\r\nThis behavior doesn't feel intuitive to me. Node.js' own require statement does something similar but only looks in 'node_modules/' directories at each level, so is less likely to run into the issue.\r\n\r\nI'm unsure of what the best behavior would be. Perhaps align the way require() works with absolute paths to match node.js?\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-19T06:38:41.85-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Require with non-relative path can pull in unexpected code",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2448
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We've been thinking about how to better define the external module resolution process; this is a good example. Assigning to Jonathan to manage this and other feedback on it.",
+      "PostedDate": "2014-04-21T11:01:18.45-07:00",
+      "Id": 142485
+    }
+  ]
+}

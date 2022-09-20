@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:17:45.433-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "This isn't critical but it seems like it should work.\r\n\r\n```typescript\r\nvar successCallback: () => void;\r\nsuccessCallback = successCallback ? successCallback : () => { }; // works\r\nsuccessCallback = successCallback || () => { }; // doesn't parse, \"identifier expected\"\r\nsuccessCallback = () => { } || successCallback; // works\r\nsuccessCallback = successCallback && () => { }; // doesn't parse, \"identifier expected\"\r\nsuccessCallback = () => { } && successCallback; // works\r\nsuccessCallback = () => { } && () => { }; // doesn't parse, \"identifier expected\"\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-27T12:11:07.87-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Lambda Functions Don't Parse After Boolean Logic Operators",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2360
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hey Grajkowski,\n\nThis is due to the precedence of arrow functions in the grammar.  Specifically, let's take a look at a few productions:\n\nNote: i'm using the grammars from here:\nhttp://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf\n\n\nFirst, we'll start with ConditionalExpression, and see how that expands out to allow this line:\n\n```\n  successCallback = successCallback ? successCallback : () => { }\n\n  ConditionalExpression:\n    LogicalORExpression ? AssignmentExpression : AssignmentExpression\n```\n\nNow, we see how TypeScript augments AssignmentExpression in its grammar:\n\n```\n  AssignmentExpression:  ( Modified )\n  ...\n  ArrowFunctionExpression\n```\n\nAs such, we expand out to:\n\n```\n   ConditionalExpression:\n     LogicalORExpression ? AssignmentExpression : ArrowFunctionExpression\n```\n\nAnd that's how we get your first example.\n\n---\n\nNow, let's look at why the following doesn't parse:\n\n```\n  successCallback || () => { };\n```\n\n\nNow, note that from the grammar, that this is a LogicalOrExpression, which looks like:\n\n```\nLogicalORExpression:\n  LogicalANDExpression \n  LogicalORExpression || LogicalANDExpression\n```\n\nExpanding out the right side, we see:\n\nLogicalANDExpression->BitwiseORExpression->BitwiseXORExpression->\nBitwiseANDExpression->EqualityExpressionNoIn->RelationalExpression->\nShiftExpression->AdditiveExpression->MultiplicativeExpression->\nUnaryExpression->PostFixExpression->LeftHandSideExpression->\nNewExpression->MemberExpression->PrimaryExpression-> FAILURE\n\nBecause of how the grammar is structured, an arrow function cannot appear on the right side of LogicalOrExpression.\n\nI hope that helps.  Please let me know if you have any more questions.",
+      "PostedDate": "2014-03-27T12:46:03.9-07:00",
+      "Id": 139033
+    },
+    {
+      "Message": "Note: the fact that:\nsuccessCallback = () => { } || successCallback;\n\nparses does seem to be an issue.  I'm going to investigate and look into a fix if this is incorrect.\n",
+      "PostedDate": "2014-03-27T12:53:47.707-07:00",
+      "Id": 139034
+    },
+    {
+      "Message": "Note: This does work however:\nsuccessCallback = successCallback || (() => { });\n",
+      "PostedDate": "2014-03-27T14:11:01.877-07:00",
+      "Id": 139041
+    },
+    {
+      "Message": "Yeah that makes sense.  I think it's less confusing if the statement doesn't (or does) parse with the lambda function on either side.\n\nBased on your explanation I tested the following which does work:\n``` typescript\nsuccessCallback = successCallback || (() => { });\n```",
+      "PostedDate": "2014-03-27T14:17:01.313-07:00",
+      "Id": 139043
+    },
+    {
+      "Message": "Confirmed bug, but would be breaking change.",
+      "PostedDate": "2014-03-31T09:55:54.45-07:00",
+      "Id": 140069
+    },
+    {
+      "Message": "breaking what, exactly?  I'm curious to see an example.",
+      "PostedDate": "2014-04-03T09:04:45.833-07:00",
+      "Id": 140418
+    }
+  ]
+}

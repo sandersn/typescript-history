@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There are now separate tools for helping to create TypeScript from JavaScript.  For example, https://npmjs.org/package/jsdocts.  Since this tool isn't part of the current toolchain and would likely be developed and maintained outside of the TypeScript compiler and language service, so I'm closing this issue.\n\n\n\n",
+    "ClosedDate": "2013-01-24T10:36:01.33-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I tried renaming *.js files to *.ts files and generating a definition file for angularjs using the inference in TypeScript using:\r\n\r\n    tsc --declarations *.ts\r\n\r\nand it seems to barf on the use of modules. Turns out the issue is the use of the identifier \"module\" in the JS:\r\n\r\n    angular.ts (892,15): module not allowed in this context\r\n\r\nThen in angular-resource.js there were a number of type errors.\r\n\r\nI wonder if there is ever going to be a non-strict mode for tsc so we can compile existing JS libraries to generate definitions files (and ignoring any syntax/type errors?) - without having to copy/rename all the files to *.ts names rather than *.js file names?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T06:25:05.563-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "make it easy to generate definitions files for existing JavaScript libraries",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 36,
+    "Id": 26
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Automatically generating .d.ts files is still experimental.  There are a few known issues there.",
+      "PostedDate": "2012-10-03T20:00:59.43-07:00",
+      "Id": 78506
+    },
+    {
+      "Message": "Until you can do this easily and use existing libraries that are not kept up by the typescript team this project is just a toy.",
+      "PostedDate": "2012-10-05T11:43:04.003-07:00",
+      "Id": 78699
+    },
+    {
+      "Message": "We've pushed fixes to develop issues regarding modules, but the use of the identifier \"module\" in JS is still problematic, given that its a reserved word in TypeScript (as well as ES6).\r\n\r\nOn area we are considering improving is being able to infer better type information from .js files.  I think this would also address your request for a non-strict mode of declare file generation.",
+      "PostedDate": "2012-10-05T16:30:20.43-07:00",
+      "Id": 78759
+    },
+    {
+      "Message": "@jopamer It's important to clarify here that \"module\" is absolutely not a reserved word in ES6, it's a contextual keyword (using a Lookahead for nonewline following the word \"module\" and IIRC, for the curly braces). If it matches the grammar, then it is a \"module\", otherwise an identifier:\n\nModuleDeclaration ::= \"module\" [NoNewline] Id \"=\" Path \";\"\n                   |  \"module\" [NoNewline] Id \"{\" ModuleBody \"}\"\n\nSee Dave Herman's explanation here: https://mail.mozilla.org/pipermail/es-discuss/2011-December/019112.html",
+      "PostedDate": "2012-10-06T16:19:16.897-07:00",
+      "Id": 78866
+    },
+    {
+      "Message": "I genrated anguler.d.ts by hand, if you interested, here it is: https://gist.github.com/3840248 \nBut I think it will need some changes to real usage (eg. modules).",
+      "PostedDate": "2012-10-07T23:22:28.043-07:00",
+      "Id": 78953
+    },
+    {
+      "Message": "@rarous many thanks! ",
+      "PostedDate": "2012-10-08T00:14:52.037-07:00",
+      "Id": 78958
+    },
+    {
+      "Message": "My first attempt at creating a definition file for some JavaScript code led to an error; if you pass a *.js file into tsc it complains.\n\n$ tsc --declarations angular-resource.js \nError reading file \"angular-resource.js\": File not found\n\nSo am thinking that we need, either to allow parsing of *.js files directly, or have a command or mode to compile JS files to create a definition file.\n\nSecondly, when parsing a JS file (after renaming a *.js to *.ts as a workaround) rather than a TypeScript file, frequently tsc fails with type errors. When creating a definition file for an existing JavaScript library, we should have a mode that turns compile errors into warnings. i.e. we don't much care if the body of a function compiles (in terms of type checking) since we're not generating any implementation code anyway - so long as it can be parsed as valid JavaScript syntax, worst case tsc can't deduce any type inference for arguments and return type. \n\nSo long as tsc can compile the JS file syntactically & can generate a definitions file (even without any type inference of arguments or return types but just having the function names) its got some value. Obviously the more inference it can make the better - but having tsc blow up early on some existing JS library when all we're trying to do is get a definitions file with as-good-as-possible inference is very limiting to what could be an amazing tool.",
+      "PostedDate": "2012-10-08T00:27:32.07-07:00",
+      "Id": 78959
+    },
+    {
+      "Message": "@jstrachan - The general process of creating a .d.ts file from JavaScript code is still manual.  Generally speaking, JavaScript code does not contain enough information to extract a correct and reasonably complete typing.  It is possible to write a variety of heuristic tools to extract approximations of the type information from JavaScript code, either by executing it and looking at the live object graph created, or by symbolically executing, or by a static analysis that has this goal in mind.  TypeScript's built-in type inference aims to be less heuristic than this though, to provide predictable tooling and static checking.  Thus, we currently view the job of creating .d.ts files from raw JS as something that a separate tool would accomplish.  I have seen references to some such tools already, and the TypeScript team may also look at building some tools in this space over time.",
+      "PostedDate": "2012-12-02T22:25:16.37-08:00",
+      "Id": 83435
+    }
+  ]
+}

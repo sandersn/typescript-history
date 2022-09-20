@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I see the error with your repro in 0.9.1.1 but 0.9.5 is behaving correctly here.",
+    "ClosedDate": "2013-12-12T10:22:43.457-08:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "If I define this interface and ambient variable:\r\n\r\n```\r\ninterface Foo<A> {\r\n  bar: {\r\n    (): A;\r\n    (x: number): number;\r\n  }\r\n}\r\ndeclare var foo: Foo<number>;\r\n```\r\n\r\nThen try to use it like so:\r\n\r\n```\r\nvar result = foo.bar() + 3;\r\n```\r\n\r\nThis does not typecheck, giving the following error:\r\n```\r\n>> error TS2111: Invalid '+' expression - types not known to support the addition operator.\r\n```\r\n\r\nThe type of `foo.bar()` should clearly be `Foo<number>`, but it looks like it's inferring `Foo<A>` for some unknown `A`.\r\n\r\n__Edit__\r\nI can work around it by breaking the anonymous type of `bar` out into its own named type, like so:\r\n```\r\ninterface Bar<A> {\r\n  (): A;\r\n  (x: number): number;\r\n}\r\ninterface Foo<A> {\r\n  bar: Bar<A>;\r\n}\r\ndeclare var foo: Foo<number>;\r\n```\r\n\r\nThen everything typechecks. So it looks like this is actually an issue with using bound generic variables within anonymous types.",
+    "LastUpdatedDate": "2014-03-31T16:35:50.023-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-11T16:18:41.657-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Problem with inferring generic result type of overloaded method",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2008
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "But operator + isn't defined for a type of Foo<number>.\n\nDid you intend\n```\ninterface Foo<A> {\n  bar(): <A>;\n}\n```",
+      "PostedDate": "2013-12-11T16:31:42.95-08:00",
+      "Id": 127055
+    },
+    {
+      "Message": "Yeah, I messed up the example... but I believe there is a problem. Stand by...",
+      "PostedDate": "2013-12-11T16:33:02.33-08:00",
+      "Id": 127056
+    },
+    {
+      "Message": "Ok, fixed the example. It seems to have to do with inferring the values of type variables in overloaded methods.",
+      "PostedDate": "2013-12-11T17:29:12.787-08:00",
+      "Id": 127062
+    },
+    {
+      "Message": "Actually it looks like an issue with using bound generic variables within anonymous types (see update).",
+      "PostedDate": "2013-12-11T17:44:34.03-08:00",
+      "Id": 127064
+    },
+    {
+      "Message": "If you do this:\n```\ninterface Foo<A>\n{\n\tbar(): A;\n}\nclass FooImp<A> implements Foo<A>\n{\n\tconstructor(private _v: A){}\n\tpublic bar(): A\n\t{ return this._v; }\n}\n\nvar foo = new FooImp<number>(6);\nvar result = foo.bar() + 3;\nalert (typeof (result));\t// reports result is type number\n```\n\nit all works fine.\n\nI'm not clear what you're trying to achieve but I wonder if it's a mis-use of the declare keyword which introduces an ambient declaration used to provide static typing over existing JavaScript code. Ambients are (afik) outside the scope of TypeScript generics resolution.\n",
+      "PostedDate": "2013-12-12T06:44:05.18-08:00",
+      "Id": 127104
+    },
+    {
+      "Message": "Yes, what you posted works, and is similar in spirit to what I posted under my __Edit__, but both of these solutions are far from ideal.\n\nI don't understand why you say that ambients are outside the scope of generics resolution. Why should generics have any special behavior with regards to ambients? The bottom line is that the type system should work in a consistent manner. My particular use case _is_ typing an external library (d3 in my  current particular case), and I need generics in order to properly capture the specification.",
+      "PostedDate": "2013-12-12T09:31:26.2-08:00",
+      "Id": 127118
+    },
+    {
+      "Message": "This may be something that was fixed with 0.9.5 or later.  Trying the example below gives me a 'number' for x.\n\n```\ninterface Foo<A> {\n    bar: {\n        (): A;\n        (x: number): number;\n    }\n}\ndeclare var foo: Foo<number>;\n\nvar x = foo.bar() + 3\n```",
+      "PostedDate": "2013-12-12T09:37:17.62-08:00",
+      "Id": 127121
+    },
+    {
+      "Message": "Thanks, it does look like it's fixed in 0.9.5!",
+      "PostedDate": "2013-12-12T11:02:23.113-08:00",
+      "Id": 127140
+    }
+  ]
+}

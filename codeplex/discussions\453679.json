@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1081614",
+    "ThreadId": "453679",
+    "Html": "<pre><code>interface A {\n    foo(x: string): void;\n}\n\nvar k: A = {\n    foo(): void {\n    }\n}</code></pre>\n\nThere should be an error stating that <code>k.foo</code> does not conform to the interface specification, yet the compiler has no problem with the code as-is. TypeScript 0.9.1.<br />\n",
+    "PostedDate": "2013-08-17T04:01:13.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081641",
+    "ThreadId": "453679",
+    "Html": "Actually I just realised that this behaviour is by design. Would be interested in a way of annotating that the method needs to be implemented exactly, not loosely.<br />\n",
+    "PostedDate": "2013-08-17T07:44:18.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081812",
+    "ThreadId": "453679",
+    "Html": "Yes, I also think that there should be some kind of &quot;strik&quot; (like no implicit any) mode, where interfaces should be implemented exactly, because in 95% this is what you want. It also makes refactoring much easier...<br />\n",
+    "PostedDate": "2013-08-18T04:43:57.43-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081973",
+    "ThreadId": "453679",
+    "Html": "I wanna add that the way it is implemented at the moment it means that you aren't saved from typos at the callsite in many cases (that I constantly run into) which in my opinion kinda defeats the purpose of the entire interface.<br />\n<br />\nThe example is somewhat contrived but I have run into this problem a few times:<br />\n<a href=\"http://www.typescriptlang.org/Playground/#src=interface%20iPerson%20%7B%0A%09firstName%3F%3A%20string%3B%0A%09lastName%3A%20string%3B%0A%7D%0A%0Aclass%20Person%20%7B%0A%09constructor(a%3AiPerson)%20%7B%0A%09%09%0A%09%7D%0A%7D%0A%0Avar%20p%20%3D%20new%20Person(%7BfristName%3A%20%22Harald%22%2C%20lastName%3A%20%22Glatt%22%7D)%3B\" rel=\"nofollow\">http://www.typescriptlang.org/Playground/#src=interface%20iPerson%20%7B%0A%09firstName%3F%3A%20string%3B%0A%09lastName%3A%20string%3B%0A%7D%0A%0Aclass%20Person%20%7B%0A%09constructor(a%3AiPerson)%20%7B%0A%09%09%0A%09%7D%0A%7D%0A%0Avar%20p%20%3D%20new%20Person(%7BfristName%3A%20%22Harald%22%2C%20lastName%3A%20%22Glatt%22%7D)%3B</a><br />\n<br />\nNote that firstName is misspelled as fristName at the callsite, however since the interface doesn't limit what can be assigned and firstName is optional it is not regarded as an error.<br />\n<br />\nI agree that there should be a flag for this, or maybe a keyword like 'strict interface' or something to bring in the functionality that only things defined in the interface are permissable at the callsite.<br />\n",
+    "PostedDate": "2013-08-18T21:37:10.137-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098430",
+    "ThreadId": "453679",
+    "Html": "Yes, a very common pattern for libraries is to initialize a resource using an Object literal. By doing this you can check that if you use the right attribute but with the wrong value for example <code>httpOptions = {port: '1234'}</code> would be an error because '1234' is a string. However we can't show an error for the case where the user does something like <code>httpOptions = {poort: 1234}</code>.\r<br />\n<br />\nConclusion: A &quot;strict interface&quot; would be nice. Only keys named in the interface are allowed.<br />\n",
+    "PostedDate": "2013-09-24T02:03:44.567-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1136723",
+    "ThreadId": "453679",
+    "Html": "The code in NathanRidley's post from August now causes a compiler error in VS with 0.9.5, but it seems to work from the command-line and in the playground.  Are you seeing that too?\r<br />\n<br />\nError\t1\tDebug Failure. False expression: Provided ast is not the expected AST, Expected: ObjectLiteralExpression Given: FunctionPropertyAssignment\tC:\\Users\\Steve\\Documents\\Visual Studio 2013\\Projects\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\VSTSC\tTypeScriptHTMLApp1<br />\n",
+    "PostedDate": "2013-12-16T07:41:32.17-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1136923",
+    "ThreadId": "453679",
+    "Html": "That is what happens with an 0.9.5 build for me as well. It's fixed in our more recent bits.\r<br />\n<br />\nAs far as this behavior goes, it's simply modeling existing JavaScript semantics. Consider that even with a compiler error it's not really enforcing all that much. That is, even if your implementation in k required a string argument there's nothing requiring that the value be used when foo is called. In some sense it's actually clearer here that the implementation of foo is stating its intention to not use the passed in value.<br />\n",
+    "PostedDate": "2013-12-16T15:49:43.76-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

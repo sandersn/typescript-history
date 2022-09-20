@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "These don't mean the same thing at all (in one case you're exporting a value, in the other you're exporting a type). Can you provide more information about what you're trying to do and what actually happens vs what you expect to happen?",
+    "ClosedDate": "2013-06-17T09:31:20.267-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "```\r\ndeclare module \"foo\"\r\n{\r\n    interface hello {}\r\n    export = hello;\r\n}\r\n\r\n```\r\ncompiles, but upon import the type is \"module\".\r\n\r\n```\r\ndeclare module \"foo\"\r\n{\r\n    var hello : {};\r\n    export = hello;\r\n}\r\n```\r\n\r\nalso compiles, but upon import detailed type information is provided.\r\n\r\nShouldn't they both be the same?\r\n",
+    "LastUpdatedDate": "2013-08-13T10:47:44.873-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-16T21:27:49.933-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Type when exporting interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1155
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sorry if I haven't been clear.  This is a very common pattern when we're trying to model external AMD libraries.  Typically there are a few common ways, for example:\n\n```\ndeclare module \"foo\"\n{\n    export var bar: string;\n    export function baz(): boolean;\n}\n```\n\nThis, however, cannot make the module directly-callable (i.e. no function() supported in exports), nor can it make the module newable (i.e. no function new() supported in exports).\n\nThe alternative is to do:\n\n```\ndeclare module \"foo\"\n{\n    var hello: {\n        (): number;\n        new(): SomeType;\n        bar: string;\n        baz(): boolean;\n    };\n    export = hello;\n}\n```\n\nThis will make the module newable and directly-callable.  However, this artificially creates a variable called \"hello\" which shows up in Intellisense.\n\nA better solution is to either allow:\n\n```\ndeclare module \"foo\"\n{\n    export = {\n        (): number;\n        new(): SomeType;\n        bar: string;\n        baz(): boolean;\n    };\n}\n```\n\nor allow exports of interfaces:\n\n```\ndeclare module \"foo\"\n{\n    interface hello {\n        (): number;\n        new(): SomeType;\n        bar: string;\n        baz(): boolean;\n    }\n    export = hello;\n}\n```\n\nNotice that if you export a function like this:\n\n```\ndeclare module \"foo\"\n{\n    function hello() {}\n    export = hello;\n}\n```\n\nthe temporary name \"hello\" does not show up in Intellisense.\n",
+      "PostedDate": "2013-06-17T20:22:13.703-07:00",
+      "Id": 103247
+    }
+  ]
+}

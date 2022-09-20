@@ -1,0 +1,122 @@
+[
+  {
+    "Id": "921384",
+    "ThreadId": "397920",
+    "Html": "\r\n<p>With arrays being an important part of JavaScript, it's always been frustrating that&nbsp;iterating&nbsp;one requires a for loop. Would it be possible to add a foreach construct which would essentially transform into a for loop? or into an ES5 function call?\r\n depending on compiler option.</p>\r\n",
+    "PostedDate": "2012-10-03T10:39:43.137-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921498",
+    "ThreadId": "397920",
+    "Html": "<p>There is support for a foreach style for loop in ES5 (which TS supports):</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> x = [1, 2, 3];\r\n\r\n<span style=\"color: blue;\">for</span> (<span style=\"color: blue;\">var</span> i <span style=\"color: blue;\">in</span> x) {\r\n document.write(x[i]);\r\n}\r\n\r\n</pre>\r\n</div>",
+    "PostedDate": "2012-10-03T13:28:40.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921511",
+    "ThreadId": "397920",
+    "Html": "<p>jon, the ES5 foreach loop works like this:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> x = [1, 2, 3];\r\n\r\nx.forEach(<span style=\"color: blue;\">function</span>(v) {\r\n  document.write(v);\r\n});\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-03T13:50:20.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921514",
+    "ThreadId": "397920",
+    "Html": "<p>Does TypeScript require ES5? I thought it required only ES3.</p>",
+    "PostedDate": "2012-10-03T14:00:58.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921521",
+    "ThreadId": "397920",
+    "Html": "<p>@mateo2:&nbsp;I believe&nbsp;the for-in statement&nbsp;has&nbsp;been part of ECMAScript at least since v3, looking&nbsp;at the spec.&nbsp;</p>\r\n<p>@EisenbergEffect: TypeScript compiles to ES3 except when you ask for a feature that's supported only in ES5 mode (like using property accessors).</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-03T14:16:25.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921528",
+    "ThreadId": "397920",
+    "Html": "<p>Ok. That's good to know about compilation. But, I don't think it's a recommended good practice to use for/in over arrays.</p>",
+    "PostedDate": "2012-10-03T14:25:00.667-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921664",
+    "ThreadId": "397920",
+    "Html": "<p>The downside to using the syntax</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> x = [1, 2, 3];\r\n\r\n<span style=\"color: blue;\">for</span>(<span style=\"color: blue;\">var</span> v <span style=\"color: blue;\">in</span> x) {\r\n    document.write(v);\r\n}\r\n</pre>\r\n</div>\r\n<p>is that in TypeScript doing so vs. accessing the index property means you lose any type inference for value of variable 'v'. It would be great if TypeScript could deal with this in one of two ways:</p>\r\n<ol>\r\n<li>Expanding for-in statements on arrays into .forEach or alternatively optimized for-loop statements with type safety on the current value.</li>\r\n<li>Introducing a dedicated foreach keyword (so as to not replace&nbsp;JS syntax)&nbsp;that expands to .forEach or optimized for-loop with type safety on the current value.</li>\r\n</ol>",
+    "PostedDate": "2012-10-03T22:53:40.04-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921665",
+    "ThreadId": "397920",
+    "Html": "<blockquote style=\"padding-bottom: 0px; font-style: italic; margin: 0.25em 1em 0px; padding-left: 0.25em; padding-right: 0.25em; padding-top: 0px; border: #ccc 0.1em solid;\"><strong>EisenbergEffect wrote:</strong><br />\r\n<p>Ok. That's good to know about compilation. But, I don't think it's a recommended good practice to use for/in over arrays.</p>\r\n</blockquote>\r\n<p><br />No... It'll bite you in IE8 and below.</p>",
+    "PostedDate": "2012-10-03T23:01:11.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921666",
+    "ThreadId": "397920",
+    "Html": "<p>As @mateo2 said, [].forEach(iterator : (element: any, i: number, array: Array) is the native ES5 way to iterate over elements in an array.</p>\r\n<p>Using `in` for arrays should be avoided. See&nbsp;http://jsfiddle.net/tMhwR/</p>\r\n<p>for...in iterates over enumerable keys of an object, rather than elements of an array.</p>\r\n<p>&nbsp;</p>\r\n<p>@EisenbergEffect specifically, the TypeScript compiler includes ES3 polyfills for ES5 array methods when targeting ES3.</p>",
+    "PostedDate": "2012-10-03T23:02:54.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921674",
+    "ThreadId": "397920",
+    "Html": "<p>@Tharaxis: Why can type inference not handle this case? Currently, type inference makes strings out of all elements, but I think this looks like a bug.</p>\r\n<p>@EisenbergEffect: Why it's not a recommended good practice? I'd rather have one construct to enumerate over collection-like objects. As Tharaxis said, the compiler is able to choose the more efficient implementation.</p>\r\n<p>Best Regards,<br />Stefan</p>",
+    "PostedDate": "2012-10-03T23:15:53.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921679",
+    "ThreadId": "397920",
+    "Html": "\r\n<p>Hi Stefan,</p>\r\n<p>I think the reason for that is likely the way for-in works vs. a standard for loop. With arrays in JS, doing a for-in will return all the values but also any additional properties you have added to that array, so for example:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> x = [1, 2, 3];\r\nx.foo = <span style=\"color:#a31515\">&quot;this&quot;</span>;\r\n\r\n<span style=\"color:blue\">for</span>(<span style=\"color:blue\">var</span> v <span style=\"color:blue\">in</span> x) {\r\n    document.write(v);\r\n}\r\n</pre>\r\n</div>\r\n<p>will produce the output 1, 2, 3, &quot;foo&quot; instead of just 1, 2, 3. Since the value of a for-in array can return&nbsp;any combination of whatever values &#43; strings that exist on that&nbsp;object, type inference will probably always break down in some way, hence\r\n my recommendation that arrays be treated differently (and monotyped preferably since JS arrays can also be [1, 2, &quot;foo&quot;, &quot;bar&quot;, 4] and so on).</p>\r\n<p><span style=\"text-decoration:underline\"><strong>EDIT:</strong></span></p>\r\n<p>Actually, thinking about it now, I suspect the dynamic behaviour of arrays (any indexed value can have any type)&nbsp;is the primary reason it can't really work.</p>\r\n<p>There is no direct way of knowing what exact value you're accessing within the for-in closure (is the v in x the first element which is a number or the 10th element which is a string?)&nbsp;however,&nbsp;accessing via index (such as in a standard for-loop)&nbsp;gives\r\n the compiler/parser a direct line to what value you're trying to retrieve and can therefore light up with valid type information.</p>\r\n",
+    "PostedDate": "2012-10-03T23:22:31.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921682",
+    "ThreadId": "397920",
+    "Html": "\r\n<p>Thanks for your explanation, Tharaxis; I appreciate it.</p>\r\n<p>The code does not work with the compiler used by the playground; it is not allowed to set &quot;foo&quot; on an array.</p>\r\n<p><em>Update:</em> Hm, hinting about a type when an array is indexed? I think this won't work for many cases. What about an array passed as function parameter?</p>\r\n",
+    "PostedDate": "2012-10-03T23:31:32.06-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921691",
+    "ThreadId": "397920",
+    "Html": "\r\n<p>Hi Stefan,</p>\r\n<p>At least TypeScript catches that issue then, although doing a x[&quot;foo&quot;] = &quot;bar&quot;; still works and will then result in the same output on my example.</p>\r\n<p>Also my example is actually wrong (prime example of bad assumptions when using JS), what the for-in loop will produce is the list of keys, so if you have an array:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> x = [1, 4, 5, 6, 1];\r\nx[<span style=\"color:#a31515\">&quot;foo&quot;</span>] = <span style=\"color:#a31515\">&quot;bar&quot;</span>;\r\n\r\n<span style=\"color:blue\">for</span>(<span style=\"color:blue\">var</span> v <span style=\"color:blue\">in</span> x) {\r\n    document.write(v);\r\n}\r\n</pre>\r\n</div>\r\n<p>you will end up with the output 0, 1, 2, 3, 4, &quot;foo&quot; instead of the actual values (which would be expected when using a for-in on an array).</p>\r\n<p>On the other hand, doing:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> x = [1, 4, 5, 6, 1];\r\nx[<span style=\"color:#a31515\">&quot;foo&quot;</span>] = <span style=\"color:#a31515\">&quot;bar&quot;</span>;\r\n\r\n<span style=\"color:blue\">for</span>(<span style=\"color:blue\">var</span> v <span style=\"color:blue\">in</span> x) {\r\n    document.write(x[v]);\r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>will result in the output 1, 4, 5, 6, 1, &quot;bar&quot;. Again, not the expected output.</p>\r\n<p>Would love for TypeScript to have some kind of elegant solution in place someday :).</p>\r\n",
+    "PostedDate": "2012-10-04T00:01:35.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921773",
+    "ThreadId": "397920",
+    "Html": "<p>It's nice to know that a polyfill is included when using an ES5 method and targeting an ES3 browser. However, I'd still like to have a dedicated foreach that is compiled into a for loop since that is more performant than the forEach method. A lot of the code I'm writing these days is related to game programming or at least graphics/canvas rendering, so loops are common and performance is important.</p>",
+    "PostedDate": "2012-10-04T03:11:44.66-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922184",
+    "ThreadId": "397920",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/101\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-10-04T15:49:12.65-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

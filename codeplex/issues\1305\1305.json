@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-03T12:21:04.923-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The existing Visual Studio 2012 JavaScript editor is generally pretty good at filling in the completion list based on inferred information available locally. For instance:\r\n\r\n```\r\nvar bob = {\r\n    hello: \"hi\",\r\n    foo: function() {\r\n        this.hello = \"yo\"; // <- intellisense completion list shows up after typing \"this.\" and includes hello field\r\n    }\r\n};\r\n\r\nvar foo = function(bar) {\r\n   /// <param name='bar' type='Bar'>etc..</param>\r\n   bar.hello = \"yo\"; // this would be an error in TypeScript\r\n   alert(bar.hello); // <-- intellisense completion list shows up, includes locally assigned hello field\r\n};\r\n```\r\n\r\nThere may be more instances of this elsewhere.\r\n\r\nHowever in TypeScript the first example works, but it I don't get intellisense information in the foo function on \"this\". In the second example, if bar is annotated with a type, similar to the vsdoc annotation, then the bar.hello = \"yo\"; line becomes an error. If bar is instead an any, then the error goes away, but I still don't get any intellisense on the alert line (to be fair, the JS intellisense engine doesn't either, unless you annotate the parameter type first, but it probably should too).\r\n\r\nI realize these may not be exactly idiomatic TypeScript examples, but they are common patterns when working with other libraries like AngularJS (the first example would be an angular factory, and the second would be a the controller assigning things to the $scope parameter). ",
+    "LastUpdatedDate": "2013-08-13T12:45:20.047-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-03T10:28:31.77-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Intellisense - completion list missing inferrable members",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1305
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks, this is by design. The type of 'this' in a function implementation is always any (see section 6.3 Function Implementations in the language spec) because of the way JavaScript's 'this' works. In your first example, yes, you might assume that this.hello = 'yo' does what you expect. But what about code like this?\n```\nvar x = bob.foo;\nx();\nconsole.log(bob.hello);\n```\nNow Intellisense led you astray by suggesting that the type of 'this' inside foo was the type of bob, as its type depends on how it was invoked.\n\nFor the second case without a type annotation the bar parameter is typed as 'any' and so we will not give an error for doing something like bar.hello but we will also not offer a completion list. There's no data flow analysis that notices you've previously added a property to the 'any' typed thing to then offer that as a completion option. Even if it did, slightly more complex cases fall down. Consider:\n```\nif(someCondition) {\n    bar.hello = 'hi';\nelse {\n    bar.goodbye\n}\nbar. // what completion list do you expect here?\n```\nThere're probably some future changes we could make to improve the experience around 'any' when its used as an 'expando' type like this but it's not something we'll be addressing in the near term.",
+      "PostedDate": "2013-07-03T12:21:01.757-07:00",
+      "Id": 105017
+    },
+    {
+      "Message": "Please reconsider closing this issue, as I believe I can address your counter points:\n\nIn your first counter-example, I understand your point, but I am not sure why that would be an argument against intellisense on this within an object literal. You have a completion list within methods of a TypeScript class when you type this. Indeed, intellisense would be practically useless for TypeScript classes without a completion list on this (as it is on object literals). Yet the same issue you described for the object literal example would also apply for class members accessed via this. See this typescript equivalent to your counter-example:\n\nhttp://www.typescriptlang.org/Playground/#src=module%20MyModule%20%7B%0A%09export%20class%20TestClass%20%7B%0A%09%09private%20name%3A%20string%20%3D%20%22hello%22%3B%0A%09%09constructor(name%3A%20string)%20%7B%0A%09%09%09this.name%20%3D%20name%3B%0A%09%09%7D%0A%09%09%0A%09%09helloWorld()%3A%20string%20%7B%0A%09%09%09return%20%22hello%20%22%20%2B%20this.name%3B%20%2F%2F%20I%20got%20intellisense%20for%20name%20here%0A%09%09%7D%0A%09%7D%0A%7D%0A%0Avar%20foo%20%3D%20new%20MyModule.TestClass(%22bob%22)%3B%0Avar%20x%20%3D%20foo.helloWorld%3B%0Ax()%3B%20%2F%2F%20see%2C%20same%20problem\n\nIf you support completion on a typescript class, you should support completion within methods of an object literal. An object literal should be treated like a kind of anonymous type, at least for the purposes of the intellisense completion list on this. To do otherwise puts typescript in the somewhat embarrassing position of having less intellisense information in many cases than the JavaScript editor does.\n\nAs for your second example, I would expect the following:\n\nWithin the if branch, the completion list would contain hello.\nWithin the else branch, the completion list would contain goodbye.\nOutside of both the if and else branches, I would expect both fields in the completion list. \n\nJustification: Handling of undefined values on instances of the any type is orthogonal to what should show up in the completion list. \n\nAnd, in anticipation of you providing this counter example, see comments:\n```\nif(someCondition) {\n   bar.hello = \"hi\";\n} else {\n   bar.hello = 12;\n}\nalert(bar.hello.toString()); // type of bar.hello shows up in completion list as 'any'\n```\n\n",
+      "PostedDate": "2013-07-03T14:59:42.983-07:00",
+      "Id": 105034
+    },
+    {
+      "Message": "In a lot of cases we have to strike a balance between what is always right vs what is likely right based on common usage (and what we have time to do in either case) since JavaScript allows for all sorts of fun stuff :)\n\nBoth of your requests basically hinge on the compiler doing a significant amount of data flow analysis where today it does essentially none (and where adding that ability is desirable but certainly outside the scope of our 1.0 release). The type of 'this' in a function is 'any' in the general case. In some particular cases you can imagine that the compiler might be able to statically verify something more useful but we would want something more robust than just special casing one level into an object literal. You could also ask that 'this' in an object literal correctly use the type of the outer scope it is defined in for example.\n\nThere's also a question of expectation. You're correct that class members have a similar issue with the type of 'this' if they end up invoked through call/apply or some other unorthodox means. But in the vast majority of cases 'this' is used inside the class as a means to access the members of that object. The value of Typescript's class syntax would surely be significantly weakened if 'this' inside a class did not typecheck and present tooling suggestions with this rule as it is today.\n\nThe second case is much the same, with some additional requirements. We don't even have a general facility in the type system for saying \"this object is of type 'any' plus members x,y,z\" and the appropriate constraints to make that useful for more than Intellisense suggestions. Doing data flow analysis to build up that type is yet another step beyond that. \n\nThis is all to say, I agree these would be nice to have one day, but the features required to do so are a little more advanced than a single example makes them out to be. As it stands, the behavior you're seeing is by design, not a bug or design oversight, but hopefully we can revisit some of these more advanced features in the future.\n\nAlso, for future reference, if you simply re-open an issue we close it will get looked at again reasonably quickly (generally within a day or two), so you're always welcome to do that if you disagree, think we got it wrong, have additional information, etc.",
+      "PostedDate": "2013-07-03T16:00:35.567-07:00",
+      "Id": 105049
+    },
+    {
+      "Message": "Thank you for taking a second look at this. First of all, to be clear, I'm not in disagreement about the compiler considering this to be any for the purposes of type checking. I am limiting this proposal only to how intellisense fills in its auto-complete list.\n\nI think (and of course I haven't done any sort of statistical analysis to base this on), that any function defined on an object literal which references this is by far more likely to mean the object literal itself, and not some other object that the function is to be explicitly called on. There may be scenarios where the programmer meant the function to be called explicitly on another object, but I don't think they are nearly as common.\n\nAlso, you shouldn't need to do a data-flow analysis on object literals for what I was proposing. Perhaps I overstated the scope of what I was asking for. For instance, take a look at this object literal :\n\n```\nvar parentObject = {\n    id: \"joe\",\n    fooParent: function() {\n      this.id= \"jack\"; // auto-complete lists id (as a string), fooParent, and childObject\n      console.log(this.childObject.name); // intellisense on childObject too\n      this.unknownField = \"foo\"; // I'm NOT proposing to add unknownField to the autocomplete list\n    }, \n    childObject: {\n       id: 12,\n       name: \"foo\",\n       fooChild: function() {\n         // this in fooChild is only the childObject literal, not its parent object literal.\n         this.id = 14;\n         this.name = \"bob\"; // auto-complete lists id (as a number), name, and fooChild\n      }\n   }\n};\nparentObject.anotherUnknownField = \"foo\"; // also NOT proposing this be added to the autocomplete list in the fooParent function.      \n```\nThere are no logical branches involved (or even allowed) in the definition of an object literal. No data analysis is needed to determine what members to list in the auto-complete at each level - they are all listed in a comma separated list of name-value pairs. I'm not proposing to add to the auto-complete list fields assigned after the object literal is initially defined, including fields assigned within those functions. That might have been what you meant by the need for data-flow analysis, which I agree would be beyond the scope of this particular proposal (see unknownField and anotherUnknownField above).\n\nI concede that a full implementation of the second scenario would be a longer term project, though not an impossible one. I would just like the same level of intellisense that the JavaScript editor is capable of, at the very least. At the moment, the Visual Studio JavaScript editor, especially when combined with vsdoc annotations, has far better intellisense support for these kinds of scenarios, which is a strange kind of situation to be in.",
+      "PostedDate": "2013-07-03T18:54:55.073-07:00",
+      "Id": 105064
+    },
+    {
+      "Message": "Absolutely reasonable to want this more basic scenario to work. We're definitely aware of it and hope to improve it in the future. It's not something we're likely to get to in the near future, we've already got a lot of features whose quality we need to shore up before adding more. Although not strictly necessary since this is definitely on our radar going forward I logged a new suggestion here https://typescript.codeplex.com/workitem/1508 since this one got a little verbose. You and others can vote on it (and others) as we look at which suggestions are the most impactful in the future.",
+      "PostedDate": "2013-08-13T12:45:20.047-07:00",
+      "Id": 109693
+    }
+  ]
+}

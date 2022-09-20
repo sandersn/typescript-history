@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1259321",
+    "ThreadId": "549557",
+    "Html": "ES6 Status<br />\nFocus for next feature set<br />\n<ul>\n<li>Spread</li>\n<li>\nDestructuring<br />\n</li>\n</ul>\n<strong>ES6 Status</strong><br />\n<br />\nES6 ratification has been delayed until June 2015.  This should not change the set of features, though we're seeing changes land even now, like the new module syntax and the removal of comprehensions.<br />\n<br />\nProposal for our focus is on features we can downlevel compile (like classes).  Because it will take a while for ES6 to be natively supported broadly, the downlevel compilation story will stay a pretty powerful feature for TypeScript.<br />\n<br />\nLooks like these are good candidates: <br />\n<br />\nArrow functions, default function params, rest params, spread call, spread array, class, class expressions, For...of loops over arrays, template strings, and destructuring.<br />\n<br />\n<strong>Spread</strong><br />\n<br />\nSpread array:<br />\n<br />\nExample: [1, 2, ...items, 4, ...moreitems]<br />\n<br />\nAppears to be trivial, we just need to emit: [1, 2].concat(items, [3], moreitems) or similar pattern.<br />\n<br />\nIf it starts with the spread, then do items.concat([1, 2], ...)<br />\n<br />\nFor spread with functions:<br />\n<br />\nCodegen of f(...items) becomes f.apply(void 0, items) // strict mode, otherwise pass 'this'<br />\n<br />\nWe may need to create an __apply of our own for method invocation.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n__apply(obj, method, args) {\n  obj[method].apply(obj, args);\n}\n\n__apply(obj, <span style=\"color:#A31515;\">&quot;foo&quot;</span>, items);\r\n</pre></div>Typechecking these calls needs a flexible approach.  Key idea is that we need to check arity and types of what we know.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nf(1, 2, ...items, 3, ...more): f(T, T, BCT(...items, 3, ...more))\r\n</pre></div>Need to explore this more closely to understand impact.<br />\n<br />\n<strong>Destructuring</strong><br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> [x,y] = myFun();\r\n</pre></div>Codegen:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> __a = myFun();  <span style=\"color:Green;\">// fresh var __a</span>\n<span style=\"color:Blue;\">var</span> x = __a[0];\n<span style=\"color:Blue;\">var</span> y = __a[1];\r\n</pre></div>Type annotations:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> {x: myX, y: myY}: {x: …; y: …} = myPoint();  <span style=\"color:Green;\">// {x: myX} is a ES6 destructuring with renaming</span>\r\n</pre></div>If type annotations were inline with the destructuring, then you'd get two uses of colon.  One for type and one for rename:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> {x: myX: <span style=\"color:Blue;\">number</span>} = ...;  <span style=\"color:Green;\">// ugh</span>\r\n</pre></div>Probably means we'd want to move the type annotation beside instead of inline.<br />\n",
+    "PostedDate": "2014-06-24T10:53:28.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259501",
+    "ThreadId": "549557",
+    "Html": "<blockquote>\nES6 ratification has been delayed until June 2105.<br />\n</blockquote>\nUntil 2105! OMG, I hope not. :*( I can't wait that long!  Good news for the next generation I guess. ;)<br />\n",
+    "PostedDate": "2014-06-25T00:01:30.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259525",
+    "ThreadId": "549557",
+    "Html": "There is a chicken and egg problem here: now that the module system is supposed to be feature complete, implementations are needed, so that users can get experience, and implementers can report back with issues before the spec is published.\r<br />\n<br />\nI do recall that TypeScript was hit by the awkward module spec process, but I think it is time to try again. Currently, one can use other ES6 transpilers to get uptodate module system but no types, or use TS and get types but an older module system.\r<br />\n<br />\nIn addition to ES6 features with easy translations, please also consider an ES6 target. \r<br />\n<br />\nThat way, TS can provide typing, and other transpilers and shims (see <a href=\"https://github.com/addyosmani/es6-tools\" rel=\"nofollow\">https://github.com/addyosmani/es6-tools</a> ) can take care of the feature translations until engines have caught up with the spec.<br />\n",
+    "PostedDate": "2014-06-25T01:07:01.93-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259576",
+    "ThreadId": "549557",
+    "Html": "Hi Jon,\r<br />\n<br />\nThanks again for sharing these notes.\r<br />\n<br />\nCan I ask where the team is on the <strong>let</strong> and <strong>const</strong> keywords? I may have missed an earlier thing about this, if so, sorry.\r<br />\n<br />\nCheers,\r<br />\nMark<br />\n",
+    "PostedDate": "2014-06-25T03:12:15.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259596",
+    "ThreadId": "549557",
+    "Html": "destructuring in import statement could be cool :<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> { readFileSync, writeFileSync} = require(<span style=\"color:#A31515;\">&#39;fs&#39;</span>);\r\n</pre></div>",
+    "PostedDate": "2014-06-25T03:55:42.923-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259647",
+    "ThreadId": "549557",
+    "Html": "<strong>jamesnw wrote:</strong><br />\n<blockquote>\n<blockquote>\nES6 ratification has been delayed until June 2105.<br />\n</blockquote>\nUntil 2105! OMG, I hope not. :*( I can't wait that long!  Good news for the next generation I guess. ;)<br />\n</blockquote>\nYou mean the next, next, next generation. This is terrible news! I'll definitely have retired by then!<br />\n",
+    "PostedDate": "2014-06-25T06:18:11.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259673",
+    "ThreadId": "549557",
+    "Html": "On a more serious note, the stuff about spread seems reasonable, but how would you handle the last two cases illustrated <a href=\"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator\" rel=\"nofollow\">here</a>:<br />\n<blockquote>\nApply for new<br />\n<br />\nExample: In ES5 it is not possible to compose new with apply (in ES5 terms apply does a [[Call]] and not a [[Construct]]). In ES6 the spread syntax naturally supports &gt;this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> dateFields = readDateFields(database);\n<span style=\"color:Blue;\">var</span> d = <span style=\"color:Blue;\">new</span> Date(...dateFields);\r\n</pre></div>A better push<br />\n<br />\nExample: push is often used to push an array to the end of an existing array. In ES5 this is often done as:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> arr1 = [0, 1, 2];\n<span style=\"color:Blue;\">var</span> arr2 = [3, 4, 5];\n<span style=\"color:Green;\">// Append all items from arr2 onto arr1</span>\nArray.prototype.push.apply(arr1, arr2);\r\n</pre></div>In ES6 with spread this becomes:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> arr1 = [0, 1, 2];\n<span style=\"color:Blue;\">var</span> arr2 = [3, 4, 5];\narr1.push(...arr2);\r\n</pre></div></blockquote>\n",
+    "PostedDate": "2014-06-25T06:36:17.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259743",
+    "ThreadId": "549557",
+    "Html": "Just to clarify, we're still planning to align with ES6.  Its delay just changes what features we want to land first.\r<br />\n<br />\n@clausreinke\r<br />\n<br />\nWe are considering an ES6 target and likely will add one in a future release.\r<br />\n<br />\n@markrendle\r<br />\n<br />\nWe're still planning to doing let/const but not as a polyfill/downlevel.  This means we'd only support them in ES6 output mode.\r<br />\n<br />\n@MgSam\r<br />\n<br />\nThe first example sounds like a good question for the design team.  It's not immediately obvious to me what the polyfill is here.  I'd be curious to see what other ES6 compilers do.\r<br />\n<br />\nThe second example I think falls out from the codegen we described.  Is there something I'm missing?<br />\n",
+    "PostedDate": "2014-06-25T09:11:03.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259748",
+    "ThreadId": "549557",
+    "Html": "@jonturner The codegen you showed in the design notes only covers array declaration. It seems like to support pushing a spread the compiler would have to specifically have to look for <code>Array.push</code> being used with a spread and then create codegen similar to what Mozilla demonstrates (or rewrite it to use <code>concat</code> instead). Having the compiler special case a certain method like that seems like a slippery slope. \r<br />\n<br />\nAlso, @jamesnw and I were making a joke about the fact that you wrote ES6 has been pushed back to <strong>June 2105</strong>, aka 91 years from now.<br />\n",
+    "PostedDate": "2014-06-25T09:18:00.02-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1259749",
+    "ThreadId": "549557",
+    "Html": "Ha!  I totally missed that :p  Fixed now.\r<br />\n<br />\nI agree that special casing is a slippery slope.  We should keep examples like this in mind to make sure we have a general codegen that works across any of the types of invocations ES6 will see.<br />\n",
+    "PostedDate": "2014-06-25T09:20:48.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260035",
+    "ThreadId": "549557",
+    "Html": "For spread with new, <a href=\"https://github.com/square/esnext\" rel=\"nofollow\">esnext</a> has a <a href=\"http://square.github.io/esnext/#var%20hello%20%20%3D%20new%20Array(...%5B1%2C2%2C3%5D)\" rel=\"nofollow\">pretty interesting approach</a>, however idk if that can be compatible with ES3.<br />\n",
+    "PostedDate": "2014-06-26T06:46:20.623-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

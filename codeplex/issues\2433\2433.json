@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "What jamesnw said.\n\nInherited interface types must satisfy substitutability (http://en.wikipedia.org/wiki/Substitutability); `IFailedImplementation` is not a replacement for `IBaseCreator` because it has more required parameters than the type it attempts to substitute for.",
+    "ClosedDate": "2014-04-14T09:32:40.43-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Typescript currently offers the ability to overload methods in interfaces, but the implementation does not allow so by using generics. In the code below, IFailedImplementation does just that despite the desired result being exactly the same as ISuccessfulImplementation.\r\n\r\n```\r\n    export interface IBaseData {\r\n        id: number;\r\n    }\r\n\r\n    export interface IMutatedData {\r\n        data: IBaseData;\r\n    }\r\n\r\n    export interface IOtherMutatedData extends IMutatedData {\r\n        issueId: number;\r\n    }\r\n\r\n    export interface IBaseCreator<T, T2> {\r\n        create(a: T): T2;\r\n    }\r\n\r\n    export interface IFailedImplementation extends IBaseCreator<IBaseData, IMutatedData> {\r\n        create(respondent: IBaseData, issueId: number): IMutatedData;\r\n    }\r\n\r\n    export interface ISuccessfulImplementation  {\r\n        create(baseData: IBaseData): IMutatedData;\r\n        create(baseData: IBaseData, issueId: number): IOtherMutatedData;\r\n    }\r\n```\r\n\r\nI'd like to know your thoughts on the likelihood of this being a feature in Typescript.\r\n\r\nCheers",
+    "LastUpdatedDate": "2014-04-15T01:00:58.333-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-14T02:23:28.66-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Support interface method overloading with generics",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2433
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "There's nothing wrong here, other than you are forcing a new parameter.  change \"issueId: number\" to \"issueId?: number\".",
+      "PostedDate": "2014-04-14T06:53:39.35-07:00",
+      "Id": 141740
+    },
+    {
+      "Message": "BTW: ISuccessfulImplementation  is not the same - that *is* an overload.  The other examples are inheritance, not overloads.",
+      "PostedDate": "2014-04-14T06:55:45.71-07:00",
+      "Id": 141741
+    },
+    {
+      "Message": "Ok that seems fair enough, I was hoping you could overload rather than substitute.\n\nThanks for the link also.",
+      "PostedDate": "2014-04-15T01:00:58.333-07:00",
+      "Id": 141822
+    }
+  ]
+}

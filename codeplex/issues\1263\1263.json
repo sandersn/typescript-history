@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:58:45.72-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "It doesn't seem possible to implicitly expose the type information of external \"export =\" module hierarchies with cyclic references. (eg: submodules that hold references to parent modules, where the parent module instantiates the submodule).\r\n\r\nAdditionally, ///<reference ... /> declarations to export = ...; modules expose no type information either.\r\n\r\n# SubModule.ts\r\n```\r\n// This doesn't give us the type information of MainModule as it uses \"export = ...;\" syntax, instead of defining an internal module/class. Fair enough, this is by design and not intended for this purpose.\r\n///<reference path=\"./MainModule.ts\" />\r\n\r\n// This causes a compiler error when referencing MainModule that more or less implies we can't handle cyclic references (although CommonJS does to a degree) we only need type information at this point, not the actual module instance to be require'd!!!\r\nimport MainModule = require('MainModule');\r\n\r\nclass SubModule\r\n{\r\n    public static StaticVar = 123;\r\n    public InstanceVar = 456;\r\n    public main: MainModule;\r\n\r\n    constructor(main: MainModule) { this.main = main; }\r\n}\r\n\r\nexport = SubModule;\r\n```\r\n\r\n# MainModule.ts\r\n```\r\nimport SubModule = require('SubModule'); // Note: SubModule will then require MainModule, which won't have anything defined in it at this point because we haven't defined the class!\r\n\r\nclass MainModule\r\n{\r\n    public static SubModule = SubModule;\r\n    public SubModule: MainModule.SubModule;\r\n\r\n    constructor() { this.SubModule = new MainModule.SubModule(); }\r\n}\r\n\r\nexport = MainModule;\r\n```\r\n\r\n# Test.ts\r\n```\r\nimport MainModule = require('MainModule');\r\nconsole.log(MainModule.SubModule.StaticVar);\r\n\r\nvar instance = new MainModule();\r\nconsole.log(instance.SubModule.InstanceVar);\r\n```\r\n\r\nCompiling this results in:\r\n> SubModule.ts(11,18): error TS4022: Type reference cannot refer to container 'MainModule.ts'.\r\n> SubModule.ts(13,23): error TS4022: Type reference cannot refer to container 'MainModule.ts'.\r\n\r\nThe only work around appears to be for one to manually maintain ambient declarations along side their already typed TS modules, duplicating the type information that already exists in the modules themselves and development effort, which ultimately becomes unmanageable for larger projects (we're currently dealing with about 18 modules covering hundreds of functions - maintaining these declarations by hand is ... not realistic).\r\n\r\nOur current work around is to simply abandon type information entirely, making the entire point behind using __Type__Script in the first place somewhat void.\r\n\r\nConsidering in these cases, it's not physical require() cyclic dependency, but a type information cyclic dependency - does it make sense to have an alternate module referencing syntax to say we need the type information of another module we're passed references to? (or maybe have that implicitly handled instead of the current compiler error, which would instead get raised only upon calling/referencing types/statics in the type referenced module?)\r\n\r\n\r\nAlternatively, have I completely missed something obvious?  and is this actually possible, and I'm going about it the wrong way?",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-27T20:29:07.183-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Cyclic type information dependencies & external \"export =\" modules",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 1263
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Alternatively, is it expected that TypeScript users explicitly managed their type dependencies on a per-module scale?\n\nAnother way I can think of working around this is for each individual module to explicitly import each individual module it depends on, and for developers to do their best to make sure the imported type names are uniform across all the modules s.t. things don't get mixed up.\n\nWhich would be unlike CommonJS modules where you can have entire module hierarchies that define complex APIs passed around as a single module with a self-assembling 'main' api type - essentially adding extra limits upon require semantics that CommonJS doesn't otherwise have?",
+      "PostedDate": "2013-06-27T20:47:34.643-07:00",
+      "Id": 104474
+    },
+    {
+      "Message": "Yes, that seems to be a bug.\r\n\r\nsimpler repro:\r\n\r\n````\r\ndeclare module \"SubModule\"{\r\nimport MainModule = require('MainModule');\r\nclass SubModule {\r\npublic static StaticVar :number;\r\npublic InstanceVar :number;\r\npublic main: MainModule;\r\nconstructor();\r\n}\r\nexport = SubModule;\r\n}\r\ndeclare module \"MainModule\"{\r\nimport SubModule = require('SubModule');\r\nclass MainModule {\r\npublic SubModule: SubModule;\r\nconstructor();\r\n}\r\nexport = MainModule;\r\n}\r\n````",
+      "PostedDate": "2013-06-28T10:25:33.813-07:00",
+      "Id": 104548
+    },
+    {
+      "Message": "I was so excited for 0.9 and the export = syntax, then we got this bug, another wall for node.js developers...\n\nanalysis on what we have, and what we probably should have:\n\n```\nimport mymodule = module('mymodule');\n```\nThis works for both importing full external modules and direct exports = modules / classes... \"the latter, probably not intended? or is this syntax deprecated\"\n\n```\nimport mymodule = require('mymodule');\n```\nThis works exactly like the above but seems to be intended for exports = modules / classes, sadly it doesn't handle cyclical references, even if it's just for type information, not actual use.\nThough it's important to note that cyclical references seem to work for full external modules.\n\nWhat would be nice:\n```\nimport mymodule = reference('mymodule');\n```\nThis feature could potentially be used for importing only the type information from any module, allowing reference to the types but no use of module functions or variables.\n",
+      "PostedDate": "2013-07-31T14:33:35.847-07:00",
+      "Id": 108101
+    }
+  ]
+}

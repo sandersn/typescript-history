@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:19:44.163-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "This piece of code (that is valid JavaScript) produces an error:\r\n\r\n```\r\nvar json_expected = [\r\n\t{\"type\":\"block\",\"value\":[\r\n\t\t{\"type\":\"id\",\"value\":\"extends\",\"rawValue\":\"extends\"},\r\n\t\t{\"type\":\"id\",\"value\":\"base\",\"rawValue\":\"base\"}\r\n\t]},\r\n\t{\"type\":\"text\",\"value\":\" \"},\r\n\t{\"type\":\"expression\",\"value\":[\r\n\t\t{\"type\":\"number\",\"value\":1,\"rawValue\":\"1\"},\r\n\t\t{\"type\":\"operator\",\"value\":\"+\",\"rawValue\":\"+\"},\r\n\t\t{\"type\":\"number\",\"value\":2,\"rawValue\":\"2\"},\r\n\t\t{\"type\":\"operator\",\"value\":\"+\",\"rawValue\":\"+\"},\r\n\t\t{\"type\":\"number\",\"value\":3,\"rawValue\":\"3\"}\r\n\t]},\r\n\t{\"type\":\"text\",\"value\":\" \"},\r\n\t{\"type\":\"expression\",\"value\":[{\"type\":\"string\",\"value\":\"string\",\"rawValue\":\"\\\"string\\\"\"}]}\r\n];\r\n```\r\n\r\n```\r\nError\t1\tIncompatible types in array literal expression: Types of property 'value' of types '{ type: string; value: string; rawValue: string; }' and '{ type: string; value: number; rawValue: string; }' are incompatible\tC:\\htdocs\\atpl.js\\test\\TemplateTokenizer_test.ts\t42\t33\tTemplateTokenizer_test.ts\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-09T02:32:32.907-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Problem with JSON literals?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 710
+  },
+  "FileAttachments": [
+    {
+      "FileId": 621468,
+      "FileName": "json_literal_bug.png",
+      "DownloadUrl": ".\\621468"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "It's not possible to have heterogeneous types as elements in an array.\n\n```\n var foo =[1, \"one\"]; //Error: Incompatible types...\n\n// But\n var foo = [1, <any> \"one\"]; //Ok\n var foo: any[] = [1, \"one\"]; //Ok\n\n```\n\nThe solution to the code provided above is not prettiest in the world, because of the nested array:\n\n```\nvar json_expected : any[] = [\n    {\"type\":\"block\",\"value\":[\n        {\"type\":\"id\",\"value\":\"extends\",\"rawValue\":\"extends\"},\n        {\"type\":\"id\",\"value\":\"base\",\"rawValue\":\"base\"}\n    ]},\n    {\"type\":\"text\",\"value\":\" \"},\n    {\"type\":\"expression\",\"value\":[\n        <any> {\"type\":\"number\",\"value\":1,\"rawValue\":\"1\"},\n        {\"type\":\"operator\",\"value\":\"+\",\"rawValue\":\"+\"},\n        {\"type\":\"number\",\"value\":2,\"rawValue\":\"2\"},\n        {\"type\":\"operator\",\"value\":\"+\",\"rawValue\":\"+\"},\n        {\"type\":\"number\",\"value\":3,\"rawValue\":\"3\"}\n    ]},\n    {\"type\":\"text\",\"value\":\" \"},\n    {\"type\":\"expression\",\"value\":[{\"type\":\"string\",\"value\":\"string\",\"rawValue\":\"\\\"string\\\"\"}]}\n];\n```\n",
+      "PostedDate": "2013-02-10T05:28:09.26-08:00",
+      "Id": 88993
+    },
+    {
+      "Message": "TypeScript claims to be a superset of javascript. So I think that that should work without modification even if it cannot infeer common types and set that as any.\nAnyway, thanks for the workaround, I will use it in the meanwhile! :)",
+      "PostedDate": "2013-02-10T06:12:07.213-08:00",
+      "Id": 88994
+    },
+    {
+      "Message": "Thanks for reporting this.\r\n\r\nThe casting to any is indeed the recommended solution, but not the most convenient in this situation. We're going to take a look if we can make this easier.",
+      "PostedDate": "2013-02-11T11:26:35.237-08:00",
+      "Id": 89056
+    },
+    {
+      "Message": "Another case:\n\n```\ninterface IModule {\n    config(fn: Function);\n    config(inlineCfg: any[]);\n}\n\nvar mod: IModule;\n\n// next line: Error   1   Incompatible types in array literal expression\nmod.config([\"service\", function (service) {\n    console.log(\"\");\n}]);\n```\nNote that IModule has a overload for the config() method, which mimics angularjs' injection pattern. Suppressing the first signature - config(fn: Function) - makes the compiler happy. \n",
+      "PostedDate": "2013-03-17T05:20:19.71-07:00",
+      "Id": 93460
+    }
+  ]
+}

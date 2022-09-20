@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-03-19T17:20:47.783-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have an Extensions.d.ts file which defines the following prototype extension function:\r\n\r\n```\r\ninterface String {\r\n    foo();\r\n} \r\n```\r\n\r\nThe implementation sits in the Extensions.ts file:\r\n\r\n```\r\nimport $ = require(\"jquery\");\r\nString.prototype.foo = function () {\r\n    // Do something with jQuery here\r\n};\r\n```\r\nSo far so good, it compiles without any error.\r\n\r\nHowever, when I try to use this module in my app.ts:\r\n\r\n```\r\nimport Ext = require(\"Extensions\");\r\n\"something\".foo();\r\n```\r\nThe generated app.js file does not include the required Extensions module. I guess it is optimized out, because not referenced directly:\r\n```\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n    \"\".foo();\r\n});\r\n```\r\nBecause the Extensions.js file is not loaded, the following error is raised during run time:\r\n```\r\nTypeError: \"\".foo is not a function\r\n```\r\nThe only solution I have found so far is to create a dummy function in my extension module and reference it directly where I want to use the module. So I added this to my Extensions.ts:\r\n```\r\nexport class Extensions {    \r\n    public static ensureLoaded(): void { }\r\n}\r\n```\r\nAnd this to my app.ts:\r\n```\r\nimport Ext = require(\"Extensions\");\r\nExt.Extensions.ensureLoaded();\r\n```\r\nThis way the generated app.js is correct:\r\n```\r\ndefine([\"require\", \"exports\", \"Extensions\"], function(require, exports, Ext) {\r\n    Ext.Extensions.ensureLoaded();\r\n    \"\".foo();\r\n});\r\n```\r\nIs there a simpler solution?\r\nThank you.\r\n\r\n- György Balássy\r\n\r\n",
+    "LastUpdatedDate": "2014-03-31T16:14:06.15-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-17T22:31:59.58-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Module with prototypes are optimized out",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2334
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You are generally correct that you do need to use something from the import in value positions in order for the module import to not be optimized away. In general if you're only using the module import for static type information at build time then it stands to reason that loading the module at runtime is just an unnecessary performance cost. Another potential workaround is to use the amd-dependency flag. The forums are probably a good place to raise this with some other folks and see if they have preferred solutions for your particular use case.",
+      "PostedDate": "2014-03-19T17:20:44.383-07:00",
+      "Id": 137393
+    },
+    {
+      "Message": "Thank you, Dan. I could imagine a \"force\" modifier to the import statement which would allow to skip this optimization for the selected modul.\n",
+      "PostedDate": "2014-03-19T18:47:47.887-07:00",
+      "Id": 137398
+    }
+  ]
+}

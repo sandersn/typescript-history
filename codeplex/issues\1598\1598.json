@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See mhegazy's comment",
+    "ClosedDate": "2014-07-21T11:44:43.57-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "lib.d.ts contains an incorrect constructor:\r\n\r\ndeclare var MutationObserver: {\r\n  prototype: MutationObserver;\r\n  new(): MutationObserver;\r\n}\r\n\r\nI think it should be:\r\n\r\ndeclare var MutationObserver: {\r\n  prototype: MutationObserver;\r\n  new(callback:(records:MutationRecord[])=>any): MutationObserver;\r\n}\r\n\r\nSee https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver?redirectlocale=en-US&redirectslug=DOM%2FMutationObserver#MutationObserverInit\r\n\r\nEditing my local copy of lib.d.ts fixed the intellisense check, but produced the same error on compiling:\r\n\r\n\"Could not select overload for 'new' expression.\"\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-26T19:41:04.547-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "lib.d.ts provides incorrect constructor for MutationObserver",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 6,
+    "Id": 1598
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I just noticed this as well. It appears to be fixed in tip, but hasn't made it to a formal release yet.",
+      "PostedDate": "2013-10-02T18:57:59.37-07:00",
+      "Id": 117295
+    },
+    {
+      "Message": "Scratch that. I was reading the wrong line. Definitely still an issue.",
+      "PostedDate": "2013-10-02T19:16:50.973-07:00",
+      "Id": 117297
+    },
+    {
+      "Message": "This is a problem for me too",
+      "PostedDate": "2013-11-05T19:32:04.537-08:00",
+      "Id": 121961
+    },
+    {
+      "Message": "https://typescript.codeplex.com/SourceControl/changeset/5946ba0cdc4584fb454805008a6b5582f86b2cef\n\r\n\r** Closed by RyanCavanaugh 12/09/2013 12:18PM",
+      "PostedDate": "2013-12-09T12:18:09.25-08:00",
+      "Id": 138126
+    },
+    {
+      "Message": "It is still an issue in 1.0",
+      "PostedDate": "2014-04-12T14:14:37.673-07:00",
+      "Id": 141605
+    },
+    {
+      "Message": "Please change it to be:\ndeclare var MutationObserver: {\n    prototype: MutationObserver;\n    new(callback:(records:MutationRecord[])=>any): MutationObserver;\n}\n",
+      "PostedDate": "2014-04-12T15:36:00.693-07:00",
+      "Id": 141606
+    },
+    {
+      "Message": "This has been fixed in develop. check lib.dom.d.ts, it is defined as:\n```\n\ninterface MutationObserver {\n    observe(target: Node, options: MutationObserverInit): void;\n    takeRecords(): MutationRecord[];\n    disconnect(): void;\n}\ndeclare var MutationObserver: {\n    prototype: MutationObserver;\n    new (callback: (arr: MutationRecord[], observer: MutationObserver)=>any): MutationObserver;\n}\n```",
+      "PostedDate": "2014-04-14T12:32:02.097-07:00",
+      "Id": 141791
+    },
+    {
+      "Message": "If it is defined as  __new (callback: (arr: MutationRecord[], observer: MutationObserver)=>any): MutationObs__ - it is incorrect.\nAccording to w3 is should be defined as \"__new MutationObserver(mutations: MutationRecord[])=>any)__\"\n(http://www.w3.org/TR/dom/#mutation-observers)",
+      "PostedDate": "2014-04-14T17:58:37.477-07:00",
+      "Id": 141810
+    },
+    {
+      "Message": "new (callback: (mutations: MutationRecord[])=>any): MutationObs",
+      "PostedDate": "2014-04-14T18:00:34.307-07:00",
+      "Id": 141811
+    },
+    {
+      "Message": "These typings have been auto-generated from the IE11 DOM definitions. We do not usually make manual changes to these parts of lib.d.ts, as the change will be overwritten once we update the file again. If IE changes that in their next version we will pick up the change as well. Sorry for the inconvenience.",
+      "PostedDate": "2014-04-15T11:01:12.987-07:00",
+      "Id": 141969
+    }
+  ]
+}

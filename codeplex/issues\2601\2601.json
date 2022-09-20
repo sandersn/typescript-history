@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T17:23:37.54-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hi Guys,\r\n\r\nAn odd issue.  I was porting John Papa's Hot Towel Angular SPA template from JavaScript to TypeScript.\r\n\r\nWhilst working on directives I hit an issue here:\r\n\r\n```ts\r\ninterface ccSpinnerWindowService extends ng.IWindowService {\r\n    Spinner: Spinner;\r\n}\r\n\r\ninterface ccSpinnerScope extends ng.IScope {\r\n    spinner: Spinner;\r\n}\r\n\r\ninterface ccSpinnerAttributes extends ng.IAttributes {\r\n    ccSpinner: string;\r\n}\r\n\r\napp.directive('ccSpinner', ['$window', function ($window: ccSpinnerWindowService) {\r\n    // Description:\r\n    //  Creates a new Spinner and sets its options\r\n    // Usage:\r\n    //  <div data-cc-spinner=\"vm.spinnerOptions\"></div>\r\n    var directive = {\r\n        link: link,\r\n        restrict: 'A'\r\n    };\r\n    return directive;\r\n\r\n    function link(scope: ccSpinnerScope, element: ng.IAugmentedJQuery, attrs: ccSpinnerAttributes) {\r\n        scope.spinner = null;\r\n        scope.$watch(attrs.ccSpinner, function (options) {\r\n           if (scope.spinner) {\r\n                scope.spinner.stop();\r\n            }\r\n            scope.spinner = new $window.Spinner(options); // errors with: 'new' expression, which lacks a constructor signature, implicitly has an 'any' type.\r\n            scope.spinner.spin(element[0]);\r\n        }, true);\r\n    }\r\n}]);\r\n```\r\n\r\nAs you can see I'm modelling the addition of Spin.js's ```Spinner``` class to the ```window``` by extending ```ng.IWindowService``` and exposing ```Spinner``` there.  However, this means I cannot new up a Spinner on the ```ccSpinnerWindowService``` (there is no problem new-ing up a Spinner directly).  The error it fails with is:\r\n\r\n> 'new' expression, which lacks a constructor signature, implicitly has an 'any' type.\r\n\r\nI think this issue may be related to: https://typescript.codeplex.com/workitem/1562 - I was able to use the workaround there to get me by anyway:\r\n\r\n```ts\r\napp.directive('ccSpinner', ['$window', function ($window: ccSpinnerWindowService) {\r\n    // Description:\r\n    //  Creates a new Spinner and sets its options\r\n    // Usage:\r\n    //  <div data-cc-spinner=\"vm.spinnerOptions\"></div>\r\n    var directive = {\r\n        link: link,\r\n        restrict: 'A'\r\n    };\r\n    return directive;\r\n\r\n    function link(scope: ccSpinnerScope, element: ng.IAugmentedJQuery, attrs: ccSpinnerAttributes) {\r\n        scope.spinner = null;\r\n        scope.$watch(attrs.ccSpinner, function (options) {\r\n           if (scope.spinner) {\r\n                scope.spinner.stop();\r\n            }\r\n            scope.spinner = new (<any>$window.Spinner)(options); // works but feels oh so wrong\r\n            scope.spinner.spin(element[0]);\r\n        }, true);\r\n    }\r\n}]);\r\n```\r\n\r\nSo the question is: Am I doing something wrong here or is this an issue with TypeScript?  Is this the incorrect way to expose a class on an interface?",
+    "LastUpdatedDate": "2014-07-21T17:23:37.54-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-03T03:09:50.247-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "'new' expression, which lacks a constructor signature, implicitly has an 'any' type.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2601
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The error is a --noImplicitAny one. With --noImplicitAny the compiler warns when it sets the type of a symbol to any without the user explicitly stating it. The problem is you are calling a function with the new operator. This is a valid JavaScript invocation mechanism, but the typescript compiler can not tell the shape of the object resulting from the call. In the case of calling a class constructor with new the resulting object will have the same shape as the class. \n\nTo fix the issue, you can cast to any, as you have already done, or add a construct signature to the definition of Spinner.\n",
+      "PostedDate": "2014-07-04T11:24:23.643-07:00",
+      "Id": 151628
+    },
+    {
+      "Message": "Thanks for pitching in @mhegazy. What would \"construct signature to the definition of Spinner\" look like?\n\nSince I'm exposing a class on the interface I didn't think anything further was needed. I'm guessing I've missed something out?",
+      "PostedDate": "2014-07-04T12:15:05.723-07:00",
+      "Id": 151634
+    },
+    {
+      "Message": "Can you share the definition of Spinner interface? I am not sure I understand what you mean by \"exposing a class on the interface \"..\n\nI would add a construct signature to the definition of Spinner; something like this, you need to figure out what the return type should be.\n\n```\ninterface Spinner {\n     new (options: any): Spinner; \n}\n```",
+      "PostedDate": "2014-07-04T12:58:10.7-07:00",
+      "Id": 151637
+    }
+  ]
+}

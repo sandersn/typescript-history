@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design.. typeof doesn't work with a TypeParameter.\n\nWhat would the implementation of the get method look like?",
+    "ClosedDate": "2013-10-14T11:13:32.427-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Compiler should infer return type of generic method based on passed parameters, or at least inform you that it didnt do so.\r\n\r\n```\r\nfunction get<T>(type: typeof T): T {\r\n   ...\r\n}\r\n\r\n...\r\n\r\nvar myValue = get(MyType);\r\n\r\n```\r\n\r\nmyValue is now of type \"any\" instead of MyType.",
+    "LastUpdatedDate": "2013-11-19T16:10:54.25-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-13T05:38:19.8-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic return type inference",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1786
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The function parameter doesn't feature in the return value.\n\nThis would work:\n\n```TypeScript\n\nfunction get<T>(type: T): T {\n   ...\n}\n```\n\nBut maybe you are after this:\n\n```TypeScript\nfunction get<T>(type: typeof T): T {\n  ...\n}\n```\n\nwhich doesn't work. \n\nIt probably should.",
+      "PostedDate": "2013-10-13T06:38:05.57-07:00",
+      "Id": 118280
+    },
+    {
+      "Message": "@nabog: Oh, you are right it was a \"typo\". I've edited the issue.",
+      "PostedDate": "2013-10-13T06:48:17.697-07:00",
+      "Id": 118281
+    },
+    {
+      "Message": "Why is this by design? Java does allow this, and it works by type erasure as well.\n\n\n// this is how I use it\nprivate components: Array<T>;\n\nfunction get<T>(type: typeof T): T {\n   return (T)components.first( (c) => c instanceof type );\n}\n\n// And I think this is possible too (even if its not you can just change it to new() => T\nfunction get<T>(type: typeof T): T {\n   return new type();\n}\n\n\nThis is fairly common pattern",
+      "PostedDate": "2013-10-15T03:58:41.967-07:00",
+      "Id": 118453
+    },
+    {
+      "Message": "Oh wait, what?\n\n\"typeof doesn't work with a TypeParameter.\"\n\nWhat do you mean? Code above can be compiled and works, the problem is that return type is not infered from type of parameter.\n\ni can always do this:\n\n```\nvar myValue = get<MyType>(MyType);\n```\n\nAnd it works as expected. I just want for typescript to add \"<MyType>\" for me.",
+      "PostedDate": "2013-10-15T04:03:24.14-07:00",
+      "Id": 118455
+    },
+    {
+      "Message": "Oh I'm sorry, my bad\n\n```\nfunction get<T>(type: typeof T): T\n```\n\nthis doesnt work - no idea why though, its still all compile time stuff\n\n\nbut this does work\n\n```\nfunction get<T extends Component>(type: typeof Component): T\n```\n\nand this should return correct type __T__, or at least __Component__, but why does it return __any__?\n\n",
+      "PostedDate": "2013-10-15T04:22:31.69-07:00",
+      "Id": 118459
+    }
+  ]
+}

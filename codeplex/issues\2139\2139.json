@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-05T15:07:19.09-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Dear TypeScript Team,\r\n\r\nHere's a test case that produces a compiler error:\r\n\r\n```\r\nclass A {\r\n}\r\n\r\nclass B extends A {\r\n\tprivate _myB: string;\r\n}\r\n\r\nclass C extends A {\r\n\tprivate _myC: string; // No error if property name is '_myB'; also errors if name is '_myB' but type is number\r\n}\r\n\r\nfunction foo() {\r\n\tvar condition;\r\n\tif (condition) {\r\n\t\tvar bar = new B();\r\n\t} else {\r\n\t\tvar bar = new C(); // Compiler error!\r\n\t}\r\n}\r\n```\r\n\r\nThe error produced is the following:\r\n> Subsequent variable declarations must have the same type.  Variable 'bar' must be of type 'B', but here has type 'C'.\r\n\r\nIntuitively the error makes little sense - I don't see why the if/else blocks are considered to be in the same scope. But assuming that they are required to be, the TypeScript compiler should at least figure out that 'B' and 'C' share base class 'A' and that the subsequent declaration is therefore valid. Why is type resolution here using the structure of the classes rather than the explicitly-declared base class? After all, I went to all the trouble of declaring 'A'. :)\r\n\r\nThanks!\r\nLars\r\n\r\nP.S.: If emotional appeal will help my case, it took me a good hour to track this down because of all the \"noise\" (static factory methods, modules, inheritance chains, files, etc.) involved. It's often not this obvious to the end-user what the supposed problem is - e.g., when I was trying to reproduce the error in a new project, for the longest time I wasn't seeing the error because I didn't realize that the issue was with the types of private properties on my \"B\" and \"C\" classes which were being factored into the type resolution in this case.",
+    "LastUpdatedDate": "2014-03-31T16:17:16.283-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-30T10:18:13.397-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "If/else blocks should be in separate scopes, or at least resolve types more intuitively",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2139
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design, it matches how JavaScript scopes work which we must respect. Variable declarations are hoisted to the top of the current scope and if/else blocks do not introduce new scopes themselves, so effectively each ```bar``` you wrote is a separate declaration within the same scope. To try to lessen the pain here (since people are accustomed to this sort of pattern) we've allowed you to redeclare a variable like this as long as the types match exactly (which is fairly common) but if the types do not match exactly it simply isn't safe to allow. \n\nSee http://www.adequatelygood.com/JavaScript-Scoping-and-Hoisting.html for additional details on how JavaScript behaves in this respect.",
+      "PostedDate": "2014-01-30T17:38:55.957-08:00",
+      "Id": 132186
+    },
+    {
+      "Message": "Thanks @danquirk for the explanation. I can understand that you have to respect the scopes. However, why can't the type resolution used to determine \"if the types match exactly\" be based on the declared interfaces? Why is it necessary to do the structural typing analysis - it seems to me to be unnecessarily restrictive?",
+      "PostedDate": "2014-02-05T13:00:44.517-08:00",
+      "Id": 132762
+    },
+    {
+      "Message": "In other words, couldn't TypeScript allow me to do the following:\n\n```\nfunction foo() {\n    var condition;\n    if (condition) {\n        var bar: A = new B();\n    } else {\n        var bar: A = new C();\n    }\n}\n```\n\nOr perhaps, infer the shared base type \"A\" as you do elsewhere?",
+      "PostedDate": "2014-02-05T13:02:49.77-08:00",
+      "Id": 132763
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 01/30/2014 5:39PM",
+      "PostedDate": "2014-01-30T17:39:26.673-08:00",
+      "Id": 132764
+    },
+    {
+      "Message": "TypeScript does allow that example, because each ```bar``` is exactly the same type: ```A```. If you remove the type annotations then they are not exactly the same type and now the second declaration of ```bar``` is an error. The compiler does not support creating new, undeclared types which are the intersection of multiple types for type inference or other relationship checks. So it has no way to see a B and C, discover exactly which set of members overlap, and then check whether that maps to an existing type name or not and use that or else an anonymous type. This is something that could be added in the future but it's a pretty significant feature that impacts a lot of different areas (ex does type inference now infer types which don't otherwise exist?).\n\nAs for why it checks for type matches via structure rather than name that's a pretty fundamental part of the type system. Structural typing is the foundation upon which the language is built, as that again mirrors how JavaScript behaves. In many ways it is actually less restrictive than nominal typing. One of the primary motivators is how do you reconcile types and object literals as implementations? That is, how do you allow this if you care about name above structure?\n\n```TypeScript```\ninterface A {\n   foo: number;\n}\n\nvar a: A = { foo: 1; };\n```\n\nThe value provided for A is not an object with a matching name A or created by a constructor function named A, it is merely a collection of properties whose shape matches what A requires. If that isn't allowed then you essentially cannot add types over the top of existing JavaScript without breaking every existing piece of JavaScript code.",
+      "PostedDate": "2014-02-05T15:07:12.79-08:00",
+      "Id": 132779
+    },
+    {
+      "Message": "Okay, that helps a lot. Sorry about the false positives; I didn't test the second example before posting. It's good to know that that works. And thanks again for the thorough explanation.",
+      "PostedDate": "2014-02-05T15:41:08.723-08:00",
+      "Id": 132782
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-10T13:16:43.807-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nFirst of all, I'd like to express how grateful I am for TypeScript. I think it makes web development a lot more efficient.\r\n\r\nAnd now about the bug:\r\n\r\nMy task is to port an existing JavaScript project to TypeScript. In certain cases, we reference specific .js files in the html page depending on the device (desktop or mobile). We do not use any async module loading framework.\r\n\r\nFor example, suppose we have a Utilities module that contains standard utility functions. The device independent functions, like DoSomething, are created in Utilities.ts. Say there is a device dependent funtion called Foo. The desktop specific Foo is placed in Utilities.desktop.ts, while the mobile specific one lives in Utilities.mobile.ts.\r\n\r\nNow, DoSomething calls Foo, so we have to tell the TypeScript compliler that Foo is a function of Utilities, even though it is in another file. [This](http://typescript.codeplex.com/workitem/916) and [this](https://typescript.codeplex.com/discussions/446134) gave me the idea to try the following:\r\n\r\n```\r\n// Utilities.ts\r\nmodule My.Fancy.Module {\r\n    export interface UtilitiesStatic {\r\n        Foo: () => void;\r\n    }\r\n\r\n    export var Utilities: UtilitiesStatic;\r\n}\r\n\r\nmodule My.Fancy.Module.Utilities {\r\n    export function DoSomething(): void {\r\n\r\n        // Compiler error:\r\n        // The property 'Foo' does not exist on value of type 'Utilities'.\r\n        Utilities.Foo();\r\n    }\r\n}\r\n// end of Utilities.ts\r\n\r\n// Utilities.desktop.ts\r\nmodule My.Fancy.Module {\r\n\r\n    // Compiler error:\r\n    // Class My.Fancy.Module.UtilitiesDesktop declares interface My.Fancy.Module.UtilitiesStatic but does not implement it:\r\n    // Type 'My.Fancy.Module.UtilitiesDesktop' is missing property 'DoSomething' from type 'My.Fancy.Module.UtilitiesStatic'.\r\n    class UtilitiesDesktop implements UtilitiesStatic {\r\n        public Foo(): void {\r\n        }\r\n    }\r\n\r\n    // Compiler error:\r\n    // Cannot convert 'My.Fancy.Module.UtilitiesDesktop' to 'My.Fancy.Module.Utilities':\r\n\t// Type 'My.Fancy.Module.UtilitiesDesktop' is missing property 'My.Fancy.Module.Utilities.DoSomething' from type 'My.Fancy.Module.Utilities'.\r\n    Utilities = new UtilitiesDesktop();\r\n}\r\n// end of Utilities.desktop.ts\r\n```\r\n\r\nIn the comments you can see the errors I get. If I comment out the DoSomething function the file compiles without errors.\r\nI would add that these errors occur quite randomly, deleting a commented line or closing and reopening the solution sometimes makes some errors disappear and others appear. In addition, the underlined errors and the ones in the Error List window are not always consistent.\r\n\r\nI would expect the 'Utilities' expressions used in line 15 and 34 are resolved as the variable declared in line 7 and have type UtilitiesStatic.\r\n\r\nAside from this issue, if someone has a better approach for the scenario outlined above, help would be appreciated. I know class inheritance seems to be an obvious choice but Utilities is more like a static class and not an instance of a class. Moreover, the primary objective is to port JavaScript to TypeScript with as little modification as possible and refactor the code later.\r\n\r\nEnvironment: Visual Studio 2012 Professional, TypeScript 0.9.0 Beta.",
+    "LastUpdatedDate": "2013-06-10T13:16:43.807-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-09T05:46:16.55-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler looks for interface property that is not part of the interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1129
+  },
+  "FileAttachments": [
+    {
+      "FileId": 691160,
+      "FileName": "Repro.ts",
+      "DownloadUrl": ".\\691160"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "'Utilities' in the module My.Fancy.Module.Utilities refers to the *module itself*, not the var 'Utilities' in My.Fancy.Module. If you change the names around, this will work fine.",
+      "PostedDate": "2013-06-10T13:16:38.237-07:00",
+      "Id": 102692
+    }
+  ]
+}

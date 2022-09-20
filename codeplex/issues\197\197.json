@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "0.8.1.0 should contain this fix. Please reactivate if you see otherwise. Thanks!",
+    "ClosedDate": "2012-11-27T14:44:42.487-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Given this code:\r\n\r\ninterface HttpConfig { data?: any, timeout?: number; }\r\ninterface HttpService { get(url: string, config: HttpConfig): Promise; }\r\nvar http = <HttpService>provide(\"HttpService\");\r\n\r\nWhen I type:\r\n\r\nhttp.get(\"/orders\", {\r\n\r\nI should get IntelliSense for the properties of the HttpConfig interface, but I don't. (I get the global completion list instead.)\r\n\r\nIntelliSense does work when declaring and assigning a variable:\r\n\r\nvar config: HttpConfig = {\r\n\r\nand\r\n\r\nvar config = <HttpConfig>{\r\n\r\nSo I think it should work in the method parameter context.",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-09T03:37:49.327-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "IntelliSense not picking up interface on method parameter",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 197
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not able to reproduce the issue using the latest build from the develop branch - I think this has been fixed (given that it does repro in the playground). Can you update with more information (or a repro without external dependencies) if you see this after the next release?\r\n\r\nThanks",
+      "PostedDate": "2012-10-09T09:52:07.693-07:00",
+      "Id": 79177
+    },
+    {
+      "Message": "Will do. Any idea of when we can expect the next release?",
+      "PostedDate": "2012-10-09T14:12:50.24-07:00",
+      "Id": 79239
+    },
+    {
+      "Message": "Hi there,\n\nI hope this is the correct place to log a typescript issue... I can recreate this issue with ease on the latest VS2013 Update 2 release.\n\nIn the playground, this appears fine, but copy the following code into a new typescript project and you can see there is no intellisense when declaring one of the objects at the bottom of the script.  \n\nFor me, the problem arises when you CTRL-SPACE in \"MyGrid\"... the difference between \"MyGrid\" and \"MyGrid2\" is that \"MyGrid2\" has the object declared as a type, rather than using the inference methodology (I think that's the correct terminology!).  So \"MyGrid2\" uses \": Grid<string>\" after the variable name.  With this in place, the intellisense appears to work fine.\n\nI'd love to hear from the type-script guys regarding this issue.\n\nHere's the code:\n\n```\nmodule Controls {\n\n    export interface IGridConstructorArgs<R> {\n\n        columns: Array<GridColumn<any>>;\n        presentation?: IGridPresentationArgs;\n\n    }\n\n    export interface IGridPresentationArgs {\n\n        headerPadding?: string;\n        headerText?: ITextPresentation;\n        cellPadding?: string;\n        cellText?: ITextPresentation;\n\n    }\n\n    export interface ITextPresentation {\n\n        bold?: boolean;\n        underline?: boolean;\n\n    }\n    \n    export class GridColumn<C> {\n    }\n\n    export class Grid<R> {\n        constructor(args: IGridConstructorArgs<R>) {\n        }\n    }\n}\n\nmodule Application {\n\n    import Grid = Controls.Grid;\n\n    export class View {\n\n        public MyGrid = new Grid<string>({\n            columns: [],\n            presentation: {\n\n            }\n        });\n\n        public MyGrid2: Grid<string> = new Grid<string>({\n            columns: [],\n            presentation: {\n                \n            }\n        });\n\n    }\n}\n```",
+      "PostedDate": "2014-04-11T01:32:16.9-07:00",
+      "Id": 141470
+    },
+    {
+      "Message": "@xbarnes: this is because MyGrid2 has a contextual type that's being applied to the expression on the right hand side of the assignment.  By annotating the property before doing the assignment, the compiler has enough type information to infer what the type of the right hand side should be.\n\nMyGrid doesn't have the type annotation, so the compiler doesn't have enough to infer what the right hand side type should be.  This is because the compiler only infers types in certain cases rather than trying to infer holistically.",
+      "PostedDate": "2014-04-14T08:33:52.523-07:00",
+      "Id": 141755
+    }
+  ]
+}

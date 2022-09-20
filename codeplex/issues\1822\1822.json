@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:26:25.93-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I found this bug when used linq.js 3 beta that provide typings for TS.\r\n\r\nI tried to abstract the issue and that's what I've got.\r\n\r\nCode sample:\r\n```\r\nclass A<T> { } // it was IEnumerable<T> actually\r\n\r\ninterface B {  // it was Enumerable\r\n\t//from(): A<any>; // empty\r\n    //from<T>(obj: A<T>): A<T>;\r\n    //from(obj: number): A<number>;\r\n    //from(obj: boolean): A<boolean>;\r\n    //from(obj: string): A<string>;\r\n    from<T>(obj: T[]): A<T>;\r\n    //from<T>(obj: { length: number;[x: number]: T; }): A<T>;\r\n    //from(obj: any): A<{ key: string; value: any }>;\r\n}\r\n\r\ndeclare var b: B;\r\n\r\n{\r\n\tvar a = [new A<string>()];\t\t// type(a) == A<string>[]\r\n\tvar v1 = b.from<A<string>>(a);\t// type(v1) == A<A<string>>\r\n\tvar v2 = b.from(a);\t\t\t// type(v2) == type(v1) == A<A<string>> \r\n}\r\n\r\nclass C {\r\n\tpublic m<T> (a: A<T>[]) {\r\n\t\tvar v1 = b.from<A<T>>(a);\t// type(v1) A<A<T>>\r\n\t\tvar v2 = b.from(a);\t\t\t// type(v2) A<A<any>> !!BUG\r\n\t}\r\n}\r\n```\r\n\r\nI commented overloads of Enumerable's from except that handles the array.\r\nSo, when I use the B.from from non-generic scope, it works fine.\r\nWhen I use it from generic method (or generic class), it can't infer the correct type, and used any instead of T.\r\n\r\nTS version: 0.9.1.1 (latest at the moment)",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-21T02:17:18.123-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Lost generic type inside generic method",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1822
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yup, getting stung by this one.",
+      "PostedDate": "2013-11-11T14:30:35.177-08:00",
+      "Id": 122687
+    }
+  ]
+}

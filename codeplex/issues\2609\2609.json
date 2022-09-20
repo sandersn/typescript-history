@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I was working with a rather large enum type with more than 50 items in it. Some of the item names are rather long. Given that TypeScript repeats each item string twice in the JavaScript implementation, the output starts to look rather ugly at some point.\r\n\r\nI mean:\r\n\r\n```typescript\r\nenum MyEnum {\r\n\tSOME_BIG_UGLY_NAME_THAT_I_CANNOT_ABBREVIATE\r\n}\r\n```\r\n\r\ncompiles to:\r\n\r\n```typescript\r\nvar MyEnum;\r\n(function (MyEnum) {\r\n    MyEnum[MyEnum[\"SOME_BIG_UGLY_NAME_THAT_I_CANNOT_ABBREVIATE\"] = 0] = \"SOME_BIG_UGLY_NAME_THAT_I_CANNOT_ABBREVIATE\";\r\n})(MyEnum || (MyEnum = {}));\r\n```\r\n\r\nI was thinking why not repeat the number part instead (to avoid bringing duplicate string literal):\r\n\r\n```typescript\r\nvar MyEnum;\r\n(function (MyEnum) {\r\n    MyEnum[MyEnum[0] = \"SOME_BIG_UGLY_NAME_THAT_I_CANNOT_ABBREVIATE\"] = 0;\r\n})(MyEnum || (MyEnum = {}));\r\n```\r\n\r\nand, for enums with many items not use an iterator? like:\r\n\r\n```typescript\r\nvar MyEnum;\r\n(function (MyEnum) {\r\n    MyEnum[\"SOME_BIG_UGLY_NAME_THAT_I_CANNOT_ABBREVIATE\"] = 0;\r\n\t//...\r\n\t//...\r\n\t//...\r\n})(MyEnum || (MyEnum = {}));\r\nfor (var key in MyEnum) {\r\n\tMyEnum[MyEnum[key]] = key;\r\n}\r\n```\r\n\r\nThanks!",
+    "LastUpdatedDate": "2014-07-22T18:54:15.647-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-07T15:27:32.177-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "enum type implementation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 2609
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I know this is not currently supported behaviour, but I have in a few projects been misusing the way typescript uses enums to create string lookup objects:\n\n```typescript\n\nenum thingy {\n\ta = <any>\"b\",\n\tb = <any>\"ab\"\n}\n\nvar test: thingy = thingy.a;\n```\n\nWhich becomes:\n```JavaScript\nvar thingy;\n(function (thingy) {\n    thingy[thingy[\"a\"] = \"b\"] = \"a\";\n    thingy[thingy[\"b\"] = \"ab\"] = \"b\";\n})(thingy || (thingy = {}));\n\nvar test = thingy.a;\n```\n(Strangely different to the way TypeScript handles non-misused enums).\n\nWhile I support the above proposal, I would appreciate it if this functionality didn't break.\n",
+      "PostedDate": "2014-07-09T19:23:47.02-07:00",
+      "Id": 151973
+    },
+    {
+      "Message": "Same here. ;)",
+      "PostedDate": "2014-07-10T00:01:22.307-07:00",
+      "Id": 151985
+    },
+    {
+      "Message": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler and log an issue on the GitHub site if it still reproduces.\n\r\n\r** Closed by danquirk 07/21/2014 5:20PM",
+      "PostedDate": "2014-07-21T17:20:01.153-07:00",
+      "Id": 153219
+    },
+    {
+      "Message": "Moved suggestion to github:\r\nhttps://github.com/Microsoft/TypeScript/issues/210",
+      "PostedDate": "2014-07-22T18:54:15.647-07:00",
+      "Id": 153220
+    }
+  ]
+}

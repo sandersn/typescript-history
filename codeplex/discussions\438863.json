@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1024528",
+    "ThreadId": "438863",
+    "Html": "My main topic is... this works but is it good ?<br />\n<br />\nSAMPLE 1:<br />\n<br />\nwe've organized our code this way:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">module</span> mylib.tools\n{\n     <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Dictionary\n     {\n...\n     }\n}\r\n</pre></div>and then in some other class:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> MDictionary = <span style=\"color:Blue;\">module</span>(<span style=\"color:#A31515;\">&quot;tools/Dictionary&quot;</span>);\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Dictionary <span style=\"color:Blue;\">extends</span> MDictionary.mylib.tools.Dictionary {}\r\n</pre></div>and i can use this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">private</span> _components: Dictionary;\n<span style=\"color:Blue;\">this</span>._components = <span style=\"color:Blue;\">new</span> Dictionary();\r\n</pre></div>instead of this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">private</span> _components: MDictionary.mylib.tools.Dictionary;\n<span style=\"color:Blue;\">this</span>._components = <span style=\"color:Blue;\">new</span> MDictionary.mylib.tools.Dictionary();\r\n</pre></div>SAMPLE 2:<br />\n<br />\nI want a method to take as parameter, a random Class object as:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nEntity = <span style=\"color:Blue;\">new</span> Entity();\nEntity .add( <span style=\"color:Blue;\">new</span> Position( 100, 200 ));\r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">public</span> add( component: () =&gt; <span style=\"color:Blue;\">any</span>, componentClass  = <span style=\"color:Blue;\">null</span> ): Entity\n{\n   <span style=\"color:Blue;\">if</span> ( !componentClass )\n  {\n    componentClass = component.prototype;\n   }\n    <span style=\"color:Blue;\">if</span> ( <span style=\"color:Blue;\">this</span>._components.has(componentClass))\n    {\n         <span style=\"color:Blue;\">this</span>.remove(componentClass);\n         }\n    <span style=\"color:Blue;\">this</span>._components.add(componentClass, component);\n    <span style=\"color:Blue;\">this</span>.componentAdded.dispatch( <span style=\"color:Blue;\">this</span>, componentClass );\n    <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">this</span>;\n}\r\n</pre></div>So is this type &quot;() =&gt; any&quot; good enough and is &quot;.prototype&quot; a right way to do this.<br />\n",
+    "PostedDate": "2013-04-02T15:57:34.287-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024933",
+    "ThreadId": "438863",
+    "Html": "We're planning to introduce a new feature in 0.9.x that should help with the first sample, based on the technique of doing &quot;export =&quot;.  It would allow you to do (syntax subject to change):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//file A.ts</span>\n<span style=\"color:Blue;\">class</span> Dictionary\n{\n    ...\n}\n<span style=\"color:Blue;\">export</span> = Dictionary\n\n<span style=\"color:Green;\">//file B.ts</span>\n<span style=\"color:Blue;\">import</span> <span style=\"color:#A31515;\">&quot;A&quot;</span> as Dict;\n<span style=\"color:Blue;\">var</span> d = <span style=\"color:Blue;\">new</span> Dict();\r\n</pre></div>I'm not clear on what problem you're solving in the second example.  <br />\n",
+    "PostedDate": "2013-04-03T08:38:22.613-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1025124",
+    "ThreadId": "438863",
+    "Html": "Tnx, for the response. Cool news for the import. \r<br />\n<br />\nAbout sample 2, my uncertainty comes that I'm not sure that  &quot;component: () =&gt; any&quot; is the right way\r<br />\nto check if the component is class instance (aka function) and I've added the whole code part as example\r<br />\ncause, i want to have a dictionary(hashmap) with (Class, Component)  where Component is the object, and Class is... well the Class (in JS the prototype).\r<br />\n<br />\nMaybe my second sample is not so TS oriented, but more of code structure and implementation.<br />\n",
+    "PostedDate": "2013-04-03T15:16:31.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

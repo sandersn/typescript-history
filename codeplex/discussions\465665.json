@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1118014",
+    "ThreadId": "465665",
+    "Html": "I've read that TypeScript modules are supposed to be as close as possible to ES6 modules, but they seem fundamentally more limited. According to <a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples#cyclic_dependencies\" rel=\"nofollow\">http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples#cyclic_dependencies</a> ES6 modules support cyclic dependencies, but this doesn't work at all in TypeScript. Lack of cyclic dependency support prevents TypeScript modules from being used as a namespacing mechanism. The following TypeScript code is equivalent to the example from the ES6 wiki:<br />\n<pre><code>module Even {\n    import odd = Odd.odd;\n    export function even(n) {\n        return n == 0 || odd(n - 1);\n    }\n}\nmodule Odd {\n    import even = Even.even;\n    export function odd(n) {\n        return n != 0 &amp;&amp; even(n - 1);\n    }\n}</code></pre>\n\nHowever, it generates JavaScript that will crash at runtime:<br />\n<pre><code>var Even;\n(function (Even) {\n    var odd = Odd.odd;\n    function even(n) {\n        return n == 0 || odd(n - 1);\n    }\n    Even.even = even;\n})(Even || (Even = {}));\nvar Odd;\n(function (Odd) {\n    var even = Even.even;\n    function odd(n) {\n        return n != 0 &amp;&amp; even(n - 1);\n    }\n    Odd.odd = odd;\n})(Odd || (Odd = {}));</code></pre>\n\nThe output I expected from the compiler was something more along the lines of this:<br />\n<pre><code>var Even;\n(function (Even) {\n    function even(n) {\n        return n == 0 || Odd.odd(n - 1);\n    }\n    Even.even = even;\n})(Even || (Even = {}));\nvar Odd;\n(function (Odd) {\n    function odd(n) {\n        return n != 0 &amp;&amp; Even.even(n - 1);\n    }\n    Odd.odd = odd;\n})(Odd || (Odd = {}));</code></pre>\n\nImport aliases have been inlined, which implements the correct ES6 semantics. Was this an oversight or a deliberate design decision? Are there any plans to support full ES6 module semantics?<br />\n",
+    "PostedDate": "2013-11-05T11:33:46.66-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118521",
+    "ThreadId": "465665",
+    "Html": "This was a trade-off; when compiling to pre-ES6 it isn't always going to be possible to fully emulate all ES6 features. We recognized the problem with forward-referencing, but there were other concerns around performance, correctness, and codegen size.\r<br />\n<br />\nFrom a performance perspective, subbing in the full dotted form is going to cause extra object lookups every time the imported alias is used, which might not be obvious. Obviously this isn't going to be a big problem in every case, but in tight loops or where the alias name is very 'deep', you could incur nontrivial overhead here.\r<br />\n<br />\nWe also can't guarantee correctness. For example:<br />\n<pre><code>module M {\n    export class C { /* ... */ }\n}\n\nmodule A {\n    import C = M.C;\n    module Q {\n        var M = 4;\n        var x = new C(); // OK if we emit var, but wrong if we emit M.C\n    }\n}</code></pre>\n\nIn this case we could detect it and generate an error, but that defeats one of the more important use cases of importing.\r<br />\n<br />\nFinally there's a modest increase in file size (usually) if we inline the name. Generating the smallest possible code is not a primary concern, but it's one more point in favor of using 'var'.\r<br />\n<br />\nSince you can work around the problems with the 'var' approach by not using imports, but can't work around the problems with subbing in, the 'var' approach was the safer place to land.<br />\n",
+    "PostedDate": "2013-11-05T17:15:05.943-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118672",
+    "ThreadId": "465665",
+    "Html": "Ok, that makes sense. Thanks for the in-depth response. I can definitely understand the performance implications; code organization should not impact performance. Correctness could still be guaranteed via intelligent symbol renaming but I can also understand the argument for generated code clarity. I am planning to use TypeScript in conjunction with Google Closure Compiler (prototype shim code <a href=\"https://github.com/evanw/typescript-closure-compiler/\" rel=\"nofollow\">here</a>) so the performance concerns you mentioned are not an issue for me (the compiler safely flattens all module references to top-level symbols so there is no property access overhead).<br />\n",
+    "PostedDate": "2013-11-05T19:27:09.63-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

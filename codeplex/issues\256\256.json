@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the suggestion.  I agree it can be nice in languages that support it.\n\nIn TypeScript, we're trying to stay compatible with JavaScript.  This means we're trying to limit any addition to syntax at the expression level.  Also, in this particular feature, it's actually unclear how to implement it in the general case.  If the type of doSomething is any, we wouldn't know how to reorder arguments without runtime reflection.",
+    "ClosedDate": "2013-02-06T13:39:55.56-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "See:\r\n\r\n\r\nfunction doSomething(name:string, age?:number, height?:number) {\r\n}\r\n\r\ndoSomething(\"James\", height:5);\r\n\r\n// Generated code:\r\n\r\ndoSomething(\"James\", undefined, 5);",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-15T08:22:18.94-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Please add named-parameter support at call site",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 256
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Even as a superset feature, this won't parse. Just use an object:\n\ndeclare var params: {\n    name : any;\n    age: number;\n    height: number;\n}\n//var params = { name:string; age:number; height:number; };\n\nfunction doSomething( params ) {\n  console.log( arguments );\n}\n\ndoSomething({ name: \"James\", height: 5 });\n\n\n\nCompiles to:\n\n\nfunction doSomething(params) {\n    console.log(arguments);\n}\ndoSomething({\n    name: \"James\",\n    height: 5\n});\n",
+      "PostedDate": "2012-10-15T11:44:06.527-07:00",
+      "Id": 79807
+    },
+    {
+      "Message": "Ack, ignore that line with \"//var...\"",
+      "PostedDate": "2012-10-15T11:44:32.917-07:00",
+      "Id": 79808
+    },
+    {
+      "Message": "Not sure I follow – obviously it won't parse unless it is added to the compiler…  I know I can use objects, but for simple functions it increases readability and doesn't require an object be allocated or superfluous code written.\n\nToday I can do:\n\ninterface Params {\n\tname:string;\n\tage?:number;\n\theight?:number;\n}\n\nclass Person {\n\tconstructor(params:Params) { }\n}\n\nvar a = new Person({ name:\"James\", height:5});\n\nvs\n\nclass Person {\n\tconstructor(name:string, age?:number, height?:number) { }\n}\n\nvar a = new Person(\"James\", height:4);\n\n",
+      "PostedDate": "2012-10-24T09:06:07.353-07:00",
+      "Id": 80900
+    },
+    {
+      "Message": "I understand the reasons you mentioned, but even though using a litteral object can help, it doesn't support default parameters. it would be great to be able to do:\n\nmyFunction(parameters:{\n    a: boolean; // How do I give a default value?\n    b: boolean; // How do I give a default value?\n    c: boolean; // How do I give a default value?\n    d: boolean; // How do I give a default value?\n}){\n\n}\n\nand be able to call it like myFunction({ c: true }) \n\nThanks,\nSebastien",
+      "PostedDate": "2013-10-15T10:01:30.973-07:00",
+      "Id": 118495
+    },
+    {
+      "Message": "This issue is a duplicate of [https://typescript.codeplex.com/workitem/859](https://typescript.codeplex.com/workitem/859).\n\n@jonturner I can understand closing this because it's a duplicate, but the stated reasons for closing don't make sense:\n\n 1) Keeping syntax like JS's - There will be further development of this language beyond v1.0, right? You guys have already made it clear you _will_ be adding new syntax (as in async/await). Adding named parameters is arguably a smaller syntax change than some of the stuff already in TypeScript.\n\n 2) As I stated in the linked issue, this would necessarily be a compile-time only feature, just like 99% of everything else in TypeScript. If the compiler cannot safely rewrite the callsite at compile-time (as in the case of a function typed as `any`), it would have to throw an error.\n\nFinally, take a look at your own source code. You guys have placeholder comments for named parameters all over the place, in the style of:\n\n``` TypeScript\nfunction foo(a: string, b: number, importantParam: boolean){ }\n\nfoo('blue', 5, /* importantParam: */ true);\n```",
+      "PostedDate": "2013-10-15T13:43:33.32-07:00",
+      "Id": 118533
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:29:56.433-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "Hi, for the purpose of testing we have code that looks like this\r\n\r\n```JavaScript\r\n        function Test() { }\r\n        var test = new Test();\r\n```\r\n\r\nWith -noimplicitany this errors with: \r\n\r\n error TS7009: \"New\" expression, which lacks a constructor signature, implicitly has an 'any' type.\r\n\r\nTried a few workarounds without success:\r\n\r\n```JavaScript\r\n\r\n// Workaround #1\r\n    declare class Test {\r\n        constructor();\r\n        new(): Test;\r\n    }\r\n\r\n// Workaround #2\r\nvar test: any = new Test();\r\n\r\n// Workaround #3\r\nvar test = <any>(new Test());\r\n```\r\n\r\nIs there a way around this? \r\n\r\nWe could declare `Test` as a class but that is cumbersome, because `function Test` is actually being declared within the body of another function.\r\n\r\nThanks.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T04:24:30.577-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "No implicit any and newing a function (re-opened)",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1562
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Alternatively, in the latest bits this works:\r\n\r\n```Typescript\r\ndeclare class Test {\r\n    new(): Test;\r\n}\r\n\r\nvar test = new Test();\r\n```",
+      "PostedDate": "2013-08-22T12:41:44.89-07:00",
+      "Id": 110792
+    },
+    {
+      "Message": "```\nfunction Test() { }\nvar test = new <any>Test();\n```\n\r\n\r** Closed by RyanCavanaugh 08/22/2013 12:30PM",
+      "PostedDate": "2013-08-22T12:30:49.223-07:00",
+      "Id": 110876
+    },
+    {
+      "Message": "@RyanCavanaugh, the workaround you propose generates faulty code.\r\n\r\n```TypeScript\r\nfunction Test() { }\r\nvar test = new <any>Test();\r\n```\r\n\r\nGenerates the following JavaScript\r\n\r\n```JavaScript\r\nfunction Test() {\r\n}\r\nvar test = new Test()(); // Notice the extra set of parenthesis\r\n```\r\n\r\nThis fails at runtime with \"TypeError: object is not a function.",
+      "PostedDate": "2013-08-23T01:31:09.05-07:00",
+      "Id": 110877
+    },
+    {
+      "Message": "@danquirk, the required code should look like this:\n\n```TypeScript\ndeclare class Test {\n    new(): Test;\n}\n\nfunction foo() {\n    function Test() { }\n    var test = new Test();\n}\n```\n\nI see that the local function suppresses the class declaration. So this also won't work.",
+      "PostedDate": "2013-08-23T01:38:15.073-07:00",
+      "Id": 110880
+    },
+    {
+      "Message": "The following should work:\n\n````\nfunction Test() { }\nvar test : any = new Test();\n````\n\r\n\r** Closed by paulb 08/23/2013 10:47AM",
+      "PostedDate": "2013-08-23T10:47:16.307-07:00",
+      "Id": 110955
+    },
+    {
+      "Message": "@paulb, the following does ___not___ work when compiled with -noimplicitany:\r\n\r\n```TypeScript\r\nfunction Test() { }\r\nvar test: any = new Test(); // error TS7009: \"New\" expression, which lacks a constructor signature...\r\n```\r\n\r\nAre you saying it's been fixed in the development branch?\r\n\r\nI'm using 0.9.1.1",
+      "PostedDate": "2013-08-23T11:47:43.713-07:00",
+      "Id": 110956
+    },
+    {
+      "Message": "Ryan's original workaround with an extra set of parens will work.\n\n```Typescript\nfunction Test() { }\nvar test = new (<any>Test)();\n```\n\nIt should actually be an error to try to write it without those parens.",
+      "PostedDate": "2013-08-23T14:16:04.747-07:00",
+      "Id": 111002
+    },
+    {
+      "Message": "Marking as active.. we're taking a look if we need to do something here.",
+      "PostedDate": "2013-08-23T14:16:50.657-07:00",
+      "Id": 111004
+    },
+    {
+      "Message": "I'm guessing 'var __: { new (): {} } = <any>(): {} => { };' should also work, but doesn't.",
+      "PostedDate": "2014-08-21T09:54:27.83-07:00",
+      "Id": 155929
+    }
+  ]
+}

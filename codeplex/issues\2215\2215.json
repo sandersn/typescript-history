@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:34:20.513-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Trying the 1.0-RC I ended up with that bug :\r\n```typescript\r\nclass Test {\r\n\tconstructor(private field: string) {\r\n\t\t\r\n\t}\r\n\t\r\n\tmessageHandler = () => {\r\n\t\tvar field = this.field;\r\n\t\tconsole.log(field); // Error: Initializer of instance member variable 'messageHandler' cannot reference identifier 'field' declared in the constructor\r\n\t}\r\n}\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-25T23:11:07.207-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Initializer of instance member variable 'messageHandler' cannot reference identifier 'field' declared in the constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 8,
+    "Id": 2215
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This issue also happens in the following case:\n\n```\nclass Greeter {\n    greeting: string;\n    constructor(message: string) {\n        var self = this; \n    }\n    greet = () => {\n        var self = this;\n\t\treturn self.greeting;\n    }\n}\n```\nResult in the following error:\n\n```\nInitializer of instance member variable 'greet' cannot reference identifier 'self' declared in the constructor.\n```\n\nThis previously worked fine in TS 0.9.5.\n\nThanks",
+      "PostedDate": "2014-03-06T13:41:06.837-08:00",
+      "Id": 136083
+    },
+    {
+      "Message": "Workaround:\n\n    class Foobar extends A {\n        constructor(bar: string, baz: number) {\n            super(baz)\n            (() => {\n                // Entire body of constructor goes here.\n            })();\n        }\n        bar = () => {\n            // Safely declare/use variables here without TS2230.\n        }\n    }",
+      "PostedDate": "2014-03-11T18:55:40.35-07:00",
+      "Id": 136575
+    }
+  ]
+}

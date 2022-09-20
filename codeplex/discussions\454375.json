@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1084248",
+    "ThreadId": "454375",
+    "Html": "I just realized the new typeof operator works great for mixins, as you can just use it to get the signature of functions outside the current class.\r<br />\n<br />\nDid a test with Backbone importing the mixins from underscore, and it works great, imports all overloads at once and doesn't require us to keep track of overloads when the dependent library changes.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Model {\n    keys: <span style=\"color:Blue;\">typeof</span> _.keys;\n    values: <span style=\"color:Blue;\">typeof</span> _.values;\n}\r\n</pre></div>The only thing is that it imports the declaration as a property instead of a method, but that doesn't affect anything.\r<br />\n<br />\nIn the roadmap, it states that mixins are planned for after 1.0. I was wondering, what else are you guys planning for mixins for the future?<br />\n",
+    "PostedDate": "2013-08-23T10:40:18.77-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084603",
+    "ThreadId": "454375",
+    "Html": "Additionally one may wish to import a mixin class entirely:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo {\n  <span style=\"color:Blue;\">public</span> getFoo(){}\n}\n\n<span style=\"color:Blue;\">class</span> Bar {\n <span style=\"color:Blue;\">private</span> mixin foo = <span style=\"color:Blue;\">new</span> Foo();\n}\n\n<span style=\"color:Blue;\">var</span> bar  = <span style=\"color:Blue;\">new</span> Bar();\nbar.getFoo(); <span style=\"color:Green;\">// okay</span>\n\r\n</pre></div>",
+    "PostedDate": "2013-08-25T02:25:45.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084888",
+    "ThreadId": "454375",
+    "Html": "Right, a simpler way to include mixins for implementations.<br />\n<br />\nI'm not sure if naming the mixin would be a good idea. It could be used to save a reference for naming conflicts, but in this case you could just do what you just did without the &quot;mixin&quot; keyworkd, it would be an ambiguous feature.<br />\n<br />\nHere is an idea:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Bar {\n    mixinMethod() { }\n}\n\n<span style=\"color:Blue;\">class</span> Foo {\n    mixin Bar;\n    ownMethod() { }\n}\r\n</pre></div>Foo would be compiled to something like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Foo() {\n    }\n    <span style=\"color:Green;\">// appear before own class methods, can be overriden just by creating a method with the same name</span>\n    Foo.prototype.mixinMethod = Bar.prototype.mixinMethod;\n    Foo.prototype.ownMethod = <span style=\"color:Blue;\">function</span> () { };\n    <span style=\"color:Blue;\">return</span> Foo;\n})();\r\n</pre></div>In this case, mixins would be imported in the order they are declared, before own methods, doesn't matter when the mixin keyword appear in the class implementation.<br />\n<br />\nThis could work this way:<br />\n<br />\nImport all members<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nmixin ClassName;\r\n</pre></div>Import only specific members:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nmixin ClassName { methodA; methodB; methodC; }\r\n</pre></div>This syntax would work fine for interfaces as well, without requiring instantiation.<br />\n<br />\nYou could add private or public before those, but I suppose the idea of a mixin is to get methods from other places to expose them as part of your own class. Private mixins don't make much sense to me. If you want to use them internally, just use the library directly, there is no need to make them part of the declaration.<br />\n",
+    "PostedDate": "2013-08-26T05:29:18.673-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084996",
+    "ThreadId": "454375",
+    "Html": "@nvivo, it's not as simple as that. Consider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    <span style=\"color:Blue;\">class</span> Bar {\n        name = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        mixinMethod() {\n            alert(<span style=\"color:Blue;\">this</span>.name);\n        }\n    }\n\n    <span style=\"color:Blue;\">class</span> Foo {\n        name = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n    }\n\n    Foo.prototype[<span style=\"color:#A31515;\">&quot;mixinMethod&quot;</span>] = Bar.prototype.mixinMethod;\n\n    <span style=\"color:Blue;\">var</span> foo = <span style=\"color:Blue;\">new</span> Foo();\n    foo.mixinMethod(); <span style=\"color:Green;\">// Alerts &quot;foo&quot; instead of &quot;bar&quot;</span>\r\n</pre></div>Basically, <code>Bar</code> won't be able to reference any of its instance members in its own methods.\r<br />\n<br />\nAlso what if we want to pass in constructor arguments to Bar?\r<br />\n<br />\nThe mixin strategy is <br />\n<ul>\n<li>A one-off copying of the mixin methods onto the target's prototype.</li>\n<li>\nThe mixin is instantiated in the target's constructor and the mixin instance properties are copied into the target instance.<br />\n</li>\n</ul>\nSee also: <a href=\"https://typescript.codeplex.com/discussions/406449\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/406449</a><br />\n",
+    "PostedDate": "2013-08-26T09:34:42.883-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085456",
+    "ThreadId": "454375",
+    "Html": "I don't see why I would use a mixin if I need to track a different state than the object I'm in. I'd just instantiate a private member then.\r<br />\nYou may be trying to solve a different problem, that is of automatically encapsulating methods of an instance in your class.\r<br />\n<br />\nThe idea of a mixin is to add functionality that is not part of your class implementation, but still be the same class. They should make use of the same state, or if they need extra stuff, they should create the state members they require.\r<br />\n<br />\nAlso these methods must be suitable for mixin. You don't want to mixin random methods of libraries that require lots of private variables to work and were never meant to work outside. So, if a mixin overwrites a private variable, you should know that before mixin that function. Typescript won't be able to check if the variable the mixin depends should exist on the class or is specific to the mixin.\r<br />\n<br />\nI think using instances complicate too much.\r<br />\nLet's first go with we have been doing in javascript, that is to copy method around and make it simple so typescript can see their signatures and check for errors.<br />\n",
+    "PostedDate": "2013-08-27T09:08:40.383-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085503",
+    "ThreadId": "454375",
+    "Html": "I follow what you're saying, but I'm rather not in favour of that because it would introduce a tight coupling between the mixin and the target.\r<br />\n<br />\nIt makes it necessary to have to document the mixin along the lines of &quot;In order to use this mixin, the target must define a property called 'foo'&quot; etc. This smacks of an old school JavaScript hack.\r<br />\n<br />\nFor someone reading the target class in isolation it would not be clear of the purpose of the &quot;foo&quot; and other properties, defined there purely for use by the mixin.\r<br />\n<br />\nThe solution is to define an extends method that takes an <em>instance</em> of the mixin. A good developer would keep the mixin very simple, but the compiler can help by perhaps warning if any properties are in danger of being overwritten.\r<br />\n<br />\nContrary to your claims this is how mixins are understood in the outside world. Mixins are generally defined as object literals, but because we're dealing with types in the TypeScript world, we need to substitute with an instantiated class.<br />\n",
+    "PostedDate": "2013-08-27T12:12:24.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

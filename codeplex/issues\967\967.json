@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.08-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The output of the compiler produces ugly javascript.\r\nIt is not optimized by size.\r\nIt is better to combine many Object.defineProperty for each property to one Object.defineProperties per class. Also there are a lot SomeObject.prototype clauses. It could be optimized also. The resulting javascript is too big because of this. I tried to convert existing javascript project  to typescript and after compilation the resulting files are much larger than my existing project files. ",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-27T07:37:50.407-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Combine multiple properties into one Object.defineProperties call",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 7,
+    "Id": 967
+  },
+  "FileAttachments": [
+    {
+      "FileId": 669784,
+      "FileName": "example.js",
+      "DownloadUrl": ".\\669784"
+    },
+    {
+      "FileId": 669999,
+      "FileName": "extendType.ts",
+      "DownloadUrl": ".\\669999"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "example.js contains example how to optimize javascript in ES5 way.\nEspecially look at the property definitions how much smaller they are in comparison with typescript compiler output.",
+      "PostedDate": "2013-04-27T07:41:04.847-07:00",
+      "Id": 98679
+    },
+    {
+      "Message": "i suggest you use this function to add properties:\n function __defineProps(proto, propertyDescriptors) {\n                var pds = propertyDescriptors || {}, propertyName;\n                var pdsProperties = Object.getOwnPropertyNames(pds);\n                pdsProperties.forEach(function (name) {\n                    var pd = pds[name];\n                    if (pd['enumerable'] === undefined) {\n                        pd['enumerable'] = true;\n                    }\n                    if (pd['configurable'] === undefined) {\n                        pd['configurable'] = false;\n                    }\n                });\n              \n\n                return Object.defineProperties(proto, pds);\n            };\n\nyou can use it as:\n\n    var Defaults2 = (function (_super) {\n        __extends(Defaults2, _super);\n        function Defaults2() {\n            _super.call(this);\n        }\n//here we define several props\n       __defineProps(Defaults2.prototype, {\n            dataContext: {\n                set: function (v) {\n                    this._dateTimeFormat = v;\n                },\n                get: function () {\n                    return this._dateTimeFormat;\n                }\n            },\n            eprst: {\n                set: function (v) {\n                    this._dateTimeFormat = v;\n                },\n                get: function () {\n                    return this._dateTimeFormat;\n                }\n            }\n            //... other properties can be added in this style\n        });\n\n        return Defaults2;\n    })(Defaults);\n",
+      "PostedDate": "2013-04-27T11:00:45.457-07:00",
+      "Id": 98685
+    },
+    {
+      "Message": "In attached file i created small example how to add properties and function\r\nto new type, preserving your __extend function intact.\r\nThe js will code much smaller if you implement something in this style.",
+      "PostedDate": "2013-04-27T23:27:13.773-07:00",
+      "Id": 98705
+    },
+    {
+      "Message": "Today, i calculated the sizes difference between normal js files, and files ported to typescript, and then compiled. The avarage difference on unminified files is 30%. But what worse, that extra size in files outputted by the typescript compiler is not minified. So after minification the difference is much bigger.\n\nI'm porting js project which has 15000 lines of code (600 kb). If i port it it will be around 800 kb - unminified.\nAnd after minification it will be around 380 kb against my file 230 kb.\n\nPlease, optimize the typescript output.",
+      "PostedDate": "2013-04-29T06:02:58.1-07:00",
+      "Id": 98782
+    },
+    {
+      "Message": "Today i completed porting my project to typescript:\nActual results:\nmy project unminified: 607 kb\nmy project minified: 231 kb\n\nconverted project unminified: 788 kb\nconverted project minified: 279 kb\n\nSo, actually minification removes much of the size.\nSo actually what really adds extra size is multiple Object.defineProperty calls.\nCombine multiple properties into one call Object.defineProperties\nand the minified sizes will be smaller.\n",
+      "PostedDate": "2013-05-07T01:00:37.55-07:00",
+      "Id": 99543
+    }
+  ]
+}

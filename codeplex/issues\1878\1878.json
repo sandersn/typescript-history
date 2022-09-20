@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed with 998fbf3dd84410135daee54ef2ae10f353a5c436",
+    "ClosedDate": "2013-12-09T12:17:24.507-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "If this is \"by design\", then the design sounds very weird. The problem seems to be that TypeScript is assuming that the first _type_ parameter in `wibble` and `bibble` below is somehow related to the type of the first _argument_. But the order of the type parameters should be unrelated to the order of the function arguments, no?\r\n\r\n    interface X<T> {\r\n       f (); // define some functions so structural typing doesn't complicate things\r\n    }\r\n\r\n    interface Y<T> extends X<T> {\r\n       g ();\r\n    }\r\n\r\n    function wibble <U extends X<T>, T> (x: U): U {\r\n       return null\r\n    }\r\n\r\n    // appears to assume T is the type of x\r\n    function bibble <T, U extends X<T>> (x: U): U {\r\n       return null\r\n    }\r\n\r\n    function test () {\r\n       var x: Y<number> = null\r\n       x = wibble(x) // fine\r\n       x = bibble(x) // barfs\r\n    }\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-09T02:23:21.843-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Broken inference of type parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1878
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Both bibble and wibble work the same for me in the playground and Visual Studio 2013, and it compiles fine too.  (typescript 0.9.1.1)",
+      "PostedDate": "2013-11-09T09:37:09.227-08:00",
+      "Id": 122524
+    },
+    {
+      "Message": "    > tsc Temp.ts\n    /home/rolyp/Research/Impl/Temp.ts(21,8): error TS2086: Type '{}' does not satisfy the constraint\n     'X<Y<number>>' for type parameter 'U extends X<T>'.\n    > tsc --version\n    Version 0.9.1.1\n",
+      "PostedDate": "2013-11-09T15:38:57.597-08:00",
+      "Id": 122537
+    },
+    {
+      "Message": "I guess we must be looking at different versions of 0.9.1.1 from the `develop` branch",
+      "PostedDate": "2013-11-09T15:40:21.04-08:00",
+      "Id": 122538
+    },
+    {
+      "Message": "Confirmed same error in the develop branch. I believe the order of the type arguments shouldn't matter, so this is probably a bug.",
+      "PostedDate": "2013-11-11T09:17:54.213-08:00",
+      "Id": 122646
+    }
+  ]
+}

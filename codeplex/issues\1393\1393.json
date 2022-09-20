@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I am getting the error about the missing super call in the derived class, can you post a complete code sample. There may be something in the baseclass, which throws the compiler off.",
+    "ClosedDate": "2013-07-26T10:12:43.34-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "i am making a generic class,  if i extend a base class the args are set at the end of the ctor\r\n\r\nif i don't extend a base class the args are set at the top (as I'd expect)\r\n\r\nhere's the typescript code:\r\n\r\n```\r\n\r\nexport class Filter<TInput> extends corelib.base.ClassBase {\r\n    private _dependencyInjector: _internal.DependencyInjector<Filter<TInput>>;\r\n    /** the filter action you returned from the initializeCallback.  you can replace this at runtime */\r\n    public filterAction: (input: TInput) => TInput;\r\n\r\n    //our default services\r\n    //public $scope: IScope<TScopeTag>;\r\n\r\n    constructor(public name: string\r\n        , public parent: Module\r\n    /** return the function you wish to use as your filter's action, or NULL */\r\n        , public _initializeCallback: (thisFilter: Filter<TInput>, ...userDefinedServices: any[]) => (input: TInput) => TInput\r\n        , ... public _userDefinedServiceNames: string[]\r\n        ) {\r\n        this._initialize();\r\n    }\r\n```\r\n\r\nand here is the offending javascript,  note that the _userDefinedServiceNames is set at the very end of the ctor\r\n\r\n```\r\n    var Filter = (function (_super) {\r\n        __extends(Filter, _super);\r\n        //our default services\r\n        //public $scope: IScope<TScopeTag>;\r\n        function Filter(name, parent, _initializeCallback) {\r\n            var _userDefinedServiceNames = [];\r\n            for (var _i = 0; _i < (arguments.length - 3); _i++) {\r\n                _userDefinedServiceNames[_i] = arguments[_i + 3];\r\n            }\r\n            this._initialize();\r\n            this.name = name;\r\n            this.parent = parent;\r\n            this._initializeCallback = _initializeCallback;\r\n            this._userDefinedServiceNames = _userDefinedServiceNames;\r\n        }\r\n```",
+    "LastUpdatedDate": "2013-07-26T10:12:43.34-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-26T03:41:16.97-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "codegen: ctor public args set at end of .ctor() if extending a base class",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1393
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "i guess the issue is that my ctor's logic is being invoked before setting the class's variables.   not about optional args.   will update the title accordingly.",
+      "PostedDate": "2013-07-26T03:43:19.367-07:00",
+      "Id": 107540
+    },
+    {
+      "Message": "also, i see that i forgot to put a call to super() in my ctor.\n\nputting the super() fixes my problem.     i think i should get an error for not calling my super(), so maybe both are bugs to fix :)",
+      "PostedDate": "2013-07-26T03:45:30.267-07:00",
+      "Id": 107541
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.567-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "For the sake of demonstration I made the following project structure which is similar to one of my projects.\r\n```\r\n.\r\n|-- src\r\n|   `-- framework\r\n|-- tests\r\n|   `-- framework\r\n|-- tools\r\n|   `-- karma\r\n`-- typings\r\n    |-- expect.js\r\n    `-- mocha\r\n```\r\nNow, the tests resides in a different directory at tests/framework but when I provide the path that TypeScript expects it breaks the tests.\r\n\r\nIn this example the test file looks like this.\r\n```\r\nimport Foo = require(\"src/framework/foo\");\r\n\r\ndescribe(\"Test case or title\", () => {\r\n\tit.only(\"Scenario to test\", () => {\r\n\t\tvar foo = new Foo();\r\n\r\n\t\tvar str = foo.print();\r\n\r\n\t\texpect(str).to.be(\"Msg\");\r\n\t});\r\n});\r\n```\r\nSo to make the tests pass I have four different options:\r\n* Removing the __src/__ from the generated .js file.\r\n* Removing the __src/__ from the require statement and ignore the TypeScript's compiler error.\r\n* Writing a preprocessor for Karma to remove the __src/__ from the generated .js files before they are passed to it.\r\n* Changing the test to the code below.\r\n\r\nTo make it crystal clear Karma (the test runner) expects the path to be __framework/foo__ rather than __src/framework/foo__.\r\n```\r\ndeclare var define;\r\n\r\ndefine(function(require)\r\n{\r\n\tvar Foo = require(\"framework/foo\");\r\n\r\n\tdescribe(\"Test case or title\", () =>\r\n\t{\r\n\t\tit.only(\"Scenario to test\", () =>\r\n\t\t{\r\n\t\t\tvar foo = new Foo();\r\n\r\n\t\t\tvar str = foo.print();\r\n\r\n\t\t\texpect(str).to.be(\"Msg\");\r\n\t\t});\r\n\t});\r\n});\r\n```\r\nBy the way, when I'm changing the __function__ to lambda in the code above it complains on something else and I guess that it does because require is reserved keyword.\r\n\r\nSo the question is whether there is a way to tell the compiler to start looking for files from a base path so I won't have to add src/ to the path of the require statement?\r\n\r\n",
+    "LastUpdatedDate": "2014-07-28T15:20:16.567-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-14T11:21:24.55-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Correct require path but TypeScript doesn't like it.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2558
+  },
+  "FileAttachments": [
+    {
+      "FileId": 863949,
+      "FileName": "TypeScriptIssue.zip",
+      "DownloadUrl": ".\\863949"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I solved it! \n\nI changed my 'test.main.js: baseUrl' to '/base' instead of '/base/src' and it worked.\n\nStill, I think that adding baseUrl option to the compiler can be quite nice so we won't have to pass long paths for these of us that like their tests to be in a different directory.",
+      "PostedDate": "2014-06-14T20:14:44.93-07:00",
+      "Id": 149766
+    }
+  ]
+}

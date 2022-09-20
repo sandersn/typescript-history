@@ -1,0 +1,10 @@
+[
+  {
+    "Id": "1132601",
+    "ThreadId": "472141",
+    "Html": "Chapter 7.4 states that there is no way to dynamically check if an object implements a given interface. I think the example proposal for how to check the type is incorrect. Given the interface<br />\n<pre><code>interface Shaker {\n    shake: () =&gt; void;\n}</code></pre>\n\nthe proposed check in the spec is<br />\n<pre><code>function asShaker(obj: any): MoverShaker {\n    return obj &amp;&amp; obj.shake ? obj : null;\n}</code></pre>\n\nHowever, this will yield <code>asShaker({ shake: null }) === null</code>, which imho is incorrect (<code>null</code> is an allowed value, but falsy) and should return the passed object instead. A better (but not sufficient) check is<br />\n<pre><code>function asShaker(obj: any): MoverShaker {\n    return obj &amp;&amp; typeof obj.shake !== &quot;undefined&quot; ? obj : null;\n}</code></pre>\n\nIn fact, it can be improved even further by actually checking <code>typeof obj.shake === &quot;function&quot;</code>.<br />\n<br />\nMaybe the spec should just state that there is no way to actually check the type dynamically in a reliable manner. The following will cause the result to be typed incorrectly even though Typescript is happy (and I don't see a way around it), proving that <code>asFoo</code> is (still) not working correctly:<br />\n<pre><code>interface Foo {\n    shake: () =&gt; boolean;\n}\n\nvar myObj = {\n    shake: function () {\n        return 0;\n    }\n};\n\nfunction asFoo(obj: any): Foo {\n    return obj &amp;&amp; typeof obj.shake === &quot;function&quot; ? obj : null;\n}\n\nvar uhoh: boolean = asFoo(myObj).shake(); // *should* ideally throw NPE\ntypeof uhoh; // &quot;number&quot;</code></pre>\n\n",
+    "PostedDate": "2013-12-06T11:10:59.853-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

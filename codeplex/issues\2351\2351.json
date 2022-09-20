@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.567-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I don't understand why the constructor can have its name there in the exported JavaScript, but the members of a class cannot, which is a pain.  It's not uncommon to pull a function name given the string representation of a function. This would, in a way, add runtime name information.\r\n\r\n```\r\nclass A {\r\n\tfunc() {\r\n\t}\r\n}\r\n```\r\n\r\n... becomes ...\r\n\r\n```\r\nvar A = (function () {\r\n    function A() {\r\n    }\r\n    A.prototype.func = function () {\r\n    };\r\n    return A;\r\n})();\r\n```\r\n... and should be ...\r\n\r\n```\r\nvar A = (function () {\r\n    function A() {\r\n    }\r\n    A.prototype.func = function func() {\r\n    };\r\n    return A;\r\n})();\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-24T07:21:44.257-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Recommend that exported function names be included",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2351
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I already gave a good reason.  When debugging and walking the calling stack, some functions will NOT have names, because of the way they are being initialized (using anonymous functions without names).  Are you going to tell me this is not important?",
+      "PostedDate": "2014-03-30T19:23:50.423-07:00",
+      "Id": 140021
+    },
+    {
+      "Message": "This wouldn't be possible for functions with non-identifier names, and it's already possible to enumerate the class prototype to find which member has a given function.\n\nIf you can point to some concrete motivating examples (frameworks that reasonably need this, etc) we can try to prioritize.\n\r\n\r** Closed by RyanCavanaugh 03/24/2014 10:10AM",
+      "PostedDate": "2014-03-24T10:10:59.86-07:00",
+      "Id": 140022
+    },
+    {
+      "Message": "Just to add: MY framework, on error, produces a formatted output for review of errors for developers to use.  Currently, walking the calling chain, where there exist ONLY references to functions (where object instances are not available), doesn't allow me to extract function names, since many don't have any.  Without an object instance, how can I find out the name?  (and I have no control over user code)  I have to resort to showing a snippet of the whole function instead, which is just not right for proper error reporting purposes.",
+      "PostedDate": "2014-03-30T19:30:13.107-07:00",
+      "Id": 140023
+    },
+    {
+      "Message": "Here is my (forced) error output, and current result from walking the callers:\n______________________________________\n[DreamSpace.System.$Event.dispatchEvent(false, false, , momentjs)]: $Event<'ready'>: Assertion error: The number of handlers called does not match the number of registered handlers.\n\n function ???(canBubble, canCancel, triggerState) {... }\n\n Stack:\n function ???() { } using arguments (momentjs)\n function ???() { }\n function ???() { } using arguments ([object Event])\n\n Error source: 'http://localhost:62704/DreamSpaceJS/DreamSpace.js' on line 2002\n ________________________________\n\n(I added the \"???\" just now) Makes absolutely no sense because of how class functions are being set.  This IS a really good example in my book.",
+      "PostedDate": "2014-03-30T19:45:29.767-07:00",
+      "Id": 140025
+    }
+  ]
+}

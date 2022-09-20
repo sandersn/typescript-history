@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This appears to have been fixed already. Thanks for the report, keep them coming.",
+    "ClosedDate": "2013-05-02T17:41:54.28-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "```\r\n// duplicate :: [a] -> [a]\r\nfunction duplicate<A>(ar: A[]): A[] {\r\n    function helper(el) {\r\n        return [el, el];\r\n    }\r\n    var helper2 = (el) => [el, el];\r\n\r\n    //return concatMap(helper, ar);                     // works\r\n    //return concatMap(helper2, ar);                    // works\r\n    //return concatMap((el: A): A[]=> [el, el], ar);    // works\r\n    //return concatMap((el) => [el, el], ar);             // error TS2081: Supplied parameters do not match any signature of call target.\r\n    return concatMap((el) => { return [el, el]; } , ar);  // error TS2081: Supplied parameters do not match any signature of call target.\r\n}\r\n```\r\n\r\nThe last 2 return lines fail with the commented error.  All other versions work.\r\n\r\nThis is using the .9 alpha release with a replaced typescriptServices.js from the developer branch of commit 6932c2abbc67 in Visual Studio Express 2012 for the web.\r\n\r\nrelated code if necessary:\r\n```\r\n// forEach :: [a] -> (a -> ()) -> ()\r\nfunction forEach<A>(ar: A[], f: (a: A, n: number) => void ): void {\r\n    for (var i = 0; i < ar.length; ++i) {\r\n        f(ar[i], i);\r\n    }\r\n}\r\n\r\n// map :: (a -> b) -> [a] -> [b]\r\nfunction map<A, B>(f: (a: A) => B, ar: A[]): B[] {\r\n    var ret = [];\r\n    forEach(ar, (el: A) => {\r\n        ret.push(f(el));\r\n    });\r\n\r\n    return ret;\r\n}\r\n\r\n// :(\r\nfunction append<A>(ar0: A[], ar1: A[]): void {\r\n    forEach(ar1, (el) => {\r\n        ar0.push(el);\r\n    });\r\n}\r\n\r\n// concat :: [[a]] -> [a]\r\nfunction concat<A>(ar: A[][]): A[] {\r\n    var ret = [];\r\n    forEach(ar, (el) => {\r\n        append(ret, el);\r\n    });\r\n\r\n    return ret;\r\n}\r\n\r\n// concatMap :: (a -> [b]) -> [a] -> [b]\r\nfunction concatMap<A, B>(f: (a: A) => B[], ar: A[]): B[]{\r\n    return concat(map(f, ar));\r\n}\r\n\r\n```",
+    "LastUpdatedDate": "2013-05-02T17:41:54.28-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-01T11:35:21.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Untyped inline function does not resolve.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 985
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

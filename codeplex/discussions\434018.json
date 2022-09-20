@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1004833",
+    "ThreadId": "434018",
+    "Html": "Typescript declaration files do not contain the reference paths. Is this ok?\r<br />\nHow to force the compiler to include the reference paths in declaration files?<br />\n",
+    "PostedDate": "2013-02-21T11:26:21.42-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005144",
+    "ThreadId": "434018",
+    "Html": "Try with --comments option of tsc compiler.<br />\n",
+    "PostedDate": "2013-02-22T02:52:59.457-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005198",
+    "ThreadId": "434018",
+    "Html": "I added the --comments option, but does not change the output....<br />\n",
+    "PostedDate": "2013-02-22T05:05:33.38-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1005406",
+    "ThreadId": "434018",
+    "Html": "I'm not sure exactly what you're trying to do.  Are you automatically generating the declaration files?  What isn't being included that you want to force?<br />\n",
+    "PostedDate": "2013-02-22T12:17:40.807-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1026149",
+    "ThreadId": "434018",
+    "Html": "Hi Jon,\r<br />\n<br />\nI think the intention is that the declaration file should contain any reference comments that point to dependencies, for example... if I manually wrote a declaration file for a jQuery plugin, I would add the following to the top of the d.ts file:<br />\n<pre><code>///&lt;reference path=&quot;../jquery/jquery.d.ts&quot; /&gt;</code></pre>\n\nMy plugin declaration now has its dependencies clearly labelled, rather than relying on the consumer to add both jquery.d.ts and myplugin.d.ts to their TypeScript file.\r<br />\n<br />\nDoes this help to clarify?<br />\n",
+    "PostedDate": "2013-04-05T08:09:21.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1026299",
+    "ThreadId": "434018",
+    "Html": "Hi,\r<br />\n<br />\nThis is exactly the issue I'm experiencing. As ursuletzu stated, the --comments flag is ignored for declaration files and this is a problem because manually adding the references will get overwritten on next build. <br />\n",
+    "PostedDate": "2013-04-05T13:02:39.437-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1026402",
+    "ThreadId": "434018",
+    "Html": "Could you create a work item with the exact steps to reproduce the issue? This is the behavior I see on 0.8.3 as well as our latest bits:<br />\n<pre><code>C:\\test&gt;type repro2.ts\n/// &lt;reference path='file2.ts'/&gt;\nclass C {\n       blah(): void {}\n}\n\nC:\\test&gt;tsc --declaration repro2.ts\n\nC:\\test&gt;type repro2.d.ts\n/// &lt;reference path=&quot;file2.d.ts&quot; /&gt;\ndeclare class C {\n    public blah(): void;\n}\n\nC:\\test&gt;tsc --declaration -c repro2.ts\n\nC:\\test&gt;type repro2.d.ts\n/// &lt;reference path=&quot;file2.d.ts&quot; /&gt;\ndeclare class C {\n    public blah(): void;\n}</code></pre>\n\n",
+    "PostedDate": "2013-04-05T17:11:36.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116375",
+    "ThreadId": "434018",
+    "Html": "I want the opposite of this feature.  Declarations files with references to file paths are terrible.  It makes the declarations file less portable because all of your project structures have to be the same.\r<br />\n<br />\nMy situation is this:  I have 3 projects A, B, and C.  B is a collection of typescript files that are shared between projects A and C.  B is dependent upon JQuery which means it has a /// &lt;reference path=&quot;JQuery.d.ts&quot; /&gt; reference.  However, projects A and B are not structured the same which means I have to alter project B's declarations file when I add it to project A.  I have to change the reference to something like /// &lt;reference path=&quot;../../JQuery.d.ts&quot; &gt;.  This makes automating my build process super annoying because I have to change the reference in my declarations file.  The same goes for when I import the declarations file to project C.\r<br />\n<br />\nA few more details about my situation.  Project B is just a collection of Typescript files.  It includes one Typescript file, B.all.ts, that simply references all the other Typescript files in the project.  Like:<br />\n/// &lt;reference path=&quot;file1.ts&quot; &gt;\r<br />\n/// &lt;reference path=&quot;file2.ts&quot; &gt;\r<br />\netc.\r<br />\n<br />\nThen to build the declarations file I wrote a command that does this:  tsc.exe -d -out $(ProjectDir)\\B.all.js --target ES5 $(ProjectDir)\\B.all.ts.  The result is a declarations file for all the objects in project B.  Which is great.  Except for the local references to JQuery.d.ts.  So as an attempted work around I added this to B.all.ts:  interface JQuery {}.  The resulting definitions file includes this new definition now:  interface JQuery {}.  Which makes the declarations file compile unfortunately, the references to JQuery.d.ts are still included as well.\r<br />\n<br />\nIs there any way to make the declarations file remove the local references to JQuery.d.ts?  I'm using Typescript 0.9.1.1.<br />\n",
+    "PostedDate": "2013-10-31T16:57:21.98-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144072",
+    "ThreadId": "434018",
+    "Html": "Bumping ScottJet's comment. This makes publishing a library really unpleasant, since I am now placing project structure constraints on my consumers. As of 0.9.5.0, I still can't see a way to disable this. Please help us!<br />\n",
+    "PostedDate": "2013-12-30T16:44:28.293-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1216424",
+    "ThreadId": "535977",
+    "Html": "I'm compiling with the amd flag and use RequireJS for module loading in the browser. With 0.9.5, when I had a sourcefile containing just some references and amd-dependencies, it would generate a valid AMD external module with the expected dependencies:<br />\n<h1>test.ts</h1>\n<pre><code>/// &lt;reference path=&quot;libs/jasmine.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;libs/angular-mocks.d.ts&quot; /&gt;\n/// &lt;amd-dependency path=&quot;angular-mocks&quot;/&gt;\n/// &lt;amd-dependency path=&quot;foo/bar&quot;/&gt;\n\n// my code here</code></pre>\n\nThe fact that foo/bar is loaded at runtime means that an Angular module is defined which I use in my code. I know, side-effecting dependencies don't seem like a great idea, but structuring an Angular app seems to push this way, since Angular has its own module system and injection as well.<br />\n<br />\nHowever, with 0.9.7, the dependency is no longer added in the generated output. In fact it is isn't even compiled as an external AMD-module anymore. Probably because it is a test-file, which doesn't export anything?<br />\n<br />\nI thought that may be adding an import/require combo restored the old behavior. So I introduced a test-common module where I could put my shared testing type references:<br />\n<h1>test-common.ts</h1>\n<pre><code>/// &lt;reference path=&quot;libs/jasmine.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;libs/angular-mocks.d.ts&quot; /&gt;\n/// &lt;amd-dependency path=&quot;angular-mocks&quot;/&gt;\nexport = undefined \n// Only using this for the shared references/amd-dependency for now. Might add some useful common test code here later</code></pre>\n\nand imported this in my original file:<br />\n<h1>test.ts</h1>\n<pre><code>/// &lt;amd-dependency path=&quot;foo/bar&quot;/&gt;\n\nimport testcommon = require('test-common');\n\n// my code here</code></pre>\n\nHowever, this doesn't work either since 0.9.7 believes I'm not using the 'test-common' import in test.ts and it is pruned. Which is sort-of true, but I do depend on it for the shared references and amd-dependency that it brings in. So I had to resort to (yuck) 'using' the import:<br />\n<h1>test.ts</h1>\n<pre><code>/// &lt;amd-dependency path=&quot;foo/bar&quot;/&gt;\n\n// If no import is done, the amd-dependencies aren't added by tsc either.\nimport testcommon = require('test-common');\n// An unused import is removed by tsc, hence 'use it'...\nconsole.log(testcommon);</code></pre>\n\nMy question is three-fold:<br />\n<ol>\n<li>Is it by design that tsc no longer emits an external module when only amd-dependencies are present?</li>\n<li>Why would tsc believe that importing test-common (without using it in the code) is a no-op, since it clearly contributes an amd-dependency which is vital at runtime?</li>\n<li>\nI'm sure I'm horribly over-complicating this and there might be a much easier way to do what I want. Please do enlighten me. <br />\n</li>\n</ol>\n(although, I arrived at this setup because I have my test files in a separate directory from the application sources and want to test them with Jasmine in the browser using AMD. Using the amd-dependency seemed the best way to have tsc ignore the dependency at compile-time while still retaining it at runtime.Ssince using import/require for 'foo/bar' would lead to some strange path-issues, and I still wouldn't necessarily use the import directly)<br />\n<br />\nThanks in advance!<br />\n<br />\nSander<br />\n",
+    "PostedDate": "2014-03-01T03:13:06.763-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219079",
+    "ThreadId": "535977",
+    "Html": "I have what I think is the same problem and found the same workaround also on 1.0 RC.<br />\n<br />\nI just got started on a d.ts file for DefinitelyTyped for Knockout.punches.  For now, the d.ts file is:<br />\n<pre><code>declare module 'knockout.punches' {\n}\n\ninterface KnockoutStatic {\n    punches: any\n}\n</code></pre>\n\nWhen I use Knockout and this new Knockout.punches definition in my Durandal module for my page, unless I call into the variable returned from the require statement, ko.punches doesn't exist because &quot;knockout.punches&quot; won't exist in the generated JavaScript.  Specifically:<br />\n<br />\nIf my page.ts looks like this:<br />\n<pre><code>import app = require('durandal/app');\nimport ko = require('knockout');\nimport kop = require('knockout.punches');\n\nko.punches.enableAll();\n\nreturn {name: &quot;MyApp&quot;}\n</code></pre>\n\nThen my page.js looks like this: <br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, 'knockout'], function(require, exports, ko) {   //knockout.punches is missing...\n    ko.punches.enableAll();   //this throws an error.\n\n    return {name: &quot;MyApp&quot;};\n});\n</code></pre>\n\nIf my page.ts looks like this:<br />\n<pre><code>import app = require('durandal/app');\nimport ko = require('knockout');\nimport kop = require('knockout.punches');\nkop;  //does no useful work.\n\nko.punches.enableAll();\n\nreturn {name: &quot;MyApp&quot;}\n</code></pre>\n\nThen the generated JavaScript looks like this and everything works.<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, 'knockout','knockout.punches'], function(require, exports, ko, kop) {\n    kop;\n    ko.punches.enableAll();   //this works now.\n\n    return {name: &quot;MyApp&quot;};\n});\n</code></pre>\n\nIs there any way to say &quot;really really require this&quot; without having to issue a call against something?<br />\n",
+    "PostedDate": "2014-03-04T09:01:38.333-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1223709",
+    "ThreadId": "535977",
+    "Html": "+1\r<br />\n<br />\nThis behavior is very strange. I can understand the compiler's desire to keep dependencies to a minimum but it makes for a very weird debugging experience. Can the compiler throw a warning or something?<br />\n",
+    "PostedDate": "2014-03-17T15:30:26.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1247173",
+    "ThreadId": "535977",
+    "Html": "I had a similar issue and I found the reason why compiler removes unused modules: <a href=\"http://www.typescriptlang.org/Handbook#modules-optional-module-loading-and-other-advanced-loading-scenarios\" rel=\"nofollow\">http://www.typescriptlang.org/Handbook#modules-optional-module-loading-and-other-advanced-loading-scenarios</a>.\r<br />\n<br />\nI think your workaround is acceptable:<br />\n<pre><code>import kop = require('knockout.punches'); kop;</code></pre>\n\n",
+    "PostedDate": "2014-05-19T14:20:52.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

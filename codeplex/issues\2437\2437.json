@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces",
+    "ClosedDate": "2014-07-21T12:32:05.643-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Running typescript --declaration on\r\n```typescript\r\nmodule X {\r\n\tenum PrivateEnum { A, B, C };\r\n\t\r\n\texport class UsesPrivateEnum {\r\n\t\tstatic LeakPrivateEnum = PrivateEnum; // : typeof PrivateEnum\r\n\t}\r\n}\r\n```\r\nproduces the declaration file:\r\n```typescript\r\ndeclare module X {\r\n    class UsesPrivateEnum {\r\n        static LeakPrivateEnum: typeof PrivateEnum;\r\n    }\r\n}\r\n```\r\nAnd this can't be used in other files.\r\n\r\nSuggest expanding the enum type info:\r\n```typescript\r\ndeclare module X {\r\n    class UsesPrivateEnum {\r\n        static LeakPrivateEnum: {\r\n           A: number;\r\n           B: number;\r\n           C: number;\r\n        };\r\n    }\r\n}\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-14T10:47:52.497-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "static class members can leak module-private types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2437
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The compiler should issue an error here. We can't simply expand here because the leaked type might not be expressible as an anonymous type (e.g. could be recursive).",
+      "PostedDate": "2014-04-14T10:56:42.107-07:00",
+      "Id": 141777
+    },
+    {
+      "Message": "I'm for that in spirit, but you will break working code in the following form:\n\n```typescript\nmodule X {\n    var privateVar = { A: 1, B: () => 3, C: \"hello\" };\n    \n    export class ExposesPrivateVar {\n        static Expose = privateVar;\n    }\n}\n```\n\nthis produces\n```typescript\ndeclare module X {\n    class ExposesPrivateVar {\n        static Expose: {\n            A: number;\n            B: () => number;\n            C: string;\n        };\n    }\n}\n```\n\nIs it feasible that it would only produce an error when the type can't be expressed without recursion?",
+      "PostedDate": "2014-04-14T12:30:28.88-07:00",
+      "Id": 141789
+    },
+    {
+      "Message": "On further investigation, it seems that the bug is that static members can leak types, properties seem to be checked correctly:\n\n```typescript\nmodule X {\n\tclass Q {\n\t}\n\t\n\tvar x_ok = { a: 1, b: 2 }\n\tvar x_private = { a: 1, b: 2, q: new Q() };\n\t\n\texport class QQ {\n\t\tx_ok = x_ok;\n\t\tx_private = x_private; // <--- error on this line only.\n\t}\n} \n```",
+      "PostedDate": "2014-04-14T14:46:53.77-07:00",
+      "Id": 141802
+    },
+    {
+      "Message": "Changed title from \"Private types not expanded in .d.ts files\" to \"static class members can leak module-private types\"",
+      "PostedDate": "2014-04-15T09:53:05.103-07:00",
+      "Id": 141954
+    }
+  ]
+}

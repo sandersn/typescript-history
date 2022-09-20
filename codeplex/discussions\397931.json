@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "921420",
+    "ThreadId": "397931",
+    "Html": "\r\n<p>JavaScript only offers reflection via typeof() operator, which only returns &quot;object&quot; for instantiated Objects, and can therefore not be used for identifying Objects in regards to their classes and inheritance:</p>\r\n<pre>class Animal {...}\r\nclass Snake extends Animal {...}\r\nclass Horse extends Animal {...}</pre>\r\n<pre>// returns 'object'<br>typeof( new Snake() );</pre>\r\n<pre>// also returns 'object'<br>typeof( new Horse() );<br><br></pre>\r\n<pre>// evaluates incorrectly to 'true':<br>var b : bool = typeof( new Snake() ) == typeof( new Horse() );</pre>\r\n<p>In order to allow reflection at the simple level of &quot;is this object of that type?&quot; I am proposing support for an 'is' operator:</p>\r\n<p></p>\r\n<pre>// evaluates to 'false':\r\nvar b : bool = (new Snake()) is (new Horse());\r\n\r\n// also true (see my other proposal about support for 'Class'):\r\nvar b2 : bool = (new Snake()) is Snake;\r\n\r\n// also true, because Snake is derived from Animal:\r\nvar b3 : bool = (new Snake()) is Animal;\r\n</pre>\r\n<p></p>\r\n<p>'is' would also make it safer to use 'as' (see my proposal about adding support for explicit casts), i.e.:</p>\r\n<p></p>\r\n<pre>var a : Animal = new Snake();\r\nif( a is Snake )\r\n{\r\n  var s : Snake = a as Snake;\r\n}</pre>\r\n<p></p>\r\n<p>Thanks!</p>\r\n",
+    "PostedDate": "2012-10-03T11:49:28.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921429",
+    "ThreadId": "397931",
+    "Html": "<p>JavaScript has the instanceof operator which may work for what you want:</p>\r\n<pre>var b = (new Snake()) instanceof Horse; // false</pre>",
+    "PostedDate": "2012-10-03T12:00:25.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921443",
+    "ThreadId": "397931",
+    "Html": "\r\n<p>'instanceof' doesn't seem to work for classes that implement interfaces:</p>\r\n<p>&nbsp;</p>\r\n<pre>interface IAnimal { ... }\nclass Animal implements IAnimal {...}\nclass Snake extends Animal {...}\nclass Horse extends Animal {...}\n<br></pre>\r\n<pre>var sam = new Snake();</pre>\r\n<pre>\n// works:\nif( sam instanceof Animal )\n\talert( &quot;Sam is an Animal&quot; );\n\n// flags an error for 'IAnimal' :\nif( sam instanceof IAnimal )\n\talert( &quot;Sam is an Animal&quot; );</pre>\r\n<p>&nbsp;</p>\r\n<p>If this is considered a bug then yes, 'instanceof' would work for me!</p>\r\n<p>Thanks,</p>\r\n<p>- Bernd</p>\r\n",
+    "PostedDate": "2012-10-03T12:12:21.42-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921450",
+    "ThreadId": "397931",
+    "Html": "<p>Not a bug. Interfaces are purely type information, and TypeScript's type information is only present at compile time. Instanceof is a runtime feature of JavaScript so has no idea what TypeScript types originally existed.</p>\r\n<p>Identifying the lineage of objects in TypeScript must be done the same way it is done in JavaScript today,&nbsp;such as&nbsp;by setting sentinel values during construction or by examining the structure of the object (eg. if it has a 'talk' property it must be an animal). TypeScript could possibly provide a library method to do this for you, but it's a difficult thing to do right since the type information is not available at all at runtime.</p>",
+    "PostedDate": "2012-10-03T12:22:48.743-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921453",
+    "ThreadId": "397931",
+    "Html": "<p>Thanks for clarifying!</p>\r\n<p>Let me rephrase my request:</p>\r\n<p>I am asking for an 'is' operator that is a superset of JavaScript's 'instanceof' operator plus support for identifying implemented interfaces.</p>\r\n<p>Thanks!</p>\r\n<p>- Bernd&nbsp;</p>",
+    "PostedDate": "2012-10-03T12:27:01.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting. This has recently been fixed in the develop branch.",
+    "ClosedDate": "2013-08-01T13:54:58.277-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "If you have circular dependencies where both use \"export = \", the compiler will complain: \r\n* Type reference cannot refer to container '.../A.ts'.\r\n* Type reference cannot refer to container '.../B.ts'.\r\n\r\nExample:\r\n\r\nA.ts\r\n```\r\nimport B = require(\"B\");\r\n\r\nexport = A;\r\n\r\nclass A {\r\n    public b: B;\r\n}\r\n```\r\n\r\nB.ts\r\n```\r\nimport A = require(\"A\");\r\n\r\nexport = B;\r\n\r\nclass B {\r\n    public a: A;\r\n}\r\n```\r\n\r\nIf \"export class A\" and \"export class B\" is used, it works without problems.\r\n\r\nThis might not be possible to fix, due to [StackOverflow Circular Dependencies AMD](http://stackoverflow.com/questions/4881059/how-to-handle-circular-dependencies-with-requirejs-amd)\r\nIf it actually isn't possible, I'd just like to have it documented.\r\n\r\nThis issue might be a duplicate of [Issue 1263](https://typescript.codeplex.com/workitem/1263) or at least similar.",
+    "LastUpdatedDate": "2016-08-30T08:29:25.603-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-30T06:24:19.817-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "\"export = \" doesn't work for circular dependencies",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1410
+  },
+  "FileAttachments": [
+    {
+      "FileId": 711580,
+      "FileName": "CircularDependency.zip",
+      "DownloadUrl": ".\\711580"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I'm still seeing this behaviour (or similar) in TypeScript 0.9.1.1 - paulb, can you say when the relevant fix will appear in a release?",
+      "PostedDate": "2013-08-31T10:09:09.13-07:00",
+      "Id": 111786
+    },
+    {
+      "Message": "As far as I can tell, the compiler is now fine with circular dependencies.\nThat unfortunately doesn't mean AMD (in my case require.js) is fine with it.\n\nFrom my observations:\nclasses A, B and C\nA references B, \nB references both A and C,\nC references B\n\nA uses B, no problem.\nB uses C, no problem.\nIf now C wants to use B, it will not work, because in the context of C B is empty.\n\nThis might simply be a limitation of AMD, in which case I'd prefer to have it documented somewhere.\n\nPS: If it helps I could create another example project.",
+      "PostedDate": "2013-08-31T17:24:53.927-07:00",
+      "Id": 111795
+    },
+    {
+      "Message": "See here:\n\nhttp://requirejs.org/docs/api.html#circular",
+      "PostedDate": "2013-09-06T15:29:23.097-07:00",
+      "Id": 112737
+    },
+    {
+      "Message": "Hi,\nI just ran into this problem myself.\nAfter reading this, I'm not sure how to actually solve it though.\nI noticed this:\n\n> If \"export class A\" and \"export class B\" is used, it works without problems. \n\nBut how do you deal with situations where you have \"nested\" classes (in the sense where you have the class and then also a module with the same name, that is)?\n\nI asked this question on SO here (including very simple code + a Bitbucket repo that contains an example project): http://stackoverflow.com/questions/39227992/how-to-solve-issue-with-accessing-static-member-variable-of-nested-class-in-ty\n\nIf you have a moment, I'd appreciate it if you had a look at it.\n\nKoen",
+      "PostedDate": "2016-08-30T08:29:25.603-07:00",
+      "Id": 203809
+    }
+  ]
+}

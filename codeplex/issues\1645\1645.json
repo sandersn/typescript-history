@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.613-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I'm sure you guys are already aware of this, but I checked and I couldn't find an open issue.\r\n\r\nThe compiler currently allows you to use types before they're defined. \r\n\r\n``` TypeScript\r\nmodule Test {\r\n\tvar dog = new Dog();\r\n\tvar defaultBreed = Breed.Collie;\r\n\t\r\n\tclass Dog{\t}\r\n\t\r\n\tenum Breed {\r\n\t\tCollie,\r\n\t\tLabrador\r\n\t}\r\n}\r\n```\r\n\r\ngenerates this broken JavaScript:\r\n\r\n``` JavaScript\r\nvar Test;\r\n(function (Test) {\r\n    var dog = new Dog();\r\n    var defaultBreed = Breed.Collie;\r\n\r\n    var Dog = (function () {\r\n        function Dog() {\r\n        }\r\n        return Dog;\r\n    })();\r\n\r\n    var Breed;\r\n    (function (Breed) {\r\n        Breed[Breed[\"Collie\"] = 0] = \"Collie\";\r\n        Breed[Breed[\"Labrador\"] = 1] = \"Labrador\";\r\n    })(Breed || (Breed = {}));\r\n})(Test || (Test = {}));\r\n```\r\n\r\nIt seems like there's two possible resolutions:\r\n1) Reorder the code so the definitions occur first. However, I'm not sure if this kind of reordering is something you can safely do in a general way.\r\n2) Throw an error. This may then fall into the same category as [other static analysis](https://typescript.codeplex.com/workitem/821).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-05T12:51:00.237-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Type use before definition",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 2,
+    "Id": 1645
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion, assigning to Jon who handles suggestions.",
+      "PostedDate": "2013-09-06T13:41:33.247-07:00",
+      "Id": 112711
+    },
+    {
+      "Message": "There should be a discussion on hoisting and whether typescript ought to do it. \n\nI think the current opinion is that typescript needs to generate javascript that's as-close-to-the-source-as-possible, which precludes reordering.",
+      "PostedDate": "2013-09-09T18:11:38.12-07:00",
+      "Id": 112935
+    },
+    {
+      "Message": "The other options would be to simply generate a warning in a case like that.\n\nThis way you can keep hoisting and TypeScript as a strict Javascript superset, but you're helping the coder catch such cases at compile time.",
+      "PostedDate": "2014-01-25T02:38:57.843-08:00",
+      "Id": 131559
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:24:34.927-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "From: https://typescript.codeplex.com/discussions/468055\r\n\r\nCurrently lib.d.ts discribe HTMLElement this way : \r\n```typescript\r\ndeclare var HTMLElement: {\r\n    prototype: HTMLElement;\r\n    new (): HTMLElement;\r\n}\r\ninterface HTMLElement .....\r\n```\r\nHowever with the new [Custom Element spec](https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html) we will be able to \"extends\" native element.\r\nI think html elements should be described  as 'class' so we can use the custom elements (especially since there is pretty good polyfill that already exists)\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-11T10:00:00.053-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Custom Element",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 12,
+    "Id": 1885
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "[Polymer polyfill](https://github.com/polymer/CustomElements) is already there basicly we need to be able to specify a prototype object that \"extends\" an HTMElement an register it.\nIdealy we should be able to do it this way :\n```typescript\nclass MyCustomButton extends HTMLButtonElement {\n    myCustomMethod():void { ... }\n}\ndocument.register('my-custom-button', {\n    prototype: MyCustomButton.prototype,\n    extends: 'button'\n});\n```\nIn fact perhaps the real feature needed here should be to be able to extends any object that declares a prototype, and a constuctor call\n\n```typescript\ndeclare var MyObject: {\n    prototype: MyPrototype,\n    new():MyPrototype\n}\nclass MyClass extends MyObject { /// no error\n}\n```",
+      "PostedDate": "2013-11-12T02:54:48.823-08:00",
+      "Id": 122740
+    },
+    {
+      "Message": "For those who wants to use custom elements now here is a little workaround (even if it is far from being perfect)\n\n```typescript\ninterface DocumentExt extends Document {\n\tregister<T extends HTMLElement>(name: string,  \n\t\tdeclaration: { prototype: T; extends?: string; }): {\n\t\t\tnew(): T;\n\t\t\tprototype: T\n\t\t};\n} \n\ndeclare var document: DocumentExt;\n\ninterface MyCustomButton extends HTMLButtonElement {\n\tmyMethod():void;\n}\n\nvar MyCustomElementPrototype: MyCustomButton = Object.create(HTMLElement.prototype);\n\nMyCustomElementPrototype.myMethod = function() {\n\tvar self: MyCustomButton = this;\n\tconsole.log(self.getAttribute('hello'))\n}\n\n\n\nvar MyCustomElement = document.register('my-button',{ prototype: MyCustomElementPrototype, extends: 'button' });\n```",
+      "PostedDate": "2013-11-12T04:41:09.7-08:00",
+      "Id": 122744
+    },
+    {
+      "Message": "++",
+      "PostedDate": "2013-11-16T21:55:56.017-08:00",
+      "Id": 123292
+    },
+    {
+      "Message": "Obviously the above is hack and workaround. This should be fixed. Inheriting from HTMLElement is now a thing.",
+      "PostedDate": "2014-06-27T10:56:42.503-07:00",
+      "Id": 150956
+    },
+    {
+      "Message": "Fixing this bug is really easy after [#2475](https://typescript.codeplex.com/workitem/2475) is fixed, one can make only minor changes to the lib.d.ts to, e.g. interface \"HTMLElement\" would be renamed \"BaseHTMLElement\" then one could do empty class declaration:\n\n```\ndeclare class HTMLElement extends BaseHTMLElement {} // Intentionally empty, see 2475\n```",
+      "PostedDate": "2014-06-28T13:03:28.137-07:00",
+      "Id": 151067
+    },
+    {
+      "Message": "With diligent copying of all HTMLElement interface members I got normal inheritance working. It's perfect typescript polyfill, you get all the goodies of the IDE for your element classes.\n\nBasically using this is easy: \n\n```\nclass Tabs extends customelement.CustomHTMLElement {\n}\n```\n\nSee this [Github Gist](https://gist.github.com/Ciantic/9db1b6281bd7a743ffb5) for full example, one ugliness is the trick to introduce global variable in JavaScript: `BaseCustomHTMLElement = window.HTMLElement;`\n\nI just delete the constructor before registering, works!",
+      "PostedDate": "2014-07-05T15:37:09.413-07:00",
+      "Id": 151670
+    }
+  ]
+}

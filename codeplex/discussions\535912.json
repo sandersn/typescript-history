@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1216167",
+    "ThreadId": "535912",
+    "Html": "Why typescript allows narrow down the type of method parameters in the derived class?\r<br />\nI think that this is overlooked dangerous operation.\r<br />\n<br />\nfor example. see the following code.<br />\n<pre><code>class Base {\n  v1 = &quot;Hi!&quot;;\n}\n\nclass Derived extends Base {\n  v2 = &quot;Hello!&quot;;\n}\n\nclass SampleA {\n  method(value: Base): Base {\n    console.log(value.v1);\n    return value;\n  }\n}\n\nclass SampleB extends SampleA {\n  method(value: Derived): Derived {\n    console.log(value.v2);\n    return value;\n  }\n}\n\nvar objA: SampleA;\nvar objB = new SampleB();\n\nobjA = objB;\nobjA.method(new Base()); // Base instance passed to SampleB#method method! but it expected Derived instance...</code></pre>\n\nin TypeScript playground -&gt; <a href=\"http://goo.gl/hF6WUn\" rel=\"nofollow\">http://goo.gl/hF6WUn</a>\r<br />\n<br />\n$ tsc sample.ts\r<br />\n$ echo $?\r<br />\n0\r<br />\n<br />\nI guess derived class knows the contract of the base class, there is a duty to protect it.\r<br />\ntherefore TypeScript allows me to narrow down types of method parameters. isn't it?<br />\n",
+    "PostedDate": "2014-02-28T07:39:25.487-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1216241",
+    "ThreadId": "535912",
+    "Html": "This is indeed unsound, but intentionally so. A primary motivation for this behavior is APIs that look like this:<br />\n<pre><code>// Library\nfunction on(eventName: string, handler: (e: Event) =&gt; void) { ... }\n\n// User code\non('mousemove', (e: MouseEvent) =&gt; { console.log('Mouse at ' + e.position; });</code></pre>\n\nWithout the bivariance on argument types, the <code>on</code> call would require an awkwardly large type assertion on the function expression.<br />\n",
+    "PostedDate": "2014-02-28T10:27:13.223-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1216370",
+    "ThreadId": "535912",
+    "Html": "Thank you your answer!\r<br />\nI was convinced.\r<br />\nthank you!<br />\n",
+    "PostedDate": "2014-02-28T18:22:52.517-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1217807",
+    "ThreadId": "535912",
+    "Html": "Now that there are overloads based on string constants, are there situations where this feature is still necessary? Isn't it possible to just declare different type signatures for the different string constants?<br />\n",
+    "PostedDate": "2014-03-03T03:32:50.967-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221670",
+    "ThreadId": "535912",
+    "Html": "Regarding : <a href=\"https://typescript.codeplex.com/workitem/2282\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2282</a> (In the comic example <code>Civilian</code> does not have <code>name</code>)\r<br />\n<br />\nQuoting: <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Library</span>\n<span style=\"color:Blue;\">function</span> on(eventName: <span style=\"color:Blue;\">string</span>, handler: (e: Event) =&gt; <span style=\"color:Blue;\">void</span>) { ... }\n\n<span style=\"color:Green;\">// User code</span>\non(<span style=\"color:#A31515;\">&#39;mousemove&#39;</span>, (e: MouseEvent) =&gt; { console.log(<span style=\"color:#A31515;\">&#39;Mouse at &#39;</span> + e.position; });\r\n</pre></div><code>MouseEvent</code> has all the members of <code>Event</code>.  Same for @vvakame's example : <code>Derived</code> has all the members of <code>Base</code>. \r<br />\n<br />\nTo build on vvakame's example the following should be an error : <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Base {\n  v1 = <span style=\"color:#A31515;\">&quot;Hi!&quot;</span>;\n}\n<span style=\"color:Blue;\">class</span> Derived  {\n}\n\n<span style=\"color:Blue;\">class</span> SampleA {\n  method(value: Base): Base {\n    <span style=\"color:Blue;\">return</span> value;\n  }\n}\n\n<span style=\"color:Blue;\">class</span> SampleB <span style=\"color:Blue;\">extends</span> SampleA {\n  method(value: Derived): <span style=\"color:Blue;\">any</span> { <span style=\"color:Green;\">// Parameter value is not compatible with `Base`</span>\n    <span style=\"color:Blue;\">return</span> value;\n  }\n}\r\n</pre></div>",
+    "PostedDate": "2014-03-11T18:36:47.2-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221780",
+    "ThreadId": "535912",
+    "Html": "@RyanCavanaugh I am not convinced. If you kept it sound then all we'd need is a cast – which is the right way to do it.<br />\n<pre><code>// Library\nfunction on(eventName: string, handler: (e: Event) =&gt; void) { ... }\n\n// User code\non('mousemove', (e: Event) =&gt; { console.log('Mouse at ' + (&lt;MouseEvent&gt;e).pageX; });</code></pre>\n\nThis way it is up to the user to make sure the cast is valid. And the compiler can show an error if he mistyped the type of e.<br />\n",
+    "PostedDate": "2014-03-12T02:40:03.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222017",
+    "ThreadId": "535912",
+    "Html": "The function is almost always contextually typed, though. If you want the implied type of the parameter, you can just omit the type names on the arguments and get the type checking you want. In a sense, providing a parameter type on a contextually-typed function expression <em>is</em> a cast.<br />\n<pre><code>// New experimental browser feature: Smell events\n\ninterface OdorEvent extends Event {\n    odor: string;\n}\n\n// Error: Event does not have 'odor'. Desired 'sound' behavior by default\nwindow.addEventListener('smellDetected', (event) =&gt; { console.log(event.odor); })\n\n// Supply the type of the event, OK. Acts as a probably-safe cast\nwindow.addEventListener('smellDetected', (event: OdorEvent) =&gt; { console.log(event.odor); })\n\n// -- Proposed behavior --\n// I've written the differing type name the same number of times,\n// but with a bunch of extra characters for no reason?\nwindow.addEventListener('smellDetected', &lt;(event: OdorEvent) =&gt; void&gt;((event) =&gt; { console.log(event.odor); });\n\n// Cast a bunch of times? Or have a surplus local? Why?\nwindow.addEventListener('smellDetected', (event) =&gt; {\n    console.log((&lt;OdorEvent&gt;event).odor);\n    console.log((&lt;OdorEvent&gt;event).odor);\n});</code></pre>\n\n",
+    "PostedDate": "2014-03-12T11:25:48.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222242",
+    "ThreadId": "535912",
+    "Html": "I see where you're coming from, I just don't agree with this decision. The reason for a cast is exactly to make it look horrible, so that it screams ‘Look here, this is wrong!’. What you're doing is you're hiding the cast from the developer. They'd have to look at two classes to see whether they are casting or not, and there's nothing on the spot to indicate that they are.<br />\n<br />\nLet's not forget that a property access does not generate a runtime error in JavaScript. Therefore event.odor may return undefined. Or, if there's another subclass of Event passed in that has an odor property with a non-string value, you'll get something weird. That is exactly the type of bug that will be hard to find when you're hiding the cast. By the way, the correct approach is not to cast multiple times, but to check the type with instanceof:<br />\n<pre><code>interface OdorEvent extends Event {\n    odor: string;\n}\n// So we can use it with instanceof\ndeclare var OdorEvent: {\n    prototype: OdorEvent;\n    new (): OdorEvent;\n}\n\nwindow.addEventListener('smellDetected', (event) =&gt; {\n    if (event instanceof OdorEvent) {\n        // PROPOSAL: The compiler should know at this point that event is an OdorEvent\n        // This gives an error at the moment.\n        // (The Closure Compiler does know it.)\n        console.log(event.odor);\n        console.log(event.odor);\n    }\n});</code></pre>\n\nThat is the exact same reason why I loathe not having an ‘override’ keyword for methods. Makes it difficult to find bugs.<br />\n",
+    "PostedDate": "2014-03-13T01:59:14.077-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222246",
+    "ThreadId": "535912",
+    "Html": "Of course, this could be more elegant, given the truly fantastic generic support in TS:<br />\n<pre><code>interface OdorEvent extends Event {\n    odor: string;\n}\n\nfunction on&lt;T extends Event&gt;(t: string, c: (e: T) =&gt; void): void {}\n\non&lt;OdorEvent&gt;('smellDetected', (e) =&gt; {\n    console.log(e.odor);\n    console.log(e.odor);\n});</code></pre>\n\n",
+    "PostedDate": "2014-03-13T02:20:07.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

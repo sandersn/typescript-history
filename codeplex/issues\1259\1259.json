@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is actually by design. The reason is that when we do type inference for an array literal we try to find a best common type for the array. If we can't find one, we call it an object array (ie {}[], an array of things with no properties). This is defined in section 3.10 Best Common Type of the language spec. Now when you call quickcheck with that you get an error because an array of objects is not compatible with an array of Generator<any>. The reason your assignment to x works is because when computing the best common type for an array literal, if you have a type annotation then that type is considered as a possible candidate for the best common type, so the array literal is now Array<Generator<any>> instead of {}[] and so is an acceptable argument for quickcheck. ",
+    "ClosedDate": "2013-06-27T16:00:28.19-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "I have the following typescript program:\r\n\r\n```\r\ninterface Generator<T>\r\n{\r\n  (size: number) : T;\r\n}\r\n\r\ndeclare var arbList: Generator<Array>;\r\ndeclare var arbInt : Generator<number>;\r\n\r\nfunction quickcheck (gens: Array<Generator<any>>) : void {}\r\n\r\nvar x : Array<Generator<any>> = [ arbInt, arbList ];\r\nquickcheck([ arbInt, arbList ]);\r\n```\r\n\r\nThe call to `quickcheck` fails with the error:\r\n\r\n```\r\n/Users/erik/test.ts(12,1): error TS2082: Supplied parameters do not match any signature of call target:\r\n\tType 'Generator<any>' requires a call signature, but type '{}' lacks one.\r\n/Users/erik/test.ts(12,1): error TS2087: Could not select overload for 'call' expression.\r\n```\r\n\r\nThis is even though the assignment of `x` succeeds. Passing `x` to `quickcheck` also works. I cannot see any reason why the original code would fail to typecheck.",
+    "LastUpdatedDate": "2013-06-27T16:00:28.19-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-27T11:31:50.8-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Well-typed program (generics, any) fails to typecheck",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1259
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

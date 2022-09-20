@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design, both import statements are part of the same global namespace. It's similar to defining the class CommonComponent in the root of both files, which would give the same error.",
+    "ClosedDate": "2013-10-25T11:33:17.44-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "If I have an import statement in multiple classes to the same Class I get TS2000: Duplicate identifier error.\r\n\r\nExample if ClassOne and ClassTwo has the same import statement below I get the error. \r\n```\r\nimport CommonComponent = anothernamespace.CommonComponent;\r\n```\r\n\r\nIf I remove the import statement from one of the classes then it compiles fine. I am using TypeScript 0.9.1.1\r\n\r\nWorking on large projects it will be hard to manage what classes are already imported within different other classes. Please fix this.\r\n\r\nHere is a quick example of the issue:\r\nhttps://github.com/codeBelt/TypeScript-Namespace-Issue",
+    "LastUpdatedDate": "2013-11-19T16:00:42.47-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-24T20:41:00.193-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Import Class Into Multiple Classes Causes Duplicate identifier",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1833
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I find this to be a huge issue. In Java and ActionScript 3 you are not limited by using only one specific import statement/namespace in your whole project. Also in C# you can have the same using statement in multiple Classes.\n\nThe work around way to fix this issue is not to import anything and use the namespace when instantiating the Class. But you will also have to do this when adding a type to variables and casing objects. I find this ugly and feels like a hack. \n```\nprivate _component:anothernamespace.CommonComponent;\n \nthis._component = new anothernamespace.CommonComponent();\n \n<anothernamespace.CommonComponent>this._component;\n```\nThe language compiler should be smarter so you don’t have to use the namespace throughout your code. It should be simple and clean like:\n```\nimport CommonComponent = anothernamespace.CommonComponent;\n\nprivate _component:CommonComponent;\n \nthis._component = new CommonComponent();\n \n<CommonComponent>this._component;\n```\n",
+      "PostedDate": "2013-10-25T22:06:07.017-07:00",
+      "Id": 119761
+    },
+    {
+      "Message": "Ok, my bad. I had the import statement outside of the module namespace.\n\nI had:\n```\n///<reference path='CommonComponent.ts'/>\n\nimport CommonComponent = anothernamespace.CommonComponent;\n\nmodule namespace1 {\n    export class ClassOne {\n\n        private _component:CommonComponent;\n\n        constructor() {\n            this._component = new CommonComponent();\n        }\n    }\n}\n```\n\nWhen it should of been this:\n```\n///<reference path='CommonComponent.ts'/>\n\nmodule namespace1 {\n\n    import CommonComponent = anothernamespace.CommonComponent;\n\n    export class ClassOne {\n\n        private _component:CommonComponent;\n\n        constructor() {\n            this._component = new CommonComponent();\n        }\n    }\n}\n```",
+      "PostedDate": "2013-10-26T16:41:38.997-07:00",
+      "Id": 119792
+    }
+  ]
+}

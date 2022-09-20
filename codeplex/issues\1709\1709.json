@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The --noImplicitAny compiler flag will warn you about implicitly-any variables/parameters like `T` there. Thanks!",
+    "ClosedDate": "2013-09-23T08:53:52.67-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I attempted this little experiment:\r\n\r\n```\r\ninterface Hook<T> {\r\n\t(T) : void;\r\n\tadd(T) : void;\r\n}\r\n\r\nfunction hook<T>(): Hook<T> { \r\n    var _handlers = [];\r\n    \r\n    var fn: any = function() {\r\n        for (var i=0; i<_handlers.length; i++) {\r\n            _handlers[i].apply(this, arguments);\r\n        }\r\n    };\r\n    \r\n    fn['add'] = function(handler) {\r\n        _handlers.push(handler);\r\n    };\r\n    \r\n    return <Hook<T>> fn;\r\n}\r\n\r\ninterface onMessage {\r\n\t(message: string) : void;\r\n}\r\n\r\nvar test = hook<onMessage>();\r\n\r\ntest.add(message => console.log(message));\r\n\r\ntest('message');\r\n```\r\n\r\nGenerics don't work quite the way I expected - while the type of `test` correctly comes out as `Hook<onMessage>`, the `test.add()` method is perceived as being of type `(T: any):void` where I was hoping for `(T: onMessage):void`.\r\n\r\nHow come generics don't work the way I was hoping here?\r\n\r\nMy C# is a little rusty, but I believe something similar would have worked there?\r\n",
+    "LastUpdatedDate": "2013-09-23T08:53:52.67-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-21T20:19:54.447-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generics with function-types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1709
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Correcting the above example:\n\n```\ninterface Hook<T> {\n\t(...args: any[]) : void;\n\tadd(handler: T) : void;\n}\n\nfunction hook<T>(): Hook<T> { \n    var _handlers = [];\n    \n    var fn: any = function() {\n        for (var i=0; i<_handlers.length; i++) {\n            _handlers[i].apply(this, arguments);\n        }\n    };\n    \n    fn['add'] = function(handler: T) {\n        _handlers.push(handler);\n    };\n    \n    return <Hook<T>> fn;\n}\n\ninterface OnMessage {\n\t(message: string) : void;\n}\n\nvar onMessage = hook<OnMessage>();\n\nonMessage.add(message => console.log(message));\n\nonMessage('message');\n```\n\nIt worked as expected after all :-)\n\nWhat lead to my mistake was the fact that `add(T) : void;` is actually valid in an interface, and interpreted with `T` as the argument name and `any` as the default type of that argument. This possible confusion could be avoided by requiring explicit use of the `any` keyword in type-declarations, and I think I saw a discussion about the same thing somewhere in the forums a while back - but of course it's a matter of knowing and understanding the correct syntax, so...\n\nFeel free to close this thread.",
+      "PostedDate": "2013-09-22T17:57:07.45-07:00",
+      "Id": 115304
+    }
+  ]
+}

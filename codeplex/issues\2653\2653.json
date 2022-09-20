@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Comments lose all indentation after passing through the TypeScript compiler into the JS files.\r\n\r\nFor example, this:\r\n```\r\nvar rootObject = VDF.Deserialize(V.Multiline(function() {\r\n/*\r\nname{Level0}children:\r\n\tname{Level1}\r\n\tname{Level2}children:\r\n\t\tname{Level3}children:\r\n\t\t\tname{Level4}\r\n*/})\r\n```\r\n\r\nTurns into this, in the JS file:\r\n```\r\nvar rootObject = VDF.Deserialize(V.Multiline(function() {\r\n\t/*\r\n\tname{Level0}children:\r\n\tname{Level1}\r\n\tname{Level2}children:\r\n\tname{Level3}children:\r\n\tname{Level4}\r\n\t*/\r\n})\r\n```\r\n\r\nWhich completely breaks the \"wrap text in comments in a function then parse the function body text\" technique (when that text needs to have indentation).\r\n\r\nFor those not familiar with the technique, here is the V.Multiline function that grabs the mulitline string from the function body text:\r\n```\r\nV.Multiline = function(functionWithInCommentMultiline)\r\n{\r\n\tvar text = functionWithInCommentMultiline.toString().replace(/\\r/g, \"\");\r\n\tvar firstCharPos = text.indexOf(\"\\n\", text.indexOf(\"/*\"));\r\n\treturn text.substring(firstCharPos + 1, text.lastIndexOf(\"\\n\"));\r\n};\r\n```\r\n\r\nHaving this fixed would make my unit-tests a lot cleaner, since as of now I have to add \\n\\ at the end of each in-multiline-string line.",
+    "LastUpdatedDate": "2014-12-23T08:36:11.507-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-12-23T08:36:11.507-08:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Multiline Comments Lose Indentation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2653
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

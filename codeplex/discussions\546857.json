@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1250615",
+    "ThreadId": "546857",
+    "Html": "class Animal {<br />\n<pre><code>name: string;\nconstructor(theName: string) { this.name = theName; }\nmove(meters: number) {\n    alert(this.name + &quot; moved &quot; + meters + &quot;m.&quot;);\n}</code></pre>\n\n}\r<br />\n<br />\nclass Snake extends Animal {<br />\n<pre><code>constructor(name: string) { super(name); }\nmove() {\n    alert(&quot;Slithering...&quot;);\n    super.move(5);\n}</code></pre>\n\n}\r<br />\n<br />\nclass Horse extends Animal {<br />\n<pre><code>constructor(name: string) { super(name); }\nmove() {\n    alert(&quot;Galloping...&quot;);\n    super.move(45);\n}</code></pre>\n\n}\r<br />\n<br />\nvar sam = new Snake(&quot;Sammy the Python&quot;);\r<br />\nvar tom: Animal = new Horse(&quot;Tommy the Palomino&quot;);\r<br />\n<br />\nsam.move();\r<br />\ntom.move(34);\r<br />\n<br />\nTom does not move 34 meters.  Tom moves 45 meters.  Is that supposed to happen?  I thought that Tom would have moved the 34 meters as specified.<br />\n",
+    "PostedDate": "2014-05-28T12:56:12.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250620",
+    "ThreadId": "546857",
+    "Html": "You don't understand JavaScript inheritance.  The methods on sub (child) classes completely replace methods of the same name on super (parent) classes.  This is because JavaScript will find the first method name that matches in the prototype chain.<br />\n<br />\nTo fix this, you need to access the method on the lower type directly...<br />\n<pre><code>Animal.prototype.move.call(tom, 24);</code></pre>\n\n",
+    "PostedDate": "2014-05-28T13:13:18.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250626",
+    "ThreadId": "546857",
+    "Html": "Just to add: TypeScript is a &quot;typing&quot; layer over JavaScript (for the most part).  I would suggest learning how JavaScript works first (especially prototypes) to properly understand various behaviors from resulting JS code compiled from TS.  This tends to be an issue with C# type developers thinking C# instead of JS. ;) Anyhow, try this:<br />\n<pre><code>class Animal {\n    name: string;\n    constructor(theName: string) { this.name = theName; }\n    move(meters: number) {\n        alert(this.name + &quot; moved &quot; + meters + &quot;m.&quot;);\n    }\n} \n\nclass Snake extends Animal {\n    constructor(name: string) { super(name); }\n    move(meters: number = 5) {\n        alert(&quot;Slithering...&quot;);\n        super.move(meters);\n    }\n} \n\nclass Horse extends Animal {\n    constructor(name: string) { super(name); }\n    move(meters: number = 45) {\n        alert(&quot;Galloping...&quot;);\n        super.move(meters);\n    }\n}\n\n var sam = new Snake(&quot;Sammy the Python&quot;); \n var tom: Animal = new Horse(&quot;Tommy the Palomino&quot;); \n\n sam.move(); \n tom.move(34); \n// ... or use your existing code and run ...\nAnimal.prototype.move.call(tom, 34);</code></pre>\n\n",
+    "PostedDate": "2014-05-28T13:26:14.26-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250629",
+    "ThreadId": "546857",
+    "Html": "So..., why not explain that one tricky part in the example?  And no, I guess I don't understand JavaScript prototypes.  I have been using JavaScript for a long time, but always stayed away from prototypes because of the confusion.<br />\n",
+    "PostedDate": "2014-05-28T13:32:09.09-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1250639",
+    "ThreadId": "546857",
+    "Html": "My apologies - I guess after reading the post it may come across as sarcastic, lol.  I was being sincere - taking time to understand prototype inheritance will greatly help understand classes in TS. ;)<br />\n",
+    "PostedDate": "2014-05-28T13:51:50.79-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

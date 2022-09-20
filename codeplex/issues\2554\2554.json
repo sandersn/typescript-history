@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.613-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Type parameters should be allows to degrade to `any`:\r\n\r\n(very contrived example)\r\n````\r\nfunction doStuff(): Type<any> {\r\n    if (condition) {\r\n        return new Type<Foo>();\r\n    }\r\n    return new Type<Bar>();\r\n}\r\n````\r\n\r\nBut the compiler won't have it, even though both `Foo` and `Bar` should qualify as `any`.\r\n\r\nThis is on `v1.0.1.0`",
+    "LastUpdatedDate": "2014-07-28T15:20:16.613-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-12T17:09:42.8-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Allow to union type-parameters to any",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2554
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I tried it and it works in the playground: http://goo.gl/8nh7JQ\n'You should post the whole example code so it can be reproduced.",
+      "PostedDate": "2014-06-12T17:46:46.533-07:00",
+      "Id": 149593
+    },
+    {
+      "Message": "In your example Foo and Bar can be reconciled because they have the same shape (no shape)\n\nTry this: http://pastebin.com/LrpcXJ4z\n\nOutput is wonky, properties don't show up in the output. If you remove the function the props come back.\n\n(iand t breaks the URL generator.. lol.. so put it as pastebin)\n\n",
+      "PostedDate": "2014-06-12T18:37:10.78-07:00",
+      "Id": 149601
+    },
+    {
+      "Message": "This works though: http://pastebin.com/RKBAFncv\n\nApparently the properties get optimized out if not assigned something.\n\nI'll see if I can extract my case (it is part of few files to tricky to isolate)",
+      "PostedDate": "2014-06-12T19:56:47.047-07:00",
+      "Id": 149606
+    },
+    {
+      "Message": "Extracted it comes down to this:\n\nhttp://goo.gl/LELpsx\n\nThe function conditionally returns same type with different type-parameter but it's not allows to store it as same type with `any` as type-parameter.\n\nThere is something odd going on though, because this then does work (boolean conditional instead of type-parameter argument)\n\nhttp://goo.gl/O8aPiD\n\nSmells like an edge case.\n",
+      "PostedDate": "2014-06-12T20:22:07.94-07:00",
+      "Id": 149608
+    },
+    {
+      "Message": "That code is not valid because you are returning foo and bar, instead of Type<U>.",
+      "PostedDate": "2014-06-12T23:53:28.36-07:00",
+      "Id": 149621
+    }
+  ]
+}

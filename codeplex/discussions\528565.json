@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1201443",
+    "ThreadId": "528565",
+    "Html": "I don't know if anybody's asked this before - I searched and couldn't spot anything - but I'm wondering if anybody else has noticed the problem I'm having with debugging TS files, namely, that the debugger always interprets any reference to <code>this</code> as pointing to the underlying <em>JavaScript</em> <code>this</code>, not to the <em>TypeScript</em> <code>this</code> (which is actually <code>_this</code> in the generated JavaScript). In other words, both in Visual Studio, and in Chrome while using source maps, if I set a watch on any variable that is prefaced with <code>this</code>, the variable always shows up as undefined, because the debugger is trying to get the value of the underlying JavaScript <code>this</code> instead of the TS generated <code>_this</code>.<br />\n<br />\nDoes that make sense?<br />\n<br />\nAny workarounds for this? Or plans to fix it? It's not the end of the world, but it's been the largest debugging PITA for me for at least the last six months...<br />\n",
+    "PostedDate": "2014-01-31T10:48:26.773-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1201590",
+    "ThreadId": "528565",
+    "Html": "Well, the generated Source Map doesn't contain references for variables so when you ask for &quot;this&quot; in your Browser it can only assume the JavaScript &quot;this&quot; because it's not aware there is another (TS) one.\r<br />\n<br />\nLooking at the Source Map Revision 3 Proposal: <a href=\"https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?hl=en_US&amp;pli=1&amp;pli=1#heading=h.mofvlxcwqzej\" rel=\"nofollow\">https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?hl=en_US&pli=1&pli=1#heading=h.mofvlxcwqzej</a> there is a property called &quot;names&quot; (A list of symbol names used by the “mappings” entry.) but I personally haven't seen it in action (all compilers - including tsc - emit empty array) so I'm not sure that's the correct property to fill in.<br />\n",
+    "PostedDate": "2014-02-01T03:15:09.34-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202050",
+    "ThreadId": "528565",
+    "Html": "This is a known shortcoming that is a combination of the source map format and our debugger.  Any time the compiler has to do a rename in the resulting JavaScript, you will see this issue.  We'd like to come up with a better solution that can do this translation step, so that you always see the right evaluation.<br />\n",
+    "PostedDate": "2014-02-03T06:30:36.317-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1202102",
+    "ThreadId": "528565",
+    "Html": "Thanks for the answer, Jon. You guys are doing a great job of working out the remaining kinks in TypeScript. This is just another of those rough edges. Glad to know you guys know about it.<br />\n",
+    "PostedDate": "2014-02-03T08:38:00.587-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1256204",
+    "ThreadId": "528565",
+    "Html": "is there a fix or work around for this issue?  I'm encountering it while working in a typescript multi-device-hybrid-app.<br />\n<br />\n<strong>[UPDATE]</strong><br />\n<br />\nfound a solution in my handy dandy Pro TypeScript book (thanks Steve) - hope this issue gets fixed in future release.  Fix is as follows:<br />\n<h1>Before Fix:</h1>\n<pre><code>&lt;div data-init=&quot;MyObj.MyMethod&quot;&gt;</code></pre>\n\n<h1>After fix:</h1>\n<pre><code>&lt;div data-init=&quot;onInit&quot;&gt;\n\n&lt;script&gt;\n   function onInit() {\n        MyObj.MyMethod();\n   }\n&lt;/script&gt;</code></pre>\n\n",
+    "PostedDate": "2014-06-13T16:08:53.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

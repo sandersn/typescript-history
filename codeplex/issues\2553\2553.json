@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T17:31:45.367-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "There's virtually no documentation of the <amd-dependency> feature, but there's a broken use case for 1.01 that doesn't seem to be captured anywhere, so I'm dropping it here for reference.\r\n\r\nConsider the following jquery-plugin scenario, typical usage for <amd-dependency/>:\r\n\r\n```\r\n/// <reference path=\"../../../defs/jquery/jquery.d.ts\"/>\r\n/// <reference path=\"../../../defs/slide/slide.d.ts\"/>\r\n/// <amd-dependency path=\"slide\"/>\r\nimport $ = require('jquery');\r\n$('.slide').slide();\r\n```\r\n\r\nThis works correctly and emits:\r\n\r\n```\r\ndefine([\"require\", \"exports\", 'jquery', \"slide\"], function(require, exports, $) {\r\n    $('.slide').slide();\r\n});\r\n//# sourceMappingURL=slide.js.map\r\n\r\n```\r\n\r\nHowever, consider the case in which a plugin is not invoked directly, and simply requires importing (eg. used late on an event): \r\n\r\n```\r\n/// <reference path=\"../../../defs/jquery/jquery.d.ts\"/>\r\n/// <reference path=\"../../../defs/slide/slide.d.ts\"/>\r\n/// <amd-dependency path=\"jquery\"/>\r\n/// <amd-dependency path=\"slide\"/>\r\nsetTimeout(100, () => {\r\n   console.log('Something');\r\n});\r\n```\r\n\r\nThe compiler resolves this to:\r\n\r\n```\r\n/// <reference path=\"../../../defs/jquery/jquery.d.ts\"/>\r\n/// <reference path=\"../../../defs/slide/slide.d.ts\"/>\r\n/// <amd-dependency path=\"jquery\"/>\r\n/// <amd-dependency path=\"slide\"/>\r\nsetTimeout(100, function () {\r\n    console.log('Something');\r\n});\r\n//# sourceMappingURL=slide.js.map\r\n```\r\n\r\nIt appears that the <amd-dependency> tag can only piggy-back onto an existing define statement. So if there is no import statement in the file, the <amd-dependency> tag is ignored completely. \r\n\r\nTo make it work you need a 'fake' require call, eg:\r\n\r\n```\r\n/// <reference path=\"../../../defs/jquery/jquery.d.ts\"/>\r\n/// <reference path=\"../../../defs/slide/slide.d.ts\"/>\r\n/// <amd-dependency path=\"jquery\"/>\r\n/// <amd-dependency path=\"slide\"/>\r\nimport $ = require('jquery');\r\n```\r\n\r\nCorrectly emits to:\r\n\r\n```\r\ndefine([\"require\", \"exports\", \"jquery\", \"slide\"], function(require, exports) {\r\n});\r\n//# sourceMappingURL=slide.js.map\r\n```\r\n\r\nThis may be something of an edge case because it's probably relatively unusual to have a file without any imports, but it certainly appears as though this is a bug in the <amd-dependency> tag.",
+    "LastUpdatedDate": "2014-07-21T17:31:45.367-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-10T23:28:53.313-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "<amd-dependency> tags are auto-optimized out of files without imports.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2553
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,115 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:37:05.713-08:00",
+    "CommentCount": 15,
+    "Custom": null,
+    "Description": "Parameters in the form \"myVar: typeof {SomeBaseType}\" fails to accept derived types as arguments.  You can only pass the type that is specified.\r\n\r\nA work around is to strong-cast arguments passed as \"<typeof SomeBaseType><any>MyDerivedType\", but that is not an acceptable long term solution when writing APIs.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-04T21:09:17.323-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Expressions in initializers act as if the class type doesn't have static members from the base type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1759
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "```\nclass Base {\n\tx: string;\t\n}\nclass Derived extends Base {\n\ty: number;\t\n}\n\nfunction fn(t: typeof Base) {\n\t\n}\n\nfn(Derived); // OK\n```",
+      "PostedDate": "2013-10-07T08:13:54.773-07:00",
+      "Id": 117648
+    },
+    {
+      "Message": "Yes, perhaps in a simple scenario - and when is the simple scenario ever the case? LOL.  Try this:\n\n```\nmodule Dream_Space {\n    export class Graph_Item {\n        static registerProperty(type: typeof Graph_Item, name: string, isVisual: boolean = false) {\n        }\n   }\n}\n\nmodule Dream_Space {\n    export module UI {\n        export class UIBase extends Graph_Item {\n            static MyProperty = Graph_Item.registerProperty(UIBase, \"MyProperty\");\n        }\n    }\n}\n\n```\n\n\"UIBase\" is not accepted.  If I pass null instead, it works.  Try again. :)",
+      "PostedDate": "2013-10-07T10:25:23.11-07:00",
+      "Id": 117660
+    },
+    {
+      "Message": "FYI: I have v9.1.1 in Visual Studio 2012.",
+      "PostedDate": "2013-10-07T10:27:11.547-07:00",
+      "Id": 117661
+    },
+    {
+      "Message": "Can you post some code that you would expect to compile, but doesn't? I just tried this (see below) and it appears to work in the straightforward case.\n\r\n\r** Closed by RyanCavanaugh 10/07/2013 8:15AM",
+      "PostedDate": "2013-10-07T08:15:10.637-07:00",
+      "Id": 117663
+    },
+    {
+      "Message": "Thanks! Updating title. Simpler repro for the issue:\n\n```\nfunction doThing(x: {n: string}) { }\nclass A {\n\tstatic n: string;\n\tp = doThing(A); // OK\n}\n\nclass B extends A {\n\tp1 = doThing(A); // OK\n\tp2 = doThing(B); // Not OK (B is missing 'n'), but should be\n}\ndoThing(B); //OK\n```",
+      "PostedDate": "2013-10-07T11:02:22.17-07:00",
+      "Id": 117672
+    },
+    {
+      "Message": "(why can't I delete my own comments here!?)  Anyhow, yes, that looks about right. :)",
+      "PostedDate": "2013-10-07T11:22:30.187-07:00",
+      "Id": 117677
+    },
+    {
+      "Message": "Wait, I don't understand the first line.  Isn't \"x\" now expecting a type with INSTANCE property \"n\" instead of a static one? (or are you illustrating what the compiler is seeing?)",
+      "PostedDate": "2013-10-07T11:26:38.867-07:00",
+      "Id": 117678
+    },
+    {
+      "Message": "It's an instance property of the static type of the class. There's really no such thing as a 'static property' of an object, it's simply that classes create two different types (the instance type and the static type).",
+      "PostedDate": "2013-10-07T12:12:31.02-07:00",
+      "Id": 117684
+    },
+    {
+      "Message": "I have no idea what you are talking about.  This is valid:\n\nclass A {\n    static n: string;\n    n: string;\n}\n\nThey are not the same.  \"A.n\" is not \"(new A()).n\".",
+      "PostedDate": "2013-10-07T13:20:50.393-07:00",
+      "Id": 117699
+    },
+    {
+      "Message": "When you define a class actually you define 2 things: \n\n1) a constructor function whose type is the static side of the class This function's name is the class name. T type of this function is anonymous but can be accessed via 'typeof <anInstanceOfTheClass>' in type positions.\n2) the instance type that is created when the constructor function is invoked. This is the type referred to by the class name in type positions. This is what you traditionally think about as the type introduced by a class definition.\n\nWhen you use the static keyword in a class definition you are actually just putting a property on the constructor function object (and thus adding it to its type). At a fundamental level, as far as the qualities of a property are concerned (ex optionality) there is no such thing as a static property vs a non-static property (as there is for optional vs required), the keyword simply changes which object the property ends up on.\n\nSo in the example above, doThing says 'I need an object whose type includes a property n of type string.' Well, A is the name of a function (the class constructor function) whose type is the static side of the class A, meaning it includes a property n of type string. If the class A had additional static members those too would be part of the type of the constructor function A. But A is just another object with properties, it does not have a special kind of 'static' property distinct from other types of properties an object can have.\n\nIt is confusing coming from other languages. Does that make more sense?",
+      "PostedDate": "2013-10-07T16:12:18.757-07:00",
+      "Id": 117726
+    },
+    {
+      "Message": "I'm not new to JS, and I do consider myself quite advanced - just not as much as TS.  I think the confusion is because of what the TypeScript compiler normally enforces.  For example, given what you said, I could have the property \"x\" on both the (static) function, and as an instance property, and theoretically pass either to a parameter of the same type (it would be an ambiguity).\n\nExample: \n\n    class X {\n        static x:number;\n        x:number;\n    }\n\n    function test(o:X) { }\n\n   test(X); // fail\n   test(new X()) // ok\n\nAccording to your explanation, both are correct, at the JS level, but I'm saying it is not so in all cases in TypeScript.  \n\nThat said, I do realize that \"{ }\" declares a signature, but then doesn't the type name also? ;)\n\n",
+      "PostedDate": "2013-10-07T17:32:51.513-07:00",
+      "Id": 117734
+    },
+    {
+      "Message": "FYI: This very issue is why \"typeof\" was created in the first place. ;)",
+      "PostedDate": "2013-10-07T17:34:45.02-07:00",
+      "Id": 117735
+    },
+    {
+      "Message": "Your example doesn't have any errors in the latest bits, I'm not sure which version it was failing against. As soon as you add any other instance property to class X then the first call does fail as you'd expect.\n\nAnd yeah, this was definitely part of why 'typeof' was created.",
+      "PostedDate": "2013-10-07T19:01:13.017-07:00",
+      "Id": 117736
+    },
+    {
+      "Message": "Oh, yes, it works now.  I didn't have access to my laptop yet and took that from memory because it didn't work for me some time ago - guess I should have confirmed since upgrading. LOL. Ok, good stuff, never mind.  :D",
+      "PostedDate": "2013-10-07T20:12:32.703-07:00",
+      "Id": 117737
+    },
+    {
+      "Message": "Ok, now after testing a bit more I finally see your point more clearly.  There are two sides: one which defines the static signature (object), and one that defines the instance one (much like duck-typing ;)).  My example does work only if the two are exactly the same signature, otherwise they'll fail (i.e. adding another instance-only property).\n\nThanks, this helped clear up a few things in my head regarding TS. :)",
+      "PostedDate": "2013-10-07T20:22:34.24-07:00",
+      "Id": 117738
+    }
+  ]
+}

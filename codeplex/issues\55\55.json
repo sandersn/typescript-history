@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-05T16:19:56.007-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "According to the specification (If I am not wrong) the bellow implementation should work, but it does not compile:\r\n\r\nclass Cliente {\r\n    constructor (public codigo: number, public nome: string) {\r\n    }\r\n    toString() {\r\n        return \"Código: \" + this.codigo + \" Nome: \" + this.nome;\r\n    }\r\n\r\n    get Codigo() {\r\n        return this.codigo;\r\n    }\r\n    set Codigo(valor) {\r\n        this.codigo = valor;\r\n    }\r\n}\r\n\r\nThe only error message is:\r\n\r\nError\t1\tThe command \"\"C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.8.0.0\\tsc\" \"C:\\Users\\-------\\documents\\visual studio 2012\\Projects\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\app.ts\"\" exited with code 1.\tC:\\Users\\-------\\documents\\visual studio 2012\\Projects\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1.csproj\t67\t5\tTypeScriptHTMLApp1\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T05:04:48.55-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Properties does not work",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 55
+  },
+  "FileAttachments": [
+    {
+      "FileId": 500289,
+      "FileName": "Erro.png",
+      "DownloadUrl": ".\\500289"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "It does work, just tried that code here and works like a charm:\n\nhttp://www.typescriptlang.org/Playground/",
+      "PostedDate": "2012-10-03T07:39:27.693-07:00",
+      "Id": 78415
+    },
+    {
+      "Message": "I added the bellow code and it works as expected when using Playground as you said:\n\nvar cliente = new Cliente(1, 'teste');\nconsole.log(cliente.Codigo);\ncliente.Codigo = 10;\nconsole.log(cliente.Codigo);\n\nBut is does cause error when compiling in visual studio 2010 and 2012. It has something to do with \"--target\" (ES3 the default and ES5) compiler switch but it does not seem to be possible to change it within visual studio, am I right?\n\nWhen compiling through command line (tsc app.ts) the compiler emits the correct error message:\nProperty accessors are only available when targeting ES5 or greater.\n\nOr succeed (tsc app.ts --target ES5)\n\nThanks in advance.",
+      "PostedDate": "2012-10-03T08:04:37.32-07:00",
+      "Id": 78417
+    },
+    {
+      "Message": "@xcapp2000 I filed a bug yesterday about this... It appears that the default \"ES3\" actually outputs \"ES5\" code, there really isn't an ES3 mode.\n\nI just ran your example and can confirm that this is the same output for both ES3 and ES5\n\nvar Cliente = (function () {\n    function Cliente(codigo, nome) {\n        this.codigo = codigo;\n        this.nome = nome;\n    }\n    Cliente.prototype.toString = function () {\n        return \"Código: \" + this.codigo + \" Nome: \" + this.nome;\n    };\n    Object.defineProperty(Cliente.prototype, \"Codigo\", {\n        get: function () {\n            return this.codigo;\n        },\n        set: function (valor) {\n            this.codigo = valor;\n        },\n        enumerable: true,\n        configurable: true\n    });\n    return Cliente;\n})();\n",
+      "PostedDate": "2012-10-03T10:42:56.903-07:00",
+      "Id": 78450
+    },
+    {
+      "Message": "Right - the language service operates in ES5 mode, so you won't see this error in the IDE.  However, tsc.exe operates in ES3 mode, so it will throw this error.  To align the two, pass the --target ES5 to your tsc.exe invocation in the project file.",
+      "PostedDate": "2012-10-05T16:19:43.27-07:00",
+      "Id": 78756
+    }
+  ]
+}

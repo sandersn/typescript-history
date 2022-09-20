@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1062933",
+    "ThreadId": "448658",
+    "Html": "I have classes which each have a <em>static init()</em> method but the parameters to the <em>init</em> in each class are different. It currently gives a compile error, is there any way around this? I'm creating a definitions file for an existing library so I can't change the API without a lot of hassle:<br />\n<pre><code>class A {\n    static init() {}\n}\n\nclass B extends A {\n    static init(i:number) {}\n}\n\n// Existing library usage\nA.init();\nB.init(2);</code></pre>\n\nHere is the compile error:<br />\n<blockquote>\nClass 'B' cannot extend class 'A':<br />\nTypes of static property 'init' of class 'B' and class 'A' are incompatible:<br />\nCall signatures of types '(i: number) =&gt; void' and '() =&gt; void' are incompatible:<br />\nCall signature expects 0 or fewer parameters.<br />\n</blockquote>\n<strong>UPDATE</strong>: Here is a link to the code in the <em>TypeScript Playground</em> so you can just press the link to see the error:<br />\n<a href=\"http://tinyurl.com/nvhfauz\" rel=\"nofollow\">http://tinyurl.com/nvhfauz</a><br />\n",
+    "PostedDate": "2013-06-30T08:34:24.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063764",
+    "ThreadId": "448658",
+    "Html": "There's no simple workaround here, your API is violating some fundamental OO tenets. There's nothing special about static vs instance here, the rules are the same for each as far as overloading and assignability are concerned. If the parameter is optional you can mark it as such throughout the class hierarchy (potentially with a default value). If the parameter is not required for the base class then requiring it on a derived class doesn't make much sense. Consider:<br />\n<pre><code>var x: A = B;\nx.init();</code></pre>\n\nwhat do you expect to happen here? A claims its init takes 0 arguments, but when dispatched at runtime we will be calling B's init which expects &gt; 0 arguments of a particular type. You're asking anyone subclassing A to ensure they correctly handle their methods' arguments being optional even though the signature claims they are required. Similar things happen if you try to use these functions as values for assignment. <br />\n",
+    "PostedDate": "2013-07-02T12:16:53.427-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064011",
+    "ThreadId": "448658",
+    "Html": "Hi Dan, Thanks for replying. I was hoping static methods would be handled in a way similar to C#/C++ like this (the C# version):<br />\n<pre><code>class A {\n    public static void init() {}\n}\n\nclass B : A {\n    public static void init(double i) {}\n}\n\nclass Program {\n    static void Main(string[] args) {\n        A.init();\n        B.init(2);\n    }\n}</code></pre>\n\nIn the JavaScript library I'm trying to create definitions for (<a href=\"https://github.com/Arlorean/cocos2d\" rel=\"nofollow\">Cocos2D-HTML5</a>) actually has a static <em>create()</em> on certain classes (e.g. <a href=\"http://www.cocos2d-x.org/reference/html5-js/symbols/cc.TransitionScene.html\" rel=\"nofollow\">cc.TransitionScene</a> which extends <a href=\"http://www.cocos2d-x.org/reference/html5-js/symbols/cc.Scene.html\" rel=\"nofollow\">cc.Scene</a>) to create an instance of that type and in each derived class the parameters being passed to <em>create()</em> are different. I think this is a common pattern to have a static class method that acts like a constructor and to have different overloads for different derived classes.\r<br />\n<br />\nMy workaround for now is to remove typing with a <em>init(...rest: any[])</em> parameter list so I can progress with the rest of the definitions file. It's not ideal but it'll do for now. I'll see if I can match up common parameters from all create methods later with the hope that they line up and I can make them optional as you suggested. Thanks again for the reply.<br />\n",
+    "PostedDate": "2013-07-03T03:03:39.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064226",
+    "ThreadId": "448658",
+    "Html": "Yeah I believe C# accomplishes this via static constructors to ensure object initialization happens in a way which helps with patterns like this and using static factory pattern type things. Your use of rest parameters seems a reasonable workaround for now, glad you were able to get unblocked. Feel free to open a Codeplex issue for this feature so that others can up vote it with their support.<br />\n",
+    "PostedDate": "2013-07-03T11:20:54.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1138110",
+    "ThreadId": "448658",
+    "Html": "I found that described problem relevant for me too. I've created <a href=\"https://typescript.codeplex.com/discussions/474856\" rel=\"nofollow\">discussion with my reasons</a>.<br />\n",
+    "PostedDate": "2013-12-19T00:12:46.16-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

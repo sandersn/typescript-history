@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for narrowing this down, I'm having trouble reproing it myself though. Could you re-open this with the additional code required for that snippet to compile? I've referenced the jquery.d.ts in our repo and tried to fill in the blanks with my own definitions but then I cannot repro the crash. I can't be sure whether it's just already fixed in the develop branch or whether there's something in my definitions that don't match yours.",
+    "ClosedDate": "2013-08-08T12:40:33.9-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Thanks nabog, I managed to find the culprit using your advise.\r\nThe compiler crashed on the following function:\r\n\r\n```\r\n\r\nexport function requestUpdate(model: IData, selector?: (model: IData) => IData) {\r\n    var deferred = $.Deferred<{ d: IData; }>(),\r\n        selector = selector || (model: IData) => {\r\n            var result = <IData>$.extend({}, model);\r\n            delete result.__metadata;\r\n            return result;\r\n        };\r\n    OData.request({\r\n        requestUri: model.__metadata.uri,\r\n        method: \"POST\",\r\n        data: selector(model),\r\n        headers: {\r\n            \"If-Match\": model.__metadata.etag,\r\n            \"X-HTTP-Method\": \"MERGE\"\r\n        }\r\n    }, (data, response) => {\r\n            model.__metadata.etag = response.headers.ETag;\r\n            deferred.resolve({ d: model });\r\n        }, deferred.reject);\r\n    return deferred.promise();\r\n}\r\n```\r\n\r\nI remember promoting the selector variable to a parameter some time ago, but forgot to remove the variable declaration for it in the function body. This was no problem with TypeScript 0.8.3.1, but it crashes the TypeScript 0.9.1 compiler.\r\nThe fix is:\r\n\r\n```\r\n\r\nexport function requestUpdate(model: IData, selector?: (model: IData) => IData) {\r\n    var deferred = $.Deferred<{ d: IData; }>();\r\n    selector = selector || (model: IData) => {\r\n        var result = <IData>$.extend({}, model);\r\n        delete result.__metadata;\r\n        return result;\r\n    };\r\n    OData.request({\r\n        requestUri: model.__metadata.uri,\r\n        method: \"POST\",\r\n        data: selector(model),\r\n        headers: {\r\n            \"If-Match\": model.__metadata.etag,\r\n            \"X-HTTP-Method\": \"MERGE\"\r\n        }\r\n    }, (data, response) => {\r\n            model.__metadata.etag = response.headers.ETag;\r\n            deferred.resolve({ d: model });\r\n        }, deferred.reject);\r\n    return deferred.promise();\r\n}\r\n\r\n```\r\n",
+    "LastUpdatedDate": "2013-10-11T15:34:13.327-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T13:43:17.187-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "0.9.1 compiler crash",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1451
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I was able to reproduce this with the following code:\n\nclass Test {\n\tpublic fnc(public arg) {\n\t}\n}\n\nIt throws the same exception in the TypeScript Playground.",
+      "PostedDate": "2013-10-10T10:24:10.113-07:00",
+      "Id": 118045
+    },
+    {
+      "Message": "We've fixed the issue related to using 'public' in a non-constructor position",
+      "PostedDate": "2013-10-11T15:34:13.327-07:00",
+      "Id": 118199
+    }
+  ]
+}

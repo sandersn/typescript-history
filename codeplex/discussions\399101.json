@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "925757",
+    "ThreadId": "399101",
+    "Html": "\r\n<p>I have a problem with creating a TypeScript definition file for the OpenLayers project (http://openlayers.org).</p>\r\n<p>In OpenLayers there are classes that are named exactly like a namespace (and typically serve as base class for all classes in that namespace).</p>\r\n<p>For example there is a class <em>OpenLayers.Geometry</em> and a class <em>OpenLayers.Geometry.Point</em>.</p>\r\n<p>As far as I know this currently can't be supported in TypeScript since it is not possible for a type to have inner types (so\r\n<em>Point</em> would be a inner type of <em>Geometry)</em> and it is also not possible to have a class that has the exact same name as a module/namespace.</p>\r\n<p>Is there any plan to enable this kind of behavior? Is there already a way to model that kind of class library?</p>\r\n<p>Thanks in advance!</p>\r\n",
+    "PostedDate": "2012-10-12T04:57:42.197-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926068",
+    "ThreadId": "399101",
+    "Html": "\r\n<p>Here's one way you might implement such a model. This should help you declare the equivalent TS for existing code.</p>\r\n<p>The key thing is the use of 'new' in the type annotation for the Geometry.Point property.</p>\r\n<pre style=\"color:black\"><span style=\"color:blue\">class</span> GeometryPoint {\n    x: number;\n    y: number;\n\n    constructor () {\n        <span style=\"color:blue\">this</span>.x = 23;\n        <span style=\"color:blue\">this</span>.y = 24;\n    }\n}\n\n<span style=\"color:blue\">class</span> Geometry {\n\n    <span style=\"color:blue\">static</span> Point : <span style=\"color:blue\">new</span> () =&gt; GeometryPoint = GeometryPoint;\n\n}\n\n<span style=\"color:blue\">var</span> p = <span style=\"color:blue\">new</span> Geometry.Point();\n</pre>\r\n",
+    "PostedDate": "2012-10-12T20:10:36.117-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926156",
+    "ThreadId": "399101",
+    "Html": "\r\n<p>The solution is a real good start, however there still remains a problem. What happens if I have multiple constructor overloads?</p>\r\n<p>I think with your solution I can only bind one constructor :(.</p>\r\n<p>Oh and one more thing: If I have static fields/properties on GeometryPoint those also get lost.</p>\r\n<p>It really starts to look like it's not possible to create definition files for OpenLayers :(.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module OpenLayers {\n    <span style=\"color:blue\">class</span> GeometryPoint {\n        x: number;\n        y: number;\n\n        constructor () {\n            <span style=\"color:blue\">this</span>.x = 23;\n            <span style=\"color:blue\">this</span>.y = 24;\n        }<br><br>        static getsLost: number;<br>&nbsp;   }\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Geometry {\n        <span style=\"color:blue\">static</span> Point : <span style=\"color:blue\">new</span> () =&gt; GeometryPoint;\n        <span style=\"color:blue\">static</span> Point : <span style=\"color:blue\">new</span> (x: number, y: number) =&gt; GeometryPoint; // error\n    }\n}<br></pre>\r\n</div>\r\n",
+    "PostedDate": "2012-10-13T08:39:55.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926243",
+    "ThreadId": "399101",
+    "Html": "\r\n<p>You might consider something like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> OLGeometry {\r\n    id: string;\r\n    parent: OLGeometry;\r\n    ...\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> OLPoint <span style=\"color:blue\">extends</span> OLGeometry {\r\n    x: number;\r\n    y: number;\r\n    ...\r\n}\r\n\r\n<span style=\"color:blue\">interface</span> OLCollection <span style=\"color:blue\">extends</span> OLGeometry {\r\n    components: OLGeometry[];\r\n    componentTypes: string[];\r\n    ...\r\n}\r\n\r\ndeclare <span style=\"color:blue\">var</span> OpenLayers: {\r\n    Geometry: {\r\n        Point: {\r\n            <span style=\"color:blue\">new</span> (): OLPoint;\r\n            <span style=\"color:blue\">new</span> (x: number, y: number): OLPoint;\r\n        };\r\n        Collection: {\r\n            <span style=\"color:blue\">new</span> (components: OLGeometry[]): OLCollection;\r\n        };\r\n        fromWKT(wkt: string): OLGeometry;\r\n        ...\r\n    };\r\n    ...\r\n};\r\n\r\n</pre>\r\n</div>\r\n<p>This is the pattern we're using in 'lib.d.ts' and 'jquery.d.ts'. The one drawback is that it doesn't allow you to use TypeScript's class syntax to create classes that derive from the OpenLayers classes. I don't know if that is a scenario.</p>\r\n<p>We'll definitely continue to think about solutions to this as the language evolves.</p>\r\n<p>Anders</p>\r\n",
+    "PostedDate": "2012-10-13T15:44:46.317-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-22T12:59:50.3-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```ts\r\ninterface A {\r\n    foo(x: number, y: number);\r\n}\r\nclass B implements A {\r\n    foo(x: number) { }\r\n}\r\n```\r\n\r\nThis is accepted by the compiler (version 0.9.5.0) even though `B.foo` doesn't have the parameter `y`.\r\n\r\nIt would be unreasonable if this is by design, since it is quite common to update the interface with new parameters and then ensure all the implementations are modified to reflect this change.",
+    "LastUpdatedDate": "2014-01-22T12:59:50.3-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-22T00:31:55.827-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "interface mismatch in implementation class not detected",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2121
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I believe this is by design see: https://typescript.codeplex.com/workitem/350",
+      "PostedDate": "2014-01-22T08:43:46.88-08:00",
+      "Id": 131174
+    },
+    {
+      "Message": "nabog is correct, this is by design. There is nothing unsafe about this operation. \n\n```TypeScript\nvar a: A;\nvar b: B;\na = b;\na.foo(1,2); // ok, this is actually calling B.foo and B.foo just didn't use the second parameter\n```\n\nThe enforcement you're thinking of isn't actually very strong anyway. Even if B.foo were required to have a parameter y of type number, there would be no enforcement that y is actually used in any way in the function body, so the actual implementation in B.foo would be the same in both cases. If you updated A.foo to have a new parameter all this rule would enforce is that B.foo also has a new parameter, not that it actually does anything with it, so what have you really gained with this check?\n\nIn fact that would arguably be worse, since in its current form the declaration of B.foo is clearly stating that it is not using a second parameter, while a form that was required to include all additional parameters from its base class implementations would now require close inspection of the function body to actually understand which parameters were used and which were merely there to satisfy this compiler rule.",
+      "PostedDate": "2014-01-22T12:59:43.11-08:00",
+      "Id": 131199
+    }
+  ]
+}

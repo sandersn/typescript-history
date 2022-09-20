@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.16-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "I found a bit of a hypocritical situation that I think needs rectifying.  Native JavaScript types such as \"String\" allow being called with \"new\" or without, but TS doesn't allow this for custom types.  For example:\r\n\r\n```\r\ndeclare var String: {\r\n    new (value?: any): String;\r\n    (value?: any): string;\r\n    prototype: String;\r\n    fromCharCode(...codes: number[]): string;\r\n}\r\n```\r\n... is in the lib.d.ts, but ...\r\n```\r\nclass MyString {\r\n\tconstructor(value?: any) { }\r\n}\r\n\r\nvar myStr: {\r\n    new (value?: any): MyString ;\r\n    (value?: any): MyString ;\r\n} = MyString;\r\n```\r\n Is not allowed.  It should be for the same reasons I can call \"var s = String();\" if I choose to.\r\n\r\nNote: I know this can be forced using \"<any>\".\r\n\r\n__Edit: Best work-around so far:__\r\n\r\n```\r\nmodule System {\r\n\t// base type\r\n\texport declare function GameObject(val: number): GameObject.GameObject;\r\n\texport module GameObject {\r\n\t\texport var CONSTVAL = 1;\r\n\t\texport class GameObject { constructor(val: number) { } }\r\n\t}\r\n\t// example extension\r\n\texport declare function GameObjectDerived(val: string): GameObjectDerived.GameObjectDerived;\r\n\texport module GameObjectDerived {\r\n\t\texport var CONSTVAL2 = 2;\r\n\t\texport class GameObjectDerived extends GameObject.GameObject { constructor(val: string) { super(0); } }\r\n\t}\r\n}\r\nvar obj = System.GameObject(System.GameObject.CONSTVAL);\r\nvar dobj = System.GameObjectDerived(\"\");\r\n```\r\n_(note: System.GameObject is defined when registered in another step [not shown])_\r\n\r\n__Proposed Solution:__\r\n```\r\nclass A {\r\n    [index: number]: A; // <- since you can already do this\r\n    (...args): A; // <- why not allow this also?\r\n    constructor(...args) { }\r\n}\r\n\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-25T05:20:54.713-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Allow call signatures on classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2464
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Invoking `MyString()` without `new` creates an object with an incorrect `__proto__`; this would only be an OK thing to do if `MyString`'s `constructor` were written specially to account for the case where it's invoked for a function.\n\nAsking you to cast here to assert that you've correct implemented that special behavior in the constructor seems entirely reasonable. Can you elaborate on why this should be allowed as-is?",
+      "PostedDate": "2014-04-25T09:44:05.24-07:00",
+      "Id": 143066
+    },
+    {
+      "Message": "Yes - for game framework development, calling \"new Type()\" is just a BAD idea (because of the GC), so I'm building a system that instead should call the types directly to use internal object pools.  I need the end users to be able to call `var newType = SomeModule.Type();`.  Currently, they would have to call `var newType = SomeModule.Type.createType();` which I'd rather not enforce.\n\nI considered a possible alternative, which was to replace the \"SomeModule.Type\" with a bridge-function, but the end result is the same: You just cannot call `Type()` directly, so I'm force to have to duplicate the constructor signature *twice`: once for the constructor, and again for \".createType();\".  Since I expect end users to extend these types, this is complicating the issue for them.",
+      "PostedDate": "2014-04-25T11:46:40.7-07:00",
+      "Id": 143089
+    },
+    {
+      "Message": "FYI: I also have static properties on those types, so I need the class references on the modules, but have the ability to call the types as well.",
+      "PostedDate": "2014-04-25T11:59:56.047-07:00",
+      "Id": 143090
+    },
+    {
+      "Message": "The only other work around I can think of is to have `SomeModule.Type` be a function, and `SomeModule.Type.Type` be the actual type - but that just seems like a poor way to do things.",
+      "PostedDate": "2014-04-25T12:01:38.377-07:00",
+      "Id": 143093
+    },
+    {
+      "Message": "Here's is a workaround for ME as the API developer:\n\n```\nmodule System {\n\texport class TGameObject {\n\t\tstatic CONSTVAL = 1;\n\t}\n\texport interface IGameObject extends TGameObject {\n\t\t(val: number): IGameObject;\n\t}\n\texport var GameObject: IGameObject = <any>TGameObject;\n}\nvar obj = System.GameObject(System.TGameObject.CONSTVAL);\n```\nI should not have to expect *end users* of the API to have to do all this just to create their own types.  Should users have to remember to prefix \"T\" or some other name for the type, and call the other one to create a type? It's just silly.",
+      "PostedDate": "2014-04-25T12:37:18.15-07:00",
+      "Id": 143100
+    },
+    {
+      "Message": "Work around v2 (better for usage, but still don't like the idea of the class type being a _separate_ property on the module):\n\n```\nmodule System_v2 {\n\t// base type\n\texport class TGameObject { constructor(val: number) { } }\n\texport function GameObject(val: number): TGameObject { return null; }\n\texport module GameObject {\n\t\texport var CONSTVAL = 1;\n\t}\t \n\t// example extension\n\texport class TGameObjectDerived extends TGameObject { constructor(val: string) { super(0); } }\n\texport function GameObjectDerived(val: string): TGameObjectDerived { return null; }\n\texport module GameObjectDerived {\n\t\texport var CONSTVAL2 = 2;\n\t} \n}\nvar obj2 = System_v2.GameObject(System_v2.GameObject.CONSTVAL);\nvar dobj2 = System_v2.GameObjectDerived(\"\");\n\n```",
+      "PostedDate": "2014-04-25T14:02:45.187-07:00",
+      "Id": 143114
+    },
+    {
+      "Message": "I have a possible solution: Just allow this:\n```\nclass A {\n    [index: number]: A; // <- since you can already do this\n    (...args): A; // <- why not allow this also?\n    constructor(...args) { }\n}\n```\n\nAnd let the developers decide when to allow classes to support it.  This way nothing current has to change.  This signature is already accepted on the interface, just like the indexing support declarations.",
+      "PostedDate": "2014-04-25T16:52:18.58-07:00",
+      "Id": 143137
+    },
+    {
+      "Message": "That's a reasonable suggestion.",
+      "PostedDate": "2014-04-28T10:09:42.323-07:00",
+      "Id": 144975
+    },
+    {
+      "Message": "That @jamesnw suggestion is quite good, going a little further this :\n\n```typescript\nclass A {\n  (): string {\n    //do something\n    return 'hello world';\n  }\n  constructor(): A {\n    //do something else\n  }\n}\n```\ncould be transformed into that :\n```javascript\nfunction A() {\n  if (!(this instanceof A)) {\n    //do something\n    return 'hello world';\n  } else {\n    //do something else\n  }\n}\n```\nAllowing some kind of function/class merging",
+      "PostedDate": "2014-05-13T10:18:38.187-07:00",
+      "Id": 146450
+    },
+    {
+      "Message": "I like that addition also - I've actually done the same thing on a few occasions (to prevent calling directly and polluting the global scope).  Also, it's inline with how the native constructors work (call with 'new' to return an instance, or call by itself to return a new instance).",
+      "PostedDate": "2014-05-13T14:52:14.813-07:00",
+      "Id": 146495
+    }
+  ]
+}

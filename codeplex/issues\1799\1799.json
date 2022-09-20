@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The end result of your solution and the use of the '-out' compiler switch is identical; we will add better VS support for the scenario.\n\nThe added benefit of using the compiler is that it gives you the ability to name the output file.",
+    "ClosedDate": "2013-10-17T17:25:03.03-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Hi Guys,\r\n\r\nI've got a feature proposal for you.  I dug around the TypeScript documentation a bit because I thought that the feature I want to recommend would already have been implemented.  Unless I've missed something, it doesn't appear to be.  So here's the proposal:\r\n\r\nMy starting point for using TypeScript was to add a little more type-safety and structure to my JavaScript.  To take one example, a page in an application I'm working on is basically a mini-SPA (Single Page Application).  Now it's been ported over from JavaScript to TypeScript the single file that powers this SPA contains:\r\n\r\n- 2 interfaces\r\n- 2 classes\r\n- 1 enum\r\n\r\nBesides this there's a little bootstrapping code that runs to initialise the SPA when the page loads.\r\n\r\nSo what I'd quite like to do is break out the above interfaces / classes / enum into their own TypeScript files rather than having them all in a single file.  Then I could reference these artefacts in a bootstrapper file (eg Bootstrapper.ts).\r\n\r\nBefore you cry \"but you can do that already using require!\" - yes I know I could individually compile each TypeScript file and use the external modules functionality to load up the compiled JavaScript.  But since I've only broken out these interfaces / classes / enum for reasons of ease of use that doesn't make much sense to me.  What I'd like is to be able to have a different type of __import__ statement which, if used, effectively included the referenced TypeScript files in the file that referenced them.\r\n\r\nHere's an example of how I imagine this possibly working.  I have a file called ItemViewModel.ts: \r\n\r\n```ts\r\nmodule mySpa{ \r\n  export class ItemViewModel{\r\n    name: string;\r\n    price: number;\r\n  }\r\n}\r\n```\r\n \r\nAnd a file called ViewModel.ts: \r\n\r\n```ts\r\nmodule mySpa{ \r\n  export class ViewModel{\r\n    items: ItemViewModel[];\r\n    initialise = () => {\r\n        //Do some initialisation\r\n    }\r\n  }\r\n}\r\n```\r\n \r\nThen in my Bootstrapper.ts file I have this: \r\n\r\n```ts\r\nimport \"ViewModel.ts\"\r\nimport \"ItemViewModel.ts\"\r\n(function(){ \r\n  var viewModel = new mySpa.ViewModel();\r\n  viewModel.initialise();\r\n}());\r\n```\r\n\r\nThe __import__ statements tell the compiler to pull in ViewModel.ts and ItemViewModel.ts and during compilation the output of ViewModel.ts and ItemViewModel.ts is included in the output of Bootstrapper.ts.\r\n\r\nNow that I've set out my \"this is a feature I think TypeScript ought to have\" please feel free to tell me \"it already does - here's how you do it\"... I'm happy to be set straight!",
+    "LastUpdatedDate": "2013-11-19T16:07:08.723-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-17T07:02:38.097-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Compile-time import / require of TypeScript files / modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1799
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "isn't it as \"commonjs\" compile option instead of ADM compile?\nwhat is the difference?\n",
+      "PostedDate": "2013-10-17T07:38:06.683-07:00",
+      "Id": 118714
+    },
+    {
+      "Message": "Hi @dardino,\n\nMy understanding is that both CommonJS / AMD concern the loading of _____external_____ modules ( see 11.2.5 and 11.2.6 in the TypeScript spec http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf ) after they have been compiled separately.\n\nMy suggestion is essentially about importing ___internal___ modules as part of the TypeScript compilation step.",
+      "PostedDate": "2013-10-17T08:47:45.16-07:00",
+      "Id": 118720
+    },
+    {
+      "Message": "If I understand the scenario correctly, then this is achieved today with /// <reference tags, and the --out compiler option.\n\nIf your source files /// <reference> the files they depend on (i.e. Bootstrapper.ts would have a reference for ViewModel.ts, and ViewModel.ts one for ItemViewModel.ts), then those files will get pulled into the compilation.  If you use the --out compiler switch, then all these source files will be output to the one JavaScript file.\n\nIf I misunderstood and this is the type of thing you were looking for, then please reopen with further details.  Thanks!",
+      "PostedDate": "2013-10-17T11:56:43.173-07:00",
+      "Id": 118754
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 10/17/2013 11:56AM",
+      "PostedDate": "2013-10-17T11:56:49.85-07:00",
+      "Id": 118767
+    },
+    {
+      "Message": "Hi Billti,\r\n\r\nI'm afraid not - the out compiler switch (as I understand it) concatenates files together.  If you want to use this then you have to do so on the command line and specify there the files you want to combine.  I see where you're going but that's not the same as what I'm suggesting.\r\n\r\nI want to provide the same control from within the TypeScript file which would allow users to use this from the compiler command line or using the Visual Studio plug-in.  I hope that's clear - let me know if not.\r\n\r\nI've re-opened the issue.",
+      "PostedDate": "2013-10-17T13:49:16.51-07:00",
+      "Id": 118769
+    },
+    {
+      "Message": "Thanks paulb,\n\nBetter VS support will hopefully sort the issue.  I suppose what I'm after is the ability to set different compiler flags on a per-file basis.  (I can still imagine there being situations in which I want to compile different files in different ways)\n\nI don't know if that would be best achieved by settings against a file in the csproj (or equivalent) file or in the text of the individual files themselves.  (eg actually specifying compiler flags in the text of the TS file)\n\nI guess either would work for me...",
+      "PostedDate": "2013-10-17T22:45:57.757-07:00",
+      "Id": 118799
+    }
+  ]
+}

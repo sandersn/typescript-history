@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1015932",
+    "ThreadId": "436777",
+    "Html": "These three classes illustrate a compiler issue that I consider a flaw:<br />\n<pre><code>interface BaseInterface { /* ... */ };\ninterface Implementor { new (): BaseInterface; };\n\nclass notInlined {\n    private newableType: Implementor;\n    private instance: BaseInterface;\n\n    public set NewableType(value: Implementor) {\n        this.newableType = value;\n\n        if (value) this.instance = new value();\n    }\n\n    public get NewableType(): Implementor {\n        return this.newableType;\n    }\n}\n\nclass inlined {\n    private newableType: { new (): BaseInterface; };\n    private instance: BaseInterface;\n\n    public set NewableType(value: { new (): BaseInterface; }) {\n        this.newableType = value;\n\n        if (value) this.instance = new value();\n    }\n\n    public get NewableType(): { new (): BaseInterface; } { // *** &quot;Getter and setter types do not agree&quot;\n        return this.newableType;\n    }\n}\n\nclass inlined2 {\n    private newableType: { new (): BaseInterface; };\n    private instance: BaseInterface;\n\n    public set NewableType(value: { new (): BaseInterface; }) {\n        this.newableType = value;\n\n        if (value) this.instance = new value();\n    }\n\n    public get NewableType() { // *** &quot;Getter and setter types do not agree&quot;\n        return this.newableType;\n    }\n}</code></pre>\n\nThe notInlined example compiles fine but the inlined and inlined2 example gets an error &quot;Getter and setter types do not agree&quot;.  inlined2 is only different in that its getter omits its return type specification.\r<br />\n<br />\nI sorta understand that the reason for this error could be that while the type definitions are identical, each is compiled as a distinct type and so the type inferencer sees them as different.\r<br />\n<br />\nBut the rest of the language is so ducky, I think this ought to be accommodated too.  See inlined3, below!  NewableType____() getter has a different name but does specify the type.  This example has no errors <strong><em>EVEN THOUGH</em></strong> the return type of the getter is distinctly defined from that of private newableType.<br />\n<pre><code>class inlined3 {\n    private newableType: { new (): BaseInterface; };\n    private instance: BaseInterface;\n\n    public set NewableType(value: { new (): BaseInterface; }) {\n        this.newableType = value;\n\n        if (value) this.instance = new value();\n    }\n\n    public get NewableType____(): { new (): BaseInterface; } {\n        return this.newableType;\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-03-15T07:36:52.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017055",
+    "ThreadId": "436777",
+    "Html": "The inline and inlined2 examples look like there's a bug in the getter/setter type resolution.  I'll file this one so we can take a look at it.<br />\n\r<br />\nNot sure about inlined3, as I don't see how the types differ between newableType and NewableType___'s return.  Aren't they both { new (): BaseInterface; }?<br />\n",
+    "PostedDate": "2013-03-18T07:09:41.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017056",
+    "ThreadId": "436777",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/827\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-03-18T07:09:53.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017073",
+    "ThreadId": "436777",
+    "Html": "Hi Jon,\r<br />\n<br />\nThanks!\r<br />\n<br />\nI'm not sure what you mean about inlined3.   I think you think I was saying that inlined3 doesn't work.  Perhaps based on my ambiguous usage of &quot;distinctly&quot;?\r<br />\n<br />\nMy point is that inlined3 DOES work.  In 1 and 2, the getter/setter names are the same so they have to match but the (assumed) bug says they don't match.  I was asking why does 3 work fine, if there is a good reason for 1 and 2 not to work.\r<br />\n<br />\nInlined3 is a counter-example showing that the type resolver can otherwise recognize that the types are identical.  And I included this because it illustrates both the narrowing and widening type cases.  If I only tested the setter, well maybe the narrowing case works but not the widening case or vise versa.<br />\n\r<br />\nYou get me?<br />\n",
+    "PostedDate": "2013-03-18T07:36:18.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017135",
+    "ThreadId": "436777",
+    "Html": "This is just a bug (see <a href=\"http://typescript.codeplex.com/workitem/691\" rel=\"nofollow\">http://typescript.codeplex.com/workitem/691</a>) -- if the setter appears before the getter and the type is any anonymous type, you'll get this error. As a work-around, just move the getter above the setter.<br />\n",
+    "PostedDate": "2013-03-18T08:48:23.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

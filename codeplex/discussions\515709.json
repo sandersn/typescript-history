@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1185755",
+    "ThreadId": "515709",
+    "Html": "Taylor Mullen &amp; I were mulling about constructor overloads and function overload helpers and came up with the following.<br />\n<pre><code>class Rectangle {\n    constructor(x: number, y: number, width: number, height: number) =&gt; (new eg.Vector2d(x, y), new eg.Size2d(width, height));\n    constructor(position: eg.Vector2d, size: eg.Vector2d) {\n        /* notice we don't supply a final constructor */\n        this.Position = position;\n            this.Size = size;\n    }\n}</code></pre>\n\nBehind the scenes when compiling to javascript it could generate the following<br />\n<pre><code>var Rectangle = (function () {\n    function Rectangle(arg1, arg2, arg3, arg4) {\n        if(arg1 &amp;&amp; arg2 &amp;&amp; arg3 &amp;&amp; arg4 &amp;&amp; \n           typeof arg1 === &quot;number&quot; &amp;&amp; typeof arg2 === &quot;number&quot; &amp;&amp;\n           typeof arg3 === &quot;number&quot; &amp;&amp; typeof arg4 === &quot;number&quot;) {\n            arg1 = new eg.Vector2d(arg1, arg2); /* this code comes from the declaration mapping itself with remapped arguments */\n            arg2 = new eg.Size2d(arg3, arg4);\n        }\n        this.Position = arg1;\n        this.Size = arg2;\n    }\n    return Rectangle;\n})();\n</code></pre>\n\nThe idea is you define a mapping from one constructor to another and the compiler generates the code involved to translate from constructor a to constructor b. The main portion of the generated code would be for parameter type checking. The rest of the code is actually supplied by the conversion.<br />\n<br />\nThis is obviously a very specific example and there are already issues I can see with it as it wouldn't support type checking against interfaces so two constructors with the same number of params only differing by interface type.<br />\n<br />\nHowever this does solve a major issue with constructor overloading.<br />\n",
+    "PostedDate": "2014-01-20T18:12:54.737-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1188193",
+    "ThreadId": "515709",
+    "Html": "We've looked into having separate functions for overloads, but unfortunately it doesn't work in all cases.  For example, I'm not sure what the compiler would produce in an example that overloaded on function type:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">class</span> Rectangle {\n    <span style=\"color:Blue;\">constructor</span>(x: (y: <span style=\"color:Blue;\">number</span>)=&gt;<span style=\"color:Blue;\">number</span>) { ... }\n    <span style=\"color:Blue;\">constructor</span>(x: (y: <span style=\"color:Blue;\">string</span>)=&gt;<span style=\"color:Blue;\">string</span>) { ... }\n}\r\n</pre></div>Here, I believe all we see for typeof is that they are both typeof &quot;function&quot;.<br />\n",
+    "PostedDate": "2014-01-21T10:59:10.647-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1188278",
+    "ThreadId": "515709",
+    "Html": "That looks to be running different code depending on constructor. My goal was to use the existing constructor declarations that we're forced to use anyway but allow a simpler way of mapping parameters from one constructor to another. so...<br />\n<pre><code>class Rectangle {\n    constructor(x: (y: number) =&gt; number);\n    constructor(x: (y: string) =&gt; string);\n    constructor(g: any) {\n         //you can't tell what g is here anyway\n    }\n}</code></pre>\n\nIn this example mapping wouldn't do anything anyway since you have to handle it as if it was typeless but the examples I gave allow you to just massage the incoming data rather than run different code based on incoming data. You're still constrained to the limitations of js.\r<br />\n<br />\nIn this type of example if you were to provide =&gt; mapping on the first constructor to the second one the compiler could give a warning saying that the signature types couldn't be determined or something.<br />\n",
+    "PostedDate": "2014-01-21T11:38:10.453-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed with http://typescript.codeplex.com/SourceControl/changeset/9b7b0e5e2f76cdf2f97a66c9835545ee07cd4291",
+    "ClosedDate": "2013-07-30T18:35:38.777-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\nvar foo = (dummy) => { };\r\n\r\nfunction test()\r\n{\r\n\tfoo(() =>\r\n\t\tfunction () { return 0; }\r\n\t);\r\n}\r\n```\r\n\r\ncompiles to:\r\n\r\n```\r\nvar foo = function (dummy) {\r\n};\r\n\r\nfunction test() {\r\n    foo(function () {\r\n        return function () {\r\n            return 0;\r\n        };\r\n    });\r\n}\r\n```\r\n\r\nHowever, by referring to \"this\" in the function (which should not introduce a need to have a \"_this\" variable because it is not a lambda expression):\r\n\r\n```\r\nvar foo = (dummy) => { };\r\n\r\nfunction test()\r\n{\r\n\tfoo(() =>\r\n\t\tfunction () { return this; }\r\n\t);\r\n}\r\n```\r\n\r\ncreates the \"_this\" variable which is not necessary:\r\n\r\n```\r\nvar foo = function (dummy) {\r\n};\r\n\r\nfunction test() {\r\n    var _this = this;\r\n    foo(function () {\r\n        return function () {\r\n            return this;\r\n        };\r\n    });\r\n}\r\n```\r\n\r\nNow, if I remove the enclosing lambda:\r\n\r\n```\r\nvar foo = (dummy) => { };\r\n\r\nfunction test()\r\n{\r\n\tfoo(function () { return this; });\r\n}\r\n```\r\n\r\n\"_this\" no longer shows up:\r\n\r\n```\r\nvar foo = function (dummy) {\r\n};\r\n\r\nfunction test() {\r\n    foo(function () {\r\n        return this;\r\n    });\r\n}\r\n```\r\n\r\nIn other words, \"this\" is detected to be used inside a lambda express, even though it is further inside a \"function\" statement.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-19T03:23:10.78-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Detection of when _this is needed is faulty",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1174
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. Per 4.2 The this Keyword in the language spec:\n\nIn the body of an arrow function expression, references to this are rewritten in the generated JavaScript code, as described in section 4.9.2.\n\nOnce you are inside the body of an arrow function references to 'this' are rewritten. The compiler does not attempt to pop in and out of this state depending on the ordering of nested function/fat arrow calls.\n\r\n\r** Closed by danquirk 06/20/2013 8:05PM",
+      "PostedDate": "2013-06-20T20:05:13.48-07:00",
+      "Id": 103974
+    },
+    {
+      "Message": "I realize I misread the last bit. That does look like a bug, marking as active.",
+      "PostedDate": "2013-06-24T14:07:29.017-07:00",
+      "Id": 103975
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for tracking down the original, jamesnw.\n\nhttps://typescript.codeplex.com/workitem/2352",
+    "ClosedDate": "2014-04-14T09:04:07.957-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "It seems Typescript is incorrectly inferring the type of the initialValue for Array.prototype.reduce. In the code below, you can see I'm giving reduce an empty array as the initial value, however the compiler (1.0.0.0) throws an error: The property 'concat' does not exist on value of type '{}', followed by an error on the later operation: The property 'filter' does not exist on value of type '{}'.\r\n\r\nI feel like either I'm doing something wrong here, or Typescript is not inferring correctly. I haven't had this problem with other reduce operations.\r\n\r\n\r\n```\r\nexport class Analysis {\r\n    constructor(\r\n        public analysisType: AnalysisType,\r\n        public cruises: Cruise[],\r\n        public filters: AnalysisFilter,\r\n        public calcVariables: AnalysisCalculationVariables\r\n    ) {\r\n    }\r\n\r\n    getObservationSet() {\r\n        var cruises = this.cruises;\r\n        var observations = cruises.reduce((acc, cruise) => {\r\n            // The property 'concat' does not exist on value of type '{}'\r\n            return acc.concat(cruise.observations);\r\n        }, []);\r\n\r\n        var spatial = this.filters.spatial;\r\n        var temporal = this.filters.temporal;\r\n        \r\n        // The property 'filter' does not exist on value of type '{}'\r\n        return observations.filter((obs) => {\r\n            if (obs.latitude < spatial.latS || obs.latitude > spatial.latN ||\r\n                obs.longitude < spatial.longW || obs.longitude > spatial.longE) {\r\n                return false;\r\n            }\r\n\r\n            return true;\r\n        });\r\n    }\r\n}\r\n\r\n```",
+    "LastUpdatedDate": "2014-04-14T09:04:07.957-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-11T20:01:30.993-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Incorrect Type Inference for Array.prototype.reduce",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2426
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm going to take a wild guess and assume that since reduce passes ANY value from the result of the previous operation (not just initial) as the \"acc\" param, how can it *assume* it's always an array? :)",
+      "PostedDate": "2014-04-11T23:38:27.71-07:00",
+      "Id": 141561
+    },
+    {
+      "Message": "That doesn't seem right though, because the type inference has two options here, type any or type array. If it's type array then the accumulator and return value MUST be an array, because in Typescript you don't get to change the type of variables once they've been declared. If it's any then there's no compile error because there's no checking.\n\nI mean I can get around this via type annotation, so it's not a blocker, but it just seems like I shouldn't have to type annotate here, the compiler inferring '{}' is completely inaccurate when the initialValue is an array.\n\n```\n        var observations: any[] = cruises.reduce((acc: any[], cruise) => {\n            return acc.concat(cruise.observations);\n        }, []);\n```\n\nMaybe the problem is in the definition files though. Not really familiar with the Typescript source but maybe it's time I dug in properly.",
+      "PostedDate": "2014-04-12T02:01:06.577-07:00",
+      "Id": 141571
+    },
+    {
+      "Message": "It would seem this is a TS inference limitation:\nhttps://typescript.codeplex.com/workitem/2352",
+      "PostedDate": "2014-04-12T06:35:07.533-07:00",
+      "Id": 141585
+    },
+    {
+      "Message": "Ah, okay closing.",
+      "PostedDate": "2014-04-13T04:20:40.383-07:00",
+      "Id": 141628
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once it's possible) and log an issue on the GitHub site if it still reproduces",
+    "ClosedDate": "2014-07-21T11:45:18.6-07:00",
+    "CommentCount": 23,
+    "Custom": null,
+    "Description": "We've been working on the big project for a while now using TypeScript. And I think since version 8.1.1 the whole team experienced a bug when the editor just stops processing *.ts files(coloring is gone as well).\r\n\r\nI'm attaching the log entry from from the AcitivityLog.xml. \r\nSeveral workaround help temporary make the editor working, likemannually putting typescriptServices.js to that folder (it looks like a shadowcopy folder of the addon). Or reinstalling typescript. But the error appears again and again.\r\n\r\nWe actually thought it's Web Essentials fault but it's not. After removing it we still get the error.\r\n\r\nP.S. It's still reproducible in 0.8.3.\r\n\r\nUpdate: Still reproducible in 0.9.1\r\n\r\nUpdate: Still reproducible in 0.9.5\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-07T18:01:16.65-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "VS 2012 Editors dies from time to time",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 25,
+    "Id": 794
+  },
+  "FileAttachments": [
+    {
+      "FileId": 635053,
+      "FileName": "logentr.log",
+      "DownloadUrl": ".\\635053"
+    },
+    {
+      "FileId": 694841,
+      "FileName": "ActivityLog_0.9.zip",
+      "DownloadUrl": ".\\694841"
+    },
+    {
+      "FileId": 789294,
+      "FileName": "ActivityLog_0.9.5.xml",
+      "DownloadUrl": ".\\789294"
+    },
+    {
+      "FileId": 829628,
+      "FileName": "ActivityLog.xml",
+      "DownloadUrl": ".\\829628"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this with a great log -- marking active.",
+      "PostedDate": "2013-03-08T09:31:03.267-08:00",
+      "Id": 92684
+    },
+    {
+      "Message": "Do you have any updates on this issue? This annoying behavior continue to occur for every team member even after installing 0.8.3.1\n\nThis is actually the same issue submitted by other person: https://typescript.codeplex.com/workitem/848",
+      "PostedDate": "2013-04-11T05:48:14.113-07:00",
+      "Id": 96729
+    },
+    {
+      "Message": "Fixed in develop branch\n\r\n\r** Closed by RyanCavanaugh 06/13/2013 11:22AM",
+      "PostedDate": "2013-06-13T11:22:01.847-07:00",
+      "Id": 103412
+    },
+    {
+      "Message": "The bug is still reproducible on typescript 0.9",
+      "PostedDate": "2013-06-19T05:51:00.057-07:00",
+      "Id": 103413
+    },
+    {
+      "Message": "log file is attached.",
+      "PostedDate": "2013-06-19T05:53:35.043-07:00",
+      "Id": 103414
+    },
+    {
+      "Message": "After looking at the TypeScriptLanguageService.dll in dotPeek. I found where the problem is:\n\nnamespace TypeScriptLanguageService.CompilerServices\n{\n  internal static class FileHelpers\n  {\n    public static string GetSetupLocation()\n    {\n      return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);\n    }\n\n    public static string ReadFileFromSetupLocation(string fileName)\n    {\n      string path = Path.Combine(FileHelpers.GetSetupLocation(), fileName);\n      try\n      {\n        return File.ReadAllText(path);\n      }\n      catch (Exception ex)\n      {\n        throw new Exception(string.Format((IFormatProvider) CultureInfo.InvariantCulture, \"Error while reading file: '{0}' from location: '{1}'.\", new object[2]\n        {\n          (object) fileName,\n          (object) path\n        }), ex);\n      }\n    }\n  }\n}\n\nBecause of shadow copying the assemblies Assembly.GetExecutingAssembly().Location is pointing to c:\\Users\\v.makaev\\AppData\\Local\\assembly\\dl3\\XXXX\\XXXX\n\nAgain when copying files typescriptServices.js and lib.d.ts to this mysterious folder IDE continue to work properly, but I guess it would fail because another folder will be used.\n\nCan you actually try to read some keys in registry and get the reference to \"c:\\Program Files (x86)\\Microsoft Visual Studio 11.0\\Common7\\IDE\\CommonExtensions\\Microsoft\\TypeScript\" to look up the file?",
+      "PostedDate": "2013-06-19T06:49:25.23-07:00",
+      "Id": 103426
+    },
+    {
+      "Message": "You're correct; this was not actually fixed (this bug was closed in error). We still plan to address this.",
+      "PostedDate": "2013-07-01T12:48:11.1-07:00",
+      "Id": 104788
+    },
+    {
+      "Message": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!\n\r\n\r** Closed by RyanCavanaugh 08/07/2013 11:53AM",
+      "PostedDate": "2013-08-07T11:53:44.36-07:00",
+      "Id": 108988
+    },
+    {
+      "Message": "Again I've looked in the dotPeek and couldn't find any change that could fix the problem. Can you please tell what have you done here so maybe I will find a workaround how to get rid of the problem?",
+      "PostedDate": "2013-08-08T02:40:23.013-07:00",
+      "Id": 108992
+    },
+    {
+      "Message": "We are also experiencing this issue in 0.9.1.1\n\nLet me know if you need more info.",
+      "PostedDate": "2013-09-03T02:39:06.357-07:00",
+      "Id": 111897
+    },
+    {
+      "Message": "Entire team here also experiencing this bug in 0.9.1.1.",
+      "PostedDate": "2013-09-12T02:23:58.537-07:00",
+      "Id": 113332
+    },
+    {
+      "Message": "Our team confirming as well, 0.9.1.1\n\n42 entries at once of the error.",
+      "PostedDate": "2013-09-13T00:32:51.513-07:00",
+      "Id": 113443
+    },
+    {
+      "Message": "Also confirming. 0.9.1.1",
+      "PostedDate": "2013-10-10T07:58:19.053-07:00",
+      "Id": 118035
+    },
+    {
+      "Message": "The issue has not been fixed yet. Still reproducible on 0.9.5",
+      "PostedDate": "2014-02-07T04:36:50.957-08:00",
+      "Id": 132921
+    },
+    {
+      "Message": "No reports that this is happening on 0.9.5 closing as need more info.\n\nPlease re-open when you have a repro using 0.9.5 or later.\n\r\n\r** Closed by paulb 01/17/2014 12:22PM",
+      "PostedDate": "2014-01-17T12:22:33.473-08:00",
+      "Id": 132922
+    },
+    {
+      "Message": "Please re-open the bug if you're still seeing the issue.  If possible, can you also share the project that causes this issue so we can debug what is going on?",
+      "PostedDate": "2014-02-10T11:15:12.403-08:00",
+      "Id": 133133
+    },
+    {
+      "Message": "It's a bug in codeplex or smth but I'm unable to reopen the issue. The process just hangs for a while. Tried from different computers and browsers but it doesn't reopen.",
+      "PostedDate": "2014-02-16T07:51:17.91-08:00",
+      "Id": 133704
+    },
+    {
+      "Message": "I don't have this bug reproduced on a sample project. It only happens on a real project which is quite large and I can't share this. If you read one of my former messages you'll see that Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) is not necessarily is the SetupLocation and it changes when the TypeScript plugin assembly is being shadow-copied.\n\nHave you guys actually done anything about this issue during so many releases? Or you just keep closing it hoping that it's kinda fixed indirectly?",
+      "PostedDate": "2014-02-16T08:00:51.023-08:00",
+      "Id": 133707
+    },
+    {
+      "Message": "We fixed some other issues here, but you're correct that the same issue (using Assembly.GetExecutingAssembly().Location) is still present. Marking this active again.",
+      "PostedDate": "2014-02-17T11:57:48.053-08:00",
+      "Id": 133858
+    },
+    {
+      "Message": "Someone from TypeScript team has contacted me to help reproduce the issue. \n\nOn a real project it happens from time to time but I could come up with a scenario which mimics the Visual Studio hosting an addon with shadow copy enabled. \n\nThe code can be found here:\nhttps://github.com/VladimirMakaev/typescript-bug\n\n\nThe solution contains 2 projects:\nChildProccess  - a console application that references TypeScriptLanguageService.dll. The reference to a TypeScriptLanguageService.dll has intentionally CopyLocal=false to prevent the dll to be copied in the wrong folder. But the probing path is set to TypeScript. For that to work you have to manually set OutputDir for this project to the folder C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\IDE\\CommonExtensions\\Microsoft\\ (adjust if you have another vs installation folder).\nThis projects writes GetSetupLocation() to the output.\n\nTypeScriptServicesHost - a console application that creates new application domain which runs ChildProcess.exe and have shadow-copy \n\nSo if you run ChildProcess you'll see C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\IDE\\CommonExtensions\\Microsoft\\TypeScript in the output.\n\nBut if you run TypeScriptServicesHost you'll see something like C:\\Users\\v.makaev\\AppData\\Local\\assembly\\dl3\\VTYCJYCB.51X\\JT6B6H89.PM2\\06a7bfe7\\\n\n(Hint: to fix the bug you'll probably need to use Assembly.GetExecutingAssembly().CodeBase in the GetSetupLocation but I'm not sure)\n\n\n",
+      "PostedDate": "2014-02-20T02:18:43.57-08:00",
+      "Id": 134182
+    },
+    {
+      "Message": "Still reproducible on 1.0 RC. Could you please fix this. Looks like fix is quite simple and this bug is really annoying forcing you restart VS few times a day. It is really spoil TS experience.",
+      "PostedDate": "2014-03-02T23:54:39.467-08:00",
+      "Id": 135589
+    },
+    {
+      "Message": "Still getting the error. I use VS 12 and have recently upgraded to TypeScript 1.0. I am constantly needing to uninstall and re-install TypeScript. \r\n\r\nThe bug occurs every time I switch solutions or restart the computer. Attached is the activity log with the error.",
+      "PostedDate": "2014-04-18T07:37:52.96-07:00",
+      "Id": 142324
+    },
+    {
+      "Message": "This supposed to be fixed in the latest bits, can you please check if you have TypeScriptConfigurationSettings registry key (it should be somewhere around HKEY_CURRENT_USER\\Software\\Microsoft\\VisualStudio\\<version>.0_Config\\TypeScriptConfigurationSettings)?",
+      "PostedDate": "2014-04-21T15:11:27.16-07:00",
+      "Id": 142537
+    }
+  ]
+}

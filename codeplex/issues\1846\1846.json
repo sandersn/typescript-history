@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.19-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Hi, I expected this to work but it doesn't:\r\n\r\n```\r\nFile1:\r\nexport module A {\r\n    export module B {\r\n        export class X {\r\n        }\r\n    }\r\n}\r\n\r\nFile2:\r\nimport mod = require(\"File1\");\r\nimport A = mod.A; // (A is now a module)\r\n\r\nexport module A { // (this should be added to the previous 'A' [JS wise, this seems valid])\r\n    export module B {\r\n        export class Y extends X {\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThis should be allowed so that 'X' in File2 is recognized by the compiler (and intellisense). If I type \"import f2 = require(\"File2\")\", I would expect that internal module A from File1 is also available (and thus, \"f2.A.B.X\" would be recognized as valid by the compiler/intellisense).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-28T11:17:35.697-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Two internal modules from different module files need to be allowed to merge.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1846
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Assigning to Jonathan to investigate what this might look like. Per spec (10.5), these modules do not merge because they do not originate from the same globally-qualified name.",
+      "PostedDate": "2013-10-28T12:42:45.373-07:00",
+      "Id": 119897
+    },
+    {
+      "Message": "Officially, sure, but if you look at the JavaScript produced, it \"attaches\" the new internal module, sub-modules, and types to any existing internal module that exists in the \"exports\" object (ie. \"(function(A){/*...*/})(exports.A||exports.A={});\").",
+      "PostedDate": "2013-10-28T14:23:18.19-07:00",
+      "Id": 119928
+    },
+    {
+      "Message": "Related discussion: https://typescript.codeplex.com/discussions/463498#post1113726\n\nGood to know this is on the radar. ;)",
+      "PostedDate": "2013-10-29T08:55:55.573-07:00",
+      "Id": 120043
+    },
+    {
+      "Message": "@jamesnw\n\nBeing able to merge across external modules or through import aliases is actually called out in the language spec as something that is disallowed:\n\nFrom 10.5: \"Declaration merging does not apply to local aliases created by import declarations. In other words, it is not possible have an import declaration and a module declaration for the same name within the same module body.\"\n\nOne reason behind this is that it complicates the compiler and the language service.  Where you would only have to track exact paths for declaration merges, with this any symbol could be a potential merge, and you'd have to track them to see if they were aliases of a potential other merge target.  \n\nAn example of how complex this gets, in miniature:\n\n```TypeScript\nclass X {\n  a: number;\n}\n\nmodule Y {\n  export module Z {\n    export var c: number;\n  }\n  export var b: number;\n}\n\nexport X = Y.Z\n```\n\nReasoning about scope, symbols, etc, because very complex quickly.\n",
+      "PostedDate": "2013-10-29T09:56:59.367-07:00",
+      "Id": 120057
+    },
+    {
+      "Message": "That's fine, but my example was contrived to make a point - we need module merging, not necessarily my way of doing it. ;)  If I have multiple modules in my project (like multiple DLLs in a C# project), I should be able to reference one from another accordingly, just like making a reference in a C# project to anther DLL before it loads, correct? ;)",
+      "PostedDate": "2013-10-29T10:18:07.223-07:00",
+      "Id": 120059
+    },
+    {
+      "Message": "You can reference modules using their qualified names.  I'm not clear on why you need to merge across modules.  What are you trying to do?",
+      "PostedDate": "2013-10-29T16:26:56.3-07:00",
+      "Id": 120119
+    },
+    {
+      "Message": "You can reference types in .NET DLLs using fully qualified names also, but how many people actually do? ;) (nor want to)\n\nAre you aware that it is a good idea to load only scripts you need on a web page?  Are you also aware that Visual Studio compiles all my TS files into _individual_ JS files?  Are you aware that loading the .js files in the wrong order can cause issues? (because there can be dependencies - each _internal_ module in the global scope (not to be confused with a module file) in a loaded .js file will \"add to\" any existing internal module of the same name).  That is what I am referring to, the ability to build my whole web app in one project, and delay load certain scripts (I'm doing this now with a work around).\n\nFrankly, I prefer not to use module files.  In fact, I do this now, only loading the script files I need when they are needed.  Currently, I work under my own framework.\n\nExample:\n    module SomeSite {  export class Application { } }\n    var app: SomeSite.Application = new SomeSite.Application();\nThen I have a static function in the module for loading a script:\n    SomeSite.using(\"additionalModule\", ()=>{ /* ... do stuff when available */} )\nNow my cool new module may actually be:\n    module SomeSite {  export class SomethingCool { } }\nAnd when the script file loads and executes, I suddenly have \"app.SomethingCool\" available.\n\nSo, originally, when developing my \"Application\", I have full intellisense for the not-yet-loaded scripts.  It's up to me to make sure the dependent scripts have loaded before calling functions dependent on types that are in them.  You cannot do this well with module files.  Anyhow, I have to resort to creating a \"manifest.js\" file to setup my dependency details, because TS won't allow me to delay-call modules (that is, to allow me to decide when to actually invoke the function that sets up the module properties).\n\nOne idea might be to allow something like:\n    var callback = delayed module SomeModule { ... };\nwhich might produce:\n    var SomeModule;\n    var callback = function() { {function(SomeModule){/*...*/})(SomeModule || SomeModule = {}); };\nWhich would allow developers to do whatever with the callback reference - this way I can use any dependency library I want, or create my own.\n    ",
+      "PostedDate": "2013-10-29T20:10:31.127-07:00",
+      "Id": 120138
+    },
+    {
+      "Message": "I have another test case at https://typescript.codeplex.com/discussions/510391 that may be related to this issue. It also concerns merging modules across files, yet it is only triggered when an external module import is involved.",
+      "PostedDate": "2014-01-19T02:37:49.893-08:00",
+      "Id": 130820
+    }
+  ]
+}

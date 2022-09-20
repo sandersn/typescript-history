@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces",
+    "ClosedDate": "2014-07-21T12:09:01.04-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "We recently converted our project to use external modules instead of internal modules. This means we are now using TypeScriptOutDir instead of TypeScriptOutFile.\r\n\r\nWe have our project structure as follows:\r\n\r\n    root/\r\n        font/\r\n        js/\r\n            source/\r\n                app/\r\n        ts/\r\n            app/\r\n\r\nThe TypeScriptOutDir is set to\r\n    $(ProjectDir)js\\source\r\n\r\nWhen we try to publish the web site, we get an error about the Copy step failing:\r\n\r\n    C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v11.0\\WebApplications\\Microsoft.WebApplication.targets (182): Could not copy the file \"\\app\\file.js\" because it was not found.\r\n\r\nThe interesting thing to note from the above error is the path is relative to the TypeScriptOut directory, whereas all other files in this Copy step are relative to the root (i.e. font/file.otf).",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-05T09:56:44.593-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "VS Publish 'file not found' problems with TypeScriptOutDir",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 12,
+    "Id": 2489
+  },
+  "FileAttachments": [
+    {
+      "FileId": 835501,
+      "FileName": "Publish.zip",
+      "DownloadUrl": ".\\835501"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "It should be noted that if we take out the TypeScriptOutDir and let the compiler output js files adjacent to their ts files, the publish works fine.",
+      "PostedDate": "2014-05-05T10:02:46.117-07:00",
+      "Id": 145602
+    },
+    {
+      "Message": "It sounds like you have some files \"included\" in your project that aren't actually being built - can you try removing them?\n\nIf that doesn't fix it, could you upload a zip file with a project that reproduces the error? Thanks!",
+      "PostedDate": "2014-05-05T12:02:45.097-07:00",
+      "Id": 145614
+    },
+    {
+      "Message": "I've attached a simple project which shows the problem.\r\nRight click the Test project, and publish.\r\nThe release config has the TypeScriptOutDir set.\r\n\r\nIf you remove the TypeScriptOutDir, the publish will work",
+      "PostedDate": "2014-05-05T14:40:03.53-07:00",
+      "Id": 145628
+    },
+    {
+      "Message": "I am using VS 2013 Premium, with the latest version of TS installed.",
+      "PostedDate": "2014-05-05T14:46:05.173-07:00",
+      "Id": 145630
+    },
+    {
+      "Message": "Confirmed. Root cause here is that our msbuild task doesn't correctly report output items when compiling to an outdir, so the wrong filename is being looked for.",
+      "PostedDate": "2014-05-06T11:33:01.38-07:00",
+      "Id": 145714
+    },
+    {
+      "Message": "As a quick workaround I replaced the TypeScriptCollectPublishFiles target in the TypeScript.targets file to:\n\n```\n  <Target Name=\"TypeScriptCollectPublishFiles\" DependsOnTargets=\"CompileTypeScript\" Condition=\"'$(TypeScriptOutDir)' == ''\">\n    <Message Text=\"Adding to FilesForPackagingFromProject: @(GeneratedJavascript->'%(Identity)')\"/>\n    <ItemGroup>\n      <FilesForPackagingFromProject Include=\"@(GeneratedJavascript->'%(Identity)')\"/>\n    </ItemGroup>\n  </Target>\n  <Target Name=\"TypeScriptCollectPublishFiles\" DependsOnTargets=\"CompileTypeScript\" Condition=\"'$(TypeScriptOutDir)' != ''\">\n    <Message Text=\"Adding to FilesForPackagingFromProject\"/>\n    <ItemGroup>\t\t\t\t\n        <ItemsToInclude Include=\"$([System.IO.Directory]::GetFiles(&quot;$(TypeScriptOutDir)&quot;, &quot;*.js&quot; , SearchOption.AllDirectories))\" />\n        <FilesForPackagingFromProject Include=\"@(ItemsToInclude)\">\n            <DestinationRelativePath>%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>\n        </FilesForPackagingFromProject>\n    </ItemGroup>\n    <Message Text=\"Added to FilesForPackagingFromProject: @(FilesForPackagingFromProject)\"/>\n  </Target>\n```",
+      "PostedDate": "2014-05-21T02:38:08.107-07:00",
+      "Id": 147320
+    }
+  ]
+}

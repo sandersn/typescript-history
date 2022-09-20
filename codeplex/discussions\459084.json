@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1099036",
+    "ThreadId": "459084",
+    "Html": "In some languages like Java, there is a clear distinction between, say, boolean and Boolean (primitive vs. wrapper type).\r<br />\n<br />\nHowever, according to the TypeScript spec, the lower-cased keywords are just aliases for the actual types so for example the <code>boolean</code> keyword should just reference the Boolean type (though they are not 100% &quot;compatible&quot;, i.e. functions accepting &quot;strings&quot; cannot be called with &quot;Strings&quot;).\r<br />\n<br />\nI was wondering why were these keywords introduced. Why didn't the team decide to go with full type names like for example ActionScript did?<br />\n",
+    "PostedDate": "2013-09-25T07:05:06.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099336",
+    "ThreadId": "459084",
+    "Html": "To clarify, <code>boolean</code> <em>does not</em> reference the <code>Boolean</code> interface you see in lib.d.ts. The primitive type keywords reference the primitive types, which are otherwise not named. These primitive types appear to have the members of their corresponding named interface types (e.g. values of the primitive type <code>number</code> appear to have the members of the <code>Number</code> interface).<br />\n",
+    "PostedDate": "2013-09-25T12:56:16.087-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099385",
+    "ThreadId": "459084",
+    "Html": "Ah, you may have just defined what &quot;primitive types&quot; mean for me :) This is the full definition as given in the spec:<br />\n<blockquote>\nThe primitive types are the Number, Boolean, String, Void, Null, and Undefined types and all user defined enum types.<br />\n</blockquote>\nWithout taking any assumptions (which might be a dangerous thing if you learn TypeScript with background in other languages), I thought that primitive types are defined just by their presence in that list. This is the first time I hear that primitive types are &quot;not named&quot; or special in any way - interesting but makes sense I guess.\r<br />\n<br />\nSo when I declare <code>var a: string</code>, it is of a <em>primitive type</em>, while when I do <code>var b: String</code>, it is of an <em>object type</em>? Is that right?\r<br />\n<br />\nFinal question: what if primitive types didn't exist in TypeScript and even basic variables used types like String, Number etc. What problems would it cause and why was it necessary to introduce primitive types? For example, Date doesn't have a corresponding <code>date</code> primitive type.<br />\n",
+    "PostedDate": "2013-09-25T14:31:33.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099396",
+    "ThreadId": "459084",
+    "Html": "<blockquote>\nSo when I declare var a: string, it is of a primitive type, while when I do var b: String, it is of an object type? Is that right?<br />\n</blockquote>\nYes<br />\n<blockquote>\nFinal question: what if primitive types didn't exist in TypeScript ...<br />\n</blockquote>\n<code>boolean</code> is a good example to talk about. The JavaScript boolean type itself has no members; the only reason you can call things like <code>hasOwnProperty</code> on the value <code>true</code> is because it gets implicitly converted to an object for the purpose of that call. Accordingly, the TypeScript <code>Boolean</code> interface has no members:<br />\n<pre><code>interface Boolean {\n}</code></pre>\n\nNow, thought experiment time, we remove the notion of a primitive type and say that <code>true</code> is of the interface type <code>Boolean</code> and thus has no members (other than the apparent members it gets from the global <code>Object</code> interface). Then we write code like this:<br />\n<pre><code>var x = true;\nx = { foo: 'hello' }; // OK?</code></pre>\n\nThe object literal provided is a subtype of <code>Boolean</code>, so the compiler would have to allow this for the same reason it allows assignments from <code>HTMLCanvasElement</code> to <code>HTMLElement</code>. You wouldn't want this to be allowed.\r<br />\n<br />\n<code>Date</code> is a good counter-example, because you could actually get away with passing some mock object that had all the same properties as a <code>Date</code> object to some function that expected a <code>Date</code> (minus things that actually check the prototype). There's no counterpart for the primitive types -- 'x === true' is only <code>true</code> if <code>x</code> really is a boolean, not just some other object that has the same properties as <code>true</code>.<br />\n",
+    "PostedDate": "2013-09-25T14:55:33.327-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099399",
+    "ThreadId": "459084",
+    "Html": "Correct, though 'a' will appear to have the members of the String interface type for various purposes (ex property access, assignment compatibility).\r<br />\n<br />\nThere are areas in JavaScript where doing something to a number is semantically different from doing that same thing to an object type (ex typeof, or adding a property to a number). So it would get strange if that distinction did not exist and then because of structural typing we allowed anything with Number's properties to be assigned and used with number primitive values. Further, because number is more efficient than its boxed form (Number) there's another reason for the type system to understand the difference.<br />\n",
+    "PostedDate": "2013-09-25T14:56:35.03-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1099788",
+    "ThreadId": "459084",
+    "Html": "These are excellent answers, thanks. Maybe it is described somewhere in the spec and I have just missed it.<br />\n",
+    "PostedDate": "2013-09-26T11:40:24.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,490 @@
+[
+  {
+    "Id": "957279",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>To the best of my understanding, a module is conceptually similar to an assembly in C#. That is, it is a reusable package of code that can be referenced where needed.</p>\r\n<p>I have been trying to use modules as I would have namespaces in C#, but this leads to pretty ugly code (notably: lots of wrapper code for the module definitions, lots of tedious repetitions to import other modules and lots of ugly module prefixes).</p>\r\n<p>It seems to me as if TypeScript lacks a feature that corresponds to namespaces - a way to conceptually organize your code into logically separate parts. Using modules as namespaces seems wrong as it really was designed for exposing libraries to external\r\n consumers, rather than being a language feature to help organize the internal structure of a library or application.</p>\r\n<p>Am I overlooking something?</p>\r\n<p>Note: related question posted on <a title=\"stackoverflow.com\" href=\"http://stackoverflow.com/questions/13922305/what-recommendations-exist-for-structuring-typescript-code-bases\" target=\"_blank\">\r\nstackoverflow.com</a></p>\r\n",
+    "PostedDate": "2012-12-17T14:17:40.85-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "957771",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>Modules serve a few roles (in some ways they seem a bit overloaded).&nbsp; For example, when using AMD, they're a way to structure your program into loadable modules.&nbsp;&nbsp;Used that way, they tend to get called &quot;external&quot; modules.&nbsp;</p>\r\n<p>There are also the &quot;internal&quot; modules which serve similar roles to modules and namespaces in other languages.&nbsp; These allow you to sort your code into separate modules for code organization and cleanliness.&nbsp; Like you say, you can use these for group related\r\n functionality for customers, too.&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-12-18T08:52:10.01-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "957912",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I am currently using internal modules.</p>\r\n<p>However, it feels clunky and ill suited for code organization due to the fact that you cannot implicitly import types defined in other modules - you have to prefix type names with module names. I'd still like to separate my code into smaller modules, but\r\n not at the current syntactical cost of doing so.</p>\r\n",
+    "PostedDate": "2012-12-18T12:18:16.127-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958510",
+    "ThreadId": "407063",
+    "Html": "\r\n<p><strong>&gt; lots of wrapper code for the module definitions</strong></p>\r\n<p>This was something that struck me when we first started using TypeScript, but kind of slipped into the background in the light of other issues. If you have say ten projects, each containing five TypeScript files; and each file exports a single class into\r\n a common namespace say &quot;my.classes&quot; then there will be 49 redundant &quot;var my&quot; declarations, as well as a lot more superficial code. This is highlighted in red below.&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><div style=\"color:black; background-color:white\"><pre><br></pre>\r\n<pre><span style=\"color:green\">// TypeScript</span>\r\n\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bleeter {}\r\n}\r\n\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Greeter {\t}   \r\n}\r\n</pre>\r\n</div>\r\n<br></pre>\r\n</div>\r\n<p></p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><div style=\"color:black; background-color:white\"><pre><span style=\"color:green\">// Compiled JavaScript</span>\r\n\r\n<span style=\"color:#000000\"><span style=\"color:#0000ff\">var </span>my;</span>\r\n(<span style=\"color:blue\">function</span> (<span style=\"color:#000000\">my</span>) {\r\n    (<span style=\"color:blue\">function</span> (<span style=\"color:#000000\">classes</span>) {\r\n        <span style=\"color:blue\">var</span> Bleeter = (<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">function</span> Bleeter() { }\r\n            <span style=\"color:blue\">return</span> Bleeter;\r\n        })();\r\n        classes.Bleeter = Bleeter;        \r\n    })(<span style=\"color:#000000\">my.classes || (my.classes = {}</span>));\r\n    <span style=\"color:#0000ff\">var </span><span style=\"color:#000000\">classes = my.classes;</span>\r\n})(<span style=\"color:#000000\">my || (my = {}</span>));\r\n<span style=\"color:#ff0000\">var my;</span>\r\n(<span style=\"color:blue\">function</span> (<span style=\"color:#ff0000\">my</span>) {\r\n    (<span style=\"color:blue\">function</span> (<span style=\"color:#ff0000\">classes</span>) {\r\n        <span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">function</span> Greeter() { }\r\n            <span style=\"color:blue\">return</span> Greeter;\r\n        })();\r\n        classes.Greeter = Greeter;        \r\n    })(<span style=\"color:#ff0000\">my.classes || (my.classes = {}</span>));\r\n    <span style=\"color:#ff0000\">var classes = my.classes;</span>\r\n})(<span style=\"color:#ff0000\">my || (my = {}</span>));\r\n</pre>\r\n</div>\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>I think this is something that needs to be optimised by the compiler, otherwise we are delegating a lot of important work to the bundling mechanism.</p>\r\n<p>&nbsp;</p>\r\n<p><strong>&gt; lots of tedious repetitions to import other modules</strong></p>\r\n<p>&nbsp; &nbsp;Only relevant if you are using external modules. However, having to use the &lt;reference&gt; include comment is also not very satisfactory.</p>\r\n<p><strong>&gt; lots of ugly module prefixes</strong></p>\r\n<p>You can declare a using statement like below:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module my.interfaces {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">interface</span> IFoo {}\r\n}\r\n\r\n<span style=\"color:#0000ff\">using </span>my.interfaces; <span style=\"color:green\">// Using declaration</span>\r\n\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bleeter <span style=\"color:blue\">implements</span> <span style=\"color:green\">/*interfaces.*/</span>IFoo {}\r\n}\r\n\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Greeter <span style=\"color:blue\">implements</span> <span style=\"color:green\">/*interfaces.*/</span>IFoo {\t}   \r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>&nbsp;</p>\r\n<p>Sorry, cruel joke: you can't do that just yet! :D</p>\r\n<p>IMO (and as JonTurner has been at pains to stress) these are nice to have features rather than critical issues and are not likely to be fixed any time soon.</p>\r\n<p>However, since it says on the homepage &quot;<span>TypeScript supports tools for large-scale JavaScript applications&quot;, I would think issues such as these certainly affect scalability, because one needs to be able to organise the code-base in a meaningful way;\r\n and hence should be given some priority.</span></p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2012-12-19T08:21:23.303-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958678",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>Noel, there's an issue with the compiler optimizing the use of modules.&nbsp;&nbsp;Modules create a closure scope around the class definition that can be useful for defining stuff private to the file.&nbsp; The problem is if you automatically merge all of these module\r\n definitions you're also merging all of the closure scopes which could be dangerous.&nbsp;</p>\r\n<p>For instance, in the example below what would you expect the compiler to do about the\r\n<strong>className </strong>variable?&nbsp; The code works as expected now but if the modules were merged it would stop working as expected.</p>\r\n<p>Typescript:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module my.classes {\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Bleeter&quot;</span>;\r\n\t\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bleeter { \r\n\t\t<span style=\"color:blue\">public</span> name(): string {\r\n\t\t\t<span style=\"color:blue\">return</span> className;\r\n\t\t}\r\n\t}\r\n}\r\n\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Greeter&quot;</span>;\r\n\t\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Greeter {\t\r\n\t\t<span style=\"color:blue\">public</span> name(): string {\r\n\t\t\t<span style=\"color:blue\">return</span> className;\r\n\t\t}\r\n\t}   \r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>Generated JavaScript:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> my;\r\n(<span style=\"color:blue\">function</span> (my) {\r\n    (<span style=\"color:blue\">function</span> (classes) {\r\n        <span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Bleeter&quot;</span>;\r\n        <span style=\"color:blue\">var</span> Bleeter = (<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">function</span> Bleeter() { }\r\n            Bleeter.prototype.name = <span style=\"color:blue\">function</span> () {\r\n                <span style=\"color:blue\">return</span> className;\r\n            };\r\n            <span style=\"color:blue\">return</span> Bleeter;\r\n        })();\r\n        classes.Bleeter = Bleeter;        \r\n    })(my.classes || (my.classes = {}));\r\n    <span style=\"color:blue\">var</span> classes = my.classes;\r\n})(my || (my = {}));\r\n<span style=\"color:blue\">var</span> my;\r\n(<span style=\"color:blue\">function</span> (my) {\r\n    (<span style=\"color:blue\">function</span> (classes) {\r\n        <span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Greeter&quot;</span>;\r\n        <span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">function</span> Greeter() { }\r\n            Greeter.prototype.name = <span style=\"color:blue\">function</span> () {\r\n                <span style=\"color:blue\">return</span> className;\r\n            };\r\n            <span style=\"color:blue\">return</span> Greeter;\r\n        })();\r\n        classes.Greeter = Greeter;        \r\n    })(my.classes || (my.classes = {}));\r\n    <span style=\"color:blue\">var</span> classes = my.classes;\r\n})(my || (my = {}));\r\n\r\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-12-19T12:34:24.297-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958683",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I would expect the compiler to issue an error for a duplicate variable definition.</p>\r\n<p>The example also seems a bit contrived, considering that it's probably not good behavior to declare state outside of classes (even if the underlying mechanism for capturing the state is the same for classes as for modules).</p>\r\n",
+    "PostedDate": "2012-12-19T12:39:56.903-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958726",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I would disagree with the compiler issuing an error.&nbsp; While this example is a bit contrived the behavior is useful.&nbsp; This is essentially how you define truly private classes, functions, and state.&nbsp; And I'm about to post an example of doing a using clause\r\n which leverages this behavior.</p>\r\n",
+    "PostedDate": "2012-12-19T13:50:59.34-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958736",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I agree that it's a bit cumbersome to have to prefix things pulled from an &quot;internal module&quot; with their namespace but what I've found is that you can easily simulate a &quot;using&quot; clause if you import stuff from your internal modules in much the same way you\r\n do with &quot;external modules&quot;.</p>\r\n<p>If you look at the example below you'll see that you can define a variable&nbsp;<span style=\"text-decoration:underline\">within</span> a modules closure&nbsp;scope (the important part) that acts as an alias for anything defined within another module.&nbsp;\r\n It's very similar to the &quot;var http = require(&quot;http&quot;);&quot; statement you would do to import an external module only you don't need the require() call.</p>\r\n<p>This pattern has&nbsp;a couple of things going for it. 1) it means a lot less typing on your part as you don't need to namespace prefix everything. 2) it helps the minification process as a minifier will covert 'Foo' to 'a' or something throughout your code.</p>\r\n<p>It's worth noting that this pattern won't work for interfaces (those are purely compile time constructs) or variables&nbsp;but&nbsp;importing classes, functions,&nbsp;&amp; modules should work fine.&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module lib {\r\n\t<span style=\"color:green\">// Define modules classes</span>\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Foo {\t}\r\n}\r\n\r\nmodule app {\r\n\t<span style=\"color:green\">// Import other modules &amp; classes</span>\r\n\t<span style=\"color:blue\">var</span> Foo = lib.Foo;\r\n\t\r\n\t<span style=\"color:green\">// Define modules classes</span>\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bar {\r\n\t\t<span style=\"color:blue\">private</span> foo = <span style=\"color:blue\">new</span> Foo();\r\n\t}   \r\n}\r\n\r\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-12-19T14:07:26.57-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958737",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>As far as I can see, declaring variables at module scope doesn't allow you to do anything you couldn't do without them, which at least makes them non-essential.</p>\r\n<p>And even if you can come up with some scenario in which they are useful, not having your generated JS consist of 25% &quot;wrapper junk&quot; would be a huge benefit in terms of debugging experience, code size/bandwidth usage, performance, etc.</p>\r\n<p>For any general-purpose programming language, a feature that benefits most people most of the time is almost always preferable to a feature that only a few will use or benefit from. This is particularly true when the latter comes at the cost of not being\r\n able to do the former, which is what we have here.</p>\r\n<p>All IMHO, of course :)</p>\r\n",
+    "PostedDate": "2012-12-19T14:09:34.137-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958740",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>As for the &quot;using&quot; import, I can see that being useful in some cases.. but imagine if all you had in C# was the alias-using clause, allowing you to import one type at a time. You'd have type-import-headers the size of Texas at the top of your files. I can't\r\n see myself going down that path.</p>\r\n",
+    "PostedDate": "2012-12-19T14:12:11.55-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958773",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>One of the goals of TypeScript is to stay as close to vanilla JavaScript as possible.&nbsp; When you declare a module you are in fact creating a closure scope so while we can argue back and forth over the usefulness of that closure, doing anything to tamper\r\n with it seems like it would violate the goal of being&nbsp;standard JavaScript.&nbsp; I just know from experience this would likely result in the occasional really odd bug. If you've ever had to track down an issue that a minifier introduced you'll know what\r\n I mean...</p>\r\n<p>I personally like the ability to spread a modules definition across multiple files but there isn't an argument that says if you don't like all of the extra closures this results in you should just put all of your classes for a module in a single file.&nbsp;</p>\r\n<p>Another thing worth pointing out is that in a production environment you're likely minifying &amp; combining all of these files and then delivering them to the client with gzip compression enabled.&nbsp; The gzip compression will pretty much negate all of\r\n this duplication so in reality the result is just slightly more code for the browser to parse.&nbsp; Modern JavaScript engines are so fast that this additionally parsing is essentially negligible.&nbsp; I'd be really surprised if eliminating this duplication\r\n on even&nbsp;the largest projects resulted in &gt;1ms faster load times.&nbsp;</p>\r\n",
+    "PostedDate": "2012-12-19T16:00:15.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958779",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>A module is a TypeScript construct (as opposed to something JavaScript itself defines). As such, the language designers are free to specify what rules apply to it.</p>\r\n<p>That it happens to compile to a closure scope is just the idiomatic way of encapsulating something in JavaScript, and therefore the natural way for the compiler to implement the module construct.</p>\r\n<p>I do want my code to span across files. I find large files unmanageable and unproductive to work with, which is precisely why I so strongly believe that the current module implementation is poorly suited for managing large code bases (one of the goals of\r\n TypeScript, as I recall).</p>\r\n<p>Modern JS engines may be fast but I'm targeting mobile devices, and most of those are pretty darn slow, so everything counts.</p>\r\n",
+    "PostedDate": "2012-12-19T16:13:05.38-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958780",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>Modules are actually a proposed&nbsp;ES6 construct so they should be in the next version of JavaScript.&nbsp; TypeScript tries to be a superset of ES6 so in some places they're mercy of how ES6 is planned to work.</p>\r\n<p><a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples\">http://wiki.ecmascript.org/doku.php?id=harmony:modules_examples</a>&nbsp;</p>\r\n",
+    "PostedDate": "2012-12-19T16:20:00.053-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958781",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>That is true, but if TypeScript is not going to provide useful abstractions over plain JS then there isn't much point in using it.</p>\r\n<p>Perhaps I should advocate for an &quot;implicit&quot; modifier to the module keyword instead. An opt-in mechanism that would allow me to change how the compiler treats a given module declaration (i.e. scoped/encapsulated or unscoped/merged).</p>\r\n",
+    "PostedDate": "2012-12-19T16:29:27.567-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "958788",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I should add that I would be all for something similar to &quot;using&quot;. I was simply trying to show one way of&nbsp;achieving that today. &nbsp;You may not have noticed but there are already places in TypeScript where you get this in an automatic way.</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module a {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Foo {}\r\n}\r\n\r\nmodule a.b {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bar {\r\n\t\t<span style=\"color:blue\">private</span> foo = <span style=\"color:blue\">new</span> Foo();\r\n\t}\r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>Notice that I didn't have to type <strong>a.</strong>Foo() yet they added it for me in the generated output:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> a;\r\n(<span style=\"color:blue\">function</span> (a) {\r\n    <span style=\"color:blue\">var</span> Foo = (<span style=\"color:blue\">function</span> () {\r\n        <span style=\"color:blue\">function</span> Foo() { }\r\n        <span style=\"color:blue\">return</span> Foo;\r\n    })();\r\n    a.Foo = Foo;    \r\n})(a || (a = {}));\r\n<span style=\"color:blue\">var</span> a;\r\n(<span style=\"color:blue\">function</span> (a) {\r\n    (<span style=\"color:blue\">function</span> (b) {\r\n        <span style=\"color:blue\">var</span> Bar = (<span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">function</span> Bar() {\r\n                <span style=\"color:blue\">this</span>.foo = <span style=\"color:blue\">new</span> a.Foo();\r\n            }\r\n            <span style=\"color:blue\">return</span> Bar;\r\n        })();\r\n        b.Bar = Bar;        \r\n    })(a.b || (a.b = {}));\r\n    <span style=\"color:blue\">var</span> b = a.b;\r\n})(a || (a = {}));\r\n\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>&nbsp;This only happens when a child namespace references a member of a parent namespace. &nbsp;A &quot;using&quot; clause would be useful in making this magic happen anywhere. &nbsp;</p>\r\n",
+    "PostedDate": "2012-12-19T16:51:47.323-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "960542",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I wasn't aware of that happening, but glad to see that it is already partially available.. and that I'm not alone in wishing it was more widely supported.</p>\r\n<p>TypeScript is still young and some early-adopter pain points are to be expected, but hopefully this particular issue will be fixed.</p>\r\n",
+    "PostedDate": "2012-12-20T02:03:10.857-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "960678",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>@ickman, yes we wouldn't want the compiler to try combining closures, because that might well bring the web to a grinding halt!</p>\r\n<p>Here is a suggestion, based on how we used to organise our JS code in those dark days before TypeScript:</p>\r\n<p>&nbsp;</p>\r\n<p>We declare the structure of the required namespaces in a separate file.</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// Global namespace declaration file MyNamespaces.ts</span>\r\nnamespace my { interfaces{}; classes{};  }\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>Each TypeScript class is declared in its own file.</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// Bleeter.ts</span>\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Bleeter&quot;</span>;\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Bleeter {}\r\n}\r\n\r\n<span style=\"color:green\">// Greeter.ts</span>\r\nmodule my.classes {\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Greeter&quot;</span>;\t\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Greeter {\t}   \r\n}\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>The proposed JavaScript compilation of each file:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// MyNamespaces.js</span>\r\n<span style=\"color:blue\">var</span> my = { interfaces: {}, classes: {} };\r\n\r\n<span style=\"color:green\">// Bleeter.js</span>\r\n(<span style=\"color:blue\">function</span>(classes){\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Bleeter&quot;</span>;\r\n\tclasses.Bleeter = <span style=\"color:blue\">function</span> Bleeter(){}\r\n\r\n})(my.classes);\r\n\r\n<span style=\"color:green\">// Greeter.js</span>\r\n(<span style=\"color:blue\">function</span>(classes){\r\n\t<span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Greeter&quot;</span>;\r\n\tclasses.Greeter = <span style=\"color:blue\">function</span> Greeter(){}\r\n\t\r\n})(my.classes);\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>&nbsp;</p>\r\n<p>The basic improvement is that we inform TypeScript of our intended namespace structure, so that it can optimise away all the unnecessary guesswork, for example: &nbsp;&quot;my = my || &nbsp;{}&quot; and so on.</p>\r\n<p>There is only one minor consideration: The bundling mechanism must ensure the namespace file is included before any other file.</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2012-12-20T02:32:43.377-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "961052",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>@Noel that would work for me too.</p>\r\n<p>The key thing I want to avoid is having module prefixes everywhere a given type is used, littered throughout the code base. Having a single file somewhere that avoids this, even if it is something I have to create and maintain manually, would be a huge benefit.</p>\r\n",
+    "PostedDate": "2012-12-20T03:53:42.217-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "966427",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>I would personally say that the example of class name is really poor, who would put that in the outer scope of the class by design?...</p>\r\n<p>Anyways, while modules are proposed in ECMA 6, I believe that &quot;/// &lt;reference path=&quot;...&quot;&gt;&quot; is a pure TS construct, so when we define how that works, that doesn't have much to do with ECMA it self...&nbsp;<br>\r\n<br>\r\nThe question is, would anyone really write modules like so in real JavaScript if they could avoid it???<br>\r\n<br>\r\nIt doesn't make allot of sense to me to do:<br>\r\n<br>\r\n</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> my;\n(<span style=\"color:blue\">function</span> (my) {\n    (<span style=\"color:blue\">function</span> (classes) {\n        <span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Bleeter&quot;</span>;\n        <span style=\"color:blue\">var</span> Bleeter = (<span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">function</span> Bleeter() { }\n            Bleeter.prototype.name = <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> className;\n            };\n            <span style=\"color:blue\">return</span> Bleeter;\n        })();\n        classes.Bleeter = Bleeter;        \n    })(my.classes || (my.classes = {}));\n    <span style=\"color:blue\">var</span> classes = my.classes;\n})(my || (my = {}));\n<span style=\"color:blue\">var</span> my;\n(<span style=\"color:blue\">function</span> (my) {\n    (<span style=\"color:blue\">function</span> (classes) {\n        <span style=\"color:blue\">var</span> className = <span style=\"color:#a31515\">&quot;my.Classes.Greeter&quot;</span>;\n        <span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">function</span> Greeter() { }\n            Greeter.prototype.name = <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> className;\n            };\n            <span style=\"color:blue\">return</span> Greeter;\n        })();\n        classes.Greeter = Greeter;        \n    })(my.classes || (my.classes = {}));\n    <span style=\"color:blue\">var</span> classes = my.classes;\n})(my || (my = {}));\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>Except that&nbsp;it is my only way of&nbsp;separating&nbsp;my JS into multiple files. The scoping here actually becomes a problem for me, because what I actually wanted was:<br>\r\n<br>\r\n&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> my;\n(<span style=\"color:blue\">function</span> (my) {\n    (<span style=\"color:blue\">function</span> (classes) {\n        <span style=\"color:blue\">var</span> moduleName = <span style=\"color:#a31515\">&quot;my.classes&quot;</span>;\n        <span style=\"color:blue\">var</span> Bleeter = (<span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">function</span> Bleeter() { }\n            Bleeter.className = <span style=\"color:#a31515\">&quot;my.classes.Bleeter&quot;</span>;\n            Bleeter.prototype.name = <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> Bleeter.className;\n            };\n            <span style=\"color:blue\">return</span> Bleeter;\n        })();\n        classes.Bleeter = Bleeter;        \n        <span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">function</span> Greeter() { }\n            Greeter.className = <span style=\"color:#a31515\">&quot;my.classes.Greeter&quot;</span>;\n            Greeter.prototype.name = <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> Greeter.className;\n            };\n            <span style=\"color:blue\">return</span> Greeter;\n        })();\n        classes.Greeter = Greeter;        \n    })(my.classes || (my.classes = {}));\n    <span style=\"color:blue\">var</span> classes = my.classes;\n\n})(my || (my = {}));\n\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>If I wanted closure scope to work as in the first example, I would also name them differently...</p>\r\n<p>But maybe&nbsp;that's&nbsp;just me who considers the above to be crappy design.</p>\r\n",
+    "PostedDate": "2012-12-21T02:32:23.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "967216",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>@jmelgaard +1 - it's my point exactly.</p>\r\n<p>The only time when the first code block is what you want is when they are from two independent libraries (that happen to choose the same root module name). But it's *never* what you want if those are two classes that are part of the same library or app,\r\n because if it was, you could just choose different module names for them instead.</p>\r\n",
+    "PostedDate": "2012-12-21T12:07:29.673-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "977768",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>As a C# developer, I've been recently playing with both Dart and Typescript. &nbsp;What I've discovered is that Dart's 'part of' for libraries, seems much more elegant than Typescript's modules.</p>\r\n<p>It took me days to figure out how to build a multi-file library in Typescript (and have it actually work), and only a few minutes in Dart. Dart's multi-file library packaging is simple and elegant compared to all of the weird contortions of the many facets\r\n of Typescript modules (ECMA.Next | CommonJS | AMD? Internal/External ... compiler flags ...).&nbsp; Above all, none of that works very well unless you glue some external JS library on top of it, or manually plaster &lt;script&gt; tags all over the place.&nbsp; Having no prior\r\n WEB development experience, all of this looks so contrived.</p>\r\n<p>The process of moving to JavaScript from C#, is like moving from 'Word' to 'Notepad' and trying to get the same quality content-presentation ... yes you can (using markup) build a Word document in Notepad, but why would anyone want to?</p>\r\n<p>Dart may become the new Silverlight and just may succeed because, unlike Microsoft, Google is showing it has the 'b#lls' to stick it out.&nbsp; I just can't imagine how bad Anders must feel about&nbsp;leaving C# for&nbsp;this crap.</p>\r\n",
+    "PostedDate": "2012-12-26T12:04:48.8-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "979216",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>TypeScript is currently designed to adhere as closely as possible to the official JavaScript standards, which puts quite a few limits on what the language designers can do.</p>\r\n<p>Personally I think it is a monumentally unwise decision, given that&nbsp;what most people want is simply an abstraction layer (aka nicer programming language) that makes them as productive as possible, while allowing easy interaction with existing JS code. To\r\n me, JS is just the IL of the web browser. Give it a couple of years and I'm sure we'll see a &quot;binary JS&quot; standard..</p>\r\n<p>As such, I agree much more with the Dart design philosophy (but back when I checked it out it looked like an ugly mix of C++ and Java; now it actually looks a lot more polished, or maybe all my JS/TS coding has made me camelCaseInsensitive).</p>\r\n<p>The way I see it, Dart is the new Java (as it was perceived when launched), and Microsoft has only recently caught on to the fact. Anders' job is simply to close the gap and ensure that Google doesn't run off with all the web developers..</p>\r\n",
+    "PostedDate": "2012-12-26T16:57:53.537-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "982082",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>@mertner</p>\r\n<p>That is not&nbsp;necessarily&nbsp;true, I have read quite a sum of good reviews or comments towards TypeScript exactly because it tries to go as close to original JavaScript and ECMA 6 as it possibly can, ofc. this comes from all those with the mind &quot;If\r\n you wan't to write JavaScript, learn JavaScript, not coffee script or Dart&quot;... And there appears to be quite a few of those...<br>\r\n<br>\r\nDart is really only cool in Google Chrome where you can run it without transforming it it JavaScript first, and then that ends... and AFAIK no other browsers standing in line to implement a Dart engine. That is to bad, but there is also so many devises etc.\r\n that runs JavaScript as is, so it's not quite as easy as &quot;it's just the browsers&quot; either...<br>\r\n<br>\r\nAs i have seen others state: <em><strong>&gt;&nbsp;</strong><strong>&quot;If it's a abstraction layer on top of JavaScript you wan't... Then why not go with either Dart,</strong> CoffeeScript, Script# or something else?&quot;</em></p>\r\n<p>I think it's good that TypeScript tries a different&nbsp;approach, one that actually teaches us JavaScript along the way, I like that&nbsp;philosophy, and after all, there is plenty of the other kind as is, we didn't need another one.<br>\r\n<br>\r\nThat doesn't limit us to define a way to resolve this though, after all there is nothing in JavaScript it self that can collapse several files into a single code file, that is only&nbsp;prepossessing&nbsp;that can do that. That is pure tooling, and how that\r\n work is completely decoupled from JavaScript it self in my&nbsp;opinion...<br>\r\n<br>\r\nSo lets keep this discussion within that boundary, what can we do about this and still stick closely to the mindset of TypeScript and not derail it, because I don't think that will help the cause at all...</p>\r\n<hr>\r\n<p><strong><em>&gt;&nbsp;When you declare a module you are in fact creating a closure scope so while we can argue back and forth over the usefulness of that closure, doing anything to tamper with it seems like it would violate the goal of being&nbsp;standard\r\n JavaScript.&nbsp; I just know from experience this would likely result in the occasional really odd bug. If you've ever had to track down an issue that a minifier introduced you'll know what I mean...</em></strong></p>\r\n<p>I am not&nbsp;necessarily&nbsp;to fond of&nbsp;suggesting&nbsp;this, but ill do it anyways.</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">//File: Class1.ts</span>\npartial module mod { \n    <span style=\"color:blue\">class</span> Class1 { }\n}\n\n<span style=\"color:green\">//File: Class2.ts</span>\npartial module mod { \n    <span style=\"color:blue\">class</span> Class2 { }\n}\n\n<span style=\"color:green\">//File: Class3.ts</span>\nmodule mod { \n    <span style=\"color:blue\">class</span> Class3 { }\n}\n</pre>\r\n</div>\r\n<p>Would give the following output (at least when we ask to merge the files):</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> mod;\n(<span style=\"color:blue\">function</span> (mod) {\n    <span style=\"color:blue\">var</span> Class1 = (<span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">function</span> Class1() { }\n        <span style=\"color:blue\">return</span> Class1;\n    })();    \n    <span style=\"color:blue\">var</span> Class2 = (<span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">function</span> Class2() { }\n        <span style=\"color:blue\">return</span> Class2;\n    })();    \n})(mod || (mod = {}));\n\n<span style=\"color:blue\">var</span> mod;\n(<span style=\"color:blue\">function</span> (mod) {\n    <span style=\"color:blue\">var</span> Class3 = (<span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">function</span> Class3() { }\n        <span style=\"color:blue\">return</span> Class3;\n    })();    \n})(mod || (mod = {}));\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>One thing that bugs me is that if &quot;Class1.ts&quot; and &quot;Class2.ts&quot; would be compiled separately to each of their own files, we get a different behavior... as well as the &quot;partial&quot; keyword that doesn't really have anything to do with ECMA6...<br>\r\n<br>\r\nBut&nbsp;at least this way it becomes very explicit that we wan't the content of &quot;module&quot; to be&nbsp;collapsed, while maintaining the ability to keep the scope as is for current implementations.<br>\r\n<br>\r\n&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-01T05:48:34.41-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "982336",
+    "ThreadId": "407063",
+    "Html": "\r\n<p>@jmelgaard,</p>\r\n<p>&nbsp;</p>\r\n<p>The idea of a &quot;partial&quot; modifer is an interesting suggestion. It would work for the case when the TypeScript compiler is used to process a single project. By this I mean, tsc.exe is passed a list of TypeScript files to process, which are then compiled in\r\n a single pass.</p>\r\n<p>This is a special case of the general approach, where TypeScript files are separated into separate projects, and tsc.exe is run independently on each project. This is what normally happens when one has TypeScript files organised in separate projects in Visual\r\n Studio.</p>\r\n<p>For the general case if Class1.ts is in one project and Class2.ts is in a separate project then their respective complied JavaScript output files can only be combined by a bundling (or linking) mechanism - in other words: it is outside the scope of the compiler.</p>\r\n<p>This is why I suggested the namespace option above, which would work in this situation. Also the behaviour is the same if all files are in one project or compiled individually.</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2013-01-02T07:42:14.077-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "982640",
+    "ThreadId": "407063",
+    "Html": "\r\n<p><strong>@nabog</strong></p>\r\n<p>I don't see the 2 solutions to be mutually exclusive. And I don't see the as solving the exact same problem, the solutions overlap&nbsp;allot&nbsp;though...</p>\r\n<p>Essentially&nbsp;I would like to be able to split this up in multiple files...</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module mod {\n    <span style=\"color:blue\">var</span> modName = <span style=\"color:#a31515\">&quot;mod&quot;</span>; \n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Class1 { \n      className = <span style=\"color:#a31515\">&quot;Class1&quot;</span>; \n      <span style=\"color:blue\">public</span> hello(){\n        <span style=\"color:blue\">return</span> modName &#43; <span style=\"color:#a31515\">'.'</span>&#43; <span style=\"color:blue\">this</span>.className;\n      }\n    }\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Class2 {\n      className = <span style=\"color:#a31515\">&quot;Class2&quot;</span>; \n      <span style=\"color:blue\">public</span> hello(){\n        <span style=\"color:blue\">return</span> modName &#43; <span style=\"color:#a31515\">'.'</span>&#43; <span style=\"color:blue\">this</span>.className;\n      }\n    }\n}\n\n</pre>\r\n</div>\r\n<p>Problem is that JavaScript nor TypeScript allows me to as-is... Then I have to export the module variable to access it because suddenly we are outside the closure for the second class.<br>\r\n<br>\r\nIt implies allot of issues to collapse that though, as you mentioned ones you compile each file individually you &quot;break&quot; it... it is also not &quot;obvious&quot; that you would have &quot;modName&quot; var in one file and can access it in another...<br>\r\n<br>\r\nA Complete alternative is that I can view logical segments of a large typescript file&nbsp;separately, so that I am not burdened with seeing all the code in the same module at the same time, and being able to collapse modules, classes etc is not enough, it\r\n is still allot of noise in my way of thinking.<br>\r\n<br>\r\nBefore ind pure JS, making some simple pre-processing that did this sort of stuff wasn't that&nbsp;difficult&nbsp;in pure JavaScript. you could essentially have something like:<br>\r\n<br>\r\n</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">//module.js</span>\n<span style=\"color:blue\">var</span> mod;\n(<span style=\"color:blue\">function</span> (mod) {\n    mod.modName = <span style=\"color:#a31515\">&quot;mod&quot;</span>;\n      \n    <span style=\"color:green\">//@import '{...}/Class1.js'</span>\n    <span style=\"color:green\">//@import '{...}/Class1.js'</span>\n})(mod || (mod = {}));\n\n<span style=\"color:green\">//Class1.js</span>\n    <span style=\"color:blue\">var</span> Class1 = (<span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">function</span> Class1() {\n            <span style=\"color:blue\">this</span>.className = <span style=\"color:#a31515\">&quot;Class1&quot;</span>;\n        }\n        Class1.prototype.hello = <span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">return</span> mod.modName &#43; <span style=\"color:#a31515\">'.'</span> &#43; <span style=\"color:blue\">this</span>.className;\n        };\n        <span style=\"color:blue\">return</span> Class1;\n    })();\n    mod.Class1 = Class1;\n\n<span style=\"color:green\">//Class2.js</span>\n    <span style=\"color:blue\">var</span> Class2 = (<span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">function</span> Class2() {\n            <span style=\"color:blue\">this</span>.className = <span style=\"color:#a31515\">&quot;Class2&quot;</span>;\n        }\n        Class2.prototype.hello = <span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">return</span> mod.modName &#43; <span style=\"color:#a31515\">'.'</span> &#43; <span style=\"color:blue\">this</span>.className;\n        };\n        <span style=\"color:blue\">return</span> Class2;\n    })();\n    mod.Class2 = Class2;   \n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>Because it wouldn't be the wiser, mod could be a global variable... it wouldn't know... so it would be ok with it...</p>\r\n<p>In TypeScript... the compiler is the wiser however... And that is a good thing for many parts... but for this particular little case... It annoys me...</p>\r\n",
+    "PostedDate": "2013-01-03T05:20:47.02-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054191",
+    "ThreadId": "407063",
+    "Html": "It seems like there is a general consensus that we want something to the effect of a using statement, but that using statements can cause collisions, which could be dangerous. \r<br />\n<br />\nMight I recommend the code below should be valid. In that code, there are two modules (Alpha and Bravo) each with a unique class and one collision (ClassCharlie). The second module (Bravo) has a using statement for the first (Alpha). \r<br />\n<br />\nWith nothing else specified, the compiler would return an error when trying to use the collision export (new ClassCharlie()), saying that the call is ambiguous.\r<br />\n<br />\nWith the addition of a disambiguating statement (using ClassCharlieFromAlpha = Alpha.Charlie;), there is no longer an ambiguity, and the problem is resolved. It might also be wise to require a disambiguating statement for each collision, and continue to return errors for collisions, forcing the user to perform a complete disambiguation.\r<br />\n<br />\nThis solves the problem without the creation of extra local variables in the module, and without having to create a local variable for each module export you intend to use.\r<br />\n<br />\nJust a thought.<br />\n<pre><code>module Alpha {\n    export class ClassAlpha { }\n    export class ClassCharlie { }\n}\n\nmodule Bravo {\n    using Alpha;\n    using ClassCharlieFromAlpha = Alpha.ClassCharlie; //Disambiguating \n\n    export class ClassBravo { }\n    export class ClassCharlie { }\n\n    //Alpha.ClassAlpha\n    var alpha = new ClassAlpha(); \n    \n    //Bravo.ClassBravo\n    var bravo = new ClassBravo(); \n\n    //Alpha.ClassCharlie\n    var alphaCharlie = new ClassCharlieFromAlpha();\n\n    //Bravo.ClassCharlie\n    var bravoCharlie = new ClassCharlie();\n}</code></pre>\n\nRenders as <br />\n<pre><code>var Alpha;\n(function (Alpha) {\n    var ClassAlpha = (function () {\n        function ClassAlpha() {\n        }\n        return ClassAlpha;\n    })();\n    Alpha.ClassAlpha = ClassAlpha;\n    var ClassCharlie = (function () {\n        function ClassCharlie() {\n        }\n        return ClassCharlie;\n    })();\n    Alpha.ClassCharlie = ClassCharlie;\n})(Alpha || (Alpha = {}));\n\nvar Bravo;\n(function (Bravo) {\n    var ClassBravo = (function () {\n        function ClassBravo() {\n        }\n        return ClassBravo;\n    })();\n    Bravo.ClassBravo = ClassBravo;\n    var ClassCharlie = (function () {\n        function ClassCharlie() {\n        }\n        return ClassCharlie;\n    })();\n    Bravo.ClassCharlie = ClassCharlie;\n\n    var alpha = new Alpha.ClassAlpha();\n    var bravo = new Bravo.ClassBravo();\n    var alphaCharlie = new Alpha.ClassCharlie();\n    var bravoCharlie = new Bravo.ClassCharlie();\n})(Bravo || (Bravo = {}));</code></pre>\n\n",
+    "PostedDate": "2013-06-07T15:39:09.81-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054370",
+    "ThreadId": "407063",
+    "Html": "I strongly agree with @jmelgaard and would like to see something similar to the &quot;partial&quot; keyword that allows to combine modules from different files into a single closure.<br />\n<br />\nI would personally prefer just to see a 'namespace' keyword which would clobber code in the same closure. How that fits into ECMA6, I don't know.<br />\n<br />\nOrganizing a large codebase with TypeScript still seems like a huge pain point. <br />\n<br />\nOverall I really like the approach of TypeScript but using requirejs and separate independent modules isn't really helping,<br />\n",
+    "PostedDate": "2013-06-08T08:43:16.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081970",
+    "ThreadId": "407063",
+    "Html": "I gotta give my +1 here. Managing a huge collection of files into a project is horrible in JavaScript, at best painful in TypeScript, and butchered in Dart. Dart had a semi acceptable system around 9 months ago but went backwards since, at least in my opinion.<br />\n<br />\nWhat I want:<br />\n<ul>\n<li>namespaces that can be nested</li>\n<li>classes inside namespace should be able to access their own fully qualified name as well as shortname</li>\n<li>the glue to include another ts file from your ts file should come automatically without using 3rd party libs</li>\n<li>optimally: the glue to add in a .js file with a .d.ts file should come automatically as well without requiring &lt;script&gt; or a lib</li>\n<li>\nI don't care if the resulting compiled js code is one file or not as long as it behaves this way<br />\n</li>\n</ul>\nDart doesn't offer this, TypeScript doesn't offer this and JavaScript doesn't offer this as well without some serious crutching... <br />\n<br />\nI do agree with the concern of others here in the thread though that this is critical for large scale apps and so should be on a high priority.<br />\n",
+    "PostedDate": "2013-08-18T21:24:33.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083811",
+    "ThreadId": "407063",
+    "Html": "I find it strange that no one has really stuck to the ES6 implications.\r<br />\n<br />\nThe real issue is, when ECMAScript 6 is a standard, your code:<br />\n<pre><code>module lib {\n    // Define modules classes\n    export class Foo {  }\n}\n\nmodule app {\n    // Import other modules &amp; classes\n    var Foo = lib.Foo;\n    \n    // Define modules classes\n    export class Bar {\n        private foo = new Foo();\n    }   \n}</code></pre>\n\nwill render to javascript like this:<br />\n<pre><code>module lib {\n    export class Foo {  }\n}\n\nmodule app {\n    var Foo = lib.Foo;\n    \n    export class Bar {\n        private foo = new Foo();\n    }   \n}</code></pre>\n\nIt's very forward thinking and have heard they are going to alter the internal implementations of ES6 within typescript as they move towards a standard, keeping as close as possible to the spec.\r<br />\n<br />\nI don't think writing good ES5 is the point of the ES6 elements in typescript today. You can already use it to write clever ES5 applications. The ES6 elements are to help you get ready for the future.<br />\n",
+    "PostedDate": "2013-08-22T12:35:47.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083824",
+    "ThreadId": "407063",
+    "Html": "@tombmedia\r<br />\n<br />\nThat's a really good point, and does make me question whether we need a better system than what is already in place. TypeScript is not about building a new language, but rather adding type annotations to an old one.\r<br />\n<br />\nBut is there harm is providing syntactic sugar for hiding a module variable, and providing access implicitly?\r<br />\n<br />\nIn fact, TypeScript already provides this syntactic sugar. Consider this code:<br />\n<pre><code>module A {\n    export var x;\n}\n\nmodule A.B {\n    export var y = x;\n}</code></pre>\n\nWhich compiles to<br />\n<pre><code>var A;\n(function (A) {\n    A.x;\n})(A || (A = {}));\n\nvar A;\n(function (A) {\n    (function (B) {\n        B.y = A.x;\n    })(A.B || (A.B = {}));\n    var B = A.B;\n})(A || (A = {}));</code></pre>\n\nWhen I write &quot;var y = x&quot;, the TypeScript compiler is inferring that I mean &quot;B.y = A.x&quot;. \r<br />\n<br />\nWhy not extend the ability to implicity call A to circumstances other than submodules of A?\r<br />\n<br />\nDoes that make sense?<br />\n",
+    "PostedDate": "2013-08-22T12:56:24.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086158",
+    "ThreadId": "407063",
+    "Html": "I met the exact problem when trying to migrate one of our javascript library to typescript. Basically I want (1) many classes in separate files while under one 'module' or namespace (2) compiled to one js file with one closure.\r<br />\n<br />\nWhat should I do? My current workaround is, to avoid using typescript and stay with javascript.<br />\n",
+    "PostedDate": "2013-08-29T06:18:37.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086453",
+    "ThreadId": "407063",
+    "Html": "I wonder if we could omit module closures in the source files, then concatenate all files and wrap them in one single module closure before sending to the compiler. \r<br />\nIt is surely not ideal and comes with limitations, but that might even keep IDE support functional (e.g. referencing other classes without module prefix). \r<br />\n<br />\nIt still feels wrong and something that the compiler could assist in, but before dropping TypeScript entirely it might be an acceptable hack.<br />\n",
+    "PostedDate": "2013-08-29T21:15:20.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086645",
+    "ThreadId": "407063",
+    "Html": "+1 for supporting partial modules like jmelgaard proposed, this is really required to make closures work correctly without exposing internals.\r<br />\n<br />\nBut the issue about compiling to multiple module declarations with repeated code, I'd say it is not an issue. The result in the runtime is the same, it is correct javascript and there is no measurable speed difference in parsing one vs another. It would be nice if it worked this could be improved, but not a requirement. Can be optimized in the future.<br />\n",
+    "PostedDate": "2013-08-30T07:04:21.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090326",
+    "ThreadId": "407063",
+    "Html": "Been away from TS for a month or so, so slightly late to the party in this thread but I would very much support the addition of the &quot;partial module&quot;.<br />\n",
+    "PostedDate": "2013-09-09T12:04:33.907-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094409",
+    "ThreadId": "407063",
+    "Html": "<strong>DRubino wrote:</strong><br />\n<blockquote>\n<a href=\"mailto:@tombmedia\n(...)\nWhen\" rel=\"nofollow\">@tombmedia\n(...)\nWhen</a> I write &quot;var y = x&quot;, the TypeScript compiler is inferring that I mean &quot;B.y = A.x&quot;. <br />\n<br />\nWhy not extend the ability to implicity call A to circumstances other than submodules of A?<br />\n<br />\nDoes that make sense?<br />\n</blockquote>\nYes, we need the ability to use a class without prefixing with a module name. The situation today is terrible and make TypeScript very hard to use.\r<br />\n<br />\nIn my case, I have a big project that I don't want to code in pure JS.  I sill think TS is a better alternate solution than Dart but we need to fix this issue before 1.0.\r<br />\n<br />\nA &quot;using&quot; keyword would be neat.<br />\n",
+    "PostedDate": "2013-09-19T03:57:07.647-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094425",
+    "ThreadId": "407063",
+    "Html": "You can now do this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> abra.cadabra.superc.ali.frag.ilistic {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Foo{\n        f = <span style=\"color:#A31515;\">&quot;foo&quot;</span>;\n        doFoo(){\n            alert(<span style=\"color:Blue;\">this</span>.f);\n        }\n    }\n}\n\n<span style=\"color:Blue;\">module</span> bar {\n    <span style=\"color:Blue;\">import</span> z = abra.cadabra.superc.ali.frag.ilistic;\n    <span style=\"color:Blue;\">import</span> Z = abra.cadabra.superc.ali.frag.ilistic.Foo;\n    \n    <span style=\"color:Blue;\">var</span> fooOne = <span style=\"color:Blue;\">new</span> z.Foo();\n    <span style=\"color:Blue;\">var</span> fooTwo = <span style=\"color:Blue;\">new</span> Z();\n    \n    fooOne.doFoo();\n    fooTwo.doFoo();\n}\r\n</pre></div>",
+    "PostedDate": "2013-09-19T05:12:06.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1096734",
+    "ThreadId": "407063",
+    "Html": "@nabog\r<br />\n<br />\nYes you can import modules or single classes. Often, modules will contain a number of classes and it's not practical each one. Therefore, you have to import the module itself, using some sort of shorthand (in your example z). Now the codebase has multiple conventions for naming modules, one of which is rather cryptic. \r<br />\n<br />\nI think using statements and aliasing would provide a more elegant solution to module name reduction, and would be elegant, in the sense that it provides an extension of module inference that is equivalent to the way it is done in sub-modules (see my comment above).\r<br />\n<br />\nThe more I code in TypeScript, the more I feel that using statements are a must have, and that importing at the module level adds an unnecessary amount of boilerplate to my code:\r<br />\n<br />\nvar thing = c.DoSomething(new c.NewThing());\r<br />\nvar nextThing = new d.OtherThing(thing);\r<br />\n<br />\nThe code is littered with c. and d., which provide little semantic value, and decrease the readability of the code. To import class by class, I need to add a lot of boiler plate to achieve the desired effect of a using statement, and in a way that doesn't scale well with the number of classes used:\r<br />\n<br />\nimport DoSomething = Charlie.DoSomething;\r<br />\nimport OtherThing = Delta.OtherThing;\r<br />\n<br />\nFor me, it's a must-have feature.<br />\n",
+    "PostedDate": "2013-09-19T21:14:18.347-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100087",
+    "ThreadId": "407063",
+    "Html": "Well, the import z = ....  does not help a lot. \r<br />\nAs DRubino said, the source code looks like a constellation of &quot;z.&quot;, &quot;d.&quot;, &quot;c.&quot;, etc  and all those prefixes are meaningless.\r<br />\n<br />\nFrom my point of view, we realy need a solution to fix this issue ASP.<br />\n",
+    "PostedDate": "2013-09-27T05:33:10.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100547",
+    "ThreadId": "407063",
+    "Html": "@DRubino/@dcrespe, the import simply creates an alias for a namespace and is useful when dealing with a namspace structure with a deep hierarchy.\r<br />\n(In fact the import statement isn't really necessary: a var can be declared directly instead.)\r<br />\n<br />\nSo, yes, I agree that we need the <code>using</code> keyword for importing a namespace into a specific file.<br />\n",
+    "PostedDate": "2013-09-29T03:35:54.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100909",
+    "ThreadId": "407063",
+    "Html": "What does the TypeScript team think about the discussion so far? There are some good points here..<br />\n",
+    "PostedDate": "2013-09-30T07:19:31.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100931",
+    "ThreadId": "407063",
+    "Html": "I second feedback from the TypeScript team! This feels like an important issue to a number of developers.<br />\n",
+    "PostedDate": "2013-09-30T07:50:30.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100973",
+    "ThreadId": "407063",
+    "Html": "I don't usually like to post when I have nothing to contribute except agreeing, but I totally agree with this discussion.  Having the same module look the same across the codebase is a big readability issue.<br />\n",
+    "PostedDate": "2013-09-30T09:59:22.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104202",
+    "ThreadId": "407063",
+    "Html": "<strong>DRubino wrote:</strong><br />\n<blockquote>\nI second feedback from the TypeScript team! This feels like an important issue to a number of developers.<br />\n</blockquote>\nIs there any technical issues that would prevent the Typescript team from implementing a &quot;using&quot; feature ?<br />\n",
+    "PostedDate": "2013-10-06T06:08:45.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106589",
+    "ThreadId": "407063",
+    "Html": "Using &quot;using&quot; is very similar to JavaScript &quot;with&quot; statements, which create a block and it becomes fairly complex to reason about the scopes of symbol uses.<br />\n\r<br />\nOur module system is planned to align as closely as possible with ECMAScript 6's module system, now that that's going into place.  Last I looked into it (I haven't read the most recent stuff that's come out in the last couple days), there wasn't an &quot;import * from bar&quot; syntax that would pull all the exported symbols into the current namespace.<br />\n\r<br />\nThis is one of those design decisions that has a pretty divided opinion, so I suspect we'll err on the side of keeping with what ES6 recommends.\r<br />\n<br />\nThat said, once we do align, you should be able to pull out multiple symbols from the module as local names. While this wouldn't give you a wildcard, you would get a set of symbols that don't require full qualification.<br />\n",
+    "PostedDate": "2013-10-11T14:00:04.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106812",
+    "ThreadId": "407063",
+    "Html": "Thank you for your reply.\r<br />\n<br />\nI have been programming with using statements for quite some time, and when backed by compiler that can detect ambiguity issues and a langauge that can resolve them, using statements only make life easier. It seems that the main difference between &quot;using&quot; and &quot;with&quot; is when they are evaluated. A &quot;using&quot; statement would be compile-time syntactic sugar for a reference to the module, in much the same way it works in submodules:<br />\n<pre><code>module A {\n   export class AClass { };\n}\n\nmodule A.B {\n    export var a = new AClass();\n}</code></pre>\n\nconverts to:<br />\n<pre><code>var A;\n(function (A) {\n    var AClass = (function () {\n        function AClass() {\n        }\n        return AClass;\n    })();\n    A.AClass = AClass;\n    ;\n})(A || (A = {}));\n\nvar A;\n(function (A) {\n    (function (B) {\n        B.a = new A.AClass(); //AClass is generated as A.AClass. This is what a using statement could do.\n    })(A.B || (A.B = {}));\n    var B = A.B;\n})(A || (A = {}));</code></pre>\n\nIt feels very restricting to have to add a class to a submodule of A just to get unqualified names for all of the exports in A. It would feel more natural to have using statements (or import wildcards), and have the compiler check for ambiguities. This still feels to me like a &quot;must have&quot; for application scale development, especially given that we have design-time type-checking.<br />\n",
+    "PostedDate": "2013-10-12T23:30:30.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114106",
+    "ThreadId": "407063",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nThis is one of those design decisions that has a pretty divided opinion, so I suspect we'll err on the side of keeping with what ES6 recommends.<br />\n<br />\nThat said, once we do align, you should be able to pull out multiple symbols from the module as local names. While this wouldn't give you a wildcard, you would get a set of symbols that don't require full qualification.<br />\n</blockquote>\nI don't know if the ECMA6 team really want to stick with very long class name such as &quot;standard.structure.BinaryTree&quot; but it is not manageable for serious projects. \r<br />\n<br />\nThe need of pointing every single classes we  want to use as a local name can be tiedous too. It can lead to dozen of lines of code to declare what classes must be considered as local (a module may have hundreds of classes).\r<br />\n<br />\nThe compiler should do the work and  identify the ambiguities. If ECMA6 does not include this feature, TypeScript must provide it as an extension of  ECMA6.<br />\n",
+    "PostedDate": "2013-10-30T05:28:51.203-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1117471",
+    "ThreadId": "407063",
+    "Html": "Guys, just trying to catch up from October of 2012 till now, apologies if this was already covered elsewhere. I'm still having the same problems with modules that I had a year ago with the latest source... is this still not fixed/modified/understood/acknowledged?<br />\n<br />\nAll I want to do is create custom types (Value Objects, Java POJO's, Domain Objects, whatever...) and have TypeScript ensure it's the correct type. So far, it works, but the syntax is still awful. Python, Ruby, Java, C#, and ActionScript 3 allow you to import a class, and then have that namespace be &quot;defined&quot; magically, and you just supply the class.<br />\n<br />\nTypeScript however, requires me to use both the module local variable but also the entire package path. This is not going to work for large code bases and the CoffeeScript guys have ammo, which is horrible.<br />\n<br />\nObserve:<br />\n<pre><code>export module com {\n    export class Message {\n        greeting: string;\n        constructor(greeting: string) {\n            this.greeting = greeting;\n        }\n        greet() {\n            return &quot;Hello, &quot; + this.greeting;\n        }\n    }\n}</code></pre>\n\nAnd then I use that defined VO like so:<br />\n<pre><code>import MessageModule = module(&quot;com/Message&quot;)\n\nmodule Sayings {\n    export class Greeter {\n        message: MessageModule.com.Message;\n        constructor(message: MessageModule.com.Message) {\n            this.message = message;\n        }\n        greet() {\n            return &quot;Hello, &quot; + this.message.greet();\n        }\n    }\n}\n\nvar Message = MessageModule.com.Message;\nvar message = new Message(&quot;world&quot;);\nvar greeter = new Sayings.Greeter(message);</code></pre>\n\nCompiles great. Now if I modify the last line like so:<br />\n<pre><code>// var greeter = new Sayings.Greeter(message);\nvar greeter = new Sayings.Greeter(&quot;a string not a VO&quot;);</code></pre>\n\nThe tsc compiler correctly shows an error of &quot;Supplied parameters do not match any signature of call target&quot;.<br />\n<br />\nSo, while I don't mind making references to the module in code, having to make full module + package paths for class variable types is awful.<br />\n<br />\nIs this going to be improved/fixed?<br />\n",
+    "PostedDate": "2013-11-04T18:47:53.107-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118898",
+    "ThreadId": "407063",
+    "Html": "Took me a while but I just read this entire thread. If I may, allow me to add my thoughts: 2 points come to mind.<br />\n<h3>1. Modules and Closures</h3>\nI created an <a href=\"https://typescript.codeplex.com/workitem/1868\" rel=\"nofollow\">issue</a> and realise now that it was probably not the best place to put it.<br />\n<br />\nI see no reason why module definitions spread across files should share the same closure. Currently, in JavaScript, if you want to share values you must attach it to a shared object. Such as, from constructors to functions on the prototype - if you want to share something, attach it to <code>this</code>.<br />\n<br />\nAs stated in the issue, I don't see why there must be several closures for one module definition with deep namespacing. As I see it, the arguments put forward, above, push for no closures or a shared closure among different files. As only trivial examples of 1- or 2-depth namespacing (<code>ns1</code> or <code>ns1.ns2</code>) are used, I understand why I don't see an argument for one closure per module, but please consider having namespaces 4plus deep: your JS code can get pretty messy.<br />\n<br />\nConsidering you can't place code in between each level of namespacing (the dots), it's a little naive to consider the 2 examples, below, the same:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nmodule ns1.ns2.ns3 {\n    <span style=\"color:Blue;\">var</span> x; <span style=\"color:Green;\">// dummy code for playground to output</span>\n}\n\nmodule ns1 {\n    <span style=\"color:Blue;\">export</span> module ns2 {\n        <span style=\"color:Blue;\">export</span> module ns3 {\n            <span style=\"color:Blue;\">var</span> x; <span style=\"color:Green;\">// dummy code for playground to output</span>\n        }\n    }\n}\r\n</pre></div>Notice how both will output the same javascript:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> ns1;\n(<span style=\"color:Blue;\">function</span> (ns1) {\n    (<span style=\"color:Blue;\">function</span> (ns2) {\n        (<span style=\"color:Blue;\">function</span> (ns3) {\n            <span style=\"color:Blue;\">var</span> x;\n        })(ns2.ns3 || (ns2.ns3 = {}));\n        <span style=\"color:Blue;\">var</span> ns3 = ns2.ns3;\n    })(ns1.ns2 || (ns1.ns2 = {}));\n    <span style=\"color:Blue;\">var</span> ns2 = ns1.ns2;\n})(ns1 || (ns1 = {}));\n\n<span style=\"color:Blue;\">var</span> ns1;\n(<span style=\"color:Blue;\">function</span> (ns1) {\n    (<span style=\"color:Blue;\">function</span> (ns2) {\n        (<span style=\"color:Blue;\">function</span> (ns3) {\n            <span style=\"color:Blue;\">var</span> x;\n        })(ns2.ns3 || (ns2.ns3 = {}));\n        <span style=\"color:Blue;\">var</span> ns3 = ns2.ns3;\n    })(ns1.ns2 || (ns1.ns2 = {}));\n    <span style=\"color:Blue;\">var</span> ns2 = ns1.ns2;\n})(ns1 || (ns1 = {}));\r\n</pre></div>Apologies for the large set of code, but I guess it proves the point - and that's only 3 levels deep!<br />\n<br />\nFor my proposed solution, see the issue linked above.<br />\n<h3>2. Implicit Prefix of Imported Entities</h3>\nSorry for using &quot;entities&quot; there. Lack of a better word for modules/classes/enums/variables...<br />\n<br />\nI like the argument that <code>A.x</code> is available as <code>x</code> in <code>A.B</code> which transpiles to <code>A.x</code> in the JS, as I too find myself having to explain this to people - it seems to be a hidden gem. Luckily I noticed it, but it got me hooked, and now I find myself creating nested modules purely for that syntactic sugar. In my rather large app for my startup, there are nested namespace levels which really belong a level up, for example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nmodule ram {}\nmodule ram.app1 {}\nmodule ram.app2 {}\n<span style=\"color:Green;\">// i then have</span>\nmodule ram.app1.bindings {}\nmodule ram.app2.bindings {}\n<span style=\"color:Green;\">// rather than</span>\nmodule ram.bindings {}\r\n</pre></div>Really, KnockoutJs bindings don't even need a module or closure, but I do it purely to get the implicit prefixing. So is TypeScript inspiring me to write better code? In this case, no - it's actually the opposite.<br />\n<br />\nIn some cases, I omit an extra namespace. For example, I put all my enums under <code>module ram {}</code> rather than in <code>module ram.enums {}</code> because it's a pain to type enums.X everywhere and using <code>import e = enums;</code> is just as bad as it just reduces the readability of my code.<br />\n<br />\nAs I was reading the thread I was dying to shout ES6's <code>import * from ns1.ns2</code> as I've seen it presented by Kit Cambridge in his ES6 conference talks. Not many cites of ES6 syntax above, instead recommendations of <code>using</code>. But I see @JonTurner already  looked into that and said it had &quot;a divided opinion&quot;. I guess the:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> { x, y, z } from ns1.ns2\r\n</pre></div>would offer a method of implicit prefixing (albeit long-winded in many cases). But couldn't TypeScript (assuming this isn't too far from ES6 syntax) offer <code>import * from ns1.ns2</code> and convert the <code>*</code> to the curly brace syntax, depending on what we use in the module body?<br />\n<br />\nApologies for an extremely long post. Hopefully I contributed something useful.<br />\n",
+    "PostedDate": "2013-11-06T07:07:14.427-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1118928",
+    "ThreadId": "407063",
+    "Html": "@ramideas is import * in the ES6 spec? Jon Turner said that he hadn't seen such a syntax. But if it is in the spec, I'm sure it would make it into TypeScript. \r<br />\n<br />\nIm regards to the focus on using, my guess is that TypeScript appeals to .Net developers programming in C#, and we know the import constructs that are familiar to us. I'm sure we're all willing to take a syntax that is consistent with ES6 as long as it allows us to reference the classes in a module without explicitly naming the module or its alias.\r<br />\n<br />\nRe: closure sharing in modules: This breaks encapsulation for me. And I'm not sure how it would be implemented. Do you have any ideas?<br />\n",
+    "PostedDate": "2013-11-06T07:35:37.047-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119002",
+    "ThreadId": "407063",
+    "Html": "I'm taking Jon Turner's word, as I don't see <code>import * ...</code> on <a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:modules\" rel=\"nofollow\">http://wiki.ecmascript.org/doku.php?id=harmony:modules</a> (but I see <code>export * ...</code>).<br />\n<br />\nRE: sharing closures amongst modules - who are you trying to hide the variable from? If it is yourself, wouldn't exporting a variable with an underscore prefix warn you? If it is others who are using your module, I agree this may be a use-case of a shared closure.<br />\n<br />\nBut with classes, setting something as <code>private</code> isn't truly private. At runtime, everything has access to it. The only thing preventing it is TypeScript's compile time detection, which can be bypassed by casting the enclosing object to <code>any</code> before accessing a private field.<br />\n<br />\nMy problem with a shared closure is the compiler then becomes responsible for ordering dependencies. Consider the compilation of 3 files:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// file1.ts</span>\nmodule A {\n    <span style=\"color:Blue;\">var</span> _x; <span style=\"color:Green;\">// private variable, only accessible within this modules closure</span>\n}\n<span style=\"color:Green;\">// file2.ts</span>\nmodule B {\n    <span style=\"color:Green;\">// depends on something declared in file1.ts</span>\n    <span style=\"color:Green;\">// shouldn&#39;t have access to _x</span>\n}\n<span style=\"color:Green;\">// file3.ts</span>\nmodule A {\n    <span style=\"color:Green;\">// uses _x somewhere</span>\n    <span style=\"color:Green;\">// depends on something declared in file2.ts</span>\n}\r\n</pre></div>For the above declarations of <code>module A</code> to share the same closure they need to be reordered so they are together, but the dependencies prohibit that.<br />\n<br />\nI'm not saying I've thought this through thoroughly but a, possibly hacky, solution could be to declare <code>var _x</code> as <code>export private var _x</code> which would tell the compiler this needs to be available across closures. The compiler could then create and export an object from the module (called __shared, for example) which would hold _x as a property. I mean, you could do this now:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// file1.ts</span>\nmodule A {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> __shared__ = {};\n    shared._x = 0;\n}\n<span style=\"color:Green;\">// file3.ts</span>\nmodule A {\n    __shared._x++;\n}\r\n</pre></div>All the compiler would have to do is parse something like <code>export private var _x = 0;</code> as <code>export var _shared = {}; _shared._x = 0;</code> and implicitly assume the <code>_shared.</code> prefix where these variables are used. Obviously any subsequent <code>export private var _y = 0;</code> would only add to the object (<code>_shared._y = 0;</code>) rather than redeclare it - rather like the <code>var _this = this;</code> declaration. (Those are 'plus' signs in the code, they seem to get HTML-escaped...)<br />\n<br />\nLike I said, it's hacky. The reason I theorised using <code>export private var</code> rather than <code>var</code> is because you don't want to unintentionally hold onto <code>var</code>'d objects preventing the GC from doing it's thing.<br />\n<br />\nSide note: Notice how I'm giving suggestions of how the compiler can parse 'new' typescript as 'current' typescript? Is this helpful? (I ask anyone who knows anything about the compiler) In my head, it's like parsing .NET code to IL. It's always the same IL, so the output process can remain the same. It's just the input/parsing process that needs modification.<br />\n",
+    "PostedDate": "2013-11-06T08:35:06.447-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224116",
+    "ThreadId": "407063",
+    "Html": "Another vote for the addition of a &quot;partial&quot; directive for module declarations. If you define classes in single .ts files and compile all output to a single .js file they compile with a module per class when the intent is generally a single module of each name containing all its classes.<br />\n",
+    "PostedDate": "2014-03-18T12:31:39.767-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224123",
+    "ThreadId": "407063",
+    "Html": "I agree with <a href=\"mailto:@ramideas\" rel=\"nofollow\">@ramideas</a>. I've had to split up modules to get code to compile in the right order:<br />\n<pre><code>//File1.ts\nmodule A {\n     export class AClass { }\n}\n\n//File2.ts\nmodule B {\n     export var aclass = new AClass();\n     export class BClass { };\n}\n\n//File3.ts\nmodule A {\n     export var bclass =  new BClass();\n}\n</code></pre>\n\nThere is no way to reorganize this code to collapse the two module A declarations, as they are ordered to each require the previous file. In general, it might be hard to detect situations like this, and it would definitely lead to unexpected situations where you can or cannot use private variables in a module. Better to leave them declared as is, even with the redundancy and lack of access.<br />\n",
+    "PostedDate": "2014-03-18T12:50:44.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224125",
+    "ThreadId": "407063",
+    "Html": "On another note, I am still dying for some form of import*. Nested modules already effectively perform an import each other:<br />\n<pre><code>module A {\n    //Declares some classes functions and variables\n}\n\nmodule A.B {\n    //Has unprefixed access to the classes, functions and variables in module A\n}\n</code></pre>\n\nIs it such a stretch to extend that to modules outside of the heirarchy?<br />\n<pre><code>module C {\n     import* A;\n\n     //Has unprefixed access to the classes functions and variables in module A.\n}\n</code></pre>\n\nThis is a must have, whether or not it is supported in ES6. Having a compiler to detect the ambiguities at design time could be the difference between including or not including this feature in a language spec. There might therefore be good reason for ES6 and TypeScript to go in different directions.<br />\n",
+    "PostedDate": "2014-03-18T12:53:51.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224704",
+    "ThreadId": "407063",
+    "Html": "Interesting topic!<br />\n<br />\nI have a general question regarding namespaces/modules. I couldn't yet come up with a solution to organize my code just the way I want, although I think it should be possible.<br />\nSo this is what I'd love to have:<br />\n<ul>\n<li>each class has it's own .ts file, some may be in nested folders</li>\n<li>have a TS library &quot;MyLib&quot;, which has some top level classes as well as nested ones (eg. &quot;util/Helper.ts&quot;, &quot;gui/Button.ts&quot;)</li>\n<li>have a TS app &quot;MyApp&quot; that has it's own classes (eg. &quot;App.ts&quot;, &quot;view/Main.ts&quot; but uses some classes from &quot;MyLib&quot;</li>\n<li>whenever I build that results in one js file that includes all the classes that MyApp needs, but I don't need AMD really (currently I use require.js for JS dev but in the end I compile to one file anyway), so if &quot;view/Main.ts&quot; statically declares that it uses &quot;gui/Button.ts&quot; that will be included in the compiled single js file (even if view/Main.ts doesn't use it actually). But if there's a class in &quot;MyLib&quot; that's not needed by &quot;MyApp&quot; that shouldn't be included.</li>\n<li>in an ideal world a class could list all it's dependencies on top of it's file, and somehow I could set the &quot;path&quot; of &quot;MyLib&quot; in the settings of &quot;MyApp&quot; (like &quot;../libs/MyLib&quot; so this way multiple app projects can use the same library without needing to copy-paste library files.</li>\n<li>\nonce that's set &quot;view/Main.ts&quot; could use the type &quot;gui/Button.ts&quot; either by :\n<ul>\n<li>importing &quot;MyLib/gui/Button&quot; and simply refering to &quot;Button&quot; as the type (if 2 Buttons are imported then it needs to refer to it like MyLib.gui.Button</li>\n<li>or if that's not possible then like MyLib.gui.Button or gui.Button</li>\n</ul>\n</li>\n<li>ideally the compiled end result is a single js file that tsc can produce, but if it can only be done with module loading systems like require.js, common.js, or some other external tool that's still ok as long as I can set it up to do the work everytime I save (I use webstorm).</li>\n<li>\nusing JS libraries is not an issue, I can just include them as script tags in the html and use their d.ts files<br />\n</li>\n</ul>\nAs you can see all I really want is to be able to organize my code as I used to do it in Java, Actionscript, etc.<br />\nAre these realistic / achievable requirements today? If there are projects that use similar organizing you can just point me to their github page. Really appreciate any help!<br />\n",
+    "PostedDate": "2014-03-20T02:33:59.647-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224925",
+    "ThreadId": "407063",
+    "Html": "I seem to have one big issue with how namespaces/modules work now: I can't seem to use a ts library from a project in a way that I only have to specify the path of that library once.\r<br />\nIn the above example structure, if I want to use MyLib/gui/Button.ts from MyApp/view/Main.ts I need to use a reference tag relative to MyApp/view/Main.ts. If I want to use it somewhere else I need to add a reference tag there again relative to that .ts file. The problem is, if I move the library, I have to manually rewrite all of these references by hand which can be very time consuming.\r<br />\n<br />\nIs it not possible to configure the path of &quot;MyLib&quot; once for the project &quot;MyApp&quot; and then just reference &quot;MyLib&quot; as &quot;MyLib&quot;, so either class inside MyApp can uniformly reference the Button.ts like this: &quot;MyLib/gui/Button.ts&quot;. This way, if the path of MyLib changes, I can just edit the configuration for &quot;MyApp&quot; and everything else is good to go. This looks like something I'd need, but I can't I do it somehow with the current compiler?\r<br />\n<a href=\"https://typescript.codeplex.com/discussions/451757\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/451757</a>\r<br />\n<br />\nOn the other hand the reference tag is quite ugly, and I know it has a different purpose than using import, but this feels like a bit of a mess.\r<br />\n<br />\nOne solution I have currently is to generate a d.ts file for &quot;MyLib&quot; copy that to &quot;MyApp/libs/MyLib.d.ts&quot; and reference that. The problem with this is, if I just include the built MyLib.js as a script tag than the whole lib will be added, not just the classes that &quot;MyApp&quot; needs.<br />\n",
+    "PostedDate": "2014-03-20T10:58:11.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1224986",
+    "ThreadId": "407063",
+    "Html": "@grizzly33 Excuse me if I am misunderstanding you, but the current TypeScript plugin for Visual Studio (and the previous one too, I believe) automatically include all TypeScript files in the project as references. If webstorm behaves differently, you may need to take it up with JetBrains.\r<br />\n<br />\nThis still doesn't solve the problem of references in other projects, but due to the nature of ASP.Net projects (and IIS, I believe), you can't actually include TypeScript files from other projects without copying the compiled JavaScript to a directory in the current project that is permissioned to serve files.\r<br />\n<br />\nSo in general, it feels like there is more work to be done to facillitate modularization and reuse.<br />\n",
+    "PostedDate": "2014-03-20T13:08:55.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1225004",
+    "ThreadId": "407063",
+    "Html": "thanks for the answer! Well, so far I haven't used Visual Studio for web development, but I may give it a shot. I preferred WebStorm so far.\r<br />\nI understand that from an ASP.Net POV, but I think when it comes to TypeScript that context shouldn't come in discussions: I think we're on the wrong track if some feature of TypeScript is influenced by the nature of how .Net or Visual Studio works, especially if it conflicts the interest of many users (if that's the case).\r<br />\n<br />\nAlthough, even if the library files need to be included in the project I think it would be very useful to configure a path name and be able to reference that path with it's name instead of using the path everywhere.\r<br />\nBut generally I think it's a pretty common requirement to have only a single instance of a library during development. If I change a library I don't want to copy paste it to all projects again that use it. Or actually I may want that (in which case I just copy it), but I want the ability that I can use a single instance too, which I can achieve perfectly with require.js currently (I just hate the typeless nature of it.. \r<br />\n<br />\nIs this currently not possible? I'm thinking, if all else fails, it shouldn't be too hard to modify the compiler to handle this, but I don't like the idea to come up with something not standard.<br />\n",
+    "PostedDate": "2014-03-20T14:05:15.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1225024",
+    "ThreadId": "407063",
+    "Html": "@grizzly33 I hear what you are saying about the config file, and I wouldn't be surprised if someone told me that this already exists for Visual Studio. I cannot speak for Webstorm. <br />\n<br />\nIt occurs to me that solutions of the form that we are exploring would be outside the realm of the TypeScript compiler. For instance, I don't think a config file that centralized the dependencies of a web project would actually be passed in to tsc.exe. It would instead influence the way the IDE makes use of the TypeScript compiler. Therefore we would need to talk about TypeScript support in our respective IDEs.<br />\n<br />\nAn analogous feature is TypeScript intellisense. That TypeScript as a language is designed to allow for static analysis is one thing, and should be discussed in a forum on language design. But the actual implementation of compile-time tooling is the responsibility of the IDE developers.<br />\n<br />\nIf anyone has a better grasp on the divison of responsibilities here, please let us know.<br />\n<br />\nWith regard to the language, I am pushing for a more robust import system. It is my belief that the TypeScript tooling to resolve ambiguities that arise from unprefixed class, function and variable importation would be relatively easy to implement. Or at least, they would not be more complex to implement than the many features of the wonderful tooling that already exists for TypeScript in Visual Studio and Webstorm.<br />\n",
+    "PostedDate": "2014-03-20T15:08:37.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1225039",
+    "ThreadId": "407063",
+    "Html": "Well, yeah maybe it's not the language's responsibility, to be honest I can't see into that deep enough to judge yet.\r<br />\nFor my use-case though, where I'd want to use libraries externally (without copy pasting them) what do you suggest is the best workflow? My only idea for now is to generate a d.ts file for the lib, and use that as a kind of a replacement for the config file in the app's classes where it's needed.<br />\n",
+    "PostedDate": "2014-03-20T16:13:41.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1225059",
+    "ThreadId": "407063",
+    "Html": "@grizzly33 For that use case, I would recommend creating a console application which finds and compiles external files, and then generates 1) a single JavaScript file and 2) a definition file for all of them (d.ts). That program can take a destination for those files as an input, and can be run on build for your current project.\r<br />\n<br />\nIt may take a bit of extra work, but if you write the program in a sufficiently abstract way, it should be reusable for your future TypesScript projects. I use a similar strategy to handle external references for myself. I hope that helps!<br />\n",
+    "PostedDate": "2014-03-20T17:41:03.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1225346",
+    "ThreadId": "407063",
+    "Html": "thanks, that sounds like a good approach. I hope to find the time to write it, in the meantime if someone already has something like that on github let me know!<br />\n",
+    "PostedDate": "2014-03-21T12:47:44.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

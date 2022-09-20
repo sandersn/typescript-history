@@ -1,0 +1,126 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.627-07:00",
+    "CommentCount": 15,
+    "Custom": null,
+    "Description": "The version of TS that is included with the VS2013.3 CTP and VS14 crashes VS when I make a change to a TS file and then clear my temp file in IE and refresh the page. The VS status bar says the output was generated successfully and here is the VS dialog message when it crashes...\r\n\r\nProblem signature:\r\n  Problem Event Name:\tCLR20r3\r\n  Problem Signature 01:\tdevenv.exe\r\n  Problem Signature 02:\t14.0.21730.1\r\n  Problem Signature 03:\t53884985\r\n  Problem Signature 04:\tTypeScriptDebugEngine\r\n  Problem Signature 05:\t12.0.21730.1\r\n  Problem Signature 06:\t53884954\r\n  Problem Signature 07:\tf\r\n  Problem Signature 08:\t2b\r\n  Problem Signature 09:\tSystem.NullReferenceException\r\n  OS Version:\t6.1.7601.2.1.0.18.10\r\n  Locale ID:\t1033\r\n  Additional Information 1:\tfa29\r\n  Additional Information 2:\tfa2957fec6f0e6f62a6f1facf4f1833f\r\n  Additional Information 3:\ta120\r\n  Additional Information 4:\ta12041efbc9bf39619d401469bb5ce34\r\n\r\nRead our privacy statement online:\r\n  http://go.microsoft.com/fwlink/?linkid=104288&clcid=0x0409\r\n\r\nIf the online privacy statement is not available, please read our privacy statement offline:\r\n  C:\\Windows\\system32\\en-US\\erofflps.txt\r\n",
+    "LastUpdatedDate": "2014-07-28T15:17:22.627-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-19T09:01:53.207-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "VS2013.3 CTP and VS14 TS Crashes VS on IE Clear temp files refresh",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2568
+  },
+  "FileAttachments": [
+    {
+      "FileId": 868390,
+      "FileName": "app.ts",
+      "DownloadUrl": ".\\868390"
+    },
+    {
+      "FileId": 877191,
+      "FileName": "TypeScriptHTMLApp10.zip",
+      "DownloadUrl": ".\\877191"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Hi\n\nIs it possible to share the repro code and the edits you made so we can look into this issue.\n\nThanks\nSheetal",
+      "PostedDate": "2014-06-20T12:29:14.527-07:00",
+      "Id": 150364
+    },
+    {
+      "Message": "Any TS file I modify in my project and then clear IE temp files and then refresh the page causes the TypeScriptDebugger to crash VS14. I attached the simplest TS file in my project.\r\n\r\nTo reproduce the issue, I just added this line of code after line 17 in the file.... var s = \"\";\r\n\r\nThen I clear the IE temp files so the modified output JS will load in the browser, refresh the browser page and then the TypeScriptDebugger crashes VS14. Like I said I can do this in any TS file and the TS debugger crashes.",
+      "PostedDate": "2014-06-24T07:19:59.5-07:00",
+      "Id": 150600
+    },
+    {
+      "Message": "I have figured out exactly how to reproduce this TypeScriptDebugEngine crash 100% of the time. If you create a new TypeScript project using the VS default project template for TypeScript everything runs fine without any VS crashes.\r\n\r\nHowever, if you add an inline script to the HTML page and then refresh the page (you may have to save TS file even though you aren't making changes and then refresh) the TypeScriptDebugEngine crashes VS.\r\n\r\ni.e.\r\n\r\n```\r\n<script>\r\n    var s = \"\";\r\n</script>\r\n```\r\n\r\nBy just adding the simple inline script above to the HTML page and then refreshing, the TypeScriptDebugEngine crashes. I've tried using a template type script (i.e. <script type=\"text/template\"><span>test</span></script>) and this does NOT cause the TypeScriptDebugEngine to crash.\r\n\r\nIMPORTANT...\r\n1. Different from what I said in my original post, you do NOT have to make changes to any TypeScript file for this issue to occur.\r\n2. To reproduce this issue, you may have to refresh the IE browser page a couple times and might even have to save the only TS file and then refresh even though you didn't make any changes.\r\n\r\nThis is especially a problem for WebForm projects, b/c the System.Web.UI.Page class automatically appends inline scripts to the page, which then causes the TypeScriptDebugEngine to crash on page refreshes.\r\n\r\nTo help move this issue along, I have attached the TypeScript project that I am able to reproduce this issue on. There is a index.html and index.aspx and I have the index.aspx set as the startup page. If you debug this project and refresh it works fine, but in the index.aspx page, if you uncomment the inline script I have commented out and then refresh the page, the TypeScriptDebugEngine will crash VS.",
+      "PostedDate": "2014-07-08T12:07:08.253-07:00",
+      "Id": 151861
+    },
+    {
+      "Message": "Also, here is the content from the VS 2013 crash log...\n\nException Type       : System.NullReferenceException\nException Message    : Object reference not set to an instance of an object.\nException Stack Trace:    at TypeScriptDebugEngine.DebugMonitor.ScriptDocumentNotifications.Microsoft.VisualStudio.Debugger.ComponentInterfaces.IDkmScriptDocumentTreeNodeUnloadNotification.OnScriptDocumentTreeNodeUnload(DkmScriptDocumentTreeNode scriptDocumentTreeNode, DkmEventDescriptor eventDescriptor)\n   at Microsoft.VisualStudio.Debugger.EntryPoint.IDkmScriptDocumentTreeNodeUnloadNotification_OnScriptDocumentTreeNodeUnload(IntPtr pvClassInfo, IntPtr ScriptDocumentTreeNode, IntPtr EventDescriptor)\nException Data   : [EmptyOrNull]\n",
+      "PostedDate": "2014-07-08T12:13:09.903-07:00",
+      "Id": 151862
+    },
+    {
+      "Message": "I looked into this, and I verified that this is fixed\nCan you please try VS2013 Update 3 RC ([http://support.microsoft.com/kb/2933779](http://support.microsoft.com/kb/2933779)) and see if your issue is fixed.\n\nThanks.\nSheetal",
+      "PostedDate": "2014-07-09T11:49:20.027-07:00",
+      "Id": 151936
+    },
+    {
+      "Message": "I was using VS2013 Update 3 RC yesterday when I discovered how to reproduce the issue.\n\nAlso, I installed VS14 CTP2 and the problem exist in this as well.",
+      "PostedDate": "2014-07-09T12:05:45.37-07:00",
+      "Id": 151940
+    },
+    {
+      "Message": "What version is the TypeScriptDebugEngine.dll supposed to be so I can verify the correct one is installing with the VS2013.3 RC and VS14 CTP2?",
+      "PostedDate": "2014-07-09T12:07:33.357-07:00",
+      "Id": 151941
+    },
+    {
+      "Message": "The dll version should be 12.0.30626.0",
+      "PostedDate": "2014-07-09T13:57:54.33-07:00",
+      "Id": 151952
+    },
+    {
+      "Message": "VS14 CTP2 is a fresh install on my machine and the TypeScriptDebugEngine.dll version in the directory \"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Packages\\Debugger\" is 12.0.21901.1.\n\nIs there a way to obtain the newer version so I can replace the older version that installed with VS14 CTP2?",
+      "PostedDate": "2014-07-10T06:10:49.967-07:00",
+      "Id": 152015
+    },
+    {
+      "Message": "Have you verified this one VS2013 with Update 3 RC? Did you verify if the TypeScriptDebugEngine.dll in \"C:\\Program Files (x86)\\Microsoft Visual Studio 12.10\\Common7\\Packages\\Debugger\" is as mentioned in earlier post",
+      "PostedDate": "2014-07-10T09:22:53.58-07:00",
+      "Id": 152024
+    },
+    {
+      "Message": "I'm having this same issue with VS 2013.3 RC, and my TypeScriptDebugEngine.dll is 12.0.30626.0. ",
+      "PostedDate": "2014-07-10T10:55:29.607-07:00",
+      "Id": 152032
+    },
+    {
+      "Message": "I just verified that the TypeScriptDebugEngine.dll that installs with VS2013.3 RC is version 12.0.30626.0 and the issue definitely exists in this RC.\n\nHappy to see I'm not the only one with this problem. Welcome to the club.",
+      "PostedDate": "2014-07-10T11:35:58.59-07:00",
+      "Id": 152033
+    },
+    {
+      "Message": "I was able to repro this issue and am working on the fix for this one.",
+      "PostedDate": "2014-07-10T14:33:06.433-07:00",
+      "Id": 152048
+    },
+    {
+      "Message": "Will this fix be available separate from the VS2013.3 Update or will it be bundled into VS2013.3 RTW",
+      "PostedDate": "2014-07-11T11:25:56.997-07:00",
+      "Id": 152122
+    },
+    {
+      "Message": "The fix should be available in VS2013.3 RTW.",
+      "PostedDate": "2014-07-17T08:59:12.29-07:00",
+      "Id": 152712
+    }
+  ]
+}

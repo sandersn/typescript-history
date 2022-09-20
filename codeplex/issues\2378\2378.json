@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.22-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "In the 1.0.0 compiler when generating declaration files, referenced declaration files are added to the generated declaration files. Previously this was not the case and has broken our build. One possible solution is to remove the references from the code and just add them into the build during compile. This is undesirable for our build, and the new references in the auto generated files will not work with our build system (as they are added based off the source path).\r\n\r\nLooking through the compiler this could be fixed by adding a flag such as \"noReference\" that signals the compiler to just return from emitReferencePaths within declarationEmitter.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-03T17:07:57.21-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Option to not include references in generated declarations",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2378
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "To be clear, your issue is that .d.ts files have /// references in them to other .d.ts files? What exactly is broken by their inclusion in your system?",
+      "PostedDate": "2014-04-03T18:26:36.68-07:00",
+      "Id": 140489
+    },
+    {
+      "Message": "Yes, as backwards as it sounds the problem is that the /// references are in the d.ts files. The problem stems from the fact that the out directory specified to the compiler is not the final place for the declaration files. In our build we have a publish step in which we move certain files (dlls, headers, declarations, etc) to an InternalAPIs location within the source tree. This is so that other teams within the organization can reference our components without building our source or having a reference to our build directory. When we do this publish step all of the /// references are no longer valid.\n\nCurrently I have patched the compiler and added a \"noReference\" flag so that /// references are not added to the declarations. We would be happy to do a pull request for this feature.",
+      "PostedDate": "2014-04-04T09:02:48.05-07:00",
+      "Id": 140555
+    },
+    {
+      "Message": "The reason for the /// reference rewrite is to ensure that the generated .d.ts will work. in your original .ts file(b.ts) you indicated that it depends on another .ts file (a.ts) through a /// reference, which would mean that the generated .d.ts (b.d.ts) would need the .d.ts generated from your other file (a.d.ts) to function. and any consumer of this b.d.ts need to include a.d.ts as well to be able to build.\n\nSince your configuration seems to work without the /// references in the d.ts, why have them in the .ts in the first place? if there are no /// refrences in the .ts files the compiler will not add them to your .d.ts files.\n",
+      "PostedDate": "2014-04-04T10:50:02.363-07:00",
+      "Id": 140569
+    },
+    {
+      "Message": "We need the references in the .ts files so that they build correctly. Our team is using another teams declaration files in our published InternalAPIs folder, building, and publishing again to InternalAPIs. Then other teams are using both our declarations and the original declarations that we are referencing. If we don’t include the reference it won’t build, unless we pass the declarations to the compiler, which defeats the purpose of having /// references in the first place.",
+      "PostedDate": "2014-04-04T12:13:11.107-07:00",
+      "Id": 140588
+    },
+    {
+      "Message": "Got it. Marking as a suggestion. We've gotten feedback on this multiple times from both sides. Some people are broken by the /// existing, others are broken when they're gone. Sounds like we may indeed just need a switch to toggle it.",
+      "PostedDate": "2014-04-04T13:48:57.023-07:00",
+      "Id": 140604
+    },
+    {
+      "Message": "Awesome. If your interested the patch that we have done from the base 1.0.0 of TypeScript can be seen at:\n\nhttps://typescript.codeplex.com/SourceControl/network/forks/karpinsn/TypeScriptFeatures/changeset/547be679ffe474b0ee96cfd5bb3d59762071abfa",
+      "PostedDate": "2014-04-04T15:19:36.697-07:00",
+      "Id": 140617
+    },
+    {
+      "Message": "In case anyone is going to use this patch, I fixed a really stupid copy and paste error (my bad), the working commit is at:\n\nhttps://typescript.codeplex.com/SourceControl/network/forks/karpinsn/TypeScriptFeatures/changeset/5af445617056dc573955a696ac6509802b717a61",
+      "PostedDate": "2014-04-06T14:59:57.803-07:00",
+      "Id": 140749
+    }
+  ]
+}

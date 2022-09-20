@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "921293",
+    "ThreadId": "397897",
+    "Html": "\r\n<p>I am trying to find extension points in the typescript compiler and i couldn't figure out a place where type information for specific nodes is calculated.</p>\r\n<p>Is this type inference feature implemented in the Language Service only?</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-03T08:02:47.773-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922584",
+    "ThreadId": "397897",
+    "Html": "<p>Thanks for the question.&nbsp; We perform type inference for both command-line compiles&nbsp;as well as within the language service.&nbsp; (In fact, the language service sits atop the compiler itself - typescript.js.)</p>\r\n<p>For type definitions as well as annotated constructs, types are calculated during the type collection and binding phases (see typeCollection.ts and binder.ts).&nbsp; Once the \"known\" types are assigned to symbols, inferencing is interleaved with the typecheck phase.&nbsp; (See typeFlow.ts.)</p>\r\n<p>Hope this helps,</p>\r\n<p>- Joe</p>",
+    "PostedDate": "2012-10-05T11:27:06.663-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922602",
+    "ThreadId": "397897",
+    "Html": "<p>Thanks,</p>\r\n<p>I will have a look more thoroughly at the source files.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-05T12:05:36.23-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932500",
+    "ThreadId": "397897",
+    "Html": "<p>Is the type inference algorithm documented somewhere (tech report, draft paper), and how does it compare to other JS/AS type systems?</p>\r\n<p>For instance, I found the following surprising:</p>\r\n<p>\r\n<pre>function f() {\r\n\tvar result;\r\n\tresult.x = \"hi\";\t// added property\r\n\treturn result;\r\n} // type () =&gt; any:-(\r\n\r\ndeclare var g: () =&gt; {x:String};\r\n\r\nfunction g() {\r\n\tvar result;\r\n\t// result.x = \"hi\"; // missing property\r\n\treturn result;\r\n} // type () =&gt; {x:String} :-(\r\n\r\nconsole.log(f().x,g().x); // no errors :-(</pre>\r\n</p>",
+    "PostedDate": "2012-10-25T09:18:33.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933040",
+    "ThreadId": "397897",
+    "Html": "<p>In your first example, type inference will infer the type of 'result' as any, and it will keep that type.&nbsp; The reason being is that in general we can't guess types by looking at code (though we could in simple examples like yours).&nbsp; A slightly more complicated example makes things more difficult:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">function</span> f() {\r\n    <span style=\"color: blue;\">var</span> result;\r\n    <span style=\"color: blue;\">if</span> (random_bool()) {\r\n        result.x = <span style=\"color: #a31515;\">\"hi\"</span>; <span style=\"color: green;\">// add x property</span>\r\n    }\r\n    <span style=\"color: blue;\">else</span> {\r\n        result.y = <span style=\"color: #a31515;\">\"bye\"</span>;  <span style=\"color: green;\">// add y property</span>\r\n    }\r\n    return result;\r\n}\r\n</pre>\r\n</div>\r\n<div style=\"color: black; background-color: white;\">By keeping the type inference more localized, it's both easier to reason about (and easier to optimize for in the compiler).</div>\r\n<div style=\"color: black; background-color: white;\">&nbsp;</div>\r\n<div style=\"color: black; background-color: white;\">A similar situation happens in your second example.&nbsp; For example:</div>\r\n<div style=\"color: black; background-color: white;\">&nbsp;</div>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">function</span> g(): {x: string;} {\r\n    <span style=\"color: blue;\">var</span> result;\r\n    <span style=\"color: green;\">// result.x = \"hi\"; // missing property</span>\r\n    <span style=\"color: blue;\">return</span> result;\r\n} <span style=\"color: green;\">// type () =&gt; {x: string} :-(</span>\r\n</pre>\r\n</div>\r\n<p>The type of 'result' is 'any' because&nbsp;there isn't an&nbsp;initialization on \"var result\".&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">&nbsp;</div>",
+    "PostedDate": "2012-10-26T08:48:13.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933167",
+    "ThreadId": "397897",
+    "Html": "<p>That is why I was asking for a type system description - not what the code currently does, but what you are aiming for, and how your aims relate to the other JS/AS type systems out there.</p>\r\n<p>Tracking types from object updates is standard in implementation-level \"hidden class\" inference, and I thought that most JS type system research was trying to merge control flow information into the type analysis, even down to dynamic-type-check guarded conditionals&nbsp;(so far, I've only read a fraction of the papers I've found, but that seemed to be a common thread).</p>\r\n<p>The problem with your random conditional example is that the paths are merged back together, with no unifying information to use after the merge, and little use during the split. That is a worst case.</p>\r\n<p>That is different from straightline update code, which unfortunately is common in JS, since some of the core object APIs (such as object extension) are imperative, rather than functional. So, straightline update code will need to be handled in practice. In pre-ES6 code, one needs to go even further, to handle the various object extension and module export library functions out there - it will take a lot of time before all of that is converted to use modules and classes.</p>\r\n<p>As for the second example: yes, the type for 'result' is 'any', but trying to convert that to the declared '{x:string}' would trigger a warning in most type systems (not in the AS3 one, perhaps). And if you consider that the type of an uninitialized variable is really representing an undefined value, something looks very wrong (the type system allows me to use an undefined value as if it had a property, without so much as a warning).</p>\r\n<p>PS. call me old-fashioned, but a proper mailing list would be nicer for community involvement. Neither the forums/issues, nor their email notifications offer the same functionality/convenience. And TypeScript as a typed ES6 tranpiler is interesting enough that many JS coders and tool hackers might want to be involved;-)</p>",
+    "PostedDate": "2012-10-26T14:27:34.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

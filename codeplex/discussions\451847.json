@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "1074649",
+    "ThreadId": "451847",
+    "Html": "<pre><code>interface IEnumerable&lt;T&gt; extends Enumerable {\n    GroupBy&lt;K&gt;(keySelector: ($: T) =&gt; K): IEnumerable&lt;IGrouping&lt;T, K&gt;&gt;\n}\n</code></pre>\n\nIm trying to createtype definitions for Linq.JS.<br />\nAnd generics seems totally broken, unless I'm doing something wrong here.<br />\n<br />\nGroupBy returns an enumerable that contains &quot;groupings&quot; which contains items of type T (item type) and the group key K <br />\nIn C#, I could do the above.<br />\nBut here I get some weird error about wrapping generics with their own type args.<br />\n<br />\n&quot;&quot;A generic type may not reference itself with a wrapped form of its own type parameters.\t&quot;&quot;<br />\n<br />\nCan I somehow get around this?<br />\n",
+    "PostedDate": "2013-07-30T05:12:22.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1074838",
+    "ThreadId": "451847",
+    "Html": "This limitation is intentional, although we will be lifting it in the future. The reason it was never an issue in C# is because it uses a nominal type system rather than a structural one like Typescript. A workaround for the moment may be possible using additional type parameters and type parameter constraints depending on your exact API shape.<br />\n",
+    "PostedDate": "2013-07-30T13:23:31.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1074887",
+    "ThreadId": "451847",
+    "Html": "Another, less precise, workaround would be:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> IEnumerable&lt;T&gt; <span style=\"color:Blue;\">extends</span> Enumerable {\n    GroupBy&lt;K&gt;(keySelector: ($: T) =&gt; K): IEnumerable&lt;<span style=\"color:Blue;\">any</span>&gt;\n}\r\n</pre></div>The &quot;gotcha&quot; is having T in an argument to the recursive call to IEnumerable.  Like Dan says, we're working on lifting this restriction in a future version.<br />\n",
+    "PostedDate": "2013-07-30T15:58:29.523-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1074914",
+    "ThreadId": "451847",
+    "Html": "When you guys says &quot;lifting it in the future&quot;, do you mean by 1.0? 1.x? 2.x? <br />\n",
+    "PostedDate": "2013-07-30T18:38:33.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075313",
+    "ThreadId": "451847",
+    "Html": "We're aiming to have the restriction removed by 1.0.<br />\n",
+    "PostedDate": "2013-07-31T14:44:13.86-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076365",
+    "ThreadId": "451847",
+    "Html": "Is there any information about this wrapped generics restriction? I'd love to read an article describing the source this problem, exact scenarios where structural subtyping can't work with arbitrary 'wrapped' usages of generic types. <br />\n",
+    "PostedDate": "2013-08-03T13:47:34.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076936",
+    "ThreadId": "451847",
+    "Html": "With TypeScript's structural types determination of type relationships (subtype, assignability, identity) can potentially lead to infinite expansion of generics. Consider the following:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> List&lt;T&gt; {\n    data: T;\n    next: List&lt;T&gt;;\n    owner: List&lt;List&lt;T&gt;&gt;;\n}\n<span style=\"color:Blue;\">interface</span> MyList&lt;T&gt; {\n    data: T;\n    next: MyList&lt;T&gt;;\n    owner: MyList&lt;MyList&lt;T&gt;&gt;;\n}\n<span style=\"color:Blue;\">var</span> list: List&lt;Foo&gt;;\n<span style=\"color:Blue;\">var</span> myList: MyList&lt;Foo&gt;;\nlist = myList;\r\n</pre></div>To determine whether 'myList' is assignable to 'list' we must compare MyList&lt;Foo&gt; to List&lt;Foo&gt;. So we create the expansions of the two generic types and compare their properties. This in turn leads us to compare MyList&lt;MyList&lt;Foo&gt;&gt; with List&lt;List&lt;Foo&gt;&gt;, which in turn leads to another level of expansion, and so on ad infinitum.\r<br />\n<br />\nWe currently have a rule that ensures such &quot;generative recursive generics&quot; never occur, but were planning to change the type comparison algorithm to instead detect and short-circuit the expansion. The short-circuiting mechanism would change references to a type parameter to type ‘any’ in cases where we detect a wrapping reference during generic expansion, and it would thus cut off the infinite expansion. However, in finite scenarios where the generic expansion is guided by the program text, such as when materializing a generic type because of an expression construct (e.g. a property access), we wouldn’t prevent wrapping expansion because it is bounded by what the program actually explores. For example, the expression 'myList.owner.owner.owner' isn’t per se dangerous because nothing explores the expansion beyond three levels.\r<br />\n<br />\nHope this makes sense.<br />\n",
+    "PostedDate": "2013-08-05T13:55:05.47-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077200",
+    "ThreadId": "451847",
+    "Html": "Does this mean that once the restriction is lifted, it will work as expected?\r<br />\nI will get working intellisense/type safety for the example I presented at the first post here?\r<br />\nOr will it as you say, revert to &quot;any&quot; and thus make it look like it is more or less untyped?<br />\n",
+    "PostedDate": "2013-08-06T04:24:53.033-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077741",
+    "ThreadId": "451847",
+    "Html": "Thanks, it's much clearer now. I was thinking about general algorithm for checking subtyping and it seems to me that problem is undecidable in general case. Do you know if it is decidable or not? I was trying to build a correspondence with context free grammars. Possible property chains allowed by a type, like x.owner.owner.owner.data.data.data for 'List&lt;T&gt;' type in your example form a language that seems to be context free. With restrictions on generic type wrapping the correspondent language is regular and inclusion is decidable therefore.<br />\n",
+    "PostedDate": "2013-08-07T06:57:38.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1112132",
+    "ThreadId": "451847",
+    "Html": "I've found the same issue when worked on IxJS (similar to Linq.js): <a href=\"https://typescript.codeplex.com/workitem/1839\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1839</a>\r<br />\nPlease, remove this restriction on generative recursion.<br />\n",
+    "PostedDate": "2013-10-25T08:15:31.277-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1112203",
+    "ThreadId": "451847",
+    "Html": "Generative recursion should be much less restricted in the latest compiler in 'develop'.  If you try it out, and have a case that still does not work correctly, please file an issue and let us know.<br />\n",
+    "PostedDate": "2013-10-25T11:13:10.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

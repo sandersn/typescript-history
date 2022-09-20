@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:22:42.283-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "I can understand that current behavior can match the specification. If it's true the issue would be as a proposal.\r\n\r\nLet's look at the following code:\r\n```ts\r\nfunction f<T>(value: T) { return value; };\r\n\r\nfunction g(func: (x: number) => number) {}\r\ng(f);\t// ok, f is (x: number) => number\r\n\r\nfunction h<R>(func: (x: number) => R): R { return null; }\r\n\r\nh<number>(f);\t// ok, f is (x: number) => number\r\nh(f);\t\t\t// wrong, R infered as {}\r\n```\r\n\r\nIn case of call `h(f)`\r\n1. type parameter `R` have not been set, so it should be inferred;\r\n2. when `f` will be converted to `(x: number) => R` where `R` is _unknown_ or _unfixed_ type, `f` should be `(x: number) => number` to follow its signature.\r\n3. based on converted signature of `f`, `R` should be fixed to `number` type.\r\n\r\nSo, I think there's enough information to infer type based on parameter which signature is generic.\r\n\r\nHere is a real world sample. Promises/A+ defines a signature for implementations to construct a new promise. It is a function for `new` that take a callback for resolve continuation:\r\n```ts\r\nclass SuperPromise<T> {\r\n  constructor (resolver: (resolve: (value: T) => void, reject: (reason: any) => void) => void) { ... }\r\n}\r\n// typeof(SuperPromise) is { new <T>(resolver: (resolve: (value: T) => void, reject: (reason: any) => void) => void): SuperPromise<T>; }\r\n```\r\nOn other side, there is a consumer of the implementation with ability to convert some future value to promise. Let's take `RxJS` library for such example:\r\n```ts\r\ninterface Observable<T> {\r\n  toPromise<TPromise extends IPromise<T>>(promiseCtor: { new (resolver: (resolvePromise: (value: T) => void, rejectPromise: (reason: any) => void) => void): TPromise; }): TPromise;\r\n}\r\n```\r\nand when we have an instance of `Observable<number>` (so `T` already known as `number`), calling of `.toPromise(SuperPromise)` might infer `TPromise` to be `SuperPromise<number>` with logic I've described above. And it would be exactly what was expected.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "TypeScript 2.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-07T00:06:36.597-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Type inference when use generic call signature as parameter",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2159
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "thanks for reporting this works as expected using the latest bits from the develop branch.\n\r\n\r** Closed by paulb 02/07/2014 5:14PM",
+      "PostedDate": "2014-02-07T17:14:00.15-08:00",
+      "Id": 133004
+    },
+    {
+      "Message": "I tried with latest code from 'develop' branch (commit e9c9df95698c):\r\n```ts\r\ninterface A<T> {\r\n\tf<R>(c: { new (x: T): R; }): R;\r\n}\r\n\r\nvar a: A<number>;\r\n\r\ndeclare class B<T> {\r\n\tconstructor (x: T);\r\n}\r\n\r\nvar result = a.f(B);\r\n```\r\n\r\nI expect that `result` will be `B<number>`, but it was inferred as `B<any>`.\r\nI reopening the issue.",
+      "PostedDate": "2014-02-08T05:57:06.557-08:00",
+      "Id": 133005
+    },
+    {
+      "Message": "Investigating; this seems like a bug but the inference rules are rather complex. We're looking at this simplification specifically:\n\n```\ninterface A<TParam> {\n    wrapDirect<TResult>(f: (x: TParam) => TResult): TResult;\n    // Same as above, but wraps the parameter in an object type \n    wrapObject<TResult>(f: { member: (x: TParam) => TResult; }): TResult;\n}\n\nvar funcObj: {\n    member<T>(x: T): T;\n};\n\nfunction identity<T>(x: T): T {\n    return x;\n}\n\nvar a: A<number>;\nvar x = a.wrapDirect(identity); // x: number\nvar y = a.wrapObject(funcObj); // y: any, but should be y: number (?)\n```",
+      "PostedDate": "2014-02-10T09:49:56.52-08:00",
+      "Id": 133120
+    },
+    {
+      "Message": "Thanks, that's exactly I'm talking about.",
+      "PostedDate": "2014-02-10T10:30:12.4-08:00",
+      "Id": 133124
+    },
+    {
+      "Message": "This is by design for 1.0 but we'll be looking at it in the next release, so keeping this issue active. Basically this comes down to spec section 4.12.2 (last bullet in the \"exceptions\" list):\r\n > •\tIf e is an expression of a function type that contains exactly one generic call signature and no other members, and T is a function type with exactly one non-generic call signature and no other members, ...\r\n\r\nThe example does not satisfy the language here because `B` is an object type with a construct signature, rather than a function type. The work for post-1.0 would be to change the rule here to relate any \"matching\" call or construct signature and not care about any other members of `e` (since they are irrelevant to type inference).\r\n\r\nThe posted example will probably not change behavior as we don't want to go so \"deep\" into members (reasons here are too complex to go into). The motivating example, which better matches your code anyway, would be:\r\n\r\n```\r\ninterface Wrapper {\r\n    wrapFunction<TResult>(f: (x: number) => TResult): TResult;\r\n    wrapConstructor<TResult>(f: new (x: number) => TResult): TResult;\r\n}\r\n\r\nfunction identity<T>(x: T): T {\r\n    return x;\r\n}\r\n\r\nvar identityCtor: {\r\n    new <T>(x: T): T;\r\n}\r\n\r\nvar w: Wrapper;\r\nvar x = w.wrapFunction(identity); // x: number\r\nvar y = w.wrapConstructor(identityCtor); // y: any, but should be y: number\r\n```",
+      "PostedDate": "2014-02-10T10:52:03.307-08:00",
+      "Id": 133130
+    }
+  ]
+}

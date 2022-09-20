@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This does look like a dupe, although 1182 is active I actually don't see this error repro in the latest bits in develop at the moment.",
+    "ClosedDate": "2013-06-20T19:14:53.857-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The description is complicated but the examples should make it clear.\r\n\r\nThe following doesn't work:\r\n```\r\nclass Alpha {\r\n    constructor(url: string, options?: { x?: string[]; }) {\r\n        // blah\r\n    }\r\n}\r\nvar a = new Alpha(\"http://www.example.com\"); // fails\r\nvar a = new Alpha(\"http://www.example.com\", {}); // fails\r\nvar a = new Alpha(\"http://www.example.com\", {x: [\"asdf\"]}); // fails\r\n```\r\nThe error on constructing Alpha is: \"Supplied parameters do not match any signature of call target.\"  That's a problem because obviously they do.  Defining any options does not make the call match.\r\n\r\nIf it's not a string array but just a string in the anonymous type it works:\r\n```\r\nclass Beta {\r\n    constructor(url: string, options?: { x?: string; }) {\r\n        // blah\r\n    }\r\n}\r\nvar b = new Beta(\"http://www.example.com\"); // passes\r\n```\r\n\r\nIf the anonymous type is refactored out and made an interface it works:\r\n```\r\ninterface CharlieOptions {\r\n    x?: string[];\r\n}\r\nclass Charlie {\r\n    constructor(url: string, options?: CharlieOptions) {\r\n        // blah\r\n    }\r\n}\r\nvar c = new Charlie(\"http://www.example.com\"); // passes\r\n```\r\n\r\nIf the function is not a constructor but a method it also works:\r\n```\r\nclass Delta {\r\n    fxn(url: string, options?: { x?: string[]; }) {\r\n        // blah\r\n    }\r\n}\r\nvar d = new Delta();\r\nd.fxn(\"http://www.example.com\"); // passes\r\n```\r\n\r\nThe failure case is specific but it's a common pattern so this is a significant problem in my code.",
+    "LastUpdatedDate": "2013-06-20T19:14:53.857-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-19T10:10:53.993-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Call To Constructor Will Never Match Signature With Anonymous Type Containing An Array",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1180
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Possibly a duplicate of https://typescript.codeplex.com/workitem/1112\n\nThe workaround is to do something like the following (assuming browser):\n\n```JavaScript\n\n class Alpha {\n        constructor(url: string, options?: { x?: string[]; }) {\n            // blah\n        }\n    }\n\nvar a = new window[\"Alpha\"](\"http://www.example.com\"); // Should work\n```",
+      "PostedDate": "2013-06-19T13:19:22.653-07:00",
+      "Id": 103526
+    },
+    {
+      "Message": "You're right, it is a duplicate.  Thanks.  I looked through the backlog but apparently not far enough.",
+      "PostedDate": "2013-06-19T16:36:54.393-07:00",
+      "Id": 103555
+    }
+  ]
+}

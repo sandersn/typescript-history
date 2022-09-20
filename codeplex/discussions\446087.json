@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1053142",
+    "ThreadId": "446087",
+    "Html": "I'm not sure if this is a bug, or just something I don't understand about TS generics. I'm trying to model an interface where there might be &quot;n&quot; type parameters, much like the Action&lt;T1,T2...&gt; classes in C#.\r<br />\n<br />\nSo I've got some interface definitions that look like this:<br />\n<pre><code>interface Multiple&lt;T1&gt;{\n    t1: T1;\n}\n\ninterface Multiple&lt;T1, T2&gt;{\n    t1: T1;\n    t2: T2;\n}</code></pre>\n\nBut the compiler throws an error on the second interface: &quot;Duplicate identifier t1&quot;.\r<br />\n<br />\nIs that expected? It seems like the compiler is treating both <code>Multiple&lt;T1&gt;</code> and <code>Multiple&lt;T1,T2&gt;</code> as really just being the same <code>Multiple</code> interface. Is that correct?\r<br />\n<br />\nI could work around it with something like this, of course:<br />\n<pre><code>interface Multiple&lt;T1&gt;{\n    t1: T1;\n}\n\ninterface Multiple&lt;T1, T2&gt;{\n    t2: T2;\n}</code></pre>\n\nBut the problem with that approach is that there's no way from me to declare a variable of just type <code>Multiple&lt;T1&gt;</code>. If I try this:\r<br />\n<br />\n<code>var m: Multiple&lt;User&gt;;</code>\r<br />\n<br />\nThe compiler gives me the error:<br />\n<pre><code>error TS2090: Generic type 'Multiple&lt;T1, T2&gt;' requires 2 type argument(s).</code></pre>\n\nIs the best way to implement this to give each interface a completely separate name, like so?<br />\n<pre><code>interface Multiple1&lt;T1&gt;{\n    t1: T1;\n}\n\ninterface Multiple2&lt;T1, T2&gt;{\n    t1: T1;\n    t2: T2;\n}\n\nvar m1: Multiple1&lt;User&gt;;\nvar m2: Multiple2&lt;User, Room&gt;;</code></pre>\n\n",
+    "PostedDate": "2013-06-05T08:24:59.25-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053188",
+    "ThreadId": "446087",
+    "Html": "TypeScript doesn't support overloading on arity like C#. Instead, TypeScript allows you to have multiple declarations for the <em>same</em> interface. Such declarations are merged into one by the compiler (similar to partial classes in C#). You're seeing an error because the two declarations of 't1' conflict when the interface declarations are merged. And, yes, the way to do this is to give each interface a unique name.<br />\n",
+    "PostedDate": "2013-06-05T10:15:33.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1053227",
+    "ThreadId": "446087",
+    "Html": "Cool, thanks, that's what I needed to know.<br />\n",
+    "PostedDate": "2013-06-05T11:30:22.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

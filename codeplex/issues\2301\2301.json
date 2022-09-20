@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been deeply discussed in the forums; the short answer is that there is not a solution here that preserves reasonable runtime performance characteristics.\n\nIf you want to take the performance trade-off, simply write your class functions as arrow function properties:\n\n```\nclass ThisProof {\n    someFunc = (arg) => {\n        console.log(this); // Always points to class instance\n    };\n}\n```",
+    "ClosedDate": "2014-03-12T10:59:12.74-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have recently discovered that, although TypeScript has classes, it provides no built-in way of reliably getting at a class's instance from its methods. The `this` keyword is available, but has the same semantics as JavaScript, making it highly dependent on the calling context. I think TypeScript is the first ever programming language with classes and no built-in reference to their instances available from their methods. This makes classes in TypeScript useless and pointless. After looking into the situation, I discovered that the decision was made to follow the ES6 standard with respect to `this`. If this is the case, it means classes in ES6 will also be useless and pointless.\r\n\r\nI propose one of the following changes to TypeScript:\r\n1. `this` should behave the same as every language (except JavaScript) that has a `this` or `self` keyword. That is, it should refer to the class instance from constructors, methods, accessors and mutators; or\r\n1. Provide a way to reliably get at the class instance from constructors, methods, accessors and mutators (e.g. `self` keyword).\r\n\r\nThe workaround of creating instance methods as fat arrow functions from within the constructor is unacceptable as it produces unreadable code that will have to be changed when this language specification bug is fixed.",
+    "LastUpdatedDate": "2014-03-31T16:19:25.173-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-11T17:34:10.513-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "this inside class's methods should always be the class instance itself",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2301
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Since TypeScript compiles into JavaScript, how do you propose the \"correct\" JavaScript should look in order to guarantee the 'this' context always refers the to the class instance?",
+      "PostedDate": "2014-03-12T05:29:37.713-07:00",
+      "Id": 136612
+    },
+    {
+      "Message": "Thanks Ryan. I had missed the 0.9.1 change that essentially allows fat arrow instance methods. I doubt the performance issues are a deal breaker. It is generally the case that in other languages, there is a performance hit associated with methods vs. top-level functions anyway. In many cases the compiler can optimise this away, but of course with TypeScript, we don't have the luxury of doing that because everything is public and could potentially be called by anything and it is desirable that TypeScript continues to output idiomatic JavaScript.",
+      "PostedDate": "2014-03-12T16:21:48.903-07:00",
+      "Id": 136691
+    }
+  ]
+}

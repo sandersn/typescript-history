@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1054771",
+    "ThreadId": "446543",
+    "Html": "Currently when returning an interface, if the return object is <code>this</code> the translated code is simply <code>this</code>. I was wondering if there were any plans, or previous thoughts, with regards to returning only the required methods and properties of <code>this</code>, and constructing an anonymous object?<br />\n<br />\nFor example:<br />\n<pre><code>interface IPerson {\n    id: number;\n    name: string;\n}\n\nclass Person implements IPerson {\n    id: number = 0;\n    name: string = '';\n    hairColour: string = '';\n\n    constructor() { }\n    public getInfo(): IPerson {\n        return this;\n    }\n}</code></pre>\n\nCurrently compiles to:<br />\n<pre><code>Person.prototype.getInfo = function () {\n    return this;\n};</code></pre>\n\nInstead, my suggested approach would be:<br />\n<pre><code>Person.prototype.getInfo = function () {\n    return {\n        id: this.id,\n        name: this.name\n    };\n};</code></pre>\n\nThe reasoning; this would particularly come in handy when overriding certain methods such as <code>toJSON</code>. Thoughts?<br />\n",
+    "PostedDate": "2013-06-10T03:14:18.82-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055494",
+    "ThreadId": "446543",
+    "Html": "This sort of aggressive guessing is not something we would do.\r<br />\n<br />\nYou can get the desired behavior very easily:<br />\n<pre><code>function makeShallowCopy(obj: Object) {\n    var result = {};\n    Object.getOwnPropertyNames(obj).forEach(name =&gt; result[name] = obj[name]);\n    return result;\n}\n\nclass Person implements IPerson {\n    id: number = 0;\n    name: string = '';\n    hairColour: string = '';\n\n    constructor() { }\n    public getInfo(): IPerson {\n        return makeShallowCopy(this);\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-06-11T10:32:15.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055516",
+    "ThreadId": "446543",
+    "Html": "\r\n<div dir=\"ltr\">Are there any languages that do what you're proposing (i.e. create a copy of certain properties of the object when assigned to a value of a supertype)?</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-11T11:08:47.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-10-23T16:33:24.26-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "I'm seeing errors like this all over when using the new compiler:\r\n```\r\nThe property 'foobar' does not exist on value of type '{}'.\r\n```\r\n\r\nThe 'foobar' part varies depending upon the object being accessed but it looks like all implicit 'any' objects are being considered to be empty objects ('{}').  We are compiling to AMD modules and do not have noImplicitAny errors enabled.",
+    "LastUpdatedDate": "2013-11-19T16:01:29.143-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-23T08:30:25.933-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Develop: Implicit 'any' causes errors",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1830
+  },
+  "FileAttachments": [
+    {
+      "FileId": 747678,
+      "FileName": "repro.zip",
+      "DownloadUrl": ".\\747678"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Actually, now that I'm looking more closely at the errors they do seem to be a bit more specific as most occur when the 'any' variable is a result from a promise call.  It likely is related to the changes for https://typescript.codeplex.com/workitem/1807 in that case.",
+      "PostedDate": "2013-10-23T08:54:36.76-07:00",
+      "Id": 119349
+    },
+    {
+      "Message": "Do you have any simplified repro we can look at? The empty object type ({}) is generally what results when type argument inference fails to find a suitable candidate (there was a bug where it was instead returning 'any' which you probably saw if you were constantly up to date with the develop branch, noImplicitAny won't error when type argument inference returns 'any'). Depending on the circumstances this may be intentional or it may be a bug in type argument inference when using generic promise typings. Using your project from the previous issue (https://typescript.codeplex.com/workitem/1807) I'm able to compile without errors after fixing lodash.ts to not have a duplicate identifier error for _ (it defines both a function and class called _). \n\nPlease re-open if you can provide a repro, we definitely want to fix issues like this with Promises if they still exist.",
+      "PostedDate": "2013-10-23T12:06:48.86-07:00",
+      "Id": 119385
+    },
+    {
+      "Message": "It looks like the LKG hasn't been updated since the regression so I had to use the bridge app from the Eclipse plug-in.  From the attached files you'll want to run something like this:\r\n```\r\nnode repro/bridge.js\r\n```\r\n\r\nThen paste in these commands (the file paths will differ but don't flatten the files - that has broken repros in the past):\r\n```\r\n{\"service\":\"language\",\"method\":\"addFiles\",\"arguments\":[[\"/Users/dcicerone/git/eclipse-typescript/repro/jquery.d.ts\",\"/Users/dcicerone/git/eclipse-typescript/repro/libraries.d.ts\",\"/Users/dcicerone/git/eclipse-typescript/repro/lib.d.ts\",\"/Users/dcicerone/git/eclipse-typescript/repro/when.d.ts\",\"/Users/dcicerone/git/eclipse-typescript/repro/tests/fixtures/appsFixture.ts\",\"/Users/dcicerone/git/eclipse-typescript/repro/tests/fixtures/apps/errorViewFixture.ts\"]]}\r\n{ \"service\": \"language\", \"method\": \"getAllDiagnostics\", \"arguments\": [] }\r\n```\r\n\r\nI see this error:\r\n```\r\nerrorViewFixture.ts\":[{\"start\":323,\"length\":4,\"line\":8,\"text\":\"The property 'text' does not exist on value of type '{}'.\"}]}\r\n```",
+      "PostedDate": "2013-10-23T14:34:16.687-07:00",
+      "Id": 119411
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 10/23/2013 12:06PM",
+      "PostedDate": "2013-10-23T12:06:57.627-07:00",
+      "Id": 119412
+    },
+    {
+      "Message": "Thanks for the detailed repro. The error you're seeing is intentional. In appsFixture.ts you call When.defer() on line 17 which is the source of the problem. This triggers type argument inference for the T in defer. Inferences for type arguments are made by examining the parameters of the generic call, since this call has no parameters it means no candidates for T are found. When type argument inference ends up with no candidates it chooses empty object ({}) as the type of T. The way you're using it then allows this {} to be trafficked around a little bit before you see the error at a later point when trying to use the 'text' property on a type which doesn't have one. This was working in the previous builds in develop because of a bug where T was being inferred to 'any' when no candidates were found, which allowed the code in errorViewFixture to work but not with any sort of type safety (you would've seen similar behavior for a generic class which didn't use the class type parameter outside return type positions). The fix is to just explicitly pass type arguments in cases where your generic call has no parameters that use the generic type, so When.defer<any>() causes your error to go away, but again you don't actually have type safe access inside the .then call. Would you prefer to have just gotten an error on the original call to When.defer() for a case like this? (ie something like 'could not infer type for T, please explicitly specify the generic type arguments for this call')",
+      "PostedDate": "2013-10-23T16:32:59.923-07:00",
+      "Id": 119448
+    },
+    {
+      "Message": "Whoa, ok.  Thanks for explaining that.  I definitely would have expected that to just infer the type as implicit 'any' like it was before.\n\nI think people might have trouble figuring that out from the current error messages.  Normally when a generic type is incomplete we get an error at the location where the code change needs to be made.  In this case, the errors show up somewhat downstream which makes debugging them difficult.  In scenarios like this I think it would be preferable to raise errors where the generic function is called but the type is determined to be an empty object (that seems like a somewhat unlikely use case).",
+      "PostedDate": "2013-10-23T21:09:25.937-07:00",
+      "Id": 119466
+    },
+    {
+      "Message": "Not sure whether I'm understanding this correctly (my spec still says inferred type `Any`, playground infers either `any` or `{}`, depending on call).\n\nMy reason for chiming in is that `{}` does not sound like a good choice for default type:\n```\nvar dict = Object.create(null);\n\nfunction g<T>(a:T,b:T,c:T) { return [a,b,c] }\n\nvar x1 = g(1,true,dict); // any[]\nvar x2 = g(1,true,\"hi\"); // {}[]\n\nvar s1 = x1.map(x=>x.toString);\nvar s2 = x2.map(x=>Object.keys(x));\n```\nHere, primitives (`1`,`true`,`\"hi\"`) are wrongly typed as objects (`{}`), leading to runtime type error in `s2`, and if `any` was replaced with `{}`, `dict` would wrongly be typed as normal object, too, leading to runtime type error in `s1`.\n\nUsing `any` as default in combination with flagging all such implicit `any`s sounds like a better error location strategy. Or another warning for type inference failures, with the option of selectively turning warnings into errors.\n\nAnd if you really want an empty type as default, there is `void` or `undefined` (why aren't these the same, btw?), which have no methods.",
+      "PostedDate": "2013-10-24T02:43:51.423-07:00",
+      "Id": 119490
+    },
+    {
+      "Message": "@derekcicerone \nthanks for the feedback\n\n@clausreinke\nThere will be cases where 'any' is inferred as the type argument type, but this is distinct from the case where type argument inference finds 0 or > 1 viable candidate for a type argument in which case {} is chosen. In your example x1 is inferred as any[] because when choosing the best common type for T there exists a candidate whose type is a supertype of all other elements (dict, since it is 'any'). Meanwhile in x2 no such element exists so {} is chosen.\n\nNote that it isn't really accurate to say they are 'incorrectly' typed as {} since {} will appear to have the members of the global Object interface which these primitive types also appear to have. So were you to do the same thing with x2 as you did with x1 (just map the toString result) things would work fine. If you attempted to do anything more complex (like accessing particular properties you expected to be on a more specific type) then you would get a compile time error.\n\nThat said, I agree this isn't necessarily ideal in all circumstances. If --noImplicitAny were able to give errors on implicit inferences to 'any' during type argument inference (it doesn't currently support this) then it might make more sense to infer 'any' when the candidate list is 0 or >1. This does have an unfortunate side effect of making generics much more error prone for folks who aren't using --noImplicitAny though. With {} you are likely to get a compile time error at some point, with 'any' you are in danger of having it leak very pervasively throughout your program without noticing.\n\nAlternatively, or in addition, we could opt to always give a semantic error (ie one which doesn't stop code gen) when type argument inference comes up with 0 or >1 candidate. Note that this would likely mean your x1 would not be an error (because there was an 'any' provided explicitly as an argument which lead to T = 'any') while x2 would be.\n\nAppreciate the feedback, I'm going to try to raise this issue again at our next design meeting.",
+      "PostedDate": "2013-10-25T15:44:55.017-07:00",
+      "Id": 119742
+    },
+    {
+      "Message": "@danquirk\nThanks for the explanation - I think I understand the tradeoffs now much better.",
+      "PostedDate": "2013-10-25T17:19:39.77-07:00",
+      "Id": 119753
+    }
+  ]
+}

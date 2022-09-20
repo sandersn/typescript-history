@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1080534",
+    "ThreadId": "453394",
+    "Html": "Is there a way to define external modules in different assemblies and reference them.<br />\n<br />\nExample:<br />\n<br />\nAssembly1 - (location scripts/)<br />\n<pre><code>export class Animal {\n      feet: number;\n}</code></pre>\n\nAssembly2 - (location scripts/)<br />\n<pre><code>import asm1 = module(???????);\n\nclass Dog extends asm1.Animal {\n     barkType: string;\n}</code></pre>\n\n",
+    "PostedDate": "2013-08-14T06:52:02.983-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080546",
+    "ThreadId": "453394",
+    "Html": "Sure, jmwheeler<br />\n<pre><code>import asm1 = module('scripts/Animal');</code></pre>\n\nHave a look at this blog on using AMD assemblies with require.js : <a href=\"http://blorkfish.wordpress.com/2012/10/23/typescript-organizing-your-code-with-amd-modules-and-require-js/\" rel=\"nofollow\">http://blorkfish.wordpress.com/2012/10/23/typescript-organizing-your-code-with-amd-modules-and-require-js/</a><br />\n",
+    "PostedDate": "2013-08-14T07:10:00.327-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080550",
+    "ThreadId": "453394",
+    "Html": "Maybe I'm missing it but I don't see how it would be able to find a reference to Animal when it's in a completely different assembly/project.<br />\n",
+    "PostedDate": "2013-08-14T07:17:32.737-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080576",
+    "ThreadId": "453394",
+    "Html": "When you say different assembly, are you talking about a different web-site ?<br />\nAssume yes, then that you have <a href=\"http://site-a/scripts/Animal.js\" rel=\"nofollow\">http://site-a/scripts/Animal.js</a>, and you are trying to import this to <a href=\"http://site-b/NeedAnimal.ts\" rel=\"nofollow\">http://site-b/NeedAnimal.ts</a>, then I also can't see how you can use the module keyword.<br />\nAs far as I understand, the TypeScript compiler uses the module('...') keyword to load the TypeScript file at compile-time, and then compiles the resultant javascript to use require as follows:<br />\n<pre><code>require(['scripts/Animal'],  function(_scripts_animal) {\n    // scripts_animal is valid here.\n});</code></pre>\n\nIn this case, you would have to treat the scripts/Animal.js as any other .js file and create a module definition ( Animal.d.ts ) to allow for compilation - then include the <a href=\"http://site-a/scripts/Animal.js\" rel=\"nofollow\">http://site-a/scripts/Animal.js</a> as a script resource.<br />\n<br />\nHope this helps.<br />\n",
+    "PostedDate": "2013-08-14T07:42:09.423-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1080579",
+    "ThreadId": "453394",
+    "Html": "When I say assembly, I'm referring to having different .dll files with libraries of typescript files in them.  I'm working on a large scale project and attempting to have portions of the code that are reusable across different projects.<br />\n\r<br />\nI'm sure I'm not the only person who has this need which makes me think that I am either going about this the wrong way or don't know exactly what to search for in order to see what other people are doing.\r<br />\n<br />\nExample:\r<br />\n<br />\nAssembly1.dll<br />\n<pre><code> - /Scripts/Animal.ts\n</code></pre>\n\nAssembly2.dll<br />\n<pre><code> - /Scripts/Dog.ts\n\n</code></pre>\n\n",
+    "PostedDate": "2013-08-14T07:49:28.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081357",
+    "ThreadId": "453394",
+    "Html": "TypeScript currently only supports two styles of referring to other files.  Imports, which set up code to work with a module loader like AMD or CommonJS, and ///&lt;reference path=&quot;...&quot;/&gt;, which tells the compiler that it will be up to you to reference it.\r<br />\n<br />\nIf you've worked out how the dlls are going to have the underlying JavaScript loaded so the symbols are at known locations, the other step is to provide this type information.  When doing projects where there are distinct libraries/modules/etc, the recommended way is to create a .d.ts file that represents the API of each module, and then use the ///&lt;reference&gt; notation to reference these .d.ts files.  The TypeScript compiler can automatically generate these from source code given the --declaration flag.  <br />\n",
+    "PostedDate": "2013-08-16T07:16:03.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1081457",
+    "ThreadId": "453394",
+    "Html": "I think I'm going about this the wrong way.  It's too much of a &quot;Windows App&quot; based approach.  I think I'll create a Nuget package for each different project and have each project pull in any package that it requires.<br />\n",
+    "PostedDate": "2013-08-16T11:35:00.577-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

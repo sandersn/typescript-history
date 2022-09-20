@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is an unfortunate consequence of us relaxing the rules around optional parameters.\n\nFor 0.9.5 you have to use the following:\n````\nvar z = '';\nz.replace(/[a-z]/, (a, b?, c?) => '')\n````\n\nwhere for 0.9.7, we now allow you to omit the '?'\n````\nvar z = '';\nz.replace(/[a-z]/, (a, b, c) => '')\n````\n\n",
+    "ClosedDate": "2014-03-03T14:01:12.043-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "TypeScript 0.9.7 not report a type mismatch.\r\n\r\n```\r\nclass Hello {\r\n\tgreeting(word = \"JavaScript\") {\r\n\t\treturn \"Hello, \" + word;\r\n\t}\r\n}\r\n\r\nfunction doGreeting(hello: Hello) {\r\n\tconsole.log(hello.greeting());\r\n}\r\n\r\ndoGreeting({\r\n\tgreeting: (word: string) => \"Hi, \" + word.length // runtime error!\r\n});\r\n```\r\nin TypeScript playground http://goo.gl/fQF02L\r\n\r\nactual\r\n$ tsc -v\r\nVersion 0.9.7.0\r\n$ tsc sample.ts\r\n$ echo $?\r\n0\r\n\r\nexpected\r\n$ tsc\r\nVersion 0.9.5.0\r\n(omission)\r\n$ tsc sample.ts\r\nsample.ts(11,1): error TS2082: Supplied parameters do not match any signature of call target:\r\n        Types of property 'greeting' of types '{ greeting: (word: string) => string; }' and 'Hello' are incompatible:\r\n                Call signatures of types '(word: string) => string' and '(word?: string) => string' are incompatible:\r\n                        Call signature expects 0 or fewer parameters.\r\nsample.ts(11,1): error TS2087: Could not select overload for 'call' expression.\r\n",
+    "LastUpdatedDate": "2014-03-03T15:25:33.65-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-01T21:45:59.113-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type checking corrupt in TypeScript 0.9.7",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2248
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. We intentionally loosened the rules around type compatibility with function types that use optional properties to better match peoples' expectations and existing use cases. See section 3.8.4 Assignment Compatibility in the latest language spec. We now say this about these cases:\n\n```\nS is assignable to a type T, and T is assignable from S, if one of the following is true, where S’ denotes the apparent type (section 3.8.1) of S:\n•\tS’ and T are object types and, for each member M in T, one of the following is true:\no\tM is a non-specialized call or construct signature and S’ contains a call or construct signature N where, when M and N are instantiated using type Any as the type argument for all type parameters declared by M and N (if any),\n-\tM has a rest parameter or the number of non-optional parameters in N is less than or equal to the total number of parameters in M,\n```\n\n(irrelevant bullets elided)",
+      "PostedDate": "2014-03-03T15:25:33.65-08:00",
+      "Id": 135710
+    }
+  ]
+}

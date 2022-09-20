@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-30T14:54:03.91-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Sometimes we have code like this:\r\n\r\n```\r\nfunction foo(...args: any[]) {\r\n    bar.apply(this, arguments);\r\n}\r\n```\r\n\r\nIn these cases, TS generates a loop that runs for nothing. \r\n\r\n```\r\nfunction foo() {\r\n    var args = [];\r\n    for (var _i = 0; _i < (arguments.length - 0); _i++) {\r\n        args[_i] = arguments[_i + 0];\r\n    }\r\n    this.bar.apply(this, arguments);\r\n}\r\n```\r\nThe compiler could detect if the variable is used anywhere, and if not, don't generate the copy loop.\r\n\r\n",
+    "LastUpdatedDate": "2013-05-30T14:54:03.91-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-25T09:24:57.97-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Don't copy arguments unless its necessary",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1068
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is an optimization we have discussed, but are unlikely to complete in time for V1.\n\nNote that you can achieve the desired behavior by having an overload with the rest args, then the implementation with no args, i.e.\n\n```typescript\nfunction foo(...args);\nfunction foo() {\n\n}\n```\n\nThis will give the one desired signature at design time, but no param handling in the runtime implementation (and you can use arguments as desired above).",
+      "PostedDate": "2013-05-30T14:53:57.31-07:00",
+      "Id": 101711
+    }
+  ]
+}

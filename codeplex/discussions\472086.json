@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1132409",
+    "ThreadId": "472086",
+    "Html": "Hi, Guys.\r<br />\n<br />\nNow TypeScript allow this code.<br />\n<pre><code>class HTMLElement {}\nclass HTMLSpanElement extends HTMLElement {\n    iAmSpan():void{}\n}\n\ndeclare class Document {\n    createElement(tag: &quot;span&quot;):HTMLSpanElement;\n    createElement(tag: string):HTMLElement;\n}\n\nvar document:Document = null;\ndocument.createElement(&quot;span&quot;).iAmSpan(); // type safe!</code></pre>\n\nthis syntax very useful to keep interoperability existing JavaScript code.\r<br />\n<br />\nI guess allow string literal and regular expression literal support to specialized signatures is more useful.\r<br />\nfor example.<br />\n<pre><code>interface IWebApiResponse {}\n\ninterface IWebApiUsersResponse {\n    users:{ name:string; }[];\n}\n\ninterface IWebApiUserResponse {\n    user:{ name:string; };\n}\n\ndeclare class Api {\n    get(api:&quot;/users&quot;, callback:(err:Error, response:IWebApiUsersResponse)=&gt;void);\n    get(api:/\\/users\\/[1-9][0-9]*/, callback:(err:Error, response:IWebApiUserResponse)=&gt;void);\n    get(api:string, callback:(err:Error, response:IWebApiResponse)=&gt;void);\n}\n\nvar api:Api = null;\napi.get(&quot;/foobar&quot;, (err, response)=&gt;{\n});\napi.get(&quot;/users&quot;, (err, response)=&gt;{\n    // typesafe!\n    // response type is IWebApiUser&quot;s&quot;Response\n    response.users.forEach(user=&gt;console.log(user.name));\n});\napi.get(&quot;/users/123&quot;, (err, response)=&gt;{\n    // typesafe! &quot;/users/123&quot; matches /users/[1-9][0-9]*\n    // response type is IWebApiUserResponse\n    console.log(response.user.name);\n});</code></pre>\n\nThere is no significant impact on the syntactic.\r<br />\nThere is the advantages that can be resolved at compile time all has not changed.\r<br />\nOverload resolution rules simplified is now available on 0.9.5.\r<br />\nisn't it?\r<br />\nI wonder if everyone like?<br />\n",
+    "PostedDate": "2013-12-05T23:59:40.673-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132579",
+    "ThreadId": "472086",
+    "Html": "We've talked about doing this and allowing regex in string-literal overloads/specializations.  Like you point out, it's very powerful, and would be nice to have with some APIs.  We're focused more on bugfixes for 1.0, so I suspect this is wouldn't make it into 1.0, but we can explore what adding this would mean after 1.0.<br />\n\r<br />\nOne reason we might not want to do this is how much overhead it would add to typechecking, so we'd need to do some experiments to see what the impact would be.<br />\n",
+    "PostedDate": "2013-12-06T10:24:04.463-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132899",
+    "ThreadId": "472086",
+    "Html": "Time spent to compile is certainly important.\r<br />\nI have been very excited also 1.x or later.\r<br />\nIt is a very happy and get to think positively :)<br />\n",
+    "PostedDate": "2013-12-08T06:08:19.27-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

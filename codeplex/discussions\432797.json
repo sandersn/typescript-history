@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "999865",
+    "ThreadId": "432797",
+    "Html": "We in the process of adopting TypeScript in our HTML5 high-end games platform (see <a href=\"http://turbulenz.com\" rel=\"nofollow\">http://turbulenz.com</a> to try some of the games).  In general it's all going very well, but there are a few little problems I've had with the behavior of the compiler.<br />\n<br />\nWe ship a JavaScript library made up of about 80 files, which I've turned into .ts files.  Naturally, a lot of files use the types defined in other .ts files, and (this being JS) there are even some circular dependencies.  So we've had to divide the files into conceptual 'modules' (which can depend on other modules), each of which produces a .js and .d.ts file.<br />\n<br />\nIf we use '/// &lt;reference ...' to refer to the types in other .ts files then the resulting .js and .d.ts each contain all the code and declarations for dependent modules.  When an app then uses multiple modules from our engine we get a lot of errors because types are declared multiple times.  To work around this, we don't use the '/// &lt;references', but use the dependencies between modules specified in our build scripts to build the .js and .d.ts for dependent modules, and then pass those to the compiler on the command line.<br />\n<br />\nThis works fine, but since there are no '/// &lt;reference ...' statements in the code, the Visual Studio plugin is unable to resolve types in other files, even in the same project.  On the one hand, the VS plugin forces us to use references to other .ts files (I can't find a way to set up a project that doesn't require this), but adding references pushes all dependent code and decls into the output from each module.<br />\n<br />\nWe are currently working around this by including references to keep VS happy, and using the --noresolve flag when building our library.  We then have a second 'checking' build which builds each file individually (without --noresolve), thereby ensuring that the references are maintained for the people using VS.<br />\n<br />\nBefore I start submitting feature requests I'm interested to know if I've overlooked something and should be doing the build in a different way.  Or maybe this is just something that hasn't been addressed in the compiler yet.<br />\n<br />\nThanks in advance for any suggestions.<br />\n",
+    "PostedDate": "2013-02-12T00:12:01.937-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1000181",
+    "ThreadId": "432797",
+    "Html": "Could you post an extracted example of what your project structure looks like and why you get into issues of duplicated types? It's a bit hard to visualize from the write-up, but maybe an example can make it clear what the problem is.<br />\n",
+    "PostedDate": "2013-02-12T11:03:07.497-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003319",
+    "ThreadId": "432797",
+    "Html": "Thanks for your reply.<br />\n<br />\nHere's a simplified example of the kind of 'module' setup we have:<br />\n<pre><code>src/\n  utilities/\n    utilities.ts\n  scene/\n    geometry.ts\n    scene.ts\n    scenenode.ts\n  texturemanager/\n    texturemanager.ts\n</code></pre>\n\nwhere 'scene' and 'texturemanager' both use the classes defined in utilities.ts.  Let's say we build each directory as a 'module', so we end up with utilities.js, scene.js and texturemanager.js (and the respective .d.ts files) and we ship these to developers.  Developers might use either scene.js or texturemanager.js, or neither, or both.<br />\n<br />\nIf 'scene' and 'texturemanager' both use:<br />\n<br />\n  /// &lt;reference path=&quot;utilities.ts&quot; /&gt;<br />\n<br />\nto get to the type information in 'utilities', then both scene.d.ts and texturemanager.d.ts contain the class declarations from 'utilities'.<br />\n<br />\nNow, if a developer wants to use TypeScript and the .d.ts files we ship, and they use code from both 'scene' and 'texturemanager', (i.e. they reference or include on the commandline both scene.d.ts and texturemanager.d.ts) they will get 'Duplicate identifier' errors for all classes in 'utilities'<br />\n<br />\nIf 'scene' and 'texturemanager' reference utilities.d.ts then the declarations aren't replicated like this, but Visual Studio doesn't pick up any type info or changes until the build is run.<br />\n<br />\nAs mentioned, we can work around this by having several build modes, but I was a bit surprised that what I'm doing seems not to be compatible with the references system as it is now, so I'd be very interested to get your input.<br />\n",
+    "PostedDate": "2013-02-19T02:20:34.513-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003438",
+    "ThreadId": "432797",
+    "Html": "I'm sure Anders will come back on this, but <br />\n<blockquote>\nIf we use '/// &lt;reference ...' to refer to the types in other .ts files then the resulting .js and .d.ts each contain all the code and declarations for dependent modules. <br />\n</blockquote>\nand<br />\n<blockquote>\nto get to the type information in 'utilities', then both scene.d.ts and texturemanager.d.ts contain the class declarations from 'utilities'<br />\n</blockquote>\ndoesn't seem right. As far as I'm aware reference includes shouldn't cause types to be imported from the referenced files.\r<br />\n<br />\nWhat compiler options are you using?<br />\n",
+    "PostedDate": "2013-02-19T06:51:16.11-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003530",
+    "ThreadId": "432797",
+    "Html": "I guess you are compiling with the --out myoutfile.js option.\r<br />\n<br />\nIt turns out that when this option is on <strong><em>and</em></strong> you have &lt;reference path=&quot;external.ts&quot; /&gt; then the contents of &quot;external.ts&quot; are included.\r<br />\n<br />\nOne way to fix this is to make sure you only include external definitions files, e.g. &lt;reference path=&quot;external.d.ts&quot; /&gt;.<br />\n",
+    "PostedDate": "2013-02-19T09:18:46.393-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003756",
+    "ThreadId": "432797",
+    "Html": "Thanks for your reply.  Yes, we are using --out to control where the output for each module goes.  It sounds like this is just a bug then, not the expected behaviour.\r<br />\n<br />\nAs described, you are right that if we reference the .d.ts files then the type information doesn't propagate into the output .d.ts files, but then Visual Studio is working with old (or non-existent) .d.ts files until we run a build.  Anyway, if this is just unintended behaviour then that would explain the apparent conflict with what I'm trying to do.\r<br />\n<br />\nIf you don't mind me dragging this out a big more, the references are still not ideal.  We only use them to keep Visual Studio happy, and they are difficult to maintain (we need a separate build config to check that there are none missing).  Ignoring the problem of repeated type info, perhaps we could use the references to express all the dependencies (currently this info is held in our build files), but it would be nice to be able to get the compiler to flag invalid or outdated references, and maybe be able to pass search directories on the command line.  TBH, I was quite surprised that TS doesn't automatically find types in other files of the same project.\r<br />\n<br />\nFinally, I wanted to bring up the error handling behaviour of the compiler.  I would expect people to use the compiler in one of two ways: 1) ignore type errors and just generate javascript regardless (e.g. when first starting to migrate an existing project), or 2) fail completely if type errors are found.  The default behaviour seems to be half way in between.  Type errors cause the compiler to exit with non-zero error code, but the .js files are always output (barring a full syntax error).  So with most build systems the compiler is not re-run on the next build (because the output file already exists) and the errors are hidden.\r<br />\n<br />\nJust for your reference, I've added --ignoretypeerrors and --failonerror flags (and made a few tweaks to the code gen) <a href=\"https://github.com/turbulenz/typescript\" rel=\"nofollow\">in this repo</a>\r<br />\n<br />\nAnyway, these are all subtle points.  I'm very pleased with TypeScript and it's fully operational in our main development line.  A lot of game developers are used to static languages, and (rightly) nervous about big projects in JavaScript, so it's great to be able to give them the TypeScript option.  I'm sure you've seen hundreds of these but just in case you like reading them, I've written up <a href=\"http://hardcodeded.blogspot.jp/2013/02/mostly-painlessly-migrating-3d-game.html\" rel=\"nofollow\">how we migrated the engine and why TypeScript made it possible</a>.<br />\n",
+    "PostedDate": "2013-02-19T18:05:37.66-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004054",
+    "ThreadId": "432797",
+    "Html": "@dtebbs,\r<br />\n<br />\nI empathise with regard to the problems with the &lt;reference&gt; include mechanism.\r<br />\n<br />\nThere is a <a href=\"http://typescript.codeplex.com/workitem/466\" rel=\"nofollow\">bug ticket out</a> as well as a <a href=\"http://typescript.codeplex.com/discussions/433456\" rel=\"nofollow\">related discussion</a>. It will help if you are able to contribute your thoughts. \r<br />\n<br />\nThanks\r<br />\nNoel<br />\n",
+    "PostedDate": "2013-02-20T07:34:03.34-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

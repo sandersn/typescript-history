@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-09T18:33:35.087-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "There appears to be a bug with name resolution in Typescript modules affecting a project of mine (wherein I have to fake a module defined in another file to support a test suite). I've boiled it down to the following:\r\n\r\n```\r\ndeclare module OPE {\r\n  class Promise<A> {\r\n    static as<T>(x: T): Promise<T>;\r\n  }\r\n}\r\n\r\ndeclare module N {\r\n  var OPE: typeof OPE;\r\n}\r\n\r\nN.OPE.Promise.as<number>(5);\r\n```\r\n\r\nCompiling this fails with `error TS2158: Untyped function calls may not accept type arguments`. Another example that causes problems, but only when compiled with `--noImplicitAny` (this is the one that's biting us):\r\n\r\n```\r\ndeclare module OPE {\r\n  class Promise<A> {\r\n    static as<T>(x: T): Promise<T>;\r\n    then<B>(f: (x: A) => Promise<B>): Promise<B>;\r\n  }\r\n}\r\n\r\ndeclare module N {\r\n  var OPE: typeof OPE;\r\n}\r\n\r\nN.OPE.Promise.as(5).then(x => N.OPE.Promise.as(x));\r\n```\r\n\r\nThis fails with `error TS7012: Parameter 'x' of lambda function implicitly has an 'any' type`. Renaming `var OPE` to something else avoids the problem, but I can't find any other workaround.",
+    "LastUpdatedDate": "2014-04-09T21:55:41.963-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-09T18:09:23.49-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Calls to static methods are interpreted as untyped function calls",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2410
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. The fix is what you described, either rename N.OPE or rename the OPE module so that the var is not using its own name in its type annotation. Otherwise you've declared a var OPE whose type is the type of itself. This results in OPE being considered type 'any' so you'll see that N.OPE.Promise is of type 'any' as is N.OPE.Promise.as and 'any' does not permit type arguments. It's not clear what scoping rules would be make this behave the way you want. ",
+      "PostedDate": "2014-04-09T18:33:31-07:00",
+      "Id": 141276
+    },
+    {
+      "Message": "If this is by design shouldn't the declaration at least throw an error? Unfortunately this module is outside of our control, but I worked around it by declaring another variable to mask the type in the definition file:\n\n```\ndeclare var WELP: typeof OPE;\ndeclare module N {\n  var OPE: typeof WELP;\n}\n```\n\nThis caught a lot of bugs in our codebase that should've been type errors before... I'm sure we aren't the only ones who were using this incorrectly.",
+      "PostedDate": "2014-04-09T21:23:19.53-07:00",
+      "Id": 141285
+    },
+    {
+      "Message": "@danquirk You indicated you were curious as to what scoping rules would make this behave in the way the OP wants—and I'm delighted to point you in the right direction!\n\nIt seems reasonable that a variable not be in scope of its own type annotation, though I'll grant it doesn't fall out of any grander notion that pure pragmatics—such a definition is *always* wrong: giving it a type `any` is negatively useful.\n\nI get that TypeScript allows declarations in any order, which makes the answer to your question perhaps not immediately obvious—but I do think that a healthy compromise would indeed be to make a variable not be in scope for its own type annotation, such that the example code given in the OP would behave properly.",
+      "PostedDate": "2014-04-09T21:55:41.963-07:00",
+      "Id": 141291
+    }
+  ]
+}

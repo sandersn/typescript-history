@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This now correctly issues an error at the 'new' site",
+    "ClosedDate": "2013-02-19T17:00:46.08-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Code gen issue with returning arrays of Module types from getters?\r\n\r\nHere is the typescript:\r\nmodule M {\r\n    export class T {\r\n\t    x : number;\r\n    }\r\n}\r\n\r\nclass S {\r\n\tpublic get xs() : M.T[] {\r\n\t\treturn new M.T[];\r\n\t}\r\n}\r\n\r\nHere is the generated javascript:\r\nvar M;\r\n(function (M) {\r\n    var T = (function () {\r\n        function T() { }\r\n        return T;\r\n    })();\r\n    M.T = T;    \r\n})(M || (M = {}));\r\n\r\nvar S = (function () {\r\n    function S() { }\r\n    Object.defineProperty(S.prototype, \"xs\", {\r\n        get: function () {\r\n            return new (); // <<<<<< This seems busted\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n    return S;\r\n})();",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-15T20:28:42.283-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Code gen issue with returning arrays of Module types?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 261
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this issue. \nI agree that there's a bug here that should report invalid syntax on new at this point.\nHowever I believe what you're trying to achieve is:\nclass S {\n    public get xs() {\n        return <M.T[]>[];\n    }\n}\n\n",
+      "PostedDate": "2012-10-16T09:58:31.877-07:00",
+      "Id": 80109
+    },
+    {
+      "Message": "Thanks, yes returning [] might be more idiomatic.\n\nNote that the code generated for a class that isn't in a module is \"return new Array();\", which is what I was expecting.",
+      "PostedDate": "2012-10-16T10:17:40.827-07:00",
+      "Id": 80111
+    },
+    {
+      "Message": "    module Foo {\n        export class Bar { }\n    }\n\n    class Baz { }\n\n    var x = new Foo.Bar[];\n    var y = new Baz[];\n    var z = <Foo.Bar[]>[];\n\nThe last three lines compiles into:\n\n    var x = new ();\n    var y = new Array();\n    var z = [];\n\nBecause 'y' is working, I would expect 'x' to also work.\n\nThe documentation says that \"new ConstructExpr ( ... )\" is valid, where ConstructExpr is an expression. Unfortunately, \"Foo.Bar[]\" is not a valid Javascript expression, but neither is \"Baz[]\".",
+      "PostedDate": "2012-11-04T10:43:21.747-08:00",
+      "Id": 81611
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "They are not the same and it is not safe to treat them as such.  Doing so could introduce errors.  For example:\n\nvar x = new String(\"\");\nvar y = \"\";\n\nObject.keys(x);  => []\nObject.keys(y);  => TypeError: Object.keys called on non-object\n\n!!x  => \"true\", as any object evaluates as true in a boolean expression\n!!y => \"false\", as an empty string evaluates to false in a boolean expression\n\nx.addProp = 42;  =>  x is an object, so can add new properties on it.\ny.addProp = 42;  => y is a primitive.  Cannot add new properties to it.",
+    "ClosedDate": "2013-03-13T18:06:02.737-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Thinking of string as String works. However thinking of String as string is broken:\r\n\r\n```\r\nvar str1:String = \"asdf\"; \r\nvar str2:String = new String(\"asdf\");\r\nvar str3:string = \"asdf\";\r\nvar str4:string = new String(\"asdf\"); // Error \r\n```\r\n[Try It](http://www.typescriptlang.org/Playground/#src=var%20str1%3aString%20=%20%22asdf%22;%20%0Avar%20str2%3aString%20=%20new%20String%28%22asdf%22%29;%0Avar%20str3%3astring%20=%20%22asdf%22;%0Avar%20str4%3astring%20=%20new%20String%28%22asdf%22%29;%20//%20Error%20) \r\n\r\nAlso:\r\n\r\n```\r\nvar interfaceBased:String = \"123\";\r\nvar keywordBased:string =\"123\";\r\ninterfaceBased=keywordBased;\r\nkeywordBased=interfaceBased; // Error  \r\n```\r\n[Try It](http://www.typescriptlang.org/Playground/#src=var%20interfaceBased%3aString%20=%20%22123%22;%0Avar%20keywordBased%3astring%20=%22123%22;%0AinterfaceBased=keywordBased;%0AkeywordBased=interfaceBased;%20//%20Error%20%20%0A)\r\n\r\nQuestion on stackoverflow : http://stackoverflow.com/q/15377159/390330\r\n\r\n If every member of String automatically becomes a member of string they should be cross assignable by typescript rules.\r\n",
+    "LastUpdatedDate": "2013-08-13T09:53:19.7-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-12T21:56:59.2-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "String is not string",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 810
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Nonetheless it is a quirk. If every member of String automatically becomes a member of string they should be cross assignable by typescript rules. ",
+      "PostedDate": "2013-03-13T15:38:31.073-07:00",
+      "Id": 93201
+    },
+    {
+      "Message": "This was already answered on the StackOverflow question I see.   As it states, \"However, any time you use new, you create an object rather than a primitive\".\n\r\n\r** Closed by billti 03/13/2013 10:13AM",
+      "PostedDate": "2013-03-13T10:13:24.367-07:00",
+      "Id": 93202
+    },
+    {
+      "Message": "But their prototype chains are the same: \n\n\n```\nString.prototype.a=function(x){alert(x)}\ns = \"\";\ns.a(\"asdf\");\nS = new String(\"\");\nS.a(\"asdf\");\n```\n\nWhy allow \n```\ninterfaceBased=keywordBased;\n```\nand not the other way arround. ",
+      "PostedDate": "2013-03-14T19:51:40.327-07:00",
+      "Id": 93345
+    },
+    {
+      "Message": "That said, I understand it is a grey area and respect your decision. ",
+      "PostedDate": "2013-03-14T19:52:54.667-07:00",
+      "Id": 93346
+    }
+  ]
+}

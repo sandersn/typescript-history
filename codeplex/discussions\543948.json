@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1240169",
+    "ThreadId": "543948",
+    "Html": "Hi,<br />\n<br />\nWe use Telerik's Kendo UI Pro version for our views. We've written our own TypeScript wrappers for all the components we use from Kendo. That way we are able to react fast to changes in the Kendo UI code and we can extend on the functionality easily.<br />\n<br />\nIn the latest version Q1 2014 a new feature has become available in the grids called 'frozen column' which is a very nice one. A problem we found though is that the select() now returns 2 parts for each row (because the grid is divided into 2 tables with in each table a part of the row).<br />\n<br />\nWe got a work around for this from Telerik and would like to implement that in our TypeScript wrapper. Now this means we have to 'override' the 'select()' from the kendo grid. The problem is that the select is defined in the d.ts like so:<br />\n<pre><code>        select(): JQuery;\n        select(rows: string): void;\n        select(rows: Element): void;\n        select(rows: JQuery): void;</code></pre>\n\nOur implementation (override) should look something like this: <br />\n<pre><code>        public select(rows: any): JQuery\n        {\n            if (rows)\n            {\n                super.select(rows);\n            }\n            else\n            {\n                return this.tbody.find(&quot;.k-state-selected&quot;);\n            }\n        }</code></pre>\n\nThe TypeScript compiler can't extend the class that way because<br />\n<pre><code>Error   1   Class 'kendoWrappers.CttGrid' cannot extend class 'kendo.ui.Grid':\n    Types of property 'select' of types 'CttGrid' and 'kendo.ui.Grid' are incompatible:\n        Call signatures of types '(rows: any) =&gt; JQuery' and '{ (): JQuery; (rows: string): void; (rows: Element): void; (rows: JQuery): void; }' are incompatible:\n            Call signature expects 0 or fewer parameters.   C:\\NotScanned\\Ontwikkeling\\ControlIT\\trunk\\Fortrus.Messaging\\Scripts\\contractors\\kendoWrappers\\KendoWrappers.ts 320 15  Fortrus.Messaging</code></pre>\n\nThe only way I found to solve this is to edit the kendo.ui.d.ts file like so:<br />\n<pre><code>        select(rows: any): JQuery;</code></pre>\n\nNow for obvious reasons we don't want to edit the kendo.ui.d.ts file. Should we convince Telerik they should change the way the 'select()' is defined or can is there a way we can implement an override the compiler accepts?<br />\n<br />\nRegards<br />\nPaul<br />\n",
+    "PostedDate": "2014-05-01T00:58:03.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240175",
+    "ThreadId": "543948",
+    "Html": "The addition of the '?' behind the 'rows' seems to do the trick:<br />\n<pre><code>        public select(rows?: any): JQuery\n        {\n            if (rows)\n            {\n                super.select(rows);\n            }\n            else\n            {\n                return this.tbody.find(&quot;.k-state-selected&quot;);\n            }\n        }</code></pre>\n\n",
+    "PostedDate": "2014-05-01T01:31:45.117-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-01T01:53:42.83-07:00"
+  },
+  {
+    "Id": "1240364",
+    "ThreadId": "543948",
+    "Html": "To expand on the reasoning here: The definition for select says &quot;I can be called with no arguments, or I could have an argument of type string, Element, or JQuery.&quot; Your override clearly states &quot;I must be called with an argument of any type.&quot; Since your class could have its select function called polymorphically through an instance of the base class type which would allow 0 arguments you can't have your implementation take a dependency on &gt; 0 arguments existing. By marking rows as optional in your implementation you have satisfied the requirement for the parameter count, and because your parameter is of type any it satisfies the type requirements the overloads impose.<br />\n",
+    "PostedDate": "2014-05-01T12:37:24.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

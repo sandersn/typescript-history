@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1022094",
+    "ThreadId": "438243",
+    "Html": "I'm curious about the feasibility of compiling into Mozilla's asm.js modules from the type notations provided in TypeScript. Care would still be needed to make sure things worked in the asm.js restrictions (like making sure not to use dynamic variables, etc.), but certain things seem very doable, like changing a function signature with type information and setting up the function body to be statically AOTed according to the asm.js specifications.\r<br />\n<br />\nOne thing I'm not clear about though is whether an implementer of asm.js must implement heap management, or if it's ok to just use normal JS variables (it seems like it is, but it's a bit over my head).\r<br />\n<br />\nJust curious about the feasibility of this. :-)\r<br />\n<br />\nKevin N.<br />\n",
+    "PostedDate": "2013-03-27T15:32:40.883-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022106",
+    "ThreadId": "438243",
+    "Html": "From my perspective, I believe it is doable but you lose certain features of asm.js. The main thing I believe you lose is the ability to have ints and the signedness of numbers. TypeScript doesn't differentiate between double and int (just has number). So you'd likely still be forced to do the same |0 suffix or + prefix like native asm.js. At least that's my limited understanding of how it'd work. How to best port constructs such as modules and classes to the asm.js subset woudl require more thought.<br />\n",
+    "PostedDate": "2013-03-27T15:51:03.557-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022118",
+    "ThreadId": "438243",
+    "Html": "Something along these lines certainly could be possible longer term for TypeScript.  It's a direction we thought about in early TypeScript planning, and we want to keep the door open.   <a href=\"http://lljs.org/\" rel=\"nofollow\">LLJS</a> takes an approach along these lines, and some similar techniques could be applied very naturally within the context of TypeScript.  Would be interested in hearing any more thoughts on what would be most interesting in this direction.<br />\n",
+    "PostedDate": "2013-03-27T16:05:09.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022164",
+    "ThreadId": "438243",
+    "Html": "I could imagine TypeScript adding annotations to the generated JavaScript for execution engines to use for optimization.  I was kind of hoping, given that TS started in the IE team, this was one of the original intents.  Do we need a language subset for this though?\r<br />\n<br />\nOne thing that I always wondered why TypeScript doesn't cover is different numeric types.  Adding <code>double</code>, <code>float</code> and integer types has value even outside of these optimizations.  <code>number</code> could still be supported in parallel to the more restrictive types.<br />\n",
+    "PostedDate": "2013-03-27T17:37:20.003-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022437",
+    "ThreadId": "438243",
+    "Html": "I guess TypeScript would need to add a few additional math types (and maybe some other stuff - I'm not clear from the docs on how to pass functions around, etc.). Once those are in, TypeScript could compile int into x|0, and double into +x, etc. The nice thing as they point out in the Mozilla doc is that these are backward compatible, so x|0 converts to integer even in older engines (even if the runtime locks aren't the same). This means it definitely has more use than just for asm.js.\r<br />\n<br />\nCertain other features would have to go unused, such as dynamic variables in an asm.js module. So there would need to be some way to mark an entire module as asm.js (to follow the asm.js convention just use &quot;use asm&quot;), then some additional compiler checks could be added to make sure a particular module is compliant with asm.js.\r<br />\n<br />\nThe last thing, I'd bet a lot of the benefit of using asm.js and LLJS is the heap emulation, and the control over GC that gives you. I'm not sure how that could be worked into a language like TypeScript in a useful and unobtrusive way (addition of malloc?). If something like this were implemented, it could be a separate feature. Something like &quot;use heap&quot; or another kind of switch, where LLJS style heap emulation would be compiled out, instead of just using standard JS variables. (I wasn't clear if this part was actually necessary to get working in asm.js - I think it isn't).\r<br />\n<br />\nIt seems this could be very useful for creating modules where performance is vital (such as physics, or some graphics work). This would be especially true if MS, Google and Apple pick up the asm.js AOT functionality. ;-)<br />\n",
+    "PostedDate": "2013-03-28T07:49:06.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1037390",
+    "ThreadId": "438243",
+    "Html": "Typescript can even help make asm.js happen. No doubt asm.js will mature along with the larger ECMAScript standard. TypeScript can make it palatable now; just as it helps smooth over the differences in the module patterns (Universal Module Definition support would be nice on that score, by the way). Two trends:<br />\n<ul>\n<li>Low level libraries (zip libs, underscore etc., libs, and node-related libs) will all need to be rewritten in asm.js</li>\n<li>\nThe entire ecosystem needs rebuilt on the class library model rather than the bag-o-function model<br />\n</li>\n</ul>\nTypescript can be a key catalyst to make this all happen because it can hide the disjoints and make the whole seem like a cohesive language/environment.\r<br />\n<br />\nI say, Full speed ahead! Of course maturity will mean change. Typescript can provide abstractions that support for this change without the pain. Typescript, right now is a shell. Incorporating the static features of asm.js (optionally-of course) can make the JavaScript code, the content in the shell, a palatable general purpose language. The &quot;missing features&quot; as mentioned above will mature into the language over time. There's no reason we can't have static code right now.<br />\n",
+    "PostedDate": "2013-04-29T15:34:10.303-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1091155",
+    "ThreadId": "438243",
+    "Html": "I would <strong>love</strong> to see TS compiling to asm.js, but I can wait a while - let's not burden the team with one more compile target at this time, and let's get TypeScript itself where it is going.\r<br />\n<br />\nIt seems like a very natural fit though, TS and asm.js, and I really hope the team will consider this and evaluate feasibility of doing this in the future...<br />\n",
+    "PostedDate": "2013-09-11T06:35:50.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1126382",
+    "ThreadId": "438243",
+    "Html": "I think it's odd that this is a feature that has to be requested: asm.js is just a <a href=\"http://mozakai.blogspot.com/2013/06/what-asmjs-is-and-what-asmjs-isnt.html\" rel=\"nofollow\">formalization of emscripten output</a> so  IE, Chrome, and Firefox have already been optimizing for this type of code.   It's an incremental improvement over standard design patterns, the additional math libraries, etc, are <strong>not</strong> a big deal.   Unlike the speedups Dart achieves with Chrome, an asm.js compile target (or, rather, an <em>llvm</em> target) would allow MS to push these optimizations to <strong>all</strong> of the browsers.  I mean, who wouldn't switch over to the TypeScript compiled version of your  favorite library if it was faster and provided a drop-in replacement?<br />\n",
+    "PostedDate": "2013-11-18T23:32:40.493-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144779",
+    "ThreadId": "438243",
+    "Html": "I certainly would support the idea of adding an asm.js backend to TS. asm.js does not support object properties or the new-operator, so you would need to add your own memory management. Emscripten cross-compiles malloc() for this purpose. We have cross-compiled Java to asm.js with some impressive results. The type information that TS adds is an ideal foundation to emit asm.js. Since it has been several months since the original post, could one of the MS guys comment on any updates?<br />\n",
+    "PostedDate": "2014-01-02T12:09:28.747-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1228410",
+    "ThreadId": "438243",
+    "Html": "As TypeScript 1.0 beta is now out, is this being considered as a potential future development?<br />\n",
+    "PostedDate": "2014-03-30T18:28:19.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

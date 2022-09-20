@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1081138",
+    "ThreadId": "453557",
+    "Html": "As someone who mostly thinks in functional languages, I really miss ADTs in TypeScript. Is there any intention that they will make it into the language? Or are there idiomatic ways, which I have overlooked, to achieve similar things using the current TypeScript type system?<br />\n",
+    "PostedDate": "2013-08-15T14:10:51.99-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119553",
+    "ThreadId": "453557",
+    "Html": "I'd also love to see algebraic data types in Typescript (and maybe Scala-style views, although I havn't thought about it as much). They are a really powerful way to ensure a lot more compile-time correctness. <br />\n",
+    "PostedDate": "2013-11-06T19:03:15.473-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119966",
+    "ThreadId": "453557",
+    "Html": "Feel free to upvote this issue <a href=\"https://typescript.codeplex.com/workitem/1364\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1364</a><br />\n",
+    "PostedDate": "2013-11-07T11:19:29.387-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1301895",
+    "ThreadId": "453557",
+    "Html": "What I did is inspired by the way F# compiles an ADT into the CLR, which doesn't seem to have direct support for it. Its a bit hard to explain textually but I try: For every constructor of the ADT you create a (potentially private) class that derives from a common interface. The interface has at a method (i call it case) that allows to dispatch (through virtual method dispatch) between the alternatives. The method has one parameter for each alternative: a function with a signature corresponding to the signature of the constructor.<br />\nAn example for a binary tree is <a href=\"http://www.typescriptlang.org/Playground/#src=module%20Tree%0A%7B%0A%09export%20interface%20ITree%3CT%3E%20%7B%0A%09%09case%3CS%3E(ifLeaf%20%3A%20(t%20%3A%20T)%20%3D%3E%20S%2C%20ifNode%20%3A%20(l%20%3A%20ITree%3CT%3E%2C%20r%20%3A%20ITree%3CT%3E)%20%3D%3E%20S)%3B%09%09%0A%09%7D%0A%09%0A%09export%20function%20node%3CT%3E(l%20%3A%20ITree%3CT%3E%2C%20r%3A%20ITree%3CT%3E)%20%3A%20ITree%3CT%3E%0A%09%7B%0A%09%09return%20new%20Binary%3CT%3E(l%2Cr)%3B%0A%09%7D%0A%09%0A%09export%20function%20leaf%3CT%3E(t%20%3A%20T)%20%3A%20ITree%3CT%3E%7B%0A%09%09return%20new%20Leaf%3CT%3E(t)%3B%0A%09%7D%0A%09%0A%09class%20Binary%3CT%3E%20implements%20ITree%3CT%3E%09%7B%0A%09%09constructor(public%20l%3A%20ITree%3CT%3E%2C%20public%20r%3A%20ITree%3CT%3E)%20%7B%7D%0A%09%09public%20case%3CS%3E(ifLeaf%20%3A%20(t%20%3A%20T)%20%3D%3E%20S%2C%20ifNode%20%3A%20(l%20%3A%20ITree%3CT%3E%2C%20r%20%3A%20ITree%3CT%3E)%20%3D%3E%20S)%7B%0A%09%09%09return%20ifNode(this.l%2C%20this.r)%3B%0A%09%09%7D%09%09%0A%09%7D%0A%09%0A%09class%20Leaf%3CT%3E%20implements%20ITree%3CT%3E%09%7B%0A%09%09constructor(public%20t%3A%20T)%20%7B%7D%0A%09%09public%20case%3CS%3E(ifLeaf%20%3A%20(t%20%3A%20T)%20%3D%3E%20S%2C%20ifNode%20%3A%20(l%20%3A%20ITree%3CT%3E%2C%20r%20%3A%20ITree%3CT%3E)%20%3D%3E%20S)%7B%0A%09%09%09return%20ifLeaf(this.t)%3B%0A%09%09%7D%09%0A%09%7D%0A%7D%0A%0A%0Avar%20t%20%3D%20Tree.node(Tree.leaf(1)%2C%20Tree.node(Tree.leaf(2)%2C%20Tree.leaf(3)))%3B%0A%0A%0Afunction%20format%3CT%3E(t%20%3A%20Tree.ITree%3CT%3E)%20%3A%20string%20%7B%0A%09return%20t.case%3Cstring%3E(%20%0A%09%09t%20%3D%3E%20t.toString()%2C%20%0A%09%09(l%2Cr)%20%3D%3E%20%22(%22%20%2B%20format(l)%20%2B%20%22%20%22%20%2B%20format(r)%20%2B%20%22)%22%0A%09)%3B%0A%7D%0A%0Aconsole.log(format(t))%3B%0A\" rel=\"nofollow\">here</a>:\r<br />\nThis case method then can be the basis for any other method on the ADT. It is also convenient and straightforward to implement a fold (catamorphism) for the ADT.<br />\n",
+    "PostedDate": "2014-09-06T22:59:43.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

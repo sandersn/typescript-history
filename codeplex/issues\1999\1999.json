@@ -1,0 +1,126 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-09T17:26:13.443-08:00",
+    "CommentCount": 15,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nSince I installed the new version 0.9.5.0 of typescript I get this error in the build Output window more than 60% of the builds:\r\n\r\n7>VSTSC : tsc.js(49532, 17) JavaScript runtime error : Out of stack space\r\n\r\nEventually the problem is solved in a subsequent build, by doing a Build Solution, or cleaning the project with typescript files. The problem being that the build that runs well without this error may be the 4th, 5th or above after the first \"out of stack space\" build. I've already uninstalled/installed Typescript but it didn't help either.\r\n\r\nMy web project has 487 ts files in the subfolder Scripts. \r\nIn a much smaller test web project with just 4 ts files I don't have the problem.\r\n\r\nHas anyone had this problem with this version of typescript ? Any ideas as to what should be done to minimise/kill this annoying problem ?\r\n\r\nI'm using:\r\n- Windows 8.1\r\n- VS 2013\r\n- TS 0.9.5\r\n\r\nThanks in advance,\r\nMggLp",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-10T06:36:00.7-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Most builds of TS 0.9.5 end with Out of stack space",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 1999
+  },
+  "FileAttachments": [
+    {
+      "FileId": 767855,
+      "FileName": "Scripts.zip",
+      "DownloadUrl": ".\\767855"
+    },
+    {
+      "FileId": 768954,
+      "FileName": "ts-files.txt",
+      "DownloadUrl": ".\\768954"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Same issue here.\n\nIn my case it seemed to revolve around a definition I had created for AngularJS Q promises which had a relatively complex generic type structure to bubble types through the promise chain. Once I removed the generics I was then able to actually compile successfully (however the functionality defined therefore lost intellisense since I just moved to returning promises which return 'any's instead).\n\nIt's worth identifying in your code areas that might have complex generic structures (maybe those that output generic versions of themselves - such as in a fluent interface) which could be causing the compiler to loop in on itself indefinitely. It'll be worth seeing if the same issue has similar cause.",
+      "PostedDate": "2013-12-10T07:53:15.693-08:00",
+      "Id": 126783
+    },
+    {
+      "Message": "For suggested way to isolate the code causing the problem see the comment on this issue:\n\nhttps://typescript.codeplex.com/workitem/1991\n\n",
+      "PostedDate": "2013-12-10T08:03:56.667-08:00",
+      "Id": 126787
+    },
+    {
+      "Message": "We've seen this problem typically with very deeply nested and/or recursive generics, and reopening the same module repeatedly (i.e. declaration merging adding on to the same module/interface dozens of times).  Are either of these likely in your code?  If not, would you be able to provide a repro, or a more thorough description of the codebase you are working in and the steps taken to cause this problem?\n\nWithout being able to reproduce the issue locally, it's hard to tell if this is the same cause as an issue we're already investigating, or a new issue we'll need to look at.\n\nThanks.",
+      "PostedDate": "2013-12-10T09:02:46.167-08:00",
+      "Id": 126799
+    },
+    {
+      "Message": "p.s. Closing as \"need more info\" for now, so that when reopened with additional data it pops back on our radar.  Thanks!",
+      "PostedDate": "2013-12-10T09:03:57.253-08:00",
+      "Id": 126800
+    },
+    {
+      "Message": "Good morning,\r\n\r\nAttached I send a zip file with all the ts and js files of our VS project.\r\n\r\nA few of the js files are individual, but the majority are from TS compilation.\r\n\r\nWe continue to have a very negative Out of Stack Space error in most of the builds.\r\n\r\nRegards,\r\nMggLp",
+      "PostedDate": "2013-12-13T04:35:34.63-08:00",
+      "Id": 127332
+    },
+    {
+      "Message": "Hello again,\n\nIn the last couple of hours we did some experiments to compile with command line tsc our 480 something files on several of our corporate PCs. The results were as follows:\n- on 3 PCs with Windows 8.1 64 bits we had the infamous Out of Stack space error\n- on 1 PC with Windows 8.0 32 bits we also had the out of stack space error \n- on 4 PCs with Windows 7 the message never showed up and typescript compilation was OK.\n\nWe made a serious bet on Typescript since October 2012, for our flagship software package, and until the end of this year we have to conclude the conversion of the remaining 10 legacy js files to typescript.\n\nI would sincerely appreciate any feedback regarding\n- the best course of action for now on how to solve/work around this problem\n- is the problem known and being addressed by the TS team and if so when can we expect a solution.\n\nMany thanks,\nMggLp\n",
+      "PostedDate": "2013-12-13T07:58:43.147-08:00",
+      "Id": 127351
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 12/10/2013 9:04AM",
+      "PostedDate": "2013-12-10T09:04:03.713-08:00",
+      "Id": 127595
+    },
+    {
+      "Message": "Good morning,\n\nAfter realising that our \"Out of stack space\" error was \n- only happening on Windows 8.1 PCs and\n- when all the ts files were available for build \nthen we decided to work in a very unusual manner in order to avoid this dreadful error:\n- we set the Build Action of 41 of our ts files to None\n- and included in the VS project the corresponding 41 js files.\n\nThe exclusion of these 41 ts files from build seems to be enough to prevent the error from happening.\n\nStill we would like to know why 488 ts files give off a \"Out of stack space\" but 447 ts files don't on a Windows 8.1 + VS 2013 environment. Has some memory limit been reached here ? Is this some other situation of TS 0.9.5 that will be handled in the future ?\n\nRegards,\nMggLp\n\nRegards",
+      "PostedDate": "2013-12-16T03:52:30.1-08:00",
+      "Id": 127601
+    },
+    {
+      "Message": "What command line are you running to compile the sources in this file?",
+      "PostedDate": "2013-12-16T14:01:52.753-08:00",
+      "Id": 127692
+    },
+    {
+      "Message": "Hello Ryan,\r\n\r\nWe went into our Scripts folder (the folder was uploaded above in a zip file) and did:\r\ndir *.ts /b /s > ts-files.txt\r\n\r\nAfterwards we just compiled all the files inside ts-files.txt\r\ntsc @ts-files.txt:\r\n\r\nC:\\Desenv\\SGC\\Sgc.Web\\Sgc.Web\\Scripts>tsc @ts-files.txt\r\ntsc.js(49532, 17) JavaScript runtime error: Out of stack space\r\n\r\nThanks,\r\nMggLp",
+      "PostedDate": "2013-12-17T01:57:22.707-08:00",
+      "Id": 127745
+    },
+    {
+      "Message": "Sorry, bad formatting in the previous post:\n\nwe compiled all ts files with\n```\ntsc @ts-files.txt\n```\n\n\nand this is a copy/paste from command prompt after executing tsc:\n\n```\nC:\\Desenv\\SGC\\Sgc.Web\\Sgc.Web\\Scripts>tsc @ts-files.txt \n```\n\n```\ntsc.js(49532, 17) JavaScript runtime error: Out of stack space\n```\n\n",
+      "PostedDate": "2013-12-17T02:00:52.81-08:00",
+      "Id": 127746
+    },
+    {
+      "Message": "Thanks.  I was able to repro this with your project, and spent a couple of hours digging into it and talking with the team.\n\nThe underlying issue appears to be that when declarations are merged, we have a fairly recursive algorithm for looking for the declarations.  Here, all your files are reopening and merging onto the top level \"module Sgc....\".  As you have a large number of files/declarations with this namespace, the call stack grows quite large.  Depending on your platform, the stack space runs out at different points.\n\nWe've spoken about this limitation of the algorithm before, and are looking into possible solutions.  We'll try to see what we can do here.\n\nI can't give an ETA for a solid answer just yet.  What are your options for avoiding this issue in the meantime?  I assume restructuring code or breaking apart the compilation would be overly invasive - even as a temporary workaround?",
+      "PostedDate": "2013-12-17T16:00:53.647-08:00",
+      "Id": 127854
+    },
+    {
+      "Message": "Hi there,\n\nThe best course of action for us was to remove the Sgc top level module. Then we reactivated the TypescriptCompile build action for the 40 ts files previously set to None and now all our current 500 ts files compile without any \"out of stack space\" message. \n\nStill we would like to know if the problem on your side only happened on a Windows 8 system and not on a Windows 7 and if so what's the explanation for that different behavior with the Windows version.\n\nThanks for your help,\nMggLp\n\n\n",
+      "PostedDate": "2013-12-18T10:57:59.93-08:00",
+      "Id": 127951
+    },
+    {
+      "Message": "I am getting an \"Out of stack space error\" when I compile a sample ExtJS application with DefinitelyType bindings (see below). The interesting thing is that I have typescript 0.9.5 installed both as a nodejs package and as a Microsoft SDK, and the nodejs-tsc works fine whereas the SDK-tsc throws an error. \n\n```\n/// <reference path=\"ExtJS.d.ts\" />\n\nExt.require(['Ext.container.Viewport']);\n\nExt.application({\n    name: 'HelloExt',\n    launch: () => {\n        Ext.create('Ext.container.Viewport', {\n            layout: 'fit',\n            items: [\n                {\n                    title: 'Hello Ext',\n                    html : 'Hello! Welcome to Ext JS.'\n                }\n            ]\n        });\n    }\n});\n\n```\n\n",
+      "PostedDate": "2013-12-27T11:23:09.31-08:00",
+      "Id": 128518
+    },
+    {
+      "Message": "The original reported issue and the repro were caused by a recursive algorithm in the way we merge declarations (e.g. the continuous adding or new members to a top-level module across many files).  We changed this to be a more \"stack-friendly\" algorithm with the commit at https://typescript.codeplex.com/SourceControl/changeset/5b800d7605deae75dcd5cf9ff74bb3e1ba5391df .  Please try this.  It should resolve the problem.  Please reopen with more details if not.",
+      "PostedDate": "2014-01-09T17:26:06.533-08:00",
+      "Id": 130027
+    }
+  ]
+}

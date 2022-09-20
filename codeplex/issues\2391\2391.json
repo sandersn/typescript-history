@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "It would break a huge number of places where people relied on the implicit 'any' indexer, unfortunately. There'd have to be some other way to opt in to the behavior. If you have a suggestion for that, feel free to log a separate issue and we can mark it as such. Thanks!",
+    "ClosedDate": "2014-04-09T13:30:09.39-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "It would be great if Typescript would try to infer best index signature for object literals.\r\n```\r\nvar obj = {\r\n    A: { prop: \"A_value\" },\r\n    B: { prop: \"B_value\" },\r\n    C: { prop: \"C_value\" }\r\n};\r\n```\r\nhere te type of obj is `{ A : {prop:string;}; B : {prop:string;}; C : {prop:string;}; `\r\nI have compile time safety when using property names, but loose it when using index:\r\n```\r\nvar aVal = obj[\"A\"];\r\nvar bVal = obj.B;\r\n\r\nvar test = aVal.prop;\r\n//var test2 = aVal.wrongProp; //compile error\r\n\r\nvar key = \"C\";\r\nvar cVal = obj[key];\r\nvar test2 = cVal.wrongProp; //no comiple time error\r\n```\r\n\r\nit would be great if typescript would ifer index signature of object to. So i don't have to write type annotation like this:\r\n```\r\nvar obj: {\r\n        A: { prop: string; };\r\n        B: { prop: string; };\r\n        C: { prop: string; };\r\n        [key: string]: { prop: string; };\r\n    } = {\r\n    A: { prop: \"A_value\" },\r\n    B: { prop: \"B_value\" },\r\n    C: { prop: \"C_value\" }\r\n};\r\n\r\n```\r\n\r\nUsing object in JavaScript as simple hashmap is so common that it would be great to have better type inference in these area. After updating to Typescript 0.9.7 I got lot's of error when compiling with \"noimplictany\" switch because I got `any` in many places in code that used object as hashmap. This is good that I got errors but it would be great it had been already inferred.\r\n\r\n\r\nEDIT:\r\n\r\nit would be great if it worked similarly to array inference, for example:\r\n```\r\nvar arrayInferTest = [{ prop: \"A_value\", prop2: \"A_value\", prop3: \"A_value\" }, { prop: \"B_value\", prop2: \"B_value\" } ];\r\n```\r\ntype of `arrayInferTest` is ` {prop:string; prop2 :string;}[] `\r\nso for:\r\n```\r\nvar obj2 = {\r\n    A: { prop: \"A_value\", prop2: \"A_value\", prop3: \"A_value\" },\r\n    B: { prop: \"B_value\", prop2: \"B_value\"},\r\n}\r\n```\r\nobj2 type should be:\r\n```\r\n{\r\n        A: { prop: string; prop2: string; prop3: string; };\r\n        B: { prop: string; prop2: string; };\r\n        [key: string]: { prop: string; prop2: string; };\r\n}\r\n```\r\n\r\nit would be nice if enums had proper indexer too: (type of `EnumType[enumValue]` would be EnumType instead of `any`)\r\n\r\n",
+    "LastUpdatedDate": "2014-04-09T13:30:09.39-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-06T05:20:04.807-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "improve type inference for index signature",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2391
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This may be a work around for now:\n```\nvar obj = {\n    A: { prop: \"A_value\" },\n    B: { prop: \"B_value\" },\n    C: { prop: \"C_value\" },\n\titems: <{ [index: string]: { prop: string } }>null\n};\nobj.items = <any>obj;\n\nvar aVal = obj[\"A\"];\nvar bVal = obj.B;\n\nvar test = aVal.prop;\nvar test2 = aVal.wrongProp; //compiler error\n\nvar key = \"C\";\nvar cVal = obj.items[key];\nvar test2 = cVal.wrongProp; //compiler error\n\n```\n\nIt's sort of what I had to do in a similar situation.",
+      "PostedDate": "2014-04-07T11:46:50.81-07:00",
+      "Id": 140847
+    },
+    {
+      "Message": "Changing this behavior would be a breaking change for code that relied on the implicit 'any' indexer.\n\r\n\r** Closed by RyanCavanaugh 04/07/2014 9:25AM",
+      "PostedDate": "2014-04-07T09:25:52.313-07:00",
+      "Id": 141223
+    },
+    {
+      "Message": "sorry I occidentally reopened this issue. please close again it if this proposition has no chance to be implemented.\n\n RyanCavanaugh wrote Mon at 6:25 PM\n> Changing this behaviour would be a breaking change for code that relied on the implicit 'any' indexer.\n\nyes, but the code would be much more type-safe by default, and potentially find more bugs. You could also infer indexer only when types of properties are equal. For example:\n\n```\n//arr and arr2 don't have inferred index signature (or have inferrer [key:string] : any)\n\nvar arr = {\n    prop1: \"asd\",\n    prop2 : 1\n};\n\nvar arr2 = {\n    prop1: { A: \"foo\" },\n    prop2: { B: \"bar\" }\n};\n\n//arr has \"[key:string] : string\" iferred index signature\nvar arr3 = {\n    prop1: \"asd\",\n    prop2: \"asd\"\n};\n```\n\n\n\n",
+      "PostedDate": "2014-04-09T11:31:13.077-07:00",
+      "Id": 141227
+    }
+  ]
+}

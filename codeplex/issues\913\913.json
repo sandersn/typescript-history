@@ -1,0 +1,136 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We solved some of theses problem by introducing the _references.ts file in the 0.9.5 release. ",
+    "ClosedDate": "2014-01-17T13:12:46.793-08:00",
+    "CommentCount": 17,
+    "Custom": null,
+    "Description": "Given a class Alpha, Bravo and Charlie; Charlie extends Alpha, and Bravo contains a reference to Charlie.  Each of these are in a separate file.  The (correct) order they are defined in the single file output is:\r\n1. Alpha\r\n2. Charlie\r\n3. Bravo\r\n\r\nAdd a reference to Bravo inside Charlie and there's now a circular reference.  The code still compiles (as it should) but the in the output the classes are listed:\r\n1. Charlie\r\n2. Bravo\r\n3. Alpha\r\n\r\nThis is a bug because Alpha must be defined before Charlie as it is without the circular reference.\r\n\r\nI've attached an example VS2012 project that demonstrates the problem.",
+    "LastUpdatedDate": "2014-01-17T13:12:46.793-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-16T08:49:32.37-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Classes In Wrong Order In Single File with Inheritance and Circular Reference",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 17,
+    "Id": 913
+  },
+  "FileAttachments": [
+    {
+      "FileId": 664608,
+      "FileName": "CircularReference.rar",
+      "DownloadUrl": ".\\664608"
+    },
+    {
+      "FileId": 665361,
+      "FileName": "CircularReference.zip",
+      "DownloadUrl": ".\\665361"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I'm unable to unpack a rar file on this machine, but if I understand your write-up correctly, then the code looks something like the below:\n\n```\nclass Alpha {\n    a: string = \"hi\";\n}\nclass Charlie extends Alpha {\n    b = new Bravo();\n}\nclass Bravo {\n    c = new Charlie();\n}\n```\n\nWhen I put this on my 0.9.0 development branch, or in the Playground (which runs the current 0.8.3 compiler) I do not see any reordering of class declarations.\n\nCan you please verify your explanation (and/or reattach as a zip file) and reopen if the issue is as described.",
+      "PostedDate": "2013-04-18T11:08:14.083-07:00",
+      "Id": 97386
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 04/18/2013 11:08AM",
+      "PostedDate": "2013-04-18T11:08:27.19-07:00",
+      "Id": 97409
+    },
+    {
+      "Message": "I've attached a zipped version of the example.  A key fact I forgot to state is that Alpha, Bravo and Charlie are each in their own file, thus the need for compilation using the \"-out\" flag to order the classes.\n\nIn your example the classes are ordered correctly in the output, but if a circular reference is created as per below the order is incorrect:\n\n```\n// file Alpha.ts\n/// <reference path=\"Bravo.ts\" />\nclass Alpha {\n    b = new Bravo();\n}\n\n// file Bravo.ts\n/// <reference path=\"Charlie.ts\" />\nclass Bravo {\n    c = new Charlie();\n}\n\n// file Charlie.ts\n/// <reference path=\"Alpha.ts\" />\nclass Charlie extends Alpha {\n    x = 4;\n}\n```",
+      "PostedDate": "2013-04-18T13:40:08.92-07:00",
+      "Id": 97411
+    },
+    {
+      "Message": "Oh, and thanks for your attention. :)",
+      "PostedDate": "2013-04-18T13:40:46.327-07:00",
+      "Id": 97412
+    },
+    {
+      "Message": "Thanks! Think I got it now.\n\nFirst thing i noticed is that Charlie.ts extends Alpha, but doesn't reference it, so I added this line to the top of Charlie.ts\n\n```\n/// <reference path=\"Alpha.ts\" />\n```\n\nIn the code as provided, Charlie is the only file that depends on other code being present first (as it needs to setup the class to extend Alpha, so Alpha needs to be known).  The other classes are only needed at instance initialization, so it doesn't matter when they are defined, as long as it's before instances are created.\n\nIronically, having Charlie need to be included in the output last, means specifying it on the command-line first.  Here's why:\n\n - When you load a file it will resolve it's reference tags and include them first in it's graph.  Thus is you put Alpha first and it references Bravo, which then references Charlie, Charlie will be included first.  This makes sense from a dependency perspective (i.e. presumably if you are referencing something, then you need something from it).\n - Once a file has been included once, it won't be included/reordered again.\n\nThe above rules mean that by specifying Alpha first, which then references Bravo, which then references Charlie, they will be included in the reverse order of this (Charlie, then Bravo, then Alpha).  The fact Charlie then references Alpha (and depends on it) doesn't matter, all files are now in the graph and won't be added twice, and will be included in the resolved order.\n\nThis subtle complexity probably only arises on circular dependencies, as that's the only way I can think that a file can depend on another file, yet they are both already included in the opposite order.  (I could be wrong here).\n\nBasically as Charlie is the only one with a hard order dependency, specify it first on the command line.  It's references will be resolved and included before it.\n\nIf this doesn't make sense or resolve the issue, please reopen.  Thanks!",
+      "PostedDate": "2013-04-18T21:31:50.203-07:00",
+      "Id": 97456
+    },
+    {
+      "Message": "> Charlie.ts extends Alpha, but doesn't reference it\n\nYou're right.  Maybe the code shouldn't compile then, but it does.  This is probably because of how the reference to Charlie is reached.  I can open a separate bug report for that if you'd like.\n\n> specify it first on the command line\n\nI'm not building with a batch file on the command line but from Visual Studio 2012.  I don't know how VS decides to order files in the build command, but it's probably alphabetical or the order they were created.  Playing games with either of those to get the code to run isn't an appropriate solution.\n\nAs I stated initially when there isn't a circular reference TSC is willing to order classes correctly so that the code runs.  Introducing the circular reference doesn't make this an intractable problem.  There's still a correct answer and the compiler doesn't need more information to get it.",
+      "PostedDate": "2013-04-19T08:35:49.95-07:00",
+      "Id": 97489
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 04/18/2013 9:31PM",
+      "PostedDate": "2013-04-18T21:31:58.407-07:00",
+      "Id": 97490
+    },
+    {
+      "Message": "Thanks for reporting we're taking a look.",
+      "PostedDate": "2013-04-19T16:37:02.053-07:00",
+      "Id": 97531
+    },
+    {
+      "Message": "I am getting this issue too, have temporarily renamed a file to begin with the letter \"a\" to bump it to the top of the list but like OP mentions its a workaround not a solution.",
+      "PostedDate": "2013-04-25T05:42:15.067-07:00",
+      "Id": 98430
+    },
+    {
+      "Message": "Just to add that I utterly hate this bug. It struck me again today on a very large project. It happened when moving a TS file from one folder to another via Visual Studio. Once that happened the references were all totally screwed up, even moving the file back didn't help. Everything compiles fine but nothing runs.\n\nThe only solution I found was to delete the VS project and remake the entire thing from scratch, which is beyond tedious.",
+      "PostedDate": "2013-05-31T09:02:54.37-07:00",
+      "Id": 101792
+    },
+    {
+      "Message": "I'm running into this on the latest typescript release 0.9.0.1 with my semi-large project.\n\nMy project is open source, you can view the code here: https://github.com/ntaylormullen/endgate\n\nI've temporarily resolved it by creating my own powershell dependency resolution script and then calling the typescript compiler with the files in the correct dependency order.  My script is hacky and slow but gets the job done for now, would be wonderful to have this resolved so I'm not restricted by my build script's requirements.\n\nMy hackkkkyyy script: https://github.com/NTaylorMullen/EndGate/blob/master/EndGate/EndGate.Core.JS/build.ps1",
+      "PostedDate": "2013-07-13T14:27:33.387-07:00",
+      "Id": 105971
+    },
+    {
+      "Message": "I have hit a similar version of this bug, which is not so resolvable.  \n\nFor example, if class FooA extends Base and FooC extends FooA - whichever code block gets placed first in the JS will cause an extend error. The JS injects a prototype chain to extend an object, as that object is not yet defined it causes a extend error. Unfortunately whichever order our class is in - it will fail. \n\nWe created a simple test case:\n\nhttp://kurst.co.uk/samples/awayts/CyclicDependenciesError/\nhttp://kurst.co.uk/samples/awayts/CyclicDependenciesError/CyclicDependenciesError.zip\n\nWe are actively looking for solutions at the moment - and are not sure there will be a viable solution within our current framework. \n\nIt seems a 'best fix' would be to change the compiler to extend classes after they have all been initialised using a deferred token based initialisation system. \n\nAt the moment we are currently investigating migrating our code base to use AMD, which I would prefer to avoid. Will report back with anything. ",
+      "PostedDate": "2013-07-16T01:10:35.143-07:00",
+      "Id": 106139
+    },
+    {
+      "Message": "If I remember correctly then the main issue here is that dependency resolving is rather limited because it only knows about files, not about classes. It traverses 'reference' comment tags and collects the file contents, then pushes it to the compiler.\nIt does not (cannot?) differentiate between a dependency due to class inheritance ('A extends B') vs. a weaker dependency due to a class usage (e.g. in the constructor or a method). In order to resolve certain cyclic dependencies it would, however, need and have to consider this information.\n\nAt least this was the conclusion from a previous discussion and referred to 0.8.x. Not sure if 0.9 introduced new behavior here?\n\n",
+      "PostedDate": "2013-07-16T03:43:33.513-07:00",
+      "Id": 106147
+    },
+    {
+      "Message": "@karimbeyrouti\n\nWhat we did in our project to mitigate the problem (with rather view resources) is to specify dependencies starting from a single project-wide entry point file and only reference this file in all of the individual class files.\n\n    // file: _dependencies.ts\n    ///<reference path=\"ts/Base.ts\" />\n    ///<reference path=\"ts/FooA.ts\" />\n    ///<reference path=\"ts/FooC.ts\" />\n\n    // file: ts/FooA.ts\n    ///<reference path=\"../_dependencies.ts\" />\n    ...\n\n    // file: ts/FooB.ts\n    ///<reference path=\"../_dependencies.ts\" />\n    ...\n\nTo make it more manageable we use one dependency file per 'module' (=folder), and have the top-level dependency file reference these. \n\nOf course there are downsides to this approach, e.g. if you want more flexible builds. But in general, this approach worked pretty well for us so far.\n",
+      "PostedDate": "2013-07-16T03:44:16.99-07:00",
+      "Id": 106148
+    },
+    {
+      "Message": "> The references in the files provided indicate that the order will be Charlie, Bravo, Alpha. This is because Alpha is the first file provided to the compiler, and it requires Bravo be included before it. Bravo in turn requires Charlie be provided before it.\n\nI'm confused.  Why does Alpha require Bravo be included before it?  I can see that Bravo has to be included before Alpha can be *constructed*, but that's not the same thing.",
+      "PostedDate": "2013-08-10T15:44:48.507-07:00",
+      "Id": 109331
+    },
+    {
+      "Message": "This is by design for now, though unfortunate.\n\nThe references in the files provided indicate that the order will be Charlie, Bravo, Alpha.  This is because Alpha is the first file provided to the compiler, and it requires Bravo be included before it.  Bravo in turn requires Charlie be provided before it.  \n\r\n\r** Closed by paulb 08/09/2013 3:52PM",
+      "PostedDate": "2013-08-09T15:52:14.67-07:00",
+      "Id": 109332
+    },
+    {
+      "Message": "If the current behavior is by design, it makes using single-file output completely useless and could be removed.\n\nI'm seeing issues with very simple regular inheritance. I created a clean project and added two classes, A and B, and B extends A. This outputs B before A if the files are in different folders.\n\nIf the dependency resolution uses only the files references, then it would be better if there was no ordering at all, and the output used the order the files were provided to the compiler. This way we could at least compile to a single file and have control over how the output is ordered.",
+      "PostedDate": "2013-09-13T04:27:11.717-07:00",
+      "Id": 113453
+    }
+  ]
+}

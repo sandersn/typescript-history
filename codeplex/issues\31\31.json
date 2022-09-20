@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-08T12:22:48.467-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Put this into the Playground:\r\n\r\nclass A\r\n{\r\n    public x: number;\r\n    public f() { }\r\n    public g(a: any) { return undefined; }\r\n    static s: string;\r\n}\r\n\r\nThe generated Javascript does not contain a property for \"x\"?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T08:38:10.4-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Public properties not created",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 31
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "In JavaScript you can add any property to any object by just assigning it a value.\n\n    var a = { };\n    a.x = 10;\n\nThe only reason you need to declare it in TypeScript is for the type checker.\n\n    class A {\n        public x: number;\n    }\n    var a = new A();\n    a.x = 10;\n\nThe javascript it creates can just assign x to the new A object, just like in the first example.",
+      "PostedDate": "2012-10-02T08:46:24.333-07:00",
+      "Id": 78296
+    },
+    {
+      "Message": "What about this then:\n\nvar classA = new A();\n\nvar notGoingToWork = classA.x;",
+      "PostedDate": "2012-10-02T09:26:00.273-07:00",
+      "Id": 78304
+    },
+    {
+      "Message": "I agree that you can attach new properties to a JS object just by assigning it. I am talking about using a property that does not exist on the generated JS class but DOES exist looking at the TypeScript code. Surely this creates some ambiguity?",
+      "PostedDate": "2012-10-02T09:29:26.557-07:00",
+      "Id": 78306
+    },
+    {
+      "Message": "notGoingToWork will be 'undefined', which makes sense because you've not given x a value.\n\nThe only ambiguity I can think of is if you try to inspect the properties.\n\nclass A {\npublic x: number;\n}\nvar a = new A();\n\nfor (var prop in a) {\n\tconsole.log(prop);\n}\n\nOne might expect that to log x. The way around that would presumably be to assign undefined to x in the constructor. Not sure how I feel about that personally.",
+      "PostedDate": "2012-10-02T10:43:53.957-07:00",
+      "Id": 78311
+    },
+    {
+      "Message": "I believe you have to assign a default for it to show up because we generate the field during the constructor call, which will want to assign something to the this.x\n\nAlternatively, you could use an interface to describe having fields with no default value.  This generates even less JS code and works as another possible solution:\n\ninterface Foo {\n    x: number;\n}\n\nvar a: Foo = {x: 3};\n\nIs there something not having the x output prevents you from doing?\n\n",
+      "PostedDate": "2012-10-03T19:51:44.46-07:00",
+      "Id": 78504
+    },
+    {
+      "Message": "@jonturner\n\nThere is nothing especially it is stopping me from doing only that I found it to be counter-intuitive that I would declare a property in TS only for it not to appear in the generated JS.\n\nI am trying to understand the reason why I need either an interface or a default values assigned in the constructor call to make it generate on the JS class.\n\nIs there some Javascript specific reason why the property is not generated? I just found it to be a strange behaviour but potentially I am missing some reason as to why it behaves like this? Was it a concious decision not to generate the property?",
+      "PostedDate": "2012-10-08T06:43:50.68-07:00",
+      "Id": 78987
+    },
+    {
+      "Message": "For now, the work-around of assigning a \"don't care\" value aligns more closely with the kind of JavaScript we output.  When we support ES6 in the future, it may make sense to revisit this and allow fields without being initialized.",
+      "PostedDate": "2012-10-08T12:22:43.153-07:00",
+      "Id": 79039
+    }
+  ]
+}

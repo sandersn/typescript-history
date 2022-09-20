@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1048964",
+    "ThreadId": "445045",
+    "Html": "The rules for super() and this in section 8.3.2 are somewhat obtuse, but the goal seems to be the prevention of accessing &quot;this&quot; from subclass before the subclass's constructor is complete. More specifically, before the class-body and constructor-arg initialized members are set.<br />\n<br />\nNevertheless, I ran into this construct which is compatible with the rules but still suffers from the issue the language is try to address:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Base {\n  <span style=\"color:Blue;\">constructor</span>() { <span style=\"color:Blue;\">this</span>.onInit(); }\n  onInit() { }\n}\n\n<span style=\"color:Blue;\">class</span> Derived <span style=\"color:Blue;\">extends</span> Base() {\n   <span style=\"color:Blue;\">public</span> data:<span style=\"color:Blue;\">any</span> = {};\n   <span style=\"color:Blue;\">constructor</span>() {\n     <span style=\"color:Blue;\">super</span>(); <span style=\"color:Green;\">// calls this.onInit()</span>\n     <span style=\"color:Green;\">// this.data set immediately after super();</span>\n   }\n   onInit() {\n     <span style=\"color:Blue;\">this</span>.data.x = <span style=\"color:#A31515;\">&#39;x&#39;</span>; <span style=\"color:Green;\">// this.data not set yet. crash when doing new Derived()</span>\n   }\n}\r\n</pre></div>I'm not sure how this should be resolved, one way might involve splitting the member assignment step into separate method and call it for each class in the hierarchy before the body of the constructor is run.  Or the language might have some clear way of forbidding this construct.<br />\n<br />\nI see pros and cons to both answers.<br />\n",
+    "PostedDate": "2013-05-26T18:26:28.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049808",
+    "ThreadId": "445045",
+    "Html": "Calling virtual methods from the constructor is widely viewed as a bad thing to do. While it's not enforced as a language rule in TypeScript (because there's no concept of 'virtual'), this would be a good place for a static analysis tool to issue a warning (as FxCop does for C# or VB code; in C++, doing this results in 'undefined' behavior and is typically disallowed by the compiler).\r<br />\n<br />\nThere's no call or initialization order that would preserve sane semantics in the presence of virtual function calls from the constructor, so I think the only solution here is &quot;Please don't do that&quot; until someone writes a nice FxCop-like tool for TypeScript.<br />\n",
+    "PostedDate": "2013-05-28T14:03:53.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1049835",
+    "ThreadId": "445045",
+    "Html": "Thanks for the response.\r<br />\n<br />\nClearly this is a case of \r<br />\n<em>Patient</em>: &quot;doctor it hurts when I do this&quot;\r<br />\n<em>Doctor</em>: &quot;so don't do that&quot;\r<br />\n<br />\nI'm not entirely satisfied with this answer, but I can't really come up with anything better, either.  <em>grumble grumble</em><br />\n",
+    "PostedDate": "2013-05-28T15:24:40.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

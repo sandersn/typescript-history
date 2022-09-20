@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-02-26T17:15:49.9-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I should be able to create a node.js application using the internal module pattern but I cannot, and the external module pattern fails for node js because there is no mechanism for using multiple files in the same external module.... but that is a separate issue.\r\n\r\nTo reproduce:\r\n-create a root server/entry point file: server.ts\r\n-add reference to node.d.ts\r\n-include an external module, let's try http\r\n-use simple http sample code... all good!\r\n-Now we want to make the application more complex and design with the internal module pattern\r\n-create client.ts\r\n-include client.ts into server.ts via reference path\r\n-create a simple object in client.ts to describe a client accessing the server, all good!\r\n-now we need some type specifics from node in the client.ts file... we are screwed.\r\n-we try to import http, but this then breaks the reference of client.ts in server.ts, and this makes sense because both are importing http so when translated we would have two definitions of the same imported module in the same scope: var http = require('http')\r\n-so we realize this and say, well let's create an imports.ts file to reference in all files, since the internal module pattern should smush everything into one file anyway and have the imports from imports.ts up top because it has no dependencies...\r\n-so we create imports.ts\r\n-remove import http = module('http') from both files\r\n-add import http = module('http') to imports.ts\r\n-then we reference imports.ts from both client.ts and server.ts\r\n-neither reference works...\r\n-files that import external modules are not allowed...\r\n\r\nThis forces node.js developers to use the external module pattern... which is better for debugging, but currently results in ugly usage like so.:\r\n\r\n```\r\nimport vehicles = module('vehicles.truck');\r\nimport vehicles0 = module('vehicles.car');\r\nimport vehicles1 = module('vehicles.boat');\r\n```\r\nYou should really just auto merge imported modules with the same names. I know this potentially allows a developer to define their own net module and import it along with the node one potentially causing overlap... but as developers we probably should know the impact of what we're doing anyway. And there's any easy way to learn :)\r\n\r\nSo please fix both issues...\r\nALSO\r\nimporting an external module should technically work inside an internal module:\r\n```\r\nmodule net.animals {\r\n    import http = module('http');\r\n}\r\n```\r\nSince the reference will be inside the module scope, it should be fine, though in some situations it may be bad performance wise, it should probably be up to the developer to know the system they are working with.",
+    "LastUpdatedDate": "2013-08-13T12:20:17.277-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-26T07:45:37.207-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Imports of external modules fail in apps built using the internal module pattern",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 760
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "As soon as you use import or export at the top level, you are defining an external module.  As you note, you cannot do multi-file external modules currently.  Thus, you should not be /// referencing other implementation files into external module source files.  You cannot pull this implementation into the referencing file.  The only /// references that make sense in external modules is to reference declarations of other external modules (i.e. 'fs' or 'events').\n\nOnly being able to import modules at the top level is an artifact of being compatible with two different module systems.  While it is not uncommon to a \"var x = require('..')' within code blocks in Node modules, in requireJS referenced modules are loaded as dependencies before the module definition executes.\n\nUnfortunately there are many complexities and subtleties to modules - especially external modules.  We are working to make this experience better through better tooling and guidance going forward.",
+      "PostedDate": "2013-02-26T17:15:42.787-08:00",
+      "Id": 91628
+    },
+    {
+      "Message": "Thanks for your response :)\nYou guys have been doing a great job with TypeScript so far. \n\nI understand there are many issues that arrive when trying to support multiple frameworks. Once the following is implemented, TypeScript will be much nicer for node:\nhttp://typescript.codeplex.com/workitem/47\n\nMy last request would have issues between systems. \nBut you should still consider my initial issue, as the solution is simple and would cause no issues between systems.\n\nAs I understand it, when using internal modules, you have one root file that references others, creating a branching structure which then get's ordered and amalgamated into one output file?\nSo could you not just move all import statements to the top of the file, even when contained in references? they are already forced to be global. I see no issues, but please let me know if there are some in my thinking, I love to learn.",
+      "PostedDate": "2013-02-26T18:09:27.063-08:00",
+      "Id": 91632
+    }
+  ]
+}

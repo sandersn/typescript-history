@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed with 96019bdc4fdfabbfbd110a928c216 ",
+    "ClosedDate": "2013-02-19T15:57:22.74-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Consider the following:\r\nclass Student {\r\n    fullname: string;\r\n    constructor(private firstname, public middleinitial, public lastname) {\r\n        this.fullname = firstname + \" \" + middleinitial + \" \" + lastname;\r\n    }\r\n}\r\n\r\ninterface Person {\r\n    firstname: string;\r\n    lastname: string;\r\n}\r\n\r\nfunction greeter(person: Person) {\r\n    return \"Hello, \" + person.firstname + \" \" + person.lastname;\r\n}\r\n\r\nvar user = new Student(\"Jane\", \"M.\", \"User\");\r\n\r\ndocument.body.innerHTML = greeter(user);\r\n\r\nWhen using the TypeScript Playground webpage, you are not warned that the code \"greeter(user)\" is invalid.\r\n\r\n\"greeter(user)\" is invalid because greeter expects an object which implements the Person interface (public firstname: string, public lastname: string) however the user object which is being passed in has a private firstname.\r\n\r\n\r\nThis code is mostly taken from one of the \"learn\" examples.\r\n\r\nIn addition to this, the following is also valid:\r\nvar user = new Student(1, \"M.\", \"User\");\r\n\r\nI'm not sure if it is intended that an object can be pushed into a function which expects an interface, even if the class doesn't explicitly implement that interface but if it is, the data type and access modifiers should also be checked.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T06:55:48.503-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Interface does not correctly check the access modifiers and datatypes",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 94
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Keep in mind that this checking should probably only happen when the object is explicitly defined from a class - The following code should also still work:\ndocument.body.innerHTML = greeter({firstname: 'James', lastname: 'Bob'});",
+      "PostedDate": "2012-10-04T06:58:57.243-07:00",
+      "Id": 78544
+    },
+    {
+      "Message": "There are a couple things here:\n\nYou're exactly right.  It's a bug if a class is allowed to satisfy an interface requirement with a private member.  \n\nYour example with \"var user = new Student(1, \"M.\", \"User\");\" is allowed because Student takes three parameters of type 'any'.  If you change the example to this, it would be type-warned against:\n\nclass Student {\n    fullname : string;\n    constructor(private firstname:string, public middleinitial, public lastname) {\n        this.fullname = firstname + \" \" + middleinitial + \" \" + lastname;\n    }\n}\nvar user = new Student(1, \"M.\", \"User\");\n\n\nYour third example with the object literal is valid TypeScript.\n\n",
+      "PostedDate": "2012-10-04T09:02:36.967-07:00",
+      "Id": 78564
+    },
+    {
+      "Message": "I think I highlighted the wrong part of the \"var user = new Student(1, \"M.\", \"User\");\" example. The creation of the user object is valid, but the call to greeter is invalid as the object has the following signature:\n{ fullname: string, firstname: number, middleinital: string, lastname: string } (Defined by the values that it currently holds)\n\nIgnoring the fact that the object doesn't match the Person interface because of the private issue, it also doesn't match because firstname is holding a number and the interface expects it to be a string.\n\nSorry I should have made it a little clearer as to what I was trying to show for each issue.",
+      "PostedDate": "2012-10-04T10:07:30.55-07:00",
+      "Id": 78573
+    },
+    {
+      "Message": "I have some more time now so just wanted to go through and clean up my scenarios. All of these have been tried using the playground only.\n\n\n! Scenario 1 - Interface access modifiers not checked during \"implicit cast\"\n{{\ninterface Person {\n\tfirstname: string;\n\tlastname: string;\n}\n\nclass Student {\n\tconstructor(private firstname, public lastname) {\n\t}\n}\n\nfunction greeter(person: Person) {\n\treturn \"Hello, \" + person.firstname + \" \" + person.lastname;\n}\n\nvar user = new Student(\"Jane\", \"User\");\ndocument.body.innerHTML = greeter(user); // This line should raise an error due to the user object not containing a public firstname field.\n}}\nIn this case, the user object is passed into the greeter function which expects an object implementing Person. TypeScript will try and \"implicitly cast\" (For lack of a better way of wording it) the user object to the Person interface, but should fail as there is no public firstname available on the user object.\n\n\n! Scenario 2 - Type is not checked during \"implicit cast\"\n{{\ninterface Person {\n\tfirstname: string;\n\tlastname: string;\n}\n\nclass Student {\n\tconstructor(public firstname, public lastname) {\n\t}\n}\n\nfunction greeter(person: Person) {\n\treturn \"Hello, \" + person.firstname + \" \" + person.lastname;\n}\n\nvar user = new Student(1, \"User\");\ndocument.body.innerHTML = greeter(user); // This line should raise an error due to the user object containing a number for the firstname field rather than a string.\n}}\nIn this case, the user object is passed into the greeter function and is accepted due to having both required public fields, however as the interface expects them to be strings and the object is defined with \"any\" type being accepted, I believe the type of the value should be checked. I'm not sure this is even possible to check with the way your compiler works, but I'm throwing it out there as I think it is an unusual case.\n\n\n! Scenario 3 - Object literals should not perform access modifier checks, but may perform type checked based on scenario 2\nThis scenario actually currently works, but I mention it as something to test when scenario 1 is fixed and as a consideration to go with scenario 2.\n{{\ninterface Person {\n\tfirstname: string;\n\tlastname: string;\n}\n\nfunction greeter(person: Person) {\n\treturn \"Hello, \" + person.firstname + \" \" + person.lastname;\n}\n\ndocument.body.innerHTML = greeter({firstname: 'James', lastname: 'Bob'});\n}}\n\n\nI hope this helps clear things up a little.",
+      "PostedDate": "2012-10-04T13:57:31.877-07:00",
+      "Id": 78606
+    },
+    {
+      "Message": "Oh great, markup doesn't work in comments. -_-",
+      "PostedDate": "2012-10-04T13:58:29.677-07:00",
+      "Id": 78607
+    }
+  ]
+}

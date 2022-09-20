@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1172322",
+    "ThreadId": "503074",
+    "Html": "Hi,\r<br />\n<br />\nInside a module, attempting to reduce redundancy by defining a type interface that is then used in exported code results in an error TS2038: Parameter 'foo' of public method from exported class has or is using private type 'Type'.\r<br />\n<br />\nI don’t understand why the compiler throws an error in this case. Since it uses structural typing to determine whether or not types are the same, why should it matter that the interface isn’t exposed?\r<br />\n<br />\nNot OK:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> ICallback {\n  (foo:<span style=\"color:Blue;\">string</span>, bar:<span style=\"color:Blue;\">number</span>):<span style=\"color:Blue;\">void</span>;\n}\n\n<span style=\"color:Blue;\">class</span> Foo {\n  observe(callback:ICallback):<span style=\"color:Blue;\">void</span> {} <span style=\"color:Green;\">// error TS2038</span>\n}\n\n<span style=\"color:Blue;\">export</span> = Foo;\r\n</pre></div>OK:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo {\n  observe(callback:(foo:<span style=\"color:Blue;\">string</span>, bar:<span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>):<span style=\"color:Blue;\">void</span> {}\n}\n\n<span style=\"color:Blue;\">export</span> = Foo;\r\n</pre></div>Also OK, but really dumb:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> callbackType:(foo:<span style=\"color:Blue;\">string</span>, bar:<span style=\"color:Blue;\">number</span>) =&gt; <span style=\"color:Blue;\">void</span>;\n\n<span style=\"color:Blue;\">class</span> Foo {\n  observe(callback:<span style=\"color:Blue;\">typeof</span> callbackType):<span style=\"color:Blue;\">void</span> {}\n}\n\n<span style=\"color:Blue;\">export</span> = Foo;\r\n</pre></div>",
+    "PostedDate": "2014-01-16T20:25:22.653-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174173",
+    "ThreadId": "503074",
+    "Html": "What's wrong with<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> foo {\n     <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> ICallback {\n          (foo:<span style=\"color:Blue;\">string</span>, bar:<span style=\"color:Blue;\">number</span>):<span style=\"color:Blue;\">void</span>;\n     }\n     <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Foo {\n         observe(callback:ICallback):<span style=\"color:Blue;\">void</span> {}\n     }\n}\r\n</pre></div>The error is reasonable because you may wish to work with types within the module closure that you don't want accessed by outside code.<br />\n",
+    "PostedDate": "2014-01-17T08:45:46.953-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174219",
+    "ThreadId": "503074",
+    "Html": "Most things are wrong with the <code>module</code> keyword. It only makes sense to use it if you are interested in polluting the global scope with legacy JavaScript patterns; if you are writing AMD or CJS modules, your files are already modules, and it is simply wasteful. Also, what you proposed is not the same as the code in the example; I could just put <code>export</code> before the interface and class if I wanted a hash map to be exported as the module value, but I don’t. I want the class to be exported.<br />\n<br />\nThere is no “accessing” of the type by outside code in the example I gave, so I do not see or understand how that could be a rationale for this restriction. The type is defined on parameters in order to restrict them, and the restriction is identical regardless of whether the type is named or not. The purpose of naming it is to reduce (keyboard) typing and stop errors caused by the type being changed inconsistently across the file.<br />\n",
+    "PostedDate": "2014-01-17T09:05:30.31-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174334",
+    "ThreadId": "503074",
+    "Html": "Okay, I see what you're getting at. You'd like to annotate <code>callback</code> just for your own pleasure within the file that you're working.\r<br />\n<br />\nCall me old fashioned, but if one were to declare a public method on a class then anyone reading that class would expect that method to be used outside of the file.<br />\n",
+    "PostedDate": "2014-01-17T09:49:26.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174362",
+    "ThreadId": "503074",
+    "Html": "<blockquote>\nYou'd like to annotate callback just for your own pleasure within the file that you're working. <br />\n</blockquote>\nNo, I’d like to not have to write <code>(foo:string, bar:number) =&gt; void</code> over and over when I should be able to just create a named interface and use that instead. I just want to be able to type less and do more with fewer errors.<br />\n<blockquote>\nCall me old fashioned, but if one were to declare a public method on a class then anyone reading that class would expect that method to be used outside of the file.<br />\n</blockquote>\nTypeScript uses structural subtyping, so one does not have to implement <code>ICallback</code> in order to provide a valid argument from code that has no access to the named <code>ICallback</code> interface. Therefore, in my opinion, there should not be an error about the interface being private, since a consumer is not restricted from implementing a compatible interface, they just will not be able to directly use the original definition (if an object type literal is used instead the same issue exists, except the compiler doesn’t complain about it).<br />\n",
+    "PostedDate": "2014-01-17T10:00:31.3-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174383",
+    "ThreadId": "503074",
+    "Html": "You should be careful.  Revolutions have been started over requiring people to follow secret rules.<br />\n",
+    "PostedDate": "2014-01-17T10:08:58.253-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174423",
+    "ThreadId": "503074",
+    "Html": "Yes, all understood on the first go. While this might benefit those developing a library or component in isolation, it will lead to a lot of redundancy in large codebases where both the library and it's consumers are part of the same organisation. We would end up with <code>ICallback</code> being defined by every single client. \r<br />\n<br />\nI would define all interfaces externally and make them available to both client and library.<br />\n",
+    "PostedDate": "2014-01-17T10:24:20.13-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1174747",
+    "ThreadId": "503074",
+    "Html": "Here's one solution, you can create a declaration merge of the class with a module that only contains the interface.  This gives you a way to namespace the interfaces to the symbol, so that other people can get to them, while not duplicating effort or changing codegen:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo {\n    observe(callback: Foo.ICallback): <span style=\"color:Blue;\">void</span> { } \n}\n\n<span style=\"color:Blue;\">module</span> Foo {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">interface</span> ICallback {\n        (foo: <span style=\"color:Blue;\">string</span>, bar: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">void</span>;\n    }\n}\n\n<span style=\"color:Blue;\">export</span> = Foo; \r\n</pre></div>",
+    "PostedDate": "2014-01-17T12:20:11.69-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-01-17T12:26:05.227-08:00"
+  },
+  {
+    "Id": "1174839",
+    "ThreadId": "503074",
+    "Html": "jonturner, it’s interesting and a little scary that identifiers can be duplicated like that and it works. Is it planned that this will continue to work long-term? Are there defined rules about what overrides what in the specification when this is done?\r<br />\n<br />\nIt turns out there is more than one error code related to this condition; TS2027 is basically the same thing. I thought it was odd that this would have been the first time someone ran into this, but for some reason I was unable to find the other one when searching the other day. So, there is a related discussion to this at <a href=\"https://typescript.codeplex.com/discussions/447372\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/447372</a>, for reference, that may contain additional rationale for not throwing these errors.\r<br />\n<br />\nThe workaround is OK, but it feels hacky, and I still am not entirely clear on what the rationale is for restricting named interfaces like this, and I would like to understand this.\r<br />\n<br />\nIs the idea to intentionally roadblock people into doing things the Right Way? If so, it’s arguably a fair thing to do, but it makes prototyping components in TS annoying. (Yes, I will split out the interface later to one of our interfaces files, but I don’t want to break my code flow <em>right now</em> by having to go and do that.)\r<br />\n<br />\nIs it an artefact of the lack of <code>export =</code> until later versions of TS (so exporting the interface wasn’t a big deal before because you always had the ability to export multiple things)? If so, it should probably be re-evaluated.\r<br />\n<br />\nIs there another reason? If so, I’d like to understand it.\r<br />\n<br />\nOther than the above case, I have also experienced a need to create separate types when modelling inheritance that TypeScript can’t do correctly by itself (like extending Error, or multiple inheritance). In these cases, the type may be only used once ever (as the export type), and I simply want to split it into a named interface to avoid having really long, really ugly lines of code. (These sorts of classes/interfaces in TypeScript, that use existing JavaScript utility code to generate constructors, are very difficult to manage mentally right now. This might be another topic for another thread.) I’d like to say these are weird edge cases but I seem to keep running into them. It feels like preventing use of private interfaces prevents me from having tidier code.\r<br />\n<br />\nThanks everyone for your input,<br />\n",
+    "PostedDate": "2014-01-17T12:53:51.837-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1185498",
+    "ThreadId": "503074",
+    "Html": "This kind of duplication is actually an intended feature called &quot;declaration merging&quot;.  I've got a draft of the write-up on it here: <a href=\"https://typescript.codeplex.com/wikipage?title=Declaration%20Merging\" rel=\"nofollow\">https://typescript.codeplex.com/wikipage?title=Declaration%20Merging</a> which should help cover the what and the how.  Granted this is a draft article, and feedback is always welcome.\r<br />\n<br />\nThe core of the idea is that, just as in JavaScript, you can build up a definition by merging together two ideas.  For example, in JavaScript you can add additional members to a function, so now it acts as both a function and as an object.  Declaration merging is how you build up these hybrids in TypeScript in a way that maintains type checking.  It has the added advantage that it also allows you to model other common patterns, like inner classes.\r<br />\n<br />\nDeclaration merging is a bit different than export=, though they work together so that you can export more complex types as the result of importing a module.  The declaration merge gives you a single name for this hybrid that you can use, or pass to export=.\r<br />\n<br />\nre: the issue extending types like Error - do you have some example code here that isn't working?  I'd like to understand that first, to see if there's something we can do there.<br />\n",
+    "PostedDate": "2014-01-20T16:07:56.593-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

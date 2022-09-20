@@ -1,0 +1,150 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-08T18:19:07.933-07:00",
+    "CommentCount": 22,
+    "Custom": null,
+    "Description": "I have found myself implementing a policy of always using fat arrow syntax to define class methods. This is because I cannot guarantee the calling context of all methods, especially when they are indirectly called via callbacks and it isn't obvious. I can live with the performance issues. It is preferable than to be constantly tracking which methods may or may not require fat arrow declaration.\r\n\r\nAs a result, I find myself not being able to override methods at all.\r\n\r\nFor example, this causes a compilation error:\r\n\r\n```TypeScript\r\nclass Foo {\r\n    doSomething = () => { /* Insert code here... */ };\r\n}\r\n\r\nclass Bar extends Foo {\r\n    doSomething = () => {\r\n        super.doSomething(); // TS2166: Only public methods of the base class are accessible via the 'super' keyword.\r\n\r\n        // Insert code here...\r\n    };\r\n}\r\n```\r\n\r\nI would expect to be able to call `super.doSomething();` from `Bar.doSomething`. Fat arrow method syntax was specifically added as a workaround to `this` not really being `this` according to mainstream OOP conventions. I wouldn't expect fat arrow method syntax to be functionally crippled compared to its regular counterpart.",
+    "LastUpdatedDate": "2014-05-08T18:19:07.933-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-05T18:48:01.513-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Allow fat arrow subclass methods to override fat arrow superclass methods",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2491
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The problem is that at runtime, there is no way to get from an instance of `Bar` to a copy of `Foo.doSomething` -- it has already been overwritten.",
+      "PostedDate": "2014-05-05T21:32:41.6-07:00",
+      "Id": 145641
+    },
+    {
+      "Message": "The base class's method could be captured in the sub-class's constructor before defining the overridden method, much in the same way TypeScript captures `this` as `_this` for fat arrow methods.\n\nSee basarat's workaround for this problem, which may be relevant to a potential fix: http://stackoverflow.com/a/23220408/584670",
+      "PostedDate": "2014-05-05T21:49:09.653-07:00",
+      "Id": 145642
+    },
+    {
+      "Message": "Why not declare class functions as normal, then bind each one using a loop to an instance property?",
+      "PostedDate": "2014-05-05T22:07:17.673-07:00",
+      "Id": 145644
+    },
+    {
+      "Message": "@jamesnw - Why not do that in any OOP language rather than relying on its built-in runtime method binding? Surely having to write more plumbing code is a good thing, right? :P",
+      "PostedDate": "2014-05-05T22:16:08.3-07:00",
+      "Id": 145645
+    },
+    {
+      "Message": "Well, if the other OOP languages gave me issues, yes, I'd do the same then too. ;) (and with C++ I have done just that when needed)  Apparently you cannot rely on a binding that doesn't exist yet.  You write code where you have to (and you have to), or settle for going another route.  Given Ryan's answer, I simply thought of a work-around until something better comes along. \n\nThat said, the \"_super\" reference created by TS should be accessible to instance property functions also, so not sure why TS would prevent this ... ?  Property functions can also theoretically be closed on \"_super\" just like constructors.",
+      "PostedDate": "2014-05-05T23:03:07.553-07:00",
+      "Id": 145649
+    },
+    {
+      "Message": "> Well, if the other OOP languages gave me issues, yes, I'd do the same then too.\n\nFair enough. My point is that there's a viable workaround and what I'm asking for here is an enhancement to uncripple fat arrow functions with respect to inheritance. I guess that point was lost in the delivery. My bad.\n\nI'm not exactly sure how `_super` works, so I can't comment on that. It seems to be a reference to the base class itself and doesn't seem to be available within TypeScript code.",
+      "PostedDate": "2014-05-06T00:01:23.77-07:00",
+      "Id": 145652
+    },
+    {
+      "Message": "Use the TypeScript playground (http://www.typescriptlang.org/Playground) to play with the code, and select the inheritance code example, then you'll see what I mean. ;)",
+      "PostedDate": "2014-05-06T05:54:28.007-07:00",
+      "Id": 145678
+    },
+    {
+      "Message": "Let's recap here:\n1. Your title \"Allow fat arrow subclass methods to override fat arrow superclass methods\" suggests that you want sub class INSTANCE function properties to be able to access superclass INSTANCE methods - you have to know that's not even possible in a native way without adding a bunch of work around code.  As Ryan already said, how on earth would you access superclass instance functions?  First, TypeScript is NOT an OOP language! JavaScript is the target - typescript just adds a layer of type checking.  TypeScript is not going to add anything that isn't supported in JS (or going to be supported soon).\n\n\n2. Given this basic class inheritance:\n```\nclass A {\n\tx: number;\n\tf = () => { this.x = 0; };\n}\nclass B extends A {\n\tf = () => { this.x = 0; super.f(); };\n}\n```\nYou get this code ...\n```\nvar A = (function () {\n    function A() {\n        var _this = this;\n        this.f = function () {\n            _this.x = 0;\n        };\n    }\n    return A;\n})();\nvar B = (function (_super) {\n    __extends(B, _super);\n    function B() {\n        _super.apply(this, arguments);\n        var _this = this;\n        this.f = function () {\n            _this.x = 0;\n            _super.prototype.f.call(_this);\n        };\n    }\n    return B;\n})(A);\n```\nThe compiler sees prototype functions via '_super'.  You CANNOT access instance methods.  That is why I said you only have one work-around I know of, and that is to make your methods as normal, then pull them into the class instance yourself.  It's so easy to do: http://goo.gl/4Ws10v (see, I even did all that complicated plumbing for you :P ;) )\n\n",
+      "PostedDate": "2014-05-06T08:11:33.45-07:00",
+      "Id": 145692
+    },
+    {
+      "Message": "Sorry, wrong link, try this: http://goo.gl/SbCWBD\n_(the main point is the callback doesn't need an instance, and regular class methods are being used)_",
+      "PostedDate": "2014-05-06T08:15:09.027-07:00",
+      "Id": 145693
+    },
+    {
+      "Message": "Actually, this is even better, as it also confirms the instance property access for call-backs: http://goo.gl/ZHJ5Co",
+      "PostedDate": "2014-05-06T08:20:07.58-07:00",
+      "Id": 145694
+    },
+    {
+      "Message": "> First, TypeScript is NOT an OOP language! JavaScript is the target - typescript just adds a layer of type checking. TypeScript is not going to add anything that isn't supported in JS (or going to be supported soon).\n\nIn that case, all classes add is confusion. They make JavaScript look like OOP, luring unsuspecting classic OOP devs (e.g. Java, C#, every other OOP language) with its similar appearance, only to confuse them with `this` not really being `this` unless they make their methods look like lambdas, in which case they're properties rather than methods.\n\nSo would it be safe to say that TypeScript has classes *only* because ES6 has them and, if ES6 didn't, it either also wouldn't or would have included a sane implementation?\n\nAll that aside, from a technical point of view, I can't see how this can't be done. In the workaround I linked to, it's quite trivial to capture the base class's method in the constructor right before overriding it, and then being able to call it in the overridden method. A TypeScript solution to this could do something similar.",
+      "PostedDate": "2014-05-06T19:24:55.88-07:00",
+      "Id": 145746
+    },
+    {
+      "Message": "The linked workaround seems to violate a couple principles we like to adhere to:\n1) generate idiomatic JavaScript\n2) don't generate additional code you wouldn't have written yourself if the syntax sugar weren't available\nIn addition, what happens when ES6 adds this syntax (classes and arrow functions)? The same code in TS generates meaningfully different semantics than it would in JS? That's pretty undesirable. ",
+      "PostedDate": "2014-05-06T19:43:55.603-07:00",
+      "Id": 145748
+    },
+    {
+      "Message": "@jamesnw I like your workaround, because it means we don't have to use fat arrow syntax for methods in order to properly capture `this` and they can therefore be overridden.",
+      "PostedDate": "2014-05-06T19:44:05.53-07:00",
+      "Id": 145749
+    },
+    {
+      "Message": "@slmt Correct, properties, and not methods. :)  TS supports classes as a syntactic modal of the JavaScript inheritance patterns.  ES6 classes are just syntactic sugar that makes development using prototypes a little easier.  TS already captures base class references.\n\nGlad you like it.  Just remember that:\n1. The base class loops over the prototype functions and pulls them into the instance using wrapper functions to bind 'this' (or you can use the new 'bind()' method).\n2. #1 means that for every instance, all methods are now function properties! (more memory required)\n3. This is not very performance efficient by any means - but if you're not creating any game related or high performance business applications ( ;) ), it shouldn't be an issue. ;)\n\n",
+      "PostedDate": "2014-05-06T20:30:06.123-07:00",
+      "Id": 145750
+    },
+    {
+      "Message": "> 1) generate idiomatic JavaScript\n> 2) don't generate additional code you wouldn't have written yourself if the syntax sugar weren't available\n\nOh, like this\n\n```javascript\nvar __extends = this.__extends || function (d, b) {\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\n    function __() { this.constructor = d; }\n    __.prototype = b.prototype;\n    d.prototype = new __();\n};\n```\n?",
+      "PostedDate": "2014-05-07T01:00:55.14-07:00",
+      "Id": 145760
+    },
+    {
+      "Message": "I too have found myself in the position of the OP, \"defensively\" coding using arrow functions to define methods.   In my case this is in the context of AngularJS.   My methods are being called in a manner that isn't obvious and thus it is not apparent how my method needs to be defined, whether for callback that needs to preserve the this context or not..   \n\nI wish I was knowledgeable enough in JS to suggest a solution to the problem but at the moment all I can do is confirm that there is problematic disconnect between the handling of the context of 'this' as managed in arrow functions and super.   \n\nWhile acknowledging that there are workarounds as noted here, it still seems odd to even have to think about coding my methods in different ways depending on how they are called.    It is coupling, which should be avoided in OO design.\n\n",
+      "PostedDate": "2014-05-07T05:59:48.507-07:00",
+      "Id": 145782
+    },
+    {
+      "Message": "@rcollette:  Remember, this is a JS thing, not a TS thing.  For example, if `func` is a function, calling `func()` by itself has no object, and like any other language, _if allowed_, would not pass the context object (for 'this').  In fact, in \"strict mode\", `this` inside `func()` is undefined. Now, if you call `object.func()`, then like any other language, the 'this' context is set for the function.  I thnk that is easy to understand.\n\nNow, it's very common in the JS world to implement a '_this' for closures, such as:\n```\nfunction Type() {\n    var x = 0;\n    var _this = this;\n    this.addX = function() { x += 1; return _this; }; // add +1 to private var and return this.\n    setInterval(function(){ _this.addX(); }, 1000);\n}\n```\n\nSo, TS does this for JS developers implicitly ONLY when '=>' is used. In TS I can simply do this:\n```\nfunction Type() {\n    var x = 0;\n    this.addX = () => { x += 1; return this; }; // add +1 to private var and return this.\n    setInterval(() => { this.addX(); }, 1000);\n}\n```\nSo, I can leave out the `var _this = this;` line, which again is somewhat common to put in for similar cases.\n\nIn TS, all class members are defined using `function(...) { ...}`, so any `this` in TS class member functions will output exactly as shown (as `this` and not `_this` - remember, only '=>' creates a '_this' var).\n\nKeep this in mind, and it's not hard to follow. ;)\n\n",
+      "PostedDate": "2014-05-07T12:34:50.803-07:00",
+      "Id": 145828
+    },
+    {
+      "Message": "@slmt\n\n__extends is emulating planned es6 behavior (see bterlson's comment):\nhttps://typescript.codeplex.com/workitem/2377",
+      "PostedDate": "2014-05-07T16:02:52.793-07:00",
+      "Id": 145869
+    },
+    {
+      "Message": "Correct - in fact, arrow functions, rest parameters, default parameter values, etc., are all a part of the ES6 spec.  TypeScript helps bring the future (best it can) to today.   The future is NOW!  LOL ;)  Anyhow, best to learn the quirks now and get a handle on it for later.",
+      "PostedDate": "2014-05-07T16:43:19.397-07:00",
+      "Id": 145875
+    },
+    {
+      "Message": "> The future is NOW!\n\nThe future is Dart.",
+      "PostedDate": "2014-05-07T17:23:56.667-07:00",
+      "Id": 145876
+    },
+    {
+      "Message": "I think someone forgot to inform the ES6 people then. ;)",
+      "PostedDate": "2014-05-07T17:41:27.137-07:00",
+      "Id": 145879
+    },
+    {
+      "Message": "It seems this is better suited to the forums at the moment for a more complete proposal. The issues here have been covered fairly well already. We need to align with how ES6 works, avoid emitting surprising code, and make sure that your JS works the same when it's in TS.",
+      "PostedDate": "2014-05-08T18:19:04.097-07:00",
+      "Id": 145992
+    }
+  ]
+}

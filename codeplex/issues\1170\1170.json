@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:57:52.04-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "If you compile the below example with \"tsc -d\" you end up with an ambient definition file that is missing the \"animal\" prefix off animal.dog.ICat and animal.dog.Dog in the \"pomeranian\" submodule. \r\n\r\nI realize that my class/module hierarchy makes no sense. \r\n\r\nInput\r\n```\r\nmodule animal {\r\n\r\n    export class Animal {\r\n        constructor() {\r\n        }\r\n    }\r\n\r\n}\r\n\r\nmodule animal.dog {\r\n\r\n    export class Dog extends animal.Animal {\r\n        constructor() {\r\n            super();\r\n        }\r\n    }\r\n    export interface ICat {\r\n\r\n    }\r\n}\r\n\r\nmodule animal.dog.pomeranian {\r\n    export class Pomeranian extends animal.dog.Dog {\r\n        constructor(private _loves:ICat) {\r\n            super();\r\n        }\r\n\r\n        public getLoves(): ICat {\r\n            return this._loves;\r\n        }\r\n    }\r\n\r\n    export class Doberman extends animal.dog.Dog {\r\n        constructor(private _hates: animal.dog.ICat) {\r\n            super();\r\n        }\r\n\r\n        public getHates(): animal.dog.ICat {\r\n            return this._hates;\r\n        }\r\n    }\r\n\r\n}\r\n\r\nvar cat:animal.dog.ICat = null;\r\nvar pomeranian = new animal.dog.pomeranian.Pomeranian(cat);\r\nvar doberman = new animal.dog.pomeranian.Doberman(cat);\r\nconsole.log(pomeranian);\r\n```\r\n\r\nOutput\r\n```\r\ndeclare module animal {\r\n    class Animal {\r\n        constructor();\r\n    }\r\n}\r\ndeclare module animal.dog {\r\n    class Dog extends animal.Animal {\r\n        constructor();\r\n    }\r\n    interface ICat {\r\n    }\r\n}\r\ndeclare module animal.dog.pomeranian {\r\n\r\n// NOTE dog.Dog and dog.ICat are used here instead of animal.dog.Dog and animal.dog.ICat\r\n\r\n    class Pomeranian extends dog.Dog {\r\n        private _loves;\r\n        constructor(_loves: dog.ICat);\r\n        public getLoves(): dog.ICat;\r\n    }\r\n    class Doberman extends dog.Dog {\r\n        private _hates;\r\n        constructor(_hates: dog.ICat);\r\n        public getHates(): dog.ICat;\r\n    }\r\n}\r\ndeclare var cat: animal.dog.ICat;\r\ndeclare var pomeranian: animal.dog.pomeranian.Pomeranian;\r\ndeclare var doberman: animal.dog.pomeranian.Doberman;\r\n```\r\n\r\nThe issue may be to do with not fully-qualifying the initial reference to animal.dog.ICat in the Pomeranian constructor, however it still compiles and produces valid JavaScript. I work around this by post-processing my d.ts files as part of the build. This problem has been around a while (at least since 0.8.3) it would be nice to see a fix. ",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-18T21:19:39.693-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.0 Module names in generated d.ts files missing prefix",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1170
+  },
+  "FileAttachments": [
+    {
+      "FileId": 694671,
+      "FileName": "app.ts",
+      "DownloadUrl": ".\\694671"
+    },
+    {
+      "FileId": 694791,
+      "FileName": "templa.ts",
+      "DownloadUrl": ".\\694791"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  We are aware of the fully qualified name not being generated in the declare files, and are looking into fixing it.\r\n\r\nThat said, in the case above I believe it should be fine.  Indeed, if I paste the above code in the TypeScript playground (which is now running 0.9.0) I don't see any errors or warnings, and can write code such as \"var x = new animal.dog.pomeranian.Pomeranian(cat);\" without issue.\r\n\r\nDue to the way declaration merging and scopes work now, the reference to dog.Dog will look in its parent scopes to be resolved, and will be found in animal. (This is also why you can reference the ICat from the 2nd module block inside the 3rd module block without qualifying it).  Are you seeing errors with the above code?  Please reopen with more info on exact scenarios and TypeScript version if so.",
+      "PostedDate": "2013-06-18T23:38:04.157-07:00",
+      "Id": 103371
+    },
+    {
+      "Message": "Hmm, yes, that does actually seem to be valid and you're right, the most basic case where the module prefix is removed does now work (so I can remove that from my build scripts at least). Sorry I didn't check my assumptions on that one. There is still one case where it does produce an invalid ambient definition file (d.ts). I couldn't code up an example, so I trimmed back my code to the barest minimum that causes it. \r\n\r\nSo this is valid code (so there's no point in dumping it into the playground), however it produces an invalid d.ts file if compiled using \"tsc -d templa.ts\". I've included the output d.ts (which you can dump into the playground if you want) for reference. You can see that the 4th last line causes an error due to the module name not being fully/correctly qualified.\r\n\r\nInput\r\n\r\n```\r\ndeclare module templa.mvc {\r\n    interface IModel {\r\n    }\r\n}\r\ndeclare module templa.mvc {\r\n    interface IController<ModelType extends templa.mvc.IModel> {\r\n    }\r\n}\r\ndeclare module templa.mvc {\r\n    class AbstractController<ModelType extends templa.mvc.IModel> implements mvc.IController<ModelType> {\r\n    }\r\n}\r\ndeclare module templa.mvc.composite {\r\n    interface ICompositeControllerModel extends mvc.IModel {\r\n        getControllers(): mvc.IController<mvc.IModel>[];\r\n    }\r\n}\r\n\r\nmodule templa.dom.mvc {\r\n\r\n    export interface IElementController<ModelType extends templa.mvc.IModel> extends templa.mvc.IController<ModelType> {\r\n    }\r\n\r\n}\r\n// Module\r\nmodule templa.dom.mvc {\r\n\r\n\r\n    export class AbstractElementController<ModelType extends templa.mvc.IModel> extends templa.mvc.AbstractController<ModelType> implements IElementController<ModelType> {\r\n\r\n        constructor() {\r\n            super();\r\n        }\r\n    }\r\n}\r\n\r\n// Module\r\nmodule templa.dom.mvc.composite {\r\n    export class AbstractCompositeElementController<ModelType extends templa.mvc.composite.ICompositeControllerModel> extends templa.dom.mvc.AbstractElementController<ModelType> {\r\n\r\n        public _controllers: templa.mvc.IController<templa.mvc.IModel>[];\r\n\r\n        constructor() {\r\n            super();\r\n            this._controllers = [];\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nOutput\r\n\r\n```\r\ndeclare module templa.mvc {\r\n    interface IModel {\r\n    }\r\n}\r\ndeclare module templa.mvc {\r\n    interface IController<ModelType extends templa.mvc.IModel> {\r\n    }\r\n}\r\ndeclare module templa.mvc {\r\n    class AbstractController<ModelType extends templa.mvc.IModel> implements mvc.IController<ModelType> {\r\n    }\r\n}\r\ndeclare module templa.mvc.composite {\r\n    interface ICompositeControllerModel extends mvc.IModel {\r\n        getControllers(): mvc.IController<mvc.IModel>[];\r\n    }\r\n}\r\ndeclare module templa.dom.mvc {\r\n    interface IElementController<ModelType extends templa.mvc.IModel> extends templa.mvc.IController<ModelType> {\r\n    }\r\n}\r\ndeclare module templa.dom.mvc {\r\n    class AbstractElementController<ModelType extends templa.mvc.IModel> extends templa.mvc.AbstractController<ModelType> implements mvc.IElementController<ModelType> {\r\n        constructor();\r\n    }\r\n}\r\ndeclare module templa.dom.mvc.composite {\r\n    class AbstractCompositeElementController<ModelType extends templa.mvc.composite.ICompositeControllerModel> extends mvc.AbstractElementController<ModelType> {\r\n        public _controllers: templa.mvc.IController<mvc.IModel>[];\r\n        constructor();\r\n    }\r\n}\r\n\r\n```",
+      "PostedDate": "2013-06-19T01:23:32.43-07:00",
+      "Id": 103389
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 06/18/2013 11:38PM",
+      "PostedDate": "2013-06-18T23:38:16.107-07:00",
+      "Id": 103391
+    },
+    {
+      "Message": "Thanks for the update, we should be generating valid declare files for valid code, marking as active.",
+      "PostedDate": "2013-06-20T20:18:08.387-07:00",
+      "Id": 103741
+    }
+  ]
+}

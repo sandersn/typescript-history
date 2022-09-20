@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1237544",
+    "ThreadId": "543192",
+    "Html": "I have dabbled a little in using the precompiled <code>typescriptServices.js</code> (hacky with require.js). \r<br />\n<br />\nNow I'd like to have a go at some more detailed services but then I'd want to leverage the compiler checking\r<br />\n<br />\nWe write TypeScript in the node.js style, with external modules, as it works great with code coming from npm (and defs from DT). But the compiler is written in internal module style.\r<br />\n<br />\nSo how do I interface my external module code with the internal module compiler code? \r<br />\n<br />\nI tried a few thing, but it is all a bit messy. I have a choice between the npm-published code (lacks services), but also the precompiled <code>typescriptServices.js</code> and the raw source from this repos.<br />\n",
+    "PostedDate": "2014-04-24T06:48:36.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238160",
+    "ThreadId": "543192",
+    "Html": "The reason why nothing is exported is mainly related to support. We did not want to commit to a public API surface area yet. This applies to the compiler and the language service as well; and since the Language Service file is not runnable from the command line, publishing it through npm is a not of much use. Once we are ready to commit to the API we I expect us to publish both in the npm package with the correct exports. Using the raw LKG drop from the enlistment should get you the latest, there are always chances for things to change. My advice is to stick to the ILanguageService interface, this is the one most LS users depend on, and the most stable, I do not expect it to change much overtime, may be add new features, or change some parameter types. using the Compiler semantic model (decls, symbols, etc..) directly would be riskier, I expect that to keep changing for a while.<br />\n",
+    "PostedDate": "2014-04-25T12:46:18.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238165",
+    "ThreadId": "543192",
+    "Html": "Makes sense, but I can easily vendor the code I use in my project so I just pick something from the repo.\r<br />\n<br />\nBut note the code is all internal module code now.\r<br />\n<br />\nIs there a recommended way to use it typed in a project that uses <em>external</em> module style (eg: node/amd code via <code>import/require</code>? <br />\n",
+    "PostedDate": "2014-04-25T13:02:25.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238174",
+    "ThreadId": "543192",
+    "Html": "The easiest way would be to use typescriptServices.d.ts that is generated as part of the local build. append &quot;export = TypeScript&quot;, now you can import that as an external module. on the consuming side, you need to add the export= TypeScript on node as well. hope that helps.<br />\n",
+    "PostedDate": "2014-04-25T13:15:52.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1238185",
+    "ThreadId": "543192",
+    "Html": "This was pretty easy. I did hit a small glitch with some types that become private because of the single export.\r<br />\n<br />\nCan be hacked also, but here is a ticket for it: <a href=\"https://typescript.codeplex.com/workitem/2468\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2468</a><br />\n",
+    "PostedDate": "2014-04-25T14:01:25.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

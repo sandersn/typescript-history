@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This works fine for me. Can you say what error you're getting / what behavior you're seeing that's unexpected?\n\nAre you trying this in a file that is an external module? That will have different semantics.",
+    "ClosedDate": "2014-04-30T09:28:53.957-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "The current release does not seem to handle the following properly, even though it is handled fine by the online Playground:\r\n\r\n```\r\ninterface String {\r\n    newMethod ():string;\r\n}\r\n\r\nString.prototype.newMethod = function ():string {\r\n   // ...\r\n   return \"something\";\r\n}\r\n```\r\n and I can't seem to add newMethod to an interface for String in VS2013 anywhere. \r\n\r\n Thanks \r\n\r\n Todd",
+    "LastUpdatedDate": "2014-04-30T21:14:29.29-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-30T09:04:36.34-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "interface merge with JS classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2480
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "\nThe error I get is \n\nThe property 'newMethod' does not exist on value of type 'string'.\n\nIt does not matter whether the code is in the startup file or a module ... it's the same.\n\n",
+      "PostedDate": "2014-04-30T10:25:37.19-07:00",
+      "Id": 145233
+    },
+    {
+      "Message": "I have searched for other errors in the interface and I have found this also in the Output pane under JavaScript Language Service:\n\nReferenced file '~/Scripts/_references.js' not found.",
+      "PostedDate": "2014-04-30T10:34:00.01-07:00",
+      "Id": 145234
+    },
+    {
+      "Message": "```\nC:\\Throwaway>type a.ts\ninterface String {\n    newMethod ():string;\n}\n\nString.prototype.newMethod = function ():string {\n   // ...\n   return \"something\";\n}\n\nvar x = '';\nx.newMethod();\n\nC:\\Throwaway>tsc a.ts\n```\n\nNote that if you have an export in your file, the meaning of `interface String` changes (making a new interface rather than extending the existing one) and you will get that error:\n```\nC:\\Throwaway>type b.ts\ninterface String {\n    newMethod ():string;\n}\n\nString.prototype.newMethod = function ():string {\n   // ...\n   return \"something\";\n}\n\nvar x = '';\nx.newMethod();\n\n// Added\nexport var t = 3;\nC:\\Throwaway>tsc b.ts --module amd\nC:\\Throwaway\\b.ts(5,18): error TS2094: The property 'newMethod' does not exist on value of type 'String'.\nC:\\Throwaway\\b.ts(11,3): error TS2094: The property 'newMethod' does not exist on value of type 'string'.\n```\n",
+      "PostedDate": "2014-04-30T10:55:18.323-07:00",
+      "Id": 145239
+    },
+    {
+      "Message": "By trial and error, I have found that including an import statement somewhere in the code produces the error effect:\n\n```\ninterface String {\n    newMethod ():string;\n}\n\nString.prototype.newMethod = function ():string {\n   // ...\n   return \"something\";\n}\n\nimport someName = require('anyValidModule');\n```\n\nIs this intended?\n\nThanks\n\nTodd\n",
+      "PostedDate": "2014-04-30T10:55:57.01-07:00",
+      "Id": 145240
+    },
+    {
+      "Message": "Yes, this is intended. External modules (files with top-level `export` or `import`) introduce a new scope.\n\nSee also\nhttps://typescript.codeplex.com/workitem/1404\nhttps://typescript.codeplex.com/workitem/1881",
+      "PostedDate": "2014-04-30T11:01:56.813-07:00",
+      "Id": 145241
+    },
+    {
+      "Message": "Hi Ryan\n\nIt's a pity that TS has this behaviour. Extending JS classes is fairly common and this is a sad limitation on the interface ... but at least it still compiles fine.\n\nI'll try to create a workaround referencing the links that you included.\n\nThanks for all your help with this.\n\nTodd",
+      "PostedDate": "2014-04-30T11:32:46.523-07:00",
+      "Id": 145246
+    },
+    {
+      "Message": "You can still do it, you just need a separate .d.ts file.",
+      "PostedDate": "2014-04-30T11:41:34.19-07:00",
+      "Id": 145248
+    },
+    {
+      "Message": "If the ability to reference the global scope (http://typescript.codeplex.com/workitem/2287) ever gets implemented, I'm sure this issue would no longer be one. ;)",
+      "PostedDate": "2014-04-30T13:26:11.7-07:00",
+      "Id": 145262
+    },
+    {
+      "Message": "Hi Ryan\n\nI have put the JS customisations into a separate file, got tsc to create JS.d.ts, and used the following reference in the affected scripts:\n\n```\n/// <reference path=\"JS.d.ts\" />\n```\n\nIt has all worked perfectly.\n\nThanks so much for your help with this matter.\n\nTodd",
+      "PostedDate": "2014-04-30T21:14:29.29-07:00",
+      "Id": 145302
+    }
+  ]
+}

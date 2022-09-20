@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1262906",
+    "ThreadId": "550668",
+    "Html": "I apologize if this is not the place where I should be asking this.  If there is a better place for me to initiate this discussion, please point me in the right direction.  Thank you!\r<br />\n<br />\nI am in the process of introducing TypeScript to my team as an augmentation of our existing single-page JavaScript application.  Some of the engineers are quite interested in the opportunity to introduce type-safety into our product.  Others don't really care.  The only real concern across the board is the issue of compilation time.  Most of the engineers on the team have been working with JavaScript exclusively for quite a while, so there is an almost visceral reaction to a compilation step for what it will do to the edit-refresh loop so common in world of JS development.\r<br />\n<br />\nI happen to think that the concern is overstated, but I understand their nervousness in this regard.  As such, I am looking to solutions that will lessen their concerns.  I am concerned about the compilation times around TypeScript as they may be a bit higher than some on the team may be comfortable with.\r<br />\n<br />\nI may have come up with a solution, though I want to run it by people here as it would likely require modifications to the TypeScript compiler, which I am happy to offer my services to add if it is something that people think would be useful.  My thought was that the time involved in compiling, I suspect, is largely in parsing the files and verifying the type coherency.  From what I understand, the types have little-to-no affect on the actual JavaScript generation.  What if the compiler was split into a two pass compilation process?  The first pass would simply generate the JavaScript, largely ignoring the type system.  This pass could ignore definitions files altogether as they don't affect structure.  This first pass could also use timestamps to avoid recompilation.  The second pass would then perform the actual compilation, verifying the types and so on.  The result would be a first pass that runs very quickly, allowing developers to immediately see their work in the browser while getting the errors a moment later.\r<br />\n<br />\nPerhaps my assumptions about the possibility of a simple first pass are incorrect or perhaps this already occurs.  If so, I apologize for wasting people's time.  If neither is the case, does this seem like something that would be useful?  Is this something that others would find beneficial.  And, if so, should I work on contributing it to the core?\r<br />\n<br />\nLet me know.  Thanks for your time!<br />\n",
+    "PostedDate": "2014-07-05T07:58:05.153-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263056",
+    "ThreadId": "550668",
+    "Html": "@jinxidoru,<br />\n\r<br />\ntry setting up a project with the option &quot;compile-on-save&quot; on. This is normally very fast and is almost no different to the usual JavaScript edit-save-refresh workflow.\r<br />\n<br />\nThere is a small bug to this (in Visual Studio), in that the compile-on-save occasionally only triggers after a slight (or extended) delay on the first go for a newly opened file. Please feel free to open a ticket on the issue tracker if you are able to reproduce this consistently.\r<br />\n<br />\nAlso IMO the developers who don't really care whether they are getting type-safety or not are stupid and should be fired at the earliest opportunity (!)<br />\n",
+    "PostedDate": "2014-07-06T11:16:31.967-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263085",
+    "ThreadId": "550668",
+    "Html": "Thanks for the response.  I am not using Visual Studio; I'm using the command-line.  Is &quot;compile-on-save&quot; the same as the &quot;-w&quot; switch on the command-line?  If so, how is the performance when you have dozens, even hundreds of files?  Does it remain fast, or would it make sense to do as I describe above where the files are parsed first then compiled?\r<br />\n<br />\nAs for firing the developers: I agree.  That said, I think it's just a matter of getting people familiarized with TypeScript and then they will come around.  Once they've started using types, I suspect that all of them will quickly learn the value.  It's just that initial opposition that I need to overcome in whatever way possible.<br />\n",
+    "PostedDate": "2014-07-06T14:22:51.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263109",
+    "ThreadId": "550668",
+    "Html": "If you're using the command line, look at using something like Grunt or Gulp to automate the watch process for you.\r<br />\n<br />\nIn gulp you can set it up so that the scripts are compiled on save, and also potentially run it through extra processing if you need.  It looks like there is a relatively new plugin that supports incremental compilation, to further make the compiling faster.<br />\n\r<br />\n<a href=\"http://gulpjs.com/\" rel=\"nofollow\">http://gulpjs.com/</a>\r<br />\n<a href=\"https://www.npmjs.org/package/gulp-type/\" rel=\"nofollow\">https://www.npmjs.org/package/gulp-type/</a><br />\n",
+    "PostedDate": "2014-07-06T20:39:36.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1263159",
+    "ThreadId": "550668",
+    "Html": "<strong>jinxidoru wrote:</strong><br />\n<blockquote>\nIf so, how is the performance when you have dozens, even hundreds of files?  Does it remain fast, or would it make sense to do as I describe above where the files are parsed first then compiled?<br />\n</blockquote>\nCompile-on-save already does that. The output will be generated so long as there are no JavaScript syntax errors. If there are TypeScript type-related errors, an error message is printed but the output file will still be generated.\r<br />\n<br />\nWe have 600 plus TypeScript files, broken up into separate projects. The project compilation is quite slow, some 08-15 seconds per project, but we have no complaints with the performance of the compile-on-save feature (with the caveat I mentioned above).<br />\n",
+    "PostedDate": "2014-07-07T01:09:18.57-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

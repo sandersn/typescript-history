@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-18T18:10:04.25-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "When I try to force a generic type parameter to extend another base class in a generic method, the behavior of the compiler is both confusing and wrong. \r\nMaybe I'm wrong, but this seems incorrect anyway.\r\n\r\nHere is a simplified example of what I'm talking about : \r\n\r\n```\r\nclass test<A> {\r\n\tpublic testMethod (param: A): void {\r\n\t}\r\n}\r\n\r\nclass base {\r\n\tconstructor (public field: string) {}\r\n}\r\n\r\nvar method = <T extends base> () : void => {\r\n\tvar z = new test<T>();\r\n\tz.testMethod(new base(\"text\")); // should not generate an error in text editor\r\n}\r\n\r\nvar method2 = (): void => {\r\n\tvar z = new test<number>();\r\n\tz.testMethod(\"text\"); // should not compile\r\n}\r\n\r\nclass B {\r\n\tpublic method3<T extends base> (): void {\r\n\t\tvar z = new test<T>();\r\n\t\tz.testMethod(new base(\"text\")); // should not generate an error in text editor\r\n\t}\r\n\t\r\n\tpublic method4 (): void {\r\n\t\tvar z = new test<number>();\r\n\t\tz.testMethod(\"text\"); // should not compile\r\n\t}\r\n}\r\n```",
+    "LastUpdatedDate": "2013-09-18T18:10:04.25-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-17T03:20:33.063-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "issue with type constraints on generic methods",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1694
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is actually by design, although it can be subtle at times. While your example seems safe it is not too hard to construct similar examples where you run into issues. Consider this slightly more complex situation:\n\n```Typescript\nclass test<A> {\n    public testMethod(param1: A, param2: A): void {\n        param1 = param2;\n    }\n}\n\nclass B {\n    constructor(public foo: string) { }\n}\n\nclass D1 extends B {\n    constructor(public bar: number) { super(''); }\n}\n\nclass D2 extends B{\n    constructor(public baz: number) { super(''); }\n}\n\nfunction f<T extends B>(x: T) {\n\n    var tester = new test<T>();\n\n    var d1: D1;\n    var d2: D2;\n    d1 = d2; // error\n    tester.testMethod(d1, d2); // error\n}\n```\n\nAlthough each individual argument for test.testMethod satisfies the necessary constraint (we require that T extends B and D1 and D2 do each extend B) it becomes problematic in the implementation of testMethod. If the function call were allowed then I have now assigned a value of type D2 to a value of type D1, but that's not a valid assignment. Consequently, the assignment compatibility rules are written in such a way as to disallow this sort of thing. This is covered in detail in the language specification in section 3.8.4 Assignment Compatibility, \n\nNote that if f took a parameter of type T then that would be valid as an argument for testMethod since they would be identical type parameters when it comes time to check for assignment compatibility. Feel free to open a thread in the discussion forum if you'd like to go into this more, it's definitely confusing at times.",
+      "PostedDate": "2013-09-18T18:10:00.053-07:00",
+      "Id": 114996
+    }
+  ]
+}

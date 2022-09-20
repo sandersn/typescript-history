@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.923-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "the below code is working already in typescript:\r\n\r\n```typescript\r\nclass Entity {\r\n   static FindOne() {\r\n      return new this;\r\n   }\r\n   static FindAll() {\r\n      return [new this, new this];\r\n   }\r\n}\r\n\r\nclass User extends Entity {\r\n   public name: string;\r\n   constructor() {\r\n      super();\r\n      this.name = 'Joe';\r\n   }\r\n}\r\n\r\n// test var here is not inferred as type 'User' but it could with 'this' keyword as return type\r\nvar test = User.FindOne(); \r\nconsole.log(test); // this logs out the User object with name as 'Joe'\r\n```\r\nso only thing it needs is ability to specify 'this' as return type\r\nthe proposed syntax would be then this:\r\n\r\n```typescript\r\nclass Entity {\r\n   static FindOne(): this {\r\n      return new this;\r\n   }\r\n   static FindAll(): this[] {\r\n      return [new this, new this];\r\n   }\r\n}\r\n\r\nclass User extends Entity {\r\n   public name: string;\r\n   constructor() {\r\n      super();\r\n      this.name = 'Joe';\r\n   }\r\n}\r\n```\r\n\r\nI know plenty of frameworks using this and i use this pattern myself a lot. Also it keeps the types flowing with fluent api's when the methods are inherited.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-19T12:46:00.487-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "'this' keyword as method return type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 8,
+    "Id": 1372
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This would be very useful when building functions that can be chained.",
+      "PostedDate": "2013-09-20T07:12:08.763-07:00",
+      "Id": 115143
+    },
+    {
+      "Message": "While I'm inclined to say you can simple type \"static FindOne(): Entity\" just as easily, I do see a big benefit when used with generic parameters;  I hate having to retype those everywhere.",
+      "PostedDate": "2014-04-03T14:53:33.173-07:00",
+      "Id": 140467
+    },
+    {
+      "Message": "The issue is that Entity is not enough. It is User what it returns and there is no way to declare this.",
+      "PostedDate": "2014-04-04T05:11:07.047-07:00",
+      "Id": 140533
+    },
+    {
+      "Message": "using generics on static methods leads to:\nerror TS2099: Static methods cannot reference class type parameters.",
+      "PostedDate": "2014-04-04T05:24:15.263-07:00",
+      "Id": 140535
+    },
+    {
+      "Message": "Ah ok, I see what you are trying to do now; makes sense.",
+      "PostedDate": "2014-04-04T09:23:23.2-07:00",
+      "Id": 140557
+    },
+    {
+      "Message": "Like DerCapac said, this is also very common when creating chainable methods, especially when extending classes.\n\n```typescript\nclass Base {\n\tfoo(): Base {\n\t\treturn this;\n\t}\n\n\tbar(): Base {\n\t\treturn this;\n\t}\n}\n\nclass Derived extends Base {\n\tbaz(): Derived {\n\t\treturn this;\n\t}\n\n\tbarbaz(): Derived {\n\t\treturn this.bar(); // <= compile error, 'cast' from Base to Derived invalid\n\t}\n}\n\nvar d = new Derived()\n\t.baz()\n\t.foo()\n\t.barbaz() // <= compile error, foo() returns a Base\n\t.bar();\n```\n\nSo, having the 'this' keyword as return type for methods is very useful, also for non-static methods.\nProbably the compiler should then enforce that 'return this' is performed (not just e.g. 'return new Base()').",
+      "PostedDate": "2014-07-08T02:35:52.297-07:00",
+      "Id": 151823
+    },
+    {
+      "Message": "see also https://typescript.codeplex.com/discussions/523904",
+      "PostedDate": "2014-07-08T09:06:27.527-07:00",
+      "Id": 151849
+    }
+  ]
+}

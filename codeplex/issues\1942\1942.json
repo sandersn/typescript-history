@@ -1,0 +1,96 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:31:41.937-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I was testing my project with 0.95 beta version of the compiler and had found strange bug.\r\nThis bug is related to workitem 1925 only i tried to find what the reason for this bug, and after reducing the code line by line i had found the place where it originated. \r\nThe same code is attached in bug.ts file.\r\n```\r\nexport class CollectionItem {\r\n    constructor() {\r\n\r\n    }\r\n}\r\n\r\nexport class BaseCollection<TItem extends CollectionItem> {\r\n    _items: TItem[];\r\n    constructor() {\r\n    }\r\n    _onFillEnd(args: { newItems: TItem[]; }) {\r\n    }\r\n    get items() {\r\n        return this._items;\r\n    }\r\n}\r\n\r\nexport class ListItem extends CollectionItem {\r\n    constructor() {\r\n        super();\r\n    }\r\n}\r\n\r\nexport class BaseList<TItem extends ListItem> extends BaseCollection<TItem> {\r\n    constructor() {\r\n        super();\r\n\r\n    }\r\n    fillItems() {\r\n        var newItems = [];\r\n        //uncomment the below line and comment the above line and the error disappear\r\n        //var newItems:TItem[] = [];\r\n        this._onFillEnd({\r\n            newItems: newItems\r\n        });\r\n    }\r\n}\r\n\r\nexport class BaseDictionary<TItem extends ListItem> extends BaseList<TItem>{\r\n    constructor() {\r\n        super();\r\n    }\r\n}\r\n\r\nexport class ColMapListItem extends ListItem {\r\n    constructor() {\r\n        super();\r\n    }\r\n    get src_name(): string { return null; }\r\n    set src_name(v: string) { }\r\n}\r\n\r\nexport class ColMapDictionary extends BaseDictionary<ColMapListItem> {\r\n    constructor() {\r\n        super();\r\n    }\r\n}\r\n\r\nvar colMap: ColMapDictionary;\r\ncolMap = new ColMapDictionary();\r\n\r\nvar items = colMap.items, filtered = items.map(function (cm) {\r\n//here's the error \r\n    var t = <ColMapListItem>cm;\r\n//and here's too \r\n    return cm.src_name;\r\n});\r\n```\r\nif you make  var newItems:TItem[] = []; instead of var newItems = [];\r\nthe error will dissapear.\r\nThe difference is in newItems variable types\r\nI changed newItems: any[] to newItems:TItem[] \r\n\r\nPlease look into this. ",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-22T19:18:23.423-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "TS0.95 Generics related bug",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1942
+  },
+  "FileAttachments": [
+    {
+      "FileId": 761610,
+      "FileName": "bugprj.zip",
+      "DownloadUrl": ".\\761610"
+    },
+    {
+      "FileId": 761657,
+      "FileName": "bug.ts",
+      "DownloadUrl": ".\\761657"
+    },
+    {
+      "FileId": 761658,
+      "FileName": "bug2.ts",
+      "DownloadUrl": ".\\761658"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "attached project",
+      "PostedDate": "2013-11-22T19:19:05.84-08:00",
+      "Id": 123982
+    },
+    {
+      "Message": "Seems it is related to what how the compiler treats 'any' type now.\nit does not see the error in the fillItems method\nwhenn there was an assigment any[] to TItem[] typed arguments. \nBut it later stops to compile the project with weird errors.",
+      "PostedDate": "2013-11-22T21:28:01.817-08:00",
+      "Id": 123988
+    },
+    {
+      "Message": "Finally a managed to reduce the code to 75 lines.\r\nI attached bug.ts file. You can see comments there at line 40.",
+      "PostedDate": "2013-11-23T02:30:40.74-08:00",
+      "Id": 124000
+    },
+    {
+      "Message": "reduced a little more to 66 lines. \r\nattached bug2.ts\r\nread comment at line 32.",
+      "PostedDate": "2013-11-23T02:41:09.857-08:00",
+      "Id": 124001
+    },
+    {
+      "Message": "Simplified as best I could. Thanks for reporting this!\n\n```\nclass Item {\n}\n\nclass BasicList<T> {\n    foo(args: T[]) {\n    }\n\n    fillItems() {\n        var newItems = [];\n        this.foo(newItems);\n    }\n}\n\nclass ListDerivative<T> extends BasicList<T> {\n}\n\nclass ConcreteListDerivative extends ListDerivative<Item> {\n}\n\nvar items: Item[];\nitems.push(items[0]); // Cannot convert T to Item\n```",
+      "PostedDate": "2013-11-25T09:03:47.537-08:00",
+      "Id": 124165
+    },
+    {
+      "Message": "Hello. Happy new year!\nAre you trying to fix this bug?\nI'm asking because it is still present in the new download.",
+      "PostedDate": "2014-01-04T23:25:28.977-08:00",
+      "Id": 129119
+    },
+    {
+      "Message": "This is fixed in the develop branch (at least with the simplified repro above). When you say \"new download\" do you mean 0.9.5 or the compiler built from latest sources?",
+      "PostedDate": "2014-01-07T12:06:52.857-08:00",
+      "Id": 129667
+    },
+    {
+      "Message": "Sorry. I downloaded the compiler 0.95 beta on 6 th. january, and thought it is still december.\nThe compiler was from 5th december 2013.",
+      "PostedDate": "2014-01-08T04:38:36.37-08:00",
+      "Id": 129785
+    }
+  ]
+}

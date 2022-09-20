@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1058686",
+    "ThreadId": "447553",
+    "Html": "There seems to be something really strange going on with getters in 0.9. I've struggled to come up with a small example. This one will compile into invalid javascript. If you change DummyCollection to Array, it seems to work. Also compiles fine if you make the SelectedValues getter a regular function .\r<br />\n<br />\nmodule Test \r<br />\n{<br />\n<pre><code>export class DummyCollection\n{\n    Add(obj) { }\n}\n\nexport class SelectorControl\n{\n    public get SelectedValues(): DummyCollection\n    {\n        var list = new DummyCollection();\n        for (var i = 0; i &lt; 2; i++)\n        {\n            list.Add(&quot;hello&quot;);\n        }\n\n        return list;\n    }\n}</code></pre>\n\n}\r<br />\n<br />\n<br />\nHere is the resulting javascript; (see the for loop starting with &quot;this.i&quot;)\r<br />\n<br />\nvar Test;\r<br />\n(function (Test) {<br />\n<pre><code>var DummyCollection = (function () {\n    function DummyCollection() {\n    }\n    DummyCollection.prototype.Add = function (obj) {\n    };\n    return DummyCollection;\n})();\nTest.DummyCollection = DummyCollection;\n\nvar SelectorControl = (function () {\n    function SelectorControl() {\n    }\n    Object.defineProperty(SelectorControl.prototype, &quot;SelectedValues&quot;, {\n        get: function () {\n            this.list = new DummyCollection();;\n            for (this.i = 0;; i &lt; 2; i++) {\n                list.Add(&quot;hello&quot;);\n            }\n\n            return list;\n        },\n        enumerable: true,\n        configurable: true\n    });\n    return SelectorControl;\n})();\nTest.SelectorControl = SelectorControl;</code></pre>\n\n})(Test || (Test = {}));<br />\n",
+    "PostedDate": "2013-06-19T07:27:40.067-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058704",
+    "ThreadId": "447553",
+    "Html": "I am seeing this as well, but not in every situation.  Thanks for reproducing!  If it does this, it changes every &quot;var x&quot; in the function to &quot;this.x&quot;.<br />\n",
+    "PostedDate": "2013-06-19T08:06:18.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1058745",
+    "ThreadId": "447553",
+    "Html": "Thanks for reporting we have an issue on this logged.\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/workitem/1167\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1167</a><br />\n",
+    "PostedDate": "2013-06-19T09:35:00.457-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

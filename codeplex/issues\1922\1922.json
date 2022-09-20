@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch.",
+    "ClosedDate": "2014-01-17T15:31:51.667-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\n__Version 0.9.5 Beta__\r\n\r\nConsider the following:\r\n\r\n```TypeScript\r\ninterface Foo<T> {\r\n    item: T;\r\n}\r\n\r\ninterface Bar extends Foo<any> {\r\n}\r\n\r\ninterface Baz extends Bar, Foo<string> {\r\n}\r\n\r\nvar autocomplete: Baz = undefined;\r\nautocomplete.item.foobar; // Inferred as \"any\"\r\n```\r\n\r\nThe final interface Baz extends both Bar and Foo, the latter with a specialisation. My initial expectation was that `Baz.item` should be of type string. However, the code compiles fine and the type is inferred as any.\r\n\r\nExperimenting further, it appears that changing the order of the base interfaces produces the desired error:\r\n\r\n```TypeScript\r\n//  Error TS2189: Build: Interface 'Baz' cannot simultaneously extend types 'Foo<string>' and 'Bar'\r\n// Types of property 'item' ... are not identical\r\ninterface Baz extends Foo<string>, Bar  {\r\n}\r\n```\r\n\r\nI am aware that probably the best way to structure this would be to make Bar generic:\r\n\r\n```TypeScript\r\ninterface Bar<T> extends Foo<T> {\r\n}\r\n\r\ninterface Baz extends Bar<string>  {\r\n}\r\n```\r\n\r\nHowever, the bug report here is to highlight that fact that my very first example above compiles fine, while silently using Bar.item instead of the expected Baz.item.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-20T02:23:09.87-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Ordering of Generic Base Interfaces suppresses error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1922
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. I had just noticed this the other day as well. Marked as active.",
+      "PostedDate": "2013-11-20T15:08:46.04-08:00",
+      "Id": 123715
+    }
+  ]
+}

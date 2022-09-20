@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We can't infer the type of T in your example from the call site, since your generic type parameter is only used in the return type position. ",
+    "ClosedDate": "2013-12-27T11:49:19.353-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The generic type in the code below seems to be inferred as {} even though the generic type is located at the return type and the return type is never {}.\r\n\r\n```\r\nclass AST {\r\n}\r\n\r\ninterface ExpressionVisitor<T> {\r\n  visitSymbolExpression(node: SymbolExpression): T;\r\n}\r\n\r\nclass Expression extends AST {\r\n  acceptExpressionVisitor<T>(visitor: ExpressionVisitor<T>): T {\r\n\tthrow new Error('This is an abstract method');\r\n  }\r\n}\r\n\r\nclass SymbolExpression extends Expression {\r\n  acceptExpressionVisitor<T>(visitor: ExpressionVisitor<T>): T {\r\n    return visitor.visitSymbolExpression(this);\r\n  }\r\n}\r\n\r\nclass VoidResolver implements ExpressionVisitor<void> {\r\n  resolve(node: Expression): void {\r\n    // Supplied parameters do not match any signature of call target:\r\n    //\r\n    //   Types of property 'visitSymbolExpression' of types 'VoidResolver'\r\n    //   and 'ExpressionVisitor<{}>' are incompatible:\r\n    //\r\n    //     Call signatures of types '(node: SymbolExpression) => void' and\r\n    //     '(node: SymbolExpression) => {}' are incompatible.\r\n    //\r\n    // Could not select overload for 'call' expression.\r\n    node.acceptExpressionVisitor(this);\r\n\r\n    // This works fine\r\n    node.acceptExpressionVisitor<void>(this);\r\n  }\r\n\r\n  visitSymbolExpression(node: SymbolExpression): void {\r\n  }\r\n}\r\n\r\nclass NumberResolver implements ExpressionVisitor<number> {\r\n  resolve(node: Expression): number {\r\n    // Cannot convert '{}' to 'number'.\r\n    return node.acceptExpressionVisitor(this);\r\n\r\n    // This works fine\r\n    return node.acceptExpressionVisitor<number>(this);\r\n  }\r\n\r\n  visitSymbolExpression(node: SymbolExpression): number {\r\n\treturn 0;\r\n  }\r\n}\r\n```\r\n",
+    "LastUpdatedDate": "2013-12-27T11:49:19.353-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-27T08:43:02.983-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic type inference failure for return types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2052
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

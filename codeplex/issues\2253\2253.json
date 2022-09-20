@@ -1,0 +1,216 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reactivate if you're still seeing this on the 1.0 build. Thanks!",
+    "ClosedDate": "2014-04-03T14:19:42.67-07:00",
+    "CommentCount": 34,
+    "Custom": null,
+    "Description": "The 0.9.7 visual Studio plugin makes all of my typescript projects lock up. The navigation bars are in a constant state of \"refreshing\", there's no intellisense and eventually the caret stops blinking and VS completely freezes. Compiling works fine, though, and has no errors.\r\n\r\nUninstalling the plugin and reinstalling the 0.9.5 fixes this issue. But the problem persists every time I install the latest version.\r\n\r\nUPDATE:\r\nSee 5th comment.\r\n\r\nupdated title",
+    "LastUpdatedDate": "2014-04-11T05:07:45.413-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-03T10:39:42.197-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "0.9.7 Visual Studio Plugin infinite refreshing in navigation bar",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 7,
+    "Id": 2253
+  },
+  "FileAttachments": [
+    {
+      "FileId": 815121,
+      "FileName": "System2.png",
+      "DownloadUrl": ".\\815121"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Additional info:\nFor the first few seconds after the solution loads, the intellisense and the navigation bars work normally. But after the first few seconds, things start to slow down, intellisense stops working and newly opened files have navigation bars that are in the permanent refresh state. Long story short, there is a short delay before things stop working. ",
+      "PostedDate": "2014-03-03T11:32:21.703-08:00",
+      "Id": 135658
+    },
+    {
+      "Message": "I had the same problem... and the same solution. I switched back to 0.9.5 and it works great now. Something is wrong with Typescript 1.0 RC. Also, Intellisense doesn't work on 1.0RC but it does work perfectly in 0.9.5.\n\nI have no extra updates/extensions that I could uninstall (except the NuGet Manager but I didn't install it because I don't see how that could cause problem). I do have VS 2013 Pro, VS Express 2013 Desktop and VS 2012 Pro installed on my computer.",
+      "PostedDate": "2014-03-03T14:03:22.677-08:00",
+      "Id": 135684
+    },
+    {
+      "Message": "This could be an install issue, since we haven't made much changes in those areas between 0.9.5 and 0.9.7.\n\nCan you try un-install typescript, and delete all files from the ```` Program Files\\Microsoft SDKS\\TypeScript ```` folder, and re-install TypeScript 0.9.7.\n\nFurther when you hit the freeze, how much is memory consumption and CPU consumption? How many cores does your machine have?",
+      "PostedDate": "2014-03-03T14:09:48.553-08:00",
+      "Id": 135686
+    },
+    {
+      "Message": "I couldn't get it to freeze today. I'm possibly not waiting long enough, or the freezing that I was having before could have been unrelated. In any case, Intellisense/NavBar still breaks a few seconds after loading a project. \n\nI did start the task manager when it was freezing before, and I remember it seeming like like nothing was going on cpu-wise.\n\nI'm running on a single core with 2GB of RAM.\n\nThe TypeScript uninstaller already removes the the Program Files\\Microsoft SDKS\\TypeScript folder. I did a search for typescript in the window explorer and deleted any other remnants (eg, file templates, temp files, etc.) that were still on the system after running the uninstaller, but this did not solve the problem after reinstalling 0.9.7.  \n\nI didn't mention this before, but this is happening to me on VS 2012. ",
+      "PostedDate": "2014-03-04T12:01:05.977-08:00",
+      "Id": 135818
+    },
+    {
+      "Message": "Please re-open when you have more info using the button on top.\n\r\n\r** Closed by paulb 03/03/2014 2:10PM",
+      "PostedDate": "2014-03-03T14:10:07.663-08:00",
+      "Id": 135819
+    },
+    {
+      "Message": "We've seen bad performance of Visual Studio (and TypeScript) on single core machines. Is it a virtual machine, can you increase the number of core?",
+      "PostedDate": "2014-03-05T11:47:01.41-08:00",
+      "Id": 135949
+    },
+    {
+      "Message": "Yes, it's a vm and I just tested with an additional core (only have 2 on my laptop), but this did not help.\n\nI'm beginning to think that the freezing was an unrelated issue (as stated in my previous comment), which I was having after first upgrading to 0.9.7. I can't reproduce the freezing at this point.\n\nThe main problem is that intellisense just doesn't work after a few seconds of the project loading. I originally thought that the freezing was a symptom of the intellisense locking up, but that doesn't seem to be the case. I can edit and compile .ts files with the same performance that I've always had, but there is absolutely no intellisense after the first few seconds.  \n\nThe ActivityLog.xml shows that the TypeScriptLanguageService.dll loads, which makes sense since intellisense is available at the very beginning. But once it stops working, it does not return... no matter how long I wait.\n\nMy point is that this doesn't seem to be a performance issue.\n\nRunning \"devenv.exe /log\" only seems to log start up extension loading routines. Is there a way that I can increase the log level to include intellisense errors? Or is there something else I can do to troubleshoot this?",
+      "PostedDate": "2014-03-05T12:55:04.497-08:00",
+      "Id": 135959
+    },
+    {
+      "Message": "There is not much additional logging we can enable at this time.. it's something we're looking in to adding.\n\nDoes this happen with all project, even the simple new project?",
+      "PostedDate": "2014-03-05T13:39:13.827-08:00",
+      "Id": 135964
+    },
+    {
+      "Message": "I just figured it out:\n\"<TypeScriptOutDir>...</TypeScriptOutDir>\" is causing the problem. When I comment out this tag in the project file and then restart the solution, intellisense works again.\n\nIs this a compile on save thing? The tsc compiler still supports --outDir, so I'm assuming that this feature is still available.  ",
+      "PostedDate": "2014-03-05T14:08:25.78-08:00",
+      "Id": 135966
+    },
+    {
+      "Message": "This does seem to be a \"compile on save\" issue, because all of a sudden .js files are starting to show up in my ts folder when I save files.\n\nHow did \"compile on save\" feature get enabled is my question. Options -> Text Editor -> TypeScript -> Project does not have anything checked under the Compile on Save section, so how do I turn this off? \n\nBeing a c++ developer at heart, I don't like the idea of source files being compile every time I make an edit. Seems to me like a waste of resources, especially since I \"ctrl + s\" like it's a nervous tick. I really hope this isn't a mandatory thing now.",
+      "PostedDate": "2014-03-05T14:28:54.927-08:00",
+      "Id": 135968
+    },
+    {
+      "Message": "You can disable this on a per-project base now... since you're on VS 2012 you'll have to edit the proj file manually.\n\nAdd the following tag to the collection of TypeScript options in your proj file:\n````\n<TypeScriptCompileOnSaveEnabled>false</TypeScriptCompileOnSaveEnabled>\n```` ",
+      "PostedDate": "2014-03-05T17:56:23.493-08:00",
+      "Id": 135993
+    },
+    {
+      "Message": "From issue https://typescript.codeplex.com/workitem/2259.\n\nI used a dedicated output directory too (set to \"js\\\").\nRemoving it, everything seems OK now.\n\nThis also seems to solve another issue: \"compile on save\" is now working (though was not working on 0.9.5, so don't exactly know whether it was due to the output dir option too or it has been fixed on 0.9.7).",
+      "PostedDate": "2014-03-06T02:28:35.153-08:00",
+      "Id": 136020
+    },
+    {
+      "Message": "FYI, even when compile on save is disabled, TypeScriptOutDir still breaks intellisense.",
+      "PostedDate": "2014-03-06T07:00:55.983-08:00",
+      "Id": 136042
+    },
+    {
+      "Message": "I wanted to say that since I no longer use TypeScriptOutDir, \"compile on save\" is working (in addition to intellisense etc...).\n\nHowever after 1 or 2 hours under VS, it seems intellisense, etc... breaks again (without changing any project settings, just editing and debugging).\nJust restarting VS and it's fine for 1 or 2 hours :-)\nI don't remember I faced that with 0.9.5.",
+      "PostedDate": "2014-03-06T07:32:14.373-08:00",
+      "Id": 136048
+    },
+    {
+      "Message": "I experience the same problem (goes without saying that it is rather annoying ;-(  ).\nWhen I fire up vs2013 with a solution and project, intellisesne works ..\nwithin a minute it breaks.\n\nI cant find a way to reproduce it. Its on vs2013, w7, vmware, 2 cores.\n",
+      "PostedDate": "2014-03-07T08:55:02.96-08:00",
+      "Id": 136187
+    },
+    {
+      "Message": "As a note, I dont have TypeScriptOutDir in my project file....",
+      "PostedDate": "2014-03-09T04:11:11.653-07:00",
+      "Id": 136320
+    },
+    {
+      "Message": "Hello, we experience the same issue when using TypeScriptOutDir with TypeScript RC1 on Visual Studio Express 2013. ",
+      "PostedDate": "2014-03-10T06:59:05.37-07:00",
+      "Id": 136397
+    },
+    {
+      "Message": "This error is driving me crazy. Typescript is amazing but it sucks not to have intelligent. I feel robbed of one of the best things about typescript. \r\nI tried \r\n<TypeScriptCompileOnSaveEnabled>false</TypeScriptCompileOnSaveEnabled>\r\nDid not work. \r\n\r\nI do have typescript redirecting my files to a specific folder as mentioned by other users. \r\n\r\nMy System and attached screenshot with a red border of where the problem occurs is attached. \r\n\r\nMy System SPECS: \r\nI7 3.20ghz,3194mhz, 4 cores\r\nram:12gb DDR2\r\nWindows 7",
+      "PostedDate": "2014-03-17T20:28:26.257-07:00",
+      "Id": 137173
+    },
+    {
+      "Message": "So I removed i got rid of save on build in all configs types \ndebug \nrelease \nallconfig\n\nI got rid of redirect javascript output to directory in all config types.\n\nIntellisense is back.\n\n",
+      "PostedDate": "2014-03-17T20:35:57.627-07:00",
+      "Id": 137174
+    },
+    {
+      "Message": "I am now convinced after enabling and disabling  redirect javascript output to directory in all config types on the typescript build that is the cause of the loss of intellisense. \n\nThe behavior is as follows: \nEnable redirect javascript output to directory \nIntellisense stops working\nDisable  redirect javascript output to directory \nSave and Close the project\nReopen\nIntellisense is working. \n\nI was able to repeat that 10 times. ",
+      "PostedDate": "2014-03-17T20:41:17.117-07:00",
+      "Id": 137175
+    },
+    {
+      "Message": "I am experiencing similar problems with TypeScript 0.9.7 & Visual Studio 2013 and tracked it down to having the TypeScript Build setting of <TypeScriptOutFile> enabled in my real project or even a test project (i.e. HTML Application with TypeScript template).\n\nWith that TS build setting enabled, I specifically encountered the following problems:\n- Initially loading my project, navigation bar momentarily shows \"(refreshing)...\", but then populates normally as expected.\n- While the navigation bar is initially populating, I can successfully set a breakpoint as expected.\n- After the navigation bar is loaded, I can no longer set a breakpoint due to the \"This is not a valid location for a breakpoint.\" error.\n- At random points, the VS environment will stop responding and may come back after moment, but the CPU usage is zero and the memory usage has minor fluctuations.\n- If I reload my project, the navigation bar is always stuck on \"refreshing)...\" and I always receive that invalid breakpoint location error.\n\nI have also tried disabling the <TypeScriptCompileOnSaveEnabled> setting as well as enabling & disabling <TypeScriptOutDir>, but they had no affect.\n\nI further tried repairing as well as uninstalling/cleaning/reinstalling TypeScript 0.9.7, but they too had no affect.\n\nI have also tried disabling & then uninstalling all of my VS extensions as well as resetting my VS settings, but again they had no affect.\n\nFinally, based on other user experiences and my own frustration, I switched to TypeScript 0.9.5 and everything seems to be working okay so far even with that <TypeScriptOutFile> setting enabled!\n\nMy system is Windows 7 x64 with 4 core CPU, but please let me know if I can provide any additional information in order to get these issues resolved.",
+      "PostedDate": "2014-03-19T10:40:16.52-07:00",
+      "Id": 137343
+    },
+    {
+      "Message": "Exactly the same issue in 1.0rc within VS2013.\n\nAre there any know workarounds?\n",
+      "PostedDate": "2014-03-31T12:25:24.997-07:00",
+      "Id": 140088
+    },
+    {
+      "Message": "@colinbreame ... In my experience, the only known workaround is disable the TypeScriptOutDir and TypeScriptOutFile settings in your project file, or go back to TypeScript 0.9.5.",
+      "PostedDate": "2014-03-31T12:57:09.993-07:00",
+      "Id": 140091
+    },
+    {
+      "Message": "We have the same problems too. Removing TypeScriptOutDir and TypeScriptOutFile and it works again",
+      "PostedDate": "2014-04-02T00:26:27.437-07:00",
+      "Id": 140258
+    },
+    {
+      "Message": "I've just installed 1.0, hoping this would be fixed. But it's worst than before !!!\n\nWith 1.0 even with unset TypeScriptOutDir and TypeScriptOutFile, Intellisense is only working 1 time then stops working.\nI haven't found any way to get it work.\nSo 1.0 is clearly unusable for me.\n\nThen I wanted to go back to 1.0RC.\nUnfortunately I'm under VS 2013, so installed VS2013 RC2, but was unable to uninstall it.\nI had to remove VS and reinstall it from scratch :-(\n\nBut now I'm blocked, I'm not able to find the 1.0RC (nor 0.9.5) to download. It seems they have been removed.\n\nCould you please provide a link to download 1.0RC?",
+      "PostedDate": "2014-04-03T08:31:12.26-07:00",
+      "Id": 140406
+    },
+    {
+      "Message": "@stephaned, all of the versions can be found under the details section at the link below.\nhttp://www.microsoft.com/en-us/download/details.aspx?id=34790",
+      "PostedDate": "2014-04-03T08:56:24.823-07:00",
+      "Id": 140413
+    },
+    {
+      "Message": "Thanks for the link !",
+      "PostedDate": "2014-04-03T09:39:22.317-07:00",
+      "Id": 140424
+    },
+    {
+      "Message": "@Ryan, this is what I mentioned 3 comments earlier: this is worst with 1.0, I haven't found any workaround. Please reopen it.",
+      "PostedDate": "2014-04-04T01:21:09.917-07:00",
+      "Id": 140506
+    },
+    {
+      "Message": "@stephaned, 1.0RTM did fix this issue for me. Specifying an out directory no longer breaks intellisense.\n\nOne thing, that may be causing issues for you is having the 0.9 typescript tools version specified in your project file. There is an alert about this when you first open the solution after upgrading, but for me, it was hidden behind the editor window. While this alert box is open, intellisense will not work. \n\nIf you don't upgrade your project files with this alert box, your projects won't build and unfortunately the alert box will not appear again if you reopen your solution. In order to manually upgrade your projects, you will have to remove the line '<TypeScriptToolsVersion>0.9</TypeScriptToolsVersion>' from the project files.\n\nIf you're still having problems with intellisense after upgrading your project files, you should probably open a separate issue thread for 1.0RTM. ",
+      "PostedDate": "2014-04-04T07:40:44.18-07:00",
+      "Id": 140548
+    },
+    {
+      "Message": "@jonathonl, I saw the dialog box (indeed behind VS main window !) and fixed the project file.\nI was able to compile, but Intellisense stopped working after its first use.\n\nAre you using 2013 web express version?\nDid you uninstall TS before upgrading?\n\n(as I spend too much time restoring VS, I think I'll wait a bit to see if others still have the issue, and if not will try upgrading it later on).",
+      "PostedDate": "2014-04-04T08:52:49.49-07:00",
+      "Id": 140553
+    },
+    {
+      "Message": "> Are you using 2013 web express version?\nNo, I'm using VS 2012 Pro.\n\n> Did you uninstall TS before upgrading?\nNo, I installed 1.0RTM over 0.9.5 without uninstalling it.\n\n> I think I'll wait a bit to see if others still have the issue, and if not will try upgrading it later on\nSounds like a good idea.",
+      "PostedDate": "2014-04-04T09:56:36.25-07:00",
+      "Id": 140559
+    },
+    {
+      "Message": "Also having same problems... tried 1.0RTM over 1.0RC (0.9.7) and installation failed, now I can't repair 0.9.7 and I can't uninstall it. TypeScript installer freezes while trying to set restore point. I have both VS 2012 and VS 2013 on Win7 64bit. Don't know how to move forward... Can anyone suggest a fix? 0.9.7 worked great for me...",
+      "PostedDate": "2014-04-04T16:55:58.307-07:00",
+      "Id": 140624
+    },
+    {
+      "Message": "Same Issue: IntelliSense and refreshing all the time\n\nResolution was to remove <TypeScriptToolsVersion>0.9</TypeScriptToolsVersion> from the project file \n\nEnvironment: 2008R2, VS2013, TS 0.9.7\n\n\n\n",
+      "PostedDate": "2014-04-10T01:47:11.973-07:00",
+      "Id": 141323
+    },
+    {
+      "Message": "This issue has been solved for us with 1.0 version. Thanks",
+      "PostedDate": "2014-04-11T05:07:45.413-07:00",
+      "Id": 141485
+    }
+  ]
+}

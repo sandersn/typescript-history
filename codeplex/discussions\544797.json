@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1243430",
+    "ThreadId": "544797",
+    "Html": "I'm using rest parameters in my constructor function for both the base class and the derived class. However because TypeScript has converted the REST parameter to an array in the dervied class, when super is called it passes an array over to the base class and so the base call constructor is called with an array rather than REST parameters. See <a href=\"http://www.typescriptlang.org/Playground#src=class%20A%20%7B%0A%09private%20list%3A%20Array%3Cany%3E%3B%0A%20%20%20%20constructor(...list%3A%20Array%3Cany%3E)%20%7B%20%0A%09%09this.list%20%3D%20list%3B%0A%09%7D%0A%09%0A%09public%20print()%20%7B%0A%09%09console.log(this.list)%3B%0A%09%7D%0A%7D%0A%0Aclass%20B%20extends%20A%20%7B%0A%20%20%20%20constructor(public%20name%3A%20string%2C%20...list%3A%20Array%3Cany%3E)%20%7B%20%0A%09%09super(list)%3B%20%0A%09%7D%0A%7D%0A%0Avar%20b%3A%20B%20%3D%20new%20B('bob'%2C%20'red'%2C%20'green'%2C%20'blue')%3B%0A%0Ab.print()%3B\" rel=\"nofollow\">playground example</a> below where I want the behavior of the print function to be ['red', 'green', 'blue'] rather than  [['red', 'green', 'blue']].<br />\n<pre><code>class A {\n    private list: Array&lt;any&gt;;\n    constructor(...list: Array&lt;any&gt;) { \n        this.list = list;\n    }\n    \n    public print() {\n        console.log(this.list);\n    }\n}\n\nclass B extends A {\n    constructor(public name: string, ...list: Array&lt;any&gt;) { \n        super(list); \n    }\n}\n\nvar b: B = new B('bob', 'red', 'green', 'blue');\n\nb.print();</code></pre>\n\n",
+    "PostedDate": "2014-05-09T03:11:00.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243476",
+    "ThreadId": "544797",
+    "Html": "That's how it's supposed to work.  What's missing is spreading arrays to parameters: <a href=\"http://tc39wiki.calculist.org/es6/spread/\" rel=\"nofollow\">http://tc39wiki.calculist.org/es6/spread/</a>\r<br />\n<br />\nTypeScript is about supporting ES6 patterns today, not creating something else. ;)<br />\n",
+    "PostedDate": "2014-05-09T06:10:00.893-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243488",
+    "ThreadId": "544797",
+    "Html": "Yeah I know. Just wanted to see if there was any implementation change I could make without changing the design to accept an array instead :)<br />\n",
+    "PostedDate": "2014-05-09T07:04:29.553-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243507",
+    "ThreadId": "544797",
+    "Html": "I think you'll just have to do something like this for now:<br />\n<pre><code>class A {\n    private list: Array&lt;any&gt;;\n    \n    constructor(...list: Array&lt;any&gt;) {\n        if (list.length == 1 &amp;&amp; typeof list[0] == 'object' &amp;&amp; list[0] instanceof Array)\n            this.list = list[0];\n        else\n            this.list = list;\n    }\n    \n    public print() {\n        console.log(this.list);\n    }\n}\n\nclass B extends A {\n    constructor(public name: string, ...list: Array&lt;any&gt;) {\n        super(list);\n    }\n}\n\nvar b: B = new B('bob', 'red', 'green', 'blue');\nb.print();</code></pre>\n\n",
+    "PostedDate": "2014-05-09T07:59:55.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1243509",
+    "ThreadId": "544797",
+    "Html": "Here's another way:<br />\n<pre><code>class A {\n    private list: Array&lt;any&gt;;\n    \n    constructor(list: Array&lt;any&gt;);\n    constructor(...list: Array&lt;any&gt;); \n    constructor(list?: any) {\n        if (arguments.length == 1 &amp;&amp; typeof list == 'object' &amp;&amp; list instanceof Array)\n            this._initialize.apply(this, list);\n        else\n            this._initialize.apply(this, arguments);\n    }\n    \n    private _initialize(...list: Array&lt;any&gt;) {\n        this.list = list;\n    }\n    \n    public print() {\n        console.log(this.list);\n    }\n}\n\nclass B extends A {\n    constructor(public name: string, ...list: Array&lt;any&gt;) {\n        super(list);\n    }\n}\n\nvar b: B = new B('bob', 'red', 'green', 'blue');\nb.print();</code></pre>\n\n",
+    "PostedDate": "2014-05-09T08:02:14.04-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1244217",
+    "ThreadId": "544797",
+    "Html": "Cheers for the help James, that last solution is a fairly nice way of getting around the problem. With a little bit of tinkering it should do the job.<br />\n",
+    "PostedDate": "2014-05-12T00:29:16.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1244232",
+    "ThreadId": "544797",
+    "Html": "Thanks, glad I could help. ;)<br />\n",
+    "PostedDate": "2014-05-12T00:54:04.177-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

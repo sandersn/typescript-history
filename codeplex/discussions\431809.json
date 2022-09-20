@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "995785",
+    "ThreadId": "431809",
+    "Html": "Why on earth did you override the out function so that one can't use --module amd and specify an outputfile name, seems to me to be a bit odd?<br />\n",
+    "PostedDate": "2013-02-03T08:33:10.27-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995817",
+    "ThreadId": "431809",
+    "Html": "Because (as far as we can tell) it's <em>never</em> what you intended.\r<br />\n<br />\nConsider some code structured like this (note: don't structure your code this way! it's wrong!)\r<br />\n<br />\n<strong>A.ts</strong><br />\n<pre><code>function foo() { ... }</code></pre>\n\n<strong>B.ts</strong><br />\n<pre><code>/// &lt;reference path=&quot;A.ts&quot; /&gt;\nexport class bar {\n  // use 'foo' in here\n}</code></pre>\n\n<strong>C.ts</strong><br />\n<pre><code>import b = module(&quot;./B&quot;);\nexport class bar2 extends b.bar {\n   // ... use\n}</code></pre>\n\nBefore, when you compiled this set of files using --out, you'd get three files: A.js, which has function foo() in it, B.js, which has the B module, and C.js, which has the C module. The compiled code won't work, and it doesn't even make sense -- if you're using a module loader, which you must be if B.js and C.js are modules, then the only way to load A.js is as a module, but A.js isn't a module.\r<br />\n<br />\nIf you have some code structure that you were using in pre-0.8.2.0 that actually did work at runtime, we'd be interested to see it. We closed off --out/module because we couldn't figure out any code setup that worked; if it turns out we were wrong we'd definitely revisit this.\r<br />\n<br />\nSomewhat relatedly, --out does accept a <em>directory</em> when doing module compilation, which might be of use to you.<br />\n",
+    "PostedDate": "2013-02-03T10:38:47.777-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

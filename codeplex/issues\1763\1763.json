@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Classes cannot implement construct signatures for the same reason they cannot implement call signatures. See http://stackoverflow.com/a/13408029/1704166 for some details there.\n\nIn your second code snippet, note that `foo = bar = foo` is *not* a way to check for interassignability of two expressions. Because the type of an assignment expression is the type of the right operand, that statement only checks that foo is assignable to bar. Foo is assignable to an instance of Bar because Foo has all of the members of an instance of Bar (all zero of them). An instance of Bar is not assignable to Foo because it lacks a construct signature (`foo = bar` correctly produces an error).",
+    "ClosedDate": "2013-10-07T08:22:02.79-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The following gives an error : \r\n\r\n```typescript\r\ninterface Foo{\r\n    new (x:number)\r\n}\r\n\r\nclass Bar implements Foo{\r\n    constructor(x:number){}\r\n}\r\n```\r\nThe error reads: \r\n> 'Foo' requires a construct signature but 'Bar' lacks one.\r\n\r\nHowever they are inter-assignable i.e. the types match: \r\n```typescript\r\ninterface Foo{\r\n    new (x:number)\r\n}\r\n\r\nclass Bar{\r\n    constructor(x:number){}\r\n}\r\n\r\nvar foo:Foo; \r\nvar bar:Bar;\r\nfoo=bar=foo; // They are inter assignable \r\n```\r\n\r\nIs the inability to implement such an interface by design? If so the error statement could use a rewording e.g. `cannot implement a newable interface` since the types are actually compatible.",
+    "LastUpdatedDate": "2013-10-07T08:22:02.79-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-05T22:33:15.86-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Implement a newable interface ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1763
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The manual does not mention this feature, so I think this may be missing by design.\n\nAs far as the syntax, my guess would have been:\n\n```\ninterface Foo {\n\tconstructor(x: number);\n}\n```\n\nInterestingly, this is valid syntax - however, attempting to implement this interface, you will get an error-message about a *missing property* named \"constructor\", so no dice.\n\nI also attempted declaring a static method `create` as part of the interface, thinking you could accomplish the same thing by enforcing the presence of a static factory-method (rather than a specific constructor) on every class; unfortunately, static declarations are not allowed in interface declarations either.\n\nI remember running into the same thing with C# in the past, and I'm afraid you're going to find the answer is always in the negative. The typical explanation is something along the lines of this: you're trying to use interfaces to specify a \"contract\" to which your *types* need to conform - but that's not what interfaces do, they specify how the *objects* need to conform.\n\nWhether you agree with that or not (and I don't) that is most likely the answer you're going to get.\n\nThere is a work-around, however - it's a little more complicated, and involves introducing an object that represents each type. In the long run, this may turn out to be an advantage - if you'd like, you can read my [very long explanation on StackOverflow](http://stackoverflow.com/questions/5221689/c-sharp-static-function-in-interface/7905448#7905448).\n",
+      "PostedDate": "2013-10-06T08:13:57.28-07:00",
+      "Id": 117581
+    }
+  ]
+}

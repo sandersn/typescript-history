@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1237363",
+    "ThreadId": "543151",
+    "Html": "This question relates to <a href=\"https://typescript.codeplex.com/workitem/2239\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2239</a>.<br />\n<br />\nI've encountered the same issue with the lodash type definitions. There's a Collection&lt;T&gt; interface declared here: <a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/01f1a715b4ad1906e89f85a330ae972a70c533b7/lodash/lodash.d.ts#L3856\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/blob/01f1a715b4ad1906e89f85a330ae972a70c533b7/lodash/lodash.d.ts#L3856</a>.<br />\n<br />\nlodash has a find function declared as follows<br />\n<pre><code>find&lt;T&gt;(collection: Collection&lt;T&gt;, pluckValue: string): T;</code></pre>\n\nWhen calling find, it appears that TS does not detect the return type correctly (VS thinks it is &quot;{}&quot;).<br />\n<br />\nI attempted to add an optional param referring to T within the Collection&lt;T&gt; interface (as suggested in 2239), but it didn't seem to change anything. I can't really add a required param as it won't exist on both arrays and objects.<br />\n<br />\nI also tried adding an indexer to Collection&lt;T&gt; that takes an &quot;any&quot; key and returns a T. TS doesn't seem to allow &quot;any&quot; to be used as an indexer though.<br />\n<br />\nThe only solution I can see is instead of declaring the methods as accepting a Collection&lt;T&gt;, to provide two overloads (one that accepts List&lt;T&gt; and one that accepts Dictionary&lt;T&gt;). This doesn't seem ideal, so I'm curious if there are any better solutions.<br />\n",
+    "PostedDate": "2014-04-23T22:08:11.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237644",
+    "ThreadId": "543151",
+    "Html": "The T might be inferred to {} if the collection you're passing can't be resolved to something with more information.\r<br />\n<br />\nCan you share the code where you're calling 'find'?  We might be able to tell why the type is being inferred to {}.<br />\n",
+    "PostedDate": "2014-04-24T09:54:23.023-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237707",
+    "ThreadId": "543151",
+    "Html": "The lodash/underscore typing on DefinitelyTyped needs some significant updates to work better with TypeScript's type inference and generic inference algorithms. That Collection&lt;T&gt; {} is so pervasive is a real problem. Not only is that type definition meaningless (literally any object qualifies as a Collection&lt;T&gt;, it is no better than saying 'any' and worse due to the confusion it creates) but it also can't be inferred correctly since there's no data to inform what T actually is. There are numerous functions with similar issues where T can rarely if ever be inferred (ex functions of the form foo&lt;T&gt;(): T {}). \r<br />\n<br />\nFor example, note that this isn't an error:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n_.find(1, <span style=\"color:#A31515;\">&#39;ummm&#39;</span>);\r\n</pre></div>after which you might be less surprised that this doesn't work correctly<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> r = _.find([1,2], <span style=\"color:#A31515;\">&#39;1&#39;</span>); <span style=\"color:Green;\">// r is {} not number</span>\r\n</pre></div>while explicitly specifying the type argument does work<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> r = _.find&lt;<span style=\"color:Blue;\">number</span>&gt;([1, 2], <span style=\"color:#A31515;\">&#39;1&#39;</span>); <span style=\"color:Green;\">// r is number</span>\r\n</pre></div>You are on the right track with indexers. A string indexer is sufficient for what you are trying to do to Collection. Currently the List and Dictionary types are far more useful as they actually specify what makes something List-like or Dictionary-like (via indexers), while Collection says literally nothing about what makes something Collection-like. The type hierarchy appears to have been written with a nominal sense of typing in mind rather than a structural one, as Collection&lt;T&gt; not only serves no purpose but actually makes the typings less likely to generate the errors you want it to catch.<br />\n",
+    "PostedDate": "2014-04-24T12:18:07.923-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237752",
+    "ThreadId": "543151",
+    "Html": "The lodash definitions were using the type inference before so that when using <code>Collection&lt;T&gt;</code> it would infer to <code>List&lt;T&gt;</code> or <code>Array&lt;T&gt;</code> or <code>Dictionary&lt;T&gt;</code> before the type inference was removed (pre-0.9.7).  This also was used to imply <code>Array&lt;T&gt;</code> was compatible with <code>List&lt;T&gt;</code>.  This allowed support for JQuery objects to be used, as well as Arrays, as well as object indexers to simplify the typings.<br />\n<br />\nI was never able to figure out a way to have that implicit resolution work, and the issues on the definietely typed repo were just hoping that pre-0.9.7 type resolution would return.  I have an active pull request against the respository that just breaks out the use of <code>Collection&lt;T&gt;</code> =&gt; <code>Array&lt;T&gt;</code>, <code>List&lt;T&gt;</code>, <code>Dictionary&lt;T&gt;</code> and instances of <code>List&lt;T&gt;</code> =&gt; <code>Array&lt;T&gt;</code>, <code>List&lt;T&gt;</code>.  With these changes most of the functionality is restored, the only difference is there are a hell of a lot more lines to maintain.  That said I'll take more lines to maintain, and have a working type definition for a library that I use with almost all my projects.<br />\n",
+    "PostedDate": "2014-04-24T14:00:11.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237801",
+    "ThreadId": "543151",
+    "Html": "Thanks for the heads up, David. I'll check out your fork and probably end up using your type defs for now. I agree that type safety is the better trade-off (especially if someone else is maintaining it for you :)). We can always switch back if a better way to write the defs avails itself.<br />\n",
+    "PostedDate": "2014-04-24T17:49:07.923-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

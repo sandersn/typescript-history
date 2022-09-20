@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the latest bits in the develop branch.",
+    "ClosedDate": "2013-06-24T17:19:15.983-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Consider the following TypeScript code:\r\n\r\nimport P = module(\"Person\");\r\n\r\nexport module Database {\r\n    export class DB {\r\n        public findPerson(id: number): P.Models.Person {\r\n            return new P.Models.Person(\"Rock\", \"Strongo\");\r\n        }\r\n    }\r\n}\r\n\r\nThis compiles into the following Javascript:\r\n\r\nvar P = require(\"./Person\")\r\n(function (Database) {\r\n    var DB = (function () {\r\n        function DB() { }\r\n        DB.prototype.findPerson = function (id) {\r\n            return new P.Models.Person(\"Rock\", \"Strongo\");\r\n        };\r\n        return DB;\r\n    })();\r\n    Database.DB = DB;    \r\n})(exports.Database || (exports.Database = {}));\r\n\r\n\r\nNotice the lack of a semi-colon on the require statement. This is causing problems with execution of the javascript code in node.js.\r\n\r\n$ node Test.js\r\n\r\nDB.js:2\r\n(function (Database) {\r\n^\r\nTypeError: object is not a function\r\n    at Object.<anonymous> (DB.js:2:1)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Module.require (module.js:362:17)\r\n    at require (module.js:378:17)\r\n    at Object.<anonymous> (Test.js:1:71)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n\r\nIf you put the semi-colon on the require statement in the .js file, it works fine.\r\n\r\nFor a full example, see the attached files. Do\r\n\r\ntsc Test.ts\r\nnode Test.js\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-02T16:15:42.213-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Typescript fails to generate semi-colons for require statements",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 364
+  },
+  "FileAttachments": [
+    {
+      "FileId": 525537,
+      "FileName": "Person.ts",
+      "DownloadUrl": ".\\525537"
+    },
+    {
+      "FileId": 525538,
+      "FileName": "Files.zip",
+      "DownloadUrl": ".\\525538"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "How do you attach multiple files with this thing without zipping them up?",
+      "PostedDate": "2012-11-02T16:17:29.37-07:00",
+      "Id": 81562
+    },
+    {
+      "Message": "Similar to http://typescript.codeplex.com/workitem/348",
+      "PostedDate": "2012-11-04T01:43:42.143-08:00",
+      "Id": 81600
+    },
+    {
+      "Message": "Thanks for reporting this issue! Marking it as 'Active' (to be fixed).",
+      "PostedDate": "2012-11-05T16:57:39.93-08:00",
+      "Id": 81727
+    }
+  ]
+}

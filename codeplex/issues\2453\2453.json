@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The spec says\n\n> Declaration merging also extends to internal module declarations with the same qualified name relative to a common root as a function, class, or enum declaration\n\nClass properties (this includes static functions) are not a function, class, or enum -- they're properties.\n\nAs for why this is the case, I have no idea. You might post on the Language Spec forum.",
+    "ClosedDate": "2014-04-21T10:34:46.633-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "This relates to section 10.5, Declaration Merging in the spec.\r\n\r\n(I'm not 100% sure this is a problem with the implementation, perhaps the spec needs to be clarified?)\r\n\r\n\r\n```typescript\r\nmodule Errors {\r\n\tclass X {\r\n\t\tstatic Q() { return 7; }\t\r\n\t}\r\n\t\t\r\n\tmodule X.Q { // <-- error here, Q already defined\r\n\t\texport var x = 100;\r\n\t}\r\n}\r\n\r\nmodule Workaround {\r\n\tclass X {\r\n\t}\r\n\t\r\n\tmodule X {\r\n\t\texport function Q() { return 7; } // <-- effectively the same as static Q() above\r\n\t}\r\n\t\r\n\tmodule X.Q { // <-- works\r\n\t\texport var x = 100;\r\n\t}\r\n}\r\n```",
+    "LastUpdatedDate": "2014-04-21T11:34:53.657-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-21T07:35:52.157-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "static members v.s. merged module members",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2453
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I accept this answer.\n\nThe following also produces an error (thankfully!!!), but I'll bet that someone else will want to do this:\n\n```typescript\nclass Extendable { }\n\nmodule Extenable.prototype {\n   export function mixinFunction() { ... }\n}\n\nnew Extendable().mixinFunction();\n```",
+      "PostedDate": "2014-04-21T11:34:53.657-07:00",
+      "Id": 142489
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-17T14:43:17.847-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm upgrading my project to 0.9.5 and have one remaining problem.\r\n\r\nI use both chai and sinon-chai for tests. The chai.d.ts file defines the module:\r\n```\r\ndeclare module 'chai' {\r\n\r\n    function expect(target: any): Expect;\r\n...\r\n    interface Expect extends LanguageChains, NumericComparison, TypeComparison, Assertions {\r\n...\r\n}\r\n```\r\nThe sinon-chai.d.ts extends chai's Expect object:\r\n\r\n```\r\ndeclare module 'chai' {\r\n    interface Expect {\r\n        called: Expect;\r\n        calledOnce: Expect;\r\n        calledTwice: Expect;\r\n...\r\n```\r\n\r\nWhen I compile I get the error:\r\n```\r\n1>C:\\XXX\\scripts\\node_modules\\sinon-chai\\lib\\sinon-chai.d.ts(8,16): error TS2191: Build: Ambient external module declaration cannot be reopened.\r\n```\r\n\r\nI've attached the two files.\r\n\r\nIn 0.9.1 the code compiled without error. \r\n\r\nHow can I solve this error?",
+    "LastUpdatedDate": "2014-03-31T16:15:35.943-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-16T15:40:21.147-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Error in project using chai.d.ts and sinon-chai.d.ts",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2024
+  },
+  "FileAttachments": [
+    {
+      "FileId": 768881,
+      "FileName": "Files.zip",
+      "DownloadUrl": ".\\768881"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Per the spec, external modules do not allow declaration merging (i.e. cannot be reopened and modified after declaration).  Looks like in 0.9.5 we fixed the bug that allowed this.\n\nGenerally we consider external modules to have a consistent shape/type.  It looks like here chai has a 'use' method where you can pass it another module (sinon-chai in this case) and it will augment itself.  We don't really have a mechanism to model this current.  Feel free to open a suggestion if you feel this is a feature we should consider.",
+      "PostedDate": "2013-12-17T14:43:12.26-08:00",
+      "Id": 127840
+    },
+    {
+      "Message": "I was also disappointed to see this got \"fixed\" in 0.9.5. I thought declaration merging was an intentional feature that accounted for the dynamic nature of javascript code and the way that some libraries behave.\n\nI was using the feature in an existing project, and had intended to use it in a new project.",
+      "PostedDate": "2014-02-11T09:22:37.257-08:00",
+      "Id": 133269
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-04T10:36:34-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Given this example: \r\n\r\n[\"a\", \"b\", \"c\"].map( v => this[v] = v );\r\n\r\nThe TypeScript output is:\r\n\r\n[\r\n    \"a\", \r\n    \"b\", \r\n    \"c\"\r\n].map(function (v) {\r\n    return _this[v] = v;\r\n});\r\n\r\n\r\nWhich throws a ReferenceError: _this is not defined.\r\n\r\n\r\nIn Traceur, the output is:\r\n\r\n[\"a\", \"b\", \"c\"].map((function(v) { \r\n  return traceur.runtime.elementSet(this, v, v); \r\n}).bind(this)); \r\n\r\n\r\nIgnoring the Traceur specific runtime call, the value is |this| is still correct (captured via bind()).\r\n\r\nIn another ticket, it was noted that bind() will be used whenever the target is explicitly ES5, so if this is supposed to be ES3-safe, I'd argue that you can't use [].map() in ES3. \r\n\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T13:05:06.013-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "ArrowFunction bound scope is wrong",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 43
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is a bug, but only occurs for code at the top-level.  Putting the code sample above inside a function, class, or module will correctly cause the \"var _this = this\" to be generated.  (aside: in practice, it should also be relatively rare to need to refer to global this inside a top-level lambda, since it normally has a better name bound globally, like 'window', but this is still a bug).\n",
+      "PostedDate": "2012-10-02T13:30:15.8-07:00",
+      "Id": 78345
+    },
+    {
+      "Message": "Luke, I agree that it's an edge case (and one that should be avoided), but the bound name is still `_this` and that will conflict with user code.\n\nShould I file a separate ticket for the bind() & map(), ES3 v ES5 thing?",
+      "PostedDate": "2012-10-02T13:57:14.36-07:00",
+      "Id": 78348
+    },
+    {
+      "Message": "Pushed fix to develop - http://typescript.codeplex.com/SourceControl/changeset/c9f97dd8d713",
+      "PostedDate": "2012-10-04T10:36:28.173-07:00",
+      "Id": 78576
+    },
+    {
+      "Message": "@jopamer Since I'm on OSX, I can't build any of the code so I can't run the develop branch tests locally... Does this also resolve the issue described here: http://typescript.codeplex.com/workitem/11 ? A cursory glance says no.",
+      "PostedDate": "2012-10-04T11:59:05.263-07:00",
+      "Id": 78588
+    }
+  ]
+}

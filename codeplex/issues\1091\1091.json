@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Correct, all triple slash references must be the first things in the file. While the lack of errors is unfortunate, at the moment since they are just comments it would be expensive to give a better error here without scanning the contents of every comment in every file in a project.",
+    "ClosedDate": "2013-05-30T18:45:18.95-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "We have about a hundred **.ts** files in our project and a dozen **.d.ts** files. On TypeScript 0.8.3 to handle the references we had a single file called **_references.d.ts** that listed all of the definition files in the order of dependency and made sure that it appeared before any other typescript items in the project's **.csproj** file.\r\n\r\n```\r\n<ItemGroup>\r\n  <TypeScriptCompile Include=\"Scripts\\_references.d.ts\" />\r\n  ...\r\n```\r\n\r\nThis way all references were resolved correctly without us having to add any references in any of the typescript source files. However, this doesn't seem to work anymore after upgrading to TypeScript 0.9.0.alpha. Right now it does not work even if we make a reference to **_references.d.ts** in every source file and have to go through all of them and include direct references to each definition file. This is going to be a pain, also I don't like this approach because we won't be able to know unused references in each .ts file and there's no easy way to clean them up. So my question is, is this pain by design, or is there any other way we can make the compiler happy about references?\r\n\r\nThanks!\r\n\r\n[Link to this question on StackOverflow](http://stackoverflow.com/questions/16825751/issue-with-references-upgrading-to-typescript-0-9-0-alpha)",
+    "LastUpdatedDate": "2013-05-30T18:45:18.95-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-30T10:00:30.09-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Issue with references upgrading to TypeScript 0.9.0.alpha",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1091
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think I found what was the problem. In our ___references.d.ts__ file, there was an Interface that was declared at the top of the file before any references. The compiler did not give any informative errors and just ignored those references (RED FLAG).\n\nSo all /// <reference path=\"...\" />'s need to come first in the file.\n",
+      "PostedDate": "2013-05-30T16:19:05.693-07:00",
+      "Id": 101733
+    }
+  ]
+}

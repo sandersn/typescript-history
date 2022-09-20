@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in the develop branch",
+    "ClosedDate": "2013-07-22T09:23:45.99-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The code below ran fine through the 0.8.3 compiler, but generates the error message:\r\n```\r\ntsc.js(38215, 13) Unable to get value of the property 'isError': object is null or undefined\r\n```\r\n\r\nwhen compiled with typescript 0.9.0.1\r\n\r\n```\r\ntsc.exe --target ES5 ts901isError.ts\r\n```\r\n\r\n```\r\ninterface Iterator\r\n{\r\n\tmoveNext() : boolean;\r\n\tcurrent: any;\r\n}\r\n\r\nclass Generator\r\n{\r\n\tconstructor(public iterator: () => Iterator)\r\n\t{}\r\n\r\n\tselect(f: (e) => any) : Generator\r\n\t{\r\n\t\treturn new Generator(() =>\r\n\t\t{\r\n\t\t\tvar i = this.iterator();\r\n\t\t\tvar c : any;\r\n\t\t\treturn {\r\n\t\t\t\tmoveNext: () =>\r\n\t\t\t\t{\r\n\t\t\t\t\tif (!i.moveNext())\r\n\t\t\t\t\t{\r\n\t\t\t\t\t\tc = undefined;\r\n\t\t\t\t\t\treturn false;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tc = f(i.current);\r\n\t\t\t\t\treturn true;\r\n\t\t\t\t},\r\n\t\t\t\tget current() { return c; }\r\n\t\t\t}\r\n\t\t});\r\n\t}\r\n}\r\n```\r\n\r\nSomehow the problem is hard to isolate, one fix is to separate the function that is passed to the constructor:\r\n\r\n```\r\ninterface Iterator\r\n{\r\n\tmoveNext() : boolean;\r\n\tcurrent: any;\r\n}\r\n\r\nclass Generator\r\n{\r\n\tconstructor(public iterator: () => Iterator)\r\n\t{}\r\n\r\n\tselect(f: (e) => any) : Generator\r\n\t{\r\n\t\treturn new Generator(() => generate(this.iterator()));\r\n\r\n\t\tfunction generate(i : Iterator)\r\n\t\t{\r\n\t\t\tvar c : any;\r\n\t\t\treturn {\r\n\t\t\t\tmoveNext: () =>\r\n\t\t\t\t{\r\n\t\t\t\t\tif (!i.moveNext())\r\n\t\t\t\t\t{\r\n\t\t\t\t\t\tc = undefined;\r\n\t\t\t\t\t\treturn false;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tc = f(i.current);\r\n\t\t\t\t\treturn true;\r\n\t\t\t\t},\r\n\t\t\t\tget current() { return c; }\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n```",
+    "LastUpdatedDate": "2013-07-22T09:23:45.99-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-22T09:04:01.303-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "tsc.js(38215, 13) Unable to get value of the property 'isError': object is null or undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1378
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:24:18.49-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "'use strict' placed at the beginning of external module definition should be placed inside the generated define function.\r\n\r\nFor example, repeater.ts:\r\n```\r\n'use strict';\r\n\r\nimport Component = require('../Component');\r\n\r\nclass Repeater extends Component {\r\n  // ...\r\n```\r\n\r\nResults in this JS code:\r\n```\r\n'use strict';\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\ndefine([\"require\", \"exports\", '../Component'], function(require, exports, Component) {\r\n    var Repeater = (function (_super) {\r\n        __extends(Repeater, _super);\r\n```\r\n\r\nNote that 'use strict' was moved at the top of the file but it should be placed inside the function like that:\r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\ndefine([\"require\", \"exports\", '../Component'], function(require, exports, Component) {\r\n    'use strict';\r\n    var Repeater = (function (_super) {\r\n        __extends(Repeater, _super);\r\n```\r\n\r\nI'm using latest typescript compiler (0.9.5). I've checked that even if class doesn't extend anything the 'use strict' is still propagated to the top of the file level.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-10T11:54:20.963-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "use strict is placed outside module definition",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2003
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. This shouldn't have any consequences in practice unless you are manually concatenating stuff to the JS afterwards but strictly speaking (no pun intended) it should be inside the module as you noted.",
+      "PostedDate": "2013-12-12T11:25:47.167-08:00",
+      "Id": 127147
+    },
+    {
+      "Message": "Unfortunately I'm concatenating all scripts into one file but that's not a very important issue. It just seemed... not _correct_ :)",
+      "PostedDate": "2013-12-12T12:13:21.317-08:00",
+      "Id": 127160
+    }
+  ]
+}

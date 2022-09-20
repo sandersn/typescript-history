@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks - I'll make sure we have a regression test in place just in case.",
+    "ClosedDate": "2012-11-06T14:57:08.053-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Given the code\r\n\r\nvar f = function (...args: any[]) { return args }\r\n\r\n`f` is currently inferred to have the type `(args: any[]) => any[]`, which is incorrect. \r\n\r\nThe correct type is `(...args: any[]) => any[]`.\r\n\r\nNon-anonymous functions like\r\n\r\nfunction g (...args: any[]) { return args }\r\n\r\nbehave like expected.",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-11T13:30:42.197-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Wrong type is inferred for anonymous function with varargs",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 235
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This looks to be fixed in recent builds:\n\nvar f = function (...args: any[]) { return args };\nf(4, 3, 2); // Works\n\r\n\r** Closed by RyanCavanaugh 10/15/2012 12:39PM",
+      "PostedDate": "2012-10-15T12:39:10.457-07:00",
+      "Id": 80670
+    },
+    {
+      "Message": "Re-opening. This is what I get with the latest version from Git:\n\ncat <<EOF > test.ts\nvar f = function (...args: any[]) { return args }\nfunction g (...args: any[]) { return args }\nEOF\ntsc --declarations test.ts\ncat test.d.ts\n\nOutput:\n\nvar f: (args: any[]) => any[];\nfunction g(...args: any[]): any[];\n\nNote the missing ellipsis!",
+      "PostedDate": "2012-10-22T10:45:24.533-07:00",
+      "Id": 80671
+    },
+    {
+      "Message": "I'm still not able to reproduce this:\n\nD:\\>type b.ts\nvar f = function (...args: any[]) { return args }\nfunction g (...args: any[]) { return args }\n\nD:\\>tsc b.ts --declaration\n\nD:\\>type b.d.ts\nvar f: (...args: any[]) => any[];\nfunction g(...args: any[]): any[];\n\nSame story if I run using 'node'. Can you confirm which commit you're synced up to (in the 'develop' branch), and maybe upload the test.ts file you're using to reproduce the issue? Thanks!",
+      "PostedDate": "2012-10-22T15:43:40.32-07:00",
+      "Id": 80706
+    },
+    {
+      "Message": "I'm using exactly the same source code as you for testing, yet get a different result. I must conclude I must be doing something wrong with regards to version control. Git says I'm on the develop branch with commit 45731d9e78f9ec85bf28887b1096a7ae99d6b02a which should be OK. Is there any chance that bin/tsc.js is out of date in the repository? (I'm not on a Windows system so the Makefile doesn't work for me and I can't rebuild myself.) Anyway, feel free to close this issue; I trust your judgment. I'll just wait for next stable release which I should be able to handle. :-) Sorry for taking your time.",
+      "PostedDate": "2012-10-23T13:30:25.59-07:00",
+      "Id": 80795
+    }
+  ]
+}

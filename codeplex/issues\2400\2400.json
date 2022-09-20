@@ -1,0 +1,105 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:16:13.4-07:00",
+    "CommentCount": 13,
+    "Custom": null,
+    "Description": "hello...\r\n\r\ni just upgraded to TS 1.0 and ran into a couple of strange compiler errors: \r\n\r\nError\tBuild: Could not select overload for 'new' expression.\t\r\nError\tBuild: Supplied parameters do not match any signature of call target.\r\n\r\nwhat's strange about these errors is that they don't appear with the previous TS version (.9.7)... and also i can't figure out what the problem is with the code... it looks like the compiler does not like the arguments being passed to the constructor function... i'll try to summarize here...\r\n\r\nconstructor signature for EstimateGridViewModel class:\r\n     constructor(seasonQuarters: Array<dm.Period>, estimate: dm.Estimate, sellingTitle: projections.SellingTitleListItem,\r\n            estimatePeriodPrograms: Array<prj.EstimatePeriodProgram>, estimatePeriodProgramDemos: Array<prj.EstimatePeriodProgramDemo>,\r\n            demoFormulas: projections.DemoFormulaHierarchy[], estimateUniverseDemos: collections.Dictionary<number, number>)\r\n\r\nconstructor call:\r\n     this.gridModel = new EstimateGridViewModel(this._seasonQuarters, this.model, this.sellingTitle, this._estimatePeriodPrograms, this._estimatePeriodProgramDemos, this._demoFormulas, this._estimateUniverseDemos);\r\n\r\ni have double checked numerous times and made sure that the argument types being passed in match the constructor's parameter types... again, this is working with the previous version of TS... so what i then did is cast all the args to <any>...\r\n\r\n     this.gridModel = new EstimateGridViewModel(<any>this._seasonQuarters, <any>this.model, <any>this.sellingTitle, <any>this._estimatePeriodPrograms, <any>this._estimatePeriodProgramDemos, <any>this._demoFormulas, <any>this._estimateUniverseDemos);\r\n\r\nbut even then i continue getting the same error... any ideas???? i saw another issue today that although similar may or may not be related... https://typescript.codeplex.com/workitem/2399... thank you\r\n\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-07T08:53:48.57-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "strange error after upgrading to 1.0: Could not select overload for 'new' expression",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 6,
+    "Id": 2400
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is affecting us to move to 1.0. PLease fix. Thanks!",
+      "PostedDate": "2014-04-07T09:05:21.507-07:00",
+      "Id": 140821
+    },
+    {
+      "Message": "This issue is blocking us from upgrade. Please fix it. thanks, VS",
+      "PostedDate": "2014-04-07T09:18:39.94-07:00",
+      "Id": 140825
+    },
+    {
+      "Message": "hello ryan... thank you for your response...\n\nwell, 2399 seems to be an issue related to function overloading... the issue i described above however is not at all related to function overloading... the only reason issue 2399 caught my attention is that #1) the error messages are similar and #2) they both exhibit errors that were not present in the previous version of TS... but that's really where the similarities end the differences begin... in my case as i noted above i have a situation whereby the compiler does not like the args i am passing to a constructor... there is no overloading involved here i think... i have a class with a parameterized constructor... i have another class that creates an instance of this class passing args to the constructor... and that's where the problem is... it may be difficult getting you self contained repro sample... my guess is that if this issue were that simple to repro, it would not be an issue... can i send you the sourcecode somehow? that i think i can arrange... it's alot of code... thank you",
+      "PostedDate": "2014-04-07T13:36:27.207-07:00",
+      "Id": 140866
+    },
+    {
+      "Message": "Can you look at issue 2399 and determine if this is the same issue you're seeing?\n\nIf not, we'll need more context here to understand what the problem might be. If you can reduce it to a self-contained example that would be ideal.\n\r\n\r** Closed by RyanCavanaugh 04/07/2014 11:00AM",
+      "PostedDate": "2014-04-07T11:00:12.67-07:00",
+      "Id": 140867
+    },
+    {
+      "Message": "Can you email me your code? ryanca@microsoft.com. Thanks!",
+      "PostedDate": "2014-04-07T13:52:12.197-07:00",
+      "Id": 140869
+    },
+    {
+      "Message": "FYI: I tried typing out a \"shell\" of this here: http://goo.gl/uJrZ0l\nBut no errors.  There's obviously more going on I guess.",
+      "PostedDate": "2014-04-07T14:03:36.993-07:00",
+      "Id": 140872
+    },
+    {
+      "Message": "thanks ryan... i have sent the code over\n\nthanks jamesnw for your effort... ",
+      "PostedDate": "2014-04-07T15:02:22.873-07:00",
+      "Id": 140886
+    },
+    {
+      "Message": "After much gnashing of teeth, we have a distilled version:\n\n```\n// Minimal repro? :(\nmodule estimates {\n    function doNothingWith<T>(n: T) { }\n    function randomFunc() {\n        doNothingWith(estimates);\n    }\n\n    function elsewhere() {\n        // Error, but shouldn't be: Can't select overload\n        var t = new ClassInOtherFile(3);\n    }\n\n    export class ClassInOtherFile {\n        constructor(arg: number) { }\n    }\n} \n```",
+      "PostedDate": "2014-04-07T16:41:49-07:00",
+      "Id": 140897
+    },
+    {
+      "Message": "\"doNothingWith(estimates);\" is not legal - modules are not types.  Comment out that line and it works.",
+      "PostedDate": "2014-04-07T17:48:52.133-07:00",
+      "Id": 140902
+    },
+    {
+      "Message": "Side note: There SHOULD be an error - the problem here is the error is in the wrong place, and gives the wrong message.  That said, modules are \"objects\", so you can still do this: \"doNothingWith(<any>estimates);\" (you cannot infer types from modules, but you can force the expected type with a cast)",
+      "PostedDate": "2014-04-07T17:52:15.913-07:00",
+      "Id": 140903
+    },
+    {
+      "Message": "`doNothingWith(estimates)` is perfectly legal (we're not writing `doNothingWith<estimates>()`). The fact that their type is anonymous is not relevant to whether they can be used in generic type inference positions.\n\nNote that re-ordering this file makes the error go away.",
+      "PostedDate": "2014-04-07T20:55:03.387-07:00",
+      "Id": 140916
+    },
+    {
+      "Message": "Oh, I thought \"doNothingWith<T>(n: T) \" would not be allowed to infer the type of a MODULE. :) (thought I guess it does become an object).  I just remembered that TS was changing focus from module being types - but I guess a module is still of type \"object\" in JS.",
+      "PostedDate": "2014-04-08T01:09:02.813-07:00",
+      "Id": 140928
+    },
+    {
+      "Message": "Apparently adding a cast at ```doNothingWith(<any>estimates)``` prevents the type of estimates from being prematurely resolved at that point, so the error goes away.\n\nNot ideal, but maybe a good workaround until early/forced type resolutions work?",
+      "PostedDate": "2014-04-08T12:15:37.777-07:00",
+      "Id": 140999
+    }
+  ]
+}

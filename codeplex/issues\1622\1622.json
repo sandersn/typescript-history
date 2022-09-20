@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.453-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I would like to see support for the `const` keyword - seems pretty basic, and I was kind of surprised to find this isn't supported already, and that nobody posted a request for this feature yet? (if it has been requested, I was unable to find the issue.)\r\n\r\nNote that this is not a duplicate of [#879](https://typescript.codeplex.com/workitem/879) which proposes to resolve the literal values at run-time - that idea produces two undesirable constraints: it obfuscates the code for consumers of the generated JavaScript, and it prevents you from using constants of non-scalar types, e.g. constant objects, which can't be inserted as literal values for every reference.\r\n\r\nWhat I was expected is basically just what [Jon Turner mentioned on the forums](https://typescript.codeplex.com/discussions/442412#PostContent_1041880) (\"a simple constant where we verify that it's never assigned to\"), e.g. basic support for [ES.next style const](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const) but with the addition of compile-time checking and (optional) typing:\r\n\r\n    const VALUE = 'foo';\r\n    const NUMBER: number = 123;\r\n\r\nFor all intents and purposes, the `const` I'm suggesting is identical to `var`, and the compiled output would be identical, e.g.:\r\n\r\n\tmodule Foo\r\n\t{\r\n\t\texport var A: number = 123;\r\n\t\texport var B: number = 123;\r\n\t}\r\n\r\nCompiles to:\r\n\r\n\tvar Foo;\r\n\t(function (Foo) {\r\n\t    Foo.A = 123;\r\n\t    Foo.B = 123;\r\n\t})(Foo || (Foo = {}));\r\n\r\nI believe this is in tune with how the JS community at large does \"constants\" currently, as indicated by the existing [JSDoc `@const` annotation](http://usejsdoc.org/tags-constant.html) which also should be supported by TypeScript.\r\n\r\nJon Turner did also state on the forum thread reference above, that \"if it gets into ES6 ... TS will adopt it (though likely after 1.0)\" - in my opinion, the JS community uses constants now, and the TS community should not have to wait for the ES6 release.\r\n\r\nWhen targeting ES5 with the compiler, there is no reason not to support the current JS community pseudo-constant pattern - according to Mozilla, \"Constants follow the same scope rules as variables\", so there should be no problems supporting this now for the ES5 target with the compiler.\r\n\r\nThe ES5 target will need to handle the `const` keyword eventually, somehow - and you would need a *very* good reason to divert from the established JS community pattern.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-30T05:38:59.84-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support for constants (const keyword)",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 45,
+    "Id": 1622
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "See also [this forum thread](https://typescript.codeplex.com/discussions/397633) for some related discussion.\n",
+      "PostedDate": "2013-08-30T06:02:10.143-07:00",
+      "Id": 111670
+    },
+    {
+      "Message": "Thanks for the suggestion, assigning to Jon who handles suggestions.",
+      "PostedDate": "2013-08-30T10:31:04.333-07:00",
+      "Id": 111699
+    },
+    {
+      "Message": "I recommend that the compiled output will use Object.freeze, so for:\n```\nconst xxx = 'value';\n```\n\nit will result with the compiled:\n```\n\nvar xxx = 'value';\nObject.freeze(xxx);\n```\n\nin addition to checking by the compiler that no assignment to xxx is ever being made.\n",
+      "PostedDate": "2014-06-16T01:31:41.597-07:00",
+      "Id": 149804
+    }
+  ]
+}

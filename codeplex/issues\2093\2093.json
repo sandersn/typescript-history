@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:33:45.007-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Using import aliases (import X = Y) doesn't count as \"usage\" for the analysis of used dependencies.\r\n\r\nSteps to reproduce:\r\n\r\nA.ts\r\n``` TypeScript\r\nexport class A {\r\n}\r\n```\r\n\r\nB.ts\r\n``` TypeScript\r\nimport a = require('./A');\r\n\r\nimport A = a.A;\r\n\r\nexport = A;\r\n```\r\n\r\nCompiling B.ts with tsc --module amd results in this JavaScript.\r\n\r\nB.js\r\n``` JavaScript\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n    var A = a.A;\r\n\r\n    \r\n    return A;\r\n});\r\n```\r\n\r\nNote that reference to A is missing.\r\n\r\nAdding explicit variable in B.ts helps:\r\n``` TypeScript\r\nimport a = require('./A');\r\n\r\nimport A = a.A;\r\na;\r\nexport = A;\r\n```\r\n\r\nNow reference is added correctly:\r\n``` JavaScript\r\ndefine([\"require\", \"exports\", './A'], function(require, exports, a) {\r\n    var A = a.A;\r\n    a;\r\n    \r\n    return A;\r\n});\r\n```\r\n\r\nTested in tsc version 0.9.5.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-12T11:10:08.83-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Import dependency omitted when using import alias",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2093
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think that this discussion may be related:\n\nhttps://typescript.codeplex.com/discussions/535977\n\n",
+      "PostedDate": "2014-03-04T11:43:08.263-08:00",
+      "Id": 135813
+    }
+  ]
+}

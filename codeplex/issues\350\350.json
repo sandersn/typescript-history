@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. The rule here is that the type of Foo.bar must be a subtype of the type of IFoo.bar; functions that take fewer parameters are subtypes of functions that take more parameters (assuming the extant parameters and return types are compatible). See section 3.6.2 of the spec.",
+    "ClosedDate": "2012-10-31T10:57:40.68-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The function parameters are not being enforced on a class that implements an interface.\r\n\r\nIn the following example, class Foo is accepted as implementing interface IFoo with no warnings or errors, even though it omits the baz parameter.\r\n\r\ninterface IFoo{\r\n    bar(baz : string) : void;\r\n}\r\n\r\nclass Foo implements IFoo {\r\n    bar() {\r\n\r\n    }\r\n}\r\n\r\nvar a: Foo = new Foo();\r\n\r\nvar b: IFoo = new Foo();\r\n\r\na.bar(\"Test\");\r\nb.bar(\"Test\");\r\n",
+    "LastUpdatedDate": "2014-01-05T13:56:33.63-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-31T02:11:50.397-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Interface Function Parameter Not Enforced",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 350
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think I get it.\n\nJust to clarify, this is because calling code that passes the argument actually won't be broken by this right?\n\ni.e. you can pass arguments in JavaScript even when they aren't required without affecting behaviour - so if an implementation could perform the operation without the parameter it could decide to omit it without changing code that used an old implementation that did need a parameter.\n\nI think I can understand why you would do it this way.\n\nThanks\n\n\n",
+      "PostedDate": "2012-10-31T15:37:32.113-07:00",
+      "Id": 81385
+    },
+    {
+      "Message": "@RyanCavanaugh confused about what you mean by \"assuming the extant parameters are compatible\" The parameters in the below implementation are not compatible in my opinion but the compiler gives no error: \n\n```\ninterface IFoo {\n    explode: (string, number) => bool;\n}\n\n// This is a valid interface implementation:  \nclass Foo implements IFoo {\n\t// same number of parameters with different types \n    explode(x:number,y:string) { return true;}   \n}\n\n```",
+      "PostedDate": "2013-04-08T16:41:20.453-07:00",
+      "Id": 96434
+    },
+    {
+      "Message": "'explode' has two 'any' parameters named 'string' and 'number'. 'Foo' implements it with a compatible signature.",
+      "PostedDate": "2013-08-13T14:05:01.307-07:00",
+      "Id": 109715
+    },
+    {
+      "Message": "I strongly urge you to reconsider this design. Now function definitions in classes and function definitions behave differently and that is very surprising.\n\nIn my opinion \n\nbar() {\n}\n\nshould only be allowed if the interface definition allows it like this:\n\ninterface IFoo{\nbar(baz? : string) : void;\n} \n\nWhy have the choice to enforcement exact argument count matches one place and not give the choice of enforcing in other places? It is very surprising since I relied on it being consistently enforced as I was used to in \"regular\" functions.",
+      "PostedDate": "2014-01-05T13:56:33.63-08:00",
+      "Id": 129139
+    }
+  ]
+}

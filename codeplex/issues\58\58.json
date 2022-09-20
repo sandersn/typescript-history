@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-03T14:05:36.947-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Not sure if this is just my inability to understand the language specification or a bug in the implementation. Given this code:\r\n\r\ninterface Person {\r\n    name: string;\r\n}\r\n\r\nclass Student {\r\n    constructor(public name:any) {}\r\n}\r\n\r\nfunction greeter(person: Person) {\r\n    return \"Hello \" + person.name;\r\n}\r\n\r\nconsole.log(greeter(new Student({})));\r\n\r\nI expect when I run the typescript compiler on it to be told that the Student type is incompatible with the required Person interface, because there's no guarantee that the \"name\" field is a string. However, it type checks fine:\r\n\r\nC:\\Users\\Tim Monks\\scratch>tsc testcase.ts\r\n\r\nC:\\Users\\Tim Monks\\scratch>node testcase.js\r\nHello [object Object]\r\n\r\nChanging this slightly, if you say that 'Student implements Person' in the definition for Student, tsc does report a type error:\r\n\r\nclass Student implements Person {\r\n    constructor(public name:any) {}\r\n}\r\n\r\nC:\\Users\\Tim Monks\\scratch>tsc testcase.ts\r\nC:/Users/Tim Monks/scratch/testcase.ts(5,0): Class 'Student' declares interface 'Person' but does not implement it: Types of property 'name' of types 'Student' and 'Person' are incompatible\r\n\r\nMy expectation is that I should see this error message when trying to compile the original code snippet.",
+    "LastUpdatedDate": "2012-10-03T14:05:36.947-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T06:35:34.67-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Structural type checking at call site considers members with \"any\" type to satisfy a requirement for a field with a type other than \"any\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 58
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "On a totally unrelated note, it would also be great if it were at all possible/clear how to put code snippets into issues so that they weren't stripped of indentation!",
+      "PostedDate": "2012-10-03T06:37:11.283-07:00",
+      "Id": 78409
+    },
+    {
+      "Message": "This is indeed the intended behavior.  Per section 3.6.3 of the spec, 'any' is bi-directionally assignment compatible with any other type, so Student will satisfy the assignment constraint set forth by Person.  However, any is not a subtype of any other type, so the inheritance case won't work.\n\nAlso - agreed about the indentation.  I'll follow up with the CodePlex team.\n\nThanks!\n\n",
+      "PostedDate": "2012-10-03T14:05:32.57-07:00",
+      "Id": 78478
+    }
+  ]
+}

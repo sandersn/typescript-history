@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The implementation signature does not count as an overload signature. Consider how calling 'on' looks given your current definition. You'll see the completion list only has a single overload with an 'event' parameter of type \"foo\". There must also be an overload where 'event' is of type string or any. Then you write your implementation signature however you want.",
+    "ClosedDate": "2014-07-01T15:45:22.45-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Using tsc Version 1.0.1.0:\r\n\r\n``` TypeScript\r\ninterface Handler\r\n{\r\n    ( event: number ): void;\r\n}\r\n\r\nclass Base\r\n{\r\n    // error TS2154: Specialized overload signature is not assignable to any non-specialized signature.\r\n    on( event: \"foo\", handler: Handler ): void;\r\n    on( event, handler ): void\r\n    {\r\n    }\r\n}\r\n```",
+    "LastUpdatedDate": "2014-10-29T16:24:51.06-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-01T12:39:31.55-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Overloading on string constants does not seem to work on classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2597
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks. I was missing that subtlety.",
+      "PostedDate": "2014-07-01T16:24:40.433-07:00",
+      "Id": 151307
+    },
+    {
+      "Message": "For anyone else who is wondering what this looks like in practise:\n\n```\nclass Base\n{\n    // error TS2154: Specialized overload signature is not assignable to any non-specialized signature.\n    on( event: \"foo\", handler: Handler ): void;\n    on( event, handler ): void;\n    on( event, handler ): void;\n    {\n\n    }\n}\n```",
+      "PostedDate": "2014-10-29T16:22:57.307-07:00",
+      "Id": 163583
+    },
+    {
+      "Message": "Sorry, made a mistake in my last post... is there an edit option?\n\n```typescript\nclass Base\n{\n    on( event: \"foo\", handler: Handler ): void; // specialized signature\n    on( event:string, handler: Handler ): void; // default signature\n    on( event:string, handler: Handler ): void // implementation\n    {\n        // implementation\n    }\n}\n```",
+      "PostedDate": "2014-10-29T16:24:51.06-07:00",
+      "Id": 163584
+    }
+  ]
+}

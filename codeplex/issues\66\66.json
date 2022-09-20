@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.47-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The code:\r\n\r\nfunction sum (...numbers: number[]) {\r\n  var sum = 0;\r\n  for (var i = 0; i < numbers.length; i++) {\r\n    sum += numbers[i];\r\n  }\r\n  return sum;\r\n}\r\n\r\nCurrently compiles to:\r\n\r\nfunction sum() {\r\n    var numbers = [];\r\n    for (var _i = 0; _i < (arguments.length - 0); _i++) {\r\n        numbers[_i] = arguments[_i + 0];\r\n    }\r\n    var sum = 0;\r\n    for(var i = 0; i < numbers.length; i++) {\r\n        sum += numbers[i];\r\n    }\r\n    return sum;\r\n}\r\n\r\nBut, this isn't necessary, as the rest parameter is used only as an array.  In the case above a better output would look like:\r\n\r\nfunction sum () {\r\n  var sum = 0;\r\n  for (var i = 0; i < arguments.length; i++) {\r\n    sum += arguments[i];\r\n  }\r\n  return sum;\r\n}\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T08:30:39.533-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Optimize idiomatic rest parameters",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 8,
+    "Id": 66
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "While I definitely agree that certain optimizations can and should be made, the optimization you're looking for here would require special casing which itself would incur maintenance costs. A more broader optimization would be to use this pattern:\n\n// TypeScript\nfunction sum() {\nvar numbers = Array.prototype.slice.call(arguments, 0); // 0 changes with the position of the rest param\nvar sum = 0;\nfor (var i = 0; i < numbers.length; i++) {\n  sum += numbers[i];\n}\nreturn sum;\n}",
+      "PostedDate": "2012-10-03T10:29:28.903-07:00",
+      "Id": 78445
+    },
+    {
+      "Message": "Thanks rwaldron.  The approach you're advocating is one that we've discussed for a while.  I'm assigning this over to Mohamed to take a look.",
+      "PostedDate": "2012-10-03T13:56:54.963-07:00",
+      "Id": 78475
+    },
+    {
+      "Message": "Back to Jonathan to put this in a definitive state",
+      "PostedDate": "2013-01-28T17:10:04.93-08:00",
+      "Id": 87607
+    },
+    {
+      "Message": "I brought up a similar issue months ago.  I think a simple fix would simply be to never output the first loop if the parameter variable is never accessed.  For instance, if I only access \"arguments\", no other code would (nor should) be output.\n\nNO: SLICE is NOT a good idea: http://jsperf.com/loop-arguments-vs-native-slice\nThe JIT compiled loop is faster than the call overhead to \"slice()\".",
+      "PostedDate": "2014-03-31T18:18:31.733-07:00",
+      "Id": 140131
+    }
+  ]
+}

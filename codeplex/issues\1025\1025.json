@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please track #2 with the linked work item. Thanks!",
+    "ClosedDate": "2013-05-13T10:04:06.453-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I understand that TypeScript has jQuery support.  However, I have been using Dojo with TypeScript with pretty good success.  There are a few quirks to get around TypeScript issues, but most of them can be resolved via creating definition files for the verious API's.  Others can wait for full generics support in the up-coming version.\r\n\r\nAs one of the premier libraries for building large-scale cross-browser web-apps, Dojo seems to be a great fit for TypeScript.  However, a few nagging things prevent easy integration of Dojo with TypeScript.\r\n\r\n__Nagging Issue #1__\r\nDojo uses RequireJS-style AMD module definitions instead of CommonJS-style.  It __demands__ returning an object for each module in addition to putting it into \"exports\" (which is optional).  If there is a way to add an option to the TypeScript compiler causing it to emit RequireJS-style AMD modules:\r\n\r\n```\r\nxxx.js:\r\n\r\ndefine([ ... dependencies ...], function(x, y, ...) {\r\n    return { foo: ..., bar: ..., baz: ... };\r\n});\r\n```\r\nthen we can use ```import xyz = module(\"xyz\")``` instead of falling back to Dojo's ```require``` structure and eliminate one level of code indentation.  This makes code much cleaner and conformant to TypeScript lingo, but I can't find a way to get it to work under the current TypeScript compiler.\r\n\r\n__Nagging Issue #2__\r\nDojo has a configuration system that allows it to load AMD modules from multiple paths depending on prefix.  Therefore, module files can reside in multiple locations.\r\n\r\nShort of writing numerous .d.ts files, one corresponding to one Dojo module and rebuilding the Dojo directory structure, it is not easy to simply \"require\" standard Dojo modules because TypeScript will complain that the module does not exist in the current path -- although the lack of RequireJS-style AMD structure makes it a moot point at this time (see Issue #1).\r\n\r\nThus, it is not easy to simply write a massive dojo.d.ts for inclusion without rebuilding the Dojo tree structure.  An feature in the compiler to remap module paths, or to disable checking module file existence will help a great deal here!\r\n\r\n\r\nSorry for writing such a long one, but I can see TypeScript having great fit with Dojo!\r\n",
+    "LastUpdatedDate": "2013-08-13T09:59:23.99-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-12T20:16:20.107-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "TypeScript and Dojo AMD style",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1025
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I've logged #2 as a separate issue (we need to track these independently) at https://typescript.codeplex.com/workitem/1030",
+      "PostedDate": "2013-05-13T09:59:44.98-07:00",
+      "Id": 100074
+    },
+    {
+      "Message": "Issue #1 is resolved with the 'export =' feature (in latest sources, but not in any release yet):\n\n__a.ts__\n```\nclass foo { }\nclass bar { }\n\nvar mod = { f: foo, b: bar };\nexport = mod;\n```\n\n__a.js__\n```\ndefine([\"require\", \"exports\"], function(require, exports) {\n    var foo = (function () {\n        function foo() {\n        }\n        return foo;\n    })();\n    var bar = (function () {\n        function bar() {\n        }\n        return bar;\n    })();\n\n    var mod = { f: foo, b: bar };\n\n    return mod;\n});\n```",
+      "PostedDate": "2013-05-13T10:03:49.387-07:00",
+      "Id": 100076
+    },
+    {
+      "Message": "Wonderful!  This 'export =' feature will help greatly!\n\nIn many AMD loaders, it is not really necessary to pull in \"require\" and \"exports\".  Is it possible to put add a switch to disable these two standard imports to simplify the generated JavaScript code?\n\nThanks!\n",
+      "PostedDate": "2013-05-13T20:18:58.877-07:00",
+      "Id": 100123
+    },
+    {
+      "Message": "Feel free to log a separate suggestion for that one. Thanks!",
+      "PostedDate": "2013-08-13T09:59:23.99-07:00",
+      "Id": 109631
+    }
+  ]
+}

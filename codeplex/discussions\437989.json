@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1021080",
+    "ThreadId": "437989",
+    "Html": "As I am using TypeScript I am running into the &quot;this&quot; issue more often.\r<br />\n<br />\nEach time I hit this problem, I rewrite my functions as declarations, and then code the functions in the constructor using a lambda expression () =&gt;. This then prompts the TypeScript compiler to create the _this reference and fix the binding.\r<br />\n<br />\nThe problem is that it seems my code is now trending toward a class with a massive constructor, containing all the code, and a bunch of declarations. Is this how it is supposed to be? Is this what others are finding?\r<br />\n<br />\nOr is there a better way? Am I falling into an anti-pattern here?<br />\n",
+    "PostedDate": "2013-03-26T00:46:13.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021113",
+    "ThreadId": "437989",
+    "Html": "Curious to see some code to work out why this is happening for you. We've a massive TypeScript code base here (hundreds of methods across lots of classes) and have never had to do this once (aside from when handling the response of an event listener). Maybe this could be better answered with some code shown?<br />\n",
+    "PostedDate": "2013-03-26T02:12:31.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1021125",
+    "ThreadId": "437989",
+    "Html": "A lot of my code is calling back to a webapi to get data, and also posting changes to the same. Each time I do this I have a callback mechanism, which changes scope, so requires a lambda method. If I try to structure my code in separate methods I end up writing more lambdas in the ctor..\r<br />\n<br />\nExample:<br />\n<pre><code>   \n  export class CallRateWithName {\n\n        CallRateID = ko.observable(0);\n        CallRateDefinitionID = ko.observable(0);\n        RateName = ko.observable(&quot;&quot;);\n        Rate = ko.observable();\n\n        EditSave: () =&gt; void;\n\n        // META for withholding data\n        meta = function () { };\n\n\n        SaveComplete: () =&gt; void;\n\n        Editing = ko.observable(false);\n\n        SetOriginal: ()=&gt; void;\n\n        RevertToOriginal: () =&gt; void;\n\n        EditStart() { this.Editing(true); }\n        EditCancel() {\n            this.Editing(false);\n            this.RevertToOriginal();\n        }\n\n\n        constructor(data: any) {\n            AnvilJS.Utils.CopyProperties(data, this);\n\n            this.SetOriginal = () =&gt; {\n                (&lt;any&gt;this.meta).Original = ko.observable(this.Rate());\n            };\n            this.RevertToOriginal = () =&gt; {\n                this.Rate((&lt;any&gt;this.meta).Original());\n            };\n\n            //save original rate\n            this.SetOriginal();\n\n            this.SaveComplete = () =&gt; { \n                alert(&quot;saved&quot;);\n                this.Editing(false);\n            };\n\n            this.EditSave = () =&gt; {\n                //alert(&quot;Sorry, not implemented&quot;);\n                var data = ko.toJS(this);\n                delete data.EditSave;\n                AnvilJS.api.CustomerRates.ChangeCustomerRate(data,\n                    this.SaveComplete,\n                    (error) =&gt; {\n                        this.EditCancel();\n                        alert(error);\n                        //throw error;\n                    });\n            }\n\n        }\n</code></pre>\n\nIn plan JS one generally creates a _this or a <em>self</em> variable and reference this within the functions to ensure the correct scope. Except you can't (that I know of) do this in typescript since all variables have to be accessed via 'this'.<br />\n",
+    "PostedDate": "2013-03-26T02:46:42.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022055",
+    "ThreadId": "437989",
+    "Html": "@Quango<br />\n<br />\nThat code is sure far from what you would do normally.<br />\nI am guessing you have an API that calls your methods from outside but from a different context so 'this' is broken?<br />\n<br />\nWhat you can do instead is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nexternal <span style=\"color:Blue;\">class</span> MyClass {\n    <span style=\"color:Blue;\">public</span> SaveComplete;\n\n    <span style=\"color:Blue;\">constructor</span>() {\n        <span style=\"color:Blue;\">this</span>.SaveComplete = () =&gt; <span style=\"color:Blue;\">this</span>.InternalSaveComplete();\n    }\n\n    <span style=\"color:Blue;\">private</span> InternalSaveComplete() {\n        <span style=\"color:Green;\">// this now refer to our class as we changed scope above.</span>\n        <span style=\"color:Green;\">// so you can place the implementation here.</span>\n    }\n}\r\n</pre></div><a href=\"http://www.typescriptlang.org/Playground/#src=class%20Context%20%7B%0A%09name%20%3D%20%22Context%22%3B%0A%20%20%20%20constructor(right%2C%20wrong)%20%7B%0A%09%09%0A%09%09right.onclick%20%3D%20()%3D%3Ethis.OnClickLambda()%3B%0A%09%09wrong.onclick%20%3D%20this.OnClickDirectly%3B%0A%20%20%20%20%7D%0A%09%0A%20%20%20%20private%20OnClickDirectly()%20%7B%0A%09%09var%20elm%20%3D%20document.createElement('div')%3B%0A%09%09elm.innerText%20%3D%20%22Directly%20binding%20on%20click%20was%20called%20from%20%22%20%2B%20this.name%0A%09%09document.body.appendChild(elm)%3B%0A%09%7D%0A%09%0A%09private%20OnClickLambda()%20%7B%0A%09%09var%20elm%20%3D%20document.createElement('div')%3B%0A%09%09elm.innerText%20%3D%22Lambda%20binding%20on%20click%20was%20called%20from%20%22%20%2B%20this.name%3B%0A%09%09document.body.appendChild(elm)%3B%0A%09%7D%0A%7D%0A%0A%0Avar%20rightButton%20%3D%20document.createElement('button')%3B%0ArightButton.innerText%20%3D%20%22Right%20Button%22%3B%0A(%3Cany%3ErightButton).name%20%3D%20%22Button%22%3B%0A%0Avar%20wrongButton%20%3D%20document.createElement('button')%3B%0AwrongButton.innerText%20%3D%20%22Wrong%20Button%22%3B%0A(%3Cany%3EwrongButton).name%20%3D%20%22Button%22%3B%0A%0A%0Avar%20greeter%20%3D%20new%20Context(rightButton%2CwrongButton)%3B%0A%0Adocument.body.appendChild(rightButton)%3B%0Adocument.body.appendChild(wrongButton)%3B\" rel=\"nofollow\">Example of different bindings</a><br />\n",
+    "PostedDate": "2013-03-27T14:36:27.383-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022247",
+    "ThreadId": "437989",
+    "Html": "Ah! that sounds like a much better approach: I can still keep the code outside the constructor, but just 'link' in this manner to ensure the correct context is passed.\r<br />\n<br />\nmany thanks<br />\n",
+    "PostedDate": "2013-03-28T00:54:59.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022470",
+    "ThreadId": "437989",
+    "Html": "I've wondered if a second &quot;this&quot; could be added that would work more like the standard this from other languages. TypeScript could have a property operator @ that would be bound to the class, rather than whatever context the function is attached to at runtime. I wonder if that duality would get confusing though.\r<br />\n<br />\nTo illustrate:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> MyClass {\n    <span style=\"color:Blue;\">public</span> myVar;\n\n    <span style=\"color:Blue;\">constructor</span>() {\n        <span style=\"color:Blue;\">this</span>.myVar = <span style=\"color:#A31515;\">&quot;someVal&quot;</span>;\n    }\n\n    <span style=\"color:Blue;\">public</span> myMethod() {\n        console.log( @myVar ); <span style=\"color:Green;\">// outputs &quot;someVal&quot;</span>\n        console.log( <span style=\"color:Blue;\">this</span>.myVar ); <span style=\"color:Green;\">// outputs &quot;someVal&quot; if called from within MyClass context</span>\n    }\n}\n<span style=\"color:Blue;\">var</span> myObj = <span style=\"color:Blue;\">new</span> MyClass();\n\n<span style=\"color:Green;\">// to simulate what often happens with async handlers</span>\n<span style=\"color:Blue;\">var</span> randomObj = {\n    myVar: <span style=\"color:#A31515;\">&quot;someOtherVal&quot;</span>,\n    borrowedMethod: myObj.myMethod\n};\n\nrandomObj.borrowedMethod();\n<span style=\"color:Green;\">// outputs:</span>\n<span style=\"color:Green;\">//   &quot;someVal&quot;</span>\n<span style=\"color:Green;\">//   &quot;someOtherVal&quot;</span>\n\r\n</pre></div>",
+    "PostedDate": "2013-03-28T08:26:58.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022516",
+    "ThreadId": "437989",
+    "Html": "Yes, I agree that we need <em>something</em> along these lines.<br />\n<br />\nThe standard JavaScript pattern for this is to define a local var &quot;self&quot; or &quot;_this&quot; var and reference that to ensure the correct scope.  Sadly this isn't possible in TypeScript classes as there is no concept of a &quot;class-scope&quot; variable. &quot;this&quot; is only guaranteed in the c'tor and can't be &quot;saved&quot;.<br />\n<br />\nWhat will tend to confuse people (me included) is that if you use &quot;this&quot; in TypeScript code, Intellisense will 'type' it as the class: except of course we know there is no guarantee of this when the function is called.<br />\n<br />\nI'm not blaming TypeScript per se, I think it's a flaw in the ECMAscript 6 design; but TypeScript could perhaps fix it. <br />\n<br />\nMy personal preference for the accessor would be something like @this or even @self (to avoid confusion) - e.g. <a href=\"mailto:console.log(@self.myVar)\" rel=\"nofollow\">console.log(@self.myVar)</a> - a reserved word that is guaranteed to be the scope of the class in which it is referenced. <br />\n<br />\n[edit] I am going to log as an issue - cannot see an existing one<br />\n",
+    "PostedDate": "2013-03-28T09:41:19.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022553",
+    "ThreadId": "437989",
+    "Html": "I have now posted this as <a href=\"http://typescript.codeplex.com/workitem/851\" rel=\"nofollow\">Issue 851</a>\r<br />\n<br />\nJust tried to see if I could create a workaround by declaring _this (which we know is used in the constructor) and referencing it from within the code. It didn't work because the 'var _this = this' line that TypeScript generates is local to the constructor function, and not the function closure.<br />\n<pre><code>// try sneaky access to '_this'\ndeclare var _this:Greeter;\n\nclass Greeter {\n    greeting: string;\n    greet() {\n        return &quot;Hello, &quot; + _this.greeting;\n    }\n    \n    dummy: ()=&gt;void;\n    \n    constructor(message: string) {\n        this.greeting = message;\n        this.dummy = ()=&gt; { var tmp = this;}\n    }\n}\n\nvar greeter = new Greeter(&quot;world&quot;);\n\nvar button = document.createElement('button');\nbutton.innerText = &quot;Say Hello!&quot;;\nbutton.onclick = function() {\n    alert(greeter.greet());\n}\n\ndocument.body.appendChild(button);\n\n</code></pre>\n\n",
+    "PostedDate": "2013-03-28T10:37:50.19-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022582",
+    "ThreadId": "437989",
+    "Html": "When you need a class method to be used as a callback, you can either wrap it in a lambda specifically for the callback, or use this.f.bind(this).\r<br />\n<br />\ne.g.<br />\n<pre><code>class Greeter {\n    name: string;\n    constructor() {\n        $.get(&quot;/username&quot;).success(this.gotUsername.bind(this));\n        // or\n        $.get(&quot;/username&quot;).success((name) =&gt; { this.gotUsername(name); });\n    }\n    gotUsername(name: string) {\n        this.name = name;\n    }\n}</code></pre>\n\nAs I understand it, the second form with the lambda gives better performance.\r<br />\n<br />\nIf you're not passing them as callback functions, you shouldn't need to do anything odd at all.<br />\n",
+    "PostedDate": "2013-03-28T11:49:51.463-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1023069",
+    "ThreadId": "437989",
+    "Html": "The lambda makes things easier, but wouldn't a class property accessor make things even easier? Also, as a matter of personal preference, I like the plain @propname, vs. <a href=\"mailto:@self.propname\" rel=\"nofollow\">@self.propname</a> better - less typing.<br />\n<br />\nThis could conceivably be only used for call time reference passing:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Greeter {\n    name: <span style=\"color:Blue;\">string</span>;\n    <span style=\"color:Blue;\">constructor</span>() {\n        <span style=\"color:Green;\">// So anywhere this is used</span>\n        $.get(<span style=\"color:#A31515;\">&quot;/username&quot;</span>).success(@gotUsername);\n        <span style=\"color:Green;\">// would get turned into this (or the bind method)</span>\n        $.get(<span style=\"color:#A31515;\">&quot;/username&quot;</span>).success((name) =&gt; { <span style=\"color:Blue;\">this</span>.gotUsername(name); });\n    }\n    gotUsername(name: <span style=\"color:Blue;\">string</span>) {\n        <span style=\"color:Blue;\">this</span>.name = name;\n    }\n}\r\n</pre></div>Or if it's property based:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Greeter {\n    name: <span style=\"color:Blue;\">string</span>;\n    <span style=\"color:Blue;\">constructor</span>() {\n        $.get(<span style=\"color:#A31515;\">&quot;/username&quot;</span>).success(@gotUsername);\n    }\n    gotUsername(name: <span style=\"color:Blue;\">string</span>) {\n        @name = name;\n    }\n}\r\n</pre></div>Methods that contain the use of that operator would have to be compiled differently to protect the reference, which could be difficult. Or, the TS compiler could detect when it's used in both places (like above) and swap out the passing reference (inside success in this example) with a lambda, and the @ in the function body with a simple this. I'm not sure how flaky that would be though.<br />\n<br />\nEdit: I guess that would only work in cases where you are using an internal method. The reference problem would still exist in cases where you were subscribing to a method on another object.<br />\n",
+    "PostedDate": "2013-03-29T16:14:32.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

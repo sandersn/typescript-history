@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. We don't do contextual typing here and the right hand side needs to have a fully resolved type before checking whether it is assignable to the type on the left hand side. You could also see this if that ternary expression were used as the target of a return statement in a function. The workaround is to just cast each result to the desired type so that the entire expression returns a valid type for the assignment statement.",
+    "ClosedDate": "2013-08-29T12:46:11.643-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "If I have the following conditional expression that returns two different types depending on the condition, the TypeScript compiler is throwing an error:\r\n\r\n```\r\nvar foo: number = 0,\r\n\tbar: string = \"123\",\r\n\tresult: any = true ? foo : bar; // Compiler throws error: \"Type of conditional expression cannot be determined. Best common type could not be found between 'number' and 'string'.\"\r\n```\r\n\r\nBecause I'm assigning the result of the conditional expression to an ```any``` type (e.g. ```result: any```), I wouldn't expect this to happen. Maybe I am not understanding something about this situation but I don't think this should be a compiler error.\r\n\r\nThanks\r\n\r\n",
+    "LastUpdatedDate": "2013-09-06T15:26:13.2-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-27T22:04:48.93-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Conditional Expression compiler error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1609
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I guess I was thinking that because the left hand side's type was explicitly set to the ```any``` type that whatever value the right hand side assigns should be allowed. If the left hand side type was ```number``` then I could certainly see enforcing the right hand side type checking constraints before assignment because you obviously can't do the following:\n\n```\nvar foo: number = 0,\n    bar: string = \"123\",\n    result: string= true ? foo : bar; // Bad. I'd expect a compiler error in this case because results is a string.\n```\n\nThe following works but smells a bit funny that's all:\n\n```\nvar foo: number = 0,\n    bar: string = \"123\",\n    result: any = true ? <any>foo : <any>bar; // Feels wrong to have to cast to 'any' here.\n```",
+      "PostedDate": "2013-08-29T13:29:48.23-07:00",
+      "Id": 111591
+    }
+  ]
+}

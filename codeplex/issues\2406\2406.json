@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See http://stackoverflow.com/questions/22841203/typescript-class-members-missing-from-new-object-instance/22846831#22846831\n\nThe initialization order of class members is by design. As in every other language, the base class constructor runs first, and constructors should not expect to be able to see behavior from the derived class during initialization.",
+    "ClosedDate": "2014-04-09T09:06:10.917-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "please look at the following code\r\n\r\nclass PersonImpl\r\n{\r\n\tpublic name: string = null;\r\n\tpublic phone: string = null;\r\n}\r\n\r\nclass PersonDerived extends PersonImpl\r\n{\r\n\tpublic name: string = null;\r\n\t\r\n\tconstructor ()\r\n\t{\r\n\t\tsuper();\r\n\t}\r\n}\r\n\r\nnow look at the generated script\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar PersonImpl = (function () {\r\n    function PersonImpl() {\r\n        this.name = null;\r\n        this.phone = null;\r\n    }\r\n    return PersonImpl;\r\n})();\r\n\r\nvar PersonDerived = (function (_super) {\r\n    __extends(PersonDerived, _super);\r\n    function PersonDerived() {\r\n        _super.call(this);\r\n        this.name = null;\r\n    }\r\n    return PersonDerived;\r\n})(PersonImpl);\r\n\r\nnotice the problem? ill clearify\r\n\r\nit appears that if i have declared a class but left it members unassigned\r\nthey will be simply abstracted away; discarding any 'metadata' i have implemented into my class\r\nmaking it impossible for me to know at runtime whether a given instance has the field or not (if it hasnt been setted then not)\r\n\r\na way to overcome this is by assign the property\\field a default value, however this is also problematic \r\nas seen in the example; the name is setted only after the parent constructor has been called\r\nthus overriden the name value with the default value provided\r\n\r\nis this the desired behavior?\r\nmaybe the compiler also needs to assign default values? (0 for number, null for everything else ?)",
+    "LastUpdatedDate": "2014-04-13T00:52:07.02-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-09T01:49:30.143-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Constructor and class members declaration",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2406
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "A good reason (IMHO) that compiler defaults are BAD is because you may want to declare something that is added in a custom way.  For instance, one might declare a call-back event property as\"\n```\nclass MyAwesomeClass {\n    onSomeCoolEvent1: ()=>any;\n    onSomeCoolEvent2: ()=>any;\n    onSomeCoolEvent3: ()=>any;\n    /* x 20 */\n    myPureVirtualFunction: (n:number)=>number;\n}\n```\nand not have the constructor cluttered with dozens of unnecessary property sets for EVERY object creation.  In fact, I even have \"pure virtual\" type functions (and I use that term loosely here, since there are yet no such things as abstract types in TS) that have no base implementation.  I can use this to check if the implementer has overridden it to add support.\n",
+      "PostedDate": "2014-04-09T09:39:29.46-07:00",
+      "Id": 141200
+    },
+    {
+      "Message": "jamesnw thank you for your quick response\nhowever i feel your answer is inadequate,\ni simply stated the if i declared a property on a class\nsomething should persist that property\n\nimage i am deriving a class\nbase => class base {}\nderived => class derived extends base {}\n\nnow image that in my base class im running on of the the derived properties\n--- ops ---\ncant do that since there arent any; the super class (base) constructor is called first and there wont be any properties because i failed to initialized them and even if i did\nthey still be left outside the scope of the parent since it will only happen afterwords \n\ni was not stating that you should put thus properties in the constructor\ni was stating that the compiler should write some value to thus properties (on property declaration)\ni understand that typescript is avoid adding 'custom' logic to the code like reflection which is reasonable\nhowever, at this point is seams that if i had written most of my code with javascript my documentation may suffer but i had much more flexibility and reasoning of the DOM js implementation than with typescript\nand had much more metadata about my types then i have with typescript even though the latter supposedly has more 'type' safety\n\nthank you and again\ngreat job!\n",
+      "PostedDate": "2014-04-13T00:49:00.773-07:00",
+      "Id": 141622
+    },
+    {
+      "Message": "its sad that this issue has been closed, instead of being infront of thus problems you simply choose to avoid them; hey typescript another coffeescript coming your way\n\ngood luck and farewell",
+      "PostedDate": "2014-04-13T00:52:07.02-07:00",
+      "Id": 141623
+    }
+  ]
+}

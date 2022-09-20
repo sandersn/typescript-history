@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed with https://typescript.codeplex.com/SourceControl/changeset/7cb46f2e3243400fa80b134c9e2881389c696c3d. ",
+    "ClosedDate": "2013-08-23T08:03:53.593-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The problem is that HTMLCanvasElement in the lib.d.ts file is declared as the following:\r\n \r\n```TypeScript\r\ninterface HTMLCanvasElement extends HTMLElement {\r\n    width: number;\r\n    height: number;\r\n    toDataURL(): string;\r\n    toDataURL(type: string, ...args: any[]): string;\r\n    getContext(contextId: string): CanvasRenderingContext2D;\r\n}\r\n```\r\n \r\nYou see getContext allways returns a Canvas2D context. The correct return value would be \"object\" (see\r\nhttp://www.w3.org/wiki/HTML/Elements/canvas). \r\n\r\nI assume that is because Internet Explorer does not support WebGL and so it is assumed that getContext will always return a 2D object. \r\n\r\nYou could fix this by editing the lib.d.ts file in the typescript installation folder and change the return value to \"any\".\r\n\r\nI guess as long Microsoft does not want to support WebGL this bug will stay as it is. \r\n \r\n\r\nTo execute my IDL exporter you need node. My build script is optimized for unix, I can add windows support later.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "TypeScript 0.9.1",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-08T09:52:58.56-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "IDL to TypeScript converter + TypeScript WebGL bindings",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 179
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This was related to my library to enable WebGL in TypeScript. I found a dirty workaround for that problem. \nSee here for more detail https://github.com/RicoP/webgl.d.ts ",
+      "PostedDate": "2012-10-08T11:33:03.673-07:00",
+      "Id": 79029
+    },
+    {
+      "Message": "This has been fixed meanwhile.\n\nlib.d.ts from TS 0.9.1.0\n\n```\ninterface HTMLCanvasElement extends HTMLElement {\n    width: number;\n    height: number;\n    toDataURL(type?: string, ...args: any[]): string;\n    getContext(contextId: string, ...args: any[]): any;\n    getContext(contextId: \"2d\"): CanvasRenderingContext2D;\n}\n```",
+      "PostedDate": "2013-08-22T23:25:17.33-07:00",
+      "Id": 110870
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1017061",
+    "ThreadId": "437053",
+    "Html": "With the way TS/JS declares object literals, there seems to be a syntax ambiguity when attempting to implicitly return object literals in a lambda.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> foo = 5;\n<span style=\"color:Blue;\">var</span> a = i =&gt; {i: i, foo: foo};\r\n</pre></div>The compiler, of course, tries to parse the object as a function body and fails.\r<br />\n<br />\nIs this a bug or is it not technically possible for the compiler to disambiguate whether the brackets denote a function body or an object literal with an implicit return? My suspicion is that without introducing additional syntax, the latter is probably true.\r<br />\n<br />\n<em>Side note</em>, why implicitly returning object literals would be useful (LINQ):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> myObj = enumerable\n    .SelectMany(a =&gt; a, (a,b) =&gt; {a: a, b: b})\n    .Where(anon =&gt; anon.a === 5 &amp;&amp; anon.b === <span style=\"color:#A31515;\">&#39;foo&#39;</span>)\n    .FirstOrDefault()\r\n</pre></div>",
+    "PostedDate": "2013-03-18T07:20:31.85-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017079",
+    "ThreadId": "437053",
+    "Html": "I think adding parenthesis would solve the problem?<br />\n<pre><code>var foo = 5;\nvar a = i =&gt; ({i: i, foo: foo});</code></pre>\n\n",
+    "PostedDate": "2013-03-18T07:41:32.907-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017108",
+    "ThreadId": "437053",
+    "Html": "Yes, this works. I didn't think of that workaround. \r<br />\n<br />\nI think the original question remains though, which is whether it's possible (or even worth it) for the compiler to try and differentiate a function body/object in the absence of parenthesis. <br />\n",
+    "PostedDate": "2013-03-18T08:23:35.427-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017268",
+    "ThreadId": "437053",
+    "Html": "Note that JavaScript itself has the same syntactic ambiguity - this could either be a Labelled Statement inside a Block, or an ExpressionStatement consisting of an object literal.<br />\n<pre><code>if(x &lt; 4) {\n    a: foo()\n}</code></pre>\n\nWe follow the same pattern and always assume { } indicates a Block where an ambiguity could exist.<br />\n",
+    "PostedDate": "2013-03-18T12:28:36.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017275",
+    "ThreadId": "437053",
+    "Html": "Interesting. I hadn't considered that scenario with a label before.\r<br />\n<br />\nThanks for your response.<br />\n",
+    "PostedDate": "2013-03-18T12:38:55.753-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

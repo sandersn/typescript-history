@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I don't understand what the bug here is supposed to be. What would you want the error (or non-error) to be, and why?",
+    "ClosedDate": "2013-01-28T10:53:50.24-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hi, here is the repro:\r\n\r\n```\r\n\r\nmodule fred {\r\n\t\r\n    export class Foo {\r\n        constructor(\r\n\t\t\tstate: { \r\n\t\t\t\tz: number; \r\n \t\t\t     }\r\n\t\t\t\t) { };\r\n    }\r\n\t\r\n\texport class Bar {\r\n        constructor(\r\n\t\t\tstate: { \r\n\t\t\t\tz?: number; \r\n \t\t\t     }\r\n\t\t\t\t) { };\r\n    }\r\n}\r\n\r\nvar foo = new fred.Foo({qux: 11}); // Ok: Error: Supplied params...\r\nvar bar = new fred.Bar({qux: 11}); // Not ok: no error\r\n\r\n```",
+    "LastUpdatedDate": "2013-08-13T12:19:23.427-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-27T08:57:15.757-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Bug when optional property in object literal passed to constructor",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 658
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi, Ryan,\n\nThe constructor for class Bar is expecting an object that has an optional property \"z\" of type number.\n\nIn the very last line I am trying to instantiate a Bar, passing in an object literal that does not match the expected object.\n\n```\n   var bar = new fred.Bar({qux: 11}\n```\n\nThe expected exception is the following:\n\n> Supplied parameters do not match any signature of call target:\n>\tCould not apply type '{ z?: number; }' to argument 1, which is of type '{ qux: number; }'\n\n\nMy understanding of this is: If I wanted the Bar's constructor argument \"state\" to be polymorphic then I would have declared it as an interface type. However, I specifically want to restrict the constructor argument to an object that has a single property called \"z\".\n\nI am unable to do that at present, which means errors are not being picked up.\n\nI kind of see that this is how the language seems to have been designed and this may not be seen as a bug.\n\nBut I don't see a compelling reason for not flagging this as an error.",
+      "PostedDate": "2013-01-28T12:56:05.837-08:00",
+      "Id": 87546
+    },
+    {
+      "Message": "This isn't a reasonable thing to do in a structural type system.",
+      "PostedDate": "2013-08-13T12:19:23.427-07:00",
+      "Id": 109679
+    }
+  ]
+}

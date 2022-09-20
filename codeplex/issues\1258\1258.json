@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. We don't do any flow control analysis for type inference (or other features really). See section 6.3 Function Implementations for the rules in this case:\n\nThe return type of an implicitly typed function f is inferred from its function body as follows:\n\n•\tOtherwise, if f’s function body directly references f or references any implicitly typed functions that through this same analysis reference f, the inferred return type is Any.",
+    "ClosedDate": "2013-06-27T16:03:41.953-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Type inference fails in the face of recursion where the base case returns an expression of a known type, e.g. 'true'.  Instead of the known type, 'any' is inferred.\r\n\r\nThe example:\r\n\r\n```\r\n// test.ts\r\nfunction testFn(countdown: number) {\r\n    if (countdown <= 0) {\r\n        return true;\r\n    }\r\n\r\n    return testFn(countdown - 1);\r\n}\r\n```\r\n\r\nSteps:\r\n1. tsc.exe -d test.ts\r\n2. Open test.d.ts\r\n\r\nExpected:\r\n`declare function testFn(countdown: number): boolean;`\r\n\r\nActual:\r\n `declare function testFn(countdown: number);`\r\n\r\nTested with 0.9.0",
+    "LastUpdatedDate": "2013-08-13T11:37:02.64-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-27T10:01:59.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Recursive function return type not inferred",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1258
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

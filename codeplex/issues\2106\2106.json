@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting, this is actually covered in the breaking changes page:\n\n__Rest arguments are now properly checked for function arity__\nDescription: You will need to properly handle functions with rest args as if they could have 0 or 1 arguments in the position of the rest arg. For example:\n````\nfunction myFunction(f: (...args: string[]) => void) { }\n\nmyFunction((x, y) => { }); //0.9.1.1\nmyFunction((x?, y?) => { }); //0.9.5\n````\n\nReason: The compiler was unintentionally too lenient in this case and allowed errors where functions were mismatched. We have tightened it to prevent these issues.\n\nDo note in the current develop branch we've relaxed this and your original sample now works as expected.",
+    "ClosedDate": "2014-01-17T12:15:09.013-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "I have just recently upgraded to 0.9.5 from the latest of the 0.8.x versions... And I stumbled upon something that worked previously but does not work now.\r\n\r\nNamely having a function that takes another function defining an open-ended list of args...\r\n\r\nE.g.\r\n\r\n``` typescript\r\ngreet(fn: (...args) => string) {\r\n    return fn(\"Hello, \");\r\n}\r\n\r\ngreet((arg) => arg + \"WORLD\")\r\n```\r\n\r\nThe above gives an error in the Visual Studio editor as well as the playground and the compiler.\r\nIt does compile in the playground however.\r\n\r\nNow in this short sample code, it doesn't make a whole lot of sense... But when subscribing to events in e.g. Angular we do things like:\r\n\r\n\r\n``` typescript\r\nscope.$on('eventName1', function( event, with, long, other, list, of, params ) { })\r\nscope.$on('eventName2', function( event, fewer, params ) { })\r\nscope.$on('eventName2', function( event, single ) { })\r\n\r\nscope.$broadcast('eventName1', with, long, other, list, if, params );\r\nscope.$broadcast('eventName2', with, fewer, params );\r\nscope.$broadcast('eventName3', with, single );\r\n```\r\n\r\nSo basically there is no definitive list of how many params there can be, and how many is all defined by the event name.\r\n\r\nNow we could define a whole list of overloads...\r\n\r\n``` typescript\r\ninterface scope {\r\n  $on(name, handler: () => any );\r\n  $on(name, handler: (event: any) => any );\r\n  $on(name, handler: (event, arg1 ) => any );\r\n  $on(name, handler: (event, arg1, arg2 ) => any );\r\n  $on(name, handler: (event, arg1, arg2, arg3 ) => any );\r\n}\r\n\r\nvar t: test;\r\nt.$on(\"name\", () => {});\r\nt.$on(\"name\", (e, a1) => {});\r\nt.$on(\"name\", (e, a1, a2) => {});\r\nt.$on(\"name\", (e, a1, a2, a3) => {});\r\n```\r\n\r\nAnd so on, and we could probably cover 99.9999% of all cases...\r\n(I really don't think we would go beyond e.g 10 args, that would be bad design)\r\n\r\nFunny thing in the above though...\r\nWe can leave out the first overload...\r\n\r\n``` typescript\r\ninterface test {\r\n  $on(name, handler: (event) => any );\r\n  $on(name, handler: (event, arg1 ) => any );\r\n  $on(name, handler: (event, arg1, arg2 ) => any );\r\n  $on(name, handler: (event, arg1, arg2, arg3 ) => any );\r\n}\r\n\r\nvar t: test;\r\nt.$on(\"name\", () => {}); //Which would this match now?.. by rule of the other shouln't it fail?\r\nt.$on(\"name\", (e, a1) => {});\r\nt.$on(\"name\", (e, a1, a2) => {});\r\nt.$on(\"name\", (e, a1, a2, a3) => {});\r\n```\r\n\r\nThis the compiler seems to accept... (at least when dealing with the playground.\r\nIn any case... this breaks something, it might be intentional, it might not be... but at the very least it seems like there is something that is inconsistent.",
+    "LastUpdatedDate": "2014-01-17T12:15:09.013-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-17T04:16:21.123-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "'(param: string) => boolean' and '(...args: any[]) => any' are incompatible",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2106
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

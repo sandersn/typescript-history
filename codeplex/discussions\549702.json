@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1259908",
+    "ThreadId": "549702",
+    "Html": "Hi,\r<br />\n<br />\nIt would be super awesome if Visual Studio had the option to compile all .ts files with the tsc.exe -out flag set to the name of the original file, because at the moment, if you have a more than one typescript file that references other files in a project, you have to jump through hoops to get them all to compile. \r<br />\n<br />\nFor example, I have something like\r<br />\n<br />\nAllClientsViewModel.ts\r<br />\nClientModel.ts\r<br />\nAllSubscriptionsViewModel.ts\r<br />\nSubscriptionModel.ts\r<br />\n<br />\nBecause both AllClientsViewModel.ts and SubscriptionModel.ts need to use ClientModel.ts, I'm in a bind. \r<br />\n<br />\nA workaround using gulp.js is a gulpfile along the lines of <br />\n<pre><code>var gulp = require('gulp');\nvar tsc = require('gulp-tsc');\nvar tap = require('gulp-tap');\nvar watch = require('gulp-watch');\nvar plumber = require('gulp-plumber');\n\ngulp.task('compile-typescript', function ()\n{\n    return gulp.src(['Admin/Pages/*.ts'])\n        .pipe(tap(function(file, t)\n    {\n            console.log(file.path);\n            gulp.src([file.path])\n            .pipe(tsc({ out: file.path.replace('.ts', '.js'), module: &quot;amd&quot; }))            \n            .pipe(gulp.dest('.'));\n        }));\n});\n\ngulp.task('typescript-watch', function () {\n    watch({ glob: 'Admin/Pages/*.ts' })\n       .pipe(tap(function (file, t) {\n           console.log(file.path);\n           gulp.src([file.path])\n           .pipe(tsc({ out: file.path.replace('.ts', '.js'), module: &quot;amd&quot; }))\n           .pipe(gulp.dest('.'));\n       }));\n});\n</code></pre>\n\nRun the typescript-watch task in a cmd window, and use a post-build event to run the typescript-compile task, because Visual Studio will compile the .js files over the .js files that were built in the typescript-watch task when you last saved the file, leaving you scratching your head as to why when you hit play, your ts files have suddenly lost their referenced files.\r<br />\n<br />\nIt further, would be absolutely <em>awesome</em> if Visual Studio could automatically detect reference files based on what classes have been used in that particular file, much like it knows how to automatically add a project reference in C# if you use a class you haven't yet referenced :)\r<br />\n<br />\nRegards,\r<br />\nMatt<br />\n",
+    "PostedDate": "2014-06-25T21:40:37.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260107",
+    "ThreadId": "549702",
+    "Html": "I'm probably missing something, but Visual Studio already has a setting to use the --out flag to compile all the .ts files into the same .js file.  If you look in the TypeScript Build, under Output, there's &quot;Redirect JavaScript output into a file&quot;.\r<br />\n<br />\nYou can also configure the order they go out using a _references.ts file.  You also don't need to use ///ref when inside of a project, as all the files should be able to see each other.<br />\n",
+    "PostedDate": "2014-06-26T09:47:39.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260212",
+    "ThreadId": "549702",
+    "Html": "No, I've just not been clear. I don't want just 1 .ts into 1 .js, I want each .ts compiled with the -out flag, so that every .ts will still have a corresponding .js and that .js contains all the required references of it's respective .ts...<br />\n<br />\nIn the above example, AllClientsViewModel.js and AllSubscriptionsViewModel.js should be independant files, but both contain ClientModel.js, as they correspond to AllClientsView.html and AllSubscriptionsView.html...<br />\n<br />\n_references.ts would probably work in this scenario, <em>if</em> VS knew how to compile each individual .ts of the project with the -out flag... The TypeScript Build options seem only to allow for one .ts file to have the -out flag applied to it, as opposed to each .ts file having the -out flag applied to it... Unless I've missed something entirely obvious, which is entirely possible ;)<br />\n",
+    "PostedDate": "2014-06-26T15:01:26.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260232",
+    "ThreadId": "549702",
+    "Html": "The --out flag is specifically, and only, for specifying a single output .js file which all the input .ts files will be compiled into. The behavior you're asking for (one .js per .ts) is the default behavior, which is why --out exists for those who need finer grained control over concatenated outputs. The --out flag is not specified on a per file basis, it applies to a single compilation of many files, which is why it's in the project settings pane in VS.<br />\n",
+    "PostedDate": "2014-06-26T16:26:17.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1260239",
+    "ThreadId": "549702",
+    "Html": "Yep, it's just that it limits you to having one output file for the whole project unless you use a workaround like I posted above. If you have many pages or Views, it would be great to be able to have several .ts files in a project where the -out flag is applied, because each page served up lives in it's own isolated scope much like an executable does. With a larger project, whilst I <em>could</em> have say, an app.ts file which references every other file in the project, you'd have to serve that entire app.js on each page, despite the fact that 90% of what's in that app.js wouldn't be used by the page, whereas if the project file could specify that all files .ts files are transpiled with the -out parameter, one could rest assured that you could reference any .js output file, and it would have all the required resources included. <br />\n<blockquote>\nThe behavior you're asking for (one .js per .ts) is the default behavior, which is why --out exists for those who need finer grained control over concatenated outputs. <br />\n</blockquote>\nWhat I'm asking for is that each .ts -&gt; .js transpilation uses the --out parameter... either way you get a single .js, it's just with --out you get a .js that includes everything it needs. I want that output for <em>each</em> .ts, not just one.<br />\n<br />\nCurrently, visual studio can either do<br />\n<pre><code>tsc app.ts --out app.js (app.js contains all the files that app.ts references, lets say allAnimals.ts, allAmphibians.ts, allFrogs.ts, animal.ts, amphibian.ts and frog.ts) </code></pre>\n\nOR<br />\n<pre><code>tsc allAnimals.ts\ntsc allAmphibians.ts\ntsc allFrogs.ts\ntsc animal.ts\n...</code></pre>\n\nThe option I would like to have is one where VS will do<br />\n<pre><code>tsc allAnimals.ts --out allAnimals.js\ntsc allAmphibians.ts --out allAmphibians.js\n...</code></pre>\n\nIt means that you could have several related, but different modules within a single project. If my project contained the functionality to do say, run an admin panel and customer interface, whilst I want the admin stuff in the same project because it's using many of the same classes as the customer code, I don't want the admin functionality included in the output that's delivered to a customer... <br />\n<br />\nIt seems like a neat (performance impact notwithstanding) way to simplify a build. Any emitted .js file could be included in a page with the guarantee that the .js contains every reference it needs to function.<br />\n",
+    "PostedDate": "2014-06-26T17:12:07.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1075347",
+    "ThreadId": "452035",
+    "Html": "We have a cache data structure which has a method which looks like this:<br />\n<pre><code>    public get(key: K, valueLoader?: () =&gt; V): V {\n        var value = this._cache.get(key);\n\n        // load and save the value if one was not found in the _cache\n        if (value === undefined &amp;&amp; valueLoader !== undefined) {\n            value = valueLoader();\n            this.set(key, value);\n        }\n\n        return value;\n    }</code></pre>\n\nThis compiled in 0.9.0.1, but with the in-progress 0.9.1 compiler I'm seeing the following error on the valueLoader parameter's type: &quot;Return type of exported function is using inaccessible module&quot;.\r<br />\n<br />\nIn case it matters, the context for this code looks like this (we compile to AMD modules):<br />\n<pre><code>import Map = require(&quot;common/map&quot;);\n\nclass Cache&lt;K, V&gt; {\n\n    private _cache: Map&lt;K, V&gt;;\n    private _maxSize: number;\n\n    constructor(maxSize?: number, lru = false) {\n        if (maxSize !== undefined &amp;&amp; maxSize &lt; 1) {\n            throw new Error(&quot;maxSize must be positive.&quot;);\n        }\n\n        this._cache = new Map(lru);\n        this._maxSize = maxSize;\n    }\n\n...\n\n}\nexport = Cache;</code></pre>\n\nIs this error message expected?  I can provide the entire file and its dependency (map.ts) if necessary.  Thanks for any assistance!<br />\n",
+    "PostedDate": "2013-07-31T16:00:20.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1076956",
+    "ThreadId": "452035",
+    "Html": "ping - i see there is another thread on generics but i'm not sure if this one is related.<br />\n",
+    "PostedDate": "2013-08-05T15:16:31.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077187",
+    "ThreadId": "452035",
+    "Html": "Can you try<br />\n<pre><code>get(key: K, valueLoader?: { (): V; }): V</code></pre>\n\ninstead of<br />\n<pre><code>get(key: K, valueLoader?: () =&gt; V): V</code></pre>\n\nas the method signature?<br />\n",
+    "PostedDate": "2013-08-06T03:46:22.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077326",
+    "ThreadId": "452035",
+    "Html": "Whoa, good call: that works fine.  Do you know why that works but the other syntax doesn't?  Is it a bug in the compiler? (or a breaking change in 0.9.1)<br />\n",
+    "PostedDate": "2013-08-06T09:44:02.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077412",
+    "ThreadId": "452035",
+    "Html": "One of my colleagues found another fix which is the one I think we'll go with:<br />\n<pre><code>public get(key: K, valueLoader?: () =&gt; Cache.V): V {</code></pre>\n\n",
+    "PostedDate": "2013-08-06T12:52:50.477-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077638",
+    "ThreadId": "452035",
+    "Html": "I find that doing it via an interface works:<br />\n<pre><code>interface FuncReturning&lt;V&gt; { (): V; }\npublic get(key: K, valueLoader?: FuncReturning&lt;V&gt;): V { ... }\n</code></pre>\n\nThis must be a bug in 0.9.1 since it didn't show up in 0.9.01.<br />\n",
+    "PostedDate": "2013-08-07T03:08:41.8-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

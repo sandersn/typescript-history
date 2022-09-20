@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Field initializers run in the order they're specified.",
+    "ClosedDate": "2013-08-21T10:30:47.473-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I am using TypeScript with Knockout and I ran into a problem trying to take advantage of the new relaxed ```'this'``` handling in TS 0.9.1 to clean up my use of Computed Observables.  It appears the order of property declarations matters when using Computer Observables that refer to ```'this'``` in their callbacks. In my example I have:\r\n\r\n```\r\nclass MyClass {\r\n  ...\r\n        resultsCount = ko.computed<number>(() => {\r\n            return this.results ? this.results().length : 0;\r\n        }, this);\r\n\r\n        results = ko.observableArray<farPoPartReceiptCore.IPurchaseOrder>();\r\n  ...\r\n}\r\n\r\n```\r\nAt run-time, the ```this``` inside of the ```resultsCount``` Knockout Computed Observable is the expected instance of ```MyClass``` but __it does not yet have it's ```results``` property defined__. Attempting to access ```this.results``` is ```undefined```.\r\n\r\nChanging the order of the properties so that ```results``` is defined before ```resultsCount``` fixes the issue but I'm not sure why?\r\n\r\nI'm wondering if this a JavaScript issue, a TypeScript issue or just something I'm doing wrong?\r\n\r\nAny help would be appreciated.\r\n\r\nThanks",
+    "LastUpdatedDate": "2013-08-21T10:30:47.473-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-20T16:47:49.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Potential issue with 'this' handling in 0.9.1",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1540
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Field initializers still translate to assignments in the constructor (have a look at the JS output). The only change was to allow `this` in there and link it to the instance. If you pass `this` to external methods before the constructor is finished, it will be partially initialized - not a good idea.",
+      "PostedDate": "2013-08-21T02:13:59.33-07:00",
+      "Id": 110572
+    },
+    {
+      "Message": "Hi Robert,\n\nYou might want to look into using Knockout Computed's `deferEvaluation` option - this may resolve your issue.  You can read about it here:\n\nhttp://knockoutjs.com/documentation/computedObservables.html\n\nand in more detail here:\n\nhttp://www.knockmeout.net/2011/06/lazy-loading-observable-in-knockoutjs.html\n\nHope that helps.",
+      "PostedDate": "2013-08-21T03:13:42.78-07:00",
+      "Id": 110576
+    },
+    {
+      "Message": "Ah, that make sense. Thanks so much for the help! \n\nUsing KOs ```deferEvaluation``` as follows resolves the issue:\n\n```\nclass MyClass {\n  ...\n        resultsCount = ko.computed<number>(() => {\n            return this.results ? this.results().length : 0;\n        }, this, { deferEvaluation: true });\n\n        results = ko.observableArray<farPoPartReceiptCore.IPurchaseOrder>();\n  ...\n}\n```",
+      "PostedDate": "2013-08-21T06:23:59.853-07:00",
+      "Id": 110589
+    }
+  ]
+}

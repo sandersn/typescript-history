@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1150884",
+    "ThreadId": "484070",
+    "Html": "It is common in C++ and C# for generic types to extend a type parameter. When I've tried to do so in VS2013 I get the error:  <strong>error TS2073: Build: A class may only extend another class.</strong><br />\n<h3>Example:</h3>\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Api {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> PagedCriteria&lt;TCriteria&gt; <span style=\"color:Blue;\">extends</span> TCriteria {\n        <span style=\"color:Blue;\">public</span> skip: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> take: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> page: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> pageSize: <span style=\"color:Blue;\">number</span>;\n    }\n}\r\n</pre></div>I suppose since TCriteria extends Object by default, which is an interface, the error makes sense. However, even if I make it extend a class, it still doesn't work:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">module</span> Api {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> CriteriaBase { }\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> PagedCriteria&lt;TCriteria <span style=\"color:Blue;\">extends</span> CriteriaBase&gt; <span style=\"color:Blue;\">extends</span> TCriteria {\n        <span style=\"color:Blue;\">public</span> skip: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> take: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> page: <span style=\"color:Blue;\">number</span>;\n        <span style=\"color:Blue;\">public</span> pageSize: <span style=\"color:Blue;\">number</span>;\n    }\n}\r\n</pre></div>Is there something like the c# 'where T : class' functionality for TypeScript?\r<br />\n<br />\nI have looked through the specification and the forums, but I have not seen the issue addressed. As I said, this is a very common idiom for C++ and C# generic programming.<br />\n",
+    "PostedDate": "2014-01-08T06:35:01.11-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1150978",
+    "ThreadId": "484070",
+    "Html": "In the first example, we don't know enough about the type variable to say that we can extend it.  Just for reference, the type system assumes that a type variable without any constraints has the shape { }, so we don't have much to go on.<br />\n<br />\nAt first blush, the second example looks like it should work to me (assuming there isn't some subtlety involved I'm missing).  It's quite possible this is a bug in the compiler.<br />\n",
+    "PostedDate": "2014-01-08T09:31:16.823-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151007",
+    "ThreadId": "484070",
+    "Html": "What does it matter if the initial shape is { }? The actual type parameter itself may have all kinds of content, and in any event, I'm just adding four properties regardless of the type parameter's content.  The second example, that you site as a possible bug has the same shape as the default: { }, but you think that should work.\r<br />\n<br />\nAgain, this is something that is very common in C++ and C#. Why can these languages deal with it but typescript's JavaScript generator cannot?\r<br />\n<br />\nShould I enter a bug for this issue?<br />\n",
+    "PostedDate": "2014-01-08T10:53:11.257-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151068",
+    "ThreadId": "484070",
+    "Html": "@kenbrubaker actually C# disallow such pattern. But TypeScript might do this. Maybe =)<br />\n",
+    "PostedDate": "2014-01-08T13:30:51.627-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151150",
+    "ThreadId": "484070",
+    "Html": "I'm actually wrong - turns out this intentionally not allowed.\r<br />\n<br />\nWe don't have a C++-style templating system, which would let you &quot;stamp out&quot; classes each time you have a new instance instantiated with a type variable.  To TypeScript, the types Dictionary&lt;number&gt; and Dictionary&lt;string&gt; codegen to the same Dictionary constructor rather than two different constructors. In TypeScript, types are erasable - they don't have an effect on the codegen (except in a couple exceptions around modules).<br />\n\r<br />\nBecause of this, we statically have one inheritance chain.<br />\n",
+    "PostedDate": "2014-01-08T17:49:46.813-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1151348",
+    "ThreadId": "484070",
+    "Html": "I stand corrected:\r<br />\n<br />\n<strong>error CS0689: Cannot derive from 'T' because it is a type parameter</strong><br />\n",
+    "PostedDate": "2014-01-09T06:37:53.17-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

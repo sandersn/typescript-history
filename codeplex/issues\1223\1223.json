@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-06-27T12:49:54.177-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Take the following simplified code:\r\n\r\n```\r\nfunction foo(title: string) {};\r\n\r\nmodule foo.Bar{\r\n  export function f() {};\r\n};\r\n\r\nmodule foo.Baz {\r\n  export function g(){\r\n    Bar.f();\r\n  };\r\n}\r\n```\r\n\r\nThis is accepted without errors. It generates the following Javascript:\r\n\r\n```\r\nfunction foo(title) {\r\n}\r\n;\r\n\r\nvar foo;\r\n(function (foo) {\r\n    (function (Bar) {\r\n        function f() {\r\n        }\r\n        Bar.f = f;\r\n        ;\r\n    })(foo.Bar || (foo.Bar = {}));\r\n    var Bar = foo.Bar;\r\n})(foo || (foo = {}));\r\n;\r\n\r\nvar foo;\r\n(function (foo) {\r\n    (function (Baz) {\r\n        function g() {\r\n            .Bar.f();\r\n        }\r\n        Baz.g = g;\r\n        ;\r\n    })(foo.Baz || (foo.Baz = {}));\r\n    var Baz = foo.Baz;\r\n})(foo || (foo = {}));\r\n```\r\n\r\nNotice the leading dot in `foo.Baz.g`, which causes a runtime parse error.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-24T12:47:23.203-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Declared function with same name as module generates incorrect code",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1223
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  That's a bad issue.  We'll get right on it.",
+      "PostedDate": "2013-06-25T15:01:18.043-07:00",
+      "Id": 104131
+    },
+    {
+      "Message": "I ran into a similar output error with different input. This typescript:\n\n```\nmodule M\n{\n  export class C {\n  }\n  export module C {\n    export var C = C\n  };\n};\n```\n\ngenerates this output:\n\n```\nvar M;\n(function (M) {\n    var C = (function () {\n        function C() {\n        }\n        return C;\n    })();\n    M.C = C;\n    (function (C) {\n        C.C = .C;\n    })(M.C || (M.C = {}));\n    var C = M.C;\n    ;\n})(M || (M = {}));\n;\n```\n\nAre these related or should I open another ticket?",
+      "PostedDate": "2013-06-27T01:52:42.723-07:00",
+      "Id": 104320
+    },
+    {
+      "Message": "This should both be fixed now with this check-in: https://typescript.codeplex.com/SourceControl/changeset/aaf8c7bab435c99e8a6e879ca2fd951258cac8d2 \n\nWe'll try to get a hotfix out for these issues shortly.  Thanks very much for reporting.  Much appreciated.",
+      "PostedDate": "2013-06-27T12:49:48.077-07:00",
+      "Id": 104396
+    }
+  ]
+}

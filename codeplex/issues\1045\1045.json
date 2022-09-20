@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-05-16T15:22:53.973-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Running out of stack space on the latest develop binaries typescript-a26bd0821cfb980884bc0b11ec4e3084033d8b15.\r\n\r\nAttached file which caused the error.\r\n\r\nSorry, I haven't started taking things out to figure out when the error stops, because it takes quite a long time to eventually run out of memory.\r\n",
+    "LastUpdatedDate": "2013-08-13T10:01:12.83-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-16T03:59:15.51-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Out of stack space on 0.9",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1045
+  },
+  "FileAttachments": [
+    {
+      "FileId": 680866,
+      "FileName": "linq.ts",
+      "DownloadUrl": ".\\680866"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  We have a couple of issues causing stack overflow we're investigating, and one of them involves mutually recursive base types.  I haven't reduced your code sample to the exact cause yet, but I do see some other errors (once reduced enough not to stack overflow) leading me to these suspicions.\n\nOne error I see often is \"A generic type may not reference itself with its own type parameters\".  I see that in code such as \"class Enumerable<T>\", which has the below member:\n\nBufferWithCount(count: number): Enumerable<T[]>\n\nNote that error message is a little unclear (we are fixing that), and it should be that Enumerabe cannot reference itself with a wrapped form of its own type parameters.  In the above, the [] notation is effectively shorthand for Enumerable<Array<T>>, which is in conflict with this rule.\n\nWe're trying to find a way to relax this rule, but in the meantime, if you can address it in your code and still see issues, let us know and we'll investigate further.\n\nThanks!",
+      "PostedDate": "2013-05-16T15:22:46.737-07:00",
+      "Id": 100397
+    },
+    {
+      "Message": "Thanks for the info!\n\nThat rule seems to be way too restrictive...  It prevents writing full templated utility libraries.\n\nThis essentially means that if I have a generic class, I cannot have methods on that class returning the same type or having parameters of the same time, nor can I hve fields on that class with the same type.  A simple linked list would be impossible...  won't it?\n\nWith this rule, how can one put generics into jQuery, for example?  Or design fluent interfaces which enables chaining?\n",
+      "PostedDate": "2013-05-16T19:52:39.193-07:00",
+      "Id": 100419
+    },
+    {
+      "Message": "This rule is being loosened.",
+      "PostedDate": "2013-08-13T10:01:12.83-07:00",
+      "Id": 109634
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+[
+  {
+    "Id": "1063011",
+    "ThreadId": "448674",
+    "Html": "I'm putting together a VS project for a client, getting it set up with TypeScript and require.js....and for the life of me, I cannot figure out how to get jQuery to import correctly. I thought I just needed to provide a definition file like this:<br />\n<pre><code>/// &lt;reference path=&quot;ts/durandal/durandal.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;ts/jquery/jquery.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;ts/knockout/knockout.amd.d.ts&quot; /&gt;\n\ndeclare module 'jquery' {\n    export = $;\n}</code></pre>\n\nI thought that by using the new export = syntax that it would just work. The good news is that this seems to satisfy the compiler. The bad news is that there is absolutely no intellisense when you do this:<br />\n<pre><code>import $ = module('jquery');</code></pre>\n\nI've tried tons of other combinations as well, but the above is the only one that satisfies the compiler. None of them get intellisense working. What am I missing here? Or is this an over-site in the design of export?<br />\n",
+    "PostedDate": "2013-06-30T19:07:01.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063668",
+    "ThreadId": "448674",
+    "Html": "In the current spec (section 11.2.4), the scope of the symbols an export= can point at is limited to being declared at scope of the export=.<br />\n\r<br />\n   &quot;The Identifier of an export assignment must name one or more entities declared at the top level in the external module.&quot;\r<br />\n<br />\nIt may just be that we're not giving an error on the &quot;export = $&quot;, yet.<br />\n",
+    "PostedDate": "2013-07-02T09:07:40.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063670",
+    "ThreadId": "448674",
+    "Html": "Ok. I understand if that's a constraint. But, how do I get jQuery to play in an AMD scenario? Is it really not possible?<br />\n",
+    "PostedDate": "2013-07-02T09:09:07.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063747",
+    "ThreadId": "448674",
+    "Html": "As the jquery.d.ts is purely design time information (ie interfaces and ambient declarations) it should be perfectly usable with AMD. Note that an import is generally done because the module you are importing has actual code associated with it, where our jquery.d.ts does not. I think the combination of the JS techniques listed here <a href=\"http://www.requirejs.org/docs/jquery.html\" rel=\"nofollow\">http://www.requirejs.org/docs/jquery.html</a> plus the examples of using Typescript with RequireJS here  <a href=\"http://blorkfish.wordpress.com/2012/10/23/typescript-organizing-your-code-with-amd-modules-and-require-js/\" rel=\"nofollow\">http://blorkfish.wordpress.com/2012/10/23/typescript-organizing-your-code-with-amd-modules-and-require-js/</a> should help you get on the right path. Then you'll just reference (not import) jquery.d.ts where you need that type information. Does that make sense?<br />\n",
+    "PostedDate": "2013-07-02T11:46:31.307-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063753",
+    "ThreadId": "448674",
+    "Html": "I'm quite familiar with RequireJS config. I've already set up my paths correctly. What I'm trying to do is have an import statement actually cause the TypeScript compiler to generate the correct AMD wrapper AND provide intellisense. I will read the second article...but frankly, I'm getting the strong impression that the TS module system can't even handle this extremely common scenario...it's pretty disappointing.<br />\n",
+    "PostedDate": "2013-07-02T11:53:09.603-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063785",
+    "ThreadId": "448674",
+    "Html": "I think you will need to do: <br />\nimport $ = require(&quot;../Scripts/jquery&quot;)<br />\n<br />\nAs far as a know the import $ = module('jquery'); is only for internal non AMD modules.<br />\nBut i might be wrong.<br />\n<br />\nI am using another approach:<br />\nYou add a shim to require, in the require.config<br />\n<br />\nrequire.config({<br />\n<pre><code>baseUrl: &quot;app&quot;,\n// Shims\n//----------------------------------------------------------------------------------------------------\nshim: {\n    &quot;jquery&quot;: {\n        exports: &quot;$&quot;\n    }\n},\n// Paths\n//----------------------------------------------------------------------------------------------------\npaths: {\n    jquery: '../Scripts/jquery-2.0.2'\n}</code></pre>\n\n});<br />\n<br />\nand then in some external module, which you have required, eg MainView.ts:<br />\n<br />\ndeclare var $: JQueryStatic; // Must be outside of the class<br />\n<br />\nclass MainView {<br />\n<pre><code>       constructor() {   \n       }</code></pre>\n\n}<br />\n",
+    "PostedDate": "2013-07-02T13:13:49.157-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063789",
+    "ThreadId": "448674",
+    "Html": "Guys. Guys. Guys. jQuery does not require a shim. It already works, out of the box, with AMD. I just want to import it...and I don't want it to be public. If using the shim config is the only way, then I guess I have to live with that. But, it seams that it should just work. There is a KO amd d.ts that makes ko work correctly. Perhaps something like this needs to be done for jQuery? I'm just not sure what the magic sauce is to make TS understand. Also, it concerns me that a custom d.ts file will need to be created to make every js, amd-understanding library work. Is this really not supported?<br />\n",
+    "PostedDate": "2013-07-02T13:20:32.343-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063834",
+    "ThreadId": "448674",
+    "Html": "I assume you will be using Jquery in more than one module, therefore you can use the shim<br />\nand use <br />\n<pre><code>declare var $: JQueryStatic; </code></pre>\n\nIf you just want to load jquery as a amd module, you need to set set define.amd.jQuery to true.<br />\nand then you should be able to require it the same way as your other modules.<br />\n<pre><code>import yourJqueryReference = require(&quot;../Scripts/jquery&quot;)</code></pre>\n\nAnd maybe read &quot;MAPPING MODULES TO USE NOCONFLICT&quot; from here <a href=\"http://requirejs.org/docs/jquery.html\" rel=\"nofollow\">http://requirejs.org/docs/jquery.html</a> <br />\n",
+    "PostedDate": "2013-07-02T15:39:08.427-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063859",
+    "ThreadId": "448674",
+    "Html": "One final time. This is not a require.js issue. I know how path, shim and no conflict work. I know how to require, define and optimize modules. I've even written a UI framework and a build tool on top of this stuff and built lots of apps this way before TypeScript. What I cannot get to work is TypeScript. I want to write this:<br />\n<pre><code>import $ = module('jquery');</code></pre>\n\nBut, I cannot figure out how to define the jquery  module...from the TypeScript perspective... to get both the compiler and the intellisense to work.<br />\n",
+    "PostedDate": "2013-07-02T17:06:49.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063865",
+    "ThreadId": "448674",
+    "Html": "An import declaration is used for referencing external modules, the jquery.d.ts is not an external module (it has no top level export/import statements or an export= statement) so it isn't used with import in the fashion you're attempting. It simply provides type information to the compiler at design time via /// &lt;reference path='jquery.d.ts'/&gt;. \r<br />\n<br />\nIf you want to use JQuery with an import and AMD code generation then yes you will need a version of the .d.ts that is authored appropriately, namely exporting the existing definitions. It only takes a minute to convert the existing .d.ts to this form, and slightly longer than that to write a tool to do the same for an arbitrary .d.ts. That no such definition already exists on definitelytyped suggests most people are only loading this synchronously in a script tag since their app can't do much before JQuery is loaded.\r<br />\n<br />\nIn any case, changing the existing .d.ts to an external module definition I now can say this:<br />\n<pre><code>import JQuery = require('jquery');\nvar $: JQuery.JQueryStatic;\n$('aThing');\nvar myDeferred = $.Deferred(d =&gt; { });</code></pre>\n\nwhich generates:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) { \n    var $;\n    $('aThing');\n    var myDeferred = $.Deferred(function (d) {\n    });\n});</code></pre>\n\nIs that more like what you wanted?<br />\n",
+    "PostedDate": "2013-07-02T17:36:55.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063866",
+    "ThreadId": "448674",
+    "Html": "That is closer, but the code that you are showing as being generated by the compiler is not correct. Here's what I want to type in my app code:<br />\n<pre><code>import $ = module('jquery');\n\n$('.someSelector').show();</code></pre>\n\nAnd it should generate something like this:<br />\n<pre><code>define(['require', 'exports', 'jquery'), function(require,exports,$){\n    $('.someSelector').show();\n});</code></pre>\n\nI understand that the existing jquery file is not correctly set up to mimic the real word library (which actually provides an AMD module if requested). So, is there a way that I can easily fix it so that I can write code like above, or create a new .d.ts file that uses the existing one and then exports something. I'm happy to submit it back to Definitely Typed. I do plenty of open source work.<br />\n",
+    "PostedDate": "2013-07-02T17:45:25.047-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063870",
+    "ThreadId": "448674",
+    "Html": "I think this is what I was looking for: <a href=\"https://typescript.codeplex.com/workitem/1058\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1058</a>\r<br />\nSome SO searched turned this up along with some peaved Node developers whose d.ts files broke on 0.9 because of this. I see that the issue indicates how to make the module callable. But, what if there are many callable overrides? How do you make the module callable with all the overrides?<br />\n",
+    "PostedDate": "2013-07-02T18:03:07.28-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063874",
+    "ThreadId": "448674",
+    "Html": "Another discussion here: <a href=\"https://typescript.codeplex.com/discussions/444444\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/444444</a>\r<br />\nThis seams to be my case. If I'm reading the conversation correctly, then there is a bug that is preventing me from declaring the new jQuery module correctly. Me sad ;(<br />\n",
+    "PostedDate": "2013-07-02T18:10:33.253-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063876",
+    "ThreadId": "448674",
+    "Html": "All I did with the existing jquery.d.ts was add 'export' to each interface definition and declare statement. You can start there and see if it's actually modeled as you want and submit it to DefinitelyTyped. \r<br />\n<br />\nI should've written 'declare var $: JQuery.JQueryStatic' since it doesn't need to be (and shouldn't be) emitted. So your code snippet requires one extra line in the TS to get what you want in the JS:<br />\n<pre><code>import JQuery = require('jquery');\ndeclare var $: JQuery.JQueryStatic;\n$('.someSelector').show();</code></pre>\n\nyields:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {  \n    $('.someSelector').show();\n});\n//# sourceMappingURL=app.js.map\n</code></pre>\n\nThe additional line is necessary since in the Typescript file the imported $ variable is now under the JQuery namespace so you would need to write JQuery.$('.someSelector'). Instead we just tell the compiler that at runtime it can trust that there is a $ variable of the type described in the jquery.d.ts.<br />\n",
+    "PostedDate": "2013-07-02T18:13:53.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063877",
+    "ThreadId": "448674",
+    "Html": "<strong>EisenbergEffect wrote:</strong><br />\n<blockquote>\nAnother discussion here: <a href=\"https://typescript.codeplex.com/discussions/444444\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/444444</a><br />\nThis seams to be my case. If I'm reading the conversation correctly, then there is a bug that is preventing me from declaring the new jQuery module correctly. Me sad ;(<br />\n</blockquote>\nThis thread is a better explanation of the solution and state of things <a href=\"https://typescript.codeplex.com/discussions/446134\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/446134</a><br />\n",
+    "PostedDate": "2013-07-02T18:15:55.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063922",
+    "ThreadId": "448674",
+    "Html": "So is this incorrect then? \r<br />\n<br />\n<a href=\"https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts#L87\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts#L87</a><br />\n",
+    "PostedDate": "2013-07-02T22:40:24.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063927",
+    "ThreadId": "448674",
+    "Html": "My guess is that that works. But, I don't know if the current jQuery definition file can be made to work that way. Perhaps a separate amd defintion file can be made...bu I think it would have to duplicate part of jQuery in a clever way in order to get the callables to work correctly. I don't even know any more. I've pretty much given up.<br />\n",
+    "PostedDate": "2013-07-02T23:12:33.473-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064019",
+    "ThreadId": "448674",
+    "Html": "I had it solved quite similar to how danquirk suggests. <br />\n<br />\nI wasted countless hours in attempt to have callable jquery module so I would have <br />\n<pre><code>import $ = module('jquery');</code></pre>\n\njust like i have<br />\n<pre><code>import ko = module(&quot;knockout&quot;);\n...\nvar a = ko.observable(7);</code></pre>\n\nended up with<br />\n<pre><code>import jquery = module(&quot;jquery&quot;);\nvar $ = &lt;jquery.JQueryStatic&gt;jquery;</code></pre>\n\nthat lets you load jquery as amd dependency<br />\nGenerated code looks like that:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, &quot;jquery&quot;], function(require, exports, __jquery__) {\n    var jquery = __jquery__;\n    var $ = jquery;</code></pre>\n\nPS. I changed interfaces in declaration files into export interface just as Dan did.<br />\n<br />\nEDIT: I don't remember correctly last snippet I will correct it later at home. <strong>DONE</strong><br />\nEDIT2: I know I cast module to type but it achieves AMD module without krazy ///&lt;references<br />\n",
+    "PostedDate": "2013-07-03T03:20:53.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064192",
+    "ThreadId": "448674",
+    "Html": "For usage with AMD, we ended up downloading the jquery.d.ts file from definitelytyped without any modifications, then creating a separate libraries.d.ts file which contains:<br />\n<pre><code>/// &lt;reference path=&quot;jquery/jquery.d.ts&quot; /&gt;\n\ndeclare module &quot;jquery&quot; {\n  export = jQuery;\n}</code></pre>\n\nThen we can just use jquery directly in a TypeScript file:<br />\n<pre><code>/// &lt;reference path=&quot;../../libraries/libraries.d.ts&quot; /&gt;\n\nimport $ = require(&quot;jquery&quot;);</code></pre>\n\nThen we have a requireConfig.js file which specifies that &quot;jquery&quot; should resolve to JQuery.<br />\n",
+    "PostedDate": "2013-07-03T10:01:25.603-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064210",
+    "ThreadId": "448674",
+    "Html": "@derekcicerone I tried exactly what you recommended...and I still don't get intellisense. Strange. Here's what I have:<br />\n<br />\nreferences.d.ts<br />\n<pre><code>/// &lt;reference path=&quot;../Typescript/durandal/durandal.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;../Typescript/jquery/jquery.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;../Typescript/knockout/knockout.amd.d.ts&quot; /&gt;\n\ndeclare module 'jquery' {\n    export = jQuery;\n}</code></pre>\n\nfoundation.ts<br />\n<pre><code>/// &lt;reference path=&quot;../references.d.ts&quot; /&gt;\n\nimport composition = module(&quot;durandal/composition&quot;);\nimport $ = module('jquery');\n\ncomposition.addBindingHandler('foundation', {\n    init: () =&gt; {\n        $(document).foundation();\n    }\n});</code></pre>\n\nNow, this compiles into the correct JS code as follows:<br />\n<br />\nfoundation.js<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, &quot;durandal/composition&quot;, 'jquery'], function(require, exports, __composition__, __$__) {\n    var composition = __composition__;\n    var $ = __$__;\n\n    composition.addBindingHandler('foundation', {\n        init: function () {\n            $(document).foundation();\n        }\n    });\n});\n//@ sourceMappingURL=foundation.js.map\n</code></pre>\n\nBut, there is no intellisense on $ in foundation.ts.<br />\n",
+    "PostedDate": "2013-07-03T10:29:57.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064222",
+    "ThreadId": "448674",
+    "Html": "It's quite possible the lack of Intellisense is just a bug as export= is a fairly recent addition to the language. I'll take a look.<br />\n",
+    "PostedDate": "2013-07-03T11:16:04.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1074710",
+    "ThreadId": "448674",
+    "Html": "Try this workaround. It gives me intellisense and it compiles:<br />\n<pre><code>///&lt;reference path=&quot;./d.ts/DefinitelyTyped/jquery/jquery.d.ts&quot;/&gt;\n\ndeclare module 'jquery' {\n    var x: any;\n    export = x;\n}\n\nimport jquery = require('jquery');\n\nvar $ = &lt;JQueryStatic&gt;jquery;\n\n$(document).ready( () =&gt; console.log('hi') );</code></pre>\n\nMK<br />\n",
+    "PostedDate": "2013-07-30T07:04:39.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078052",
+    "ThreadId": "448674",
+    "Html": "Sorry to revive an old thread, but there is a workaround that (although somewhat brittle and hackish) I believe gets the job done the way EisenbergEffect intends (at least in ASP.NET projects within Visual Studio). \r<br />\nOriginal details are at <a href=\"http://absolom-programming.blogspot.ca/2012/10/typescript-amd-with-js-library.html\" rel=\"nofollow\">http://absolom-programming.blogspot.ca/2012/10/typescript-amd-with-js-library.html</a>\r<br />\n<br />\nIn this particular case there needs to be a shim in the configuration of requirejs named 'jquery' pointing to the jquery.js file, which must not be in the root directory.\r<br />\nIn the TypeScript root (Scripts/ in my case) create jquery.ts with this content:<br />\n<pre><code>/// &lt;reference path=&quot;definitelyTyped/jquery/jquery.d.ts&quot; /&gt;\n\nexport = $;</code></pre>\n\nBut this export won't be used, it is there only to allow the type of $ to flow from the .d.ts to the import on the client, thus enabling intellisense.\r<br />\nTo use it just write: <br />\n<pre><code>import $ = require(&quot;jquery&quot;);</code></pre>\n\nDuring development and compilation this &quot;jquery&quot; should be resolved to jquery.ts because it is in the root dir and $ will be typed JQueryStatic. But at execution time it will be routed by requirejs through the shim defined to the proper jquery.js.<br />\n",
+    "PostedDate": "2013-08-07T20:33:49.51-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

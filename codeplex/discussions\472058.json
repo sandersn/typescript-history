@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1132267",
+    "ThreadId": "472058",
+    "Html": "In chapter 4.18, the following declaration is provided<br />\n<pre><code>var f: (s: string) =&gt; string;</code></pre>\n\nThe text then brings the following example:<br />\n<blockquote>\nFor example, given the declaration of the variable ‘f’ above, the assignment <br />\n<pre><code>f = s =&gt; s.toLowerCase(); </code></pre>\n\ncauses the function expression to be contextually typed, inferring the String primitive type for &gt; ‘s’. <br />\nHowever, simply enclosing the construct in parentheses<br />\n<pre><code>f = (s =&gt; s.toLowerCase()); </code></pre>\n\ncauses the function expression to be processed without a contextual type, now inferring ‘s’ and the result of the function to be of type Any as no type annotations are present. <br />\n</blockquote>\nHowever, the following snippet will not compile. But from what I understand if the <code>Any</code> type is inferred from this version, there should be no errors. I want to note that I actually think it should be possible and okay to detect the error because the declaration is clear, but it's just not what I expect from reading the text:<br />\n<pre><code>var f: (s: string) =&gt; string;\nf = (s =&gt; s.toLowerCase());\n\nf(1); // error</code></pre>\n\n",
+    "PostedDate": "2013-12-05T11:09:52.89-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132304",
+    "ThreadId": "472058",
+    "Html": "The type of a variable does not change after its declaration, regardless of what assignments happen to it. The assignment on the second line of your last example is irrelevant to whether or not <code>f(1);</code> is an error.\r<br />\n<br />\nThe part about the expression <code>(s =&gt; s.toLowerCase())</code> being determined to have a return type of <code>any</code> applies to the expression <em>itself</em>. In this case, the type of that expression is only considered for the purposes of checking assignment compatibility with <code>f</code>.<br />\n",
+    "PostedDate": "2013-12-05T13:14:37.267-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132307",
+    "ThreadId": "472058",
+    "Html": "Contextual typing allows types from declarations to be 'pushed' to values which had no explicit type annotation. It doesn't cause types to flow in the other direction and make the type of an explicitly typed declaration change based on the argument values provided. It would be very strange for f to be typed as <code>string =&gt; string</code> but for that to be a lie depending on how someone later initialized it. When contextual typing is not applied in the example above f is still <code>string =&gt; string</code>, it is just being initialized with a function that is <code>any =&gt; any</code> which is a valid assignment. <br />\n",
+    "PostedDate": "2013-12-05T13:23:27.4-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132318",
+    "ThreadId": "472058",
+    "Html": "Thanks you guys, that makes sense. Though technically worded correctly, maybe it's something where the spec could be a little clearer? I could imagine not being the only one wondering about this, but who knows. :)<br />\n",
+    "PostedDate": "2013-12-05T13:53:53.067-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

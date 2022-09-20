@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1246555",
+    "ThreadId": "545678",
+    "Html": "Hello Community,<br />\n<br />\nI am diving into TypeScript, and one of the features I am exploring is the output into a single file.  However, I am running into a problem and I am hoping to get assistance.<br />\n<br />\nMy app.ts:<br />\n<pre><code>var greeter = new Testing.Greeter(&quot;Hello TypeScript&quot;);   \nvar temp = greeter.sayHello();</code></pre>\n\nMy greeter.ts:<br />\n<pre><code>module Testing\n{\n    export class Greeter {\n        subject: string;\n        constructor(subject: string) {\n            this.subject = subject || &quot;World&quot;;\n        }\n\n        sayHello() {\n            return &quot;Hello &quot; + this.subject;\n        }\n    }\n}</code></pre>\n\nMy output.js:<br />\n<pre><code>var greeter = new Testing.Greeter(&quot;Hello TypeScript&quot;);\nvar temp = greeter.sayHello();\n\nvar Testing;\n(function (Testing) {\n    var Greeter = (function () {\n        function Greeter(subject) {\n            this.subject = subject || &quot;World&quot;;\n        }\n        Greeter.prototype.sayHello = function () {\n            return &quot;Hello &quot; + this.subject;\n        };\n        return Greeter;\n    })();\n    Testing.Greeter = Greeter;\n})(Testing || (Testing = {}));</code></pre>\n\nAs you can see, Testing.Greeter is defined <em>after</em> the output from app.ts, and so when I new up a Testing.Greeter, it is undefined.<br />\n<br />\nI realize I could use a setTimeout, but that always smells of a hack.  In an HTML page, I could use the window.onload, however, I am in a NodeJS application.<br />\n<br />\nSo, the questions are:<br />\n<br />\n1) Is there a way to change the ordering of the file output (preferred)?  If not,<br />\n2) Is there an &quot;onload&quot; in NodeJS? (a search for this turned up empty).<br />\n<br />\nThank you in advance for any assistance you can lend,<br />\nMichael<br />\n",
+    "PostedDate": "2014-05-17T19:10:00.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246719",
+    "ThreadId": "545678",
+    "Html": "There are a couple of ways you can change order in the generated code:<br />\n<ol>\n<li>Order of arguments on the command line: tsc greeter.ts app.ts --out output.js</li>\n<li>/// references; the reference tag acts like a dependency declaration, the compiler will build a dependency graph following the reference tags and ensuring, in absence of cycles, that all dependencies come before the file declaring them in the output. In your example add to app.ts /// &lt;reference path=&quot;greeter.ts&quot; /&gt; </li>\n</ol>\n",
+    "PostedDate": "2014-05-18T11:40:36.913-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246733",
+    "ThreadId": "545678",
+    "Html": "Thank you for your reply, mhegazy.  For the command line, I am actually using Visual Studio 2013.  Is there a way to configure VS2013 to do this?\r<br />\n<br />\nAs for the 2nd option, this seems like VS2013 would know that the startup/main file should be the last file emitted in the output file.  That is, there shouldn't be a need to reference dependencies, and they should be determined by the compiler...<br />\n",
+    "PostedDate": "2014-05-18T12:18:46.787-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246751",
+    "ThreadId": "545678",
+    "Html": "You are correct. In VS you can not use the command line argument order as the files will be passed to the compiler in the order they appear in the project file, and project files are not order-sensitive. \r<br />\n<br />\nIn VS, however, you can use _references.ts. If your project has a typescript file at the root named &quot;_references.ts&quot;, the IDE will consider it the first file in the list. Since we are walking the depencency chain in the files following /// references, your /// references in this file (_references.ts) will take precedence. so in your example:\r<br />\n_references.ts<br />\n<pre><code>/// &lt;reference path=&quot;greeter.ts&quot; /&gt; </code></pre>\n\nThis guarantees that greeter comes before app in the output. Also note that you do not need to put a reference to all your files in this file, you only should put the files you care about their order. so in your case, a reference to greeter.ts is sufficient.\r<br />\n<br />\nAs for your second question, I am not sure I understand. TypeScript does not have a concept of a startup/main file. The IDE thinks of the project as a collection of files, and unless you specify the ordering using /// references (whether in each file, or in a the special _references.ts) the IDE has no way of knowing what is the desired order.<br />\n",
+    "PostedDate": "2014-05-18T14:35:52.733-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-18T14:53:05.47-07:00"
+  },
+  {
+    "Id": "1246755",
+    "ThreadId": "545678",
+    "Html": "Ah!  I am getting my environments confused.  I am also using NodeJS Tools for Visual Studio 2013, so yes you are correct, there is no &quot;main&quot; file for a typical TypeScript HTML Application.  Sorry for the confusion.\r<br />\n<br />\nHowever, I will say that NodeJS has the right idea in many regards.  Because it does have a notion/concept of a main file (and also a startup file). It should be able to infer the dependencies (and their corresponding order) by starting with that file and working from there throughout a project.\r<br />\n<br />\nAs an aside, it's amazing (read: confounding) to see that as more technologies come out to reduce manual reference definitions (such as requirejs/node), there seems to be another technology that comes out to undo their hard work.  That is, RequireJS was created to eliminate the following maintenance madness in a HTML page:<br />\n<pre><code>&lt;script src=&quot;path/to/script1.js /&gt;\n&lt;script src=&quot;path/to/script2.js /&gt;\n&lt;script src=&quot;path/to/script3.js /&gt;</code></pre>\n\nAnd now that this has been solved through RequireJS, TypeScript comes along and introduces its own version:<br />\n<pre><code>/// &lt;reference path=&quot;path/to/script1.ts&quot; /&gt;\n/// &lt;reference path=&quot;path/to/script2.ts&quot; /&gt;\n/// &lt;reference path=&quot;path/to/script3.ts&quot; /&gt;</code></pre>\n\nJust an observation.  It just seems like we should be past this unnecessary (and annoying, frustrating, etc.) aspect of JavaScript development by now.<br />\n",
+    "PostedDate": "2014-05-18T14:52:57.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1068709",
+    "ThreadId": "450106",
+    "Html": "Hello, I'm writing a small framework based on TypeScript, is there any plans to support the #ifdebug / #endif , this would help to debug.<br />\n<br />\nExample of usage:<br />\n<ol>\n<li>tsc MyFileThatReferencesAllOtherTSFiles.ts -debug -out MyFramework.js</li>\n<li>\ntsc MyFileThatReferencesAllOtherTSFiles.ts -release -out MyFramework.js<br />\n</li>\n</ol>\nIn case of 1, the code that in the .ts files was between #ifdebug / #endif would make it into the JS, and it could contain code like &quot;console.log( ... )&quot;.<br />\n<br />\nIn case of 2 it would cut the overhead between #ifdebug / #endif.<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2013-07-15T15:40:41.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1069676",
+    "ThreadId": "450106",
+    "Html": "We don't have any plans at this time to do optional compilation of regions.  Turns out that get that to work correctly, and work well, in an interactive editing environment is tricky to get right, so we chose not to focus on it for 1.0.<br />\n\r<br />\nI'm not sure if anyone has created a fork of the compiler to add support just for the commandline experience, but it wouldn't surprise me as that's fairly straightforward.  <br />\n",
+    "PostedDate": "2013-07-17T12:09:02.13-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070303",
+    "ThreadId": "450106",
+    "Html": "In languages like JavaScript or TypeScript, you don't need C-style conditional blocks. <br />\n<pre><code>// debug.js\nfunction debug(d : ()=&gt;any) { d(); }\n\n// no-debug.js\nfunction debug(d : ()=&gt;any) { }</code></pre>\n\nAnd now you just call them with:<br />\n<pre><code>debug(() =&gt; console.log(&quot;foo bar&quot;));</code></pre>\n\nAnd of course you can extend this to make easier to use log_debug functions or the like that are more convenient to the use in the common case.\r<br />\n<br />\nYou can do similar things for asserts or the like.  You can use functions to ensure that side-effects are never called in release mode, or you can just take plain boolean arguments to make the syntax every more concise:<br />\n<pre><code>function assert(test:()=&gt;bool, msg:()=&gt;string) {\n    if (!test())\n        throw msg();\n}\n\ntry\n{\n    assert(()=&gt;0==1, ()=&gt;&quot;oh no&quot;);\n}\ncatch (e)\n{\n    alert(e);\n}</code></pre>\n\nA more generic feature useful in other contexts might be D's lazy argument expression types, something like:<br />\n<pre><code>function assert(test: lazy bool, msg: lazy string) {\n  if(!test)\n    throw msg;\n}\n\nassert(some_expensive_test(), expensive_to_build_error());</code></pre>\n\nWhich in release mode, with an assert with an empty body, would compile down to a call to an empty function (which will be optimized away by most implementations).<br />\n",
+    "PostedDate": "2013-07-18T22:26:15.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070456",
+    "ThreadId": "450106",
+    "Html": "<blockquote>\nWhich in release mode, with an assert with an empty body, would compile down to a call to an empty function (which will be optimized away by most implementations).<br />\n</blockquote>\nI assume you mean compiled away by the JIT. Do you have any references stating that? It seems unlikely to me, as functions (even empty ones) are first class objects in JavaScript that can have properties assigned to them arbitrarily. It would be unsafe for the JIT to ignore empty functions.\r<br />\n<br />\nEither way, you're still instantiating anonymous functions, making method calls, and sending more code over the wire with this kind of a solution. It also forces you to structure code in a way that may not be the most natural. Finally, it requires you to use some 3rd party system besides the compiler to modify what is being built in different scenarios. I don't think this is an adequate substitute for conditional compilation.\r<br />\n<br />\nThere actually was a (very popular) feature request for conditional compilation that was closed a while back. It seems kind of strange to me to close a request for a popular feature which is pretty essential in the kind of application-scale JavaScript scenario TypeScript is meant to address (especially since the language is only at v0.9). I hope the team reconsiders and reopens it so the community at least has the ability to continue commenting on it.<br />\n",
+    "PostedDate": "2013-07-19T06:06:19.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070729",
+    "ThreadId": "450106",
+    "Html": "<blockquote>\nI assume you mean compiled away by the JIT. Do you have any references stating that?<br />\n</blockquote>\nYou can inspect the output of compilers like V8 if you want to see.\r<br />\n<br />\nRecall that almost every JS compiler today does some form of tracing; code paths running through empty functions repeatedly will get compiled down to a very slimline set of instructions, &quot;bloated&quot; over C/C++ mostly just by the include of type guards and the like (and a weaker set of optimizations).<br />\n<blockquote>\nIt seems kind of strange to me to close a request for a popular feature which is pretty essential in the kind of application-scale JavaScript scenario TypeScript is meant to address<br />\n</blockquote>\nI'm not saying it's wrong, but that's a pretty strong claim to make.\r<br />\n<br />\nI've seen pretty large apps in various languages not using or needing any such conditional debug statements; many C++ apps have them but run beautifully with them left compiled in (and most of the time, they should be).<br />\n",
+    "PostedDate": "2013-07-19T19:52:49.707-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1070954",
+    "ThreadId": "450106",
+    "Html": "@SeanMiddleditch, with reference to your first post, what you have described is not really an alternative to a pre-processor directive.\r<br />\n<br />\nHow would the no-debug.js get referenced in a release build without actual manual intervention?\r<br />\n<br />\nThe thing that is being requested of TypeScript is the following for your code:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// debug.js (there is no no-debug.js)</span>\n<span style=\"color:Blue;\">function</span> debug(d : ()=&gt;any) { \n\n#<span style=\"color:Blue;\">if</span> (DEBUG)\n     d();\n#endif\n\n}\n\r\n</pre></div>Certainly for small projects and hobbyists it's rather trivial to ensure one or the other file is included in a release build or to comment out a section or two of code. For larger projects this introduces yet another source of potential errors.\r<br />\n<br />\nFor example we currently have code that looks like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n   <span style=\"color:Green;\">// Development sources and keys        </span>\n   <span style=\"color:Blue;\">var</span> foo = {\n        root: <span style=\"color:#A31515;\">&quot;https://xxx.blob.core.foobar.net/&quot;</span>,\n        googlePlusKey: { id: <span style=\"color:#A31515;\">&quot;458588-dfdf1qdodfdfdfdfq7ok3i5d&quot;</span>, key: <span style=\"color:#A31515;\">&quot;BIzdfGyCdfdfe8HpffgfRSb5_2Pdfdf&quot;</span> },\n        facebookKey: { id: <span style=\"color:#A31515;\">&quot;123219585123132&quot;</span> }\n     };\n\n     <span style=\"color:Green;\">// # BEGIN comment out prior to release</span>\n     foo.root = <span style=\"color:#A31515;\">&quot;https://yyy.blob.core.foobar.net/&quot;</span>;\n     foo.googlePlusKey = { id: <span style=\"color:#A31515;\">&quot;434343434&quot;</span>, key: <span style=\"color:#A31515;\">&quot;AIzdfGyCdfdfe8HpffgfRSb5_2Pdfdf&quot;</span> };\n     foo.facebookKey = { id: <span style=\"color:#A31515;\">&#39;4343434454545454545&#39;</span>};\n     <span style=\"color:Green;\">// # END comment</span>\r\n</pre></div>And a pre-release check list along the lines of<br />\n<ol>\n<li>Uncomment lines x to y in foo.ts.</li>\n<li>\nComment out lines p to q in bar.ts\r<br />\n....<br />\n</li>\n</ol>\nWe'd dearly like to replace these with a simple <code>#if (DEBUG)</code> and not have to worry ever again.\r<br />\n<br />\nI won't be surprised if someone were to pipe up saying you can use tool so-and-so to swap files in for a release build or run a macro that will do the job, but we don't want to maintain separate code files for release and debug or introduce yet another external tool. We'd like to see this solved organically within TypeScript, via the well established mechanism of a pre-processor directive.\r<br />\n<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-07-21T05:14:30.06-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092405",
+    "ThreadId": "450106",
+    "Html": "One more vote for a pre-processing facility in TypeScript that could conditionally strip out sections of code based on the project configuration (Debug vs. Release). It is a main aspect of using project configurations in other languages like C++. We would like to have debugging code - console trace, asserts - that are completely removed from Release builds.\r<br />\n<br />\nIt seems to me that the TypeScript compiler could easily add this in as an initial pass.<br />\n",
+    "PostedDate": "2013-09-13T10:25:24.51-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1218997",
+    "ThreadId": "450106",
+    "Html": "You can already achieve this if you use UglifyJS as part of your build process. Uglify has a &quot;global definitions&quot; feature that lets you specify values of &quot;constants&quot; as part of the build.\r<br />\n<br />\nI've created a Gist to illustrate how to do this: <a href=\"https://gist.github.com/markrendle/9347418\" rel=\"nofollow\">https://gist.github.com/markrendle/9347418</a><br />\n",
+    "PostedDate": "2014-03-04T06:33:32.933-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219335",
+    "ThreadId": "450106",
+    "Html": "@markrendle, that's not a bad solution for the most part. But obviously it's specific to UglifyJS.\r<br />\n<br />\nFurthermore, I don't believe it's capable of handling cases such as the following:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n#<span style=\"color:Blue;\">if</span>(DEBUG)\n       <span style=\"color:Blue;\">import</span> foo = require(<span style=\"color:#A31515;\">&#39;bar-debug&#39;</span>);\n#<span style=\"color:Blue;\">else</span>\n       <span style=\"color:Blue;\">import</span> foo = require(<span style=\"color:#A31515;\">&#39;bar-humbug&#39;</span>);\n#endif\n\n<span style=\"color:Blue;\">function</span> doFoo(){\n    foo.someMethod();\n}\r\n</pre></div>or<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n#<span style=\"color:Blue;\">if</span>(DEBUG)\n       <span style=\"color:Blue;\">class</span> Foo { doFoo(){ console.log(<span style=\"color:#A31515;\">&#39;debug&#39;</span>); }  }\n#<span style=\"color:Blue;\">else</span>\n       <span style=\"color:Blue;\">class</span> Foo { doFoo(){ console.log(<span style=\"color:#A31515;\">&#39;release&#39;</span>); }  }\n#endif\n\n<span style=\"color:Blue;\">var</span> foo = <span style=\"color:Blue;\">new</span> Foo();\r\n</pre></div>",
+    "PostedDate": "2014-03-05T00:39:56.593-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

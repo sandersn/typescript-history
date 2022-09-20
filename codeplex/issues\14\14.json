@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We've converted to jakefile anyway",
+    "ClosedDate": "2013-01-28T17:08:56.787-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "**EDIT**\r\nThis is not actually a bug, turns out TypeScript use NMake for Makefile, which doesn't care about mixing tab and space indents.\r\n\r\nBut hey, it would be still nice to normalize all white-spaces indents into tabs.\r\n\r\nThe real issue is this one:\r\nhttp://typescript.codeplex.com/workitem/17\r\n",
+    "LastUpdatedDate": "2014-06-03T07:30:26.673-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T15:22:40.613-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Makefile is not correctly indented",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 14
+  },
+  "FileAttachments": [
+    {
+      "FileId": 499824,
+      "FileName": "Makefile",
+      "DownloadUrl": ".\\499824"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I'm still getting \n\n[pc@localhost typescript]$ make\nif not exist built mkdir built\n/bin/sh: -c: line 1: syntax error: unexpected end of file\nmake: *** [prebuild-local] Error 1\n\n\nI asked the same thing on Stackoverflow, someone said that the problem is a lack of Linux support because the thing is in reality an NMake file, not a GNU Makefile. \n\nI hope they fix it soon, meanwhile I'll try to find nmake and run it with wine...",
+      "PostedDate": "2012-10-01T15:31:10.36-07:00",
+      "Id": 78220
+    },
+    {
+      "Message": "@Mahlzeit\n\nJust look inside the Makefile, you'll find it's depending on several Windows commands. So currently it's not possible to run make on *nix or cygwin, which is another issue.\n\nIn addition, for people who want to try running \"make\", you have to \"set TYPESCRIPT_HOST=node\" before you run.",
+      "PostedDate": "2012-10-01T15:42:07.333-07:00",
+      "Id": 78223
+    },
+    {
+      "Message": "===\nForget about my previous comment, I was out of my mind.\n===\n\n@Mahlzeit Yes, it is an NMake file. So this issue should be \"Support building from Linux\" in the first place. It just happens to be possible to build with GNU make with some minor tweaks.",
+      "PostedDate": "2012-10-01T16:00:46.777-07:00",
+      "Id": 78224
+    },
+    {
+      "Message": "I was able to get nmake \"running\" (hard to tell if it's really working), but I get another error with itnow:\n\n[pc@localhost typescript]$ wine nmake.exe\nfixme:heap:HeapSetInformation (nil) 1 (nil) 0\n\nMicrosoft (R) Program Maintenance Utility Version 9.00.30729.01\nCopyright (C) Microsoft Corporation.  All rights reserved.\n\nfixme:msvcrt:msvcrt_get_flags :unknown flag , not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag c not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag c not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag s not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag = not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag u not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag n not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag i not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag c not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag o not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag d not supported\nfixme:msvcrt:msvcrt_get_flags :unknown flag e not supported\nmakefile(6) : fatal error U1035: syntax error : expected ':' or '=' separator\nStop.\n",
+      "PostedDate": "2012-10-01T17:21:22.8-07:00",
+      "Id": 78233
+    },
+    {
+      "Message": "@Mahlzeit\n\nThe problem is, even if you could get NMake running with wine. You'd still need to run node.js with wine in order to build these *.ts files. I don't know whether node is supported by wine, and even if it is supported, it's obviously not a good way.\n\nSo, I've wrote another makefile. Check this out:\nhttp://typescript.codeplex.com/workitem/17",
+      "PostedDate": "2012-10-01T19:11:33.44-07:00",
+      "Id": 78241
+    }
+  ]
+}

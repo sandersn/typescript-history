@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "945013",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Was playing around a bit with the TypeScript language services and wanted to know how difficult it is to actually use them. Turned out that to add things like code completion is not hard at all.</p>\r\n<p>Of course some documentation would be welcome, but even without it it seems to be a straight forward API.</p>\r\n<p>In case any one is interested, I put my TypeScript &quot;Editor&quot; (called tsedit) on GitHub:</p>\r\n<p><a href=\"https://github.com/jbaron/tsedit\">https://github.com/jbaron/tsedit</a></p>\r\n<p>Right now there is support for:</p>\r\n<p>- simple code completion (type &lt;ctrl&gt;&lt;space&gt; after a dot).</p>\r\n<p>- syntax highlighting.</p>\r\n<p>It should run on Linux, Windows and OS-X, but I only tested it on Linux. It uses (for now) node-webkit as the render engine and CodeMirror as the editor. But other than some&nbsp;re-factoring&nbsp;of TypeScript harness.ts, the actual glue to make this to\r\n work is only a few lines of code.&nbsp;</p>\r\n<p>P.S Still hoping that MS will release the source code for their playground editor,\r\n<span>wink wink nudge nudge</span>.</p>\r\n<p>// Peter</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-21T01:12:59.35-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "945404",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Fabulous!</p>\r\n<p>Can you please elaborate, how did you need to refactor harness and any interesting gotchas on the way?&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-21T16:32:21.983-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946046",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>The&nbsp;re-factoring&nbsp;I did was just to use the real language services and not the Shim (a wrapper that wraps the data into a string)&nbsp;that is standard used. My main reason to do so was to better understand what the Language Service API exactly returns and how\r\n to use these values&nbsp;appropriate. Typed return types are easier to deal with than strings.&nbsp;Also there were some small issues with the shim (like it used single quotes for JSON strings causing&nbsp;parser&nbsp;to bark), that made it less pleasant to deal with.&nbsp;</p>\r\n<p>Overall my findings so far:</p>\r\n<p>- The language services provide a simple API to get things like code completion etc working. It is clear that the TS team put some thought and effort in this. In case of more interest, just take a look at languageService.ts to see some of the nice and&nbsp;powerful&nbsp;methods\r\n of the ILangguageService interface.</p>\r\n<p>- The real trick is that to make a real good browser-based editor that these things like code completion should run in a separate thread so you don't block the GUI event (right now not the case in my editor). So either use a web worker or perhaps just a&nbsp;server-side&nbsp;component\r\n in combination with AJAX. A server-side component (nodejs based of course) seems to be the nicest since than you can easily use all the file IO you want and the editor itself could run in any browser and have not a dependency on node-wekbit. And then a Shim\r\n based API is nice to communicate between the browser and the server component.</p>\r\n<p>Since there is no documentation yet, one of the things I have not yet figured out is how to make TS load dependent files that are&nbsp;referred&nbsp;to in the source code (like &lt;reference&gt; and module(&quot;..&quot;).&nbsp;</p>\r\n<p>P.S In case you are running Linux or OS-X and want an IDE with TS support, you could also have a look at the EAP of WebStorm 6.0. I just gave it a try and although not perfect (sometimes it flags things as wrong when they are not), it is for sure pretty\r\n impressive what they did in such short time period. But&nbsp;I think in the long term an TS editor written in TS would be nicer.</p>\r\n<p>// Peter</p>\r\n",
+    "PostedDate": "2012-11-23T02:17:51.887-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946151",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>About loading dependent files: as far as I can tell, the only code for that is in the compiler, not the harness or language services. Since the compiler source includes direct function calls, we cannot simply import it either, so until that is refactored\r\n out, we need to copy some code (CommandLineHost and something like resolve from BatchCompiler). That code then invokes the real resolver (CodeResolver in referenceResolution.ts). Then, since compilation and language service have separate code collections,\r\n we need to copy from one to the other after resolution is done.</p>\r\n<p>Good idea to whittle down the harness to essentials, btw (having an interface/type-checking compiler is helpful for that kind of surgery).</p>\r\n<p>If you can wait a few days: I'm working on my own language service client at the moment. It is a simple stdin to stdout server (commands in, info out), so it can easily be integrated into editors (my interest is Vim, but anything scriptable that can cooperate\r\n with an asynchronous subprocess should work). This also has the advantage that the expensive stuff (initial load and dependency tracking can take over 5 seconds when using a language service client on itself) only needs to be run once, and subsequent queries\r\n (for types and completions etc) are quick.</p>\r\n<p>So far, I'm using&nbsp;getSymbolAtPosition,&nbsp;getTypeAtPosition,&nbsp;getDefinitionAtPosition,&nbsp;getCompletionsAtPosition. For the latter, I seem to get too many completions in non-member mode (not after a dot) - any ideas about that?</p>\r\n<p>Apart from the varying standards of code quality and commenting in the TS sources, the object-oriented patterns make some code look more complex than it really is. For instance, instead of a simple callback, there is a callback class, or instead of a higher-order\r\n traversal, there is a visitor pattern, etc. I have to keep reminding myself &quot;this is really simple, just look a little harder&quot;..</p>\r\n",
+    "PostedDate": "2012-11-23T07:28:31.047-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946177",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Many many thanks, Claus. I'm going to use that helpful stuff in my investigation.</p>\r\n<p>&nbsp;</p>\r\n<p>Right now I am trying to put together a simplified unit testing library.</p>\r\n<p>Having a parser a test runner can infer tests from source rather than require people to call some clunky API. And given that pretty much any existing JavaScript is TypeScript, that principle can be applied to run both TS and JS tests.&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-23T08:46:59.36-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946269",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Slightly off-topic, but can anyone tell me how to interpret the result of 'getDefinitionAtPosition', specifically the 'minChar' and 'limChar' properties?</p>\r\n<p>Since the 'unitIndex' seems to point to the source of the definition, I was hoping to get the location of the definition in the source, but I don't yet see how to do that..</p>\r\n<p>Translating via the corresponding 'lineMap' seems to make no sense whatsoever. Is there an API function I'm missing, to support 'jump to definition'?</p>\r\n",
+    "PostedDate": "2012-11-23T14:49:42.537-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946276",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Claus, I guess you are right. Than for now the easy solution is just to complete load all ts files in project directory before running the language services. Then I don't have to worry about references being resolved or not.</p>\r\n<p>You server sounds interesting. What are you using as a protocol (I guess JSON is not trivial from Vim)?</p>\r\n<p>Regarding the too many completions, I also noticed that. But when I checked the lib.d.ts file, they were actually defined there. Not sure why the TS team put them in there, but just before the IE10 DOM API section there is a very long list of variables and\r\n functions that causes this behavior. Like for all the event handlers like &quot;onplay&quot; there is also defined a variable. If you comment out that list, at least it gets better.</p>\r\n<p>// Peter</p>\r\n",
+    "PostedDate": "2012-11-23T15:09:22.937-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946452",
+    "ThreadId": "404060",
+    "Html": "\r\n<p>Peter, yes, resolve-then-services is what I'm doing.</p>\r\n<p>Protocol, like everything else, is still in flux, but JSON is the current choice. That should help other clients, and for Vim, I already have to rely on Python for communicating with the TypeScript server as an asynchronous subprocess, so I can check the\r\n JSON there, too.</p>\r\n<p>I've put up a current snapshot of my sources as <a href=\"https://github.com/clausreinke/typescript-tools\">\r\ntypescript-tools</a>&nbsp;. Lots of work&nbsp;still to do, but the basic pieces are there (see README).</p>\r\n<p>If I'd had this (especially showing types and jumping to definition) when I started, writing it would have been much easier!-)</p>\r\n<p>PS. Completions are on the todo list (I guess those extras in lib.d.ts really exist on the global window, but I'd expect non-member completions to respect the prefix before the cursor position - probably I was not using the API correctly);&nbsp;my problem with&nbsp;'getDefinitionAtPosition'\r\n was just using the wrong lineMap..</p>\r\n",
+    "PostedDate": "2012-11-24T09:53:27.53-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "948532",
+    "ThreadId": "404060",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<p>PS. Completions are on the todo list (I guess those extras in lib.d.ts really exist on the global window, but I'd expect non-member completions to respect the prefix before the cursor position - probably I was not using the API correctly);&nbsp;my problem with&nbsp;'getDefinitionAtPosition'\r\n was just using the wrong lineMap..</p>\r\n</blockquote>\r\n<p>I've now added completion support, both member and non-member. The trick was to give the TSS server an updated copy of the in-memory source code, when there are unsaved changes (as there will be while one is in the process of completing a chain of property\r\n accesses).</p>\r\n<p>I've also tried to use JSON returns more consistently.</p>\r\n<p>So, if you're using Vim, this is already quite useable, and if you're using node-webkit-based CodeMirror or Emacs or whatever, you should be able to communicate with the TSS server as an asynchronous subprocess, similar to what I do for Vim:-)</p>\r\n",
+    "PostedDate": "2012-11-28T10:55:40.073-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

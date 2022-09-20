@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Again, 'typeof' in a type context operates on values, not types. They are completely separate namespaces. The compiler's error message here is correct - there is no value with the name 'T'.\n\nThe issue tracker is a very poor tool for this sort of discussion; the forums or Stack Overflow would be immensely more efficient for both of us in terms of conveying the appropriate information.",
+    "ClosedDate": "2013-08-12T12:33:49.307-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Hello,\r\n\r\nthis may be a language restriction, but it seems mostly as a bug at least according to the compiler error given. What I am trying to do is to write a generic constructor using the typeof keyword:\r\n\r\n```\r\n// The first case compiles correctly\r\nfunction create1<T>(Constructor:  T): T\r\n{\r\n  return Constructor;\r\n}\r\n\r\n// This case does not compile\r\nfunction create2<T>(Constructor:  typeof T): T\r\n{\r\n  return new Constructor();\r\n}\r\n```\r\n\r\nwhen compiling create2 the compiler complains with this error:\r\n\r\n```\r\n/Users/manuel/dev/temp/bug.ts(6,42): error TS2095: Could not find symbol 'T'.\r\n```\r\n\r\nIt seems as typeof does not understand that T is a generic type, and complains about not finding the symbol.\r\n\r\nkind regards,\r\n\r\nManuel.\r\n\r\n",
+    "LastUpdatedDate": "2013-08-12T12:33:49.307-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-08T03:01:05.817-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "typeof operator does not work on generic types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1458
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I am not sure that you are correct in what you are saying. Typeof should work with types and definitively not with values as it is explained [here](http://blogs.msdn.com/b/typescript/archive/2013/08/06/announcing-0-9-1.aspx):\n\n```\nmodule M {\n    export function myFun(x: number) {\n        return x;\n    }\n}\n\nvar m: typeof M = M;\n```\n\nBesides, now I got a better example that proves that there is a bug with generics, since this compiles correctly:\n```\nfunction create(Constructor:  typeof Array): Array\n{\n  return new Constructor();\n}\n```\n\nplease reopen, since this is something I need for [Ground](http://gnd.io) and right now I have to use a quite ugly workaround :).\n\nregards.\n\n\n",
+      "PostedDate": "2013-08-08T10:06:31.733-07:00",
+      "Id": 109043
+    },
+    {
+      "Message": "T is a type; typeof only operates on values.\n\r\n\r** Closed by RyanCavanaugh 08/08/2013 9:07AM",
+      "PostedDate": "2013-08-08T09:07:13.187-07:00",
+      "Id": 109045
+    },
+    {
+      "Message": "Ok, I have to say sorry, because you are right in that I misunderstood the blog post. But my example is still compiling correctly, and it seems as semantically it is doing what I want, passing a constructor as parameter to a function.\n\nIs there a correct way to do this using generics?\n\nregards,\n\nManuel.\n",
+      "PostedDate": "2013-08-08T10:11:37.727-07:00",
+      "Id": 109047
+    },
+    {
+      "Message": "After a bit more thought on this. I still think this is a bug. Even if typeof is defined on values only, the thing is that in javascript (and by extension typescript), a type is also a value, so when I expect the following behaviour:\n\n```\ntypeof 5 -> Number\ntypeof Number -> Function\n```\n\nand btw, this is how typeof operator works in standard typescript as well...",
+      "PostedDate": "2013-08-12T05:30:35.267-07:00",
+      "Id": 109409
+    },
+    {
+      "Message": "```\n// The first case compiles correctly\n\ninterface ZeroArgCtor<T> {\n\tnew(): T;\n}\n\nfunction create1<T>(ctor: ZeroArgCtor<T>): T\n{\n  return new ctor();\n}\n\nclass A { }\n\nvar x = create1(A); // x: A\n```\n\r\n\r** Closed by RyanCavanaugh 08/08/2013 2:52PM",
+      "PostedDate": "2013-08-08T14:52:03.833-07:00",
+      "Id": 109410
+    },
+    {
+      "Message": "\"Closed Today at 5:56 PM by RyanCavanaugh\nThe 'typeof' operator in the value space is completely separate from the 'typeof' operator in the type space. Please ask a question on Stack Overflow or the forums here if you have questions.\"\n\nOk, I thought that was pretty obvious. The point is that semantically it gives you the same, the type of the argument, being a value or a type (which is also a value...\n\nI thank you for the example using generics only without typeof, but still, you have not really debated any of my arguments, sending me to stack overflow just seems a bit rude to me.\n\nOn top of it all, the kind of error provided by the compiler must be a bug, since it is not complaining about typeof not being able to be used on a generic, but about not finding the generic type T.\n\nI completely understand that this may not be of high priority, but closing an unresolved bug does not seems to be the most optimal way to move forward.\n\nkind regards.\n\n\n",
+      "PostedDate": "2013-08-12T12:04:50.713-07:00",
+      "Id": 109493
+    },
+    {
+      "Message": "The 'typeof' operator in the value space is completely separate from the 'typeof' operator in the type space. Please ask a question on Stack Overflow or the forums here if you have questions.\n\r\n\r** Closed by RyanCavanaugh 08/12/2013 8:56AM",
+      "PostedDate": "2013-08-12T08:56:59.213-07:00",
+      "Id": 109494
+    }
+  ]
+}

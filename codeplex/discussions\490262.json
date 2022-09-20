@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1158144",
+    "ThreadId": "490262",
+    "Html": "I suggest to change the default suffix of compiled js file name.<br />\nI think suffix should be something different from ordinary js file.<br />\n<br />\nFor example, in version 0.9, &quot;script.ts&quot; is compiled to &quot;script.js&quot; but I think compiled file name should be e.g. &quot;script.ts.js&quot;.<br />\n<br />\nCommand line option of tsc to specify suffix may be also useful.<br />\n(If such a option also exists, please ignore it.)<br />\n<br />\nReason:<br />\nI use git for my TypeScript project. I don't want to add compiled files into my git repository, so I configured not to add *.js files into the repository. (By adding &quot;.js&quot; to .gitignore)<br />\nHowever, after I added a library written in JavaScript, I couldn't do so. I wanted to upload the library and the library's file name ended with &quot;.js&quot;<br />\n<br />\nIf the suffix of compiled files are something different from ordinary js files, I can configure to add ordinary js files and not to add js files compiled from ts files.<br />\n",
+    "PostedDate": "2014-01-12T09:52:07.38-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1160367",
+    "ThreadId": "490262",
+    "Html": "If you put all your JavaScript files in one directory you can use .gitignore to ignore compiled TS files but NOT ignore your other JavaScript files.\r<br />\n<br />\nI built a sample application to demonstrate: <a href=\"https://github.com/wiktor-k/ts-amd/tree/master/scripts\" rel=\"nofollow\">https://github.com/wiktor-k/ts-amd/tree/master/scripts</a>\r<br />\n<br />\nTypeScript files are inside scripts directory but my JavaScript files are ONLY inside the &quot;lib&quot; subdirectory. As I keep the number of JavaScript files as small as possible (actually they're external libraries) this works pretty well for me.\r<br />\n<br />\nFor details check the .gitignore file: <a href=\"https://github.com/wiktor-k/ts-amd/blob/master/scripts/.gitignore\" rel=\"nofollow\">https://github.com/wiktor-k/ts-amd/blob/master/scripts/.gitignore</a>\r<br />\n<br />\nAs far as the &quot;add suffix&quot; part goes - it would break loading external modules by require.js (as require('a') looks for a.js file not a.ts.js file but if you used require('a.ts') then TS compiler could complain).<br />\n",
+    "PostedDate": "2014-01-13T01:02:31.913-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1180561",
+    "ThreadId": "490262",
+    "Html": "<blockquote>\nAs far as the &quot;add suffix&quot; part goes - it would break loading external modules by require.js (as require('a') looks for a.js file not a.ts.js file but if you used require('a.ts') then TS compiler could complain).<br />\n</blockquote>\nI see. Then sepalation by directory seems better.<br />\n<br />\nI found --outDir option after I post this thread, so I made &quot;tscopt&quot; file and wrote following content:<br />\n<pre><code>--outDir build\n</code></pre>\n\nThen I added build/ directory into .gitignore file and compile ts files using &quot;@&lt;file&gt;&quot;:<br />\n<pre><code>tsc @tscopt code.ts\n</code></pre>\n\nIf you always execute tsc command on the project root, all compiled js files are put under build directory and reproduce the directory hierarchy.<br />\n<br />\ne.g. If you are on PROJECT_ROOT and execute<br />\n<pre><code>tsc @tscopt libs/code.ts</code></pre>\n\nthen PROJECT_ROOT/build/libs/code.js is generated.<br />\n",
+    "PostedDate": "2014-01-19T05:52:26.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

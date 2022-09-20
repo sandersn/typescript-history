@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "935069",
+    "ThreadId": "401497",
+    "Html": "\r\n<p>JS libraries quite often use so-called &quot;hashes&quot;, objects with all property values of the same type. For instance:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> myEventHandlers = {\n    bind: <span style=\"color:blue\">function</span> () { <span style=\"color:green\">/*...*/</span> },\n    change: <span style=\"color:blue\">function</span> () { <span style=\"color:green\">/*...*/</span> }\n};</pre>\r\n</div>\r\n<p>Here all properties are functions. In general properties names are arbitrary. Let's call such an object as\r\n<em>Typed Hash</em>.</p>\r\n<p>I asked Anders Hejlsberg during the //build/ live session about plans to support it, and he replied that I can do it using indexer, for instance:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> FunctionHash {\n  [name: string]: Function;\n}</pre>\r\n</div>\r\n<p>However this interface doesn't express the semantics that I would like to achieve because it does not\r\n<strong>require</strong>&nbsp;property values to be Functions. Consider:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> bind(handlers: FunctionHash) {\n  <span style=\"color:green\">// ...</span>\n}\n\nbind({ a: 1 }); <span style=\"color:green\">// compiles. Shouldn't</span></pre>\r\n</div>\r\n<hr>\r\n<p>Consider adding the following construct:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> HashOfT {\n  *: T;\n}</pre>\r\n</div>\r\n<ol>\r\n<li>It inherits the&nbsp;<em>[name: string]: T&nbsp;</em>semantics </li><li>Constraints&nbsp;<em>all new properties to be of type T</em>. </li><li>Prevents &quot;Member not found&quot; compiler error. </li></ol>\r\n<p>By saying&nbsp;<em>new property</em>&nbsp;I mean that the constraint does not apply to the inherited properties, such as&nbsp;<em>toString</em>. The &quot;asterisk type&quot; is used when TS compiler usually throws a &quot;Member not found&quot;&nbsp;compilation error, but\r\n also it prevents defining new properties of different types.</p>\r\n<p>With this construct I will not be able to pass a mistyped hash into a function:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> bind(handlers: { *: Function; }) {\n}\n\nbind({ a: 1 }); <span style=\"color:green\">// compilation error: &quot;a&quot; is not a Function</span></pre>\r\n</div>\r\n<p>Here <em>{ a: 1 }</em>&nbsp;attempts to define a new numeric property <em>a</em>&nbsp;which is a violation of the constraint, so it should cause a compilation error.</p>\r\n<hr>\r\n<p>When TS gets generics in the next version, type&nbsp;<em>Hash&lt;T&gt;</em> can be a shortcut for\r\n<em>{ *: T }</em>.</p>\r\n",
+    "PostedDate": "2012-10-31T16:40:48.6-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935107",
+    "ThreadId": "401497",
+    "Html": "<p>The proposed \"asterisk type\" implies that</p>\r\n<ol>\r\n<li>Properties/methods cannot be defined in a type if there is an \"asterisk type\".&nbsp;</li>\r\n<li>Same applies to subtypes and interface extensions: asterisk types are not overriddable (in some sense for the reason why arrays are not inheritable)</li>\r\n<li>Same applies to \"partial types\". For instance, it is incorrect to define <em>interface String { *: number }</em>&nbsp;because String already has members</li>\r\n</ol>",
+    "PostedDate": "2012-10-31T20:34:35.05-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935303",
+    "ThreadId": "401497",
+    "Html": "<p>To my understanding, this largely comes from the limitation of JavaScript/ECMAScript itself.&nbsp; You can't write an indexer on an object after the fact, instead you start with either an object (where [key:string]) or an array (where [key:indexing number]) and then build from there.&nbsp;</p>\r\n<p>I agree that the return type seems a bit fishy, as '1' doesn't have the type Function.&nbsp; This may be a bug in the current implementation (or something subtle in the spec).</p>",
+    "PostedDate": "2012-11-01T08:29:05.287-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "941339",
+    "ThreadId": "401497",
+    "Html": "\r\n<p>I don't think it is a bug in the current implementation because it is correct from the specification perspective.&nbsp;</p>\r\n<p>In the case of the&nbsp;<em>bind</em>&nbsp;function the goal is to <strong>restrict</strong>&nbsp;the argument value to contain only property values of a certain type. Indexers do not require that.&nbsp;</p>\r\n<p>I think that the pattern of a typed as hash is quite popular in JS libraries and TypeScript simply lacks a support of that.</p>\r\n<p>Here is another example. Imagine a function that returns a hash of columns:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> Column {\r\n  type: string;\r\n  displayName: string;\r\n}\r\n\r\n<span style=\"color:blue\">function</span> getProductColumns(): { *: Column } {\r\n  <span style=\"color:blue\">return</span> ...\r\n}\r\n\r\n<span style=\"color:blue\">var</span> unitPriceColumn = getProductColumns().unitPrice;\r\n\r\n</pre>\r\n</div>\r\nRight now I have to define <em>getProductColumns</em> return type as <em>any</em> and so all its properties are\r\n<em>any</em>&nbsp;too. I want&nbsp;the <em>unitPriceColumn </em>variable to be of type <em>\r\nColumn</em> (I know that I can cast it manually, but I don't want it to be automatic).\r\n<p></p>\r\n<p>-Nodir</p>\r\n",
+    "PostedDate": "2012-11-13T19:05:11.723-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "941667",
+    "ThreadId": "401497",
+    "Html": "\r\n<p>To make sure I understand, you're suggesting a syntactic sugar for property access.&nbsp; Currently, you can do this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> Column {\r\n  type: string;\r\n  displayName: string;\r\n}\r\n\r\n<span style=\"color:blue\">function</span> getProductColumns(): {[field:string]:Column;} {\r\n  <span style=\"color:blue\">return</span> {<span style=\"color:#a31515\">&quot;unitPrice&quot;</span>: {type:<span style=\"color:#a31515\">&quot;type&quot;</span>, displayName:<span style=\"color:#a31515\">&quot;displayName&quot;</span>}};\r\n}\r\n\r\n<span style=\"color:blue\">var</span> unitPriceColumn = getProductColumns()[<span style=\"color:#a31515\">&quot;unitPrice&quot;</span>];\r\n</pre>\r\n</div>\r\n<p>We just don't handle using a dot-style access on the last line and instead use the array style.&nbsp; You do get intellisense if you dot between the last ']' and the ';'</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-14T08:44:04.02-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "941765",
+    "ThreadId": "401497",
+    "Html": "\r\n<p>It's not only about syntax, see below. Admit that it is unnatural to write <em>\r\nobj[&quot;prop&quot;]</em> when you can write <em>obj.prop</em>. I would rather write <em>&lt;DesiredType&gt;obj.prop</em>&nbsp;to specify the type but I would expect TypeScript to do it for me. I realize that according to specs indexers should not do that.</p>\r\n<p>Again, the sample in my previous post is a second priority scenario. The main problem is that I cannot require a method parameter to be a typed hash. Here is a function that expects a hash of columns and a function call that violates the implied type restriction:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> somethingThatExpectsColumns(columns: { [key: string]: Column; }) {\n  <span style=\"color:green\">// ...</span>\n}\n\nsomethingThatExpectsColumns({ notAColumn: <span style=\"color:#a31515\">&quot;a string&quot;</span> })\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>The best tool for this scenario that TS provides is indexers, but as I wrote earlier the problem is that an indexer actually does not require an object to have all properties of the same type. In this example, it does not require (does not raise a compilation\r\n error) when I pass an argument of an <strong>obviously wrong</strong> type.&nbsp;</p>\r\n<p>So, in other words, despite TS tries to defend developers from making &quot;typing&quot; mistakes, this particular scenario of a typed hash is not covered by TypeScript. I find it a problem in the type-system design.</p>\r\n<p>That's why I propose a new element of the type-system. Think of a typed hash as a typed array, because both are collections and sometimes hashes are used instead of arrays. When you check whether an array instance is a sub-type of certain target array type\r\n (e.g. Column[]), you make sure that a type of every element is a sub-type of the target element type. Same here, but you should check property values of an object, not array elements.</p>\r\n<p>Sincerely,<br>\r\n-Nodir</p>\r\n",
+    "PostedDate": "2012-11-14T11:20:16.03-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "942293",
+    "ThreadId": "401497",
+    "Html": "\r\n<p>That it doesn't give an error for your example then it is likely a bug in the compiler.&nbsp; I'll copy this over to the issue tracker to confirm.</p>\r\n",
+    "PostedDate": "2012-11-15T12:31:10.01-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "942294",
+    "ThreadId": "401497",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/427\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-11-15T12:32:28.137-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

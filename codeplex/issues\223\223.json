@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We only have two choices around initialization order of statics. If you have a smaller isolated repro to talk about in more concrete terms, that would be a good fit for the discussion boards. Thanks!",
+    "ClosedDate": "2013-02-25T16:25:18.42-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Consider the following code:\r\nvar TodoListView = Backbone.View.extend({\r\n    tagname: 'ul',\r\n    className: 'todos'\r\n});\r\nIn Typescript, the equivalent would be:\r\nclass TodoListView extends Backbone.View {\r\n    tagname: string = 'ul';\r\n    className: string = 'todos';\r\n}\r\n\r\nUnfortunately, at runtime, both tagname and className are both undefined.\r\n\r\nThe following code does work, however:\r\nclass TodoListView extends Backbone.View {\r\n    tagname: string;\r\n    className: string;\r\n    constructor (options?: any) {\r\n        this.tagname = 'ul';\r\n        this.className = 'todos';\r\n        super(options);\r\n    };\r\n}\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-10T07:50:45.347-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Default property values become undefined at runtime when extending module classes",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 223
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not able to repro your issue with the following code:\nclass a { }\nclass b extends a {\n    tagname: string = 'a';\n}\n\nvar x = new b();\nalert(x.tagname);",
+      "PostedDate": "2012-10-10T10:52:03.43-07:00",
+      "Id": 79349
+    },
+    {
+      "Message": "Have a look at the javascript generated when using this to extend Backbone.Router:\nclass TSAppRouter extends Backbone.Router {\n    routes:any = {\n        \"*other\" : \"defaultRoute\"\n    };\n}\n\nProduces the following javascript code, which does not work: ( note the call to _super.apply happens before this.routes is assigned:\nvar TSAppRouter = (function (_super) {\n    __extends(TSAppRouter, _super);\n    function TSAppRouter() {\n        _super.apply(this, arguments);\n        this.routes = {\n            \"*other\": \"defaultRoute\"\n        };\n    }\n    return TSAppRouter;\n})(Backbone.Router);\n\nThe following code works, however, forcing the super call to happen after this.routes is assigned.\nclass TSAppRouter extends Backbone.Router {\n    routes: any;\n    constructor (options?: any) {\n        this.routes = { \"*other\": \"defaultRoute\"}; // this call must precede super(options)\n        super(options);\n    };\n}\n\nGenerated (and working javascript) :\nvar TSAppRouter = (function (_super) {\n    __extends(TSAppRouter, _super);\n    function TSAppRouter(options) {\n        this.routes = {\n            \"*other\": \"defaultRoute\"\n        };\n        _super.call(this, options);\n    }\n    return TSAppRouter;\n})(Backbone.Router);\n\n\n",
+      "PostedDate": "2012-10-11T22:45:06.457-07:00",
+      "Id": 79573
+    },
+    {
+      "Message": "Backbone itself does a number of state initialization tasks internally that TypeScript won't know about... The whole point of writing classes is to avoid the overhead of libraries like Backbone that are trying to do what classes already do intrinsically.",
+      "PostedDate": "2012-10-13T13:29:01.83-07:00",
+      "Id": 79686
+    }
+  ]
+}

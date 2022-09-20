@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "https://typescript.codeplex.com/SourceControl/changeset/05fa46574f1462444d273c37fa3f213cee1ce3c9",
+    "ClosedDate": "2013-12-09T12:16:57.1-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "According to the specifications Object.prototype has a function called constructor: http://www.ecma-international.org/ecma-262/5.1/#sec-15.2.4.1\r\nThe definition in lib.d.ts does not include this at this time.\r\n\r\nI understand that most people won't need this, since they use _new Object()_ anyway, but when writing a utility function to deep clone an object this constructor function becomes quite handy.\r\n\r\nI currently use the following snippet to keep the compiler happy on my side:\r\n\r\n```\r\ninterface Object {\r\n    constructor: () => Object;\r\n}\r\n```\r\n\r\nHowever this causes constructors on booleans and numbers to also return Object, so this function will need to be added to all types for it to work properly.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-03T06:13:14.09-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Object misses constructor function in lib.d.ts definition",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1857
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Since the constructor ought to be called using the new operator, it ought to be declared with\n```typescript\ninterface Object {\n\tconstructor: { new(): Object; }\n}\n```\n\nHowever, since the result of a new operator is not guaranteed to be anything more than an object (thanks javascript semantics!), even if we could specify a type like ```constructor: { new(): this; }```, it wouldn't necessarily work for all subclasses of object.  So I think that specifying it per subclass/subinterface as needed is correct.",
+      "PostedDate": "2013-11-09T09:56:05.137-08:00",
+      "Id": 122528
+    }
+  ]
+}

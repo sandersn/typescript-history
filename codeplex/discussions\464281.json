@@ -1,0 +1,178 @@
+[
+  {
+    "Id": "1114246",
+    "ThreadId": "464281",
+    "Html": "I noticed a new function has been added to the develop branch: LanguageService.cleanupSemanticCache().  Should this method be called before getting diagnostics across all files or is it for some other scenario?<br />\n",
+    "PostedDate": "2013-10-30T09:47:03.027-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114651",
+    "ThreadId": "464281",
+    "Html": "Hi Derek, \r<br />\n<br />\nThe purpose of this method is to let the host tell the compiler that it has performed the large semantic operations it intends to perform and the compiler can throw away semantic data. You should call it after you're done getting all diagnostics for all files and if you expect to not need semantic information afterwards. \r<br />\n<br />\nSo, in practice, you'd use this for projects with no files that are currently opened by the user. Since the user isn't editing the files, storing around all that semantic information is wasteful once we've computed diagnostics. \r<br />\n<br />\nIt's optional to use, but is handy if you're dealing with lots of projects, or very large projects.\r<br />\n<br />\nI hope that helps clarify things. Please let me know if you want more info. \r<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-10-30T15:36:35.953-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114776",
+    "ThreadId": "464281",
+    "Html": "Interesting, so it sounds like it allows the host to manage the memory usage a bit more granularly.  I'm having trouble coming up with a scenario in which say an IDE would want to call this though.  For example, in the current Eclipse plug-in code, when a file is saved, the plug-in asks for diagnostics across all files (in case a change in that one file impacted others).  Wouldn't it make sense to always retain that cached semantic information for subsequent file save operations to avoid recomputing the information if possible?<br />\n",
+    "PostedDate": "2013-10-30T17:36:34.867-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114894",
+    "ThreadId": "464281",
+    "Html": "&quot;Wouldn't it make sense to always retain that cached semantic information for subsequent file save operations to avoid recomputing the information if possible?&quot;\r<br />\n<br />\nThe language service and compiler already preserve whatever information is valid to store across edits.  Semantic information does not apply.  The semantic information from before is always recomputed as nearly any edit can/will affect it.\r<br />\n<br />\n&quot;I'm having trouble coming up with a scenario in which say an IDE would want to call this though.&quot;\r<br />\n<br />\nAs mentioned above, the scenario is:\r<br />\n<br />\nYou have a solution with many projects.  Most of the projects are not being edited by the user.  You've collected diagnostics for them, but now don't expect to need anything else until the user starts editing it.  Instead of having a lot of memory allocated and held around unnecessarily, you can allow the engine to reclaim all that memory.\r<br />\n<br />\n&quot;For example, in the current Eclipse plug-in code, when a file is saved, the plug-in asks for diagnostics across all files&quot;\r<br />\n<br />\nThis appears to be the difference between how Eclipse consumes the compiler and how VS does.  You have a single compiler instance apparently used across all files.  In VS this is not how we do things.  We have a compiler instance per VS project.   For your use case, where you merge all files together, this method would not be helpful.  For a use case where there are lots of independent islands of files, this can be very helpful.\r<br />\n<br />\nHope this helps!<br />\n",
+    "PostedDate": "2013-10-30T20:18:37.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114917",
+    "ThreadId": "464281",
+    "Html": "Oh interesting - thanks for the explanation - I was wondering how VS supports multiple projects. \r<br />\n<br />\nThe Eclipse plug-in also currently has a separate language service instance per project but it doesn't support references across projects yet. That's going to be my next project now that we've got our code compiling with the develop branch compiler. Separate compilers for each project makes sense since each project will have different files (and dependencies loaded). \r<br />\n<br />\nAny advice for getting AMD module lookups to work across projects? (I'm guessing some tricks with the language service host's path resolution logic)<br />\n",
+    "PostedDate": "2013-10-30T22:37:07.71-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114930",
+    "ThreadId": "464281",
+    "Html": "For cross project cases, i would generate the .d.ts for the project and add that file to the projects that you want to be referencing it.  In that way a .d.ts acts as the exported surface area that the other project should know about.<br />\n",
+    "PostedDate": "2013-10-31T00:17:08.573-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1114985",
+    "ThreadId": "464281",
+    "Html": "This is very useful information. Why not have a blog dedicated to language service development? Or a mailing list, a wiki with FAQ, etc?\r<br />\n<br />\nAnything to make life easier for language service clients (of which there are half a dozen now), by improving communication;-) The whole point of the language services is that TS tools can share code/ideas.\r<br />\n<br />\nI develop/maintain typescript-tools (basis for Vim, Emacs, and Sublime plugins), and I do not always have the option of following TS commits as they happen. Reconstructing intentions and necessary client code change from commits is no fun, even less so when a few weeks have gone by and the &quot;last known good&quot; isn't that good after all.<br />\n",
+    "PostedDate": "2013-10-31T04:33:13.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1115131",
+    "ThreadId": "464281",
+    "Html": "@cyrusn We are doing the d.ts thing right now but it doesn't scale well for AMD projects because it requires generating a d.ts for each module (and then keeping them up-to-date in all the projects containing them).  That's why we'd like to build against the original sources across projects.<br />\n",
+    "PostedDate": "2013-10-31T09:43:27.69-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1115313",
+    "ThreadId": "464281",
+    "Html": "Sounds like a great idea Claus.  The main problem right now is simply one of resources.  I'm going to forward this along to our PM to see if we can track doing something like this and getting better communication with the community.\r<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-10-31T13:28:05.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1115314",
+    "ThreadId": "464281",
+    "Html": "<a href=\"mailto:@derek\" rel=\"nofollow\">@derek</a>.  Hrmmm.  Could you clarify why it doesn't scale?  I'm not quite getting it.<br />\n\r<br />\nNote: it will be the case (if  you have project references) that a chance in one project may end up causing you to need to get diagnostics for all dependent projects (if hte .d.ts surface across referenced projects).  I'm not sure if there's any way around that.  That's simply the nature of the language and the transitive impact that changes cause.\r<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-10-31T13:31:04.163-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116352",
+    "ThreadId": "464281",
+    "Html": "Right now we have one core project that contains basic functionality like communication with the server.  We plan to have several other projects that make use of the functionality in that core project.  If we generate a d.ts file for each module used by those other projects we could easily be up to hundreds of files we'd have to keep in sync.  If we could find a way to reference the source files directly across projects, then we wouldn't need to keep anything in sync (it would be more like Java or C# projects).<br />\n",
+    "PostedDate": "2013-10-31T15:38:00.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116354",
+    "ThreadId": "464281",
+    "Html": "@derek \r<br />\n<br />\ni guess i'm not seeing why this is particularly difficult.  but i don't know the particulars of your domain/architecture. :-)\r<br />\n<br />\nA project changes.  You generate the d.ts file for it.  You inform dependent projects.  You generate their d.ts. files, and so on down the dependency graph.\r<br />\n<br />\nNote: this is the world today already in VS for things like VB and C# and C++ projects.  'metadata dlls' are the lingua franca used for one project to tell another &quot;here's my public surface area you can use&quot;.  VS and the build system know the dependency graph and pass along the information between projects as changes happen.\r<br />\n<br />\nWe could try to provide something like this ourselves.   But it won't prevent any &quot;scaling&quot; issues.  It will just push those scaling issues to a different part of the stack.  The reason i like it above the compiler is it allows compilation of one project to happen in isolation of all others instead of having one compiler need to reach into data held by another.  <br />\n",
+    "PostedDate": "2013-10-31T15:50:51.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116356",
+    "ThreadId": "464281",
+    "Html": "Note: i'm not dismissing the idea.  It's definitely something to noodle on.  I'm just not seeing slam dunk benefits to it.<br />\n",
+    "PostedDate": "2013-10-31T15:56:18.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116357",
+    "ThreadId": "464281",
+    "Html": "Hmm, interesting.  Are you talking about generating d.ts files automatically via the plug-in and injecting them into the downstream projects or creating them manually?  Right now we are manually building d.ts files for our core project and copying them into the dependent projects.  We have to repeat this process each time the core changes its public APIs.  Also, there can be several d.ts files which need to be exported from a single project since we are using AMD modules (because they are referenced by their file paths vs. internal module names).  Currently I think we export 3 d.ts files from our core project since there are 3 modules used by other projects.  If we have say 10 dependent projects, that would be 30 files to keep up-to-date.<br />\n",
+    "PostedDate": "2013-10-31T15:59:24.107-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116358",
+    "ThreadId": "464281",
+    "Html": "I was definitely thinking about them being 'auto generated'.  I agree the 'keep them up to date yourself' approach wouldn't scale :)<br />\n",
+    "PostedDate": "2013-10-31T16:01:00.277-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116361",
+    "ThreadId": "464281",
+    "Html": "Hmm, that's a really interesting idea.  I honestly never thought of something like that.  Would you generate them to disk so that they actually exist as files in the downstream projects or just generate them into the language service host somehow?  Either way it seems like it would be necessary to somehow mark certain modules as being exported so that the plug-in would know to build them.<br />\n",
+    "PostedDate": "2013-10-31T16:05:42.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116363",
+    "ThreadId": "464281",
+    "Html": "In general, i would nt actually pollute the disk where real project files were stored.  I would either do it in memory, or use a temp location if i really needed the disk.\r<br />\n<br />\nThe LS API has no knowledge of the disk.  It just talks to the host to get file contents.  So it leaves how/where the files are stored completely up to the host.<br />\n",
+    "PostedDate": "2013-10-31T16:08:06.607-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116366",
+    "ThreadId": "464281",
+    "Html": "Cool, that's a neat idea.  I'll have to think about this a bit more - one problem off the top of my head is that this would break the ability to follow the definition of something to its source to inspect the implementation (something we do during Java development all the time).  But the approach of injecting things into the LS host in general seems like a good path to go down.<br />\n",
+    "PostedDate": "2013-10-31T16:15:59.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116370",
+    "ThreadId": "464281",
+    "Html": "True.  One thing that would be nice to provide (and inspired by the work in the Roslyn project) would be a way to go from a definition in d.ts to the original symbol that generated it.  That way you could say &quot;oh... goto def took me to this d.ts. method let me see if that was backed by source and take them there&quot;.\r<br />\n<br />\nNo plans on that yet.  but it would certainly be nice to have in the future :)<br />\n",
+    "PostedDate": "2013-10-31T16:32:04.09-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116371",
+    "ThreadId": "464281",
+    "Html": "@cyrusn if you want to hire outside help, let me know;-)\r<br />\n<br />\nrelated feature suggestions that would be useful:<br />\n<ul>\n<li>declaration emitter as language service (<a href=\"https://typescript.codeplex.com/workitem/1795\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1795</a>)</li>\n<li>generating declaration hash for file (as in: if the hash hasn't changed, eg comment/layout edits only, no need to reload dependencies)</li>\n</ul>\n",
+    "PostedDate": "2013-10-31T16:33:49.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116457",
+    "ThreadId": "464281",
+    "Html": "As for jump-to-def: isn't that already problematic for interfaces, even without .d.ts files? When I apply my LS client to itself, and ask the LS for the definition of language service methods, I get directed to the LS interface, with no obvious way to go to the pullLS implementation.\r<br />\n<br />\nPS. I would usually log all these things on the issue tracker, but workitems all too often get closed if they are not in scope for TSv1.0.<br />\n",
+    "PostedDate": "2013-11-01T03:12:11.097-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1116458",
+    "ThreadId": "464281",
+    "Html": "Yup.  It's a similar issue to C#.\r<br />\n<br />\nIf you're calling through an interface method, then the def is the interface method.  Going from def to implementation would definitely be a nice-to-have though.<br />\n",
+    "PostedDate": "2013-11-01T03:14:22.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

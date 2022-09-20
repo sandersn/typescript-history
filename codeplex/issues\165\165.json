@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for filing this issue.\n\n'instanceof' is a JavaScript operator that means \"Does this (rhs) value appear anywhere in this (lhs) value's prototype chain?\"\n\nAs such, the RHS is a value, not a type. Interfaces in TypeScript are purely a compile-time construct and don't introduce any run-time values. Even if they did, 'instanceof' is only looking at the prototype chain of the LHS value, and interfaces don't appear in the prototype chain.",
+    "ClosedDate": "2012-10-09T13:12:49.003-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "The following code does not work:\r\n\r\n    class SecurityContext {\r\n        private token: Tokens.Token;\r\n    \r\n        authenticate(token: Tokens.Token) {\r\n            this.token = token;\r\n        }\r\n    \r\n        isAuthenticated(): bool {\r\n            return this.token instanceof tokens.Token;\r\n        }\r\n    }\r\n\r\nThe error returned is:\r\n\r\n    The name 'tokens' does not exist in the current scope\r\n\r\nIs instanceof simply not supported for interfaces? How do I check if a certain object implements an interface?\r\n",
+    "LastUpdatedDate": "2012-10-09T13:12:49.003-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-08T02:24:32.76-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "instanceof <<interface>> not working",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 165
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Why is the project on CodePlex. I understand it's a Microsoft product but everytime I file a bug or open a PR part of me dies. Both Github and Bitbucket are _so_ __much__ better. Even the most rudimentary features like text formatting and editing an issue are not supported...",
+      "PostedDate": "2012-10-08T02:26:34.087-07:00",
+      "Id": 78969
+    },
+    {
+      "Message": "This is not a bug. \n\nIn your case, \"tokens\" doesn't exist in the current scope, because you need to capitalize the word to \"Tokens\" (as it appears everywhere else). Anyway, this works...\n\nclass Token {\n  t: number;\n  constructor() {\n    this.t = Math.random() * 10;\n  }\n}\nclass SecurityContext {\n  token: Token;\n\n  authenticate(tkn: Token) {\n    this.token = tkn;\n  }\n\n  isAuthenticated(): bool {\n    return this.token instanceof Token;\n  }\n}\n\n\nvar s = new SecurityContext();\n\ns.authenticate( new Token() );\n\nconsole.log( s ); // { token: { t: 5.853700051084161 } }\nconsole.log( s.isAuthenticated() ); // true\n",
+      "PostedDate": "2012-10-08T09:11:05.773-07:00",
+      "Id": 79008
+    },
+    {
+      "Message": "@rwaldron: thanks for your comment. However, I still have a weird issues: \n\nI'm having trouble getting the instanceof operator working in TypeScript.\n\nGiven the following code:\n\n{\nmodule Tokens\n{\n    export interface Token\n    {\n    }\n\n    export class AnonymousToken implements Token\n    {\n    }\n\n    export class MaleToken implements Token\n    {\n    }\n\n    class BaseToken implements Token {\n        constructor(private id: string, private name: string, private familyName: string, private emailAddress: string) {\n        }\n        \n        getId(): string {\n            return this.id;\n        }\n        \n        getName(): string {\n            return this.name;\n        }\n        \n        getFamilyName(): string {\n            return this.familyName;\n        }\n        \n        getEmailAddress(): string {\n            return this.emailAddress;\n        }\n    }\n\n    export class HyvesToken extends BaseToken\n    {\n    }\n\n    export class FacebookToken extends BaseToken\n    {\n    }\n}\nclass SecurityContext {\n    private token: Tokens.Token;\n\n    authenticate(token: Tokens.Token) {\n        this.token = token;\n    }\n\n    isAnonymous(): bool {\n        return this.token instanceof Tokens.AnonymousToken;\n    }\n\n    isAuthenticated(): bool {\n        return !this.isValidToken() || !this.isAnonymous();\n    }\n    \n    isValidToken(): bool {\n        return this.token instanceof Tokens.Token;\n    }\n}\n\nvar securityContext: SecurityContext = new SecurityContext();\n\nsecurityContext.authenticate(new Tokens.AnonymousToken());\n\n// Expect this to return boolean (True) it returns boolean (False)\nconsole.log(securityContext.isAnonymous());\n}\n\n[url:See this gist|https://gist.github.com/3855633]",
+      "PostedDate": "2012-10-08T16:45:04.75-07:00",
+      "Id": 79083
+    },
+    {
+      "Message": "Seriously? Also the wiki formatting doesn't work :-( \n\nThe fact that TypeScript is hosted on this horrible platform is going to kill adoption of this otherwise very well executed project.\n\n",
+      "PostedDate": "2012-10-08T16:46:04.11-07:00",
+      "Id": 79084
+    },
+    {
+      "Message": "I'll be completely honest—instanceof is almost never what you want...\n\n\nvar f = function() {}\nf instanceof Object; // true\n",
+      "PostedDate": "2012-10-08T17:53:52.443-07:00",
+      "Id": 79091
+    }
+  ]
+}

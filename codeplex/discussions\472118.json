@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1132517",
+    "ThreadId": "472118",
+    "Html": "<pre><code>function test(b: boolean, d: Date) {\n    var r1: boolean = b || d; // &quot;Cannot convert '{}' to 'boolean'.&quot;\n    var r2: boolean = b || &lt;boolean&gt;d; // Bad restriction.  &quot;Type 'Boolean' is \n                                       // missing property 'toDateString' from \n                                       // type 'Date'&quot; (and fix Casing of boolean)\n    var r3: boolean = &lt;boolean&gt;(b || d); // OK but dumb\n    var r4: boolean = !!(b || d); // OK but dumb - requires unecessary javascript - \n                                  // and if `!` can take it, why can't an \n                                  // expecting-boolean expression take it?\n    var r5 : boolean = (b || d) ? true : false; // same here, illustrating \n                                                // `? :` condition, parens optional\n}</code></pre>\n\n",
+    "PostedDate": "2013-12-06T07:42:31.447-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132562",
+    "ThreadId": "472118",
+    "Html": "The type of the <code>||</code> operator is the &quot;best common type&quot; of the two operands. This is the same procedure we use for determining the type of array literals and other places where the types of several expressions are &quot;combined&quot; into one type. When there is no best common type, as there is here, the result is <code>{ }</code>, the empty type.<br />\n<br />\nr1 should hopefully be what you expect, since the result of the expression could either be a boolean (true) or a Date.<br />\n<br />\nIn r2, the type assertion is disallowed because boolean is not assignable to Date and Date is not assignable to boolean. The idea here is that type assertions should at least be plausible; if you really have some value of a completely different type, you can use <code>&lt;boolean&gt;&lt;any&gt;d</code> instead (though ideally you would just fix the typing of whatever gave you that expression).<br />\n<br />\nr3 is valid because <code>boolean</code> is assignable to <code>{}</code>. It's an interesting contrast to r2 because essentially the compiler is saying &quot;You produced a value we can't reason about, so I'm not going to try to enforce any plausibility of that type assertion&quot;.<br />\n<br />\nr4 is not dumb because it has an actual runtime implication -- if b is false, r4 be guaranteed to be a boolean value. This is idiomatic JavaScript and it has practical implications and uses.<br />\n<br />\nr5 takes advantage of the fact that any type of expression is valid in a control flow test expression (the alternative would be far too annoying).<br />\n",
+    "PostedDate": "2013-12-06T09:58:49.267-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132580",
+    "ThreadId": "472118",
+    "Html": "r2 still seems like a mistake to me.  boolean doesn't have any contractual obligations to fill.  And even if it did, it seems to me that the error should be that the other way around: &quot;Type 'Date' is missing property 'negate()' from type 'boolean'&quot; since we're casting AS boolean, the original type has to be compatible only in that direction.  That is, if I'm explicitly casting as boolean, why would I expect to be able to use .toDateString()?  And I /would/ be upset if it were missing boolean's 'negate()'.  But I'm not aware of any .negate()-like members in boolean so I feel like it should pass without error in this situation.\r<br />\n<br />\nWhat I'm saying about r4 is that while this is perhaps a least-disruptive syntax (beaten only by <code>b || !!d</code>), it is only required to satisfy the type system but has a wasteful runtime overhead.  Negligable, I'm sure, but that's irrelevant.\r<br />\n<br />\nI understand why this behavior is happening, but I guess I'm suggesting that the type system should take into account the special case of that a non-boolean expression will be implicitly cast to boolean one in cases where only boolean is allowed - just as it does for operators <code>!</code> and <code>? :</code>.\r<br />\n<br />\nI believe that boolean is as narrow a type as you can get, so there's no danger in treating a non-boolean type as a boolean - like I was saying above, there's no .negate() that the type system would let you use if the value were improperly cast and leaked into other areas of the code.  So even if we expected a boolean and at runtime got an Array, or undefined or whatever, the javascript engine would handle it just as you expect it would and just as the type system expected it to.<br />\n",
+    "PostedDate": "2013-12-06T10:24:34.62-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132586",
+    "ThreadId": "472118",
+    "Html": "<blockquote>\nI understand why this behavior is happening, but I guess I'm suggesting that the type system should take into account the special case of that a non-boolean expression will be implicitly cast to boolean one in cases where only boolean is allowed<br />\n</blockquote>\nboolean does have a specific contract, which is that it's the only type that will ever be <code>=== false</code> or <code>=== true</code>. Consider this code:<br />\n<pre><code>function makeVisible(visible: boolean) {\n    if (visible === true) {\n        show();\n    } else {\n        hide();\n    }\n}\n\nmakeVisible(1); // Ends up calling hide(), not show()</code></pre>\n\nThis sort of error is very common and very worth catching.\r<br />\n<br />\nIf you want to represent a type that is going to be used without comparison in a truthiness test (e.g. <code>x</code> in <code>if(x) {...}</code>), you can use <code>any</code>, <code>{}</code> or, if you want to capture the intent more precisely, you could even write something like this:<br />\n<pre><code>// Represents a truthy or falsy value\ninterface booly { }\n\nfunction makeVisible(visible: booly) {\n    if (visible) {\n        show();\n    } else {\n        hide();\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-12-06T10:38:19.953-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132590",
+    "ThreadId": "472118",
+    "Html": "Yeah, that's a good supporting example and explanation.  Thanks.  It's not dumb after all.\r<br />\n<br />\nWhat about the r2 error message though?  Should it not be that other way around?\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-12-06T10:45:24.71-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132594",
+    "ThreadId": "472118",
+    "Html": "The error is confusing, but technically correct (i.e. the worst kind of correct when issuing errors) because we actually would consider the type assertion to be valid if Boolean had all the members of Date.<br />\n<br />\nWe consider an assertion of type <code>A</code> from type <code>B</code> to be valid if <code>A</code> is assignable to <code>B</code> <em>or</em> <code>B</code> is assignable to <code>A</code>. The full explanation requires reading spec sections 3.8.1 and 3.8.4, but long story short: the check fails in the first direction where we treat the boolean as a primitive type because primitive and object types are never assignment compatible, then fails in the other direction where we treat the boolean as an object type which lacks the members of Date.<br />\n",
+    "PostedDate": "2013-12-06T10:55:13.533-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132616",
+    "ThreadId": "472118",
+    "Html": "Ok cool.  Thanks.<br />\n",
+    "PostedDate": "2013-12-06T12:22:47.313-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

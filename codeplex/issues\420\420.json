@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:15:36.933-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "TypeScript specification says: \"It is an error to have two names with same spelling in the same declaration space <...> Every declaration (whether local or exported) in a module contributes to one or both of these declaration spaces <...> a class declaration contributes both a member name (representing the constructor function) and a type name (representing the class instance type) to the containing module\"\n\nSo the code below should not be allowed:\n\nmodule A\n{\n\tclass B\n\t\t{\n\t\t};\n\texport var B = new B();\n}\n\nHowever compiler will not complain about duplicate identifiers and will generate broken javascript:\n\nvar A;\n(function (A) {\n    var B = (function () {\n        function B() { }\n        return B;\n    })();    \n    ; ;\n    A.B = new A.B();\n})(A || (A = {}));\n\nNotice that it will work fine if line [A.B = new A.B();] is changed to [A.B = new B();]\n\nIf 'export' keyword is removed, the compiler will correctly detect duplicate identifiers.\n\nSo it seems that either:\n1) compiler should generate an error about duplicate identifiers in the code above\nor\n2) TypeScript specification should be changed and javascript generation should be corrected",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-14T03:44:45.057-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Duplicate identifiers not detected",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 420
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting this issue! Marking it as 'Active' (to be fixed).",
+      "PostedDate": "2012-11-14T09:10:38.55-08:00",
+      "Id": 82485
+    },
+    {
+      "Message": "I found a similar problem which is likely related. When a function parameter has the same name as the containing module and you try to reference exported variables on the module, the generated code is incorrect due to the name collision.\n\nThis:\n```\nmodule test {\n\texport var foo = 'correct';\n\texport function bar(test) {\n\t\tconsole.log(foo);\n\t}\n}\n\ntest.bar({ foo: 'incorrect' });\n```\n\nGenerates this:\n```\nvar test;\n(function (test) {\n    test.foo = 'correct';\n    function bar(test) {\n        console.log(test.foo);\n    }\n    test.bar = bar;\n})(test || (test = {}));\ntest.bar({\n    foo: 'incorrect'\n});\n```\n\nIf you remove the 'export' from the definition of 'foo', then it compiles properly. ",
+      "PostedDate": "2013-02-09T22:56:24.207-08:00",
+      "Id": 88977
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for getting to the root cause, the versioning will be fixed in the next release.",
+    "ClosedDate": "2014-01-17T13:10:37.95-08:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "In vs 2013 and win 8.1. When I create a new project with the \"HTML application with TypeScript\" template I always get an error  on build (starting with \"The AssignTargetPath\" could not be loaded\"). I also get the same error whenever I try to add typescript to an existing working project.\r\nIf I remove the typescript Import line from the project file then the project complies but then compiling ts files and debugging is not working (unless I compile using the console). I mean this line in .csproj file: \r\n> <Import Project=\"$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets\" Condition=\"Exists('$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\TypeScript\\Microsoft.TypeScript.targets')\" />\r\n\r\n__Error message:__\r\n> Error\t1\tThe \"AssignTargetPath\" task could not be loaded from the assembly Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a. Could not load file or assembly 'Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies. The file cannot be found. Confirm that the <UsingTask> declaration is correct, that the assembly and all its dependencies are available, and that the task contains a public class that implements Microsoft.Build.Framework.ITask.\tTypeScriptHTMLApp1\r\n\r\nI have tried to unistall TypeScript and reinstall it several times without success.",
+    "LastUpdatedDate": "2014-01-17T13:10:37.95-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-02T07:42:55.68-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "AssignedTargetPath could not be loaded on build",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2064
+  },
+  "FileAttachments": [
+    {
+      "FileId": 776826,
+      "FileName": "Skärmklipp.PNG",
+      "DownloadUrl": ".\\776826"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I uninstalled TypeScript, restarted the computer. Checked that no msbuild.exe process was running and reinstalled TypeScript. Then tried to build but got the exact same error...\n\nI am running Windows in Swedish if that has anything to do with it?",
+      "PostedDate": "2014-01-06T13:52:10.613-08:00",
+      "Id": 129261
+    },
+    {
+      "Message": "Can you try killing any running msbuild.exe processes and reinstall? We've seen this happen if you upgrade shortly after VS is closed. Please re-open if you still see the problem. Thanks!\n\r\n\r** Closed by RyanCavanaugh 01/06/2014 12:32PM",
+      "PostedDate": "2014-01-06T12:32:07.513-08:00",
+      "Id": 129262
+    },
+    {
+      "Message": "We did have a bug in a prior release with a localized DLL not loading, but that was fixed in the latest 0.9.5 release.  Could you please clarify for me which version of TypeScript you are using?  Also, which language Visual Studio do you have installed?\n\nDid this ever work?  Or is this the first time attempting to use TypeScript and you've always got the error on this machine?\n\nDo you have anything installed to non-standard paths?  (i.e. VS installed elsewhere than under \"C:\\Program Files (x86)\")\n\nDoes everything else in TypeScript appear to be working?  (i.e. you get syntax colorization, the language service is providing intellisense and drop-downs, etc...)\n\nWe'll try to reproduce locally or come up with other possible issues once we have the answers to the above.  Thanks.",
+      "PostedDate": "2014-01-07T17:02:43.217-08:00",
+      "Id": 129725
+    },
+    {
+      "Message": "I have installed TypeScript v0.9.5.0 (see screenshot). And vs 2013 premium eng.\r\n\r\nTypeScript used to work fine, I belive it was after the latest update that the error first occured.\r\n\r\nI use standard paths: C:\\Program Files (x86)\\Microsoft Visual Studio 12.0.\r\n\r\nI think everything else works in TypeScript, I get intellisense, error handling, renaming etc in *.ts files. I tried to run the typescript compiler from cmd but that didn't work either .js file was never updated and I didn't get any error message.",
+      "PostedDate": "2014-01-10T12:32:55.453-08:00",
+      "Id": 130108
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 01/08/2014 2:58PM",
+      "PostedDate": "2014-01-08T14:58:49.47-08:00",
+      "Id": 130109
+    },
+    {
+      "Message": "I've got same issue. Annoying bug, why is it closed???",
+      "PostedDate": "2014-01-10T23:58:58.83-08:00",
+      "Id": 130153
+    },
+    {
+      "Message": "Seems I've localized the issue and found temp solution.\n\nIn file \"C:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v12.0\\TypeScript\\Microsoft.TypeScript.targets\"\nthere is such line:\n```\n<UsingTask TaskName=\"AssignTargetPath\"       AssemblyName=\"Microsoft.Build.Tasks, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"/>\n```\nAfter changing it to\n```\n  <UsingTask TaskName=\"AssignTargetPath\"       AssemblyName=\"Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"/>\n```\nthe issue is gone.\n\nSo I guess the bug is occured because I have no installed .NET 2.0. I've just changed used \"Microsoft.Build.Tasks\" version from 2.0 to 4.0. Also it works when I used \"12.0\" as \"Microsoft.Build.Tasks\" version.\nAlso it works when",
+      "PostedDate": "2014-01-11T00:24:29.643-08:00",
+      "Id": 130155
+    },
+    {
+      "Message": "Thank you irium, your solution works! Finally I can move forward with my project :). Same here thought, I have not .net 2.0 installed on this computer. Strange that it used to work?",
+      "PostedDate": "2014-01-11T03:06:06.733-08:00",
+      "Id": 130156
+    },
+    {
+      "Message": "I'm pretty sure this question is for developers :)",
+      "PostedDate": "2014-01-11T13:47:49.783-08:00",
+      "Id": 130176
+    }
+  ]
+}

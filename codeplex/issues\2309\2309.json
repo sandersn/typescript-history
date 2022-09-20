@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the latest bits. Private members are emitted into .d.ts without type information by design. noImplicitAny will no longer incorrectly flag private statics in .d.ts without type information as an error.",
+    "ClosedDate": "2014-03-13T16:08:57.687-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Consider the following example Typescript file:\r\n\r\n\r\n```\r\n-- example.ts --\r\nclass Foo {\r\n  public public1: boolean;\r\n  public public2 = false;\r\n  public public3: boolean = false;\r\n\r\n  private private1: boolean;\r\n  private private2 = false;\r\n  private private3: boolean = false;\r\n\r\n  private static privateStatic1: boolean;\r\n  private static privateStatic2 = false;\r\n  private static privateStatic3: boolean = false;\r\n\r\n  private static publicStatic1: boolean;\r\n  private static publicStatic2 = false;\r\n  private static publicStatic3: boolean = false;\r\n\r\n  constructor() {\r\n  }\r\n}\r\n\r\n```\r\n\r\nUsing tsc v0.9.7.0, I compile this, requesting the declaration file:\r\n> tsc -d example.ts\r\n\r\nThis generates the following declaration file:\r\n\r\n```\r\n-- example.d.ts --\r\ndeclare class Foo {\r\n    public public1: boolean;\r\n    public public2: boolean;\r\n    public public3: boolean;\r\n    private private1;\r\n    private private2;\r\n    private private3;\r\n    private static privateStatic1;\r\n    private static privateStatic2;\r\n    private static privateStatic3;\r\n    private static publicStatic1;\r\n    private static publicStatic2;\r\n    private static publicStatic3;\r\n    constructor();\r\n}\r\n\r\n```\r\n\r\n\r\nAs you can see, the typing information was somehow lost for all of the private and static variables. Now, if I try to use this typing file with the noImplicitAny flag enabled, the compiler will throw errors:\r\n\r\n\r\n```\r\ntsc --noImplicitAny example.d.ts\r\nexample.d.ts(8,5): error TS7008: Member 'privateStatic1' of object type implicitly has an 'any' type.\r\nexample.d.ts(9,5): error TS7008: Member 'privateStatic2' of object type implicitly has an 'any' type.\r\nexample.d.ts(10,5): error TS7008: Member 'privateStatic3' of object type implicitly has an 'any' type.\r\nexample.d.ts(11,5): error TS7008: Member 'publicStatic1' of object type implicitly has an 'any' type.\r\nexample.d.ts(12,5): error TS7008: Member 'publicStatic2' of object type implicitly has an 'any' type.\r\nexample.d.ts(13,5): error TS7008: Member 'publicStatic3' of object type implicitly has an 'any' type.\r\n```\r\n\r\n\r\nNote that for some reason it only flags the statics as being implicitAny, even though the non-static private variables are also declared as implicitAnys in the .d.ts file.",
+    "LastUpdatedDate": "2014-03-13T16:08:57.687-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-13T15:53:07.177-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Declaration files improperly contain implicit anys",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2309
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

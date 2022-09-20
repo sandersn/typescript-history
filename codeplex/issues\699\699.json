@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing this issue as it's more a question/discussion.\n\nYes, generics will help here.",
+    "ClosedDate": "2013-02-06T09:43:00.793-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "The definition of Backbone.View in [todos.ts](http://typescript.codeplex.com/SourceControl/changeset/view/0c05df1781d6#samples/todomvc/js/todos.ts) sample is as follows:\r\n\r\n```\r\n   export class View {\r\n       constructor (options? );\r\n       $(selector: string): any;\r\n       el: HTMLElement;\r\n       $el: any;\r\n       model: Model;\r\n       remove(): void;\r\n       delegateEvents: any;\r\n       make(tagName: string, attrs? , opts? ): View;\r\n       setElement(element: HTMLElement, delegate?: bool): void;\r\n       tagName: string;\r\n       events: any;\r\n\r\n       static extend: any;\r\n   }\r\n```\r\n\r\nmodel is set to be of type Backbone.Model however, in Backbone.js the 'class type' extending Backbone.Model is assigned to the model property and not an instance of Backbone.Model. Backbone will take care of the instatiation of the type. So I guess the correct definition should be something like:\r\n\r\n```\r\n       model: ()=>Model;\r\n```\r\n\r\nbut that still creates compiler error. How is it possible to define this?\r\n\r\n```\r\n       model: class A where A extends Backbone.Model; // generics?\r\n```\r\n",
+    "LastUpdatedDate": "2013-08-06T20:34:47.493-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-05T08:26:46.613-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Backbone.View definition",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 699
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The following can bypass the compiler error for now but it still needs to be more specific.\n\n```\n       model: Function;\n```\n\nIf it's not supported yet I would suggest the following syntax:\n\n```\n       model: <Model>;\n```",
+      "PostedDate": "2013-02-05T10:16:35.22-08:00",
+      "Id": 88291
+    },
+    {
+      "Message": "This issue was copied from a discussion, but it is not specific to Backbone.js and is a common issue that should be addressed in the specification.",
+      "PostedDate": "2013-02-06T16:39:41.007-08:00",
+      "Id": 88775
+    },
+    {
+      "Message": "[Related issue](https://github.com/borisyankov/DefinitelyTyped/issues/821) on DefinitelyTyped.\n\nMaybe the solution for this is the new `typeof` operator?",
+      "PostedDate": "2013-08-06T13:40:46.337-07:00",
+      "Id": 108702
+    },
+    {
+      "Message": "#### Update:\n\nI initially tried the following:\n\n    class View<TModel extends Model> extends Events {\n    //...\n        model: TModel;\n\nbut this means `model` accepts instances of TModel not the type of TModel. Maybe the [typeof](http://blogs.msdn.com/b/typescript/archive/2013/08/06/announcing-0-9-1.aspx) operator in TypeScript 0.9.1 is just what we were looking for?\n\n#### Update:\n\nCan do `model: typeof Model;` but cannot use typeof of generic type like:\n\n    class View<TModel extends Model> extends Events {\n    //...\n        model: typeof TModel; // Error: Could not find symbol 'TModel'.",
+      "PostedDate": "2013-08-06T17:58:44.827-07:00",
+      "Id": 108739
+    },
+    {
+      "Message": "So are you asking that you want the class constructor, not the instance type, as the member?  In that case, you could write something like the below:\n\n```typescript\nclass MyModel extends Model {\n\tmyMembers: string[];\n\tstatic lastCreated: Date;\n}\n\nclass View<T extends {new(): Model;}> extends Events {\n    model: T;\n}\n\nvar x = new View<typeof MyModel>();\n\nx.model.lastCreated; // <- strongly typed, so includes the statics on MyModel\nvar y = new x.model(); // <- returns MyModel instance with 'myMembers' and base 'Model' members\n```\n\nHere I am using 'typeof' to pass the constructor type (not the instance type), and in the constraint specifying that is has to be a constructor that can new up models.   Using generics however I'm able to preserve the strong typing such that the statics and members on my derived model class flow through.\n\nIs this roughly what you wanted?  Or did I misunderstand the requirement?",
+      "PostedDate": "2013-08-06T19:16:40.347-07:00",
+      "Id": 108740
+    },
+    {
+      "Message": "I also posted a reply on the DefinitelyTyped discussion of this same topic, suggesting another variant of what Bill suggests above:  \n\nhttps://github.com/borisyankov/DefinitelyTyped/issues/821#issuecomment-22227663.  ",
+      "PostedDate": "2013-08-06T20:34:47.493-07:00",
+      "Id": 108741
+    }
+  ]
+}

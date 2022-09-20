@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "In your example, 'Foo' is a value and it is also a type. I'm writing up a forum post to clear this up; please wait for it before reopening more issues on this subject.",
+    "ClosedDate": "2013-08-12T13:19:28.38-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\nThe following code works:\r\n\r\n```\r\nfunction create(Constructor:  typeof Array): Array\r\n{\r\n  return new Constructor();\r\n}\r\n```\r\n\r\nWhereas the following complains about not finding symbol T:\r\n\r\n```\r\nfunction create<T>(Constructor:  typeof T): T\r\n{\r\n  return new Constructor();\r\n}\r\n```\r\nbug.ts(7,41): error TS2095: Could not find symbol 'T'.\r\n\r\n",
+    "LastUpdatedDate": "2013-08-12T13:19:28.38-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-12T12:15:59.843-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "typeof of a generic type provides an incongruent compiler error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1498
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sure, I understand what you are saying, and I fully understand the main purpose of the typeof operator and its main use cases, but typeof works indeed as a \"go find a constructor function\" operator, so people will use it for that purpose (me included). The confusing part in typescript is, what is a value and what is a type?, for example, if I declare a class Foo, would Foo be a value or a type? I guess it is both: depending on the context is treated as a value or as a type. The following code seems reasonable for me but of course it does not compile:\n\n```\nclass Foo\n{\n\n}\n\nfunction create1(Constructor:  typeof Foo): Foo\n{\n  return new Constructor();\n}\n\nfunction create<T>(Constructor:  typeof T): T\n{\n  return new Constructor();\n}\n\n// Foo is a type here or a value? (I know is a type, but it is not so crystal clear to realise it).\nvar foo = new create<Foo>(Foo)\n```\n\nwhereas \"string\", \"any\", \"boolean\" are just types, not values, and therefore this does not work:\n```\nvar a: typeof string;\n```\n\nSo, in any case a bit confusing...\n\n\n\n\n",
+      "PostedDate": "2013-08-12T13:08:12.59-07:00",
+      "Id": 109509
+    },
+    {
+      "Message": "'typeof' is not a \"go find a constructor function\" operator; it is intended for getting the type of an identifier expression. It operates on values, not types, and T here is a type.\n\r\n\r** Closed by RyanCavanaugh 08/12/2013 12:28PM",
+      "PostedDate": "2013-08-12T12:28:47.117-07:00",
+      "Id": 109512
+    },
+    {
+      "Message": "It really is not a \"go find the constructor function\" operator. It doesn't operate that way, and can't. Consider:\n\n```\ninterface Alpha {\n\tnew(): Animal;\n\talpha: string;\n}\n\ninterface Beta {\n\tnew(): Animal;\n\tbeta: string;\n}\n\ninterface Animal {\n\tmove(): void;\n}\n\nvar p1: Alpha;\nvar p2: Beta;\n\nvar x = new p1();\nvar y = new p2();\n// x and y are identical, we have no way\n// to map from x to p1 or y to p2\n```",
+      "PostedDate": "2013-08-12T13:13:00.41-07:00",
+      "Id": 109513
+    }
+  ]
+}

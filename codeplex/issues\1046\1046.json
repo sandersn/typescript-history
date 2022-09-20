@@ -1,0 +1,100 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.16-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "Here is a peculiar exercise that I have to go through every time I need my module to depend on something that is not code, such as a template or a stylesheet:\r\n\r\n```\r\n     // fragment (1)\r\n     declare module 'text!./Templates/Template.html' { }\r\n     import template = module( 'text!./Templates/Template.html' );\r\n\r\n```\r\n\r\nAnd then:\r\n\r\n```\r\n     // fragment (2)\r\n     $(element).html( <string>template );\r\n     ko.applyBindings( this, element );\r\n```\r\n\r\nThe first solution that jumps to mind is not to use TypeScript module syntax at all, but instead wrap fragment __(2)__ in a straight __require()__ call, like this:\r\n\r\n```\r\n     // fragment (3)\r\n     require( ['text!./Templates/Template.html'], (template: string) => {\r\n         $(element).html( <string>template );\r\n         ko.applyBindings( this, element );\r\n     });\r\n```\r\n\r\nBut there are two alternative problems with this approach: it will either (a) introduce an undesirable \"flickering\" effect as components load and show themselves one by one, or (b) create a ripple effect forcing me to make my whole program asynchronous, which would seriously damage the whole point of using AMD loader in the first place and make the code a lot less maintainable, not to mention the obvious difficulties of combining Knockout-style data bindings with async architecture.\r\n\r\nI want the \"clean\" solution, that is __loading my whole module dependency graph as a single logical operation__.\r\n\r\nI've also tried experimenting with the module import syntax itself to put this ugly business away into a function or something, but no luck: the TypeScript spec explicitly states that module id should be a string literal, no way around it.\r\n\r\nSo a possible solution I can envision could be something like this:\r\n\r\n```\r\n     // fragment (4)\r\n     import template = content( 'text!./Templates/Template.html' ): string;\r\n\r\n    // and later:\r\n    $(element).html( template );\r\n```\r\n\r\nwhich would generate JS code in exactly the same way it does now:\r\n\r\n```\r\n     // fragment (5)\r\n     require([\"require\", \"exports\", \"text!./Templates/Template.html\"], function(require, exports, __template__) {\r\n         var template = __template__;\r\n         \r\n         // and later:\r\n         $(element).html( template );\r\n     }\r\n```\r\n\r\nThat is, no code generator changes necessary.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-16T05:53:48.95-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support non-code AMD modules",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 10,
+    "Id": 1046
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for raising.  I was actually struggling with this exact problem earlier in the week, and we've been discussing internally how we can improve this here (but no concrete plans yet).\n\nNote we do have a undocumented feature as outlined here ( https://typescript.codeplex.com/workitem/948 ) to inject dependencies. This was created as a workaround to exactly this issue.  So something like the below code:\n\n```TypeScript\n/// <amd-dependency path=\"text!my/template/path\"/>\n\ndeclare var require;\n\nimport mustache = module('./mustache');\nimport model = module('./model');\n\nvar template:string = require('text!my/template/path');\ndocument.getElementById('view').innerHTML = mustache.render(template, model.data);\n```\n\nWould generate the below output:\n\n```JavaScript\ndefine([\"require\", \"exports\", './mustache', './model', \"text!my/template/path\"], function(require, exports, __mustache__, __model__) {\n    var mustache = __mustache__;\n    var model = __model__;\n\n    var template = require('text!my/template/path');\n    document.getElementById('view').innerHTML = mustache.render(template, model.data);\n});\n```\n\nWithin the function block as the text module/plug-in was declared as a dependency in the 'define' parameter array, this is already loaded, and is immediately available for use (the internal require call simply assigning it to a local var).\n\nI'll assign this to Jonathan as a suggestion to track further improvements in this area.\n\nThanks!",
+      "PostedDate": "2013-05-16T15:55:30.42-07:00",
+      "Id": 100402
+    },
+    {
+      "Message": "Hi, Bill!\n\nThank you for the hidden feature - I like it, and it will do nicely for now.\n\nUnfortunately, however, when I tried it out, it did not work for some reason: ",
+      "PostedDate": "2013-05-16T17:26:19.33-07:00",
+      "Id": 100413
+    },
+    {
+      "Message": "(sorry, hit Ctrl+S too soon)\n\n...it did not work for some reason: the compiler compiled the require() call just as any other call, but did not add the module to the dependencies list of the define() call.\n\nCan you suggest a debugging strategy?",
+      "PostedDate": "2013-05-16T17:28:09.823-07:00",
+      "Id": 100414
+    },
+    {
+      "Message": "Did you add the \"/// <amd-dependency path=\"text!my/template/path\"/>\" as the first line?\n\nWe did omit this in our initial 0.9 work, and just added it back in recently (see https://typescript.codeplex.com/SourceControl/changeset/e483a0a5323e479aeb2d53d8809d28fc229b08ff ).  Make sure you are using later bits than this if on 0.9.",
+      "PostedDate": "2013-05-16T18:37:18.267-07:00",
+      "Id": 100418
+    },
+    {
+      "Message": "Oh, missed that somehow.\nWell, if I need to specify it in two places anyway, that doesn't do any good, I'm afraid :-(\n\nThank you for pointing out, though.",
+      "PostedDate": "2013-05-17T07:15:53.63-07:00",
+      "Id": 100451
+    },
+    {
+      "Message": "I'm not clear - is there a problem specifying it in two places?  It's a workaround, to be sure, but is there another aspect of this that's blocking you from using the workaround?",
+      "PostedDate": "2013-11-12T11:32:37.633-08:00",
+      "Id": 122793
+    },
+    {
+      "Message": "See my reply in issue 1864.\n\nI would like to especially stress that this kind of support is absolutely essential for a language that boasts support for \"large scale JavaScirpt applications\".\n\nIn the time when at least half of JavaScript development is in-browser apps, how can a language pretend to support it without a straightforward way to something as simple as load a resource?",
+      "PostedDate": "2013-11-12T12:33:24.327-08:00",
+      "Id": 122798
+    },
+    {
+      "Message": "I second \"fsoikin\"'s opinion. Loading HTML templates is essential for a wide variety of single page applications .\n\nThe workaround provided in this thread is sufficient for a 'Hello World' application, but is a no-go for any large-scale application using AMD + _Handlebars_/_underscore_ for templates.\n\nE.g. we have more than 100 templates imported from about 70 files. Lack of this feature promotes a level of code duplication that blocks us from adopting Typescript.",
+      "PostedDate": "2014-01-14T01:19:18.3-08:00",
+      "Id": 130370
+    },
+    {
+      "Message": "I think the simplest solution would be to treat require(constant string) calls as special when using module amd flag.\n\nWhat I mean by special? Two things - 1. predefine require function (module=amd) as:\n\n``` TypeScript\ndeclare function require(name: string): any;\n```\n\n2. And convert all calls of require with constant string as parameter such as:\n``` TypeScript\nvar template: string = require('templates/view.html');\n```\n\ninto:\n``` TypeScript\n/// <amd-dependency path=\"text!templates/view.html\"/>\n\nvar template: string = require('text!templates/view.html');\n```\n\nAs using module amd already gives us require function in scope (generated .js files have it) it makes sense to predefine it. Emitting amd-dependency when using constant string expression also should be relatively easy. The any return type allows casting to anything the developer wants.",
+      "PostedDate": "2014-01-14T10:56:23.023-08:00",
+      "Id": 130412
+    },
+    {
+      "Message": "I'll throw another suggestion:\n\nIf code contains a type annotation in _import_ = _require_ statement, then trust the developer to provide the AMD module during runtime.\n\n```ts\n//no type annotation - will check the existence of the module and infer type from that file\nimport someJsFile = require('some/jsfile'); \n//type annotation present - we trust the developer that module will be provided at runtime and has a correct type annotation\nimport template: string = require('text!templates/view.html');\n```",
+      "PostedDate": "2014-01-20T01:13:12.877-08:00",
+      "Id": 130862
+    },
+    {
+      "Message": "We get around this as follows:\n###some-dir/some-template.html\n```\n<html>...</html>\n```\n###some-dir/some-template.html.d.ts\n```\n// Auto-generated\ndeclare module 'text!./some-template.html' {\n    var text: string;\n    export = text;\n}\n```\n###some-dir/some-controller.ts\n```\n/// <reference path=\"./some-template.html.d.ts\" />\nimport template = require('text!./some-template.html');\n\n// Template has type of string as expected.\n// The typescript compiler will emit a require as long as the template value is actually used.\n```\nThe small `.d.ts` wrappers can be auto-generated via some quick 'n dirty scripts.\n\nWhat I'd really like to see is a pluggable 'module resolution API' for the Typescript complier. Problems like this could then be solved in a more generic way.",
+      "PostedDate": "2014-03-15T19:24:01.75-07:00",
+      "Id": 136968
+    },
+    {
+      "Message": "> What I'd really like to see is a pluggable 'module resolution API' for the Typescript complier. Problems like this could then be solved in a more generic way.\n\nI wrote a small story about [module resolution plugins here](https://typescript.codeplex.com/discussions/539193).",
+      "PostedDate": "2014-03-16T17:42:13.337-07:00",
+      "Id": 136988
+    }
+  ]
+}

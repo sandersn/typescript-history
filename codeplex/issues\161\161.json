@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As rwaldron points out, this isn't in line with what the user would expect.  We're focusing constructor typing in TypeScript on common scenarios rather than corner case scenarios.  \n",
+    "ClosedDate": "2013-03-07T16:05:29.05-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "```TypeScript\r\nvar Person = function(n) {\r\n    return { name: n };\r\n}\r\n\r\nvar w = new Person(\"foo\");\r\nconsole.log(w.name); // prints foo\r\n```\r\nThe above valid js throws the following errors in ts\r\n\r\nnew expression only valid on constructors - line 5\r\nExpected var, class, interface, or module\tline 6",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T20:10:11.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "newing constructor function errors out",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 161
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is not a bug.\n\nThat might be valid JavaScript, but the code is returning an object, which overrides the newly constructed object that the constructor is supposed to return.\n\n\nvar Person = function(n) {\n  this.n = n;\nreturn { name: n };\n}\n\nvar w = new Person(\"foo\");\nconsole.log(w.name); // prints foo\n\n\nBut... \n\n\nconsole.log(w.n);// undefined\nconsole.log( w instanceof Person ); // false\n\n...You've created something that won't benefit from \"new\".\n\nSo, back to TypeScript... If you rewrite your constructor like...\n\nvar Person = function(n) {\n  this.name = n;\n};\n\nvar w = new Person(\"foo\");\n\nconsole.log(w.name); // prints foo\nconsole.log( w instanceof Person ); // true\n\n\n\n",
+      "PostedDate": "2012-10-08T08:52:57.51-07:00",
+      "Id": 79007
+    },
+    {
+      "Message": "If typescript is super set of javascript, and when using legacy javascript, wouldn't these kind of false compilation errors lead to confusion?\n\nThat function was from legacy code that ensured that constructor function always returned a valid object, even when user of that function didn't use new...\n\nso the above works when called without new keyword\n\nPerson(\"bar\") // works\nnew Person(\"bar\") //works",
+      "PostedDate": "2012-10-08T15:41:18.227-07:00",
+      "Id": 79074
+    },
+    {
+      "Message": "I explained why it \"works\", which is that it never \"worked\", because it was never constructing a \"Person\" at all.",
+      "PostedDate": "2012-10-08T16:12:30.853-07:00",
+      "Id": 79078
+    }
+  ]
+}

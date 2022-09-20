@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1107991",
+    "ThreadId": "462387",
+    "Html": "I have a TypeScript application which uses requirejs.  I am using the --module AMD switch with the compiler.  The following files are an example of the structure of my application.<br />\n<br />\nCommon/myModule.ts<br />\n<pre><code>export module myModule {\n    export class myClass {\n       ...\n    }\n}</code></pre>\n\nMySecondDirector/mySecondFile.ts<br />\n<pre><code>import myModuleImport = require(&quot;Common/myModule&quot;);</code></pre>\n\nCompiles to<br />\n<pre><code>require(['Common/myModule'], function(require, exports, __myModuleImport __){\n   ...\n});</code></pre>\n\nmyModuleImport seems to be undefined when referenced unless i change the compiled code to look like this.<br />\n<pre><code>require(['Common/myModule.js'], function(require, exports, __myModuleImport __){\n   ...\n});</code></pre>\n\nAm I doing something wrong?  Is this a bug in TypeScript?  Is it a bug in requirejs?<br />\n<br />\n<strong>EDIT:</strong> Corrected the compiled mySecondFile.js<br />\n",
+    "PostedDate": "2013-10-15T14:32:05.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1108027",
+    "ThreadId": "462387",
+    "Html": "Ending a filename in requirejs with .js means that it will be loaded as a 'plain' JS file instead of a module, which probably isn't what you want.\r<br />\n<br />\nWhat does the compilation of Common/myModule.ts look like? You would probably get this behavior if that file were accidently compiled with --module commonjs.<br />\n",
+    "PostedDate": "2013-10-15T15:57:07.65-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1108032",
+    "ThreadId": "462387",
+    "Html": "Common/myModule.ts compiles to this.<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {\n    (function (myModule) {\n        ...\n    })(exports.myModule|| (exports.myModule= {}));\n    var myModule= exports.myModule;\n});</code></pre>\n\nI also made a small adjustment the MySecondDirector/mySecondFile.js code from my previous post.  I had apparently left out the require and export paramters from the function.<br />\n",
+    "PostedDate": "2013-10-15T16:31:07.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

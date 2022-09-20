@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the latest bits in the develop branch.",
+    "ClosedDate": "2013-09-13T17:18:04.957-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "The following code demonstrates what I believe to be a regression between 0.8.3 and 0.9.0.  I haven't checked the spec on this, so maybe 0.9.0 is more \"correct\"; all I know is it was really nice when it used to work.\r\n\r\n```\r\ninterface IAnimal {\r\n\tname: string;\r\n}\r\n\r\nclass Giraffe {\r\n\tname = \"Giraffe\";\r\n\tneckLength = \"3m\";\r\n}\r\n\r\nclass Elephant {\r\n\tname = \"Elephant\";\r\n\ttrunkDiameter = \"20cm\";\r\n}\r\n\r\nvar a = [\r\n\tnew Giraffe(),\r\n\tnew Elephant()\r\n] // b is {}[] (correct)\r\n\r\nfunction foo(animals: IAnimal[]) {\r\n\tfor (var animal in animals) {\r\n\t\talert(animal.name);\r\n\t}\r\n}\r\n\r\nfoo(a); // ERROR: This worked in 0.8.3, but no longer works in 0.9.0\r\n\t\t// It works in 0.9.0 if 'neckLength' and 'trunkDiameter' are removed.\r\n\r\nvar b: IAnimal[] = [\r\n\tnew Giraffe(),\r\n\tnew Elephant()\r\n] // c is IAnimal[]\r\n\r\nfoo(b); // This is the workaround that I'm using in 0.9.0\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-21T07:53:00.17-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.0 array type inference regression",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1204
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "```\nvar a = [\n    <IAnimal>new Giraffe(),\n    <IAnimal>new Elephant()\n]\n```\n```\nvar a = Array<IAnimal>(\n    new Giraffe(),\n    new Elephant()\n)\n```\n\nEither will allow foo(a) to work.  I couldn't find anything in the spec to indicate how an array type is inferred so I don't know if this is a bug or not",
+      "PostedDate": "2013-06-23T16:29:31.83-07:00",
+      "Id": 103887
+    },
+    {
+      "Message": "For reference, the spec section of interest is 3.10 Best Common Type which explains how the compiler will choose a type to infer amongst a set of candidate types (including an empty set). In this case a is inferred to be an array of objects because none of the types of the elements are a base type for all the other elements. If one of the elements were an IAnimal then a would be inferred to be IAnimal, else you can explicitly specify the type as you did with b.",
+      "PostedDate": "2013-06-24T12:36:16.787-07:00",
+      "Id": 103958
+    },
+    {
+      "Message": "This is by design, all 3 solution mentioned should work here.\n\nWe generally won't try to construct a 'base type' when the types in the array don't have anything in common.\n\r\n\r** Closed by paulb 06/24/2013 10:56AM",
+      "PostedDate": "2013-06-24T10:56:27.933-07:00",
+      "Id": 104001
+    },
+    {
+      "Message": "Now that I look at this again, I realize I missed an important detail in my original description.  The actual scenario that I was working with was:\r\n\r\n```\r\nfoo([\r\n    new Giraffe(),\r\n    new Elephant()\r\n]);\r\n```\r\n\r\nDoes that make a difference?  Would it be possible to bring back \"type inference for an anonymous array based on the function argument type\", or \"deferred type inference for anonymous types until their first usage\", or something like that?",
+      "PostedDate": "2013-06-24T17:10:48.047-07:00",
+      "Id": 104002
+    },
+    {
+      "Message": "Ah, yes, that is different and looks like a bug. In this case the array literal should be contextually typed by the type of foo's argument (4.18 Contextual Typing) so that when computing the best common type of the array that argument type (IAnimal) is added to the candidate set of types (4.6 Array Literals) and things work as you expected. Marking as active.",
+      "PostedDate": "2013-06-24T17:36:50.997-07:00",
+      "Id": 104006
+    },
+    {
+      "Message": "Hurray!  I love TypeScript. :)",
+      "PostedDate": "2013-06-24T18:09:53.987-07:00",
+      "Id": 104012
+    },
+    {
+      "Message": "Is it just me, or has this been fixed in 0.9.1.1? :)",
+      "PostedDate": "2013-08-29T07:45:23.223-07:00",
+      "Id": 111530
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "921903",
+    "ThreadId": "398048",
+    "Html": "\r\n<p>Let's say I have a set of existing pure JS AMD modules that compose a library or framework. Then I write my application in TypeScript, also composed of external modules intended to be compiled to AMD. From within one of my TypeScript modules, how do I import\r\n the pre-existing pure JS AMD module?</p>\r\n",
+    "PostedDate": "2012-10-04T07:41:35.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923068",
+    "ThreadId": "398048",
+    "Html": "<p>You simply author '.d.ts' files for the JS AMD modules and include them in your compilation using import directives. For example, say you have a JS AMD module 'geometry.js' like the following</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>define([<span style=\"color: #a31515;\">\"exports\"</span>], <span style=\"color: blue;\">function</span>(exports) {\r\n    exports.makePoint = <span style=\"color: blue;\">function</span>(x, y) {\r\n        <span style=\"color: blue;\">return</span> { x: x, y: y };\r\n    }\r\n})\r\n</pre>\r\n</div>\r\n<p>You would write the corresponding&nbsp;'geometry.d.ts' as follows</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> Point {\r\n    x: number;\r\n    y: number;\r\n}\r\n<span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> makePoint(x: number, y: number): Point;\r\n</pre>\r\n</div>\r\n<p>To import the module you use an import directive. For example, you might write 'test.ts' as follows</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">import</span> geometry = module(<span style=\"color: #a31515;\">\"geometry\"</span>);\r\n<span style=\"color: blue;\">var</span> p = geometry.makePoint(10, 20);</pre>\r\n</div>\r\n<p>To compile you use the '--module amd' flag</p>\r\n<pre>tsc --module amd test.ts</pre>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-07T08:47:01.613-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923105",
+    "ThreadId": "398048",
+    "Html": "<p>Ah. I see. That makes sense. I assume that the source description file should be placed in the same path as the actual AMD module.. and that the compiler would then write the TypeScript amd modules so that they point to the correct \"real\" module.</p>",
+    "PostedDate": "2012-10-07T10:44:20.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

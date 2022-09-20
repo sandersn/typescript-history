@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Consider the following function:\n````\nfunction fn(test: boolean = true) {\n\n}\n````\nNow with your proposals you are never able to call this function with ````false````.\n\nThe optimization for ````undefined```` is something we could consider, but would add a lot of extra complexity with very little actual real world benefit.",
+    "ClosedDate": "2014-02-06T11:04:23.55-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The check for default arguments feels rather redundant.\r\n````\r\nvar TestCase = (function (_super) {\r\n    __extends(TestCase, _super);\r\n    function TestCase(testValue) {\r\n        if (typeof testValue === \"undefined\") { testValue = \"default\"; }\r\n        _super.call(this);\r\n    }\r\n})(Base);\r\n````\r\nIt can be done in many ways:\r\n````\r\ntestValue || (testValue = \"default\")\r\ntestValue = testValue ? testValue : \"default\"\r\ntestValue = testValue || \"default\"\r\n````\r\n\r\n\r\nhttp://jsperf.com/defaultargs\r\n\r\n\r\nAdditionally a default value of undefined should get a warning or default to the behaviour of the ? after an argument:\r\n````\r\nfunction TestCase(testValue?)\r\n````\r\nas opposed to\r\n````\r\nfunction TestCase(testValue=undefined)\r\n````\r\nas it generates redundant code.\r\n\r\n\r\nMore complexly it would be nice (but I doubt it's feasible) if properties that simply get a constructor value assigned work in this way, taking out the reassignment of the argument.\r\n\r\nSo instead of\r\n````\r\ntestValue = testValue || \"default\"\r\nthis._testValue = testValue\r\n````\r\nwe automatically get\r\n````\r\nthis._testValue = testValue || \"default\"\r\n````",
+    "LastUpdatedDate": "2014-02-06T11:04:23.55-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-06T10:08:31.82-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Default argument value compilation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2157
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

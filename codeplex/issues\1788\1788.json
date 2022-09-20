@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-10T13:23:42.787-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "With the 0.9.1.1 compiler, this code compiles:\r\n```\r\n   public getDataSeries(): Dataset.ISeries[] {\r\n        return _.map(_.pluck(this.model.get(\"data\"), \"series\"), _.first);\r\n    }\r\n```\r\nBut with the 'develop' branch it produces this error message:\r\n```\r\nplot.ts(10,16): error TS2012: Cannot convert 'any[][]' to 'ISeries[]':\r\n\tType 'any[]' is missing property 'items' from type 'ISeries'.\r\n```\r\n\r\nI spent a few hours refactoring the code trying to get it to work but I was unsuccessful in getting the compiler to accept the types.  Here is another version of this code with more type information that works in the 0.9.1.1 compiler (but not the 'develop\" branch):\r\n```\r\n    public getDataSeries(): Dataset.ISeries[] {\r\n        var data: Dataset.IData[] = this.model.get(\"data\");\r\n        var allSeries: Dataset.ISeries[][] = _.pluck(data, \"series\");\r\n\r\n        return _.map(allSeries, _.first);\r\n    }\r\n```\r\n\r\nThe command used to reproduce this issue is:\r\n```\r\ntsc --m amd repro/backbone.d.ts repro/jquery.d.ts repro/lib.d.ts repro/lodash.d.ts repro/chart/dataset.ts repro/timeseries/plot.ts\r\n```\r\n\r\nAll the TypeScript source files necessary to reproduce are attached to this work item.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-13T17:55:56.163-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Type error with 'develop' compiler",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1788
+  },
+  "FileAttachments": [
+    {
+      "FileId": 743540,
+      "FileName": "repro.zip",
+      "DownloadUrl": ".\\743540"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "lodash is a higher-performance underscore implementation: http://lodash.com/",
+      "PostedDate": "2013-10-14T12:30:27.12-07:00",
+      "Id": 118370
+    },
+    {
+      "Message": "Looks like a couple of files are missing from the repro... one of them is underscore.\n\nPlease reopen using the button on top when you added more info.\n\r\n\r** Closed by paulb 10/14/2013 11:39AM",
+      "PostedDate": "2013-10-14T11:39:40.617-07:00",
+      "Id": 118371
+    },
+    {
+      "Message": "Thanks for the detailed repro. Interestingly I don't see the error when I condense your repro into a single file, but once I've imported lodash (rather than included the relevant code in an ambient declaration in the file that uses map and pluck) the error is reported. We'll look into this.",
+      "PostedDate": "2013-10-16T18:51:51.733-07:00",
+      "Id": 118672
+    },
+    {
+      "Message": "Yeah - the last issue I sent in was also dependent upon the directory layout so I've learned to send in repros that match the directory layout as closely as possible.",
+      "PostedDate": "2013-10-17T10:49:16.193-07:00",
+      "Id": 118734
+    },
+    {
+      "Message": "Any updates on this one?  I'm hoping to get our codebase compiling with 0.9.5 so we can start testing out the language services with the 'develop' Eclipse plug-in.",
+      "PostedDate": "2013-10-28T19:40:52.15-07:00",
+      "Id": 119978
+    },
+    {
+      "Message": "Looks like this was fixed at some point.  Thanks!",
+      "PostedDate": "2013-11-01T11:35:24.023-07:00",
+      "Id": 120448
+    }
+  ]
+}

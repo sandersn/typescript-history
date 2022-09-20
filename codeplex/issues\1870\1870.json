@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I really can't see us using this as the solution to this problem. Eval'ing stuff into some scope is going to be some combination of dangerous, slow, and non-obvious. I know folks have been looking for a solution to qualifying names in large projects across files and we definitely hear that but I would expect any solution to involve a simpler syntactic form rather than actually injecting new runtime code gen that the user didn't write which we try very hard to avoid doing.",
+    "ClosedDate": "2013-11-07T15:01:20.617-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I have a module that exports many functions/classes/vars, and currently I have two ugly options for the common scenario where I wish to import every individual function/class/var exported by that module:\r\n\r\n1. import the entire module with a single alias - requires me to qualify every reference to exported symbols in the module using `alias.name`. (yuck!)\r\n\r\n2. import each individual member in the module explicitly using `import` statements for each exported symbol. (ick!)\r\n\r\nIn order to work comfortably with modules that export many symbols, I'd like to be able to import those directly into the current scope - essentially, that means creating a local `var` for each individual member of the imported module.\r\n\r\nThere's no obvious way to do that, and this has always bothered me about JavaScript and AMD.\r\n\r\nBut it turns out you can!\r\n\r\nI'm not sure what the TypeScript syntax would be - maybe `import module.*` ... but here's what the compiled output should look like:\r\n\r\n```\r\nvar __module = { 'foo':'bar' };\r\n\r\nfor (var __name in __module) {\r\n    __member = __module[__name];\r\n    eval('var ' + __name + ' = __member;');\r\n}\r\n\r\nconsole.log('foo is: ', foo);\r\n```\r\n\r\nAnd yeah, it uses `eval()`, but only once when establishing references to members of external modules, which isn't going to be a performance hog, and it gets the job done!\r\n\r\nAdding a small run-time function when using wildcard imports would probably be cleaner:\r\n\r\n```\r\nfunction __extract(mod, name) {\r\n    var s = '';\r\n    for (var symbol in mod) {\r\n        s += 'var ' + symbol + ' = ' + name + '.' + symbol + ';';\r\n    }\r\n    return s;\r\n}\r\n\r\nvar FooModule = { 'foo':'bar', 'baz':123 }\r\n\r\neval(__extract(FooModule, 'FooModule')); // import FooModule.*\r\n\r\nconsole.log('foo is: ', foo);\r\nconsole.log('baz is: ', baz);\r\n```\r\n\r\nActually, I can use this function right now, but TypeScript doesn't know about the individual symbols created/imported by the `eval()` statement, so it has very limited usefulness in userland.\r\n\r\nWould you consider adding this feature to TypeScript please?\r\n",
+    "LastUpdatedDate": "2013-11-19T15:52:28.183-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-06T11:40:50.21-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "lexical \"bulk\" import of module members",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1870
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Well, the only alternative at this time is to import every member to a local symbol, one at a time - which is going to be perhaps less dangerous, but equal in terms of performance, and with a footprint of considerably more lines of code, both in the TS source and the output JS code, as compared to processing a list of more than 5-10 members in a loop.\n\nA much simpler syntactic form would be to simply import each known member of a module with individual var statements - but with the obvious drawback of working only for known TypeScript modules and/or members defined in d.ts files or ambient type-declarations.\n\nThe reason we need syntax for this in TypeScript is simple: because TypeScript knows the members of the module and would know after the `import module.*` statement that all of those members are now available as local symbols. There is no simple way to emulate this behavior with userland code.\n\nAnd there is no other way to dereference members of a module in JavaScript.\n\nI would be happy either way - I don't care much what the output code looks like, if it works.\n\nAnd I'm not concerned about performance at all - for the most part, this feature would (or should) be used to import members of one module into the local scope of another module, which happens only once, on load.\n\nThe computational burden of doing that is the same no matter how it's done - but the burden of importing (in my case) close to 100 members, and maintaining (possibly more than one copy) of all those imports statements, is on the developer.\n\nFurthermore, the alternative, explicitly referencing `module.member` in every statement in your code, in terms of performance, is undoubtedly a lot less efficient than dereferencing them once and bringing the members into the scope of your module, so they can be referenced directly.\n\nAs an example, let's say you have 50 members in module X, and you need access to all of those in modules A, B and C.\n\nWith the existing import/export features, you can choose between the following two solutions:\n\n(1) In modules A, B and C, import module X and reference members of X using X.name notation - this leads to code that in terms of complexity has to double-qualify every reference to every member of X, and in terms of performance, has to resolve every one of these references at run-time, every time they're encountered, e.g. repeatedly inside loops, unless you optimize by importing members referenced in loops, which creates more complexity and increases the maintenance burden.\n\n(2) In modules A, B and C, import each of 50 members in module X one at a time - this is somewhat better in terms of complexity, but I now have to maintain a list of the 50 members in each of the 3 modules which creates an increased maintenance burden. With increasing number of members and/or modules that need access to those members, this maintenance burden increases exponentially. It is better in terms of performance however, since we are no longer resolving double-qualified references e.g. inside loops. \n\nWhy not:\n\n(3) In modules A, B and C, import all members of module X with a single statement. This eliminates the maintenance burden of maintaining duplicate member references, and avoid resolving them repeatedly at run-time.\n\nThe sample code I posted may not be the answer, but there has to be a better answer than just ignoring the problem?\n\nIf I'm going to write 50 import statements anyway, resulting in 50 lines of JavaScript, you might as well give me a single statement that writes those 50 var statements for me - there's absolutely no difference in terms of footprint or performance, and definitely no point in writing and maintaining this stuff by hand.\n",
+      "PostedDate": "2013-11-07T19:33:04.597-08:00",
+      "Id": 122260
+    },
+    {
+      "Message": "We'll probably revisit this if/when ES6 modules get finalized.",
+      "PostedDate": "2013-11-19T15:52:28.183-08:00",
+      "Id": 123594
+    }
+  ]
+}

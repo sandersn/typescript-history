@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1128880",
+    "ThreadId": "471111",
+    "Html": "It looks like generic type inference changed in 0.9.5 beta.  Before the update I was doing something like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Observable&lt;T&gt; {\n    value: T;\n    <span style=\"color:Blue;\">constructor</span>(value?: T) {\n        <span style=\"color:Blue;\">this</span>.value = value !== undefined ? value : <span style=\"color:Blue;\">null</span>;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> o: Observable&lt;<span style=\"color:Blue;\">string</span>&gt;;\no = <span style=\"color:Blue;\">new</span> Observable();\r\n</pre></div>but now that fails with the error <code>types Observable&lt;{}&gt; and Observable&lt;string&gt; are incompatible.</code>  I understand the change is to reduce implicit any errors which makes sense, but in this case it feels like it's just going to cause extra typing.  Because the LHS of the assignment is typed and the RHS constructor is compatible I think this should compile without error.  Does that make sense?<br />\n",
+    "PostedDate": "2013-11-25T11:40:26.817-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128992",
+    "ThreadId": "471111",
+    "Html": "The RHS is not compatible though. The only thing the compiler knows about <code>new Observable()</code> is that T is {}, you've given no other information that can be used to infer the type (ie no arguments that can be used to infer possible types for T). This is adding real safety, not just extra typing. Consider what happens once you try to do anything with o's value:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> o: Observable&lt;<span style=\"color:Blue;\">string</span>&gt;;\no = <span style=\"color:Blue;\">new</span> Observable();\nconsole.log(o.value.charAt(0)); <span style=\"color:Green;\">// runtime exception</span>\r\n</pre></div>",
+    "PostedDate": "2013-11-25T18:05:02.14-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1128999",
+    "ThreadId": "471111",
+    "Html": "<blockquote>\nThe only thing the compiler knows about new Observable() is that T is {},<br />\n</blockquote>\nWell it doesn't know that, it guessed.  Ignoring the LHS it's arguably as good a guess as any (get it?).  I think using the LHS to make a better inference is fair game though.\r<br />\n<br />\nI don't think adding an explicit generic type in your example adds any safety.  This doesn't look more or less obviously broken to me.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> o: Observable&lt;<span style=\"color:Blue;\">string</span>&gt;;\no = <span style=\"color:Blue;\">new</span> Observable&lt;<span style=\"color:Blue;\">string</span>&gt;();\nconsole.log(o.value.charAt(0)); <span style=\"color:Green;\">// still a runtime exception</span>\r\n</pre></div>",
+    "PostedDate": "2013-11-25T18:50:11.877-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129235",
+    "ThreadId": "471111",
+    "Html": "That's true.\r<br />\n<br />\nI think the point here is that regardless of whether or not we infer the shape of T from the LHS, having an optional initializer is not going to become any safer by using the default 'any' we had before.  The fact that you'd have to specify a type here should be a red flag that perhaps you should instead be inferring it from the initial value you pass to the constructor.  We try to help give you that red flag by giving the default type '{}', which should error if you actually try to use the value, but ultimately the type system can only do so much to let the user know that not enough information was given.<br />\n",
+    "PostedDate": "2013-11-26T09:08:03.417-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129774",
+    "ThreadId": "471111",
+    "Html": "If I'm understanding you correctly then you're saying that the optional initializer is dangerous?  Making it mandatory would give us this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Observable&lt;T&gt; {\n    value: T;\n    <span style=\"color:Blue;\">constructor</span>(value: T) {\n        <span style=\"color:Blue;\">this</span>.value = value;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> o: Observable&lt;<span style=\"color:Blue;\">string</span>&gt;;\no = <span style=\"color:Blue;\">new</span> Observable(<span style=\"color:Blue;\">null</span>);\r\n</pre></div>Well it compiles but I'm not convinced it's safer.  It's a matter of personal opinion on whether the default behavior is confusing but empirically it hasn't been a source of defects for us.<br />\n",
+    "PostedDate": "2013-11-27T13:55:39.81-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129792",
+    "ThreadId": "471111",
+    "Html": "Currently the compiler only makes inferences for type arguments based on argument values. Therefore if you have a generic call or constructor that doesn't use a type parameter type in any parameter the compiler will not be able to infer anything for that type parameter other than {}. Likewise if you did have such a parameter but it is optional (as above) and you pass no argument then no inferences can be made. We're considering also making inferences from generic constraints but that isn't really relevant to this case.\r<br />\n<br />\nYou are correct that your newer example is not safer, in fact it is less safe because the 'null' value is widened to 'any' and then T is inferred to be 'any' rather than {}. It's just another way where you're making a generic call without providing any useful values with which to make inferences.\r<br />\n<br />\nOne additional argument for the current behavior is that the type annotation implies a certain level of safety which if the original assignment were allowed would not actually be the case. The following is allowed and I would argue more appropriately captures the level of safety here (ie &quot;I am claiming this is an Observable&lt;string&gt; even though it cannot be statically verified&quot;):<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> o = &lt;Observable&lt;<span style=\"color:Blue;\">string</span>&gt;&gt;<span style=\"color:Blue;\">new</span> Observable();\r\n</pre></div>Alternatively you can explicitly pass a type argument list as you did in your second post.<br />\n",
+    "PostedDate": "2013-11-27T14:55:33.957-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1129846",
+    "ThreadId": "471111",
+    "Html": "I totally get what you're saying about this being the best behaviour given the current capabilities of type inference.  I'll standardize our codebase on this style for the next release:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> o: Observable&lt;<span style=\"color:Blue;\">string</span>&gt;;\n<span style=\"color:Green;\">// code</span>\no = <span style=\"color:Blue;\">new</span> Observable&lt;<span style=\"color:Blue;\">string</span>&gt;();\n<span style=\"color:Blue;\">var</span> o2 = <span style=\"color:Blue;\">new</span> Observable&lt;<span style=\"color:Blue;\">string</span>&gt;();\r\n</pre></div>I'd still like to see the LHS of an assignment used in type inference in a future release.  I think it could make the coding experience a little more easy going without making it easier to write bugs.  Maybe gave it some thought.\r<br />\n<br />\nCheers.<br />\n",
+    "PostedDate": "2013-11-27T20:34:54.553-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

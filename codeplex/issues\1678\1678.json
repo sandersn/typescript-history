@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As you note yourself this is a dupe... \n\nhttps://typescript.codeplex.com/workitem/1639\n\nWe'll take a look at all closed suggestions for a future release.",
+    "ClosedDate": "2013-09-13T15:27:50.023-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "As discussed in this [closed issue](https://typescript.codeplex.com/workitem/1639), constructor functions cannot currently have accessibility modifiers. Instead, adding accessibility modifiers makes it a function called \"constructor\".\r\n\r\nThis is problematic for a couple reasons:\r\n- It's totally unintuitive. No one would ever realize this behavior without first writing buggy code that does the wrong thing or unless they'd read the whole language spec beforehand. \r\n- It precludes the possibility of ever adding accessibility modifiers on constructors.\r\n\r\nI propose that instead of this strange behavior, accessibility modifiers are allowed on constructors and quotes are used to indicate when you actually want a function named \"constructor\".\r\n\r\nAccessibility modifiers should be used to control accessibility, not overloaded to send a secret message to the compiler that you actual want a function called \"constructor\".\r\n\r\nFor example,\r\n\r\n``` TypeScript\r\nclass Foo {\r\n    public constructor(public bar: string) { }\r\n\r\n    public \"constructor\"() { }\r\n}\r\n```\r\nwould generate:\r\n\r\n``` JavaScript\r\nvar Foo = (function () {\r\n    function Foo(bar) {\r\n        this.bar = bar;\r\n    }\r\n    Foo.prototype.constructor = function () {\r\n    };\r\n    return Foo;\r\n})();\r\n```\r\n\r\nThis would also have the major benefit of allowing private constructors (enforced via compile time only, just like normal functions), which enable the factory or singleton patterns to be used more effectively.\r\n\r\nThis isn't a bug report, but I though I should also mention here that currently the compiler accepts quoted function names but generates invalid JavaScript for them.",
+    "LastUpdatedDate": "2013-09-13T15:27:50.023-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-12T06:46:43.507-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Allow accessibility modifiers on constructors",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1678
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

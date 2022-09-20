@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1219373",
+    "ThreadId": "538004",
+    "Html": "Hi,\r<br />\n<br />\nI have the following simple requirement. I'd like to create a module for use in NodeJS that contains the following string extension.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Green;\">// stringEx.ts</span>\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">class</span> String {\n\n    endsWith(substring: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n}\n\nString.prototype.endsWith = <span style=\"color:Blue;\">function</span> (suffix) {\n    <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">this</span>.indexOf(suffix, <span style=\"color:Blue;\">this</span>.length - suffix.length) !== -1;\n};\r\n</pre></div>Then I'd like to import this in another file in order to make the string extension available:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> str = require(<span style=\"color:#A31515;\">&#39;./stringEx&#39;</span>);\n\n<span style=\"color:Blue;\">var</span> endsWithFoo = <span style=\"color:#A31515;\">&#39;bar-foo&#39;</span>.endsWith(<span style=\"color:#A31515;\">&#39;foo&#39;</span>);\r\n</pre></div>However, this errors with 'The property endsWith does not exist on value of type 'string'.\r<br />\n<br />\nThe JavaScript equivalent of this works correctly, but no matter what I try, I get one error or the other.\r<br />\n<br />\nIs there a way to get this working or is this a missing feature?\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2014-03-05T02:15:56.977-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219516",
+    "ThreadId": "538004",
+    "Html": "You may have to split out the change to String as a separate .d.ts file you ///&lt;reference...&gt;  Modules tend to create their own namespaces and scopes in TypeScript, which might be just enough to throw off this pattern.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// StringExtension.d.ts</span>\n<span style=\"color:Blue;\">interface</span> String {\n    endsWith(substring: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">boolean</span>;\n} \r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;StringExtension.d.ts&quot;/&gt;</span>\n<span style=\"color:Green;\">// stringEx.ts</span>\n\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">var</span> tmp;  <span style=\"color:Green;\">// had to cheat so this is still an external module</span>\n\nString.prototype.endsWith = <span style=\"color:Blue;\">function</span> (suffix) {\n    <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">this</span>.indexOf(suffix, <span style=\"color:Blue;\">this</span>.length - suffix.length) !== -1;\n};\r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">///&lt;reference path=&quot;StringExtension.d.ts&quot;/&gt;</span>\n<span style=\"color:Blue;\">import</span> str = require(<span style=\"color:#A31515;\">&quot;./stringEx&quot;</span>);\n\n<span style=\"color:Blue;\">var</span> endsWithFoo = <span style=\"color:#A31515;\">&quot;bar-foo&quot;</span>.endsWith(<span style=\"color:#A31515;\">&quot;foo&quot;</span>);\r\n</pre></div>",
+    "PostedDate": "2014-03-05T08:18:39.647-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219540",
+    "ThreadId": "538004",
+    "Html": "@jon, thanks for the response.\r<br />\n<br />\nThis was one of the things I tried. However, there is a subtlety here. If you were to F12 on the <code>endsWith</code> in the last of your code snippets it actually takes you to the interface declaration in  file <em>StringExtension.d.ts</em>.\r<br />\n<br />\nThis in turn causes the compiler to infer <code>endsWith</code> as a compile-time annotation, with the end result the generated JavaScript file looks like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n   <span style=\"color:Blue;\">var</span> endsWithFoo = <span style=\"color:#A31515;\">&#39;bar-foo&#39;</span>.endsWith(<span style=\"color:#A31515;\">&#39;foo&#39;</span>);\r\n</pre></div>Notice that there is no 'var str = require('./app');` since the import has been optimised away.\r<br />\n<br />\nPerhaps this has been logged already, but I couldn't find a bug ticket for.<br />\n",
+    "PostedDate": "2014-03-05T08:55:06.367-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1219607",
+    "ThreadId": "538004",
+    "Html": "Ahh, I see.  For something like this where you're modifying globals instead of creating and using a module, you're right that you'll have to do something like this as a workaround:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> str = require(<span style=\"color:#A31515;\">&#39;./app&#39;</span>);\nstr;\r\n</pre></div>",
+    "PostedDate": "2014-03-05T11:23:40.903-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

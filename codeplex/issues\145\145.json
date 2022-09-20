@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:38:47.007-07:00",
+    "CommentCount": 6,
+    "Custom": "lukeh",
+    "Description": "The in-operator currently only accepts a string for the left operator, while a number could also be used. For example I had some code that used the following pattern:\r\n\r\n```TypeScript\r\nif (val instanceof Array) {\r\n   for (var i=0,n=val.length; i<n; i++)\r\n       if (i in val)\r\n             ......\r\n```\r\n\r\nand tsc complained that it could convert i of type number to a string. But I think a number is allowed (although of course not very commonly used).",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "TypeScript 0.9.0",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-06T23:50:43.303-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "in operator",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 145
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is definitely a bug. The LHS of the in operator is allowed to be anything except an unresolvable reference, as such the in operator itself will coerce the LHS operand (lval) to a string:\n\nReturn the result of calling the [[HasProperty]] internal method of rval with argument ToString(lval).\n\n\n\nSide note: unless your expecting sparse arrays, there is no reason to check `if (i in val)`\n\n",
+      "PostedDate": "2012-10-07T09:34:10.71-07:00",
+      "Id": 78909
+    },
+    {
+      "Message": "I just ran into this problem.  The \"in\" operator does indeed allow numbers on the LHS and behaves as one would expect on all JavaScript engines as far as I can tell.\n\nI had to write \"<string><any>v in obj\" to make it work.\n",
+      "PostedDate": "2012-11-21T23:10:50.637-08:00",
+      "Id": 82869
+    },
+    {
+      "Message": "Luke -- ruling?",
+      "PostedDate": "2013-02-25T16:43:45.74-08:00",
+      "Id": 91508
+    },
+    {
+      "Message": "It seems to me this may be one of those instances where TypeScript is preventing you from shooting yourself in the foot unless you're explicit about it (by casting). Yes, you're *allowed* to use a number in vanilla JS, but does it really make sense? All object properties are actually strings. To me, this is similar to TypeScript disallowing other nonsense that JS silently tries to deal with. The `in` operator only makes sense with strings.",
+      "PostedDate": "2013-02-26T09:05:31.733-08:00",
+      "Id": 91556
+    },
+    {
+      "Message": "After reworking the indexing type rules, allowing strings on the left-hand side is definitely going to be allowed.",
+      "PostedDate": "2013-03-01T13:01:35.76-08:00",
+      "Id": 92002
+    },
+    {
+      "Message": "Marking active",
+      "PostedDate": "2013-03-04T16:17:16.39-08:00",
+      "Id": 92255
+    }
+  ]
+}

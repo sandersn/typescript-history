@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1099952",
+    "ThreadId": "459419",
+    "Html": "Hi guys,\r<br />\n<br />\nIs there a way to access javascript's <em>this</em> within lambda?<br />\n",
+    "PostedDate": "2013-09-26T23:17:45.107-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100151",
+    "ThreadId": "459419",
+    "Html": "I assume you're asking because this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    <span style=\"color:Blue;\">var</span> fxn = () =&gt; {\n        <span style=\"color:Blue;\">this</span>.a = <span style=\"color:#A31515;\">&quot;a&quot;</span>;\n    }\r\n</pre></div>transpiles to this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    <span style=\"color:Blue;\">var</span> _this = <span style=\"color:Blue;\">this</span>;\n    <span style=\"color:Blue;\">var</span> fxn = <span style=\"color:Blue;\">function</span> () {\n        _this.a = <span style=\"color:#A31515;\">&quot;a&quot;</span>;\n    };\r\n</pre></div>and you want access to the original <code>this</code> inside that function.\r<br />\n<br />\nI wouldn't expect to be able to do that because that's an implementation detail.  Were your TypeScript to compile to EcmaScript 6 then it would use the <a href=\"http://css.dzone.com/articles/javascript-fat-city\" rel=\"nofollow\">native fat arrow</a> where this is this and there is no other concept of this.<br />\n",
+    "PostedDate": "2013-09-27T08:13:43-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100160",
+    "ThreadId": "459419",
+    "Html": "Yep, sometimes one needs both. They could introduce a new keyword: <strong>realThis</strong> :)<br />\n",
+    "PostedDate": "2013-09-27T08:27:15.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100297",
+    "ThreadId": "459419",
+    "Html": "I often find myself needing both the traditional JavaScript this and the lexicographical this. Would be great if we could use &quot;&lt;this&gt;&quot; or something inside lambdas to reference the traditional this. \r<br />\n<br />\nWith current TypeScript output, it could simply not rewrite it as &quot;_this&quot;. With ES6, it'd have to basically do what it does with the current this in lambdas. \r<br />\n<br />\nRight now my only option seems to be to drop lamda syntax entirely in these cases and setup a &quot;self&quot; variable myself. Which is kind of awkward and leads to inconsistent code.<br />\n",
+    "PostedDate": "2013-09-27T14:58:12.227-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100544",
+    "ThreadId": "459419",
+    "Html": "The &quot;traditional&quot; this can be referenced by defining a function instead of a lambda.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> button = document.createElement(<span style=\"color:#A31515;\">&quot;button&quot;</span>);\ndocument.body.appendChild(button);\nbutton.innerHTML = <span style=\"color:#A31515;\">&quot;Foo&quot;</span>;\n\nbutton.onclick = <span style=\"color:Blue;\">function</span>() {\n    alert(<span style=\"color:Blue;\">this</span>.innerHTML); <span style=\"color:Green;\">// Alerts &quot;foo&quot;</span>\n}\r\n</pre></div>",
+    "PostedDate": "2013-09-29T03:27:28.633-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100545",
+    "ThreadId": "459419",
+    "Html": "Sure, no problems there, but then you have to store the other <em>this</em> if you want to use it. It'd be nice to have both without additional code.<br />\n",
+    "PostedDate": "2013-09-29T03:29:30.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1100637",
+    "ThreadId": "459419",
+    "Html": "The other &quot;this&quot; in my example is button. Not sure I understand. Would you care to elaborate with an example?\r<br />\n<br />\nJust curious because I haven't yet found myself thinking there was some missing functionality here.<br />\n",
+    "PostedDate": "2013-09-29T10:19:59.093-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

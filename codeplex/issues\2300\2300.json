@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:34:33.477-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\nTypscript Version 0.9.7.0 allows static method inheritance but breaks in javascript. The following code will not generate a error but creates invalid javascript code.\r\n\r\nTypescript code:\r\n```\r\n class Doing\r\n {\r\n     public static stuff(){}\r\n }\r\n\r\n class Other extends Doing {\r\n     public static stuff(){\r\n         super.stuff();\r\n     }\r\n }\r\n```\r\nTypescript generates the following javascript file.\r\n\r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Doing = (function () {\r\n    function Doing() {\r\n    }\r\n    Doing.stuff = function () {\r\n    };\r\n    return Doing;\r\n})();\r\n\r\nvar Other = (function (_super) {\r\n    __extends(Other, _super);\r\n    function Other() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    Other.stuff = function () {\r\n        _super.prototype.stuff.call(this);\r\n    };\r\n    return Other;\r\n})(Doing);\r\n```\r\n\r\nAs you can see Other.stuff calls the prototype of Doing. This is not a expected behavior. It should call stuff without the prototype.\r\n```\r\n_super.stuff.call(this);\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-11T13:57:33.387-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "static method inheritance breaks in javascript. Typscript Version 0.9.7.0",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2300
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm sorry but its not the same issue. The generated javascript code calls the prototype of Doing.\nEssentially it calls the not static method stuff on Doing.\n\n```\n class Doing\n {\n     public static stuff(){}\n     public stuff(){\n       alert('not static method of Doing is called');\n     }\n }\n\n class Other extends Doing {\n     public static stuff(){\n         super.stuff();\n     }\n }\n```\nWhen Other.stuff(); is called a alert with the tekst 'not static method of Doing is called' is shown.\n\nMy issue is not that its possible but that typescript generates non valid js code.",
+      "PostedDate": "2014-03-11T15:32:59.057-07:00",
+      "Id": 136560
+    },
+    {
+      "Message": "This is how our static inheritance has always behaved. Agreed, it can be awkward, we've investigated other possibilities. Closing as a duplicate of existing issue. See \n\nhttps://typescript.codeplex.com/workitem/2047\nhttps://typescript.codeplex.com/discussions/474856\n\r\n\r** Closed by danquirk 03/11/2014 3:08PM",
+      "PostedDate": "2014-03-11T15:08:01.85-07:00",
+      "Id": 136561
+    },
+    {
+      "Message": "Sorry, you're right, I got hung up on the emit vs old versions. It looks like we lifted the restriction on super calls in statics in 0.9.5 but the emit was wrong. Marked as active.",
+      "PostedDate": "2014-03-11T16:16:25.103-07:00",
+      "Id": 136568
+    }
+  ]
+}

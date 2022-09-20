@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-06T14:27:42.657-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "This bug report is for VS 2012 Express Web Edition on TypeScript 0.9.1.1.\r\n\r\nTypescript allows documentation comments such as this:\r\n\r\n```\r\n  /**\r\n  * This holds the aaa value which is a string.\r\n  **/\r\n  aaa: string;\r\n```\r\n\r\nThe Visual Studio plugin will include the text from the documentation comment in tooltips when it can identify the member used elsewhere in the code.  This implementation appears to be incomplete in the case of object literals.\r\n\r\nThe code below demonstrates the issue.  In Visual Studio, hover the mouse pointer over aaa, bbb, or ccc in sections 1, 2 and 3, and you will see the supplemental comment, the qualified interface member that it implements (such as InterfacesTooltipTest.IPayload._propertyname_), and the TypeScript type.\r\n\r\nIn section 4, you will only see the TypeScript type in the tooltip when you hover your pointer on aaa, bbb, or ccc.  Both the documentation comment and the interface implementation information are missing.  The compiler clearly knows the rest of the information, though, since if you change aaa to a number or Boolean (for example aaa: 1) it results in a TypeScript compilation error.\r\n\r\nCode to demonstrate the issue:\r\n\r\n```\r\nmodule InterfacesTooltipTest {\r\n\r\n    export interface IInventoryGroupMap {\r\n        [groupId: string]: IInventoryType;\r\n    }\r\n\r\n    export interface IInventoryType {\r\n        [typeId: string]: IPayload;\r\n    }\r\n\r\n    export interface IPayload {\r\n        /**\r\n        * This holds the aaa value which is a string.\r\n        **/\r\n        aaa: string;\r\n        /**\r\n        * This holds the bbb value which is a number.\r\n        **/\r\n        bbb: number;\r\n        /**\r\n        * This holds the ccc value which is a boolean.\r\n        **/\r\n        ccc: boolean;\r\n    }\r\n\r\n    //SECTION 1\r\n    var payload: IPayload;\r\n    payload.aaa = \"test\"; //aaa supplemental tooltip works.\r\n    payload.bbb = 1; //bbb supplemental tooltip works.\r\n    payload.ccc = false; //ccc supplemental tooltip works.\r\n\r\n    //SECTION 2\r\n    var inventoryType: IInventoryType;\r\n    inventoryType[\"type1\"].aaa = \"test\";  //aaa supplemental tooltip works.\r\n    inventoryType[\"type1\"].bbb = 1;  //bbb supplemental tooltip works.\r\n    inventoryType[\"type1\"].ccc = false;  //ccc supplemental tooltip works.\r\n\r\n    //SECTION 3\r\n    var inventoryGroupMap: IInventoryGroupMap;\r\n    inventoryGroupMap[\"group1\"][\"type1\"].aaa = \"test\";  //aaa supplemental tooltip works.\r\n    inventoryGroupMap[\"group1\"][\"type1\"].bbb = 1;  //bbb supplemental tooltip works.\r\n    inventoryGroupMap[\"group1\"][\"type1\"].ccc = false;  //ccc supplemental tooltip works.\r\n\r\n    //SECTION 4\r\n    var inventoryGroupMap2: IInventoryGroupMap =\r\n        {\r\n            \"group2\":\r\n            {\r\n                \"type2\":\r\n                {\r\n                    aaa: \"test\", //BUG: aaa supplemental tooltip is not shown even though the compiler properly enforces the type.\r\n                    bbb: 1, //BUG: bbb supplemental tooltip is not shown even though the compiler properly enforces the type.\r\n                    ccc: false //BUG: ccc supplemental tooltip is not shown even though the compiler properly enforces the type.\r\n                }\r\n            }\r\n        };  \r\n\r\n}\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-02T08:12:40.583-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Incomplete implementation of supplemental tooltips in VS",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1630
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Additional detail:\n* Right-click Go To Definition works in sections 1-3, but does not work in section 4.\n* Right-click Refactor... Rename... works in sections 1-3 for members aaa, bbb, and ccc, but will produce a compiler error in section 4.\n* Right-click Refactor... Rename... seemingly does nothing at all in section 4 for members aaa, bbb, and ccc - not even the clicked-on member is renamed.\n",
+      "PostedDate": "2013-09-02T08:46:23.11-07:00",
+      "Id": 111855
+    },
+    {
+      "Message": "While I agree it may be unintuitive, this is per the design.  In sections 1 - 3 you are dealing with something that is of the interface type.  In section 4, the object literal is a new object of an anonymous type, that is then being assigned to a variable of the interface type.  The compiler error you refer to if you change the type to boolean in the object literal, is as the anonymous type of the object literal is now no longer assignment compatible with the explicit type of the variable it is being assigned to.\n\nSame goes for the additional details.  In each of those scenarios you are operating directly on the object literal, which is a declaration with its own new anonymous type.  Refactoring the members directly on the interface changes the members which are of the interface type, but now the object literal/type is incompatible with the interface and must also be changed (manually).",
+      "PostedDate": "2014-02-06T14:27:36.51-08:00",
+      "Id": 132875
+    }
+  ]
+}

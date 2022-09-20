@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "923010",
+    "ThreadId": "398359",
+    "Html": "\r\n<p>It'd be great to have a built in type for associative arrays/dictionaries similar to the built-in array type.</p>\r\n<p>I know that they can be emulated with objects, but such constructs do not provide type checks.</p>\r\n<p>This works:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> array: <span style=\"color:blue\">string</span>[] = []; <span style=\"color:green\">// only accepts strings</span>\narray.push( <span style=\"color:#a31515\">'Hi there'</span> ); <span style=\"color:green\">// ok</span>\narray.push( 1 ); <span style=\"color:green\">// compiler warning</span>\n</pre>\r\n</div>\r\n<p>This would be nice:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> dict: (<span style=\"color:blue\">string</span>, Person)[] = [];\ndict[<span style=\"color:#a31515\">'Matt'</span>] = <span style=\"color:blue\">new</span> Person(); <span style=\"color:green\">// ok</span>\ndict[<span style=\"color:#a31515\">'Chris'</span>] = <span style=\"color:blue\">new</span> Car(); <span style=\"color:green\">//compiler warning</span>\ndict[1] = <span style=\"color:blue\">new</span> Person(); <span style=\"color:green\">// compiler warning</span>\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-10-07T03:08:17.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923046",
+    "ThreadId": "398359",
+    "Html": "<p>You can do this using index signatures and you get the expected type checking. For example:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> dict: { [index: string]: Person; } = {};\r\ndict[<span style=\"color: #a31515;\">'Matt'</span>] = <span style=\"color: blue;\">new</span> Person(); <span style=\"color: green;\">// ok</span>\r\ndict[<span style=\"color: #a31515;\">'Chris'</span>] = <span style=\"color: blue;\">new</span> Car(); <span style=\"color: green;\">//compiler warning</span>\r\ndict[1] = <span style=\"color: blue;\">new</span> Person(); <span style=\"color: green;\">// compiler warning</span>\r\n</pre>\r\n</div>\r\n<p>Anders</p>",
+    "PostedDate": "2012-10-07T07:13:22.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923054",
+    "ThreadId": "398359",
+    "Html": "<p>That's great, thank you!</p>",
+    "PostedDate": "2012-10-07T07:41:54.257-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923078",
+    "ThreadId": "398359",
+    "Html": "<p>One last thing:&nbsp;Why is this invalid?</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">private</span> virtualKeys: { [index: number]: number; } = {} <span style=\"color: green;\">//Cannot convert '{}' to '[index: number] =&gt; number': Index signatures of types '{}' and '[index: number] =&gt; number' are incompatible</span>\r\n</pre>\r\n</div>\r\n</p>\r\n<p>What's the correct syntax then?</p>",
+    "PostedDate": "2012-10-07T09:33:53.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923099",
+    "ThreadId": "398359",
+    "Html": "<p>I don't think there is a correct syntax to annotate non-existing javascript. Object keys are transformed to strings if their type is not a string:</p>\r\n<p>var key = 4;</p>\r\n<p>var obj = { key: 4 }</p>\r\n<p>will actually result in { '4' : 4 }, which is [index: string]: number; indeed.</p>",
+    "PostedDate": "2012-10-07T10:38:10.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923548",
+    "ThreadId": "398359",
+    "Html": "<p>This comes up with defaults, too.</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> x : {foo: number;} = {};\r\n<span style=\"color: blue;\">var</span> y = &lt;{foo:number;}&gt;{};\r\n</pre>\r\n</div>\r\n<p>The first line will have a type error because you're trying to satisfy the requirement of an object with a foo member with an object without a foo member.&nbsp; The idiomatic way of writing the same thing is the second line, where you like the compiler infer the type and use an annotation instead.</p>",
+    "PostedDate": "2012-10-08T10:09:34.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.847-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Sorry for the awful title! \r\n\r\nIt seems that if I import a module anywhere other than at the top of the file, the type of the module is just 'any'. Here's an example:\r\n\r\n```\r\n/// <amd-dependency path=\"./EntityCache\" />\r\n\r\n// (...)\r\n\r\n// A property getter further down the file\r\n    public get group(): Group\r\n    {\r\n        var EntityCache = require(\"./EntityCache\");\r\n        return EntityCache.groups.get(this.groupIndex);\r\n    }\r\n\r\n```\r\n\r\nThe type of 'EntityCache' is 'any' rather than my 'EntityCache' class. \r\n\r\nFYI, I'm doing the late require because there is a cyclic dependency between the two files here - the file above is an excerpt from my Entities module which itself refers to EntityCache, and EntityCache of course needs to reference the Entities. It works perfectly fine again from the type information.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-30T06:20:29.66-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support non-top level type imports",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2479
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Is it unfeasible to get the type information from a line of code such as this? It seems to be a fairly normal use of AMD (albeit not ideal) to retrieve modules like this. I notice it isn't possible to do an import x = require('x') anywhere else other than the top of the file.\n\nThanks for your reply.",
+      "PostedDate": "2014-04-30T15:06:35.837-07:00",
+      "Id": 145278
+    },
+    {
+      "Message": "If you have defined EntityCache as another module, you should instead be able to do as Ryan stated.\n\n```\nimport EntityCache = require('./EntityCache');\n```\n\nAnd that will give you type information.  Make sure you're compling your ts files into the AMD module format.  \n`/// <amd-dependency` is for dependencies that you cannot model with import/require such as AMD plugins like `'text!./file.txt'`.  Although infact you can model those using declaration files and using the `declare module 'text!./file.txt'` format.",
+      "PostedDate": "2014-04-30T20:30:20.25-07:00",
+      "Id": 145299
+    },
+    {
+      "Message": "As mentioned, there is a circular dependency between the two files. The consequence is that if I use an import:\n```\nimport EntityCache = require(\"./EntityCache\");\n```\nThen 'EntityCache' will be undefined because 'EntityCache' itself also imports 'Entities', and that's how requirejs works. That's why I resorted to the <amd-dependency> tag - I know full well I'll get undefined back on the first pass, but calling require again in a function will give me the class. The only way I seem to be able to do this is with a:\n```\nvar EntityCache = require(\"./EntityCache\");\n```\nI realise circular dependencies are generally considered to be a bad thing but in my situation I don't see how I can get around it - Entities is a module containing my data model and EntityCache stores the collections of the different types. EntityCache obviously needs to import Entities for the type information, but Entities also needs to import EntityCache so it can get related objects.",
+      "PostedDate": "2014-05-01T02:42:09.767-07:00",
+      "Id": 145313
+    },
+    {
+      "Message": "I'm still trying wrap my head around this being 'by design'. It seems relatively common practice, with requires at least, to call 'require' within the code (i.e. somewhere other than the top of the module).\n\nThe Typescript idiom seems to be do import EntityCache = ... but if this is used in a function it obviously fails. I think this is something TypeScript should be able to support without sacrificing the typing (as my workaround does).\n\nThanks",
+      "PostedDate": "2014-05-03T16:47:26.827-07:00",
+      "Id": 145498
+    },
+    {
+      "Message": "`require`, when used like in your example, is just a function. Only `import x = require('foo');` statements automatically get type information.\n\r\n\r** Closed by RyanCavanaugh 04/30/2014 8:54AM",
+      "PostedDate": "2014-04-30T08:54:51.357-07:00",
+      "Id": 145669
+    },
+    {
+      "Message": "Maybe the following syntax could be supported in the future?\n```typescript\nvar EntityCache: typeof module \"EntityCache\" = require(\"./EntityCache\");\n```",
+      "PostedDate": "2014-05-07T21:43:25.343-07:00",
+      "Id": 145888
+    },
+    {
+      "Message": "Marking this as a suggestion for evaluation. \r\n\r\nImporting types in specific scopes like this was a little unusual but will be more common with ES6 class expressions so we may need to tackle some issues there anyway (ex private types leaking out of the scope). The other issue here is a codegen one where using import at the proposed point would generate invalid AMD codegen and thus far we have never had errors specific to the type of codegen mode you're in (ex if you opened this up as a loose file how do we know whether you're in AMD or CommonJS emit mode?).\r\n\r\nIn the meantime there are some workarounds. For one you can provide string specific overloads for require() that return the type you need to be used later.",
+      "PostedDate": "2014-05-08T18:14:55.167-07:00",
+      "Id": 145991
+    },
+    {
+      "Message": "Another reason I've wanted something like this is to \"lazy-load\" modules. As in, I want to load the script for something whenever a button is clicked, not when the file itself is requested.",
+      "PostedDate": "2014-05-12T01:30:15.763-07:00",
+      "Id": 146271
+    }
+  ]
+}

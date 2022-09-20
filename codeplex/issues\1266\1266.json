@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.52-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "With v0.9.0. Please look at the following code\r\n\r\n```\r\ninterface IPerson {\r\n   name?: string;\r\n}\r\n\r\ninterface IPersonWithFriends extends IPerson {\r\n   friends?: IPersonWithFriends[];\r\n}\r\n\r\nfunction test(p: IPersonWithFriends): void { }\r\n\r\ntest({\r\n   friends: [\r\n      {\r\n         name: \"\"\r\n      },\r\n      {  \r\n         name: [\"\"]\r\n      },\r\n   ]\r\n});\r\n```\r\n\r\nI think this should be rejected, as \"name\" is a string and not an arrray.\r\n\r\nWhen working locally (VS 2012, Web Essentials, Typescript v0.9.0)...\r\n* The above code is compiled without an error.\r\n*  When removing the first IPerson from the array, an error is given.\r\n\r\nWhen working in the Typescript Playground...\r\n* The above code is always compiled without an error.\r\n* The situation does not change, if the first IPerson is removed.\r\n\r\nIf the object is not used in a function call, but in an assignment, an error is given on compiling.\r\n\r\nHow can I see, which version is used in the web bsaed playground?",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-28T02:58:10.49-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Using interface in function call leads to incorrect compilation",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1266
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks a lot for the answer. I appreciated an additional explanation.\n\n__1:__ Haven't you forgotten one detail about what my function says, namely \"there is an optional member 'name' which is of type 'string'\". So as the second IPerson has a name property of type string[], something is not correct.\n\n__2:__ If my function is really satisfied by any type, then why does removing the first IPerson cause an error on compilation?\n\n```\ntest({\n   friends: [\n      {\n         name: [\"\"]\n      },\n   ]\n});\n```\n\nIt is hard to understand, why the call from my initial post is correct, but the above call is wrong.\n\n__3:__ If my initial post was valid code, then why is assigning the same object bad code?\n\n```\nvar p: IPersonWithFriends = {\n   friends: [\n      {\n         name: \"\"\n      },\n      {\n         name: [\"\"]\n      },\n   ]\n};\n```",
+      "PostedDate": "2013-06-28T11:49:46.01-07:00",
+      "Id": 104561
+    },
+    {
+      "Message": "This is by design. Your test function essentially says 'I require one argument of a type which may have properties named friends and name, but I do not require that the type have those properties.' So in effect your test function is satisfied by any type, you can call test(123) without error since it satisfies the requirements of those interfaces. An interface with only optional parameters is not really a constraint at all in cases like this. If you add any non-optional properties to either interface you'll see the types of errors you expect.\n\r\n\r** Closed by danquirk 06/28/2013 10:26AM",
+      "PostedDate": "2013-06-28T10:26:38.75-07:00",
+      "Id": 104696
+    },
+    {
+      "Message": "Ideally this would be caught by the \"no implicit any\" feature. Assigning to Jonathan",
+      "PostedDate": "2013-07-01T09:50:20.24-07:00",
+      "Id": 104773
+    }
+  ]
+}

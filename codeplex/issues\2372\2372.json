@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "If you look at the perf numbers as it's actually used, the performance is much closer:\n\nhttp://jsperf.com/alternate-undef-vs-if\n\nWe're sticking with \"typeof\" for now since it's the most idiomatic way for checking for missing parameters. I expect that eventually all runtimes will JIT these identically anyway (it looks like Firefox does already).",
+    "ClosedDate": "2014-04-03T14:45:21.723-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Currently, the typescript code\r\n```typescript\r\nfunction f(x = 0) {\r\n}\r\n```\r\ngenerates\r\n```javascript\r\nfunction f(x) {\r\n    if (typeof x === \"undefined\") { x = 0; } // instead of if (x === undefined) ...\r\n}\r\n```\r\nI assume that this was to avoid any possible danger of undefined being defined somewhere.\r\n\r\nI suggest this be replaced with \r\n```javascript\r\nfunction f(x) {\r\n    if (x === void 0) { x = 0; }\r\n}\r\n```\r\nsince void is a keyword and void 0 will always equal the undefined value.\r\n\r\nI think this change is warranted because http://jsperf.com/typeof-vs-void-0 shows that comparing ```typeof x === \"undefined\"``` instead of ```x === void 0``` is at least marginally slower on most (all?) browsers and much slower (85% slower) on IE11.\r\n\r\nUnless there's some legacy browser that doesn't handle the void keyword correctly, I don't see any reason to keep the current behavior.\r\n",
+    "LastUpdatedDate": "2014-04-03T18:41:04.407-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-02T22:04:04.76-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "default parameter code generation is suboptimal",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2372
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I agree as well, this would be a slight added performance boost.  In fact, I do this already in my API.",
+      "PostedDate": "2014-04-02T22:32:33.44-07:00",
+      "Id": 140377
+    },
+    {
+      "Message": "It seems that indeed the benefit is somewhat random for the most part, but more apparent on IE (which is not a surprise LOL).",
+      "PostedDate": "2014-04-03T18:41:04.407-07:00",
+      "Id": 140491
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-17T18:16:37.22-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "I am trying to create a namespace such that if i have files/folders:\r\n\r\n      /\r\n      global.ts\r\n      /global/ns1/\r\n                   ns1.ts\r\n      /globabl/ns1/ns2/\r\n                          file1.ts\r\n                          ns2.ts\r\nwhere global.ts looks like:\r\n\r\n\r\n    import ns1 = module(\"global/ns1/ns1\");\r\n    var global = {\r\n       ns1:ns1\r\n    };\r\n\r\n    export = global;\r\n\r\netc down the namespace so somewhere i can do\r\n    require(['global'],function(global){\r\n        var ns2instance = new global.ns1.file1();\r\n    });\r\n\r\n\r\n\r\ni am getting an error with global.ts about it referencing \r\n   Exported variable 'global' has or is using private type 'file1'.",
+    "LastUpdatedDate": "2014-04-17T18:16:37.22-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T08:32:27.09-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Is there a way to create this module without errors",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1446
+  },
+  "FileAttachments": [
+    {
+      "FileId": 827955,
+      "FileName": "WebApplication1.zip",
+      "DownloadUrl": ".\\827955"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "This is not a duplicate, as it occurred in .90 as well, On top of which it happens most with enums that are exported.  I have not been able to fine a workaround for this.",
+      "PostedDate": "2013-08-07T11:15:27.833-07:00",
+      "Id": 108890
+    },
+    {
+      "Message": "If you still see problem this once work item 1434 is resolved, please re-open this issue. Thanks!",
+      "PostedDate": "2013-08-13T12:01:06.73-07:00",
+      "Id": 109673
+    },
+    {
+      "Message": "Duplicate of https://typescript.codeplex.com/workitem/1434\n\r\n\r** Closed by RyanCavanaugh 08/07/2013 10:16AM",
+      "PostedDate": "2013-08-07T10:16:24.467-07:00",
+      "Id": 141348
+    },
+    {
+      "Message": "I'm still seeing this issue with 1.0RC.",
+      "PostedDate": "2014-04-10T06:53:39.05-07:00",
+      "Id": 141349
+    },
+    {
+      "Message": "It is hard to tell exactly what is going on here without a more complete repro. What is actually in ns1.ts and file1.ts? What are your full list of imports and exports in all these relevant files?",
+      "PostedDate": "2014-04-10T13:12:43.087-07:00",
+      "Id": 141419
+    },
+    {
+      "Message": "A more simple example.\n\nMy goal is to \n1.Have every class in its own file. \n2. Roll up all the classes into modules that can be \".\" ed\nExample Usage below:  \nUsage:\n```\nimport Drawing = require('Drawing');\nvar addr = new Drawing.Math.Adder();\n```\n\n/Drawing.ts\n```\nimport Math = require('Math/Math')\n\nvar Drawing = {\n    Math:Math\n};\n\nexport = Drawing;\n```\n\n/Math/Math.ts\n```\nimport Adder = require('Math/Adder');\n\nvar Math = {\n    Adder:Adder\n};\n\nexport = Math\n```\n\n/Math/Adder.ts\n```\nclass Adder {\n    add(a: number, b: number) {\n        \n    }\n}\n\nexport = Adder;\n```\n\nThis generates the error:\nError\t1\tExported variable 'Drawing' is using inaccessible module '.../WebApplication1/Math/Adder.ts'.\t...\\WebApplication1\\Drawing.ts\t\n",
+      "PostedDate": "2014-04-11T07:57:16.697-07:00",
+      "Id": 141504
+    },
+    {
+      "Message": "This is equivalent and works:\n**Drawing.ts**\n```\nexport import Math = require('Math/Math')\n```\n\r\n\r** Closed by RyanCavanaugh 04/14/2014 10:11AM",
+      "PostedDate": "2014-04-14T10:11:02.21-07:00",
+      "Id": 141788
+    },
+    {
+      "Message": "It looks as thought the optimizer is removing nested references.  I have attached the zip to the solution where this is happening.\r\n\r\nin this example:\r\nif i uncomment \r\n```\r\n//var addr = new Drawing.Math.Common.Adder();\r\n```\r\nthe optimizer will add the expected exports:\r\n```\r\ndefine([\"require\", \"exports\", 'Math/Math'], function(require, exports, Math) {\r\n    exports.Math = Math;\r\n});\r\n```\r\notherwise it doesn't include the references\r\n\r\nAlso errors are pushed to the Error List which are not failing the build:\r\n> Error\t1\tInvalid 'new' expression.\tC...Using.ts\t4\t36\tWebApplication1\r\n",
+      "PostedDate": "2014-04-14T12:46:06.287-07:00",
+      "Id": 141792
+    },
+    {
+      "Message": "If you only use imported code in type position then the compiler does not emit it into the reference list. The logic being that if your module only existed to provide static type information at design time then there is no reason to incur the runtime cost of loading a module whose contents are not used. By uncommenting that line you have used the module in an expression that will necessitate loading the module at runtime, so the emit changes.\n\nThe compiler will emit in the presence of semantic errors, but not syntactic errors. The idea is that when migrating existing JavaScript to TypeScript you may have a lot of errors that you want to clean up over time but still be able to make forward progress with TypeScript. In this case the error you're seeing is actually a bug in Visual Studio that is causing it to display an error that isn't actually an error (https://typescript.codeplex.com/workitem/2337). If you compile on the command line you'll see there's no error. ",
+      "PostedDate": "2014-04-17T18:16:32.203-07:00",
+      "Id": 142294
+    }
+  ]
+}

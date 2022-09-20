@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "941180",
+    "ThreadId": "403082",
+    "Html": "\r\n<p>Here is how we currently create an event listener:</p>\r\n<p></p>\r\n<pre>this._domElement.addEventListener('mousedown', (event: MouseEvent) =&gt; this.onMouseDown(event), false);</pre>\r\n<p></p>\r\n<p>Which is fine, it works perfectly well and the events fire and are all in local scope.</p>\r\n<p>However we then can't remove the event listener. Neither this:</p>\r\n<p></p>\r\n<pre>this._domElement.removeEventListener('mousedown', this.onMouseDown, false);</pre>\r\n<p></p>\r\n<p>nor this:</p>\r\n<p></p>\r\n<pre>this._domElement.removeEventListener('mousedown', (event: MouseEvent) =&gt; this.onMouseDown(event), false);</pre>\r\n<p></p>\r\n<p>.. works, despite the signature matching. Probably because in the resulting JavaScript it seems to create an anonymous function.</p>\r\n<p>What is the recommended way to add/remove an event listener from within TypeScript?</p>\r\n",
+    "PostedDate": "2012-11-13T12:44:04.25-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "941674",
+    "ThreadId": "403082",
+    "Html": "\r\n<p>Generally for all questions like this, the answer is &quot;do it the same as you would in JavaScript&quot;.&nbsp; In this particular case, a solution might look something like this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Greeter {\r\n    \r\n    _element: HTMLElement;\r\n\r\n    constructor (element: HTMLElement) { \r\n        <span style=\"color:blue\">this</span>._element = element;\r\n        <span style=\"color:blue\">this</span>.onMouseDown = &lt;any&gt;<span style=\"color:blue\">this</span>.onMouseDown.bind(<span style=\"color:blue\">this</span>);\r\n        <span style=\"color:blue\">this</span>._element.addEventListener(<span style=\"color:#a31515\">'mousedown'</span>, <span style=\"color:blue\">this</span>.onMouseDown);\r\n    }\r\n\r\n    onMouseDown() {\r\n        <span style=\"color:blue\">this</span>._element.innerText = Math.random().toString();\r\n        <span style=\"color:blue\">this</span>._element.removeEventListener(<span style=\"color:#a31515\">'mousedown'</span>, <span style=\"color:blue\">this</span>.onMouseDown);\r\n    }\r\n\r\n}\r\n\r\n<span style=\"color:blue\">new</span> Greeter(document.body)\r\n</pre>\r\n</div>\r\n<p>This uses a .bind to fix the 'this' type of the callback function object and store back onto the instance so it can be used later.</p>\r\n<p>Note that the &quot;&lt;any&gt;&quot; type assertion is no longer needed here in current 'develop' branch and upcoming 0.8.1 release.</p>\r\n",
+    "PostedDate": "2012-11-14T09:00:28.04-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "941876",
+    "ThreadId": "403082",
+    "Html": "\r\n<p>As a side note, if you want DOM-less event dispatching, I wrote a tiny library to provide that functionality. It is available on\r\n<a href=\"https://github.com/jmvrbanac/EventDispatcher-ts\">GitHub: EventDispatcher-ts</a>.</p>\r\n<p>With that library, your class can just extend EventDispatcher. Enjoy!</p>\r\n",
+    "PostedDate": "2012-11-14T14:49:16.347-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

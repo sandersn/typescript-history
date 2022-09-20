@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. Consider:\n\n```\nclass Animal {\n    name: string;\n}\nclass Mammal extends Animal {\n    height: number;\n}\nclass Horse extends Mammal {\n    speed: number;\n}\nfunction test<T extends Animal>(): T {\n    return new Mammal();\n}\n\nvar x = test<Horse>(); // x: Horse\nvar s = x.speed; // Wrong; x is actually Mammal\n```",
+    "ClosedDate": "2014-02-26T09:30:11.35-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I recently updated to 1.0rc and ran into an issue with existing code compiling.  I can workaround, but I would prefer to keep intact the static typing.  Here is a reproducible example:\r\n\r\n```\r\n    class A {\r\n        C: string;\r\n    }\r\n    class B extends A {\r\n        D: number;\r\n    }\r\n    function test<T extends A>(): T {\r\n        return new B();\r\n    }\r\n```\r\nError inside test function: \"Cannot convert 'B' to 'T'.\"",
+    "LastUpdatedDate": "2014-03-31T16:05:37.4-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-25T18:23:33.79-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "generic return type compile error (1.0rc)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2214
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If this is by design, then what is the purpose of \"T extends Animal\" functionality.  Shouldn't the language forbid this syntax altogether?",
+      "PostedDate": "2014-02-26T11:03:32.283-08:00",
+      "Id": 134895
+    },
+    {
+      "Message": "Remember that constraints constrain the type to *at least* the constraining type, not *at most*.\n\nExample of how constraints are useful:\n```\nclass Animal {\n    name: string;\n}\nclass Mammal extends Animal {\n    height: number;\n}\nclass Horse extends Mammal {\n    speed: number;\n}\nfunction clone<T extends Animal>(x: T): T {\n\tconsole.log('Cloning ' + x.name); // OK: x must have name property\n\tconsole.log(x.otherThing); // Not OK, x does not have this property\n\treturn undefined; // todo: figure out cloning\n}\n\nvar h1: Horse;\nvar h2 = clone(h1); // OK, Horse extends Animal\n\nvar c1: Car;\nvar c2 = clone(c1); // Not OK, Car is not an Animal\n```",
+      "PostedDate": "2014-02-26T13:41:48.82-08:00",
+      "Id": 134935
+    },
+    {
+      "Message": "Is there any reason why the following would not work in your example above?\n\n```\nfunction clone<T extends Animal>(x: T): T {\n    return new Animal(); //Getting an error here: Cannot convert 'Animal' to 'T'\n    return new Mammal(); //Same error but this is what I really want\n}\n```\n",
+      "PostedDate": "2014-03-26T17:18:48.417-07:00",
+      "Id": 138954
+    }
+  ]
+}

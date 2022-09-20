@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-14T17:11:03.707-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "Sorry I cant' provider the code that produced this.  I am working with a large legacy project that we're slowly porting so I do expect lots of warnings but not crashes.\r\n```\r\n/usr/local/lib/node_modules/typescript/bin/tsc.js:29854\r\n            throw e;\r\n                  ^\r\nTypeError: Cannot read property 'flags' of null\r\n    at Emitter.emitVariableDeclarator (/usr/local/lib/node_modules/typescript/bin/tsc.js:29052:26)\r\n    at VariableDeclarator.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53344:21)\r\n    at Emitter.emitVariableDeclaration (/usr/local/lib/node_modules/typescript/bin/tsc.js:29041:32)\r\n    at VariableDeclaration.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53736:21)\r\n    at VariableStatement.emitWorker (/usr/local/lib/node_modules/typescript/bin/tsc.js:53769:34)\r\n    at VariableStatement.AST.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:52609:18)\r\n    at Emitter.emitJavascript (/usr/local/lib/node_modules/typescript/bin/tsc.js:29546:17)\r\n    at Emitter.emitModuleElements (/usr/local/lib/node_modules/typescript/bin/tsc.js:29380:26)\r\n    at Emitter.emitInnerFunction (/usr/local/lib/node_modules/typescript/bin/tsc.js:28569:22)\r\n    at Emitter.emitFunction (/usr/local/lib/node_modules/typescript/bin/tsc.js:28950:22)\r\n    at FunctionDeclaration.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53415:21)\r\n\r\n```",
+    "LastUpdatedDate": "2013-08-14T17:11:03.707-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T07:36:51.62-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Cannot read property 'flags' of null",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1442
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Same error [here](https://typescript.codeplex.com/discussions/452684)",
+      "PostedDate": "2013-08-07T08:11:28.53-07:00",
+      "Id": 108832
+    },
+    {
+      "Message": "You might wish to check out the discussion [here](https://typescript.codeplex.com/discussions/452684) as I managed to resolve the same compiler crash in my case",
+      "PostedDate": "2013-08-07T09:18:24.483-07:00",
+      "Id": 108849
+    },
+    {
+      "Message": "@RyanCavanaugh: glad to hear you already fixed it in the development branch, however, in my case the issue was not related to a variable declaration with a missing generic parameter. Check out [this discussion](https://typescript.codeplex.com/discussions/452684)",
+      "PostedDate": "2013-08-07T09:33:13.04-07:00",
+      "Id": 108856
+    },
+    {
+      "Message": "I tested out develop branch.  I still get the crash.\n\n```\n/usr/local/lib/node_modules/typescript/bin/tsc.js:30351\n            throw e;\n                  ^\nTypeError: Cannot read property 'flags' of null\n    at Emitter.emitVariableDeclarator (/usr/local/lib/node_modules/typescript/bin/tsc.js:29548:26)\n    at VariableDeclarator.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53866:21)\n    at Emitter.emitVariableDeclaration (/usr/local/lib/node_modules/typescript/bin/tsc.js:29537:32)\n    at VariableDeclaration.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:54258:21)\n    at VariableStatement.emitWorker (/usr/local/lib/node_modules/typescript/bin/tsc.js:54291:34)\n    at VariableStatement.AST.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53127:18)\n    at Emitter.emitJavascript (/usr/local/lib/node_modules/typescript/bin/tsc.js:30042:17)\n    at Emitter.emitModuleElements (/usr/local/lib/node_modules/typescript/bin/tsc.js:29876:26)\n    at Emitter.emitInnerFunction (/usr/local/lib/node_modules/typescript/bin/tsc.js:29065:22)\n    at Emitter.emitFunction (/usr/local/lib/node_modules/typescript/bin/tsc.js:29446:22)\n    at FunctionDeclaration.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53937:21)\n```",
+      "PostedDate": "2013-08-07T13:05:10.147-07:00",
+      "Id": 108910
+    },
+    {
+      "Message": "OK.  I found the cause of my crash.\n\nIn a d.ts file of mine, I declare `require` for use within an inner-function in my legacy js code.\n\n```javascript\ndeclare var require:Function;\n```\n\nIf I switch to `any` type, then my crash goes away.\n\n```javascript\ndeclare var require:Function;\n```\n\n\nThis thread is closed; can someone acknowledge this feedback so I don't have to create a new issue. ",
+      "PostedDate": "2013-08-07T13:28:03.133-07:00",
+      "Id": 108912
+    },
+    {
+      "Message": "fixing typo from prev post\n\nthis was my fix\n```javascript\ndeclare var require:any;\n```",
+      "PostedDate": "2013-08-07T13:29:18.56-07:00",
+      "Id": 108913
+    },
+    {
+      "Message": "I believe this has been fixed in the develop branch. The root cause of the crash was when the file we were compiling had a variable declaration with missing generic parameters, if that helps you any.\r\n\r\nYou should be able to pull and build the latest compiler sources from our git repo. That should be enough to tell you where the error is; at that point you can fix the issue in your source and then either revert back to the 0.9.1 release or just keep going on the latest sources.\r\n\r\nIf you're still seeing the crash on the latest compiler sources, please re-open the bug (use the button just below the 'ISSUES' tab) with an updated call stack so we can keep investigating. Thanks!\n\r\n\r** Closed by RyanCavanaugh 08/07/2013 9:05AM",
+      "PostedDate": "2013-08-07T09:05:30.973-07:00",
+      "Id": 109687
+    },
+    {
+      "Message": "If what you're seeing is a different/new issue that is still happening after the original issue has been closed, do open a new issue. We will see it more quickly, other users will be able to find it more easily so they can upvote it if they are having similar issues, and you will more easily be able to re-open and get notifications when comments on the issue are made. Commenting on closed issues is never the most effective way to contact us.\n\nWith the latest bits in develop I don't see any errors with 'declare var require:Function' in a .d.ts file. If you're still seeing the issue please open a new issue with any other relevant details so we can get to the bottom of it.",
+      "PostedDate": "2013-08-14T14:39:52.487-07:00",
+      "Id": 109940
+    }
+  ]
+}

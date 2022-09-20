@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.66-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "In my opinion the best common type resolution is a very dangerous thing and I wish I could disable it.\r\nThe most common problem is when I need parameters of a generic function to be in agreement over a certain type variable.\r\n\r\n```\r\ninterface UseLater3<a, b, c> {\r\n   use(one: a, two: b, three: c): void;\r\n   one: a;\r\n   two: b;\r\n   three: c;\r\n}\r\n\r\nfunction createUseLater3<a, b, c>(one: a, two: b, three: c, use: (one: a, two: b, three: c) => void): UseLater3<a, b, c> {\r\n    return {\r\n         use: use,\r\n         one: one,\r\n         two: two,\r\n         three: three\r\n    };\r\n}\r\n\r\nfunction useLater3Now<a, b, c>(later: UseLater3<a, b, c>) {\r\n   later.use(later.one, later.two, later.three);\r\n}\r\n\r\n\r\n```\r\n\r\nSo the intended use of this would be:\r\n```\r\nfunction doSomethingCrazy(one: string, two: boolean, three: number) {\r\n// ...\r\n}\r\n// everything is fine here: string matches string, boolean to boolean, number to number\r\nvar later = createUseLater3('hey', true, 123, doSomethingCrazy);\r\n\r\n// after 3 hours it works as expected:\r\nuseLater3Now(later);\r\n```\r\n\r\nWorks perfectly until I make a decision to do some refactoring:\r\n```\r\n// refactored: parameters are rearranged\r\nfunction doSomethingCrazy(two: boolean, three: number, one: string) {\r\n}\r\n/*\r\n    the next line was forgotten to be refactored!\r\n    what we have now: string matches boolean, boolean to number, number to string\r\n    but it's still fine, the compiler doens't say anything because it applied best common type resolution to eveything\r\n    doSomethingCrazy is not designed to accept empty objects, why does TypeScript think it's fine to feed them to it?\r\n*/\r\n\r\nvar later = createUseLater3('hey', true, 123, doSomethingCrazy); // <--- ALLOWING THIS LOOKS LIKE A TYPESCRIPT BUG\r\n\r\n// after 3 hours we have a crash!\r\nuseLater3Now(later);\r\n```",
+    "LastUpdatedDate": "2014-07-28T15:20:16.66-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-02T09:14:30.68-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Feature request/Bug: make best common type resolution optional/works weird as implemented",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2536
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

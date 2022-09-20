@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:16:22.04-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\nthis compiles fine with tsc 1.0:\r\n```\r\n// commenting this first signature will avoid the error (see blow)\r\nexport function convertArray<ElemType>(elementType:string, elements:ElemType[]) \r\nexport function convertArray<ElemType, ElemSoaType extends SoaType>(elementType:string, elements:ElemType[], convertElement?:(ElemType) => ElemSoaType) {\r\n...\r\n}\r\n```\r\n\r\nBut the usage can cause errors, depending on the type parameters given:\r\n```\r\nvar elements:string[] = [];\r\n\r\n// works: \r\nconvertArray(\"test\", elements);     \r\n\r\n// works as well:\r\nconvertArray<string,CharacterType>(\"test\", elements, (x:string)=> new CharacterType(x)); \r\n\r\n// error TS2081: Supplied parameters do not match any signature of call target :\r\n// error TS2087: Could not select overload for 'call' expression :\r\nconvertArray(\"test\", elements, (x:string)=> new CharacterType(x)); \r\n\r\n```\r\n\r\nI'd first thought this might be by design, but as removing the upper overload signature make the implicit typing work, I assume this is a bug.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-07T06:44:01.913-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Could not select overload for 'call' expression when omitting type parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2399
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "i'm also experiencing somewhat similar strange behavior after upgrading to 1.0 from 0.9.7... https://typescript.codeplex.com/workitem/2400... i wonder if they are at all related...",
+      "PostedDate": "2014-04-07T08:55:47.35-07:00",
+      "Id": 140819
+    },
+    {
+      "Message": "Your code has a bug and so does ours :)\n\nThe implementation signature of a function is (supposed to be) not visible to callers; see the last paragraph at https://typescript.codeplex.com/wikipage?title=Functions%20in%20TypeScript. What it looks like you intended to write was:\n\n```\nfunction convertArray<ElemType>(elementType:string, elements:ElemType[]) ;\nfunction convertArray<ElemType,ElemSoaType extends SoaType>(elementType:string,elements:ElemType[],convertElement?:(ElemType) => ElemSoaType);\nfunction convertArray<ElemType,ElemSoaType extends SoaType>(\n\telementType:string,\n\telements:ElemType[],\n\tconvertElement?:(ElemType) => ElemSoaType) {\n}\n\n```\n\nOn the compiler side, you should not have been able to invoke the implementation signature at all (bug in 0.9.5) or by providing the generic type arguments (bug 1.0). Distilled:\n\n```\nfunction overloaded<T>(x: T);\nfunction overloaded<T, U>(x: T, y?: U) {}\n\noverloaded('');\n// Should be an error, but isn't (0.9.5)\noverloaded('', '');\n// Should be an error, but isn't (1.0)\noverloaded<string, string>('', '');\n\nfunction overloadedNG(x: string);\nfunction overloadedNG(x: string, y?: string) {}\n\noverloadedNG('');\n// Correctly an error\noverloadedNG('', '');\n\n```",
+      "PostedDate": "2014-04-07T09:37:48.56-07:00",
+      "Id": 140830
+    },
+    {
+      "Message": "The code is wrong (for overloading).  It should be this:\n\n```\nexport function convertArray<ElemType>(elementType:string, elements:ElemType[]); \nexport function convertArray<ElemType, ElemSoaType extends SoaType>(elementType:string, elements:ElemType[], convertElement?:(ElemType) => ElemSoaType);\nexport function convertArray<ElemType, ElemSoaType extends SoaType>(elementType:string, elements:ElemType[], convertElement?:(ElemType) => ElemSoaType) {\n\t// ...\n}\n\n```",
+      "PostedDate": "2014-04-07T10:37:00.81-07:00",
+      "Id": 140839
+    }
+  ]
+}

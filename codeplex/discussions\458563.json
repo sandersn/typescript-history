@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1096988",
+    "ThreadId": "458563",
+    "Html": "In my project, I have a bunch of classes in separate files that I'd like to reference from a common namespace.  Here's an example of what I'm trying to do:\r<br />\n<br />\nwidget1.ts (widget2.ts, widget3.ts...)<br />\n<pre><code>export class Widget1 {}</code></pre>\n\nallWidgets.ts<br />\n<pre><code>import w1 = require('widget1')\nimport w2 = require('widget2')\n// import all other widgets...\n\nexport var Widget1 = w1.Widget1;\nexport var Widget2 = w2.Widget2;\n// export all other widgets...</code></pre>\n\nclient.ts<br />\n<pre><code>import allWidgets = require('allWidgets');\n\nexport function doWork() {\n    var w1 = allWidgets.Widget1();\n}</code></pre>\n\nSo far this works fine.  I can reference all the widget classes through allWidgets.  The issue I'm running into occurs when I attempt to either return a widget or pass a widget as a parameter to a function:\r<br />\n<br />\nclientWithErrors.ts<br />\n<pre><code>import allWidgets = require('allWidgets');\n\nexport function doWork() {\n    // error TS2067: Return type of exported function is using inaccessible module\n    return new allWidgets.Widget1();\n}\n\n// error TS2049: Parameter 'widget' of exported function is using inaccessible module\nexport function doOtherWork(widget: typeof allWidgets.Widget1) {}</code></pre>\n\nI can get around this by importing a Widget1 directly into the client file, even if I don't use it:\r<br />\n<br />\nclientWorkaround.ts<br />\n<pre><code>import allWidgets = require('allWidgets');\nimport _Widget1 = require('widget1');\n\nexport function doWork() {\n    return new allWidgets.Widget1();\n}\n\nexport function doOtherWork(widget: typeof allWidgets.Widget1) {}</code></pre>\n\nThe direct import seems to only be necessary to make the TypeScript compiler happy, since no reference to the direct import appears in the generated JavaScript.<br />\n\r<br />\nclientWorkaround.js<br />\n<pre><code>var allWidgets = require(&quot;./allWidgets&quot;);\n\n\nfunction doWork() {\n    return new allWidgets.Widget1();\n}\nexports.doWork = doWork;\n\nfunction doOtherWork(widget) {\n}\nexports.doOtherWork = doOtherWork;</code></pre>\n\nI can't tell if this is a TypeScript bug or if there's a better way to structure the code in this case.  Or maybe I just need to accept that I need to import everything directly and move on.<br />\n",
+    "PostedDate": "2013-09-20T08:11:36.86-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1096992",
+    "ThreadId": "458563",
+    "Html": "+1<br />\n",
+    "PostedDate": "2013-09-20T08:15:43.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1097143",
+    "ThreadId": "458563",
+    "Html": "I think this will fix things:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">import</span> allWidgets = require(<span style=\"color:#A31515;\">&#39;allWidgets&#39;</span>);\r\n</pre></div>",
+    "PostedDate": "2013-09-20T11:22:58.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1097146",
+    "ThreadId": "458563",
+    "Html": "@danquirk, I'm still getting the inaccessible module errors with the code you suggested above<br />\n",
+    "PostedDate": "2013-09-20T11:27:57.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1097413",
+    "ThreadId": "458563",
+    "Html": "@jpmoodlerooms You're right, that is a bug.<br />\n",
+    "PostedDate": "2013-09-21T08:05:28.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1097926",
+    "ThreadId": "458563",
+    "Html": "Might this be the same bug as what I reported?\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/discussions/456757\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/456757</a><br />\n",
+    "PostedDate": "2013-09-23T01:14:20.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098005",
+    "ThreadId": "458563",
+    "Html": "It's the same problem as reported in this issue: <a href=\"https://typescript.codeplex.com/workitem/1647\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1647</a><br />\n",
+    "PostedDate": "2013-09-23T06:26:37.93-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

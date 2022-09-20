@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1123903",
+    "ThreadId": "468800",
+    "Html": "I just want to briefly share something very useful I just learned.\r<br />\n<br />\nYou may be familiar with the <code>Math.floor('123')</code> integer type-cast, which is useful for high-performance applications because it's generally much faster than e.g. <code>parseInt('123')</code>, and does essentially the same thing.\r<br />\n<br />\nI wanted to do this in TypeScript, but I got an error:<br />\n<pre><code>var value = '123';\n\nvar int_value = Math.floor(&lt;number&gt; value); // FAILS</code></pre>\n\nIt won't let you type-cast a <code>string</code> to a <code>number</code>, which is sensible enough - however, it will let you cast an <code>any</code> to whatever you want, so this double typecast will do the trick:<br />\n<pre><code>var value = '123';\n\nvar int_value = Math.floor(&lt;number&gt; &lt;any&gt; value); // WORKS!</code></pre>\n\nIt looks a little odd, and it seemed dumb to me at first - but after thinking about it, I realized I like it - it's a double assertion, both for the compiler and for a programmer reading the source code: you're saying, &quot;I know this is dangerous, but I know what I'm doing&quot;.\r<br />\n<br />\nAnd since this is all happening at compile-time, the resulting code will be just as fast as the raw, no-guarantees, plain JavaScript version.\r<br />\n<br />\nPassing a string to <code>Math.floor()</code> in JavaScript should raise questions, if the reader is observant enough to even notice that's what's happening - in TypeScript, you're required to explain and justify what you're doing, in this case with typecasts.\r<br />\n<br />\nOne of many reasons why I really like TypeScript :-)<br />\n",
+    "PostedDate": "2013-11-15T06:23:52.433-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1124003",
+    "ThreadId": "468800",
+    "Html": "One could also get away with just<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> value = <span style=\"color:#A31515;\">&#39;123&#39;</span>;\n<span style=\"color:Blue;\">var</span> int_value = Math.floor(&lt;<span style=\"color:Blue;\">any</span>&gt; value);\r\n</pre></div>In this example the cast to <code>any</code> is perhaps not a bad thing. In general, however, we have a best practice rule of avoiding casting to <code>any</code>. The reason being, once that cast is in place the statement is effectively ignored by the compiler. This has a significant impact when refactoring code.\r<br />\n<br />\nHere's a simple example.\r<br />\n<br />\n<strong>First iteration</strong><br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo(value:<span style=\"color:Blue;\">string</span>){\n    console.log(value.indexOf(<span style=\"color:#A31515;\">&quot;a&quot;</span>));\n\n}\n\n<span style=\"color:Blue;\">class</span> Boo { \n    indexOf = (<span style=\"color:Blue;\">char</span>:<span style=\"color:Blue;\">string</span>) =&gt; 1; \n}\n\n<span style=\"color:Green;\">// Client code somewhere in the codebase</span>\n<span style=\"color:Blue;\">var</span> boo = <span style=\"color:Blue;\">new</span> Boo();\nfoo(&lt;<span style=\"color:Blue;\">any</span>&gt;boo); <span style=\"color:Green;\">// Okay</span>\r\n</pre></div><strong>Next iteration</strong><br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Ah, my boss told me to prefix all methods that return a value with &quot;get&quot;, so let me see what I should do here</span>\n<span style=\"color:Blue;\">class</span> Boo { \n    getIndexOf = (<span style=\"color:Blue;\">char</span>:<span style=\"color:Blue;\">string</span>) =&gt; 1; \n}\n\n<span style=\"color:Green;\">// Client code somewhere in the codebase</span>\n<span style=\"color:Blue;\">var</span> boo = <span style=\"color:Blue;\">new</span> Boo();\nfoo(&lt;<span style=\"color:Blue;\">any</span>&gt;boo); <span style=\"color:Green;\">// Still okay</span>\r\n</pre></div>After the second iteration the component crashes with &quot;Uncaught TypeError: Object #&lt;Boo&gt; has no method 'indexOf'&quot;, in spite of everything compiling fine.\r<br />\n<br />\nSo for that reason it's best to always avoid casting to <code>any</code>.<br />\n",
+    "PostedDate": "2013-11-15T08:46:38.207-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125749",
+    "ThreadId": "468800",
+    "Html": "<blockquote>\nIn this example the cast to <code>any</code> is perhaps not a bad thing. In general, however, we have a best practice rule of avoiding casting to <code>any</code>.<br />\n</blockquote>\nAbsolutely agree - I would never suggest casting objects to <code>&lt;any&gt;</code> in this manner... that should raise a red flag, since you're effectively forfeiting compile-time type-checking; in which case you might as well be writing plain JavaScript.<br />\n",
+    "PostedDate": "2013-11-17T17:17:01.847-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

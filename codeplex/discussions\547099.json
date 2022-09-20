@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1251312",
+    "ThreadId": "547099",
+    "Html": "I'm trying to add an API to the declare var Array in the lib.d.ts, but when I compile it throws and error referencing my ususage in my TS files saying that they property doesn't exist. Is it possible to add APIs to the lib.d.ts. I closed VS and reopened so that intellisense recognized the API, but it wouldn't compile.\r<br />\n<br />\ni.e.\r<br />\n<br />\nlib.d.ts\r<br />\ndeclare var Array: {<br />\n<pre><code>...\nfrom&lt;T&gt;(obj: any): T[];</code></pre>\n\n}\r<br />\n<br />\nmy TS file\r<br />\nvar arr = Array.from&lt;HTMLElement&gt;(document.querySelectorAll(&quot;div&quot;));<br />\n",
+    "PostedDate": "2014-05-30T08:40:33.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251356",
+    "ThreadId": "547099",
+    "Html": "No, unfortunately you cannot redefine an existing variable.<br />\n",
+    "PostedDate": "2014-05-30T10:41:10.603-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251358",
+    "ThreadId": "547099",
+    "Html": "You can, however, add methods to the INSTANCE (not the static var), like so:<br />\n<pre><code>interface Array&lt;T&gt; {\n    from&lt;T&gt;(obj: any): T[];\n}</code></pre>\n\n",
+    "PostedDate": "2014-05-30T10:47:39.977-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251363",
+    "ThreadId": "547099",
+    "Html": "Thanks for the response, but I was attempting add a polyfill the would be forward compatible w/ ES6. Do you guys have any plans on allowing at least the merging of declare var's? I understand by you don't for actual var's, but since you can easily extend objects/types in JS, merging of declare var's should be allowed?<br />\n",
+    "PostedDate": "2014-05-30T11:02:57.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251370",
+    "ThreadId": "547099",
+    "Html": "An issue was recently posted because of this limitation:<br />\n<a href=\"https://typescript.codeplex.com/workitem/2531\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2531</a><br />\n<br />\nSo far, I would suggest considering putting all your code in your own namespace, then you will be able to provide your own definition, like so:<br />\n<pre><code>module myApp {\n    declare var Array: {\n        new (arrayLength?: number): any[];\n        new &lt;T&gt;(arrayLength: number): T[];\n        new &lt;T&gt;(...items: T[]): T[];\n        (arrayLength?: number): any[];\n        &lt;T&gt;(arrayLength: number): T[];\n        &lt;T&gt;(...items: T[]): T[];\n        isArray(arg: any): boolean;\n        prototype: Array&lt;any&gt;;\n        \n        from&lt;T&gt;(obj: any): T[];\n    }\n    \n    // ... the reset of your app ...\n}</code></pre>\n\n<em>(TIP: I Just copied the lib.t.ds definition, and added to it.)</em><br />\n",
+    "PostedDate": "2014-05-30T11:34:26.67-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1251372",
+    "ThreadId": "547099",
+    "Html": "FYI: Somewhat related post (for reference): <a href=\"https://typescript.codeplex.com/discussions/546862#post1250649\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/546862#post1250649</a><br />\n",
+    "PostedDate": "2014-05-30T11:38:07.393-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

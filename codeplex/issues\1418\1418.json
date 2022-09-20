@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This probably makes more sense in the discussion forum.",
+    "ClosedDate": "2013-08-02T12:45:49.23-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nLove typescript, my use case is that I just wrote a rails asset pipeline handler for (dont use it through VS or any other MS IDE). \r\n\r\nI am finding that the compile time, even against a trivial file (just has a console.log) is extremely slow (~2.6 seconds). This is obviously unacceptable, 30 files getting loaded on a page during development would take a minute to reload the page (assuming they all need re-compilation).\r\n\r\nBy contrast, doing the same thing with coffeescript takes 0.15 seconds.\r\n\r\nA few questions\r\n\r\n1 - Is this a supported use case? Due to the open nature of the development / platform choice, I am making an assumption that a goal is to get as many people using it as possible, regardless of the platform. \r\n\r\n2 - Is this a known issue? I saw some references to performance issues that would be fixed in 0.9.1, but it is still pretty far off from where I would like it to be. If it is a known issue, is there any sort of timeline on a performance release?\r\n\r\n3 - Am I doing it wrong? I have never used it on an MS platform, but (hopefully) if you are using the MS stack people aren't seeing 2.6s load times per ts file. \r\n\r\nThe way the asset pipeline works is that you register handlers for different types of \"filters\". So you could have a file that was called \"foo.js.ts.erb\", and that would be passed to the erb handler, the output of which would be passed to the ts handler, the output of that would be treated as a js file.\r\n\r\nBecause of that, I am basically taking the blob of text which is passed to me, dumping it into a temp file, shelling out to run tsc on that, and returning the output of that to the pipeline.\r\n\r\nIf there is another way to use the compiler which is faster, some guidance would be very appreciated :)\r\n\r\nEDIT:\r\n\r\nFriend of mine suggested I give more details for people to repro what I am talking about. I am running on a fully up to date version of OSX mountain lion, and the latest tsc from npm. Here is some console output showing what I am talking about -- trivial file with a console.log clocking in at 1.99s for tsc, and 0.15s for coffeescript\r\n\r\n~/src/typescript/built/local master rockford\r\n❯ uname -a\r\nDarwin rockford.local 12.4.0 Darwin Kernel Version 12.4.0: Wed May  1 17:57:12 PDT 2013; root:xnu-2050.24.15~1/RELEASE_X86_64 x86_64\r\n\r\n~/src/typescript/built/local master rockford\r\n❯ tsc --version\r\nVersion 0.9.0.1\r\n\r\n~/src/typescript/built/local master rockford\r\n❯ cat foo.ts\r\nconsole.log('hi');\r\n\r\n~/src/typescript/built/local master rockford\r\n❯ time tsc foo.ts\r\ntsc foo.ts  1.99s user 0.11s system 100% cpu 2.095 total\r\n\r\n~/src/typescript/built/local master rockford\r\n❯ time coffee foo.ts\r\nhi\r\ncoffee foo.ts  0.15s user 0.02s system 96% cpu 0.175 total\r\n\r\n\r\nAgain, love the project, love the fact its open source, love that it runs on node :)",
+    "LastUpdatedDate": "2013-08-02T12:45:49.23-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-01T16:35:20.487-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "tsc is very slow",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1418
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If I understand what you're trying to do, this is not a supported scenario... There are a couple of things you can do to improve performance and get better results. \n\nBy leveraging the language service (typescriptservices.js) and compiling all 30 files at the same time, you won't have the overhead of compiling lib.d.ts everytime, look at the LanguageServiceHost class and the emitOutput method.\n\nFurther we did improve performance a lot, so grabbing the sources from the develop branch and compiling them yourself, should give you a performance boost.",
+      "PostedDate": "2013-08-02T12:45:26.907-07:00",
+      "Id": 108409
+    }
+  ]
+}

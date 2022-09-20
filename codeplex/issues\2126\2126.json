@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Yes, this by design, you're exporting a fundule here. See 10.5 on declaration merging in the spec.",
+    "ClosedDate": "2014-01-24T16:13:38.297-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "\r\nI'm trying to create a typescript definition for:\r\nhttps://github.com/npm/nopt/blob/master/lib/nopt.js\r\n\r\n```\r\ndeclare module \"nopt\" {\r\n\r\n    export var typeDefs: any;\r\n    export function clean(data: any, types: any, typeDefs?: any);\r\n\r\n    export interface nOptCommand {\r\n        argv: any;\r\n    }\r\n\r\n    export interface nOptArguments {\r\n        remain: string[];\r\n        cooked: string[];\r\n        original: string[];\r\n    }\r\n\r\n    function nopt(types: any, shorthands: any, args: string[], slice?: number): nOptCommand;\r\n\r\n    export = nopt;\r\n}\r\n```\r\n\r\nF:/Jonathan/GitHub/Cordova/cordova-lib/Scripts/typings/nopt.d.ts(19,5): error TS1064: Export assignment not allowed in module with exported\r\nelement.\r\n\r\n```\r\ndeclare module \"nopt\" {\r\n\r\n    var typeDefs: any;\r\n    function clean(data: any, types: any, typeDefs?: any);\r\n\r\n    interface nOptCommand {\r\n        argv: any;\r\n    }\r\n\r\n    interface nOptArguments {\r\n        remain: string[];\r\n        cooked: string[];\r\n        original: string[];\r\n    }\r\n\r\n    function nopt(types: any, shorthands: any, args: string[], slice?: number): nOptCommand;\r\n\r\n    export = nopt;\r\n}\r\n```\r\n\r\nPS F:\\Jonathan\\GitHub\\Cordova\\cordova-lib> tsc -m commonjs command.ts -out .\\package\\npm\\ecma5\r\nF:/Jonathan/GitHub/Cordova/cordova-lib/Scripts/typings/nopt.d.ts(17,81): error TS2058: Return type of exported function has or is using priv\r\nate type 'nOptCommand'.\r\n\r\nEither way, I'm stuck. What's the right way of doing this?\r\n\r\n",
+    "LastUpdatedDate": "2014-03-31T16:47:12.683-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-24T13:10:02.107-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "export module constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2126
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "PS F:\\Jonathan\\GitHub\\Cordova\\cordova-lib> tsc -v\nVersion 0.9.5.0\n",
+      "PostedDate": "2014-01-24T13:11:46.533-08:00",
+      "Id": 131527
+    },
+    {
+      "Message": "```\ndeclare module \"nopt\" {\n\n    module _nopt {\n        interface Command {\n            argv: Arguments;\n        }\n\n        interface Arguments {\n            remain: string[];\n            cooked: string[];\n            original: string[];\n        }\n        export function clean(data: any, types: any, typeDefs?: any);\n        export var typeDefs: any;\n    }\n\n    function _nopt(types: any, shorthands: any, args: string[], slice?: number):  _nopt.Command;\n \n    export = _nopt;\n}\n```\n\nThis works, though I'm not too sure why. _nopt can be both a private module & function? And we are exporting that definition?\n\nIt would make a lot of sense but not too obvious at first.\n\n  ",
+      "PostedDate": "2014-01-24T13:54:21.877-08:00",
+      "Id": 131533
+    },
+    {
+      "Message": "Ha, thanks added \" fundule\" to my vocabulary :)",
+      "PostedDate": "2014-01-25T06:37:39.63-08:00",
+      "Id": 131565
+    }
+  ]
+}

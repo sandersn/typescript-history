@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comment.",
+    "ClosedDate": "2013-06-12T10:00:11.203-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Private members are an invaluable tool for complex systems, however complex systems need tests, and tests usually need to access private members to .. test them!\r\n\r\nOn many platforms, a number of ways to test private members have been developed. In Java for example, these members may be accessed with reflection, or may be declared package protected or protected to give access to test classes.\r\n\r\nIn TypeScript these members are public at runtime, so none of the previous methods are needed. However, when accessing them from outside a class, the compiler correctly complains.\r\n\r\nIt compiles, and the test passes, but the compiler reports the access violations.\r\n\r\nIt could be a good idea to flag some functions (the test methods) in a way that the compiler knows that they are \"special\" and can access those members, and not complain about it.\r\n\r\nI've used tsUnit and Jasmine to write tests, in tsUnit test methods are metods, while in Jasmine they are functions. Given this difference, the \"this is a test function, let it access private members\" syntax should not be tied to methods or functions, but probably simply be a directive for the compiler.\r\n\r\nSomething like :\r\n```\r\n///<allow-private-access>\r\nvar inst = new ClassUnderTest();\r\nvar res = inst.privateMethod(1,2,3);\r\nexpect(res).toBe(2);\r\n///</allow-private-access>\r\n```\r\n\r\nWhen <allow-private-access> is found, compiler will not check for accessibility for the rest of the file or until </allow-private-access> is found. \r\n\r\nObviously, this feature may be abused by programmers. However, right now, there is nothing preventing them to access private members anyway, because the compiler still compiles correctly, and on most platforms a way around private members exists anyway.\r\n\r\nI haven't yet looked at the compiler source code, but if this feature is something people is interested in, I could consider working on a patch.",
+    "LastUpdatedDate": "2013-06-12T10:00:11.203-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-11T09:55:41.423-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Postponed"
+    },
+    "Summary": "Give access to \"private\" members for tests",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1139
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "A workaround already exists:\n    //var res = inst.privateMethod(1, 2, 3); // Compiler error\n    var res = (<any>inst).privateMethod(1, 2, 3); // OK",
+      "PostedDate": "2013-06-11T12:08:14.32-07:00",
+      "Id": 102790
+    },
+    {
+      "Message": "If you really want your class to expose some private members for testing purposes, you can use a pattern like this:\r\n\r\n```\r\nclass SomeClass {\r\n    private count = 0;\r\n    public foo() { this.count++; }\r\n}\r\n\r\n/// The private fields of SomeClass that are okay to access for testing purposes\r\ninterface SomeClassPrivate {\r\n    count: number;\r\n}\r\n\r\nfunction SomeClassBasicTest1() {\r\n    var x = new SomeClass();\r\n    x.foo();\r\n    var px = <SomeClassPrivate><any>x;\r\n    verify.areEqual(px.count, 1);\r\n}\r\n\r\n```",
+      "PostedDate": "2013-06-12T09:59:52.89-07:00",
+      "Id": 102872
+    }
+  ]
+}

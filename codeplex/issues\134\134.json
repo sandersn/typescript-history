@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:56.88-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "One of the great feature of ActionScript is how methods are executed in the right context even if there are passed as callback :\r\n\r\nclass Test {\r\n   public var myProperty:String = \"hello\"\r\n   public function myMethod(event:Event):void {\r\n        this.myProperty = \"hello world\";\r\n   }\r\n}\r\n.....\r\nvar t:Test = new Test();\r\nobject.addEventListener(\"anEvent\",t.myMethod);\r\nobject.dispatchEvent(new Event(\"anEvent\"));\r\ntrace(t.myProperty:String);\r\n\r\nresult in : \r\nhello world\r\n\r\nNow in TypeScript if write (tested in PlayGround)  :\r\n\r\n\r\nclass Test {\r\n   public  myProperty:String = \"hello\";\r\n   public myMethod(event:Event):void {\r\n        this.myProperty = \"hello world\";\r\n   }\r\n}\r\nvar t:Test = new Test();\r\nvar div:HTMLElement = document.createElement(\"div\");\r\ndiv.addEventListener(\"DOMNodeInserted\",t.myMethod);\r\ndocument.body.appendChild(div);\r\nconsole.log(t.myProperty) \r\nt.myMethod(null);\r\nconsole.log(t.myProperty)\r\n\r\nresult in : \r\nhello\r\nhello world\r\n\r\nThe method is not called in the right context. We have to use a binding technique like :\r\nt.myMethod.bind(t);\r\n\r\nFirst writing such a code is redondant, and we pretty much very rarely bind a method to a different object than the instance.\r\nA work around could be to translate method définition like this :\r\nObject.defineProperty(Test.prototype, \"myMethod\", { get : function() { \r\n\t\tif(!this.hasOwnProperty(\"_myMethod\"))  { \r\n\t\t\tthis._myMethod = (function() { \r\n\t\t\t\tthis.property = \"hello world\"\r\n\t\t\t}).bind(this);\r\n\t\t}\r\n\t\treturn this._myMethod;\r\n\t}\r\n});\r\n\r\nin this way the method is always bound to the object it comes from.\r\n(but perhaps it could create performance issue :p)",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-06T07:35:51.647-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Suggestion : bind method to instance",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 134
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "In one piece of code, \"myMethod\" is a method of Test.prototype, in your suggestion, you've made it into an own property instance method.\n\nThis isn't a reasonable default, as you've locked the function into a non-generic-context state.\n\n\nfunction Test() {\n  this.prop = \"hello world\";\n}\n\nObject.defineProperty(Test.prototype, \"method\", {\n  get: function() {\n    if ( !this.hasOwnProperty(\"_bound\") ) {\n      this._bound = (function() {\n        console.log( this.prop );\n      }).bind(this);\n    }\n    return this._bound;\n  }\n});\n\n\nvar t = new Test(),\n    // Some othe API wants to borrow it...\n    borrowed = t.method.bind({ prop: \"booorrrowed\" });\n\n\nborrowed();\n\n\"hello world\"\n\n\n",
+      "PostedDate": "2012-10-06T16:52:36.433-07:00",
+      "Id": 78871
+    },
+    {
+      "Message": "Ok perhaps that it becomes a little too much complex for such a little feature, but does not something like this : http://pastebin.com/0Efq0sgB resolve the problem you pointed ?",
+      "PostedDate": "2012-10-09T04:48:17.63-07:00",
+      "Id": 79129
+    }
+  ]
+}

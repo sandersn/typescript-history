@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in 'develop' branch dd64a7d4a329c254b05f3736f031d55aaddb16e6",
+    "ClosedDate": "2012-11-13T16:31:51.33-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I am using the following code:\r\n\r\n    $('html, body').animate({ scrollTop: $($(this).attr('href')).offset().top });\r\n\r\nTypescript is giving me an error message saying:\r\n\r\n    The property 'top' does not exist on value of type 'Object'\r\n\r\nI am guessing something is missing from the jQuery definition file. Has anyone else seen this problem or is this something that's not normally used with jQuery? It's something I have not seen before.\r\n\r\nFor more information. Here is the code where this is used:\r\n\r\n       $.fn.buildTableOfContent = function () {\r\n            \"use strict\";\r\n            var h2 = this.find('h2');\r\n            if (h2.length > 0) {\r\n                var h1 = this.find('h1:first');\r\n                if (h1.length === 0) {\r\n                    h1 = this.prepend('<h1>Help</h1>').children(':first');\r\n                }\r\n                var menu = h1.wrap('<div class=\"h1 with-menu\"></div>')\r\n                        .after('<div class=\"menu\"><img src=\"/Content/images/menu-open-arrow.png\" width=\"16\" height=\"16\"><ul></ul></div>')\r\n                        .next().children('ul');\r\n                h2.each(function (i) {\r\n                    this.id = 'step' + i;\r\n                    menu.append('<li class=\"icon_down\"><a href=\"#step' + i + '\">' + $(this).html() + '</a></li>');\r\n                });\r\n                menu.find('a').click(function (event) {\r\n                    event.preventDefault();\r\n                    $('html, body').animate({ scrollTop: $($(this).attr('href')).offset().top });\r\n                });\r\n            }\r\n            return this;\r\n        };",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-31T21:05:16.637-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": ".top missing from jquery typescript definition files?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 356
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This was posted by a member of our group on stackoverflow. Problem was confirmed by another member of stack overflow who made the following comments:\n\nFrom the jquery.d.ts file (line 374 in my version):\n\ninterface JQuery {\n   ...\n   offset(): Object;\n   offset(coordinates: any): JQuery;\n   offset(func: (index: any, coords: any) => any): JQuery;\n   ...\n}\nBy invoking the function with no parameters the type definition expects the function to return an Object type. I looked at the documentation for jQuery and you are correct, the returned object is expected to have top and left properties on it.\n\nUnfortunately, since there's no such thing as overloading based on return type, you wont be able to add on another member onto the JQuery interface. Since, in this particular case, the type definition is simply not as specific as it should be I would recommend simply modifying your jquery.d.ts file and changing the return type so it looks as follows (perhaps string instead of number?):\n\noffset(): { top : number; left : number; };\nIf you would rather not modify this file, you also have the option of casting the result to any before accessing any properties on it, example:\n\n$('html, body').animate({ scrollTop: (<any> $($(this).attr('href')).offset()).top });\nThe downside is the cast will be necessary each time you invoke that function with no parameters.",
+      "PostedDate": "2012-10-31T21:06:17.06-07:00",
+      "Id": 81395
+    },
+    {
+      "Message": "http://typescript.codeplex.com/SourceControl/network/forks/rwaldron/typescript/contribution/3583",
+      "PostedDate": "2012-11-02T09:42:37.103-07:00",
+      "Id": 81527
+    },
+    {
+      "Message": "Thanks for reporting this issue! Marking it as 'Active' (to be fixed).",
+      "PostedDate": "2012-11-05T16:55:41.897-08:00",
+      "Id": 81726
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I can't make sense of this - it seems like someone has edited the text of this. Can you open a new issue with a standalone description of the problem you're seeing? Thanks",
+    "ClosedDate": "2013-01-30T14:36:40.15-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Our team have the following code which was posted as a question on stackoverflow:\r\n\r\nfunction submitSuccessAccess() {\r\n    $(\".accessLink\")\r\n        .attr(\"data-disabled\", \"no\");\r\n    window.location.reload();\r\n}\r\nI am trying to call this function like this:\r\n\r\nsubmitSuccessAccess();\r\nHowever I get a red underline under submitSuccessAccess saying: supplied parameters do not match any signature of call target. Seems like the submitSuccessAccess is expecting:\r\n\r\n(eventObject: JQueryEventObject) => any\r\nI found a temporary solution. I define and use as follows:\r\n\r\nfunction submitSuccessAccess(any) {\r\n    $(\".accessLink\")\r\n        .attr(\"data-disabled\", \"no\");\r\n    window.location.reload();\r\n}\r\nsubmitSuccessAccess(null);\r\nAm I the only one to experience anything like this?\r\n\r\n\r\nThe answer can be found here:  http://stackoverflow.com/questions/13137422\r\n\r\nThe reason I am posting this is that one suggestion was as follows:\r\n\r\n------------------------------------------------------------------------------------------------------------------\r\n\r\nThe actual code for your function could be:\r\n\r\nfunction submitSuccessAccess(eventObject: JQueryEventObject) {\r\n    $(\".accessLink\")\r\n        .attr(\"data-disabled\", \"no\");\r\n    window.location.reload();\r\n}\r\nIf you don't like supplying the parameter you might change the relevant line in the jquery.d.ts file\r\n\r\n(eventObject: JQueryEventObject) => any\r\nto\r\n\r\n(eventObject?: JQueryEventObject) => any\r\nwhich it should probably have been like this in the first place.\r\n\r\n----------------------------------------------------------------------------------------------------------------\r\n\r\nIt seems to me that it's very confusing when the only way to call a function with no parameters in \r\nmy code is for me to have to manually code in (any) and call it with (null). Can someone review this and see if they agree with the poster who states that eventObject? would be a better choice. Thanks.",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-01T10:31:33.623-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "jQuery type definition suggestion for function calls.",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 360
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sorry, I'm going to sidetrack here...\n\n\nEverything in this function is useless:\n\nfunction submitSuccessAccess() {\n$(\".accessLink\")\n.attr(\"data-disabled\", \"no\");\nwindow.location.reload();\n}\n\n\nThe call to |window.location.reload();| will happen within, at most, a millisecond of the |$(\".accessLink\").attr(\"data-disabled\", \"no\");| call, which means the resulting behaviour will never actually be seen by a user.",
+      "PostedDate": "2012-11-02T09:18:56.31-07:00",
+      "Id": 81518
+    },
+    {
+      "Message": "I can't reproduce this issue. Can you post a more complete example?",
+      "PostedDate": "2012-11-05T16:10:58.193-08:00",
+      "Id": 81715
+    },
+    {
+      "Message": "The following code should reprodue, considering a click definition in jquery.d.ts like so:\n\nclick(handler: (eventObject: JQueryEventObject) => any): JQuery;\n\nThen the calling code:\n\n$j(document).ready(function () {\n    testWorkItem360();\n});\n\nfunction test() {\n}\n\nfunction test2() {\n}\n\nfunction test3():void {\n}\n\nfunction testWorkItem360() {\n  test2();\n  $('div').click(function() {\n    test(); // Error\n    test2(); // No error\n    test3(); // No error\n  });\n}",
+      "PostedDate": "2012-12-06T01:51:58.773-08:00",
+      "Id": 83675
+    }
+  ]
+}

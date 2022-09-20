@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-29T15:41:41.143-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```ts\r\ninterface I<T> {\r\n\t//foo: T;\r\n}\r\n\r\nclass C<T> implements I<T> {\r\n\t//foo: T;\r\n}\r\n\r\nfunction fn<T>(x: I<T>): T { return }\r\n\r\nvar x1 : Number = fn(new C<Number>());\r\n```\r\n\r\ntsc thinks that the result of fn is {}. If comments are removed, inference works correctly.",
+    "LastUpdatedDate": "2014-05-29T16:37:51.827-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-29T15:34:51.983-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Inference of generic argument fails for empty interfaces",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2530
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. What is there to infer for T if the type does not use T anywhere in it? The name of the type is irrelevant, only its structure matters. If the structure provides no candidates for what T might be then the compiler has no choice but to choose the most general thing it knows to be true (T is at least {}).",
+      "PostedDate": "2014-05-29T15:41:37.867-07:00",
+      "Id": 148318
+    },
+    {
+      "Message": "In fact, typing `function fn<T extends Number>(...)` fixes it also. ;)\n\nPersonally, I think it _does_ make sense that the return 'T' should be properly typed as expected in the example (as far as the type layer goes).  I don't think a missing member is a good excuse really.  I mean, after all, interfaces don't _REALLY_ exist either. ;)\n\n\n",
+      "PostedDate": "2014-05-29T16:37:51.827-07:00",
+      "Id": 148320
+    }
+  ]
+}

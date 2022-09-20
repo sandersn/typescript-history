@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-12T10:43:15.96-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I have the following interface that compiled perfectly in typescript < 0.9.5 but now gives an error that does not seem correct to me:\r\n\r\n```\r\nexport interface BaseEvents\r\n{\r\n  on(evt: string, ...args: any[]);\r\n  \r\n  /**\r\n  * Fired when any property changes.\r\n  *\r\n  * @event changed:\r\n  * @param obj {any} \r\n  * @param options {any}\r\n  */\r\n  on(evt: 'changed:', obj: any, options?: any); // TODO: Define options interface\r\n  // error TS2154: Specialized overload signature is not subtype of any non-specialized signature.\r\n\r\n  /**\r\n  * Fired when the object is destroyed.\r\n  *\r\n  * @event destroy:\r\n  */\r\n  on(evt: 'destroy:');\r\n}\r\n```\r\n\r\nso is it in fact a correct error if so, what is the solution / explanation?\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2013-12-12T10:43:15.96-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-11T06:44:10.41-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Incorrect compiler error?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2006
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@manast, you need to order the overloads from most specific to most non-specific:\n\n```TypeScript\nexport interface BaseEvents\n{\n  on(evt: 'destroy:');\n  on(evt: string, ...args: any[]);    \n  on(evt: 'changed:', obj: any, options?: any);\n  on(evt: string, obj: any, options?: any);  \n}\n```\n\nSee \"Overload resolution rules simplified\" in the [breaking changes](https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9)",
+      "PostedDate": "2013-12-11T08:08:21.753-08:00",
+      "Id": 126983
+    },
+    {
+      "Message": "On an aside it would be interesting to know why \n\n```TypeScript\non(evt: string, ...args: any[]);\n```\n\ncannot be treated as most non-specific.",
+      "PostedDate": "2013-12-11T08:13:26.84-08:00",
+      "Id": 126984
+    },
+    {
+      "Message": "Yes, I think I know the problem. ```...args: any[]``` implies zero or more arguments, but ```on(evt: 'changed:', obj: any, options?: any);```requires are least one argument so thats the problem.\n",
+      "PostedDate": "2013-12-11T09:09:58.993-08:00",
+      "Id": 126994
+    },
+    {
+      "Message": "Yep, you got it. nabog's explanation of the original issue is correct.",
+      "PostedDate": "2013-12-12T10:43:10.937-08:00",
+      "Id": 127133
+    }
+  ]
+}

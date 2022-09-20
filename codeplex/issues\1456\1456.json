@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You say:\n\n\"This way, the user of the module can do away with an extra .d.ts file just to define the interface which is used only within the module itself\"\n\nbut that isn't true, which is exactly why you need export or a .d.ts depending on the circumstances. If the interface was indeed only used within the module then all would be well, but as a constructor parameter for an exported type the interface is part of the public surface area of your module, so it is not only used within the module itself as any consumer of your module will need to know the type definition for the interface.\n\nIf this was allowed then there'd be some additional inconsistency and complication for if your constructor parameter were instead a class type (or an interface which extended a class).",
+    "ClosedDate": "2013-08-08T12:49:23.287-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Can this be done:\r\n\r\n```\r\ndeclare module \"foo\"\r\n{\r\n    export interface barOptions { ... }\r\n\r\n    class bar\r\n    {\r\n        constructor(options?: barOptions);\r\n    }\r\n\r\n    export = bar;\r\n}\r\n\r\n```\r\n\r\nThis will make the module completely self-contained.  Currently, whenever there is an \"export=\" statement, the keyword \"export\" is not allowed on variables, classes and interfaces.\r\n\r\nI strongly suggest that export be allowed on interfaces together with an \"export =\" statement.\r\n\r\nThis way, the user of the module can do away with an extra .d.ts file just to define the interface which is used only within the module itself:\r\n\r\n```\r\nimport xyz = require(\"foo\");\r\nvar r = new xyz(<xyz.barOptions> { ... });\r\n\r\n```",
+    "LastUpdatedDate": "2013-08-13T12:33:11.537-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T21:37:16.31-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Can I export interfaces together with \"export =\" statement?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1456
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Oh.  You're probably right about the possibility that the interface extends a class.  However, if it is only an interface (which I believe 99% of the case it will be if it is just an options type object), then allowing it to export will save an extra .d.ts file.\n\nOf course, if the user want to use this options interface in another code file which does not import the module, then he will have a problem...  I understand your point here.\n",
+      "PostedDate": "2013-08-08T20:21:31.313-07:00",
+      "Id": 109142
+    }
+  ]
+}

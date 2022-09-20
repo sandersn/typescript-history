@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1232833",
+    "ThreadId": "541876",
+    "Html": "Hi.\r<br />\n<br />\nThis is a question related to property getters/setters.\r<br />\n<br />\nI illustrate it with an example.\r<br />\n<br />\nGiven this simple class:<br />\n<pre><code>class MyTest \n{\n    public A: string = &quot;abc&quot;;\n\n    public get B(): string\n    {\n        return &quot;def&quot;;\n    }\n}\n</code></pre>\n\nand these unit tests:<br />\n<pre><code>describe('hasOwnProperty',\n    () =&gt;\n    {\n        it('finds property A',\n            () =&gt;\n            {\n                var x = new MyTest();\n                expect(&quot;A&quot; in x).toEqual(true);\n                expect(x.hasOwnProperty(&quot;A&quot;)).toEqual(true);\n            });\n\n        it('finds property B',\n            () =&gt;\n            {\n                var x = new MyTest();\n                expect(&quot;B&quot; in x).toEqual(true);\n                expect(x.hasOwnProperty(&quot;B&quot;)).toEqual(true);    // fails\n            });\n    });\n</code></pre>\n\nCheck with in operator succeeds in both tests, whereas check for hasOwnProperty will fail for B (which is a property getter).\r<br />\n<br />\nWhy is this the case? I would expect x.hasOwnProperty(&quot;B&quot;) to succeed.\r<br />\n<br />\nFrom a logical point of view a getter/setter should be seen as a property if it is defined within the class.\r<br />\n<br />\nAny help to clarifiy would be appreciated.\r<br />\n<br />\nGianni<br />\n",
+    "PostedDate": "2014-04-10T07:53:30.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1232841",
+    "ThreadId": "541876",
+    "Html": "Good question. The difference in behavior is because the <code>A</code> property exists on instances of the class, whereas the <code>B</code> property is defined on the prototype (which is shared among all class instances). You'd see the same behavior if <code>B</code> were a method instead of a property. Note that in the generated code, <code>Object.defineProperty</code> is called on <code>MyTest.prototype</code> rather than on each instance of <code>MyTest</code>.\r<br />\n<br />\nIn the console:<br />\n<pre><code>&gt; var x = new MyTest();\nundefined\n&gt; x.hasOwnProperty('B');\nfalse\n&gt; x.__proto__.hasOwnProperty('B');\ntrue\n&gt; x.hasOwnProperty('A');\ntrue\n&gt; x.__proto__.hasOwnProperty('A');\nfalse\n&gt; MyTest.prototype.hasOwnProperty('B');\ntrue\n&gt; MyTest.prototype.hasOwnProperty('A');\nfalse</code></pre>\n\n",
+    "PostedDate": "2014-04-10T08:29:15.123-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1082418",
+    "ThreadId": "453886",
+    "Html": "The need to use ///&lt;reference...&gt; markup is a drag.  It requires typing out a long, awkward path for something the compiler should be fully and entirely capable of figuring out on its own, <em>especially</em> when compiling for Node.\r<br />\n<br />\nHaving to type out:<br />\n<pre><code>///&lt;reference path=&quot;some/ridiculous/standardized/DefinitelyTyped/path/foo.d.ts&quot;/&gt;\nimport foo = require('foo');\n</code></pre>\n\ninstead of just:<br />\n<pre><code>import foo = require('foo');\n</code></pre>\n\nis really redundant.  Let's not get started on how this syntax isn't inline with the (IMO better) ES6 syntax proposals. :)<br />\n<ol>\n<li>know the path that Node (or AMD) uses for module lookup and look for a .ts implementing that module directly, possibly by taking an extra --include-path option to the compiler to specify paths to search</li>\n<li>do the same as above but look for a .d.ts file if the imported module is a .js so that code which is shipped as a .js with an accompanying .d.ts just works with no extra trickery</li>\n<li>\nhave a path for where .d.ts files laid out similarly to DefinitelyTyped's layout is searched for module names for modules found via the regular paths, e.g. a --definitions-path option or the like<br />\n</li>\n</ol>\nThe Visual Studio plugin also needs integration of all this, e.g. debugging support for starting up Node and setting the proper reference paths.\r<br />\n<br />\nRight now, Typescript is somewhat painful to use for Node development, with or without Visual Studio.  Minor syntactical improvements don't count for much when the tooling integration support is still so lacking.<br />\n",
+    "PostedDate": "2013-08-19T17:41:36.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082561",
+    "ThreadId": "453886",
+    "Html": "@SeanMiddleditch,\r<br />\n<br />\nThis issue has been debated extensively in the forum.\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/discussions/448336\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/448336</a>\r<br />\n<a href=\"https://typescript.codeplex.com/discussions/433456\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/433456</a>\r<br />\n<br />\nHowever, the TypeScript team are still dragging their feet over this - which is disappointing. Their first priority of fixing the language features is understandable, but there has been no word on what they want to do about this.\r<br />\n<br />\nI'm personally not in favour of passing in paths via a compiler option. That does seem like rather an ad hoc solution, because, in Visual Studio, that would involve editing the project XML every time a path needs to change.<br />\n",
+    "PostedDate": "2013-08-20T01:55:18.207-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082808",
+    "ThreadId": "453886",
+    "Html": "Thanks, I didn't find those previous discussions.\r<br />\n<br />\nI don't think that having paths in the command line will be an issue in Visual Studio.  An IDE's entire purpose is to be smarter than a plain text editor and figure out most of that project-specific stuff.  It should automatically know that if I'm building a Node project to use &quot;--module CommonJS --include-path $(PROJECT_DIR)\\node_modules --definitions-path $(PROJECT_DIR)\\node_modules --definitions-path $(PROJECT_DIR)\\DefinitelyTyped&quot;.  Or whatever is appropriate for the myriad other TypeScript-based project types that should be supported.\r<br />\n<br />\nWhile VS is at it, it should also have a NuGet-like interface to npm, tsd, component.io, and so on.  Syntax highlighting and code completion are really nice but project and build management are also critical to an IDE actually being useful, and TypeScript support in VisualStudio falls flat on its face in that regard right now, <em>especially</em> for server-side development.<br />\n",
+    "PostedDate": "2013-08-20T11:45:23.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083155",
+    "ThreadId": "453886",
+    "Html": "Agree that an IDE should be smarter - if possible.\r<br />\n<br />\nIncidentally, it appears that with the release of 0.9.1, the compiler <em>has</em> (belatedly) got a bit smarter. I believe it now makes a pass through all the .ts files in a project, building up its type repository prior to commencing on the compilation.\r<br />\n<br />\nThe implications are twofold:\r<br />\n:<br />\n<ol>\n<li>It's no longer necessary to reference types within the same project, because the compiler is aware of them.</li>\n<li>\nReferences to types outside the project need to be defined only once.<br />\n</li>\n</ol>\nBy dint of the latter it's now possible to simply add a &quot;_references.ts&quot; file to the project containing the troublesome paths:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n///<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">reference</span> <span style=\"color:Red;\">path</span><span style=\"color:Blue;\">=</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">some/ridiculous/standardized/DefinitelyTyped/path/foo.d.ts</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">/&gt;</span>\n///<span style=\"color:Blue;\">&lt;</span><span style=\"color:#A31515;\">reference</span> <span style=\"color:Red;\">path</span><span style=\"color:Blue;\">=</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">some/other/ridiculous/standardized/DefinitelyTyped/path/foo.d.ts</span><span style=\"color:Black;\">&quot;</span><span style=\"color:Blue;\">/&gt;</span>\r\n</pre></div>This is certainly an improvement to the status quo - I only hope it's a new feature and not an inadvertent bug!\r<br />\n<br />\nIMO the icing on this particular cake would be if a <code>using foo.bar;</code> were introduced so that developers may decide which modules are imported into a specific code file. This would make the code more readable, by making explicit the referenced modules in a file.<br />\n",
+    "PostedDate": "2013-08-21T08:32:30.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083381",
+    "ThreadId": "453886",
+    "Html": "nabog: This seems completely Visual Studio specific though, tsc on the command line doesn't behave this way. Naturally it can't know what files belong to the project and which don't there. Since this behavior is Visual Studio only at this point I find it kinda useless currently...<br />\n",
+    "PostedDate": "2013-08-21T18:14:52.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083387",
+    "ThreadId": "453886",
+    "Html": "@nabog that behavior is intentional, it was one of the breaking changes in 0.9.1 <a href=\"https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9&amp;referringTitle=Documentation\" rel=\"nofollow\">https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9&referringTitle=Documentation</a>\r<br />\n<br />\nIn Visual Studio, all TypeScript files in a project are considered to be referencing each other\r<br />\nDescription: Previously, all TypeScript files in a project had to reference each other explicitly. With 0.9.1, they now implicitly reference all other TypeScript files in the project. For existing projects that fit multiple projects into a single projects, these will now have to be separate projects.\r<br />\n<br />\nReason: This greatly simplifies using TypeScript in the project context.<br />\n",
+    "PostedDate": "2013-08-21T19:02:13.69-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1083783",
+    "ThreadId": "453886",
+    "Html": "@danquirk, <br />\n<br />\nthis was a pretty good change for us. The TypeScript project setup in Visual Studio is looking much more streamlined: We've been able to reduce the &lt;reference&gt; includes from some 400 plus lines to just 20-odd, which makes things more manageable when it comes to refactoring paths or determining linkages between projects.<br />\n<br />\nSo thanks!<br />\n<br />\nOne fly in the ointment is that types in <em>declarations</em> files included in a project are not being picked up automatically, unlike those in .ts files. We often declare interfaces directly in declarations files because that makes the F12 editing more straightforward (otherwise F12 takes one to a <em>generated</em> .d.ts file).<br />\n<br />\nIn another matter, there appears to be a need to include files referenced by the project being referenced in a third project, for example:<br />\n<br />\n<strong>Project1</strong>: foo.ts<br />\n<strong>Project2</strong>:  bar.ts depends on foo.d.ts; the reference is added to a project-level &quot;_references.ts&quot; file. Project 2 compiles fine.<br />\n<strong>Project3</strong>:  Depends on bar.d.ts For the project to compile it's also necessary to add a reference to &quot;foo.d.ts&quot;. Ideally this should not be necessary.<br />\n<br />\n<br />\n<br />\n@hachre, commiserations!<br />\n",
+    "PostedDate": "2013-08-22T11:31:19.833-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

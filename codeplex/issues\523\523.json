@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:43.33-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Is there a way to make TypeScript compiler generate asynchronous \"require\" call to load modules dynamically? JS example:\n\nrequire([ \"./app\", \"dojo\" ], function(app, dojo){\n  // do something with app and dojo...\n});\n\nThis capability is vital for large applications where modules should be loaded step-by-step conditionally. For example, a function might require a module, but this function won't be used by 90% of users, so there is no need to load the module at application startup. And I still need this \"require\" call to support those 10% of users.\n\nI understand that I can write it in TypeScript directly just like I would in JavaScript (which I do as a workaround), but in this case I loose all the great type system introduced by TypeScript.\n\nMy \"app\" is declared like this:\nexport module app {\n    export class Foo {\n    }\n}\nI cannot simply import it because this module is not needed most of the times.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-12-02T23:49:26.03-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "AMD \"require\" call",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 523
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Don't you mean generate a _define_ call, not require? I presume you're talking about RequireJS.  The bootstrapper script is the one that calls the initial require. All loaded modules should call define. If this is what you mean, then it already possible - the trick is understanding how you should shape your interface files and how to declare an ambient module.\n\nSee my discussion here: http://typescript.codeplex.com/discussions/404795",
+      "PostedDate": "2012-12-04T08:55:18.977-08:00",
+      "Id": 83525
+    },
+    {
+      "Message": "If you really want to generate   require(\"myexternalmodule\") calls then do NOT compile with the --module AMD, and you should declare your external modules like this in an interface file:\n\ndeclare module \"myexternalmodule\" {\n      export function foo { }\n      export var foo : number;\n}\n\nThen, in your TS file use:\n\nimport m = module(\"myexternalmodule\")\n\nand this will generate\n\nvar m = require(\"myexternalmodule\");\n\n",
+      "PostedDate": "2012-12-04T08:58:57.77-08:00",
+      "Id": 83526
+    },
+    {
+      "Message": "Well, I have to compile it with --module AMD because I really want to generate AMD modules that start with \"define\" so that these modules could be loaded by Dojo. Note that my \"app\" module is not ambient, it is regular module written in TypeScript. I also don't want to \"declare\" my own module because it is already written in TypeScript... I don't want to duplicate declarations as it doesn't make sence.\n\nSo, I meant what I meant: \"async require call\". This one is synchronous and won't work for me:\n\nm = require(\"myexternalmodule\");\n\nI need it to be asynchronous like this:\n\nrequire([\"myexternalmodule\"], function(m){\n  // do something with m...\n});\n\nProbably it's too much to ask :) So maybe I just need to figure out a way to put :type on \"m\" in the example above without actually importing the module. Currently, it doesn't seem possible though.",
+      "PostedDate": "2012-12-05T01:10:51.62-08:00",
+      "Id": 83578
+    }
+  ]
+}

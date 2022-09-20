@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "994153",
+    "ThreadId": "431419",
+    "Html": "\r\n<p>Hi everyone,</p>\r\n<p>Something that immediately bit me and confused me about TypeScript is that a value with the Any type can be assigned into a variable that has been statically typed more specifically than 'Any'. E.g.</p>\r\n<pre>var a : any = {};\nvar s : string = a; // expected this to be an error</pre>\r\n<p>I found this out through a more complicated example where I had fields which were accidentally of the 'any' type (because the compiler couldn't infer anything stronger). The other way makes sense to me, the a variable should be able to hold a string. The\r\n language specification does describe this behaviour:</p>\r\n<p>&nbsp; &nbsp; &quot;A type S is assignable to a type T, and T is assignable from S, if one of the following is true: ...&nbsp;S or T is the Any type.&quot;</p>\r\n<p>But doesn't give an explanation as to why this is a desirable feature to have in the language. My gut feeling is that it has something to do with staying a strict superset of JavaScript, but currently I can't see why some sort of explicit cast shouldn't\r\n be required in my example above, as is the case when casting from a super type to a base type:</p>\r\n<pre>class Animal {\n}\n\nclass Snake extends Animal {\n}\n\nvar a : Animal = new Animal();\nvar s : &lt;Snake&gt; =  a; // type assertion allows this\ns = a; // no type assertion, get error that cannot convert Animal to Snake</pre>\r\n<p>One thing I've found that at least discusses this behaviour is: http://siek.blogspot.co.uk/2012/10/is-typescript-gradually-typed-part-1.html</p>\r\n<p><span style=\"font-size:10pt\">Could anyone enlighten me with an example as to why it is desirable for Any to be assignable to a statically typed variable?</span></p>\r\n",
+    "PostedDate": "2013-01-30T06:26:57.313-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994224",
+    "ThreadId": "431419",
+    "Html": "\r\n<p>Having Any assignable in both directions comes from the gradual typing world.&nbsp; Saying 'Any' is like saying &quot;I don't know,&nbsp;this value may&nbsp;come from a place outside of the static type system&quot;.&nbsp; When you don't know, you can't make any assumptions about its\r\n contents.&nbsp; It may be assignment compatible.</p>\r\n<p>To your question, though, why should any be assignable to a statically typed variable?&nbsp; I think the answer might just be that when you're interfacing with dynamic code, including JavaScript, you'd end up&nbsp;requiring&nbsp;casts often.&nbsp; This could become&nbsp;a burden\r\n on the programmer without giving them much of an improvement in safety (as casts aren't checked at runtime).</p>\r\n<p>The design choices we made for TypeScript tend to favor trying to be useful and not being overly burdensome on the programmer.&nbsp; This&nbsp;choice seems to have the effect that for most things the language feels pretty light, but there are definitely corner cases\r\n where it doesn't quite catch everything.&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-30T08:55:31.42-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995270",
+    "ThreadId": "431419",
+    "Html": "In general, this makes sense to me. In a language like C#, 99% of the time your code is dealing with statically typed objects, and if you're doing a lot of casts, you're probably doing something wrong. But in the TS world, you're forced to live in an environment defined by JavaScript's dynamic types. You can often get around this by specifying interface definitions (.d.ts files) and what-not, but not always, and that's not always a reasonable approach. I agree that this is probably the best way to approach the language: what you lose in type safety you more than make up for in convenience. (And in the end, the only measure of the value of any language feature is whether it makes a programmer's life easier.)\r<br />\n<br />\nThat said, I could imagine a &quot;strict&quot; compilation setting (probably as a part of each file) which didn't allow this sort of assignment, or at least, required you to make the cast explicit.  Or perhaps a setting that just merely flagged it as a warning. Kind of like VB's &quot;option explicit&quot; or the JS hack &quot;use strict&quot;.<br />\n",
+    "PostedDate": "2013-02-01T08:18:26.927-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995330",
+    "ThreadId": "431419",
+    "Html": "Hi guys, thanks for your thoughtful replies. Couple of thoughts from me, sorry about any non-linearity in them!\r<br />\n<br />\nI've definitely come at TypeScript with expectations of an experience similar to that in a statically typed language rather than a gradually typed one. I guess there is more justification in the literature about gradually typed languages. :) I admit that I haven't given TypeScript a go for any sizable project yet so I'll definitely try to keep an open mind to this, anything that can help me understand my client side code better seems like a win.<br />\n<blockquote>\nWhen you don't know [the type of a value at compile time], you can't make any assumptions about it's contents<br />\n</blockquote>\nJon, that is true, but since an Any is assignable into some value with a static type, does it also follow that you can't make assumptions about the contents of that, too? \r<br />\nI'm trying to shift my mindset from type annotations as providing facts/constraints on runtime values to being more like my expectations (or preconditions?) for values used at runtime, which seems to fit their implications in TypeScript better (though I guess this is also the case in many statically typed languages where type annotations don't put constraints on whether a value is null or not). \r<br />\n<br />\nI've also been thinking about if a &quot;use strict&quot; mode makes sense in TypeScript. I think maybe I'd be happy with a warning - really I don't want to force myself or others to do unchecked casts, but I probably do want to be kept aware of Any values in my code. This will probably also improve through me gaining more experience about how Any values can make their way into a program.\r<br />\n<br />\nOverall I feel it's probably right that this isn't an error now, hopefully I'll find some time to better see whether it really is an inconvenience for me or not!<br />\n",
+    "PostedDate": "2013-02-01T10:02:39.513-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "995332",
+    "ThreadId": "431419",
+    "Html": "I had this same thought since Typescript first came out, and I've been curious about that since. This thread offered a bit of an answer, but I still felt there was something more, because I still had a use case where I wasn't a fan of this. Then it hit me. The way it's done now is great if you're writing Typescript from the start. There's no reason to cast something just to get around a purely compile-time limitation. But there's still a use case for it (just look at casting in C). That being that it forces the programmer to actually think through what type the data should be and cast accordingly. And that proves to be <em>very</em> useful when converting code from Javascript to Typescript.\r<br />\n<br />\nAnyway, that's just my two cents. I would definitely support some type of &quot;strict&quot; compilation option.<br />\n",
+    "PostedDate": "2013-02-01T10:05:21.64-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996204",
+    "ThreadId": "431419",
+    "Html": "There has been some discussion around something like a &quot;strict&quot; mode.  There is experimental support for a some of what the mode might do, which allows you to set the style of the checker on your file to disallow implying 'any', which enforces more type annotations when the types aren't known:<br />\n<pre><code>///&lt;style implicitAny=&quot;off&quot; /&gt;</code></pre>\n\nAgain, this is experimental, but may be helpful.<br />\n",
+    "PostedDate": "2013-02-04T08:29:49.163-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "996728",
+    "ThreadId": "431419",
+    "Html": "@itsmonktastic, this is just one more example of TypeScript's lack of type soundness (&quot;well typed programs do not wreck with type errors at runtime&quot;). In you care for my biased opinion, TypeScript designers are making poor choices. There's this talk about gradual typing, but published gradual typing systems, such as this one from Siek &amp; Taha (2006) [1], prove type soundness. In fact, in the PL community soundness seems to be the first and foremost requirement for any type system design.\r<br />\n<br />\nTo me, the obvious choice would be an F# or C#-like type system, which is not sound in presence of downcasts, but is sound if those are avoided. Downcasts allow to explicitly deal with the 1% of places where this is really needed, while preserving guarantees for the 99% of code that does not use them. This is not unlike unsafe* and Dynamic features in Haskell - they are an unsafe hole, but are available for when you need them, and do not render the whole Haskell type system useless. \r<br />\n<br />\nTypeScript authors are citing convenience as a reason for breaking soundness. But comparing to F# or C#, what it boils down to is allowing the programmer write <code>f(x)</code> instead of <code>f(downcast x)</code>. Is THAT the gain bought by making the type system entirely useless to guarantee absence of type errors? If so, it is a rather absurd decision. \r<br />\n<br />\n[1] <a href=\"http://ecee.colorado.edu/~siek/pubs/pubs/2006/siek06:_gradual.pdf\" rel=\"nofollow\">http://ecee.colorado.edu/~siek/pubs/pubs/2006/siek06:_gradual.pdf</a><br />\n",
+    "PostedDate": "2013-02-05T07:34:48.887-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "997867",
+    "ThreadId": "431419",
+    "Html": "I believe the type &quot;any&quot; represents the <strong><em>dynamic</em></strong> type rather than the super type of all types. Hence the code<br />\n<pre><code>      var a : any = {};\n      var s : string = a; // expected this to be an error</code></pre>\n\nis not really a downcast. It's equivalent to the following C#:<br />\n<pre><code>       dynamic foo = new { };\n       string bar = foo;</code></pre>\n\n<strong>why [is] this is a desirable feature to have in the language</strong><br />\n<ul>\n<li>\nObviously it provides the means to model the true behaviour of JavaScript.<br />\n</li>\n<li>\nIt's very useful for testing:<br />\n</li>\n</ul>\n<pre><code>function foo(element:HTMLElement){\n    \n    element.addEventListener(&quot;click&quot;, ()=&gt; {});\n}\n\n// Test case\n\n// Arrange\nvar listenerAdded = false;\nvar mockElement = {\n    addEventListener: ()=&gt; listenerAdded = true\n};\n\n// Act\nfoo(mockElement); // Error: Supplied paramters do not match...\nfoo(&lt;HTMLElement&gt; mockElement); // Error: Cannot convert x to HTMLElement...\nfoo(&lt;any&gt;mockElement); // Okay\n\n// Assert\nassert.isTrue(listenerAdded);</code></pre>\n\nNoel<br />\n",
+    "PostedDate": "2013-02-07T04:08:03.443-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

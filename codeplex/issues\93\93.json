@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:56.55-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The following code typechecks, but at runtime, the generated JS fails:\r\n\r\nclass C {\r\n\tstatic a = new A();\r\n}\r\n\r\nclass A {\r\n\t\r\n}\r\n\r\n\r\n===>\r\n\r\nvar C = (function () {\r\n    function C() { }\r\n    C.a = new A();\r\n    return C;\r\n})();\r\nvar A = (function () {\r\n    function A() { }\r\n    return A;\r\n})();",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-04T05:42:08.42-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Initializing statics using a class which is not defined yet",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 93
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks, Alex!\r\n\r\nWe used to provide an error on this, but recently disabled it because in cross-file IDE scenarios, it's impossible to know what order files will be loaded into the project graph.  (All typecheck and binding information is global, which is why the code passes typecheck.)\r\n\r\nWe could, however, raise the error if the modules in question all resided in the same file, though that would be a slightly inconsistent experience.\r\n",
+      "PostedDate": "2012-10-05T12:12:00.613-07:00",
+      "Id": 78711
+    },
+    {
+      "Message": "Loosely Related: http://typescript.codeplex.com/workitem/74",
+      "PostedDate": "2012-10-05T14:52:20.243-07:00",
+      "Id": 78745
+    },
+    {
+      "Message": "This can be fixed by changing the way code is generated for clases.\n\nInstead of this:\n\nvar Greeter = (function () {\n    function Greeter(message) {\n        this.greeting = message;\n    }\n    Greeter.prototype.greet = function () {\n        return \"Hello, \" + this.greeting;\n    };\n    return Greeter;\n})();\n\nLet's utilize function declaration hoisting:\n\nfunction Greeter() {\n\tif (!Greeter.__inited) {\n\t\tGreeter = (function () {\n\t\t\tfunction Greeter(message) {\n\t\t\t\tthis.greeting = message;\n\t\t\t}\n\t\t\tGreeter.prototype.greet = function () {\n\t\t\t\treturn \"Hello, \" + this.greeting;\n\t\t\t};\n\t\t\tGreeter.__inited = true;\n\t\t\treturn Greeter;\n\t\t})();\n\t}\n\tGreeter.apply(this, arguments);\n}",
+      "PostedDate": "2013-01-21T23:50:20.19-08:00",
+      "Id": 86827
+    },
+    {
+      "Message": "Oh, I'm sorry! Now I see that with my approach, static members are not initialized until the first instance is created. So it's not the solution.",
+      "PostedDate": "2013-01-22T00:01:43.65-08:00",
+      "Id": 86828
+    }
+  ]
+}

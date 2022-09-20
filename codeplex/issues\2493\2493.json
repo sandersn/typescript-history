@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-08T18:58:47.757-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Here's a code sample that illustrates some inconsistent behavior. The \"make\" function below _should_ be a generic factory function: pass in a class and get an instance of that class. To get a typed return value, we need to lock in the class's instance type using an interface for a generic constructor function.\r\n\r\nHowever, while there are no compilation errors, the resulting instance type is just Object instead of the actual type when there are non-optional constructor arguments, i.e. the compiler matched the class type correctly, but messes up the constructor's return type.\r\n\r\nAny other solutions for this generic problem? Is this really a bug in the compiler?\r\n\r\n```\r\nclass TestClass1 {\r\n}\r\nclass TestClass2 {\r\n  constructor(one: string) { }\r\n}\r\nclass TestClass2a {\r\n  constructor(one?: string) { }\r\n}\r\nclass TestClass3 {\r\n  constructor(one: string, two: number) { }\r\n}\r\nclass TestClass4 {\r\n  constructor(...arg: any[]) { }\r\n}\r\n\r\n// the \"class\" interface: match anything with a constructor\r\n// (it DOES match the classes above, but messes up T)\r\ninterface IClass<T> {\r\n  new (...args: any[]): T;  // any number of parameters, we don't care\r\n}\r\n\r\n// generic factory function:\r\nfunction make<T>(C: IClass<T>): T {\r\n  return new C();\r\n}\r\n\r\n// tests:\r\nvar t1 = make(TestClass1); // t1: TestClass1\r\nvar t2 = make(TestClass2); // t2: {}\r\nvar t2a = make(TestClass2a); // t2a: TestClass2a\r\nvar t3 = make(TestClass3); // t3: {}\r\nvar t4 = make(TestClass4); // t4: TestClass4\r\n```\r\n\r\nThe same example with a static method; also doesn't work:\r\n\r\n```\r\nclass BTestClass2 {\r\n  static method(one: string) { return new BTestClass2 }\r\n}\r\nclass BTestClass2a {\r\n  static method(one?: string) { return new BTestClass2a }\r\n}\r\nclass BTestClass3 {\r\n  static method(one: string, two: number) { return new BTestClass3 }\r\n}\r\nclass BTestClass4 {\r\n  static method(...arg: any[]) { return new BTestClass4 }\r\n}\r\ninterface IBClass<T> {\r\n  method(...args: any[]): T;\r\n}\r\nfunction makeB<T>(C: IBClass<T>): T {\r\n  return C.method();\r\n}\r\nvar bt2 = makeB(BTestClass2); // bt2: {}\r\nvar bt2a = makeB(BTestClass2a); // bt2a: TestClass2a\r\nvar bt3 = makeB(BTestClass3); // bt3: {}\r\nvar bt4 = makeB(BTestClass4); // bt4: TestClass4\r\n```",
+    "LastUpdatedDate": "2014-05-08T18:58:47.757-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-06T22:16:08.37-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Inconsistencies around rest parameters in generic interfaces and factories",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2493
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "After some more testing, here's a quick fix but it's ugly. May give someone some insight into what's going on though.\n\nReplace IClass in the original example above with the following:\n\n```\ninterface IClass<T> {\n  new (...args: any[]): T;\n  new (a: any, b: any, c: any, d: any, e: any, f: any, g: any, h: any,\n    i: any, j: any, k: any, l: any, m: any, n: any, o: any, p: any,\n    q: any, r: any, s: any, t: any, u: any, v: any, w: any, x: any,\n    y: any, z: any): T;\n}\n```",
+      "PostedDate": "2014-05-06T23:18:31.303-07:00",
+      "Id": 145756
+    },
+    {
+      "Message": "Well,...\n\nThe interface ```<T>{ new(...args: any[]): T; }``` is not a catch-all for \"constructor for T\".  It's a catch-all for \"constructor for T that takes 0 or more arguments\".  TestClass2 and TestClass3 do not take 0 or more arguments, they take 1 (or more) arguments and 2 (or more) arguments respectively.\n\nRemember that, for instance, ```element.onclick = () => { ... }``` and ```element.onclick = (event) => { ... }``` are both valid.  Just because the event is available doesn't mean the function needs that parameter, but the caller will provide it either way.\n\nSo, from a purist perspective there should be errors.  (after all, ```new C()``` is not really a valid for TestClass2 and TestClass3, they require a parameter or 2, respectively!)\n\n\nIn typescript 0.9, the IClass interface would not match TestClass2 and TestClass3 and there would be warnings/errors.  The handling of ...args: any[] was recently relaxed to allow this case without warnings, but it seems like the type system isn't really liking it.",
+      "PostedDate": "2014-05-07T21:07:03.56-07:00",
+      "Id": 145884
+    },
+    {
+      "Message": "This is fixed in the latest bits in the develop branch. ",
+      "PostedDate": "2014-05-08T18:58:45.573-07:00",
+      "Id": 145997
+    }
+  ]
+}

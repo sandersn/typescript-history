@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design, we won't re-order your code.",
+    "ClosedDate": "2013-08-23T11:16:33.397-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "#Failing example\r\nI have a minimalistic example where an extended class is declared before the base class\r\n```\r\nclass extended extends base {\r\n}\r\n\r\nclass base {\r\n    action() {\r\n        console.log(\"base action called\");\r\n    }\r\n}\r\n\r\nvar obj = new extended();\r\nobj.action();\r\n```\r\n\r\nwhen running in node.js I get the following error:\r\n\r\n```\r\nC:\\ts-node-bug>node bug.js\r\n\r\nC:\\ts-node-bug\\bug.js:4\r\n    __.prototype = b.prototype;\r\n                    ^\r\nTypeError: Cannot read property 'prototype' of undefined\r\n    at __extends (C:\\ts-node-bug\\bug.js:4:21)\r\n    at C:\\ts-node-bug\\bug.js:8:5\r\n    at Object.<anonymous> (C:\\ts-node-bug\\bug.js:13:3)\r\n    at Module._compile (module.js:456:26)\r\n    at Object.Module._extensions..js (module.js:474:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Function.Module.runMain (module.js:497:10)\r\n    at startup (node.js:119:16)\r\n    at node.js:901:3\r\n```\r\n\r\n#Working example\r\nWhen i move the extended class below the base class:\r\n\r\n```\r\nclass base {\r\n    action() {\r\n        console.log(\"base action called\");\r\n    }\r\n}\r\n\r\nclass extended extends base {\r\n}\r\n\r\nvar obj = new extended();\r\nobj.action();\r\n```\r\n\r\nI get expected output:\r\n\r\n```\r\nC:\\ts-node-bug>node working.js\r\nbase action called\r\n```\r\n\r\n#Versions\r\n```\r\nC:\\ts-node-bug>tsc -v\r\nVersion 0.9.1.1\r\n\r\nC:\\ts-node-bug>node -v\r\nv0.10.15\r\n```\r\n\r\n#Proposed solution\r\nGenerate JavaScript code where functions are generated in dependency order.\r\n",
+    "LastUpdatedDate": "2013-08-27T09:49:31.297-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-23T00:41:06.21-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "JavaScript fails in node.js when extended class is declared before base class",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1572
+  },
+  "FileAttachments": [
+    {
+      "FileId": 720951,
+      "FileName": "bug.ts",
+      "DownloadUrl": ".\\720951"
+    },
+    {
+      "FileId": 720952,
+      "FileName": "working.ts",
+      "DownloadUrl": ".\\720952"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Added code for failing example",
+      "PostedDate": "2013-08-23T00:41:55.833-07:00",
+      "Id": 110874
+    },
+    {
+      "Message": "Added code for working example",
+      "PostedDate": "2013-08-23T00:42:21.293-07:00",
+      "Id": 110875
+    },
+    {
+      "Message": "Well, if reordering is not by design, I at least would like a compiler error or warning that \"base\" is used before it is declared.",
+      "PostedDate": "2013-08-25T10:22:38.57-07:00",
+      "Id": 111084
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T17:27:11.557-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI am having problems extending Object.prototype using interface in the presence of DefinitelyTyped definitions.\r\n\r\n[http://definitelytyped.org/](http://definitelytyped.org/)\r\n\r\nThe following code :-\r\n\r\n    /// <reference path=\"node/node.d.ts\" />\r\n\r\n    import path = require('path');\r\n\r\n    interface Object {\r\n        deepClone():Object;\r\n    }\r\n\r\n    function getFileExtension(filename:string) {\r\n        return path.extname(filename).split(\".\")[1];\r\n    }\r\n\r\n    Object.prototype.deepClone = function() {\r\n        var that = new Object();\r\n        for (var key in this) {\r\n            if (this.hasOwnProperty(key)) {\r\n                if (typeof this[key] == \"object\")\r\n                    that[key] = this[key].deepClone();\r\n                else\r\n                    that[key] = this[key]\r\n            }\r\n        }\r\n        return that;\r\n    }\r\n\r\nproduces the following error :-\r\n\r\n    error TS2094: The property 'deepClone' does not exist on value of type 'Object'.\r\n\r\nWhile removing the import, and leaving the node definition :-\r\n\r\n    /// <reference path=\"node/node.d.ts\" />\r\n\r\n    //import path = require('path');\r\n\r\n    interface Object {\r\n        deepClone():Object;\r\n    }\r\n\r\n    Object.prototype.deepClone = function() {\r\n        var that = new Object();\r\n        for (var key in this) {\r\n            if (this.hasOwnProperty(key)) {\r\n                if (typeof this[key] == \"object\")\r\n                    that[key] = this[key].deepClone();\r\n                else\r\n                    that[key] = this[key]\r\n            }\r\n        }\r\n        return that;\r\n    }\r\n\r\nThis compiles okay. I don't know whether this is a problem with TypeScript or the DefinitelyTyped definitions, but it looks like its a TypeScript problem as I could not find any other 'interface Object' definitions anywhere. It looks like as soon as modules and imports are brought into the equation that Object, becomes fixed, yet there are no error messages on my Objects interface definition, yet there are errors on the actual function definitions.\r\n\r\n---\r\nAaron\r\n",
+    "LastUpdatedDate": "2014-07-21T17:27:11.557-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-25T08:30:57.043-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Problems extending Object.prototype with Node.js and /// <reference path=\"node/node.d.ts\" />",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2580
+  },
+  "FileAttachments": [
+    {
+      "FileId": 868673,
+      "FileName": "extendObjectPrototype.ts",
+      "DownloadUrl": ".\\868673"
+    },
+    {
+      "FileId": 868675,
+      "FileName": "extendObjectPrototype-FAIL.ts",
+      "DownloadUrl": ".\\868675"
+    },
+    {
+      "FileId": 868700,
+      "FileName": "extendObjectPrototype-test.ts",
+      "DownloadUrl": ".\\868700"
+    },
+    {
+      "FileId": 868701,
+      "FileName": "path.d.ts",
+      "DownloadUrl": ".\\868701"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Failure Case :-",
+      "PostedDate": "2014-06-25T08:34:04.043-07:00",
+      "Id": 150696
+    },
+    {
+      "Message": "Compiled on Windows 8.1 using Node.js v0.10.29 and node.d.js from [https://github.com/borisyankov/DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped)",
+      "PostedDate": "2014-06-25T08:37:17.763-07:00",
+      "Id": 150697
+    },
+    {
+      "Message": "I have further isolated the problem and it does look like it is a problem with imports and Object. Attached is 'extendObjectPrototype-test.ts' and 'path.d.ts'.\r\n",
+      "PostedDate": "2014-06-25T14:13:15.437-07:00",
+      "Id": 150741
+    },
+    {
+      "Message": "Attach 'path.d.ts'",
+      "PostedDate": "2014-06-25T14:19:20.867-07:00",
+      "Id": 150743
+    },
+    {
+      "Message": "Same problem occurs with Number too.",
+      "PostedDate": "2014-06-25T16:17:28.68-07:00",
+      "Id": 150747
+    }
+  ]
+}

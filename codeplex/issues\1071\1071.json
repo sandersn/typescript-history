@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:09.8-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "There's no way now to get a property name from the property reference in code\r\n\r\nFor example i have to write the code\r\n```\r\nset someProperty(v){\r\n   if (v !== this._someProperty){\r\n       this._this._someProperty = v;\r\n       this.raisePropertyChanged('someProperty');\r\n   }\r\n}\r\n```\r\n\r\nthe problem that i use a text value for the property name. If i change the property name\r\nthen i need to change the text value and this is difficult to manage and can be overlooked.\r\n\r\nI suggest a solution:\r\nIt can be solved if we had some function to get the property name from the property.\r\n\r\n```\r\nset someProperty(v){\r\n   if (v !== this._someProperty){\r\n       this._this._someProperty = v;\r\n       this.raisePropertyChanged(nameOf(this.someProperty));\r\n   }\r\n}\r\n\r\n```\r\n\r\nthe compiler can replace at compile time the expression nameOf(this.someProperty)\r\nwith 'someProperty'. It would be much easier to maintain because it is checked by the compiler.\r\n\r\nP.S.\r\nThe above example can be much trickier if we have property dependencies, when changes in one property results in changes of other properties.\r\n```\r\nset someProperty(v){\r\n   if (v !== this._someProperty){\r\n       this._this._someProperty = v;\r\n       this.raisePropertyChanged('someProperty');\r\n       this.raisePropertyChanged('someOtherProperty');\r\n       this.raisePropertyChanged('someOtherProperty2');\r\n   }\r\n}\r\n\r\n```\r\n\r\nbetter be\r\n\r\n```\r\nset someProperty(v){\r\n   if (v !== this._someProperty){\r\n       this._this._someProperty = v;\r\n       this.raisePropertyChanged(nameof(this.someProperty));\r\n       this.raisePropertyChanged(nameof(this.someOtherProperty));\r\n       this.raisePropertyChanged(nameof(this.someOtherProperty2));\r\n   }\r\n}\r\n\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-26T10:34:54.557-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "add some function to get a property name from property reference",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 9,
+    "Id": 1071
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This also will be usefull for obfuscating code.",
+      "PostedDate": "2013-05-27T02:25:38.54-07:00",
+      "Id": 101278
+    },
+    {
+      "Message": "To @ilyagolota \nI dont think it will help for obfuscation.\nBecause public properties are not obfuscated.\nBut observable pattern is very common, and to use it we need properties' names.\nMagic strings dont add reliability to a large application.\n",
+      "PostedDate": "2013-05-27T09:01:05.87-07:00",
+      "Id": 101294
+    },
+    {
+      "Message": "Thanks.  Assigning this suggestion to Jonathan for tracking.",
+      "PostedDate": "2013-05-30T16:23:02.577-07:00",
+      "Id": 101736
+    },
+    {
+      "Message": "Ah, the infamous `infoof` operator that has still never made its way into C#...",
+      "PostedDate": "2013-05-31T07:15:53.89-07:00",
+      "Id": 101785
+    },
+    {
+      "Message": "But in C# there's a way to use lambda expression to get property name.\nI use it in my old SilverLight projects.",
+      "PostedDate": "2013-05-31T11:33:52.923-07:00",
+      "Id": 101812
+    },
+    {
+      "Message": "Here it is better to add some compiler services functions to get the thing done.\n",
+      "PostedDate": "2013-05-31T11:35:35.197-07:00",
+      "Id": 101813
+    },
+    {
+      "Message": "Please consider this function to work with modules too.\nLike \n```\nmodule RIAPP {\n    export module MEKRES {\n        var modname1:string =  nameof(RIAPP), modname2:string =  nameof(MEKRES);\n   }\n}\n```\n\nIt is also needed in some cases. In my lib i register all modules by their names, and sometimes they are out of synch because of magic strings.",
+      "PostedDate": "2013-10-29T00:54:48.41-07:00",
+      "Id": 119996
+    },
+    {
+      "Message": "Hope to see this added now that we're post 1.0. I think this feature is pretty cheap to implement, and it would be extremely useful to have in the JS world.",
+      "PostedDate": "2014-06-07T17:04:33.03-07:00",
+      "Id": 149151
+    }
+  ]
+}

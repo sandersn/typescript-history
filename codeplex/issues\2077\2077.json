@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Sounds like this is all working as intended, please reopen if I've misunderstood. I recommend posting in the discussion forum for your latter questions about style/design to get more eyes on it.",
+    "ClosedDate": "2014-01-09T19:17:30.13-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "__Test code:__\r\n\r\ntest.d.ts\r\n```\r\ndeclare module mod {\r\n    class A {\r\n        constructor(n: string);\r\n    }\r\n}\r\n\r\ndeclare module \"mod/a\" {\r\n    var a: typeof mod.A;\r\n    export = a;\r\n}\r\n```\r\n\r\nB.ts:\r\n```\r\n/// <reference path=\"./test\"/>\r\n\r\nimport A = require(\"mod/a\");\r\n\r\nexport = B;\r\n\r\nclass B extends mod.A {\r\n    constructor() {\r\n        super(\"a\");\r\n    }\r\n}\r\n```\r\n\r\napp.ts:\r\n```\r\n/// <reference path=\"./test\"/>\r\n\r\nimport B = require(\"B\");\r\n\r\nvar b = new B();\r\n```\r\n\r\n__Output:__\r\n\r\nB.js:\r\n```\r\n/// <reference path=\"./test\"/>\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\ndefine([\"require\", \"exports\", \"mod/a\"], function(require, exports, A) {\r\n    \r\n\r\n    var B = (function (_super) {\r\n        __extends(B, _super);\r\n        function B() {\r\n            _super.call(this, \"a\");\r\n        }\r\n        return B;\r\n    })(mod.A);\r\n    return B;\r\n});\r\n```\r\n\r\nThe error is this line of B.js:\r\n```\r\n    })(mod.A);\r\n```\r\n\r\nI think it should be just this since this is what's passed to the callback and 'mod' is not in the global scope:\r\n```\r\n    })(A);\r\n```\r\n\r\nThis is with 0.9.5. When I try the latest on the develop branch, the define call becomes just:\r\n```\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n```\r\n\r\nIs this a bug in the compiler or in my test code?\r\n\r\nThanks.",
+    "LastUpdatedDate": "2014-01-09T19:17:30.13-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-06T21:25:26.443-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Invalid output when extending ambient class",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2077
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If I change this line in B.ts to:\n```\nclass B extends A {\n```\nthen B.js comes out correctly, but the compiler returns these errors:\n\nB.ts(7,17): error TS2073: A class may only extend another class.\nB.ts(7,17): error TS4022: Type reference cannot refer to container 'A'.\nB.ts(9,9): error TS2103: 'super' cannot be referenced in non-derived classes.",
+      "PostedDate": "2014-01-08T10:44:05.113-08:00",
+      "Id": 129818
+    },
+    {
+      "Message": "It looks like there is some confusion in the original code between internal and external modules.  Take a look at https://typescript.codeplex.com/wikipage?title=Modules%20in%20TypeScript&referringTitle=TypeScript%20Documentation and see if this helps clarify any concepts.\n\nThe \"})(mod.A);\" line is correct, as you have \"class B extends mod.A\", not \"class B extends A\", as you noted in your follow up.\n\nThe error after your follow up is correct as you have \"var a: typeof mod.A;\", so \"a\" is a variable which has the same type (i.e. structural shape) as class mod.A, but is not itself a class.\n\nAs best I can make out, code something like the below is what you are trying to achieve, and this works as expected for me.  Please reopen if you believe there are any remaining bugs in TypeScript.  For general usage questions, StackOverflow with \"TypeScript\" tag is the recommended forum (and the team is engaged there also).\n\nThanks.\n\n__test.d.ts__\n```typescript\ndeclare module \"mod/a\" {\n    class A {\n        constructor(n: string);\n    }\n    export = A;\n} \n```\n__b.ts__\n```typescript\n/// <reference path=\"./test.d.ts\"/>\nimport A = require(\"mod/a\");\n\nexport = B;\n\nclass B extends A {\n    constructor() {\n        super(\"a\");\n    }\n}\n```\n\n__app.ts__\n```typescript\nimport B = require(\"./b\");\n\nvar b = new B();\n```",
+      "PostedDate": "2014-01-08T15:31:34.067-08:00",
+      "Id": 129862
+    },
+    {
+      "Message": "The problem with your proposed change is that I'd lose the module namespacing. I don't want everything in root. I have a class called Map for example that conflicts with the Map in lib.d.ts. My real definition file has a large object model with many related classes where each class is in its own AMD module.\n\nHere's a related issue where the use of \"typeof\" was suggested:\nhttps://typescript.codeplex.com/workitem/2020\nIs there another way to create the definition file that retains namespacing?\n\nThanks for looking into this issue.",
+      "PostedDate": "2014-01-08T16:35:17.7-08:00",
+      "Id": 129868
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 01/08/2014 3:31PM",
+      "PostedDate": "2014-01-08T15:31:41.993-08:00",
+      "Id": 129869
+    },
+    {
+      "Message": "Thanks for the doc link. That did help clarify why you don't need namespaces in external modules.\n\nIn this test code, is there a way to make IModA know about ModB? I couldn't find a way so I created the external module IModB, but then users have to explicitly require(\"IModB\") to use it.\n\n__T3.d.ts__\n```ts\ninterface IModA {\n    num: number;\n//    b: ModB;\n}\n\ndeclare module \"modA\" {\n    import ModB = require(\"modB\");\n    class ModA implements IModA {\n        num: number;\n        b: ModB;\n    }\n    export = ModA;\n}\n\ndeclare module \"modB\" {\n    import ModA = require(\"modA\");\n    import IModB = require(\"IModB\");\n    class ModB implements IModB {\n        num: number;\n        a: ModA;\n    }\n    export = ModB;\n}\n\ndeclare module \"IModB\" {\n    import ModA = require(\"modA\");\n    interface IModB {\n        num: number;\n        a: ModA;\n    }\n    export = IModB;\n}\n```\n\nThanks again.",
+      "PostedDate": "2014-01-08T21:15:36.69-08:00",
+      "Id": 129900
+    },
+    {
+      "Message": "Would you recommend this approach over the previous one?\n\n__T4.d.ts__\n```ts\ninterface IModA {\n    num: number;\n    b: ModB;\n}\n\ninterface IModB {\n    num: number;\n    a: ModA;\n}\n\ndeclare class ModA implements IModA {\n    num: number;\n    b: ModB;\n}\n\ndeclare class ModB implements IModB {\n    num: number;\n    a: ModA;\n}\n\ndeclare module \"modA\" {\n    export = ModA;\n}\n\ndeclare module \"modB\" {\n    export = ModB;\n}\n```",
+      "PostedDate": "2014-01-09T10:16:22.573-08:00",
+      "Id": 129958
+    }
+  ]
+}

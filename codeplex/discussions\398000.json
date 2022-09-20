@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "921760",
+    "ThreadId": "398000",
+    "Html": "\r\n<p>Suppose I have two different classes in two files (parent.ts and child.ts):</p>\r\n<p>/// &lt;reference path='child.ts'/&gt;<br>\r\nclass Parent { <br>\r\n&nbsp; &nbsp; children:Child[]; <br>\r\n}</p>\r\n<p>/// &lt;reference path='parent.ts'/&gt;<br>\r\nclass Child {<span> <br>\r\n</span>&nbsp; &nbsp; parent: Parent;<br>\r\n}</p>\r\n<p><br>\r\nTo compile I use the following command: tsc parent.ts<br>\r\nThis works all as expected with the great benefit of some type checking.&nbsp;However as soon as in any of the two files I add any import or export statement, it doesn't compile anymore. It cannot resolve the classes in the other file anymore.</p>\r\n<p>I guess this is due to the fact that the file changes into a module as soon as you add import or export statements.&nbsp;Is this the intended behavior and is there any way (without major&nbsp;re-factoring) to make it then compile again?</p>\r\n<p>regards,</p>\r\n<p>Peter</p>\r\n",
+    "PostedDate": "2012-10-04T02:44:39.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921846",
+    "ThreadId": "398000",
+    "Html": "<p>When using the TypeScript&nbsp;flavor&nbsp;of modules, imports are not used, because you define the required sources as references i.e.:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: green;\">/// &lt;reference path=\"another_file.ts\" /&gt;</span>\r\n</pre>\r\n</div>\r\n</p>\r\n<p><br />The result of compilation is javascript with self invoking function module pattern. In this case there is no module defined really, just an object as a result of self invoking function. In browser environment you should know the order of loading for this pattern to work properly and you do not need any additional information to use it.</p>\r\n<p>When using commonJS/AMD modules you need to use import statements because those are part of the loading work done by the environment (either node or requirejs/similar). import statement will be transformed to 'require' statements.&nbsp;</p>\r\n<p>One can think of it as 'the old way' of doing modules in js: you order the scripts manually and you make sure objects used in moduleB and defined in moduleA have been loaded after moduleA. The 'new way' is providing information about the dependencies in the module itself and use module loader that can understand and use this information to load your modules in the correct order.&nbsp;</p>\r\n<p>For more details one can take a look at the demo applications, as various techniques for building are used there, demonstrating the various module patterns supported by the compiler.&nbsp;</p>",
+    "PostedDate": "2012-10-04T05:32:17.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922134",
+    "ThreadId": "398000",
+    "Html": "<p>Thanks for the feedback, much appreciated!!!</p>\r\n<p>The example I gave is actually based on how part of the tsc compiler is coded (in the services directory), or at least my understanding of it. The nice thing is that you can refer to classes etc without having to use prefixes.&nbsp;If I would have used an import statement like the following:</p>\r\n<p>\r\n<pre>import xyz = module(\"child\");</pre>\r\n</p>\r\n<p>my declarations would have to look something like this:</p>\r\n<p>\r\n<pre>children: xyz.Child[];</pre>\r\n</p>\r\n<p>Just doesn't look as nice. Wat would be great if you could import directly into the \"current scope\". So for example:&nbsp;</p>\r\n<p>\r\n<pre>import module(\"child\"); // No xyz this time.\r\n\r\n</pre>\r\n</p>\r\n<p>P.S I also found out that if I wrap my original code into a module it works as I hoped for. They actually did that in the tsc source code, but I assumed (wrongly so) that if you don't specify a module, it would all be part of a kind of \"ROOT\" module and behave similar.</p>\r\n<p>\r\n<pre><br /></pre>\r\n</p>",
+    "PostedDate": "2012-10-04T14:04:03.557-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "True private may be considered when ES6 supports that.. until then this has been extensively discussed on the forum and can not be implemented in existing JavaScript engines. See the discussion here:\n\nhttps://typescript.codeplex.com/discussions/397651",
+    "ClosedDate": "2013-10-17T12:27:29.75-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "I have a suggestion to work with public and private properties and class inheritance. \r\nSuppose we have this Greeter class with ExtraGreeter class that extend Greeter:\r\n``` typescript\r\nclass Greeter {\r\n    private privateproperty: string = \"\";\r\n    public  publicproperty: string = \"\";\r\n    constructor(message: string) {\r\n        privateproperty = message;\r\n    }\r\n    prototypemethod() {\r\n        return \"Hello, \" + privateproperty;\r\n    }\r\n    constructordefinedmethod = () => {\r\n        return \"Hello, \" + privateproperty + this.publicproperty;\r\n    }\r\n}\r\n\r\nclass ExtraGreeter extends Greeter {\r\n    prototypemethod() {\r\n        return super.prototypemethod();\r\n    }\r\n    constructordefinedmethod = () => {\r\n        return super.constructordefinedmethod();\r\n    }\r\n}\r\n```\r\nin the typescript 9.1.1 we have this output (excluding compile error):\r\n``` typescript\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Greeter = (function () {\r\n    function Greeter(message) {\r\n        var _this = this;\r\n        this.privateproperty = \"\";\r\n        this.publicproperty = \"\";\r\n        this.constructordefinedmethod = function () {\r\n            return \"Hello, \" + privateproperty + _this.publicproperty;\r\n        };\r\n        privateproperty = message;\r\n    }\r\n    Greeter.prototype.prototypemethod = function () {\r\n        return \"Hello, \" + privateproperty;\r\n    };\r\n    return Greeter;\r\n})();\r\n\r\nvar ExtraGreeter = (function (_super) {\r\n    __extends(ExtraGreeter, _super);\r\n    function ExtraGreeter() {\r\n        _super.apply(this, arguments);\r\n        var _this = this;\r\n        this.constructordefinedmethod = function () {\r\n            return _super.prototype.constructordefinedmethod.call(_this);\r\n        };\r\n    }\r\n    ExtraGreeter.prototype.prototypemethod = function () {\r\n        return _super.prototype.prototypemethod.call(this);\r\n    };\r\n    return ExtraGreeter;\r\n})(Greeter);\r\n```\r\nI think that the correct output can be this:\r\n``` typescript\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Greeter = (function () {\r\n    function Greeter(message) {\r\n        var _this = this;\r\n        privateproperty = \"\";\r\n        this.publicproperty = \"\";\r\n        this.constructordefinedmethod = function () {\r\n            return \"Hello, \" + privateproperty + _this.publicproperty;\r\n        };\r\n        privateproperty = message;\r\n    }\r\n    Greeter.prototype.prototypemethod = function () {\r\n        return \"Hello, \" + privateproperty;\r\n    };\r\n    return Greeter;\r\n})();\r\n\r\nvar ExtraGreeter = (function (_super) {\r\n    __extends(ExtraGreeter, _super);\r\n    function ExtraGreeter() {\r\n        _super.apply(this, arguments);\r\n        var _this = this;\r\n        var _super_constructordefinedmethod = _this.constructordefinedmethod;\r\n        this.constructordefinedmethod = function () {\r\n            return _super_constructordefinedmethod.call(_this);\r\n            // or: return _super_constructordefinedmethod(); ?\r\n        };\r\n    }\r\n    ExtraGreeter.prototype.prototypemethod = function () {\r\n        return _super.prototype.prototypemethod.call(this);\r\n    };\r\n    return ExtraGreeter;\r\n})(Greeter);\r\n```\r\nWhat do you think about? \r\nThanks! \r\nGabriele",
+    "LastUpdatedDate": "2013-10-17T12:27:29.75-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-17T08:13:43.243-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Private, Public and Class Inheritance Proposal ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1800
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

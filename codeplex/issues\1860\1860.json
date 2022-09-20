@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The exact details are very complicated because of the difficulty of reasoning about recursively wrapped generic types, but basically the compiler treats the two instantiations of the wrapped generic type (Bar<T>) as coming from different declarations, and thus incompatible.\n\nWe were curious if you hit this in real world code, or were just trying things out and ran into this? If this is a reasonably common pattern (i.e. what were these types called originally?) that we need to type correctly, we can investigate what it would take to rework the algorithm to treat this as similar. Otherwise we'll postpone work here in the interests of stability. Thanks for any feedback on this.",
+    "ClosedDate": "2013-11-08T11:46:43.55-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "The following code fails in develop as of commit `ebd8ae...`:\r\n\r\n```\r\ninterface IFoo<T> {\r\n}\r\n\r\ninterface IBar<T extends IBar<T>> {\r\n  foo(): IFoo<T>;\r\n}\r\n\r\n// Note: Bar<number> should satisfy IBar<Bar<number>>\r\n// because Bar<T> implements IBar<Bar<T>>\r\nclass Bar<T> implements IBar<Bar<T>> {\r\n  constructor(foo: T) {}\r\n  foo(): IFoo<Bar<T>> { return null; }\r\n}\r\n\r\nclass Baz<T extends IBar<T>> {\r\n  constructor(bar: T) {}\r\n}\r\n\r\n// error TS2086: Type 'Bar<number>' does not satisfy the constraint\r\n// 'IBar<Bar<number>>' for type parameter 'T extends IBar<T>'.\r\nnew Baz<Bar<number>>(new Bar<number>(0));\r\n```\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-03T12:35:25.557-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Postponed"
+    },
+    "Summary": "Develop: Incorrect type validation for recursive generic type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1860
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yes, this was a reduced test case from a real app. Recursive generic types are very useful for tree structures. I think the particular use case was a generic file system interface, where each file system entry is parameterized on its own type so that the children and parent of any entry are automatically of the correct type. I will try to post an example of actual code after work today.\n",
+      "PostedDate": "2013-11-08T14:14:56.78-08:00",
+      "Id": 122454
+    },
+    {
+      "Message": "Here's a more realistic reduced test case. It contains a stripped-down version of the part of the app that displays a file tree using HTML. I've removed most of the code so hopefully it should be easy to understand:\n\n```\n////////////////////////////////////////\n// Generic file system interface\n////////////////////////////////////////\n\ninterface IFileSystem<T extends IFileSystemEntry<T>> {\n  root(): T;\n  get(path: string[], callback: (error: Error, entry: T) => void): void;\n}\n\ninterface IFileSystemEntry<T extends IFileSystemEntry<T>> {\n  name(): string;\n  isDirectory(): boolean;\n  modificationTime(callback: (error: Error, time: number) => void): void;\n  children(callback: (error: Error, children: T[]) => void): void;\n  read(callback: (error: Error, data: string) => void): void;\n  write(data: string, callback: (error: Error) => void): void;\n  remove(callback: (error: Error) => void): void;\n  moveTo(parent: T, name: string, callback: (error: Error) => void): void;\n  createFile(name: string, callback: (error: Error, entry: T) => void): void;\n  createDirectory(name: string, callback: (error: Error, entry: T) => void): void;\n}\n\n////////////////////////////////////////\n// Generic tree view\n////////////////////////////////////////\n\ninterface ITreeEntry<T extends ITreeEntry<T>> {\n  name(): string;\n  children(): T[];\n}\n\nclass TreeEntryView<T extends ITreeEntry<T>> {\n  private _element = document.createElement('div');\n  private _children: T[] = [];\n\n  constructor(\n    private _entry: T) {\n  }\n\n  element(): HTMLElement {\n    return this._element;\n  }\n}\n\nclass TreeView<T extends ITreeEntry<T>> {\n  private _element = document.createElement('div');\n  private _rootView: TreeEntryView<T>;\n\n  constructor(\n    private _root: T) {\n  }\n\n  element(): HTMLElement {\n    return this._element;\n  }\n}\n\n////////////////////////////////////////\n// Tree implementation for a file tree\n////////////////////////////////////////\n\nclass FileTreeEntry<T extends IFileSystemEntry<T>>\n    implements ITreeEntry<FileTreeEntry<T>> {\n  private _children: FileTreeEntry<T>[] = [];\n\n  constructor(\n    private _entry: T) {\n  }\n\n  name(): string {\n    return this._entry.name();\n  }\n\n  children(): FileTreeEntry<T>[] {\n    return this._children;\n  }\n}\n\nclass FileTree<T extends IFileSystemEntry<T>> {\n  private _root: FileTreeEntry<T>;\n\n  // error TS2086: Type 'FileTreeEntry<T extends IFileSystemEntry<T>>'\n  // does not satisfy the constraint 'ITreeEntry<FileTreeEntry<T extends\n  // IFileSystemEntry<T>>>' for type parameter 'T extends ITreeEntry<T>'.\n  private _view: TreeView<FileTreeEntry<T>>;\n\n  constructor(\n    private _fs: IFileSystem<T>) {\n\n    // error TS2086: Type 'FileTreeEntry<any>' does not satisfy the\n    // constraint 'ITreeEntry<FileTreeEntry<any>>' for type parameter\n    // 'T extends ITreeEntry<T>'.\n    this._root = new FileTreeEntry(this._fs.root());\n    this._view = new TreeView(this._root);\n  }\n}\n```\n\nIt looks like the error message is no longer present as of commit c3e110ccfa17e24ec68ba016588158522e65e4de: fix the infinite expansion type reference for signatures. Does this mean that the generic type checking algorithm has already been reworked and I should expect this to work in the future, or that it just so happens that a compiler update hid the bug and this issue could still come up later in a different form?\n",
+      "PostedDate": "2013-11-08T19:32:15.803-08:00",
+      "Id": 122474
+    },
+    {
+      "Message": "I think you can consider this fixed. Reasoning about self-referential generics in a structural type system is necessarily best-effort, and it looks like our effort improved in this case.",
+      "PostedDate": "2013-11-19T15:58:59.32-08:00",
+      "Id": 123598
+    }
+  ]
+}

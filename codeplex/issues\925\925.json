@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Interpreting construct signatures on interface implementors to apply to the static side of the class doesn't make any sense from a consumption perspective. This would make a great Stack Overflow question if you want to understand the design here. ",
+    "ClosedDate": "2013-04-22T13:01:26.393-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Interface must either directly prohibit declaring constructor (see no point in that) or threat constructor as a constructor so it would affect implementation (looks reasonable and usable, allows to deal with class factories).\r\n\r\nNow it blames an implementation (missing property constructor) for the problem (?) in the interface. This makes no sense.\r\n\r\nFor example:\r\n``` TypeScript\r\ninterface ISome {\r\n\tconstructor(URL:string); // no error here\r\n}\r\n\r\nclass Some implements ISome { // \"missing property constructor\" error, bah\r\n\tconstructor (URL:string){\r\n\t\treturn this;\r\n\t}\r\n}\r\n```",
+    "LastUpdatedDate": "2013-04-22T13:01:26.393-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-19T05:56:21.227-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "constructor in the interface declaration inconsistency",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 925
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Ok, that gets the job done, thank you.\nBut shouldn't error be fired on the interface declaration with constructor defined? Perhaps, with a hint on \"new\" included.",
+      "PostedDate": "2013-04-20T00:36:24.883-07:00",
+      "Id": 97553
+    },
+    {
+      "Message": "You want to define a constructor in an interface which is done using the 'new' keyword\n\n\n````\n\ninterface ISome{\nnew(url:string);\n}\n````\n\n\nfor more details please see this SO question:\n\n\nhttp://stackoverflow.com/questions/13407036/how-does-typescript-interfaces-with-construct-signatures-work/13408029#13408029\n\r\n\r** Closed by paulb 04/19/2013 4:24PM",
+      "PostedDate": "2013-04-19T16:24:29.243-07:00",
+      "Id": 97562
+    },
+    {
+      "Message": "ps. Reading\nhttp://stackoverflow.com/questions/13407036/how-does-typescript-interfaces-with-construct-signatures-work/13408029#13408029\n\nand linked threads over and over again.\n\nThis thing is definitely __not__ what one would call \"nice design\", it just blows my mind. Why not just allow interface to restrict constructors? What harm could this ever produce, aside from some \"visual imperfection of idea\"..? If you are willing to have mutating constructor you just not define in in the interface. But if I DO put my constructor to the interface definition, I really __do want__ to have my constructor's signature checked. Keep it simple, heh?",
+      "PostedDate": "2013-04-22T06:24:45.217-07:00",
+      "Id": 97675
+    }
+  ]
+}

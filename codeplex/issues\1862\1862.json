@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:36:45.09-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "```\r\nError: Debug Failure. False expression: \r\n\tat Function.Debug.assert (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:1286:23)\r\n\tat SyntaxTreeCache.ensureInvariants (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:66607:34)\r\n\tat SyntaxTreeCache.updateSyntaxTree (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:66595:22)\r\n\tat SyntaxTreeCache.getCurrentFileSyntaxTree (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:66559:39)\r\n\tat LanguageService.getSyntaxTree (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:69160:46)\r\n\tat LanguageService.getIndentationAtPosition (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:69128:39)\r\n\tat LanguageService.getIndentationAtPosition (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:73020:41)\r\n\tat Main.processRequest (/Users/dcicerone/git/eclipse-typescript/com.palantir.typescript/bin/bridge.js:73138:37)\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-04T12:43:12.283-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Develop: crash when calling getIndentationAtPosition()",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1862
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This assert indicates that something is going wrong on the host side (i.e. your code) of the LS <-> Host interaction, specifically that the difference in length between the previous script snapshot and the new one doesn't match the change in length implied by the given edit range:\n\n```\n            // If this fires, then the edit range is completely bogus.  Somehow the lengths of the\n            // old snapshot, the change range and the new snapshot aren't in sync.  This is very\n            // bad.\n            var expectedNewLength = oldScriptSnapshot.getLength() - editRange.span().length() + editRange.newLength();\n            var actualNewLength = newScriptSnapshot.getLength();\n            TypeScript.Debug.assert(expectedNewLength === actualNewLength);\n```\n\nYou should ensure that your host is calculating its edit ranges and snapshots texts appropriately. One thing to look out for is that script snapshots need to be invariant; if you were accidently changing previously-returned script snapshots, you might see this error.",
+      "PostedDate": "2013-11-04T13:37:10.73-08:00",
+      "Id": 121759
+    },
+    {
+      "Message": "Hmm, ok, thanks for the tip.  The snapshot used by my host is immutable (thanks for confirming that requirement though).  I'll see what I can find next time this pops up.",
+      "PostedDate": "2013-11-04T14:16:04.837-08:00",
+      "Id": 121764
+    },
+    {
+      "Message": "See comments\n\r\n\r** Closed by RyanCavanaugh 11/04/2013 1:37PM",
+      "PostedDate": "2013-11-04T13:37:18.59-08:00",
+      "Id": 122068
+    },
+    {
+      "Message": "We had this happen in VS, so marking active. It's probably on the TypeScript side",
+      "PostedDate": "2013-11-06T15:54:51.357-08:00",
+      "Id": 122069
+    },
+    {
+      "Message": "Ah ok. Thanks for the head-up.",
+      "PostedDate": "2013-11-06T16:24:31.05-08:00",
+      "Id": 122071
+    }
+  ]
+}

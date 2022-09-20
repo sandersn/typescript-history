@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "929572",
+    "ThreadId": "400089",
+    "Html": "\r\n<p>Here are two watered down example files. This is currently how they work as requirejs modules. I've shimmed api.js in my require config to define the export as API. The goal is that these will stay as singletons. I'm trying to convert them to TypeScript\r\n equivalents but can't quite figure out how to keep them as a singleton and pass them around to various modules like I do now.</p>\r\n<p><strong>RequireJS style</strong></p>\r\n<p><em>api.js</em></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>(<span style=\"color:blue\">function</span> (global) {\n\n    <span style=\"color:blue\">var</span> API = global.API = {};\n    API.version = <span style=\"color:#a31515\">'0.0.1'</span>;\n    API.env = <span style=\"color:#a31515\">'local'</span>;\n    API.header = <span style=\"color:#a31515\">''</span>;\n\n} (<span style=\"color:blue\">this</span>));</pre>\r\n</div>\r\n<p><em>auth.js</em></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>define([\n    <span style=\"color:#a31515\">'api'</span>,\n], <span style=\"color:blue\">function</span> (api) {\n        <span style=\"color:#a31515\">'use strict'</span>;\n        \n        CommonAuth = {\n\n            maxExpiredAuthorizationRetries: 1,\n            \n            getAuthorizationHeader: <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> api.header;\n            },\n            \n            setAuthorizationHeader: <span style=\"color:blue\">function</span> (val) {\n                api.header = val;\n            }\n            \n        };\n\n        <span style=\"color:blue\">return</span> CommonAuth;\n\n    }\n);</pre>\r\n</div>\r\n<p><strong>TypeScript/AMD(requirejs) style</strong></p>\r\n<p><strong>&nbsp;</strong>I've got the following so far but this is obviously not what I am after.</p>\r\n<p><em>auth.ts</em></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// don't know how to fake this without creating a valid api module. requirejs shim is what handles my export</span>\n<span style=\"color:blue\">import</span> api = module(<span style=\"color:#a31515\">&quot;api&quot;</span>);\n\n<span style=\"color:blue\">export</span> module Common {\n\n    <span style=\"color:blue\">class</span> Auth {\n          \n        <span style=\"color:blue\">public</span> maxExpiredAuthorizationRetries: number;\n\n        constructor (maxExpiredAuthorizationRetries: number) {\n            <span style=\"color:blue\">this</span>.maxExpiredAuthorizationRetries = maxExpiredAuthorizationRetries;\n        }\n\n        <span style=\"color:blue\">public</span> getAuthorizationHeader(): string {\n            <span style=\"color:blue\">return</span> api.header();\n        }\n\n        <span style=\"color:blue\">public</span> setAuthorizationHeader(val: string): <span style=\"color:blue\">void</span> {\n            api.header(val);\n        }\n    }\n\n    <span style=\"color:blue\">var</span> auth = <span style=\"color:blue\">new</span> Auth(1);\n}</pre>\r\n</div>\r\n<p>which compiles to <em>auth.js</em> (<em>tsc auth.ts --module amd</em>`)</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>define([<span style=\"color:#a31515\">&quot;require&quot;</span>, <span style=\"color:#a31515\">&quot;exports&quot;</span>, <span style=\"color:#a31515\">&quot;api&quot;</span>], <span style=\"color:blue\">function</span>(require, exports, __api__) {\n    <span style=\"color:blue\">var</span> api = __api__;\n\n    (<span style=\"color:blue\">function</span> (Common) {\n        <span style=\"color:blue\">var</span> Auth = (<span style=\"color:blue\">function</span> () {\n            <span style=\"color:blue\">function</span> Auth(maxExpiredAuthorizationRetries) {\n                <span style=\"color:blue\">this</span>.maxExpiredAuthorizationRetries = maxExpiredAuthorizationRetries;\n            }\n            Auth.prototype.getAuthorizationHeader = <span style=\"color:blue\">function</span> () {\n                <span style=\"color:blue\">return</span> api.header();\n            };\n            Auth.prototype.setAuthorizationHeader = <span style=\"color:blue\">function</span> (val) {\n                api.header(val);\n            };\n            <span style=\"color:blue\">return</span> Auth;\n        })();        \n        <span style=\"color:blue\">var</span> auth = <span style=\"color:blue\">new</span> Auth(1);\n    })(exports.Common || (exports.Common = {}));\n\n})\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-10-19T11:56:48.46-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929951",
+    "ThreadId": "400089",
+    "Html": "<p>Hey ryan, &nbsp;</p>\r\n<p>In my testing with TypeScript, I have found that Singleton instances need to be CommonJS, not AMD.</p>\r\n<p>Looking at the generated code, the require statement is looking for __api__ have you tested exporting api.js as __api__ in your shim, and not API ? &nbsp;</p>",
+    "PostedDate": "2012-10-20T22:09:53.213-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930436",
+    "ThreadId": "400089",
+    "Html": "<p>Hey rozentalsn. My modules must be AMD. As far as __api__ that isn't a problem because that's just the alias for the module which is correctly included in the define as just plain \"api\". I believe that marking all of my class members as static is a working solution for me as far as singletons go.</p>\r\n<p>Thanks for the suggestions.</p>",
+    "PostedDate": "2012-10-22T06:04:31.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930556",
+    "ThreadId": "400089",
+    "Html": "<p>I may not fully understand the detail of the original code you are finding difficult to model - but if you are trying to recreate what you originally had in auth.js, is this what you are looking for?</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">import</span> api = module(<span style=\"color: #a31515;\">\"api\"</span>);\r\n<span style=\"color: blue;\">export</span> <span style=\"color: blue;\">var</span> maxExpiredAuthorizationRetries = 1;\r\n<span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> getAuthorizationHeader() {\r\n    <span style=\"color: blue;\">return</span> api.header;\r\n}\r\n<span style=\"color: blue;\">export</span> <span style=\"color: blue;\">function</span> setAuthorizationHeader(val) {\r\n    api.header = val;\r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-22T09:28:37.8-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930590",
+    "ThreadId": "400089",
+    "Html": "<p>lukeh, that does help. Without it I had to do this</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">export</span> <span style=\"color: blue;\">class</span> Auth {\r\n    <span style=\"color: blue;\">public</span> <span style=\"color: blue;\">static</span> maxExpiredAuthorizationRetries: number = 1;\r\n}\r\n\r\n<span style=\"color: green;\">// consume it</span>\r\n<span style=\"color: blue;\">import</span> Auth = module(<span style=\"color: #a31515;\">'auth'</span>);\r\nAuth.Auth.maxExpiredAuthorizationRetries\r\n</pre>\r\n</div>\r\n<p>In CommonJS I believe I could do something like this to avoid the naming oddity. I don't think I can do that with TypeScript yet though aside from creating a variable to rename Auth.Auth.</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">import</span> Auth = module(<span style=\"color: #a31515;\">'common.auth'</span>).Auth;\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-22T10:08:39.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

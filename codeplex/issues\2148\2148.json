@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is actually by design, we try to find the best common type (BCT) between the 3 types, which uses sub-type relations (See 3.10 in the spec).\n\nThis means we need to find the BCT between: ````I````, ````{ S:string, A:number}```` and ````{ S:string, B:number}````, which because of the subtype and supertype rules (3.8.3 etc.) happens to be ````{}````. which is not assignable to ````I````. Specifically because of the following rule in 3.8.4:\n````\n•\tthe primitive type Number is assignable to, but not a subtype of, all enum types.\n````",
+    "ClosedDate": "2014-02-03T17:02:04.237-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Consider the following:\r\n\r\n```\r\nvar us: I[] = [\r\n\t{ S: 'a', A: E.Y | E.X },\r\n\t{ S: 'b', B: 6 }\r\n];\r\n\r\nenum E { X = 1, Y = 2 };\r\n\r\ninterface I {\r\n\tS: string;\r\n\tA?: E;\r\n\tB?: number;\r\n}\r\n\r\nfunction f( e: E ){}\r\nf( E.X | E.Y );\r\n```\r\n\r\nThe inline array at the top gets a red squiggly, complaining that `type {}[] cannot be converted to I[]`.\r\n\r\nThis apparently happens because the `A` property on the first array element is inferred to have the type `number`, but that is definitely not the whole story, because, for example, function call at the very bottom does compile successfully. It appears that the failure is also somehow connected to the presence of the inline array (which has a vague resemblance of [another issue](https://typescript.codeplex.com/workitem/1990) I submitted a while ago).\r\n\r\nA few more notes:\r\n* If I remove the `I.B` property, the compilation succeeds.\r\n* If I replace the \"bitwise or\" expression with just one enum element (e.g. `E.X`), the compilation succeeds.\r\n* Same effect appears with other bitwise operations (i.e. conjunction, exclusive disjunction, and negation)\r\n* If I explicitly cast the first element to `I` (i.e. `<I>{ S: 'a', A: E.Y | E.X }`), the compilation succeeds.\r\n* I have noticed that the result of a bitwise operation on operands of an enum type itself has the type `number`. Although the `number` type appears to be implicitly convertible to enum types, this seems strange.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-02T16:14:22.107-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type inference fails with bitwise operators on enums",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 2148
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting that is indeed an issue. Although the result of a bitwise operator is a number, the assignment compatibility rules in 3.8.4 state enums and numbers are compatible.",
+      "PostedDate": "2014-02-03T10:50:17.31-08:00",
+      "Id": 132423
+    }
+  ]
+}

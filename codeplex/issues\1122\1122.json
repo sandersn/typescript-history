@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:35:12.567-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "For beta 0.9 version of the compiler.\r\nThe code in my project gives error\r\n```\r\n        Error\t1\tSupplied parameters do not match any signature of call target:\r\n\tTypes of property '_entityType' of types 'RIAPP.MOD.db.DbSet<TChildItem>' and 'RIAPP.MOD.db.DbSet<Entity>' are incompatible:\r\n\t\tConstruct signatures of types 'RIAPP.MOD.db.IEntityConstructor<TChildItem>' and 'RIAPP.MOD.db.IEntityConstructor<Entity>' are incompatible:\r\n\t\t\tType 'Object' is missing property '__changeType' from type 'RIAPP.MOD.db.Entity'.\tC:\\DATA\\TEMP\\jriappTS\\jriappTS\\modules\\db.ts\t3181\r\n\r\n```\r\nI don't understand why the compiler refers to the type Object.\r\nBecause the types should be compatable TChildItem extends Entity, so it must have  '__changeType' which is inherited from Entity class.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-07T04:46:22.37-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Generics: can not assign derived type to base type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1122
+  },
+  "FileAttachments": [
+    {
+      "FileId": 690724,
+      "FileName": "jriappTSTest.zip",
+      "DownloadUrl": ".\\690724"
+    },
+    {
+      "FileId": 690725,
+      "FileName": "error.jpg",
+      "DownloadUrl": ".\\690725"
+    },
+    {
+      "FileId": 690931,
+      "FileName": "testError.zip",
+      "DownloadUrl": ".\\690931"
+    },
+    {
+      "FileId": 690932,
+      "FileName": "testError2.zip",
+      "DownloadUrl": ".\\690932"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "We've seen a number of issues around this, can you reduce the problem to a couple of lines of code so we can investigate.\n\r\n\r** Closed by paulb 06/07/2013 10:25AM",
+      "PostedDate": "2013-06-07T10:25:33.68-07:00",
+      "Id": 102524
+    },
+    {
+      "Message": "I reduced the project to only one file in it and 139 lines of code (several classes in the project).\r\nTry to open the project in testError.zip in VS2012 disigner it will reduce to compile it and will show you the errors.\r\nP.S. - i could not reduce it to a couple of lines, needed more lines to reproduce.",
+      "PostedDate": "2013-06-07T21:40:13.897-07:00",
+      "Id": 102525
+    },
+    {
+      "Message": "Added testError2.zip.\r\nUse it to test instead testError.zip.",
+      "PostedDate": "2013-06-07T21:50:57.163-07:00",
+      "Id": 102527
+    },
+    {
+      "Message": "Marking active. We do have some bugs here.\r\n\r\nOn line 97 though, there should not be a type parameter (the type is already bound).",
+      "PostedDate": "2013-06-10T12:42:57.173-07:00",
+      "Id": 102684
+    },
+    {
+      "Message": "```\nIf you mean the line     _getItemKey(finf: string, ds: DbSet<Entity>, item: Entity) \n```\nWhere is used  DbSet<Entity> , then it is done purposefully\n\nto allow for this method to accept any DbSet with any generic argument which is descendant of Entity class.\n\nTwo methods further in the code use this method with different generic arguments\n```\n  getParentFKey(item: TParentItem) {\n            return this._getItemKey(\"\", this._parentDS, item);\n   }\n   getChildFKey(item: TChildItem) {\n            return this._getItemKey(\"\", this._childDS, item);\n    }\n\n\n```",
+      "PostedDate": "2013-06-11T00:28:27.63-07:00",
+      "Id": 102751
+    },
+    {
+      "Message": "Pardon please you was referring to line 97\n item = new this._entityType<TItem>(this, null, null);\nI corrected this, but the error persists:\n```\nmodule RIAPP {\n    export class CollectionItem {\n        _fkey: string;\n        constructor() {\n            this._fkey = null;\n        }\n        get _key() { return this._fkey; }\n        set _key(v) {\n            if (v !== null)\n                v = '' + v;\n            this._fkey = v;\n        }\n        get _collection(): Collection<CollectionItem> { return null; }\n    };\n\n\n    export class Collection<TItem extends CollectionItem> {\n        _isLoading: bool;\n        _itemsByKey: { [key: string]: TItem; };\n\n        constructor() {\n            this._isLoading = false;\n            this._itemsByKey = {};\n        }\n\n        _createNew(): TItem {\n            throw new Error('Not Implemented');\n        }\n        get isLoading() { return this._isLoading; }\n        set isLoading(v: bool) {\n            if (this._isLoading !== v) {\n                this._isLoading = v;\n            }\n        }\n    }\n\n    export class ListItem extends CollectionItem {\n        __coll: List;\n        constructor(coll: List) {\n            super();\n            this.__coll = coll;\n        }\n        get _collection() { return this.__coll; }\n    }\n\n    export class List extends Collection<ListItem> {\n        constructor() {\n            super();\n        }\n        _createNew(): ListItem {\n            var item: ListItem = new ListItem(this);\n            return item;\n        }\n        fillItems() {\n            var oldItem: ListItem = <any>this._itemsByKey[\"key\"];\n        }\n        toString() {\n            return \"List\";\n        }\n    }\n\n    export interface IEntityConstructor<TItem extends Entity> {\n        new (dbSet: DbSet<TItem>, row: string[], names: string[]): TItem;\n    }\n\n    export class Entity extends CollectionItem {\n        private __changeType: number;\n        private __dbSet: DbSet<Entity>;\n\n        constructor(dbSet: DbSet<Entity>, row: string[], names: string[]) {\n            this.__dbSet = dbSet;\n            super();\n            this.__changeType = 0;\n        }\n        toString() {\n            return 'Entity';\n        }\n        get _changeType() { return this.__changeType; }\n        set _changeType(v) {\n            if (this.__changeType !== v) {\n                this.__changeType = v;\n            }\n        }\n    }\n\n    export class DbSet<TItem extends Entity> extends Collection<TItem> {\n        //private _dbContext: DbContext;\n        private _dbContext: any;\n        _entityType: IEntityConstructor<Entity>;\n\n        constructor(dbContext: DbContext) {\n            super();\n            this._dbContext = dbContext;\n        }\n        _createNew() {\n            var item: TItem;\n            item = new this._entityType(this, null, null);\n            return item;\n        }\n        get dbContext(): DbContext {\n            return this._dbContext;\n        }\n    }\n\n    export class DbContext {\n        _arrDbSets: DbSet<Entity>[];\n        _dbSets: any;\n\n        constructor() {\n            this._arrDbSets = [];\n            this._dbSets = {};\n        }\n        get arrDbSets() { return this._arrDbSets; }\n        get dbSets() { return this._dbSets; }\n    }\n\n    export class Association<TChildItem extends Entity, TParentItem extends Entity> {\n        _dbContext: DbContext;\n        _parentDS: DbSet<TParentItem>;\n        _childDS: DbSet<TChildItem>;\n\n        constructor(dbContext: DbContext) {\n            this._dbContext = dbContext;\n            this._parentDS = dbContext.dbSets[\"parentName\"];\n            this._childDS = dbContext.dbSets[\"childName\"];\n        }\n        _getItemKey(finf: string, ds: DbSet<Entity>, item: Entity) {\n            return \"\";\n        }\n        getParentFKey(item: TParentItem) {\n            return this._getItemKey(\"\", this._parentDS, item);\n        }\n        getChildFKey(item: TChildItem) {\n            return this._getItemKey(\"\", this._childDS, item);\n        }\n    }\n\n}\n```",
+      "PostedDate": "2013-06-11T00:36:30.303-07:00",
+      "Id": 102754
+    }
+  ]
+}

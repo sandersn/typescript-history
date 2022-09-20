@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "'void' is totally usable in return type positions (arguably the only place where it actually makes sense in a specialization). I don't understand how your proposal would handle parameters not appearing in terminal positions, fields, and so on. Maybe you can post a more real-world example that shows what you're trying to accomplish?",
+    "ClosedDate": "2013-04-29T09:38:34.633-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi, consider the following:\r\n\r\n```\r\ninterface IFoo<T> {\r\n    getFoo(value: T);\r\n}\r\ninterface IBar {\r\n    foo: IFoo<void>;\r\n}\r\nvar bar: IBar;\r\nbar.foo.getFoo(); // Error TS2081 Supplied parameters...\r\n```\r\n\r\nTo make this work we need to make the \"value\" parameter optional:\r\n```\r\ninterface IFoo<T> {\r\n    getFoo(value?: T);\r\n}\r\n```\r\n\r\nBut that then makes it possible to declare IBar.foo with a parameter of an arbitrary type and still have getFoo compiling, which is pretty lax:\r\n```\r\ninterface IBar {\r\n    foo: IFoo<string>; \r\n}\r\nvar bar: IBar;\r\nbar.foo.getFoo(); // obviously no error\r\n```\r\n\r\nIn short, there is no way to explicitly declare a specialisation of IFoo.getFoo that takes no parameters.\r\n\r\nI would like to see \"void\" supported as a valid generic parameter, with no error for `getFoo()`.\r\n",
+    "LastUpdatedDate": "2013-08-13T12:27:36.463-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-29T03:46:34.14-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Void generic type parameter permitted but cannot be used",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 977
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": ">In short, there is no way to explicitly declare a specialisation of IFoo.getFoo that takes no parameters.\n\n&nbsp;\nI thought that makes it pretty clear, no?\n\nHow do I do that? I thought that if I declare ` foo: IFoo<void>;` then I'd be able to write `bar.foo.getFoo();`",
+      "PostedDate": "2013-04-29T10:16:15.12-07:00",
+      "Id": 98802
+    }
+  ]
+}

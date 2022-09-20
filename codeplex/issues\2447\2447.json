@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-18T16:18:54.2-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "A basic example to illustrate the point (this compiles even with `--noImplicitAny` turned on):\r\n\r\n```\r\nfunction countObjects<A>(array: A[], object: A): number {\r\n  return 0;\r\n}\r\n\r\nvar array: string[] = [\"a\"];\r\ncountObjects(array, \"foo\"); // OK\r\nountObjects(array, 34); // SHOULD NOT COMPILE\r\n```\r\n\r\nWhat's biting us in our codebase:\r\n\r\n```\r\n// Used to add some type safety for keys used with our database schema.\r\nclass ModelKey<A> {\r\n  private tag: A;\r\n  constructor(public name: string) {}\r\n}\r\n\r\n// To allow passing around, for instance, lists of keys whose values are guaranteed to be checked at compile-time.\r\nclass KeyValuePair<A> {\r\n  private tag: A;\r\n  constructor(private key: ModelKey<A>, private value: A) {}\r\n}\r\n\r\nvar k = new ModelKey<string>(\"foo\");\r\nnew KeyValuePair(k, \"bar\"); // OK\r\nnew KeyValuePair(k, 123); // SHOULD NOT COMPILE\r\n```\r\n\r\nIt seems as though the type `A` in both of these examples is being up-casted to `any` in order to find a common type with the first parameter, which effectively defeats the purpose of these functions having type annotations at all. I can't think of a reason why this behavior would ever be desirable, even when interfacing with existing JavaScript — is this a bug, or is there a better way to avoid this in TypeScript? Thanks for the help.",
+    "LastUpdatedDate": "2014-04-22T10:17:16.27-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-18T13:56:39.217-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "How to avoid generic type parameters getting implicitly cast to any?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2447
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "By the way, this relates to the bug in TS variance design brought up here: https://typescript.codeplex.com/discussions/428572.",
+      "PostedDate": "2014-04-18T14:05:31.743-07:00",
+      "Id": 142370
+    },
+    {
+      "Message": "Yeah unfortunately this is by design at the moment but obviously pretty undesirable. \n\nNote first that your type parameter is not chosen as ```any``` but rather as the empty object type ```{}```. So if for example your function had returned a value of type ```A``` you would have very quickly realized something was awry:\n\n```TypeScript\ndeclare function countObjects<A>(array: A[], object: A): A;\nvar r = countObjects(['a'], 34); \nvar total = 1 + r; // error, can't add number and {}\n```\n\nWhereas had the type parameter been chosen as ```any``` the code above would also not have had an error.\n\nThe reason for this is because in various situations where the compiler has multiple candidates from which to infer a single type it uses a best common type algorithm that chooses ```{}``` if no more useful type can be determined. Intuitively this makes some sense since it is the case that everything does at least have the members that ```{}``` has and so could be used safely with this inferred type. And then if you try to use something more specific than what ```{}``` has you get an error that clues you into the fact that a type was not determined the way you expected. \n\nUnfortunately though there are cases like this where you just get overtly undesirable behavior because of the particular pattern involved. We've previously considered the idea of a flag like --noImplicitAny but which would cause an error to be thrown if best common type ever chooses {}. The reason this kind of behavior isn't on by default is because there are JavaScript patterns that we want to model with something less permissive than ```any```. In particular, heterogeneous array literals and JSON arrays. Consider:\n\n```TypeScript\nvar x = [1, 'a']; // type of x?\n```\n\nOne option would be ```any``` but that's extremely permissive and pervasive if you do accidentally create such an array. Choosing ```{}``` means this existing pattern is an error and we are able to validate some behavior against the types involved. A flag like I proposed to make your code throw the error you expect would also then cause this array literal to be an error. \n\nDefinitely feel your pain here though, it's something we would like to address.\n\n",
+      "PostedDate": "2014-04-18T16:18:50.083-07:00",
+      "Id": 142381
+    },
+    {
+      "Message": "@danquirk Thanks for responding! We appreciate the detailed answer.\n\nSuch a flag as you propose would be very useful to us; in our codebase, type-safety is more important than not having to type an extra seven characters for to explicitly type something as `any[]` or `{}[]` when heterogeneity is wanted, but it does make sense that for many JS developers, the unsafe version is more desirable.\n\nHowever, I encourage you to look into row polymorphism & related techniques as a way to get around this problem. (I am the creator of Vinyl, a type safe extensible records library with row polymorphism and subtyping for Haskell; please let me know if you need any help in this area, since I have some experience). You would be much better served by making JavaScript objects be typed as proper records, as follows:\n\n```\nvar x = [1, 'a'];\n// type of x is inferred as {0: number; 1: string; rows}\nvar y = {name: \"jon\", dog: {name: \"tucker}} \n// type of y is inferred as {name: string; dog: {name: string}}\n```\n\nThis would provide both better type inference than you already have, support existing JavaScript-style usage patterns, and is totally tractable to implement.\n\nAnd if you implement row polymorphism, your type inference for functions will be greatly improved of course. When a principled version of a type system fails to capture common safe JavaScript usage patterns, the solution should be to enhance the type system, *not* to make the type system accept those patterns at the cost of accepting many more things which are clearly bugs.\n\nAnyway, please let me know if you'd like to discuss this further.",
+      "PostedDate": "2014-04-18T17:11:36.39-07:00",
+      "Id": 142392
+    },
+    {
+      "Message": "As a temporary workaround, would it be possible to simply turn off this behavior for function calls?",
+      "PostedDate": "2014-04-22T10:17:16.27-07:00",
+      "Id": 142642
+    }
+  ]
+}

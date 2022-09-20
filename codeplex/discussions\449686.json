@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1067026",
+    "ThreadId": "449686",
+    "Html": "Consider some code like this:<br />\n<pre><code>declare module MyApp.foo {\n    export interface IMyClass {\n        initialized?: bool;\n        onDestroy? (): void;\n    }\n}\n\nvar myClass = &lt;MyApp.foo.IMyClass&gt;{\n    doSomething: function() {\n        var temp = this;\n    }\n} </code></pre>\n\nWithin the doSomething function of the object literal, if I type &quot;this.&quot;, I expect the IDE to recognize that &quot;this&quot; is of type MyApp.foo.IMyClass. This is not the case. For whatever reason, the IDE thinks &quot;this&quot; is of type &quot;any&quot;. You can confirm this by inspecting the type of the &quot;temp&quot; local variable.<br />\n<br />\nI'm fairly sure this is a bug, since obviously it should see &quot;temp&quot; as type MyApp.foo.IMyClass.<br />\n<br />\nAlso, may be a related issue but I'd expect the compiler to be flagging that whole object literal as invalid because it doesn't implement the IMyClass interface yet. That said, adding the initialized and onDestroy members of the interface doesn't change the fact that it still sees temp as type &quot;any&quot;.<br />\n<br />\nThanks,<br />\n<br />\nBrian<br />\n",
+    "PostedDate": "2013-07-11T06:40:56.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1067141",
+    "ThreadId": "449686",
+    "Html": "I'm not sure if 'this' gets contextually typed outside of class definitions.  With class definitions, we're reasonably confident of what the type of 'this' is, even though the actual type of 'this' at runtime is based on how the function that uses it is called.  We've thought about doing some other cases, like the one you mention, for the time being we don't type 'this' except class definitions.\r<br />\n<br />\nPerhaps a better solution long-term is being able to type 'this' from the function, so that we can enforce that 'this' has been bound correctly at the callsite.<br />\n",
+    "PostedDate": "2013-07-11T10:11:52.06-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1067145",
+    "ThreadId": "449686",
+    "Html": "I see what you mean now. This is part of the reason that CoffeeScript uses @ to reference this. When used with single or fat arrows, it allows @ to be bound either to whatever &quot;this&quot; references (for -&gt;) or bound to the scope in the containing object (=&gt;).\r<br />\n<br />\nRegardless, I suppose it's not a huge deal to just do something like var me : MyType = this;, and then use &quot;me&quot; to gain relevant code completion.\r<br />\n<br />\nThanks,\r<br />\n<br />\nBrian<br />\n",
+    "PostedDate": "2013-07-11T10:23:59.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068202",
+    "ThreadId": "449686",
+    "Html": "Just to add though, a deeper issue may be the fact that the compiler doesn't seem to really recognize that the object is of type IMyClass, since it should flag the object as not implementing the interface in this case. It doesn't, so it's almost like casting the object to the type isn't having any real effect at all.<br />\n",
+    "PostedDate": "2013-07-14T21:57:02.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068400",
+    "ThreadId": "449686",
+    "Html": "Which part of the interface isn't being implemented?<br />\n",
+    "PostedDate": "2013-07-15T06:58:44.98-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1068438",
+    "ThreadId": "449686",
+    "Html": "You're right! I forgot that I had the two fields in the interface marked optional. When I make them required, it flags it correctly. Sorry about that!<br />\n",
+    "PostedDate": "2013-07-15T07:43:24-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135352",
+    "ThreadId": "449686",
+    "Html": "Just wanted to revisit this. I'm not sure if issues within Visual Studio are appropriate here, but a cast object literal still gets no Intellisense or code completion. I understand the previous issue about determining &quot;this&quot; within a method of an object literal. But properties and methods of the type to which the object literal itself is cast should certainly be available for Intellisense, yes? Or does anyone know if this is possibly an issue in VS 2012 that is fixed in VS 2013?<br />\n",
+    "PostedDate": "2013-12-12T21:30:07.59-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

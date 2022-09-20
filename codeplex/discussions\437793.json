@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1020242",
+    "ThreadId": "437793",
+    "Html": "Just checked the specifications of the new generics implementation and I couldn't see a way to deal with some of the more dynamic aspects of JS. \r<br />\n<br />\nAs a use-case I like to refer to the &quot;bind&quot; method on the Function interface. In JS the returned function of this method has of course the same type as the caller function.<br />\n\r<br />\nWill it be possible to declare the bind method in such way that the type system is aware of this?? \r<br />\n<br />\nI couldn't see how this would be achieved in the current implementation (but perhaps I'm missing something. Of course you could always cast the result as a work around, but it would be great if there would be a more elegant solution.<br />\n",
+    "PostedDate": "2013-03-24T02:23:48.38-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1020392",
+    "ThreadId": "437793",
+    "Html": "Result generics shouldn't be too much a problem IMO. Like so:<br />\n<pre><code>declare class Function&lt;T&gt; {\n    (...args: any[]): T;\n    bind(thisArg: any, ...args: any[]): Function&lt;T&gt;;\n}</code></pre>\n\nthough lib.d.ts defines Function as an interface. Specifically for the bind use case, the TypeScript compiler will need to infer that T for all functions internally. I would imagine even this might work for general-purpose proxying:<br />\n<pre><code>declare function proxy&lt;T&gt;(funcToProxy: { (...args: any[]) =&gt; T }): { (...args: any[]) =&gt; T };</code></pre>\n\nor even better:<br />\n<pre><code>declare function proxy&lt;T extends Function&gt;(funcToProxy: T): T;</code></pre>\n\n",
+    "PostedDate": "2013-03-24T14:11:14.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

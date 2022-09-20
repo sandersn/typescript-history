@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This should be fixed with improved handling of 'this' in 0.9.1 and later.",
+    "ClosedDate": "2013-10-29T16:37:13.733-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Here is a painfully common pattern that I use (while working with Knockout):\r\n\r\n```\r\nexport class MyViewModel {\r\n    SomeValue = ko.observable(\"str\");\r\n    StrLength;\r\n\r\n    constructor() {\r\n        this.StrLength = ko.computed( () => this.SomeValue().length );\r\n    }\r\n}\r\n```\r\n\r\nNote that I have to write \"StrLength\" twice for no apparent reason.\r\nThe compiler won't let me initialize StrLength at the point of declaration, because the initializer contains a reference to __this__, and it won't let me just assign it inside the constructor if it's not declared previously.\r\n\r\nVery inconvenient. Feels like a step back compared to plain JS.\r\n\r\n\r\nI understand I could do this:\r\n\r\n```\r\n    constructor() {\r\n        this[\"StrLength\"] = ko.computed( () => this.SomeValue().length );\r\n    }\r\n```\r\n\r\nbut that would cost me the type information, so what's the point?\r\n\r\n\r\n\r\nI'd like to be able to do something like:\r\n```\r\nexport class MyViewModel {\r\n    SomeValue = ko.observable(\"str\");\r\n    StrLength = ko.computed( () => this.SomeValue().length );\r\n}\r\n```\r\n\r\n\r\nOr, at the very least, this:\r\n\r\n```\r\nexport class MyViewModel {\r\n    SomeValue = ko.observable(\"str\");\r\n\r\n    constructor() {\r\n        public this.StrLength = ko.computed( () => this.SomeValue().length );\r\n    }\r\n}\r\n```\r\n\r\n(in the latter case, I will just end up declaring __all__ my properties inside the constructor)\r\n\r\nBoth of these should compile just fine, the only thing to do is relax the compiler's complaining.\r\nYes, I do understand there is a concern about \"undefined\" order of initialization, but can't it just be postulated in the spec?\r\nAnd to make it a bit safer, one could even add a rule that a property initializer can only reference other properties that are declared above it. That should catch all the initializing order issues, while nicely aligning with what one would do in plain JS.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-26T08:18:00.837-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Class property initializers involving \"this\"",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 9,
+    "Id": 846
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "+1\n\nIn an older release of the compiler (either 0.8.1.1 or 0.8.2) the function body of the initializer of a field that was typed as a function was allowed to reference \"this\".\n\nFor example, this code was legal:\n\n```\nexport class MyViewModel {\n    SomeValue = ko.observable(\"str\");\n    StrLength = ko.computed( () => this.SomeValue().length );\n}\n```\n\nIs there a reason why this feature was removed?",
+      "PostedDate": "2013-04-10T20:15:47.26-07:00",
+      "Id": 96710
+    },
+    {
+      "Message": "William, if you think this issue deserves the TypeScript team's attention, could you please vote for it?\n\nThank you.",
+      "PostedDate": "2013-04-10T21:12:30.15-07:00",
+      "Id": 96713
+    },
+    {
+      "Message": "I voted.",
+      "PostedDate": "2013-04-10T21:48:48.42-07:00",
+      "Id": 96715
+    },
+    {
+      "Message": "The ```this``` keyword should be allowed in function/lambda bodies in initializers as their execution is deferred until after the constructor has run.  To me this is a bug.\n",
+      "PostedDate": "2013-05-23T08:26:10.937-07:00",
+      "Id": 100996
+    },
+    {
+      "Message": "While creating some samples to post at https://groups.google.com/forum/#!topic/knockoutjs/NDUGDf1vz0Q (discussion about this issue) I found that, even though the compiler throws errors, it actually compiles and runs without any trouble.\n\nBug indeed.",
+      "PostedDate": "2013-07-16T13:36:47.14-07:00",
+      "Id": 106209
+    },
+    {
+      "Message": "@RJP actually `ko.computed` is not deferred unless you explicitly tell it to be, it's executed when defined so it can evaluate the dependencies.\n\nConcerning the suggestion in the OP:\n> And to make it a bit safer, one could even add a rule that a property initializer can only reference other properties that are declared above it.\n\nThat would be an improvement, but an error would still be thrown in this case:\n```\npublic Foo: KnockoutObservable<string>;\n\npublic Bar: KnockoutObservable<string>;\n\npublic FooBar: KnockoutComputed<string> = ko.computed(() =>\n{\n\treturn this.Foo() + \" \" + this.Bar();\n}, this, { deferEvaluation: true });\n```\n`Foo` and `Bar` are then initialised in the constructor. Besides the error we already had, the same error is now thrown for the second parameter of `computed()` and an additional error is thrown:\n\n> 'this' must only be used inside a function or script context.\n\nI know that `FooBar` is deferred, but the compiler doesn't. So either the error should be relaxed to be a warning, or there should be a way to tell the compiler \"I guarantee you that this function is deferred\".",
+      "PostedDate": "2013-07-31T06:37:20.16-07:00",
+      "Id": 108055
+    },
+    {
+      "Message": "The improved handling of ```this``` in 0.9.1 seems to have resolved this.",
+      "PostedDate": "2013-08-07T04:10:00.293-07:00",
+      "Id": 108820
+    }
+  ]
+}

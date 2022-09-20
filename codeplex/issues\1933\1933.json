@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-21T07:55:31.903-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "This:\r\n``` TypeScript\r\nmodule Test {\r\n\texport module B {\r\n\t\tclass BB extends Test.A.AA {\r\n\t\t\t\r\n\t\t}\r\n\t}\r\n}\r\n\r\nmodule Test {\r\n\texport module A {\r\n\t\texport class AA {\r\n\t\t\t\r\n\t\t}\r\n\t}\r\n}\r\n```\r\ncompiles successfully to:\r\n```Javascript\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar Test;\r\n(function (Test) {\r\n    (function (B) {\r\n        var BB = (function (_super) {\r\n            __extends(BB, _super);\r\n            function BB() {\r\n                _super.apply(this, arguments);\r\n            }\r\n            return BB;\r\n        })(Test.A.AA);\r\n    })(Test.B || (Test.B = {}));\r\n    var B = Test.B;\r\n})(Test || (Test = {}));\r\n\r\nvar Test;\r\n(function (Test) {\r\n    (function (A) {\r\n        var AA = (function () {\r\n            function AA() {\r\n            }\r\n            return AA;\r\n        })();\r\n        A.AA = AA;\r\n    })(Test.A || (Test.A = {}));\r\n    var A = Test.A;\r\n})(Test || (Test = {}));\r\n```\r\n\r\nand this is what node tells me, when I evaluate the JS:\r\n\r\n```bash\r\ntest.js:16\r\n        })(Test.A.AA);\r\n                 ^\r\nTypeError: Cannot read property 'AA' of undefined\r\n    at Test.B.Test.B (/Users/jan/Desktop/tystest/merged.js:16:18)\r\n    at Test (/Users/jan/Desktop/tystest/merged.js:17:7)\r\n    at Object.<anonymous> (/Users/jan/Desktop/tystest/merged.js:19:3)\r\n    at Module._compile (module.js:456:26)\r\n    at Object.Module._extensions..js (module.js:474:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Function.Module.runMain (module.js:497:10)\r\n    at startup (node.js:119:16)\r\n    at node.js:901:3\r\n```\r\ncould you please fix node.\r\n\r\n",
+    "LastUpdatedDate": "2013-11-21T07:55:31.903-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-21T00:40:43.553-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Order of generated code",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1933
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "TypeScript generates code to initialize the values for modules and classes.  If there are dependencies on ordering for this initialization (as there is above with BB on AA) then TypeScript will not reorder the code, and it may fail at runtime (as observed above).  You will need to place AA above BB in the code above.\n\nNote: This is also true cross-file (is AA and BB were declared in different files).  Here TypeScript cannot know which order the emitted script would be included in a web page, so can't determine if there would be ordering errors at runtime.  We have discussed the possibility of detecting some issues within the same file, and may provide warnings/errors here in a future version.",
+      "PostedDate": "2013-11-21T07:55:26.507-08:00",
+      "Id": 123769
+    }
+  ]
+}

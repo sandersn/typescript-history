@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch",
+    "ClosedDate": "2013-08-09T15:55:48.873-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "This can be reproduced in the playground:\r\n\r\n```\r\nmodule Bar\r\n{\r\n  export var a=1;\r\n  function foo() { return a; }\r\n}\r\n\r\n```\r\n\r\nproduces correct code:\r\n\r\n```\r\nvar Bar;\r\n(function (Bar) {\r\n    Bar.a = 1;\r\n    function foo() {\r\n        return Bar.a;\r\n    }\r\n})(Bar || (Bar = {}));\r\n\r\n```\r\n\r\nHowever this\r\n\r\n```\r\nmodule Bar\r\n{\r\n  export var a;\r\n  function foo() { return a; }\r\n}\r\n\r\n```\r\n\r\nwill reference an undefined a (instead of Bar.a):\r\n\r\n```\r\nvar Bar;\r\n(function (Bar) {\r\n    Bar.a;\r\n    function foo() {\r\n        return a;\r\n    }\r\n})(Bar || (Bar = {}));\r\n\r\n```\r\n\r\nI've also encountered other errors that are similar but that are not as easy to reproduce.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T04:05:20.15-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.1 module members 'not defined'",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1439
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This also gives an interesting result:\n\n```\nmodule Bar\n{\n  export var a=\"foo\";\n  export var b=foo(a);\n\n  function foo(x) { return a; }\n  export function bar() { return b; }\n}\n\n```\n\nPaste it into the playground, then replace __x__ with __a__ while watching the output. \n\nBonus case: try it without a param \"foo()\".",
+      "PostedDate": "2013-08-07T04:11:10.603-07:00",
+      "Id": 108821
+    },
+    {
+      "Message": "```\nmodule A {\n\texport var x = \"\";\n\texport function def() {\n\t\twindow[x][x];\n\t}\n}\n```\n\ncompiles to \n```\nvar A;\n(function (A) {\n    A.x = \"\";\n    function def() {\n        window[A.x][x];\n    }\n    A.def = def;\n})(A || (A = {}));\n```",
+      "PostedDate": "2013-08-07T05:42:20.79-07:00",
+      "Id": 108826
+    },
+    {
+      "Message": "Marking active - thanks for exploring this space!",
+      "PostedDate": "2013-08-07T09:50:40.693-07:00",
+      "Id": 108863
+    }
+  ]
+}

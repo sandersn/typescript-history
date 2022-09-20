@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-26T19:37:12.18-08:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "__Step 1__\r\nCreate new __Azure Cloud Service__ project in VS 2013  (this bug appears isolated to Azure projects.  These steps will not reproduce the problem if you create an ASP.NET project that is not an Azure Cloud Service)\r\n\r\n__Step 2__\r\nAdd Visual C# ASP.NET Web Role\r\n\r\n__Step 3__\r\nUse empty project and all defaults.  Your ASP.NET project will be named \"WebRole1\" by default.\r\n\r\n__Step 4__\r\nAdd Test.ts to the root directory of the WebRole1 project within the solution and copy the following module\r\n\r\n```\r\nmodule TestModule {\r\n\r\n    export class TestClass {\r\n        constructor() {\r\n            var x: number = 1;\r\n            var y: number = 2;\r\n            var z: number = x + y;\r\n            return z;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n__Step 5__\r\nAdd new HTML page index.html to the root directory, with the following contents:\r\n\r\n```\r\n<!DOCTYPE html>\r\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\r\n<head>\r\n    <title></title>\r\n    <script type=\"text/javascript\" src=\"/Test.js\"></script>\r\n    <script type=\"text/javascript\">\r\n        /// <reference path=\"Test.ts\" />\r\n        new TestModule.TestClass();\r\n    </script>\r\n</head>\r\n<body>\r\n</body>\r\n</html>\r\n```\r\n\r\nIncidentally, despite the reference tag autocomplete does not recognize the existence of TestModule or TestModule.TestClass().  Oddly, I also found this to be the case when I did my test without Azure, so perhaps this is indicating I’m doing something wrong or perhaps it’s indicating another bug.\r\n\r\n__Step 6__\r\nSet breakpoint in index.html at the line containing the constructor call: new TestModule.TestClass();\r\n\r\n__Step 7__\r\nStart the debugger but hitting the play button in Visual Studio 2013\r\n\r\n__Step 8__\r\nThe debugger should stop at the breakpoint in your index.html file.\r\nHit F11 to step into the constructor for TestModule.TestClass.\r\n\r\nYou will see a tab labeled \"Source Not Available\" with the message:\r\n\r\n\"Source information is missing from the debug information for this module\"\r\n\r\n__Version Information__\r\nVisual studio 2013\r\nTypeScript 0.9.1.1\r\nAzure 2.2, as evidenced by...\r\n\r\nLooking at the Microsoft.WindowsAzure.ServiceRuntime reference, I see\r\nVersion: 2.2.0.0\r\nRuntime: v4.0.30319\r\nPath: C:\\Program Files\\Microsoft SDKs\\Windows Azure\\.NET SDK\\v2.2\\ref\\Microsoft.WindowsAzure.ServiceRuntime.dll\r\n\r\n__Note__\r\nI believe I've seen the same problem in Visual Studio 2012 as well, and on different devices.  I’d always assumed there must be something special or wrong with my configuration, as I have a number of projects that have survived many versions of typescript and I'd suspected that the problem was due to legacy issues with their config files.  Having reproduced this with a simple new project, I'm convinced this problem is unlikely to be unique to me.\r\n\r\nI have reproduced these steps for an ASP.NET project that does not run in Azure and at Step 8, when I hit F11, the debugger opens the typescript file and shows the first step into the constructor.",
+    "LastUpdatedDate": "2013-11-26T19:37:12.18-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-22T08:57:15.577-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "TypeScript symbols not loading in Azure Cloud Service projects",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1941
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I don't repro this with the Azure 2.2 SDK on Visual Studio 2013.\n\nWhich version of the Azure SDK are you using?\n\nPlease reopen when you have more info using the button on top.\n\r\n\r** Closed by paulb 11/22/2013 11:44AM",
+      "PostedDate": "2013-11-22T11:44:48.927-08:00",
+      "Id": 123961
+    },
+    {
+      "Message": "Visual studio 2013\r\nTypeScript 0.9.1.1\r\nAzure 2.2, as evidenced by...\r\n\r\nLooking at the Microsoft.WindowsAzure.ServiceRuntime reference, I see\r\nVersion: 2.2.0.0\r\nRuntime: v4.0.30319\r\nPath: C:\\Program Files\\Microsoft SDKs\\Windows Azure\\.NET SDK\\v2.2\\ref\\Microsoft.WindowsAzure.ServiceRuntime.dll",
+      "PostedDate": "2013-11-22T15:32:15.627-08:00",
+      "Id": 123962
+    },
+    {
+      "Message": "Can you try with the 0.9.5 beta and see if that works? https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta",
+      "PostedDate": "2013-11-25T09:37:46.54-08:00",
+      "Id": 124173
+    },
+    {
+      "Message": "Happily, after downloading 0.9.5 and re-running that same Azure project, debugging works as it should.  (Although I do see two copies of the .ts below the .js file.)\n",
+      "PostedDate": "2013-11-25T10:10:24.823-08:00",
+      "Id": 124184
+    },
+    {
+      "Message": "Great to here!  \n\nWe'll look into the \"two copies\" issue, but hopefully this is just a 'quirk' and doesn't block you from debugging.  Please reopen if you do hit further issues that impact your ability to debug Azure projects.",
+      "PostedDate": "2013-11-25T21:37:08.83-08:00",
+      "Id": 124271
+    },
+    {
+      "Message": "OK.  Problem is now that I can't actually publish the project to Azure anymore.  Seems to be some interaction between Azure and Typescript with .js files.\n\nI get messages of the form:\nError\t110\tUnable to copy file \"C:\\Users\\stus\\Source\\Workspaces\\passwordphile\\Passchooser\\Telepathwords Service\\Extensions.js\" to \"C:\\Users\\stus\\Source\\Workspaces\\passwordphile\\Passchooser\\Telepathwords Service.Azure\\obj\\Release\\Telepathwords Service\\C:\\Users\\stus\\Source\\Workspaces\\passwordphile\\Passchooser\\Telepathwords Service\\Extensions.js\". The given path's format is not supported.\tC:\\Program Files (x86)\\MSBuild\\Microsoft\\VisualStudio\\v12.0\\Windows Azure Tools\\2.2\\Microsoft.WindowsAzure.targets\t2668\t5\tTelepathwords Service.Azure\n\nNote that there seem to be two paths connected to each other as the destination.  I've actually removed all references to the .js files in my project, so they should only exist as TypeScript outputs.\n\nThe Azure targets file issues seems to relate to this clause in the XML.\n\n    <!-- Publish the web to the intermediate folder -->\n    <Copy\n      Condition=\" '@(CurrentRoleWebFiles)' != '' \"\n      SourceFiles=\"@(CurrentRoleWebFiles)\"\n      DestinationFiles=\"@(CurrentRoleWebFiles->'$(IntermediateWebOutputPath)%(TargetPath)')\"\n      SkipUnchangedFiles=\"true\" />\n\n    <Message Text=\"WebRoleReferences=@(WebRoleReferences) %(RoleType), %(RoleName), %(ProjectName), %(Configuration), %(Platform), %(SourceDir), %(OutputDir), %(EntryPoint)\" />\n",
+      "PostedDate": "2013-11-26T07:21:15.177-08:00",
+      "Id": 124306
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 11/25/2013 9:37PM",
+      "PostedDate": "2013-11-25T21:37:14.73-08:00",
+      "Id": 124307
+    },
+    {
+      "Message": "Thanks.  We caught that one for the final 0.9.5 release, and checked in a fix for it this past Friday (so it's not in the Beta unfortunately).  The final 0.9.5 release should be out shortly, and this should resolve the issue.  (I'll keep this open 'til it does and you confirm).  My apologies for the frustration of running into these issues.",
+      "PostedDate": "2013-11-26T08:11:39.253-08:00",
+      "Id": 124310
+    },
+    {
+      "Message": "Fixed indeed.  Consider this one fully closed.",
+      "PostedDate": "2013-11-26T10:37:19.093-08:00",
+      "Id": 124345
+    },
+    {
+      "Message": "Great.  Thanks!",
+      "PostedDate": "2013-11-26T19:37:07.313-08:00",
+      "Id": 125403
+    }
+  ]
+}

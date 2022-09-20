@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "(See comments)",
+    "ClosedDate": "2013-05-01T16:41:53.353-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi, here is the repro:\r\n\r\n```\r\ninterface IFoo {\r\n    foo<T>(bar: () => T): void;\r\n}\r\nvar baz: IFoo;\r\nvar callback = () => {\r\n    return true;\r\n}\r\nbaz.foo<void >(callback);\r\n```\r\n\r\nThe generic IFoo.foo method accepts a callback that returns T. When T is of type void I would expect that to mean the provided callback has no return value.\r\n\r\nHowever, we are able to provide a callback that _does_ have a return value, with the compiler choosing to remain silent on this one.\r\n\r\nAny other type for T produces an error, as expected.\r\n```\r\n// TS2082: Supplied parameters do not match any signature of the call target\r\nbaz.foo<string>(callback);\r\n```\r\n",
+    "LastUpdatedDate": "2013-05-01T16:41:53.353-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-01T13:50:45.253-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic type \"void\" not enforced as return value",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 988
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Consider this code:\n\n```\n// Writes a message, returns void\nfunction writeMessage1(msg: string): void {\n    console.log('hello there! ' + msg)\n}\n\n// Usefully returns the number of characters written\nfunction writeMessage2(msg: string): number {\n    var m = 'hello ' + msg;\n    console.log(m);\n    return m.length;\n}\n\nfunction callMeMaybe<T>(x: (T) => void, arg: T) {\n    if (Math.random() > 0.5) {\n        x(arg);\n    }\n}\n\n// (string) => void matches (string) => void\ncallMeMaybe(writeMessage1, 'one');\n\n// (string) => number matches (string) => void\ncallMeMaybe(writeMessage2, 'two');\n```\n\nLogically speaking, why would we reject the second call? Is this actually likely to be an error? I don't think it is. There are tons of methods that return values only for the purpose of chaining (e.g. Array#sort, Array#reverse, which simply return the operand) that are still entirely suitable for use in a context where the return value is not needed.\n\nCallback typings should be read from the consumption side, not the provider side (this is why you should basically never have optional parameters in a callback type definition). A 'void' return type indicates that the code invoking the callback doesn't expect a return value.",
+      "PostedDate": "2013-05-01T16:41:44.18-07:00",
+      "Id": 99098
+    }
+  ]
+}

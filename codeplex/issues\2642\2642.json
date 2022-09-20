@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-08-18T19:33:48.043-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI'm getting this error: \"Uncaught TypeError: Cannot read property 'prototype' of undefined\", in this generated code:\r\n\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;  // <-- Here is the error for var b\r\n    d.prototype = new __();\r\n};\r\n\r\nI see this error in a lot of forums ans discussions but almost all of them talk about using the --out property of the compiler to concatenate all ts in one js; but I'm not using that property and also generating the js with --module AMD.\r\n\r\nHere are my typescript code associated with the error:\r\n\r\nControl.ts:\r\n\r\nexport class Control \r\n{\r\n    public GetRoot(): HTMLElement { return null; }\r\n\r\n    public AttachObservers(): void\r\n    {\r\n        this.OnAttachObservers();\r\n    }\r\n\r\n    public DetachObservers(): void\r\n    {\r\n        this.OnDetachObservers();\r\n    }\r\n\r\n    public OnAttachObservers(): void { }\r\n\r\n    public OnDetachObservers(): void { }\r\n}\r\n\r\nMenuControl.ts;\r\n\r\nimport import1 = require(\"Apps.Engine/Pages/Form/Controls/Control\")\r\nimport import2 = require(\"Platforms.Desktop/Controls/Styles/PlatformMenuStyle\")\r\nimport import3 = require(\"Core/Foundation/Collection\")\r\nimport import4 = require(\"Apps.Engine.Themes.Compilation/CompiledLayouts\")\r\nimport import5 = require(\"Apps.Engine/Pages/Frame\")\r\nimport import6 = require(\"Apps.Engine/Environment\")\r\nimport import7 = require(\"Platforms.Desktop/Controls/PlatformOverlay\")\r\nimport import8 = require(\"Platforms.Desktop/Controls/Layouts/LayoutList\")\r\nimport import9 = require(\"Apps.Engine/Pages/Form/Controls/MenuCategoryItem\")\r\nimport import10 = require(\"Apps.Engine/SR.Designer\")\r\nimport import11 = require(\"System/Action\")\r\nimport import12 = require(\"Platforms.Desktop/Controls/PlatformButton\")\r\nimport import13 = require(\"Apps.Engine/Pages/Events/EventFactory\")\r\n\r\nexport class MenuControl extends import1.Control\r\n{\r\n    private _style: import2.PlatformMenuStyle;\r\n    private _categories: import3.Collection<any>;\r\n    private _categoryItemsOverlay: HTMLDivElement;\r\n    private _compiledLayouts: import4.CompiledLayouts;\r\n    private _frame: import5.Frame;\r\n\r\n    constructor(frame: import5.Frame, environment: import6.Environment)\r\n    {\r\n    \tsuper();\r\n        this._categories = environment.GetConfig().MenuCategories;\r\n        this._style = environment.GetTheme().StyleGuide.MenuStyle;\r\n        this._categoryItemsOverlay = MenuControl.CreateCategoryItemsOverlay();\r\n        this._compiledLayouts = environment.GetTheme().Layouts;\r\n        this._frame = frame;\r\n    }\r\n\r\n    public static CreateCategoryItemsOverlay(): HTMLDivElement\r\n    {\r\n        return import7.PlatformOverlay.CreateOverlay();    \r\n    }\r\n\r\n    public GetRoot(): HTMLElement\r\n    {\r\n        return this._compiledLayouts.CreateMenuLayout(this.ResolvePlaceholdersLists);\r\n    }\r\n    \r\n    public ResolvePlaceholdersLists(name: string, layoutList: import8.LayoutList): void\r\n    {\r\n        switch (name)\r\n        {\r\n            case \"Menu\":\r\n                for (var i: number = 0; i < this._categories.Count; i++)\r\n                {\r\n                    var categoryItem = new import9.MenuCategoryItem(this._categoryItemsOverlay, this._categories[i], this._style, this._compiledLayouts, this._frame.NavigateFromMenuTo);\r\n                    var categoryButton = this.CreateCategoryButton(this._categories[i], categoryItem.OnMenuCategoryClick);\r\n\r\n                    layoutList.Add(categoryButton);\r\n                }\r\n                break;\r\n            default:\r\n                throw import10.SR.UnexpectedPlaceholderList(name);\r\n        }\r\n    }\r\n\r\n    private CreateCategoryButton(menuCategory: any, onCategoryClick: typeof import11.ActionT): HTMLButtonElement\r\n    {\r\n        var newCategoryButton = import12.PlatformButton.Create2(menuCategory.Title, this._style.CategoryStyle);\r\n        var categoryClickHandler = import13.EventFactory.CreateHandler4(newCategoryButton, onCategoryClick);\r\n        import12.PlatformButton.SetMouseDownHandler(newCategoryButton, categoryClickHandler);\r\n\r\n        return newCategoryButton;\r\n    }\r\n    \r\n    public OnAttachObservers(): void\r\n    {\r\n    }\r\n\r\n    public OnDetachObservers(): void\r\n    {\r\n    }\r\n}\r\n\r\nAnd here are my VS properties to compile Typescript (I'm using VS2012 with Typescript 1.0):\r\n\r\n<PropertyGroup Condition=\"'$(Configuration)' == 'Debug'\">\r\n    <TypeScriptTarget>ES3</TypeScriptTarget>\r\n    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>\r\n    <TypeScriptSourceMap>true</TypeScriptSourceMap>\r\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\r\n  </PropertyGroup>\r\n  <PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">\r\n    <TypeScriptTarget>ES3</TypeScriptTarget>\r\n    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>\r\n    <TypeScriptSourceMap>false</TypeScriptSourceMap>\r\n    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>\r\n  </PropertyGroup>\r\n\r\nSorry if this is not an issue, but I'm reporting here because everywhere i read that i this case I not should get this error.\r\n\r\nThanks.\r\n\r\n[Edit]: Excuse me i just realized that my code u wrong, please close this issue and sorry for taking away yout time.",
+    "LastUpdatedDate": "2014-08-18T19:33:48.043-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-08-14T07:35:02.2-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Execute error with inheritace (AMD)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2642
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We've moved to GitHub. Please log issues there https://github.com/Microsoft/TypeScript/issues",
+      "PostedDate": "2014-08-18T19:33:36.01-07:00",
+      "Id": 155705
+    }
+  ]
+}

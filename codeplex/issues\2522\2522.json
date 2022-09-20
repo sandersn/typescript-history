@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.3-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I'm writing some TypeScript code that requires comments in the JS output but the comments are being removed. I'm not specifying \"--removeComments\" in the command line but the comments are removed anyways.\r\n\r\nAs a test I did try adding \"--removeComments\" to the command line but it had no effect.\r\n\r\n```\r\ninterface Multiline\r\n{\r\n    (funcWithComment:() => void):string;\r\n    stripIndent(funcWithComment:() => void):string;\r\n}\r\ndeclare var multiline:Multiline;\r\n\r\nvar text:string = multiline(function() {/*\r\n    This is some text.\r\n\r\n    It will show up indented.\r\n*/});\r\n\r\nvar text:string = multiline.stripIndent(function() {/*\r\n This is some text.\r\n\r\n It will not show up indented.\r\n*/})\r\n```\r\n\r\ngenerates:\r\n\r\n```\r\nvar text = multiline(function () {\r\n});\r\n\r\nvar text = multiline.stripIndent(function () {\r\n});\r\n```\r\n\r\nno comments.\r\n\r\nI compiled it with:\r\n\r\n> tsc multiline-tests.ts\r\n\r\nand tried\r\n\r\n> tsc --removeComments multiline-tests.ts\r\n\r\nI'm using tsc version 1.0.0.0.\r\n\r\nThank you,\r\n\r\nSam\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-25T21:41:26.4-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Comment preservation issues",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2522
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "It's always fun to check which comments actually come out the other end:\n\nHere's a little test (not complete by any means)\n```typescript\n/*1*/function/*2*/x/*3*/(/*4*/)/*5*/{/*6*/}\nfunction y() {\n\t/*7*/\n}\nfunction z() {\n\t/*8*/;/*9*/\n}\nfunction w() {\n\t/*10*/x/*11*/;/*12*/\n}\nfunction q() {\n\t/*13*/ 777 /*14*/;/*15*/\n}\n```\nOut comes 1, 4, 7, 10, 12, 13 (twice!), and 15.   (The double emit of 13 is fixed in the develop branch).\n\nIf you can put a newline between the { and the comment then it will show up in the javascript.",
+      "PostedDate": "2014-05-26T20:30:42.72-07:00",
+      "Id": 147962
+    },
+    {
+      "Message": "\nWrote a partial patch for this here:\nhttps://typescript.codeplex.com/SourceControl/network/forks/jbondc/typescript/contribution/6910\n\nIt's been bugging me for quite some time, there's probably much more cases when comments are missed / not emitted",
+      "PostedDate": "2014-05-30T12:26:12.853-07:00",
+      "Id": 148413
+    },
+    {
+      "Message": "It's generally the case that the compiler only preserves comments that are attached to tokens (for some notion of token) but this does lead to many being dropped in places. The original implementation was a little ad hoc and we opted to fix the highest priority comment preservation issues (ie the places people were realistically most likely to write comments and want them preserved) with the intention of doing a more complete rewrite to a system that maintains the full fidelity of exactly where comments were and what they were attached to while parsing (rather than trying to continually do one off fixes for 'comments not preserved when I write x' for many different x's over and over).",
+      "PostedDate": "2014-05-30T12:32:06.157-07:00",
+      "Id": 148416
+    },
+    {
+      "Message": "I can't find an existing issues for comment preservation that fits so I'm just going to turn this into a general item people can upvote according to how much they value the feature and folks can include additional examples with issues we can use for test cases for a general solution.",
+      "PostedDate": "2014-05-30T12:33:56.017-07:00",
+      "Id": 148417
+    },
+    {
+      "Message": "Awesome, would be great to see better comment preservation, updated my patch so tests are ok.\n\nBit of a hack but using this code to avoid duplicate comments:\n\n // avoid duplicate comments\n475\t             var commentId = comment.start() +'.'+comment.end();\n\t             if(commentId === this.lastCommentId)\n477\t                 return;\n\nThere's some tricky cases like:\nvar foo // some comment\n\nComes out:\nvar foo // some comment\n;\n\nIdeally should be:\nvar foo; // some comment\n\n",
+      "PostedDate": "2014-06-01T16:49:30.877-07:00",
+      "Id": 148506
+    },
+    {
+      "Message": "I've run into this issue a few times, and it often takes some effort to determine how to structure TS code and place comments so they're preserved in the JS output. This is especially important when trying to work with ajaxmin-style ///#DEBUG conditional comments.\n\nMost recently, I've noticed the TS compiler seems to have significant trouble keeping track of comments in and around switch statements.\n\nExample 1:\n```\nvar dennis: number;\nswitch (dennis) {\n      // Stripped\n      case 1:\n            // Stripped\n            break;\n      case 2:\n            // Preserved\n            doSomething();\n            // Stripped\n            break;\n      // Stripped\n}\n```\n\nExample 2:\n```\n// Preserved                  \nif (foo) {}\n \n// Stripped\nswitch (foo) {}\n```\n",
+      "PostedDate": "2014-06-16T09:22:08.94-07:00",
+      "Id": 149830
+    }
+  ]
+}

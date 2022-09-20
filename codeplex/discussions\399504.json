@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "927131",
+    "ThreadId": "399504",
+    "Html": "\r\n<p><span>On TypeScript Definitions... (and 3rd Party JS libraries such as knockoutjs, expressjs, etc)...</span><br>\r\n<br>\r\n<span>I'm finding that it's a mess out in the wild... This project (</span><a rel=\"nofollow\" href=\"https://github.com/borisyankov/DefinitelyTyped\" target=\"_blank\">https://github.com/borisyankov/DefinitelyTyped</a><span>) hopes to bring things together, but\r\n there is a fundamental flaw in this approach... Firstly it's a project not a portal, and second, there is no version correlation between the published library and the definition file. I've raised the latter as an issue here:&nbsp;</span><span><a rel=\"nofollow\" href=\"https://github.com/borisyankov/DefinitelyTyped/issues/2\" target=\"_blank\">https://github.com/borisyankov/DefinitelyTyped/issues/2</a><br>\r\n<br>\r\nThis needs to be addressed by MS fast and a coordinated open source repository needs to be set up, much like npmjs.org (not NuGet because that is MS specific) so that people can contribute the definitions in one place...<br>\r\n<br>\r\nFor now, however, it is quite difficult to figure out what version of a library a definition refers to. For example have a look at the express.d.ts in the (<a rel=\"nofollow\" href=\"https://github.com/borisyankov/DefinitelyTyped\" target=\"_blank\">DefinitelyTyped</a>)\r\n project. This was copied from the MS samples but defines the 2.x express lib. We use the 3.x version... Also, there are at least 3 variants for the knockoutjs d.ts all of which define the library differently!<br>\r\n<br>\r\nSo... making sure we are using the correct/best defined d.ts is taking time!!!</span></p>\r\n",
+    "PostedDate": "2012-10-15T23:24:45.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "927516",
+    "ThreadId": "399504",
+    "Html": "<p>I couldn't agree more.&nbsp; We're actively working on a solution to this now.&nbsp; Like you said,&nbsp;we need&nbsp;a one-stop way to find definitions, coordinate (so we can hopefully avoid having many versions of typings for the same library), and make it clear what versions of a library are supported.&nbsp; Until this is in place, working with projects like&nbsp;DefinitelyTyped in the interim may help at least make it easier to track down declare files and contribute fixes.</p>\r\n<p>I'm going to move this&nbsp;to an feature request in the issue tracker.&nbsp; We can use that to brainstorm features this service should have.</p>",
+    "PostedDate": "2012-10-16T09:18:27.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "927518",
+    "ThreadId": "399504",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/267\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-10-16T09:18:47.18-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928174",
+    "ThreadId": "399504",
+    "Html": "<p>Jon, would you elaborate a bit on this '<span>We're actively working on a solution to this now. '</span></p>\r\n<p>I was thinking on creating a web site, similar to nuget, but feeded with definitions from DefinitelyScripted. No point to start, if you are doing something already?!?</p>",
+    "PostedDate": "2012-10-17T10:11:54.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928782",
+    "ThreadId": "399504",
+    "Html": "<p>@borisyankov, I like your site repository.... but it does not solve the problem completely nor would a site with just type definitions.</p>\r\n<p>I feel there is a more fundamental problem to which I&nbsp;elaborate&nbsp;<a href=\"http://typescript.codeplex.com/workitem/267\">here</a>.<br />I will post the comment here again because I feel it is extremely important to catch this early!</p>\r\n<div>\r\n<p>There are a number of considerations to take into account for file name versioning that points to abstracting module dependencies.  For example the express.d.ts from the MS sample includes a reference to node.d.ts at the head of the file which introduces an implied dependency between the express.d.ts and node.d.ts.</p>\r\n<p>Adding version numbering to the file names, for example a reference to node.0.8.x.d.ts in the header of an express.3.x.d.ts would create a 'hard' dependency to a specific version of the nodejs definition.</p>\r\n<p>Nodejs uses package.json files with a 'dependencies' entry that has a very nice/flexible way of expressing dependency versions.  Something like that for definitions may work be great...</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: green;\">// Note that 'path' was removed because the source of the dependency may not reside in a fixed location for all use cases</span>\r\n<span style=\"color: green;\">//&lt;reference module='node' ver='&gt;=0.8.0' /&gt; </span>\r\n<span style=\"color: green;\">//&lt;reference module='express' ver='3.x' /&gt;</span>\r\n<span style=\"color: green;\">//&lt;reference module='underscore' src='https://github.com/alvivi/typescript-underscore/blob/master/underscore.d.ts' /&gt;</span>\r\n</pre>\r\n</div>\r\n</div>\r\n<p>The above means that the compiler would need to probe known locations to resolve .d.ts files that match the criteria in the reference directives. &nbsp;The Node Package Manager (npm) does this so I'm sure the TypeScript engine or an extension could be made do this too.</p>",
+    "PostedDate": "2012-10-18T07:59:36.557-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928815",
+    "ThreadId": "399504",
+    "Html": "<p>I agree completely.</p>\r\n<p>On the versioning side, waiting on the TypeScript team to think of a better solution, something like what you suggest would work much better.</p>\r\n<p>On the 'community site' side, my idea was in addition to the site itself, that it would be a Nuget repository. This would work perfectly for Visual Studio developers. You are correct though, that not everyone uses it, nor develops on Windows.</p>",
+    "PostedDate": "2012-10-18T08:46:13.943-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929517",
+    "ThreadId": "399504",
+    "Html": "<p>It sounds like we're moving in the same direction (and it makes sense to talk about what we're thinking, too).&nbsp; Ultimately, a service like npm or nuget would be ideal.&nbsp; Let people search for the declare files they need and let the tool grab whatever dependencies they have (whether other declare files or optionally the .js files themselves)</p>\r\n<p>Going along with AnotherWay's suggestion, having a file like the npm package.json for each declare file would be helpful.&nbsp; It's also something that future services could use.&nbsp; Our version of a package.json might have:</p>\r\n<ul>\r\n<li>The name of the package</li>\r\n<li>A list of dependencies, if any, of this package</li>\r\n<li>The name of the library being wrapped</li>\r\n<li>The url to the library (and version) being wrapped</li>\r\n<li>The version of the current wrapper</li>\r\n<li>The version of the library being wrapped</li>\r\n<li>The version of TypeScript used in wrapping</li>\r\n</ul>\r\n<p>I like how you can describe multiple things in the npm version, like a dependency and a required version, or an external dependency and its location, so maybe some of those bullets could be merged.</p>",
+    "PostedDate": "2012-10-19T09:59:19.81-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930263",
+    "ThreadId": "399504",
+    "Html": "<p>Great to see things are moving in that direction!</p>\r\n<p>I trust there will be some quality control by the owners of such a service. &nbsp;What we are seeing is very different ways to define the same .d.ts file for the exact same external library. &nbsp;I guess this will settle down as people find the preferred way to make these definitions.</p>\r\n<p>Having a solid source of definition files would, in my opinion, be a huge factor in TypeScript's adoption in the community!</p>",
+    "PostedDate": "2012-10-21T22:42:19.077-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024332",
+    "ThreadId": "399504",
+    "Html": "On this topic, I posted a suggestion to move the DefinitelyTyped defniitions to Bower: <a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/428\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/issues/428</a>\r<br />\n<br />\nThis keeps the definitions in GitHub and leverages (what's becoming) a standard client side package manager for JS.  \r<br />\n<ul>\n<li>I can specify a dependency on a specific version</li>\n<li>I can keep the branches in sync between the TS repo and the library repo</li>\n<li>I can provide additional TS specific documentation in a README.md and point back to the original documentation</li>\n<li>I can also include a bower update in my web deployment script to pull down the dependent components rather than check them into the application's repo (I did this for Azure Git Deploy).</li>\n<li>\nPlus, this repo can still act as the container for TS declaration files by setting up a submodule to the above repo.<br />\n</li>\n</ul>\nI tried this out with the hammerjs library, calling the Bower package 'hammerjs-ts'.  Pulling in this declarations file will also pull in the hammerjs library as a dependency.  We probably need a package naming convention for TypeScript declarations.<br />\n",
+    "PostedDate": "2013-04-02T09:08:53.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066876",
+    "ThreadId": "399504",
+    "Html": "A related discussion that touches on many of these points can be found here:\r<br />\n<br />\n<a href=\"https://github.com/borisyankov/DefinitelyTyped/issues/427\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/issues/427</a>\r<br />\n<br />\nFor early adopters of TypeScript, managing d.ts files is certainly a major pain point. Out of date d.ts files and/or lack of d.ts files for anything other than the most recent version of JS library I feel seriously undermine what TypeScript has to offer. In large-scale projects sometimes it feels like what you gain from the TypeScript language features are lost by having to manage poorly maintained or built d.ts files.<br />\n",
+    "PostedDate": "2013-07-10T22:19:10.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1104718",
+    "ThreadId": "399504",
+    "Html": "Please see a proposed solution here: <a href=\"https://typescript.codeplex.com/discussions/461449\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/461449</a><br />\n",
+    "PostedDate": "2013-10-07T12:25:08.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

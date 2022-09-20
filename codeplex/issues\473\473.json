@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Unfortunately if you have circular references, you'll have to specify the files in a correct order (in this case, driver.ts first, or just driver.ts).",
+    "ClosedDate": "2013-01-30T14:18:04.513-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I noticed that when a ts file has a class hierarchy defined, the reference path are emitted in the wrong place, after the __extend function or not at all.\n\n",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-21T06:16:48.227-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "reference path are emmitted in wrong place in js file, or not at all",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 473
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm seeing something similar: reference-path code containing module definitions is ending up after code that is attempting to use it, leading to run-time errors accessing the undefined module members. I believe this worked correctly in 0.8.0 (I wrote a lot of code at the same time as upgrading to 0.8.1, so can't be 100% certain the same code would emit properly under 0.8.0.)",
+      "PostedDate": "2012-11-22T12:06:43.62-08:00",
+      "Id": 82894
+    },
+    {
+      "Message": "Can you post some code and the command-line you used that reproduces the issue? Thanks!",
+      "PostedDate": "2012-11-26T17:11:06.39-08:00",
+      "Id": 83079
+    },
+    {
+      "Message": "Here's a pared-down version of what I have; it looks like it comes down to circular references, and the order in which they're specified:\n\n-- foo.ts --\n/// <reference path=\"driver.ts\"/>\n\nmodule foo.bar {\n    export class B { baz: bool; }\n}\n\nconsole.log(foo.bar.A);\n\n\n-- bar.ts --\n/// <reference path=\"driver.ts\"/>\n\nmodule foo.bar {\n    export function A {\n        return false;\n    }\n}\n\n-- driver.ts --\n/// <reference path=\"foo.ts\"/>\n/// <reference path=\"bar.ts\"/>\n\n\nIf I compile with\n    tsc -out foobar.js foo.ts bar.ts driver.ts \n\nthe result is useable; but if I have\n    tsc -out foobar.js driver.ts foo.ts bar.ts \n\nthe reference to foo.bar.A is made before it's declared.\n\nI'm using the TypeScript VS Extension, which makes up its own command line -- which is unfortunately of the wrong form. Perhaps if I rename driver.ts to zzzzz.ts ...\n\n\nNote that this isn't the same problem that OP brought up, regarding extending classes, but my guess is that it's a similar issue - order of inclusion when references are multiply defined.\n",
+      "PostedDate": "2012-11-27T11:52:26.907-08:00",
+      "Id": 83123
+    }
+  ]
+}

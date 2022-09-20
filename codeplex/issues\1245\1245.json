@@ -1,0 +1,101 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch.",
+    "ClosedDate": "2013-08-08T18:10:31.477-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "relevant for 0.9.0.0 release\r\n\r\nI tried to compile attached project \r\nthe same as in Issue : https://typescript.codeplex.com/workitem/1118\r\nwhich is attached by the names  jriappTSGenerics3.zip and jriappTSGenerics4.zip \r\n\r\nthe compiler crashes now (as in beta) bur gives new error description\r\nError\t1\tUnable to get value of the property 'setHasGenericSignature': object is null or undefined\tC:\\DATA\\TEMP\\jriappTS\\jriappTS\\EXEC\tjriappTS\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-26T02:53:38.923-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Unable to get value of the property 'setHasGenericSignature': object is null or undefined ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 1245
+  },
+  "FileAttachments": [
+    {
+      "FileId": 697017,
+      "FileName": "jriappTSGenerics3.zip",
+      "DownloadUrl": ".\\697017"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "but now jriappTSGenerics3.zip  project can not be compiled\neven when i use \n```\nprivate _dbContext: any;\n```\nsee comments for  [ISSUE workitem 1118 ](https://typescript.codeplex.com/workitem/1118 )\nwhere the condition for the project is to be compiled successfully is described",
+      "PostedDate": "2013-06-26T02:59:42.42-07:00",
+      "Id": 104188
+    },
+    {
+      "Message": "This example can not be reduced to a simple one.\nBecause this internal compiler error can not give meaningfull error description. It just crashes with internal error. And I could compile this project in beta version (it is described in workitem 1118).\n",
+      "PostedDate": "2013-06-26T15:50:28.47-07:00",
+      "Id": 104276
+    },
+    {
+      "Message": "in beta  version the attached here project is compiled successfuly.\nin 0.9.0.0 there's internal compiler's error\n",
+      "PostedDate": "2013-06-26T15:54:12.95-07:00",
+      "Id": 104277
+    },
+    {
+      "Message": "Thanks for the report. I believe the minimal repro is this (extracted from modules\\db.ts):\r\n\r\nexport interface A<T> {\r\n    new (dbSet: DbSet<T>): T;\r\n}\r\n\r\nexport class DbSet<T> {\r\n    _entityType: A;\r\n    get entityType() { return this._entityType; }    \r\n}\r\n\r\nThe problem is you have a property with a generic that lacks a type parameter (_entityType) but the error isn't being reported due to the presence of the getter. This cascades into an internal compiler error later on. In the previous releases we allowed you to write generic types without a type parameter and just assumed you meant 'any' which might explain why it worked with the beta release.",
+      "PostedDate": "2013-06-27T18:21:44.603-07:00",
+      "Id": 104456
+    },
+    {
+      "Message": "Seems , it is not what you have figured out.\nNow, if i remove db.ts module at all, the compiler stumbles on the collection.ts module with the same internal error.\n",
+      "PostedDate": "2013-06-27T23:46:02.707-07:00",
+      "Id": 104484
+    },
+    {
+      "Message": "The bug is much nastier than that\nYou can try to compile one single module\n```\n module RIAPP {\n    export class CollectionItem {\n    \n    };\n\n    \n    export class Collection<TItem extends CollectionItem>  {\n        _items: TItem[];\n        \n        constructor() {\n            this._items = [];\n        }\n\n        get items() { return this._items; }\n    }\n}\n\n```\nand you will get the same error\nso after fixing this, please fix workitem 1118\nit does not give me to proceed further to convert the project. It just stopped on that bug.",
+      "PostedDate": "2013-06-28T00:23:08.213-07:00",
+      "Id": 104486
+    },
+    {
+      "Message": "P.S. if you comment line\nget items() { return this._items; }\nit will compile - OK",
+      "PostedDate": "2013-06-28T00:24:10.863-07:00",
+      "Id": 104487
+    },
+    {
+      "Message": "Strange, i dont't know what version on ts.exe typescript plaground uses,\nbut it can not be reproduced there.\nOnly when i try to compile with ts 0.9.0.0",
+      "PostedDate": "2013-06-28T00:32:03.513-07:00",
+      "Id": 104488
+    },
+    {
+      "Message": "and the same error in 0.9.0.1",
+      "PostedDate": "2013-06-29T23:16:33.207-07:00",
+      "Id": 104671
+    },
+    {
+      "Message": "I get the same problem in 0.9.0.1\nIt seems that the problem is when compiler tries to do type inference on the getter's return value and probably crashes there with the reported internal error.\n\nIf you explicit the correct return type, it will compile correctly:\nget items(): TItem[] { return this._items; }\n\nIt took me a while to find this.. so I'm glad to share it :)",
+      "PostedDate": "2013-07-31T03:00:27.17-07:00",
+      "Id": 108041
+    },
+    {
+      "Message": "This issue persists in 0.9.1. Although lucapierobon's solution fixed this issue.",
+      "PostedDate": "2013-08-14T09:31:42.04-07:00",
+      "Id": 109890
+    }
+  ]
+}

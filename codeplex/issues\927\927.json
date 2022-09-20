@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We close issues that we need more information on so we can keep track of which issues need our attention. As you can see, you can always re-open the bug with more information.\n\nWe've definitely extensively looked at all the available JavaScript OOP patterns for class-based design. The __extends function represents the \"prototypal inheritance\" pattern (https://github.com/shichuan/javascript-patterns/blob/master/code-reuse-patterns/prototypal-inheritance.html). Rather than using Object.create, which is ES5-only, we use the polyfill version (https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create) with some minification and inlining to make the generated code smaller. Our experience has been that the people who do look at the generated code tend to recognize this pattern pretty quickly.\n\nA critical thing for us is that your code semantics don't change between different module targets. We can't generate some inheritance code in Node and some other code for other module systems and expect this to work reliably. We also don't want to have TypeScript code have random other dependencies (\"it compiles to JavaScript, BUT you need this other thing...\") unless it's absolutely necessary.\n\nThis issue isn't really tracking any bugs per se, so it'd be more constructive to take any further points here to the forum where the rest of the community can engage more transparently. We'd prefer to keep the issue tracker limited to things like \"I'd expect X to work, but instead Y happens\" rather than general philosophical questions about what the generated code means or why we chose it. You can also use Stack Overflow if you want to understand the generated code more deeply. Thanks for checking us out!",
+    "ClosedDate": "2013-04-22T13:24:18.193-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm seeing that this repo https://github.com/shichuan/javascript-patterns is highly valued by the community.\r\n\r\nI'm concerned that:\r\n\r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\n```\r\nis not one of the preferred methods here:\r\n\r\nhttp://shichuan.github.io/javascript-patterns/#code-reuse-patterns\r\n\r\nIt could be that it is but I can't really recognize it?\r\n\r\nI was reading the spec but didn't really get any reasoning behind why that specific pattern is used?\r\n\r\nWhen using nodejs, why are we not using the smth like `utils.inherits`",
+    "LastUpdatedDate": "2013-04-22T13:24:18.193-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-19T12:53:27.457-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Consider alternative inheritance method (look into js patterns) + node-specific one",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 927
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Hi Ryan - I can. Why is that issue closed though? That was without even a chance for me of giving you details.\n\nThe issue stands. I ask of the typescript team to look into the patterns above and give the developers some sort of an idea of why `__extend` is what it is.\n\nRegarding my comment for nodejs usage:\n\nNode.js already has the `util.inherits` which extends objects' prototype. Can you not used it + some static method inheritance instead of `__extend`? \n\nI want to see less generated `__extend` functions around. Let's keep it dry. Can you not generated a module that takes care of inheritance ( alternative to `util`) and just import that module to nodejs files that use inheritance?\n\n",
+      "PostedDate": "2013-04-20T01:11:41.73-07:00",
+      "Id": 97555
+    },
+    {
+      "Message": "Can you be more specific on what you think needs to happen?\n\r\n\r** Closed by RyanCavanaugh 04/19/2013 3:12PM",
+      "PostedDate": "2013-04-19T15:12:50.37-07:00",
+      "Id": 97556
+    }
+  ]
+}

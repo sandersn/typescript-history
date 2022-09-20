@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-10-21T10:10:31.277-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Consider the following:\r\n\r\n```\r\nmodule A {\r\n\tclass A {}\r\n\texport var x = 1;\r\n}\r\n```\r\n\r\nIn TypeScript this code looks quite innocuous but if we look at the generated JavaScript:\r\n\r\n```\r\nvar A;\r\n(function (A) {\r\n    var A = (function () {\r\n        function A() {\r\n        }\r\n        return A;\r\n    })();\r\n    A.x = 1;\r\n})(A || (A = {}));\r\n```\r\n\r\nWe see that inside the module function the class variable A overrides the parameter A referencing the module, causing every export declaration after the class declaration to be exported on the class instead of the module.\r\n\r\nThe same goes for interfaces, enums, etc. Anything that causes var A; to be emitted inside a function(A) { … } context.\r\n\r\nGiven that the TypeScript code compiles without error or warning and that this pattern of having types inside modules with the same name is quite common I consider this a rather serious bug.",
+    "LastUpdatedDate": "2013-10-21T10:10:31.277-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-20T15:17:51.433-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Cannot have a class in a module of the same name",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1820
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "New codegen detects this and will rename the module parameter until it works:\n\n```\nvar A;\n(function (_A) {\n    var A = (function () {\n        function A() {\n        }\n        return A;\n    })();\n    _A.x = 1;\n})(A || (A = {}));\n```",
+      "PostedDate": "2013-10-21T10:10:17.737-07:00",
+      "Id": 119077
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1098300",
+    "ThreadId": "458859",
+    "Html": "While improving the express.d.ts file of DefinitelyTyped I noticed something I thought was a bit weird. Not sure if it's according to spec or if it is a bug.\r<br />\n<br />\nSince express needs to be callable and at the same time it's a namespace. I am using the merged declarations with export assignment &quot;trick&quot;. The following is a reduced example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// e.d.ts</span>\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&quot;e&quot;</span> {\n    <span style=\"color:Blue;\">function</span> inner_e(): inner_e.Foo;\n\n    <span style=\"color:Blue;\">module</span> inner_e {\n        <span style=\"color:Blue;\">interface</span> Foo {\n            blargh: <span style=\"color:Blue;\">string</span>;\n        }\n\n        <span style=\"color:Blue;\">interface</span> Bar {\n            toString(): <span style=\"color:Blue;\">string</span>;\n            foo_to_bar: (foo: Foo) =&gt; Bar;\n        }\n    }\n\n    <span style=\"color:Blue;\">export</span> = inner_e;\n}\r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">//main.js</span>\n<span style=\"color:Green;\">///&lt;reference path=&quot;e.d.ts&quot; /&gt;</span>\n\n<span style=\"color:Blue;\">import</span> e = require(<span style=\"color:#A31515;\">&#39;e&#39;</span>);\n\n<span style=\"color:Blue;\">var</span> something = e();\n\n<span style=\"color:Blue;\">function</span> f(x: e.Foobar) {\n    console.log(x.toString());\n}\r\n</pre></div>So everything works properly, types are being checked. e is both callable and a container with types at the same time. But I thought that the members of inner_e would have to be explicitly exported to be usable as in e.Foobar in f's prototype. Is this some intended behavior since it is an ambient module or am I missing something?<br />\n",
+    "PostedDate": "2013-09-23T18:55:55.977-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1098706",
+    "ThreadId": "458859",
+    "Html": "Yeah, as you suspected this is because the module declaration for inner_e is ambient. From 12.1.5 of the spec:\r<br />\n<br />\n&quot;Except for ImportDeclarations, AmbientModuleElements always declare exported entities regardless of whether they include the optional export modifier.&quot;\r<br />\n<br />\nThe thinking being that if you're describing a set of types/values to be imported, why would you describe unusable (ie non-exported) ones? Either inner_e has those interfaces exported (meaning they would be in your ambient module declaration) or you wouldn't bother to write them at all since they'd be invisible to the user of the module. So you can be explicit and add the export keyword but it is implicitly there even if omitted. <br />\n",
+    "PostedDate": "2013-09-24T11:47:26.173-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

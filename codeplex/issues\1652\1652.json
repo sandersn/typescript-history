@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Looks like this didn't make it in 0.9.5, but does work as expected in the current develop branch.",
+    "ClosedDate": "2014-01-14T14:01:11.313-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "develop branch, `v0.9.1-449-g7f4cb8e`\r\n\r\nConsider this simple code\r\n```\r\nvar x = [].concat([{a:1}],[{a:2}])\r\n          .map(b => b.a);\r\n\r\nconsole.log(x);\r\n```\r\nCompilation errors out with\r\n```\r\n$ node 0.9/typescript/bin/tsc.js concat-map.ts\r\nc:/javascript/typescript/concat-map.ts(2,23): error TS2094: The property 'a' does not exist on value of type 'undefined'.\r\n```\r\nApparently, the return type of `concat` is not inferred correctly, involving `undefined` instead of `any` (which is what the current playground gives). Replacing the `[]` with `[{a:0}]` circumvents the error, but is not available as a workaround when the concatenated arrays are variable and we need to create a new array.",
+    "LastUpdatedDate": "2014-01-14T14:01:11.313-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-06T07:58:55.677-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "type inference regression: undefined for concat/map",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1652
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting, we're taking a look.",
+      "PostedDate": "2013-09-06T15:01:29.353-07:00",
+      "Id": 112729
+    },
+    {
+      "Message": "`git bisect` with `node bin/tsc.js concat-map.ts` shows\n```\n8d65a58d4df4f912ddee3b99f8ea8b7272e5763f is the first bad commit\ncommit 8d65a58d4df4f912ddee3b99f8ea8b7272e5763f\nAuthor: Cyrus Najmabadi <...>\nDate:   Fri Aug 23 15:24:11 2013 -0700\n\n    Update LKG.\n```\nLeading up to that, there is\n```\ncommit eb72c3641a1b01db8f35583891b1665a928f8635\nAuthor: Joe Pamer <...>\nDate:   Sun Aug 18 15:39:09 2013 -0700\n\n    - Change empty array literal type inference to use the type 'undefined[]' as opposed to 'any[]'\n    - Remove primitive type restriction on type parameter constraints\n```\n\nI assume the intention was to distinguish between \"unspecified\" (`undefined`) and \"unspecifiable\" (`any`), hoping that the context will refine the type. Which does not work out for the `concat-map.ts` example.\n\nProbably related: https://typescript.codeplex.com/workitem/1747",
+      "PostedDate": "2013-10-04T14:14:20.013-07:00",
+      "Id": 117511
+    },
+    {
+      "Message": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.\n\r\n\r** Closed by RyanCavanaugh 11/19/2013 1:27PM",
+      "PostedDate": "2013-11-19T13:27:44.303-08:00",
+      "Id": 123748
+    },
+    {
+      "Message": "How is this fixed? Compilation still has errors:\r\n\r\n```\r\n$ node bin/tsc.js concat-map.ts\r\nc:/javascript/typescript/concat-map.ts(1,12): error TS2082: Supplied parameters do not match any signature of call target:\r\n        Could not apply type 'undefined' to argument 1 which is of type '{ a: number; }[]'.\r\nc:/javascript/typescript/concat-map.ts(1,12): error TS2087: Could not select overload for 'call' expression.\r\n\r\n$ git describe\r\nv0.9.1-1474-gf22a9d2\r\n```\r\n",
+      "PostedDate": "2013-11-21T03:36:09.493-08:00",
+      "Id": 123749
+    },
+    {
+      "Message": "Looks fixed in develop, but not in release (oversight?)\n```\n$ git branch -v\n  develop       8f48eda Addressed CR feedback\n* release-0.9.5 f22a9d2 Update LKG\n```",
+      "PostedDate": "2013-11-26T02:51:24.473-08:00",
+      "Id": 124280
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-02T08:59:35.883-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI'm adding typing to an existing JavaScript facility via the use of overloaded constants:\r\n\r\n```\r\n\r\ninterface TypedCommand<T extends Function> {\r\n    register: T;\r\n}\r\n\r\ninterface Commands {\r\n    (commandName: string): TypedCommand<any>;\r\n    (commandName: \"a\"): TypedCommand<{ (foo: number): string }>;\r\n}\r\n\r\nvar command: Commands;\r\n\r\ncommand(\"a\").register((foo: number) => { return \"baz\" }); // Good\r\ncommand(\"a\").register(\"hello\"); // Bad\r\n```\r\n\r\nIn 9.1.1, the second statement would fail. Furthermore, I would receive completions for \"register\" that matched the signatures I am expecting. This is no longer the case as of 9.5. The second statement compiles just fine and I get no completions at all on .register.\r\n",
+    "LastUpdatedDate": "2014-03-31T16:07:48.103-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-29T10:04:07.837-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic specializations on overloaded constants no longer observed in 9.5",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1957
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Strange - after uninstalling 9.5, going to 9.1.1 and then back to 9.5, this now works largely as I would expect it.\n\nThe completions for  \"command(\"a\").\" show the generic signature for .register (it is of T), while the completions for \"command(\"a\").register(\" show the specific overload, which is a bit less than ideal but a very minor issue overall.",
+      "PostedDate": "2013-11-29T14:32:36.617-08:00",
+      "Id": 125656
+    },
+    {
+      "Message": "The overload resolution rules have changed in 0.9.5; see https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9\n\nLong story short, specialized signatures should always go above non-specialized signatures now. The first applicable overload will always be chosen.\n\nYour code should look more like this in 0.9.5:\n\n```\ninterface TypedCommand<T extends Function> {\n    register: T;\n}\ninterface Commands {\n    // N.B. changed signature to match what's shown below\n    (commandName: \"a\"): TypedCommand<{ (n: (foo: number) => string); }>;\n    (commandName: string): TypedCommand<any>;\n}\n\nvar command: Commands;\n\ncommand(\"a\").register((foo: number) => { return \"baz\" }); // Good\ncommand(\"a\").register(\"hello\"); // Bad\n\n```",
+      "PostedDate": "2013-12-02T08:59:30.753-08:00",
+      "Id": 125789
+    },
+    {
+      "Message": "Thanks Ryan, I caught that late last week after reading the breaking changes again. In my actual code, I have multiple modules that supplement the Commands interface. In that scenario, none of the interface extensions had the signature for TypedCommand<any>, which led to a lot of confusion as some commands \"worked\" and some didn't, depending on if they were declared in the \"original\" declaration of Commands or not.",
+      "PostedDate": "2013-12-02T09:33:57.327-08:00",
+      "Id": 125794
+    }
+  ]
+}

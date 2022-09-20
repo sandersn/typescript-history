@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1245476",
+    "ThreadId": "545368",
+    "Html": "Hi, I have this angular controller\r<br />\n<br />\nmodule Ordini.Controllers {<br />\n<pre><code>export interface IOrdiniScope extends ng.IScope {\n    ProvinciaNascitaVisibile: boolean;\n    ProvinciaNascitaSelezionata: string;\n    StatoEsteroNascitaVisibile: boolean;\n    ComuneNascitaVisibile: boolean;\n\n    CambiaProvinciaNascita: Function;\n}\n\nexport class OrdiniController\n{\n    private scope: IOrdiniScope;\n\n    constructor($scope: Controllers.IOrdiniScope) {\n        this.scope = $scope;</code></pre>\n\n...<br />\n<pre><code>        this.scope.CambiaProvinciaNascita = this.CambiaProvinciaNascita;\n    }\n\n    private CambiaProvinciaNascita()\n    {\n        this.scope.ProvinciaNascitaVisibile = false;\n        ....\n    }\n }</code></pre>\n\n} \r<br />\n<br />\nand this razor view<br />\n<pre><code>                    @Html.DropDownList(&quot;ProvinciaNascita&quot;, ViewBag.ProvincieNascita as SelectList, new\n           {\n               style = &quot;BORDER-BOTTOM: #DDDDDD 1px solid; BORDER-LEFT: #DDDDDD 1px solid; WIDTH: 60%; BORDER-TOP: #DDDDDD 1px solid; BORDER-RIGHT: #DDDDDD 1px solid&quot;,\n               @class = &quot;required&quot;, ng_show=&quot;ProvinciaNascitaVisibile&quot;, ng_model=&quot;ProvinciaNascitaSelezionata&quot;, ng_change=&quot;CambiaProvinciaNascita()&quot;\n           })</code></pre>\n\nThe constructor is called correctly, and the scope is set correctly in the member variable, but when I select an Item in the combobox the function is called correctly but the scope is undefined.\r<br />\nAm I missing something?\r<br />\n<br />\nthanks,\r<br />\n  Luca<br />\n",
+    "PostedDate": "2014-05-14T13:03:39.463-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246270",
+    "ThreadId": "545368",
+    "Html": "<code>CambiaProvinciaNascita</code> is called with a wrong context (<code>this</code>). You can fix it like this:<br />\n<pre><code>export class OrdiniController {\n    private scope: IOrdiniScope;\n\n    constructor($scope: IOrdiniScope) {\n        this.scope = $scope;\n        this.scope.CambiaProvinciaNascita = this.CambiaProvinciaNascita;\n    }\n\n    private CambiaProvinciaNascita = () =&gt; {\n        this.scope.ProvinciaNascitaVisibile = false;\n    }\n }\n</code></pre>\n\nNote how I've changed the defenition of the <code>CambiaProvinciaNascita</code> method. Here is a <a href=\"http://www.typescriptlang.org/Playground#src=export%20class%20OrdiniController%20%7B%0A%20%20%20%20private%20scope%3A%20IOrdiniScope%3B%0A%0A%20%20%20%20constructor(%24scope%3A%20IOrdiniScope)%20%7B%0A%20%20%20%20%20%20%20%20this.scope%20%3D%20%24scope%3B%0A%20%20%20%20%20%20%20%20this.scope.CambiaProvinciaNascita%20%3D%20this.CambiaProvinciaNascita%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20private%20CambiaProvinciaNascita%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20this.scope.ProvinciaNascitaVisibile%20%3D%20false%3B%0A%20%20%20%20%7D%0A%20%7D%0A%20%0A%20export%20interface%20IOrdiniScope%20%7B%0A%20%20%20%20ProvinciaNascitaVisibile%3A%20boolean%3B%0A%20%20%20%20ProvinciaNascitaSelezionata%3A%20string%3B%0A%20%20%20%20StatoEsteroNascitaVisibile%3A%20boolean%3B%0A%20%20%20%20ComuneNascitaVisibile%3A%20boolean%3B%0A%0A%20%20%20%20CambiaProvinciaNascita%3A%20Function%3B%0A%7D\" rel=\"nofollow\">link to playground</a> for you to take a look at the generated JS code.<br />\n",
+    "PostedDate": "2014-05-16T11:21:35.083-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246272",
+    "ThreadId": "545368",
+    "Html": "By the way, it's a violation of established JS naming conventions to name methods with an initial capital letter.<br />\n",
+    "PostedDate": "2014-05-16T11:24:58.773-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

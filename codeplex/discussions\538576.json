@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1221252",
+    "ThreadId": "538576",
+    "Html": "My codes:\r<br />\n<br />\ninterface DelegateFun {<br />\n<pre><code>(a: number): number;\n(a: number, b: number): number;</code></pre>\n\n}\r<br />\n<br />\nI can say：\r<br />\n<br />\nvar a: DelegateFun = (a) =&gt;\r<br />\n{<br />\n<pre><code>return a;</code></pre>\n\n};\r<br />\n<br />\nBut I cannot say：\r<br />\nvar a:DelegateFun=(a,b)=&gt;{……};\r<br />\nIt seems that if you define more than one object type in an interface, only the object type with less parameters will be the default one, others will be ignored, right?\r<br />\n<br />\nAnother question is：__Can such interfaces be implemented directly by a class？If not, where's the usage of such interfaces with more than one object types?__<br />\n",
+    "PostedDate": "2014-03-10T18:33:51.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221589",
+    "ThreadId": "538576",
+    "Html": "Your interface is not defining more than one object type, it's defining more than one call signature for the type. Now an instance can be called like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> d: DelegateFun;\n<span style=\"color:Blue;\">var</span> r = d(1);\n<span style=\"color:Blue;\">var</span> r2 = d(1,2);\r\n</pre></div>so from that you can see why allowing this assignment:<br />\n<pre><code>d = (a,b) =&gt; { ... } // what if the body of this lambda dots off of b?</code></pre>\n\nisn't safe. You've provided an implementation that has 2 required parameters when the interface explicitly says it can be called with only a single parameter. \r<br />\n<br />\nInterfaces with call signatures cannot be implemented by classes. The usage is exactly as you attempted to do above. You can still use it to provide strong typing over function expressions, lambdas, or object literal types.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> d: DelegateFun;\n<span style=\"color:Blue;\">var</span> a = (a) =&gt; a + 1;\na(<span style=\"color:#A31515;\">&#39;hello&#39;</span>); <span style=\"color:Green;\">// no error</span>\n<span style=\"color:Blue;\">var</span> d: DelegateFun = (a) =&gt; a + 1;\nd(<span style=\"color:#A31515;\">&#39;hello&#39;</span>); <span style=\"color:Green;\">// error</span>\n\n<span style=\"color:Blue;\">var</span> x: { d: DelegateFun; } = { d: (a: <span style=\"color:Blue;\">string</span>) =&gt; a }; <span style=\"color:Green;\">// error</span>\n<span style=\"color:Blue;\">var</span> y: { d: DelegateFun; } = { d: (a: <span style=\"color:Blue;\">number</span>) =&gt; a }; <span style=\"color:Green;\">// no error</span>\r\n</pre></div>",
+    "PostedDate": "2014-03-11T12:33:38.907-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-03-12T18:27:40.583-07:00"
+  },
+  {
+    "Id": "1221673",
+    "ThreadId": "538576",
+    "Html": "<strong>danquirk wrote:</strong><br />\n<blockquote>\nYour interface is not defining more than one object type, it's defining more than one call signature for the type. Now an instance can be called like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> d: DelegateFun;\n<span style=\"color:Blue;\">var</span> r = d(1);\n<span style=\"color:Blue;\">var</span> r2 = d(1,2);\r\n</pre></div></blockquote>\nMany thanks!<br />\nBut there's a strange thing——I can write &quot;var r2=d(1,2)&quot; but I never define a function for d(1,2) （two parameters）at all……And the result will be the same d(1)——Why? I'm using 1.0RC version of TS and VS is 2012. I can see that the converted js file is a(1,2)……<br />\n",
+    "PostedDate": "2014-03-11T19:05:34.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221685",
+    "ThreadId": "538576",
+    "Html": "<strong>danquirk wrote:</strong><br />\n<blockquote>\nso from that you can see why allowing this assignment:<br />\n<pre><code>d = (a,b) =&gt; { ... } // what if the body of this lambda dots off of b?</code></pre>\n\nisn't safe. You've provided an implementation that has 2 required parameters when the interface explicitly says it can be called with only a single parameter. <br />\n</blockquote>\nNice explainations! But this causes another syntax problem——First I wanna confirm this:\r<br />\n<br />\nIf you use<br />\n<pre><code>interface ICaller\n{\n   (a:number):number;\n}</code></pre>\n\nThis, in fact, equals to:<br />\n<pre><code>var b:{(a:number):number)}=&gt;{……};</code></pre>\n\nNow we cannot define more than one object type to substitute for &quot;{(a:number):number)}&quot;——because obviously speaking, it cannot return you more than one object type. Right?\r<br />\n<br />\nIf so, why the interface allows us to define more than one object types? I mean this:<br />\n<pre><code>interface ICaller\n{\n   (a:number):number;\n   (a:number,b:number):number;   //This should be wrong, because a variable applied by ICaller cannot return you the object type at all!\n}</code></pre>\n\nAnother example is:<br />\n<pre><code>interface ICaller\n{\n   (a:number):number;\n   (b:string):string;\n}</code></pre>\n\nHow can you use that?<br />\n",
+    "PostedDate": "2014-03-11T20:03:16.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221687",
+    "ThreadId": "538576",
+    "Html": "<blockquote>\nvar d: DelegateFun = (a) =&gt; a + 1;<br />\nd('hello'); // error<br />\n</blockquote>\nNo, this is right. Because DelegateFun is using only one object type, this will be compiled as this below:<br />\n<pre><code>var d:{(a:number):number}=(a)=&gt;{return a+1;};</code></pre>\n\nI can pass the compile and run well in an HTML page when referring the ts file.<br />\n<br />\n<strong>PS: Ignore you pass 'hello' as a string parameter causing the problem;)</strong><br />\n",
+    "PostedDate": "2014-03-11T20:06:28.717-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222141",
+    "ThreadId": "538576",
+    "Html": "<strong>ProgramVolunteer wrote:</strong><br />\n<blockquote>\nBut there's a strange thing——I can write &quot;var r2=d(1,2)&quot; but I never define a function for d(1,2) （two parameters）at all……And the result will be the same d(1)——Why? I'm using 1.0RC version of TS and VS is 2012. I can see that the converted js file is a(1,2)……<br />\n</blockquote>\nThis is behavior inherited from JavaScript. Calling a function with more arguments than it requires is ok (as long as the types of the listed parameters do match).\r<br />\n<br />\n<strong>ProgramVolunteer wrote:</strong><br />\n<blockquote>\nNow we cannot define more than one object type to substitute for &quot;{(a:number):number)}&quot;——because obviously speaking, it cannot return you more than one object type. Right?<br />\n<br />\nIf so, why the interface allows us to define more than one object types? I mean this:<br />\n<pre><code>interface ICaller\n{\n   (a:number):number;\n   (a:number,b:number):number;   //This should be wrong, because a variable applied by ICaller cannot return you the object type at all!\n}</code></pre>\n\nAnother example is:<br />\n<pre><code>interface ICaller\n{\n   (a:number):number;\n   (b:string):string;\n}</code></pre>\n\nHow can you use that?<br />\n</blockquote>\nThese are equivalent:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> ICaller {\n    (a: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">number</span>;\n}\n\n<span style=\"color:Blue;\">var</span> i: ICaller;\n<span style=\"color:Blue;\">var</span> x: { (a: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">number</span> };\nx = i;\ni = x;\r\n</pre></div>Your last two interfaces are names for types which have multiple call signatures. An implementation for those types can handle these overloads however they choose. For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> ICaller {\n    (a: <span style=\"color:Blue;\">number</span>): <span style=\"color:Blue;\">number</span>;\n    (b: <span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">var</span> i: ICaller = (x: <span style=\"color:Blue;\">any</span>) =&gt; {\n    <span style=\"color:Blue;\">if</span> (<span style=\"color:Blue;\">typeof</span> x === <span style=\"color:#A31515;\">&#39;number&#39;</span>) {\n        <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;1;\n    } <span style=\"color:Blue;\">else</span> <span style=\"color:Blue;\">if</span> (<span style=\"color:Blue;\">typeof</span> x === <span style=\"color:#A31515;\">&#39;string&#39;</span>) {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&#39;hello&#39;</span>;\n    }\n}\n<span style=\"color:Blue;\">var</span> r1 = i(1); <span style=\"color:Green;\">// number</span>\n<span style=\"color:Blue;\">var</span> r2 = i(<span style=\"color:#A31515;\">&#39;&#39;</span>); <span style=\"color:Green;\">// string;</span>\n<span style=\"color:Blue;\">var</span> r3 = i(<span style=\"color:Blue;\">true</span>); <span style=\"color:Green;\">// error, i only accepts a number or a string</span>\r\n</pre></div>",
+    "PostedDate": "2014-03-12T16:41:33.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-03-12T18:27:25.36-07:00"
+  },
+  {
+    "Id": "1222164",
+    "ThreadId": "538576",
+    "Html": "So must I convert number, boolean type to &quot;any&quot;, other types are all &quot;reference types&quot; so can be implicitly converted to &quot;any&quot;?<br />\n",
+    "PostedDate": "2014-03-12T18:27:20.413-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1226145",
+    "ThreadId": "538576",
+    "Html": "No. The reason for the cast to 'any' in the last example is because for a function with multiple return statements and no return type annotation the compiler must infer a return type by determining a best common type. There is no useful best common type between string and number, but there is between string and any. Alternatively, when possible you could just use an explicit return type annotation. Ex:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// error</span>\n<span style=\"color:Blue;\">function</span> foo() {\n    <span style=\"color:Blue;\">if</span> (<span style=\"color:Blue;\">true</span>) {\n        <span style=\"color:Blue;\">return</span> 1;\n    } <span style=\"color:Blue;\">else</span> {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&#39;&#39;</span>;\n    }\n}\n\n<span style=\"color:Green;\">// no error</span>\n<span style=\"color:Blue;\">function</span> foo2() {\n    <span style=\"color:Blue;\">if</span> (<span style=\"color:Blue;\">true</span>) {\n        <span style=\"color:Blue;\">return</span> &lt;<span style=\"color:Blue;\">any</span>&gt;1;\n    } <span style=\"color:Blue;\">else</span> {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&#39;&#39;</span>;\n    }\n}\n\n<span style=\"color:Green;\">// no error</span>\n<span style=\"color:Blue;\">function</span> foo3(): <span style=\"color:Blue;\">any</span> {\n    <span style=\"color:Blue;\">if</span> (<span style=\"color:Blue;\">true</span>) {\n        <span style=\"color:Blue;\">return</span> 1;\n    } <span style=\"color:Blue;\">else</span> {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&#39;&#39;</span>;\n    }\n}\r\n</pre></div>",
+    "PostedDate": "2014-03-24T11:59:33.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

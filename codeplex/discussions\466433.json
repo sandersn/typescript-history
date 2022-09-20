@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1119129",
+    "ThreadId": "466433",
+    "Html": "I'm building a fairly large library, and for practical reasons, I have all of the code split into 10 or so files by area of responsibility.<br />\n<br />\nEach file has co-dependencies on classes/functions/vars exported by other files.<br />\n<br />\nThe consumer of the full library will need access to potentially all of the exported classes/functions/vars.<br />\n<br />\nI read <a href=\"http://stackoverflow.com/questions/14287954/compiling-multiple-typescript-files#answer-14288752\" rel=\"nofollow\">this explanation</a>, and it did clarify some things for me - for one, I'm pretty sure I should build this library separately from any program that might consume the library.<br />\n<br />\nI'd like the build the library using <code>--out filename.js --module=AMD --declaration</code> so that the full library gets compiled into a single-file library with a declaration file, so that I can build programs that consume this library as a single external component dependency.<br />\n<br />\nAt the moment, I am not using <code>module</code> statements in the files. Should I? If so, should (or can) I use the same module-name for each file in the entire library?<br />\n<br />\nDo I have to explicitly <code>import</code> every referenced function/class/var in every individual file?<br />\n<br />\nFor reference, can you post a link to a library (with source code) that was built in this way?<br />\n<br />\nThanks!<br />\n",
+    "PostedDate": "2013-11-06T10:30:47.51-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119424",
+    "ThreadId": "466433",
+    "Html": "Modules in separate files works just fine and is a good way to go.  If you're compiling to a single file and not using <code>export</code> then you don't need <code>import</code>.\r<br />\n<br />\nMy project has hundreds of classes all sharing the same root namespace.  Lame example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// one file</span>\n<span style=\"color:Blue;\">module</span> x.y.z {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Foo {}\n}\n\n<span style=\"color:Green;\">// another file</span>\n<span style=\"color:Blue;\">module</span> x.y.q {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> Bar {\n        member: x.y.z.Foo = <span style=\"color:Blue;\">null</span>;\n    }\n}\r\n</pre></div>",
+    "PostedDate": "2013-11-06T14:41:00.213-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1119886",
+    "ThreadId": "466433",
+    "Html": "My problem is, this is not an application, it's a library divided into individual files for practical purposes.<br />\n<br />\nAll of the symbols in these files are top-level exports, e.g. <code>export function xyz()</code> - and there are inter-dependencies between the classes/function/vars across files.<br />\n<br />\nEssentially, it's all one module, but I really want to avoid using the <code>module</code> keyword, since putting all of these functions/classes/vars in a namespace would require me to run around and qualify every reference to every symbol with the name of the namespace, throughout the entire codebase, which would look horrible.<br />\n<br />\nI was hoping I would be able to use top-level exports and generate a declaration-file. Then compile the library into a single file with <code>--module AMD</code> so that the exports won't pollute the global namespace, but so that references between symbols in the library itself would still be top-level symbols.<br />\n<br />\nIt appears that's not going to be possible?<br />\n",
+    "PostedDate": "2013-11-07T09:20:19.923-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1120191",
+    "ThreadId": "466433",
+    "Html": "TypeScript does not support --out when using external modules (i.e. compiling for AMD or CommonJS module systems).  When using external modules, one source file === one module.<br />\n\r<br />\nYou can use something like r.js to optimize the output into one JavaScript file after compilation (see <a href=\"http://www.requirejs.org/docs/optimization.html\" rel=\"nofollow\">http://www.requirejs.org/docs/optimization.html</a> )\r<br />\n<br />\nMulti-source-file external modules are a common request, and we've had many discussions on it, but unfortunately it's not something we're likely to get to for the v1.0 timeframe.<br />\n",
+    "PostedDate": "2013-11-07T19:04:57.893-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1120459",
+    "ThreadId": "466433",
+    "Html": "Yes, I discovered <code>--out</code> and <code>--module</code> don't work together. (you would think there would be an error-message for that, but it just quietly ignores <code>--out</code>.)\r<br />\n<br />\nI know I can use third-party tools like r.js for all sorts of things...\r<br />\n<br />\nMy first impulse, actually, was to set up a Grunt task and serialize the ts files prior to compiling - a bit to my surprise, that actually worked, and solved nearly all my problems.\r<br />\n<br />\nAt the expense of losing the source-maps and any ability to debug the damn thing.\r<br />\n<br />\nAnother evening wasted trying to get this damn thing to build, and still no clue how to fix this, short of completely reorganizing the entire codebase and introducing tons of redundant import statements everywhere...\r<br />\n<br />\nI've been really excited about TypeScript up to this point, but this is a huge shortcoming and it's really, really frustrating to have to give up the sensible structure that any plain JavaScript project could have had, just to work around this shortcoming in the compiler...\r<br />\n<br />\nI may just go with the Grunt task approach and make do without the source-maps, in the hopes that this will be sorted out in the future... or maybe I will simply let it build with the infinite list of errors, since I do get working source-code out of it... either way, it's a really ugly decision to have to make and decimate an otherwise very elegant project - entirely the wrong note on which to end an otherwise very pleasant experience...\r<br />\n<br />\nI guess it was too early to get this excited and invested in TS... :-(<br />\n",
+    "PostedDate": "2013-11-08T06:15:12.71-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1120465",
+    "ThreadId": "466433",
+    "Html": "You know what would work?\r<br />\n<br />\nA simple directive, like <code>/// &lt;include path=&quot;...&quot; /&gt;</code> - the compiler would interpret this directive as simply &quot;pasting&quot; another source-file's content at the point where it's included. Dead simple.\r<br />\n<br />\nThat way, I would just write a simple &quot;header&quot; file with a list of include statements, and compile that.\r<br />\n<br />\nThe only real obstruction, as far as I can figure, would be support for source-maps, since you'd have to keep track of which individual lines the included lines of code in the header-file came from and emit the correct file-names/positions.\r<br />\n<br />\nAs explained, simply concatenating my source-files prior to compilation, works - at the expensive of losing my source-maps...\r<br />\n<br />\nDoes that sound like a big or complicated feature?<br />\n",
+    "PostedDate": "2013-11-08T06:33:32.597-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1120469",
+    "ThreadId": "466433",
+    "Html": "I've posted a <a href=\"https://typescript.codeplex.com/workitem/1874\" rel=\"nofollow\">feature request</a>.<br />\n",
+    "PostedDate": "2013-11-08T06:41:46.053-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1120491",
+    "ThreadId": "466433",
+    "Html": "Another feature that could solve this problem would be support for <em>incoming</em> source-maps.<br />\n<br />\nCurrently we have support for <em>outgoing</em> source-maps only - if the compiler also supported incoming .ts files with accompanying source-maps, and mapped it's own internal source-map against it before outputting it, you would have something very powerful.<br />\n<br />\nYou would then be able to generate TypeScript from other source - the absolute simplest example would be a file concatenator that emits a source-map, and I would be very surprised if such a thing doesn't already exist, but other more advanced uses might be DSLs, template engines, etc.<br />\n<br />\nUglifyJS for example has support for both incoming and outgoing source maps.<br />\n<br />\nThoughts?<br />\n",
+    "PostedDate": "2013-11-08T07:27:23.463-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

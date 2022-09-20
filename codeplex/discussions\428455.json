@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "982919",
+    "ThreadId": "428455",
+    "Html": "\r\n<p>So I've been working though with TypeScript over the last 2 weeks or so, converting a pet project from JS to TS.</p>\r\n<p>Aside from a few management issues (to be expected!) my experience has been amazing.</p>\r\n<p>As a guy with C# experience, being able to clearly create my function overloads is amazing, I love it, and once Generics make it in, it'll be even better. &nbsp;Being to have the type checking go into the function from the compiler level is great.</p>\r\n<p>&nbsp;</p>\r\n<p>One thing that would be nice to have, is potentially the ability to define multiple possible return values.</p>\r\n<p>From the compiler point of view, you couldn't infer the real return type, it would essentially be returned as &lt;any&gt;.</p>\r\n<p>From a architecture / library creator point of view, I want to create an interface, and I want to hand out that interface to consumers of my Library, so they can work off the explicit constraints.</p>\r\n<p>In my case, the library is creating a system, that's execution, can optionally be delayed by a\r\n<a title=\"Promise/A\" href=\"http://wiki.commonjs.org/wiki/Promises/A\" target=\"_blank\">\r\nPromise</a>. &nbsp;In addition the promise library, <a title=\"cujojs/when\" href=\"https://github.com/cujojs/when\" target=\"_blank\">\r\nwhen</a>, I'm using allows you to also delay it's calls, such as reduce or map, also with a promise (or returning a value).</p>\r\n<p>&nbsp;</p>\r\n<p>A quick example case, this is from the .d.ts file I've created so far.</p>\r\n<p>This is a convention interface, so the consumer of my library can create a strongly typed object. &nbsp;They can choose to either return a Promise, an Array of Promises, or nothing (void).&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><pre>interface IConventionInit\r\n{\r\n    init(mod: IModule, facades: IModuleFacades): Promise;\r\n}</pre>\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>If we could turn this around and also say, that well you can return a promise or an array of Promises, or nothing, you should be able to state that&nbsp;explicitly without just typing it to any.</p>\r\n<pre><pre>interface IConventionInit\r\n{\r\n    init(mod: IModule, facades: IModuleFacades): [Promise | Promise[] | void];<br>}</pre>\r\n</pre>\r\n<p>Currently I'm using multiple interfaces to handle these scenarios, but then you have to involve extra process, and needs to be documented and understood, and users need to be trained. &nbsp;This functionality would clearly state the allowed return types,\r\n to the consuming developer.</p>\r\n<p>&nbsp;</p>\r\n<p>Thoughts? &nbsp;Is this a terrible idea, something that could be of use?</p>\r\n",
+    "PostedDate": "2013-01-03T22:42:02.95-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "982948",
+    "ThreadId": "428455",
+    "Html": "\r\n<p>As a guy with C# experience you should know that the return type is not part of the function signature. And having multiple return types would lead the type system ad absurdum. How would the type system know exactly what type was returned? It couldn't. It\r\n would have to assume it's any, and then you can just use any right away.</p>\r\n<p>Perhaps you should rather rethink your architecture and use better types?</p>\r\n",
+    "PostedDate": "2013-01-04T00:37:31.213-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983098",
+    "ThreadId": "428455",
+    "Html": "\r\n<p>Perhaps I'm missing something, but the following should work:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> IConventionInit\r\n{\r\n    init(mod: IModule, facades: IModuleFacades): Promise;\r\n    init(mod: IModule, facades: IModuleFacades): Promise[];\r\n    init(mod: IModule, facades: IModuleFacades): <span style=\"color:blue\">void</span>;\r\n}</pre>\r\n<pre><br></pre>\r\n<pre>So just repeat it three times with different return types;\r\n</pre>\r\n</div>\r\n// Peter\r\n<p></p>\r\n",
+    "PostedDate": "2013-01-04T09:20:16.307-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983114",
+    "ThreadId": "428455",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>SomebodyYouKnow wrote:</strong><br>\r\n<p>As a guy with C# experience you should know that the return type is not part of the function signature. And having multiple return types would lead the type system ad absurdum. How would the type system know exactly what type was returned? It couldn't. It\r\n would have to assume it's any, and then you can just use any right away.</p>\r\n<p>Perhaps you should rather rethink your architecture and use better types?</p>\r\n</blockquote>\r\n<p>You are correct, yes you can use any right now, but the library developer knows what possible return types are allowed, and what aren't. &nbsp;This is about giving the consuming developer the ability to know exactly what types are allowed or not, and have the\r\n compiler enforce that on them.</p>\r\n<p>When library side, when it sees that return value it will have no choice to refer to it as &lt;any&gt; since it has no idea what type it might be (it's a mixed type really). &nbsp;So it's up to the library developer to use traditional JavaScript code to detect and\r\n decide on what to do with the result, not the compiler. &nbsp;While the library developer is then laying the foundation for the consuming developer to say, &quot;oh I don't have to return anything here, if I don't need to do any extra work&quot;</p>\r\n<p>&nbsp;</p>\r\n<p>My understanding is that TypeScript isn't about bringing C# to JavaScript, it's about bringing strong typing and tooling to JavaScript, while still retaining all of the native core functionality that JavaScript supports. &nbsp;Multiple possible return values\r\n is something JavaScript supports out of the box, and those values don't always depending on the number of input parameters. &nbsp;Why shouldn't TypeScript also support that&nbsp;possibility?</p>\r\n<p>&nbsp;</p>\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>jbaroncom wrote:</strong><br>\r\n<p>Perhaps I'm missing something, but the following should work:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> IConventionInit\r\n{\r\n    init(mod: IModule, facades: IModuleFacades): Promise;\r\n    init(mod: IModule, facades: IModuleFacades): Promise[];\r\n    init(mod: IModule, facades: IModuleFacades): <span style=\"color:blue\">void</span>;\r\n}</pre>\r\n<pre><br></pre>\r\n<pre>So just repeat it three times with different return types;\r\n</pre>\r\n</div>\r\n// Peter\r\n<p>&nbsp;</p>\r\n</blockquote>\r\n<p>You are correct, creating 3&nbsp;separate&nbsp;interfaces, allows the consuming developer to pick and implement the one that he needs to implement. &nbsp;This adds additional work for having to teach that developer all the different possible ways he can implement the interfaces.</p>\r\n<p>If you were able to inform the developer on the one interface, that you can return type x, y, or z, and it will be handled correctly by the library. &nbsp;That's all the information they need to continue on and finish work.</p>\r\n",
+    "PostedDate": "2013-01-04T10:00:36.203-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983144",
+    "ThreadId": "428455",
+    "Html": "\r\n<p>I guess I was a bit unclear. I meant to say it is 1 interface that describes the three different flavors of the init method. The way TS does it provides the additional flexibility of changing also the parameters, not only the return type (actually you can\r\n declare &quot;init&quot; to be also many other things like an indexed property).</p>\r\n<p>BTW I'm not convinced it is a good idea to have different return types with the same parameters. The caller now has to either check the return type or there is some &quot;secret&quot; not specified in the interface that determines the behavior of this method. So although\r\n possible, not sure it is desirable.</p>\r\n<p>//Peter</p>\r\n",
+    "PostedDate": "2013-01-04T11:26:34.38-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983192",
+    "ThreadId": "428455",
+    "Html": "\r\n<p>Understood, I had actually tried that (and just tried it again as a sanity check) and if you try to implement that interface, the compiler complains that the overloads are not compatible or if you skip the overloads, you get&nbsp;declaration&nbsp;incompatible.</p>\r\n<p>I'll continue down the path I'm going now, maybe it may come up as something to support in the future or maybe not. &nbsp;At the end of the day it's a fairly minor issue, that can be worked around.</p>\r\n",
+    "PostedDate": "2013-01-04T13:51:44.08-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1003594",
+    "ThreadId": "428455",
+    "Html": "Hello,\r<br />\n<br />\nI do not know your specific use case but can't you wrap the 'returnable' data into another class?<br />\n<pre><code>class ConventionData {\n  public isPromise(): bool {}\n  public isPromiseArray(): bool {}\n\n  public getData(): any {}\n  public setData(dat: any, type: any) {}\n}</code></pre>\n\nA comment by me from an issue I've opened (<a href=\"http://typescript.codeplex.com/workitem/120\" rel=\"nofollow\">Suggestion: Specifying sum types</a>)<br />\n<blockquote>\nBut I had the idea to simplify it to semantic sugar, i.e. that the compiler allows a syntax mentioned above but doesn't do anything with it (treats it as 'any').<br />\n<br />\nThese 'annotations' would inform a reader about the types being used. Of course, this could lead some people to think that the compiler will throw a warning/error if an incompatible type is used.<br />\n</blockquote>\nI think both of our ideas actually result in 'specifying sum types'.<br />\n",
+    "PostedDate": "2013-02-19T11:26:47.77-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1004070",
+    "ThreadId": "428455",
+    "Html": "I asked similar question <a href=\"http://typescript.codeplex.com/discussions/403711\" rel=\"nofollow\">http://typescript.codeplex.com/discussions/403711</a><br />\n",
+    "PostedDate": "2013-02-20T08:03:44.97-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Only dotted notation will be typechecked, so use that if you have a constant name you're trying to refer to.",
+    "ClosedDate": "2013-09-23T08:46:09.18-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I'm wondering if it's a bug that I'm not getting any compiler messages when using an invalid enum string, as in the following code:\r\n\r\n```\r\nenum Suit {\r\n\tSpades,\r\n\tHearts,\r\n\tClubs,\r\n\tDiamonds\r\n}\r\n\r\nvar input: string;\r\nvar suit: Suit;\r\n\r\ninput = 'Hearts';\r\nsuit = Suit[input];\r\nconsole.log( Suit[suit] );\r\n// output: Hearts\r\n\r\ninput = 'Unicorns';\r\nsuit = Suit[input];\r\nconsole.log( Suit[suit] );\r\n// output: undefined\r\n```\r\n\r\nIt seems that since I've typed `suit` to be of the enum type `Suit`, TypeScript should know at compile-time that 'Unicorns' is not a valid value within the `Suit` enum and give me a compile-time error if the enum index I'm referencing doesn't exist. Instead the code compiles, but when executing I get 'undefined' in the console when trying to print the enum value.\r\n\r\nAlternately, is there another way I should be referencing an enum value using a string that will give me a compile-time error if the string is not a valid value within the enum?\r\n\r\nUPDATE: Thinking more about this I'm suspecting the reason the compiler does not throw an error is that it only knows for certain that `input` is typed as a string, but it may not be certain that it knows the string's value at compile time, so it seems like the compiler actually is behaving properly and assuming it will be a valid enum value.",
+    "LastUpdatedDate": "2013-09-23T08:46:09.18-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-21T00:02:14.577-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "No Compile Message for Invalid Enum",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1707
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "_ahem_\nhttp://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf\n\n# Section 9.1 Enum Declarations\nThe example\n``` typescript\nenum Color { Red, Green, Blue }\n```\ndeclares a subtype of the Number primitive type called ‘Color’ and introduces a variable ‘Color’ with a type that corresponds to the declaration\n``` typescript\nvar Color: {\n  [x: number]: string;\n  Red: Color;\n  Green: Color;\n  Blue: Color;\n};\n```\n\n# Section 4.10\n\nA bracket notation property access of the form\n```\n  ObjExpr [ IndexExpr ]\n```\nwhere ObjExpr and IndexExpr are expressions, is used to access the property with the name computed by the index expression on the given object. A bracket notation property access is processed as follows at compile-time:\n* If IndexExpr is a _string literal or a numeric literal_ [nope] and ObjExpr is of a type that has a property with the name given by that literal (converted to its string representation in the case of a numeric literal), the property access is of the type of that property.\n* Otherwise, if ObjExpr is of a type that __has a numeric index signature__ [yep] and IndexExpr is of type _Any, the Number primitive type, or an enum type,_ [but nope] the property access is of the type of that index signature.\n* Otherwise, if ObjExpr is of a type that _has a string index signature_ [nope] and IndexExpr is of type Any, the String or Number primitive type, or an enum type, the property access is of the type of that index signature.\n* Otherwise, if IndexExpr is of type Any, __the String__ [yep] or Number primitive type, or an enum type, __the property access is of type Any.__\n* Otherwise, the property access is invalid and a compile-time error occurs.\n\nI could personally envision the possibility that the enum type could be extended with an implicit declaration which handles the _If IndexExpr is a string literal_ case, but in this case the index is not a literal.",
+      "PostedDate": "2013-09-22T19:36:48.917-07:00",
+      "Id": 115307
+    },
+    {
+      "Message": "Thanks, I hadn't seen the logic you highlighted in section _4.10_, your annotations were helpful to point out why the compiler is going with type `Any`. Thanks for connecting the dots for me, I appreciate it.",
+      "PostedDate": "2013-09-22T20:45:25.677-07:00",
+      "Id": 115311
+    },
+    {
+      "Message": "Yeah, specs are hard.  It took me a few reads to figure it out, myself.",
+      "PostedDate": "2013-09-23T07:49:44.973-07:00",
+      "Id": 115347
+    }
+  ]
+}

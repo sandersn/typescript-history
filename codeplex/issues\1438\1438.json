@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:31:47.413-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Kendo UI has a Model class with static and instance members with the same name: idField and fields. This is from the Kendo UI type definition:\r\n```\r\n\r\n    class Model extends ObservableObject {\r\n        idField: string;\r\n        _defaultId: any;\r\n        fields: DataSourceSchemaModelFields;\r\n        defaults: { [field: string]: any; };\r\n        constructor(data?: any);\r\n        init(data?: any): void;\r\n        dirty: boolean;\r\n        id: any;\r\n        editable(field: string): boolean;\r\n        isNew(): boolean;\r\n        static idField: string;\r\n        static fields: DataSourceSchemaModelFields;\r\n        static define(options: DataSourceSchemaModelWithFieldsObject): typeof Model;\r\n        static define(options: DataSourceSchemaModelWithFieldsArray): typeof Model;\r\n    }\r\n\r\n```\r\nWith TypeScript 0.9.1 I am not allowed to access the idField and fields instance members because there are static members with the same name, as in the following code:\r\n```\r\n\r\nexport function apply(type: typeof kendo.data.Model, options: kendo.data.DataSourceSchemaModelWithFieldsObject): void;\r\nexport function apply(type: typeof kendo.data.Model, options: kendo.data.DataSourceSchemaModelWithFieldsArray): void;\r\nexport function apply(type: typeof kendo.data.Model, options: kendo.data.DataSourceSchemaModel) {\r\n    type.prototype.idField = type.idField = options.id;\r\n    type.prototype.fields = type.fields = Array.isArray(options.fields) ? toObject(<kendo.data.DataSourceSchemaModelField[]>options.fields) : <kendo.data.DataSourceSchemaModelFields>options.fields;\r\n    type.prototype.defaults = getDefaults(type.fields);\r\n    type.prototype._defaultId = getDefaultId(type.prototype.defaults, type.idField);\r\n}\r\n```\r\n\r\nI get an error 'Static member cannot be accessed off an instance variable' where I have type.prototype.idField and type.prototype.fields. Surely this must be allowed. Could this be fixed?\r\nNote that I use typing with 'typeof' operator that was added to 0.9.1.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T03:44:34.63-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.1 does not allow class with static and instance member with same name",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1438
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Marking active. I'm only seeing this when accessing the class through the .prototype member, though.",
+      "PostedDate": "2013-08-07T09:36:45.057-07:00",
+      "Id": 108858
+    }
+  ]
+}

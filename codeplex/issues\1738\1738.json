@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is allowed because `NodeSelectEvent` is a subtype of `NodeClickEvent`. The assignment compat rules (section 3.8.4) state that call signatures are compatible if:\n\n> each parameter type in the instantiation of N is assignable to or from the corresponding parameter type in M for parameter positions that are present in both signatures\n\nI don't remember the exact motivation behind the bivariance here; if you're interested in finding out more I'd recommend posting on the Language Spec forum and someone more involved in that rule can probably chime in. Thanks!",
+    "ClosedDate": "2013-09-30T09:15:15.697-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I extracted this example from a real project I'm working on:\r\n\r\n```\r\nmodule ControlTest {\r\n\texport interface NodeClickEvent { node: Node }\r\n\texport interface NodeSelectEvent { node: Node; selected: boolean }\r\n\t\r\n\texport interface Handler<Event> { (event: Event) : void }\r\n\t\r\n\texport interface ControlConfig {\r\n\t    onClick: Handler<NodeClickEvent>;\r\n\t    onSelect: Handler<NodeSelectEvent>;\r\n\t}\r\n\t\r\n\texport class Control {\r\n\t\r\n\t    public _onClick: Handler<NodeClickEvent>[];\r\n\t    public _onSelect: Handler<NodeSelectEvent>[];\r\n\t\r\n\t    constructor(options: ControlConfig) {\r\n\t        this._onClick = [options.onSelect];\r\n\t        this._onSelect = [options.onClick];\r\n\t    }\r\n\t}\r\n}\r\n```\r\n\r\nThe problem is in the constructor, where I made a typo - I'm putting the onSelect-handlers in the list of onClick-handlers, and vice-versa. Shame on me.\r\n\r\nFor some reason, the compiler (and the Playground) thinks this is totally okay.\r\n\r\nI'm not sure I have a 100% understanding the type-system yet, but since the `NodeSelectEvent` interface has two members, at the very least, a `Handler<NodeClickEvent>` should not be compatible with a `Handler<NodeSelectEvent>`, as the `selected: boolean` property is missing.\r\n\r\nOr am I missing something?\r\n",
+    "LastUpdatedDate": "2013-11-19T16:17:12.36-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-27T16:46:08.85-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Missing/wrong type-checks for generic array-types (?)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1738
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The bivariance is true to JavaScript, where this would be allowed - I have no issue with that.\n\nAnd yes, `NodeSelectEvent` is a subtype of `NodeClickEvent`.\n\nBut `NodeClickEvent` is not a subtype of `NodeSelectEvent` - it doesn't have the `selected` property, and that property isn't optional, so at least the `this._onSelect = [options.onClick];` statement should fail.\n\nOr not?\n",
+      "PostedDate": "2013-09-30T14:04:45.363-07:00",
+      "Id": 116045
+    },
+    {
+      "Message": "It doesn't need to be a subtype, it just needs to have assignment compatibility. Being a supertype, it meets that criteria (per the spec section cited above).",
+      "PostedDate": "2013-10-07T12:57:07.867-07:00",
+      "Id": 117697
+    },
+    {
+      "Message": "I don't understand... if assignment compatibility goes *both ways*, then just by each type having *one* arbitrary property with the same name and type in common, they are considered compatible??\n\nThat just doesn't make any sense.\n\nI should be able to assign `{ node: Node; selected: boolean }` to a `{ node: Node }`, because it more than satisfies the `{ node: Node }` requirement.\n\nBut being able to assign a `{ node: Node }` to a `{ node: Node; selected: boolean }` doesn't make any sense to me - it's missing the `selected` property, so in what sense it is \"compatible\"?\n\nI could see it being compatible with `{ node: Node; selected?: boolean }` *maybe*, since the `selected` property is *optional*, but if it is a required property, and this assignment works in both directions, that would mean *any arbitrary types* with *any one* arbitrary property in common are considered compatible?\n\nThat just doesn't make any sense to me.\n",
+      "PostedDate": "2013-10-08T18:19:10.433-07:00",
+      "Id": 117887
+    },
+    {
+      "Message": "No, there has got to be a different explanation here - or the following example should be valid:\n\n```\ninterface Human {\n\tarms: number;\n}\n\ninterface Robot {\n\tarms: number;\n\tpower_switch: boolean;\n}\n\nfunction power_up(robot: Robot) {\n\tflap_arms(robot);\n}\n\nfunction flap_arms(human: Human) {\n\tpower_up(human);\n}\n```\n\nYou can `power_up()` a `Robot`, and you can `flap_arms()`, because all that is required is something with `arms` - but you cannot `power_up()` a human, because it does not have a `power_switch`.\n\nI don't know why it works in my example, but this is *not* supposed to work in both directions.",
+      "PostedDate": "2013-10-08T18:38:09.933-07:00",
+      "Id": 117890
+    },
+    {
+      "Message": "Function arguments are covariant, but the type of function arguments when considering the compatibility of call signatures are bivariant.",
+      "PostedDate": "2013-10-11T15:42:27.83-07:00",
+      "Id": 118201
+    },
+    {
+      "Message": "I don't fully understand what that means or why it works that way.\n\nBut the example I posted initially, according to what I know of programming in general, should not be valid.\n\nIf one type has members that are missing in the other, the compiler thinks that's okay - but as soon as both types have at least one member not present in the other, the compiler considers that an error. I see how it works, but I can't think of a real-world use-case for this behavior - it seems likely to lead to errors that could be potentially *extremely* difficult to debug, since missing members in JavaScript are likely to be accidentally set, \"extending\" an object that *isn't supposed* to have a given property *with* that property, making the object behave like an object of a different type.\n\nThat sounds to me like a recipe for disaster.\n\nI love how TypeScript generally protects (or lets you build safeguards) against these kinds of errors, which are otherwise very typical of JavaScript. What's truly alluring to me, is how TypeScript manages to do this without \"breaking\" JavaScript - without taking away any of the dynamic features of JavaScript. To me, that's the best of both worlds (static and dynamic) but in this particular case, it seems TypeScript is a bit too \"forgiving\", and I have to wonder if this \"co-variance\" is necessary or beneficial...?\n",
+      "PostedDate": "2013-10-14T17:39:36.497-07:00",
+      "Id": 118415
+    },
+    {
+      "Message": "I have to agree with mindplay. This is an area of confusion for a lot of people.\n\n- Assuming covariance allows for type errors to occur in library code that operates on function, but is convenient and easy to understand.\n- Existential typing is annoying on the call side, but it is safer and compatible with non-generic libraries.\n- Bi-variance doesn't really make sense under any normal conditions. At best, this is only for ease of library creation when you don't want to handle contravariance but the compiler needs it for structural typing.\n\nI would be happy with covariance on parameters.\nI would be happiest with declaration-side variance, like what Scala has, where:\n\ninterface Config {}\n\nclass Builder<+T> {\n  build(config: Config): T {\n    //...\n  }\n}\n\nclass Base { kind: number }\nclass A extends Base { a: string }\nclass B extends Base { b: string }\n\nvar okay: Builder<Base> = new Builder<A>()\nvar notOkay: Builder<A> = new Builder<Base>()\n\nLibraries can then be more honest about their compatibility as method providers. So we could take a more specific type of Config in our example:\n\nclass Builder<-C extends Config, +T> {\n  build(config: C): T {\n    //...\n  }\n}\n\nclass ButtonConfig extends Config(\"button\") {\n  action: Function  // this should assume normal function variance (-P) => +R\n}\n\nvar okay = new Builder<Config, B>();\nvar alsoOkay: Builder<ButtonConfig, Base> = okay;",
+      "PostedDate": "2013-10-22T22:06:09.323-07:00",
+      "Id": 119300
+    },
+    {
+      "Message": "I wish I knew how to edit my previous comment so I could clean it up and make more sense out of it...\n\nAnyway, I think variance is an important issue to get right from a library developers' perspective. I know that there is always a way to cut corners in JavaScript, but that's why I think TypeScript should not cut corners with generics. It will lead to errors popping up in library code for completely valid type annotations, but because the compiler couldn't figure out that the caller was doing something wrong.\n\nAlso, bivariance really doesn't make any sense. It puts the onus of accuracy on the caller of library code (who may not understand that a method to a parameter can be contravariant or invariant but not covariant, and the return type can covariant or invariant but not contravariant). Functional languages (like JavaScript) benefit greatly from generics, and the type system should be able to validate through the generic type system.\n\nI know variance is a head scratcher, but if the creator of library code doesn't understand how to get around the generics, they can always leave the annotations off and use the bottom type \"any\". But if something has a type annotation, the compiler should do the work of validating it properly.",
+      "PostedDate": "2013-10-25T14:37:01.347-07:00",
+      "Id": 119733
+    }
+  ]
+}

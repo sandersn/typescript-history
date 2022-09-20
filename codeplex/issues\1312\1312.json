@@ -1,0 +1,100 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:24.033-07:00",
+    "CommentCount": 12,
+    "Custom": null,
+    "Description": "It's impossible to define class and export instance of that class via `export = `.\r\nDiscussion: [#447372](https://typescript.codeplex.com/discussions/447372)\r\n\r\nExample :\r\n```\r\nclass Greeter {\r\n\r\n}\r\n\r\nvar greeter: Greeter = new Greeter()\r\nexport = greeter\r\n// or simply: export = new Greeter()\r\n```\r\n\r\nCompilation:  ```error TS2027: Exported variable 'greeter' has or is using private type 'Greeter'.```\r\n\r\nPrimary Use Case: Singleton pattern",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-06T07:14:23.06-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Export object of private class",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 23,
+    "Id": 1312
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This seems totally by design. You're trying to export a variable that has a type which is not exported, and thus not visible outside of your module. Which is exactly what the compiler tells you.\n\nIf you don't care about the consumer not knowing the type of your variable, you can export it untyped, i.e.:\n\n```\nvar greeter: any = new Greeter()\nexport = greeter\n```\n\nBut if you __do__ want the consumer to know the type, you have to export it as well.",
+      "PostedDate": "2013-07-06T08:29:25.233-07:00",
+      "Id": 105248
+    },
+    {
+      "Message": "How about \"silent anonymous\" export of class type?\n\nConsider this code in another module:\n```\nimport greeter_instance = require(\"greeter\");\n```\nIt would't be possible to refer \"Greeter\" class by name, but it will be visible to compiler and language services and auto assigned to greeter_instance variable.\nWould it be possible without some bigger patch?\nI know saving just few lines of duck typing workarounds has low importance. \n\nFor now i'm using two workarounds:\n1)\n```\nepoxrt.Greeter = class Greeter{}\n\nvar greeter = new Greeter()\nexport.greeter = greeter\n```\n\n2)\n```\nclass Greeter {\n\tstatic getInstance() { return greeter }\n}\n\nvar greeter = new Greeter()\nexport = Greeter\n```",
+      "PostedDate": "2013-07-06T09:36:28.45-07:00",
+      "Id": 105253
+    },
+    {
+      "Message": "My problem lay in the fact that we were using a singleton pattern, meaning for every singleton __only one__ instance should ever be available/accessible. So exporting the type is not an option because you don't want other people to be able to create a new object from that class.\n\nHowever, it was required that the singleton was a class, because all singletons had to implement some basic functionality that was inherited from a base class (since re-declaring that functionality on every singleton is not an option).\n\nEach singleton had to implement methods and properties that were not available on the base class that was the crux of their use, and they can sometimes be very complex, so getting typing information for them is highly, highly beneficial.",
+      "PostedDate": "2013-07-07T18:38:38.287-07:00",
+      "Id": 105346
+    },
+    {
+      "Message": "I'm also having this problem with constructs like this:\n\n```ts\nmodule foo {\n\tfunction bar() {}\n\texport var pub = bar;\n}\n```\neven though `bar` signature is just a function of public types (`():void`) this is impossible.",
+      "PostedDate": "2014-01-03T05:26:30.32-08:00",
+      "Id": 128958
+    },
+    {
+      "Message": "And here is more useful example why it's needed - wrapping internal functions.\n\n```ts\nmodule foo {\n\tfunction wrap<T extends Function>(f: T): T {\n\t\t/* complex wrapping */\n\t\treturn f;\n\t}\n\t\n\t/* complex generic signature */\n\tfunction _bar<T>() {}\n\t\n\texport var bar = wrap(_bar);\n}\n```",
+      "PostedDate": "2014-01-03T05:36:10.66-08:00",
+      "Id": 128961
+    },
+    {
+      "Message": "I have encountered similar issues, w/ respect to trying to implement singleton patterns (without duplicating code).\n\nSomeType.ts\n```\nclass SomeType {\n}\n\nexport = SomeType;\n```\n\nSomeSingleton.ts\n```\nimport SomeType = require(\"SomeType\");\nvar instance = new SomeType();\nexport = instance;\n```\n\nmain.ts\n```\nimport SomeInstance = require(\"SomeInstance\");\n// SomeInstance's value is exported, but it's type isn't - which is odd when you consider you can export variables assigned to object literal types, and their type information 'does' get exported (unlike this case)\n```\n\nI think in the export= sense, the export= should export both the value 'and' the (aliased) type.\n\nI'm guessing this is somewhat closely related to the fact that you can't currently (purely due to lexical reasons, not type system reasons) define type aliases outside of the special \"import of an export=ContainerTypeName module\" case? (as best I can tell, the type system completely supports the ability to do so? if the syntax would)\n\nexport = variable; // Should export a type alias for the variables type, in addition to the variable itself\n// Side-note: This seems somewhat related to the ability to explicitly introduce type aliases at any scope as well (eg: typedefs)\n\nFor this 'specific' case of exporting instances of private types, I don't think there's any typesystem overhead either (there's no real ambiguities, type aliases are already part of the type system - they're just not currently exported along with variables).\n\nI've got no comment nor opinion on exporting functions who take/return private types (seems fair enough, since you can't alias it under the same name and there's no 'returntypeof').",
+      "PostedDate": "2014-03-21T02:01:18.587-07:00",
+      "Id": 137527
+    },
+    {
+      "Message": "Ammendum: (Accidentally submitted before I had finished editing and testing my massively simplified repro case)\n\nEdit to SomeInstance.ts\n```\nimport SomeType = require(\"./SomeType\");\n\nclass SomeComplexType\n{\n    public value: SomeType;\n}\n\nvar instance = new SomeComplexType();\nexport=instance;\n```\n\nEdit to above comments: references to \"export = variable\" should probably refer to \"value: Type\" - same concept applies (variable assignments to private types should result in an implicit type alias), main.ts' resolution of 'typeof SomeInstance.value' should resolve to the type alias that is SomeComplexType.value, much like typeof SomeImportedVariable would resolve to the generated type alias for the import statement.\n\nIn this ammended case, I still see no typesystem overhead (same complexity already applies to chained export=variable cases as far as I understand it).\n\n",
+      "PostedDate": "2014-03-21T02:21:45.787-07:00",
+      "Id": 137528
+    },
+    {
+      "Message": "I have to be quick - so sorry if I missed the point.\n\nMittens: You can represent that with a module:\n\n``` Typescript\nimport SomeType = require(\"./SomeType\");\n\nmodule SomeComplexType\n{\n    export var value: SomeType;\n}\n\nexport=SomeComplexType;\n```\n\nAnd you should get perfect intellisense for it on import.",
+      "PostedDate": "2014-03-21T18:57:18.523-07:00",
+      "Id": 137600
+    },
+    {
+      "Message": "Griffork: Indeed you can, I guess my simplified use case is a bit too simplified (I shoved SomeComplexType into SomeInstance.ts in my ammendment, when it's in-fact imported from another module in my actual project like I had started to do in my original comment).\n\nIn my specific case I have 2 uses of SomeComplexType, in some cases instances are created - in others a special singleton of it is used - thus it can't be a module.\n\nCases where the singleton is used, the module importing the singleton 'also' has to import the module that defines SomeComplexType as some arbitrary name (that it never refers to directly...) to avoid the TS2027 error described in the issue.",
+      "PostedDate": "2014-03-23T20:27:22.023-07:00",
+      "Id": 137706
+    },
+    {
+      "Message": "This is a required features to allow using some third-party libraries (for example facebook React framework) :\nsee discussions: https://typescript.codeplex.com/discussions/537998\n\nIf you have a factory involving generics type, you won't be able yo use `export =` syntax at all.",
+      "PostedDate": "2014-03-24T19:48:02.827-07:00",
+      "Id": 138193
+    },
+    {
+      "Message": "I have a workaround that's working for me, using AMD modules. I haven't tested in other conditions.\n\nYou need an interface, and you cast your type as the interface before export, something like:\n\niFoo:\n```javascript\ninterface IFoo {\n  superUsefulFunction: () => void;\n}\nexport = IFoo;\n```\n\nfoo:\n```javascript\nimport IFoo = require(\"ifoo\");\nclass Foo implements IFoo {\n  public superUsefulFunction = () => {\n    // here there be monsters (or code)\n  };\n}\nvar foo : IFoo = new Foo();\nexport = foo;\n```\n\nHope this helps.",
+      "PostedDate": "2014-05-31T08:51:54.707-07:00",
+      "Id": 148457
+    },
+    {
+      "Message": "I have moved my part of this bug to https://github.com/Microsoft/TypeScript/issues/341",
+      "PostedDate": "2014-08-02T02:36:47.713-07:00",
+      "Id": 154227
+    }
+  ]
+}

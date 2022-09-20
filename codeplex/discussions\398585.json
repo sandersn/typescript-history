@@ -1,0 +1,90 @@
+[
+  {
+    "Id": "923773",
+    "ThreadId": "398585",
+    "Html": "\r\n<p>I was watching Ander's video, which was great. But I noticed that when he was talking about the use of the typescript private keyword that the resulting javascript implementation of the variable was using the\r\n<em>this </em>keyword. I'm not sure this is right since you can implicitly get privacy by using var instead. Here's a nice link in Crockford's site explaining the details&nbsp;<a href=\"http://www.crockford.com/javascript/private.html\">http://www.crockford.com/javascript/private.html</a>.\r\n I'm hoping they switch to this output style in the future.</p>\r\n",
+    "PostedDate": "2012-10-08T19:55:21.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923777",
+    "ThreadId": "398585",
+    "Html": "<p>I hope they don't. The way it's done at the moment is significantly cleaner and requires no inner functions within the constructor just to access a 'private' var.</p>",
+    "PostedDate": "2012-10-08T20:17:27.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923779",
+    "ThreadId": "398585",
+    "Html": "<p>It works for var variables without functions, but I see your point.</p>",
+    "PostedDate": "2012-10-08T20:42:08.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923793",
+    "ThreadId": "398585",
+    "Html": "<p>@photonstorm - I'm not sure what's cleaner about the current implementation. It's not what many people used to Javascript would expect.</p>\r\n<p>How to implement private isn't a totally obvious design choice, but if private properties are going to be implemented as properties hanging off 'this', I wonder if it wouldn't at least make sense to define them as non-enumerable.</p>",
+    "PostedDate": "2012-10-08T21:38:37.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923804",
+    "ThreadId": "398585",
+    "Html": "\r\n<p>The way it does it at the moment is mostly what I'm used to, I just expect an _ in the private var name:</p>\r\n<p>this._x</p>\r\n<p>So I'm a bit biased, but I know what you mean. Has to be a trade-off somewhere I guess, given how there's no real way of implementing privates nicely without upsetting one camp. It's such a significant design choice though that&nbsp;I don't for a moment\r\n think they chose it idly or were unaware of the var method (it's just a reason best known to them right now).</p>\r\n",
+    "PostedDate": "2012-10-08T23:07:31.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923827",
+    "ThreadId": "398585",
+    "Html": "<blockquote style=\"border: solid .1em #ccc; font-style: italic; margin: .25em 1em 0 1em; padding: 0 .25em 0 .25em;\"><strong>Alexjs wrote:</strong><br />\r\n<p>@photonstorm - I'm not sure what's cleaner about the current implementation. It's not what many people used to Javascript would expect.</p>\r\n<p>How to implement private isn't a totally obvious design choice, but if private properties are going to be implemented as properties hanging off 'this', I wonder if it wouldn't at least make sense to define them as non-enumerable.</p>\r\n</blockquote>\r\n<p>In ES5 - probably yes, however is non enumerable make them non-callable?</p>\r\n<p>The thing with the closed-over properties is that it takes too much memory: I personally have seen this in lots of libraries especially ones that want to provide as many functionality as possible into one. Each instance make a closure and often not one.&nbsp;</p>\r\n<p>The idea in the implementation is that if the method/property is marked as private at compile time calling it from an instance is not allowed. At run time it does not matter really, because 'nice third party' is assumed (i.e. that no one will touch it even if it is exposed in the prototype). Having everything in the prototype saves memory and also one can more easily 'clean up' (see goog.Disposable if you like). TypeScript will not prevent you from implementing the desired pattern in your code, but the javascript spilled as result of the class pattern they selected is the best in regard of memory consumption and this is important as they are targeting <strong>large application for the web.&nbsp;</strong></p>",
+    "PostedDate": "2012-10-09T00:31:05.253-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "924144",
+    "ThreadId": "398585",
+    "Html": "<p>Non-enumerable wouldn't make them unusable or uncallable, but it hides them a little better. It has two main effects:</p>\r\n<p>1. If you iterate over the keys of an object using 'for-in', you don't see non-enumerable objects</p>\r\n<p>2. As a result JSON.stringify will not write out the property by default (you can still customize this to write the non-enumerable properties if you need to)</p>\r\n<p>Non-enumerable seems like the right choice for private members to me.</p>",
+    "PostedDate": "2012-10-09T10:22:42.363-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "924362",
+    "ThreadId": "398585",
+    "Html": "\r\n<p>Lot's of things have a cost associated to them. Certainly adding classes and modules has a cost (ecmascript 6), even functions have some cost. But I think if we're calling something private it should behave in a private way. I mean after all if people don't\r\n like the performance cost you could simply choose not to apply the private keyword right?</p>\r\n",
+    "PostedDate": "2012-10-09T17:14:28.72-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "924508",
+    "ThreadId": "398585",
+    "Html": "<p>You can say that, yes. Unfortunately lots of JavaScript developers do not understand the cost associated, maybe that is why the decision was made to only use the privacy at compilation level and not in the resulting code. Imagine targeting mobile, while ie6 is soon to be gone everywhere, the new IE is mobile browsers. They tend to be sensitive on memory...</p>",
+    "PostedDate": "2012-10-10T00:00:26.497-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926759",
+    "ThreadId": "398585",
+    "Html": "<p>There is an existing discussion on this, with a note from Anders:</p>\r\n<p><a title=\"Private Variables Discussion\" href=\"http://typescript.codeplex.com/discussions/397651\" target=\"_self\">http://typescript.codeplex.com/discussions/397651</a></p>",
+    "PostedDate": "2012-10-15T08:00:12.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "981713",
+    "ThreadId": "398585",
+    "Html": "\r\n<p>Sohnee I made a response within the post that you linked to. I think my work arounds are reasonable.</p>\r\n",
+    "PostedDate": "2012-12-29T23:25:22.61-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "993868",
+    "ThreadId": "431328",
+    "Html": "\r\n<p>Consider the following TypeScript:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Test {\n    foo: string;\n    bar: string;\t\t\n}\n\t\n<span style=\"color:blue\">var</span> a = <span style=\"color:blue\">new</span> Test();\na.foo = <span style=\"color:#a31515\">'foo'</span>;\n<span style=\"color:green\">//...10000 lines later</span>\na.bar = <span style=\"color:#a31515\">'bar'</span>;\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>This makes the following JavaScript:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Test = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">function</span> Test() { }\n    <span style=\"color:blue\">return</span> Test;\n})();\n<span style=\"color:blue\">var</span> a = <span style=\"color:blue\">new</span> Test();\na.foo = <span style=\"color:#a31515\">'foo'</span>;\n<span style=\"color:green\">//...10000 lines later</span>\na.bar = <span style=\"color:#a31515\">'bar'</span>;\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p><span style=\"font-size:10pt\">The generated Test &quot;class&quot; does not contain definitions for foo or bar. They are essentially created at runtime. I know that in modern browsers the Just-In-Time-Compilers try to ascertain the shape of objects and allocate memory\r\n based on these presumed object&nbsp;types. If the type of the objects appear to change at runtime, the browser discards its assumption and has to dynamically figure out the shape of the object as it mutates.</span></p>\r\n<p>Correct me if I'm wrong, but in the code TypeScript generates, the object shape is not being defined until its properties are accessed. Isn't this preventing the JIT from accurately precompiling the code?</p>\r\n<p>Wouldn't this be more efficient:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Test = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">function</span> Test() { \n        <span style=\"color:blue\">this</span>.foo = undefined; \n        <span style=\"color:blue\">this</span>.bar = undefined; \n    }\n    <span style=\"color:blue\">return</span> Test;\n})();\n<span style=\"color:blue\">var</span> a = <span style=\"color:blue\">new</span> Test();\na.foo = <span style=\"color:#a31515\">'foo'</span>;\na.bar = <span style=\"color:#a31515\">'bar'</span>;\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>?</p>\r\n<p>Thanks for any insight.</p>\r\n",
+    "PostedDate": "2013-01-29T13:58:31.463-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994077",
+    "ThreadId": "431328",
+    "Html": "\r\n<p>I believe that (at least for the V8 engine) it is the order in which the properties are set that makes it possible to reuse existing &quot;shadow/hidden class&quot; definitions. If you do set the properties in the constructor or later in the code makes no difference\r\n as long as the order is identical every time. At least that is my understanding.</p>\r\n<p>Of course setting them as soon as possible in the constructor makes it easier to guarantee this order (but also causes some additional memory usage). One way to achieve the&nbsp;initializations&nbsp;in the constructor:&nbsp;</p>\r\n<p></p>\r\n<pre>class Test {\r\n  i:string=undefined; // Now typescript will set them in the constructor\r\n\r\n}\r\n</pre>\r\n<p></p>\r\n<p>P.S I'm not sure this type of optimization is worthwhile the effort for the average application. Yes is makes a difference, but if you then use a generic framework like jQuery, it all becomes less relevant compared to some of the overhead such a framework\r\n introduces.&nbsp;</p>\r\n<p>// Peter</p>\r\n",
+    "PostedDate": "2013-01-30T03:46:06.227-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994139",
+    "ThreadId": "431328",
+    "Html": "\r\n<p>You're right, for most applications it probably won't make a significant difference. But for an application that say, is creating thousands of objects over and over again, where sometimes properties are assigned and sometimes not, it\r\n<em>might </em>make a big difference. It just seems fundamentally odd that <strong>\r\nType</strong>Script wouldn't be doing anything to assist the browser JIT in creating type definitions.&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-30T05:51:16.5-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994170",
+    "ThreadId": "431328",
+    "Html": "\r\n<p>&nbsp;</p>\r\n<p>The fact that TypeScript doesn't create property declarations, unless initialised, has implications for the runtime behaviour of the compiled JavaScript when running in strict mode. &nbsp;For example:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:#a31515\">&quot;use strict&quot;</span>;\r\n\r\n<span style=\"color:blue\">class</span> Foo {\r\n\tbar: string;\r\n}\r\n\r\n<span style=\"color:blue\">var</span> foo = <span style=\"color:blue\">new</span> Foo();\r\n\r\nObject.seal(foo);\r\n\r\nfoo.bar = <span style=\"color:#a31515\">&quot;All will be revealed&quot;</span>; \r\n<span style=\"color:green\">//Runtime Error: Can't add property bar, object is not extensible</span>\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p><span style=\"font-size:10pt\">When I first came across this my initial reaction\r\n<a href=\"http://typescript.codeplex.com/workitem/384\">was to raise ticket</a>. However, after working with TypeScript the last few months, the problem has been cast in a different light.</span></p>\r\n<p>The point of course is that Object.seal is a <strong><em>runtime check</em></strong> and has all but been made redundant by the compile-time safety that TypeScript provides. While previously we had Object.seal sprinkled liberally over the code-base it's\r\n increasingly become clear that there is little added value from doing that.</p>\r\n<p>So yes, there is a runtime implication, but no: that may not be a compelling reason for changing the way TypeScript compiles into JavaScript.</p>\r\n<p>There is a benefit from doing that for client-side (browser) JavaScript because of the smaller file size.</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2013-01-30T07:12:53.217-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "994176",
+    "ThreadId": "431328",
+    "Html": "\r\n<p>This is another great argument as to why properties should be initialized to undefined (or null) if not&nbsp;explicitly&nbsp;initialized. If you control the environment your code runs in the compile-time guarantees might be enough, but the fact is by no longer using\r\n Object.seal you're losing runtime guarantees about type safety that you used to have.</p>\r\n",
+    "PostedDate": "2013-01-30T07:20:25.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

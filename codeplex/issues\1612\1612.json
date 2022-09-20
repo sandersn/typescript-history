@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.237-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "So the [previous issue](https://typescript.codeplex.com/workitem/933) for partial classes was dismissed as impossible out of hand, but I don't think that's the case at all. There are at least 2 ways I can think of to implement them.\r\n\r\n1) Make it a compile-time only feature. Just have the compiler combine the code of the two classes and check for conflicts between members. The compiler already is capable of validating subclasses, so this doesn't appear to be that vastly different. Obviously the unified class would only be emitted in one of the output files or a single unified file.\r\n\r\n2) Actually generate JavaScript for a partial class that could even be extended at runtime. Consider the following hypothetical TypeScript:\r\n\r\n``` TypeScript\r\n//FileA.ts\r\npartial class Dog{\t\t\r\n    constructor(public name: string){}\r\n\r\n    bark(): string{return 'woof';}\r\n}\r\n\r\n//FileB.ts\r\npartial class Dog{\r\n    eat: string() { return 'num num'; }\r\n}\r\n```\r\n\r\nCould generate the following JavaScript:\r\n``` JavaScript\r\n//FileA.js\r\nvar Dog = Dog || function (name) { this.name = name; }\r\nvar Dog = (function (Dog) {\r\n    Dog.prototype.bark = function () {\r\n        return 'woof';\r\n    };\r\n    return Dog;\r\n})(Dog);\r\n\r\n//FileB.ts\r\nvar Dog = Dog || function (name) { this.name = name; }\r\nvar Dog = (function (Dog) {\r\n    Dog.prototype.eat = function () {\r\n        return 'num num';\r\n    };\r\n    return Dog;\r\n})(Dog);\r\n```\r\nTry it, it works. The major change here from vanilla classes is that the constructor function needs to be generated outside the function that assigns the prototype and passed in as an argument. The compiler would need to be smart enough to duplicate that constructor function in each file that contains the partial class, so you don't have a \"which file is executed first\" scenario.\r\n\r\nUse case:\r\nI'm generating some TypeScript classes from a tool and I'd like to extend them in another file without subclassing them. For application-scale projects, partial classes are a handy tool to have in your toolbelt.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-28T05:45:20.493-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Partial classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 34,
+    "Id": 1612
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Marking as a suggestion so others can vote on it. \r\n\r\nThere are certainly a number of design issues here that would need to be sorted out and it's questionable whether it's truly that desirable given some of the issues. As the compiler does not generally deal with managing ordering it'd be up to the user to manually order the partial class definitions in a way that makes sense, and the compiler would be unable to determine certain issues as a result. There would be questions about how certain other features would work, like adding additional overload or index signatures.",
+      "PostedDate": "2013-08-29T12:51:15.75-07:00",
+      "Id": 111584
+    },
+    {
+      "Message": "@danquirk I'm not sure why the ordering should matter. In the first scenario the compiler need only check that each method is defined at most once and that the constructor is defined at most once and then staple the code together. In the second scenario the compiler need only duplicate the constructor function that I mentioned in my description.\n\nOverloads are not an issue, as JavaScript has no true overloading and TypeScript's overloads only make sense in the context of a method body that immediately follows the signatures. Trying to add a TypeScript-overload in a piece of the partial class that does not contain the method body would be bizarre- it would be trying to give type information about something you don't even own.",
+      "PostedDate": "2013-08-29T13:29:49-07:00",
+      "Id": 111592
+    },
+    {
+      "Message": "But JavaScript is prototypical - classes and inheritance are just conceptual ideas we use at the source-level, there are no classes in JS.\n\nMaybe we need to re-think the partial concept for JavaScript a little bit.\n\nIn JavaScript, load order *does* matter, because we don't have such a thing as static class definitions. Classes are actually code that *runs* and constructs the \"classes\" (prototypes) one method at a time, so this is very different from e.g. C# where class definitions are static.\n\nWe also need to consider how somebody would decorate a \"class\" with new methods in JavaScript - the \"class\", initially, is always \"partial\" in JavaScript, in the sense that it's prototype is always open to further modification, and the constructor itself can be overwritten at will.\n\nSo first off, I think we're looking at two different types of declarations - a regular class definition, followed by one or more \"partial\" class definitions that extend the actual class definition:\n\n\tclass Dog {\n\t\tprivate _name: string;\n\t\t\n\t\tconstructor(name: string) {\n\t\t\tthis._name = name;\n\t\t}\n\t\t\n\t\tpublic bark() {\n\t\t\treturn this._name + ' says: woof!';\n\t\t}\n\t}\n\t\n\tpartial class Dog {\n\t\tprivate _ate: string[];\n\t\t\n\t\tconstructor(name: string) {\n\t\t\tparent(name: string); // call previous constructor\n\t\t\tthis._ate = [];\n\t\t}\n\t\t\n\t\tpublic eat(food: string) {\n\t\t\treturn this._name + ' eats: ' + food + ' (nom nom)';\n\t\t\tthis._ate.push(food);\n\t\t}\n\t}\n\nNote that I introduced a `parent` keyword here, so that when overriding the constructor (or other methods) in a partial class, you can call the `parent` method - this would provide the same degree of flexibility that JavaScript provides, as far as being able to call the original method (or not) at any time, as well as being able to modify it's return value if needed.\n\nThe compiled output for regular classes doesn't need to change:\n\n    var Dog = (function () {\n        function Dog(name) {\n            this._name = name;\n        }\n        Dog.prototype.bark = function () {\n            return this._name + ' says: woof!';\n        };\n        return Dog;\n    })();\n\nThe compiled output for partial classes would assume the class has already been defined, and would simply replace the class - for example, the compiled partial class might replace the existing definition of `Dog`, and copy members from the prototype of the existing \"class\":\n\n    Dog = (function (parent) {\n        function Dog(name) {\n            parent.call(this, name);\n            this._ate = [];\n        }\n        for (var member in parent.prototype) {\n            Dog.prototype[member] = parent.prototype[member];\n        }\n        Dog.prototype.eat = function (food) {\n            return this._name + ' eats: ' + food + ' (nom nom)';\n            this._ate.push(food);\n        };\n        return Dog;\n    })(Dog);\n\nI tested this, and it seems to work - I think this is more true to JavaScript semantics? Typically, when you see classes being extended with \"plugins\" in JavaScript libraries, the extension is a little \"invasive\" operation on the existing constructor or \"class\" along the lines of this.\n\nMaybe there's a better/cleaner/faster way to accomplish something similar?\n\nI think, ideally, overwriting `Dog` should actually be avoided, so that copying all the members from the parent prototype could be avoided, but I was unable to find any other way to replace the actual constructor.\n\nAnyhow, I hope maybe this gives a basis for further discussion.",
+      "PostedDate": "2013-09-05T05:56:00.383-07:00",
+      "Id": 112574
+    },
+    {
+      "Message": "Calls to `parent` in my examples above probably should read `parent.apply(this, arguments)`\n",
+      "PostedDate": "2013-09-17T06:24:37.283-07:00",
+      "Id": 114783
+    },
+    {
+      "Message": "The use-case for which I would like this capability is to augment script-generated code with customization that is not lost the next time the code is generated.",
+      "PostedDate": "2013-10-26T09:04:34.617-07:00",
+      "Id": 119778
+    },
+    {
+      "Message": "Just as the `var _this = this;` injection is avoided when `this` is not used in a lambda function, you could avoid overwriting the Class and copying the prototype members if a new `constructor` is not declared - therefore only adding to the prototype.\n\n(function (Partial) {\n    Partial.prototype.eat = function (food) {\n        return this._name + ' eats: ' + food + ' (nom nom)';\n        this._ate.push(food);\n    };\n})(Dog);",
+      "PostedDate": "2013-11-05T09:11:03.307-08:00",
+      "Id": 121844
+    },
+    {
+      "Message": "Why wouldn't you choose to just extend the interface?\n```TS\n//FileA.ts\n class Dog{      \n    \tconstructor(public name: string){}\n    \tbark(): string{return 'woof';}\n\t}\t\n\n//FileB.ts\ninterface  Dog {\n    eat(str:string): string;\n}\n\nDog.prototype.eat= function(str){\n    return (\"woof woof\");\n}\n```\n\nAbuse of partials could ultimately hurt the advantage TS brings to the table.  I would prefer seeing a new class if introducing new properties but given the reliance on generated code below could be a better way\n```TS\n//FileB.ts\nextend interface Dog {\n        eat(food:string): string{return 'woof woof';}\n}\n\n```\n I like it better because accessing the prototype in TypeScript just begs to cause issues in the future as the language develops\n",
+      "PostedDate": "2013-11-05T09:55:42.013-08:00",
+      "Id": 121850
+    },
+    {
+      "Message": "What I ended up doing is generating a base class and then extending it.\n\n```\n//DogBase.ts\n// this file is generated.  Any modifications will be overwritten by the next generate.\n class DogBase{      \n        constructor(public name: string){}\n        bark(): string{return 'woof';}\n }\n\n//Dog.ts\nclass Dog extends DogBase {\n        constructor(name: string){super(name);}\n        eat(food:string): string{return 'woof woof';}\n}\n```\n",
+      "PostedDate": "2013-11-06T10:47:05.423-08:00",
+      "Id": 122038
+    },
+    {
+      "Message": "It already kinda works, although the playground will mark it as duplicate identifier.\n\n\tclass A {\n\t\tpublic a() { alert('a'); }\n\t}\n\t\n\tclass A extends A {\n\t\tpublic b() { alert('b'); }\n\t}\n\t\n\tvar obj: A = new A();\n\tobj.a();\n\tobj.b();\n\nmaybe this should be legit.",
+      "PostedDate": "2014-02-10T15:37:50.947-08:00",
+      "Id": 133161
+    },
+    {
+      "Message": "I think this suggestion should allow us to directly implement new jQuery function like the following code.\n\n```\npartial class JQuery\n{\n    disable(isDisabled: bool)\n    {\n          return this.prop('disabled', isDisabled);\n    }\n}\n```\n\nAdditional, compiler should smart enough to ignore validation of defined functions on JQuery interface. Normally, there are tons of jQuery extension that define jQuery interface like the following code. If compiler doesn't ignore that, it will raise about the following functions do not implement.\n\n```\ninterface JQuery {\n    accordion(): JQuery;\n    autocomplete(): JQuery;\n    datepicker(): JQuery;\n}\n```",
+      "PostedDate": "2014-04-13T00:00:04.197-07:00",
+      "Id": 141620
+    }
+  ]
+}

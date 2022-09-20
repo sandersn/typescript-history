@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1064740",
+    "ThreadId": "449116",
+    "Html": "I am working on a javascript project using Typescript professionally, and here are my biggest &quot;wants&quot;.   Could someone please let me know if these features are planned, or if there are any work-arounds?  I use the VS plugin, but this can probably also be applied to tsc.exe too<br />\n<br />\n<strong>1)  Project References</strong><br />\nI would like to put shared utilities into a seperate typescript project, and reference those from another project.        I can't do this today because references below the project root would break pathing when running in a webserver, and copying the library files is a weak compromise because then i have duplicate code files sprinkled around and managing this manually is complex/annoying.<br />\n<br />\n<strong>2) build targets</strong> <br />\ni have a set of libraries that I wish to use in Node and browser.   unfortunatly our node team is using CommonJS while we are using AMD for the browser.  right now I can't build for both (building one overwrites the other)<br />\n",
+    "PostedDate": "2013-07-04T20:30:59.577-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064774",
+    "ThreadId": "449116",
+    "Html": "If you are using visual studio, can you not branch the files from one project into a folder in the other project?<br />\n",
+    "PostedDate": "2013-07-04T23:49:36.743-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064783",
+    "ThreadId": "449116",
+    "Html": "@Griffork, sorry I don't know what you mean by &quot;branch the files&quot;.  <br />\n\r<br />\nIf you mean checkout the file from a revision control system in multiple locations, that's a logistical problem and technically complex.  (fyi, I use mercural)\r<br />\n<br />\nIf you mean something else, please elaborate.<br />\n",
+    "PostedDate": "2013-07-05T00:11:04.063-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065378",
+    "ThreadId": "449116",
+    "Html": "Ahh, if you're not using TFS then it probably isn't an easy answer for you.\r<br />\nEssentially it's like checking out another solution inside a solution, but visual studio handles the complexity for you. The only problem is updating is manual, so you have to remember to do it yourself.<br />\n",
+    "PostedDate": "2013-07-07T18:32:51.767-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065441",
+    "ThreadId": "449116",
+    "Html": "@novaleaf\r<br />\n<br />\nWe currently have two typescript application that use a shared library. The shared library is in its own repository (git) and has its own .csproj (based on &quot;HTML Application with Typescript&quot;). We include the shared library as a submodule in the application repositories, and include the .csproj in the application solutions. \r<br />\n<br />\nFor the build we use /// &lt;reference path=&quot;../Library/Reference.d.ts&quot;/&gt; which ref's all ts files in the library. We have set both the applications to build to a single .js (put &lt;TypeScriptOutFile&gt;Application.js&lt;/TypeScriptOutFile&gt; in the application csproj). The library code is compiled into the application.js along with the application code.\r<br />\n<br />\nThe shared library don't need to have any build output for itself (though you could have it output a unit test application for example). We actually accomplish this by having an empty typescript file at the project root and in all other files set &quot;Build Action = Content&quot;.\r<br />\n<br />\nSo we rely heavily in /// &lt;reference&gt; and on the fact that we compile to single js-file. But this allows us to have a single class per file without worrying about run-time latency for loading scripts.\r<br />\n<br />\nA small warning though: we are currently experiencing HUGE performance issues with the typescript compiler/VS plugin. I don't think it has to do with our setup, but I don't really know.<br />\n",
+    "PostedDate": "2013-07-07T23:54:05.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065868",
+    "ThreadId": "449116",
+    "Html": "@MarkusJohnsson:  the 0.9.x typescript plugins have a lot worse performance than before.   I personally am using 0.9.0.1 and it's perf is usable (barely) but you may try going back to 0.8.3.1 if you don't need generics.\r<br />\n<br />\nthanks for the info.  I really don't like using nested-repositories because you have to remember to do a complex commit-pull dance when making any change to the sublibraries. <br />\n\r<br />\nI toyed with a post-build script, but that adds lots of infrastructure overhead, and I work on a team that uses other ide/os's so that's not a very happy solution.\r<br />\n<br />\nwhat i've settled with for the time being is to put all my projects in a root folder, and reference the sub-folders as needed.\r<br />\n<br />\nexample:<br />\n<ul>\n<li>root/</li>\n<li>root/projA.csproj</li>\n<li>root/library.csproj</li>\n<li>root/projA/*.ts</li>\n<li>\nroot/library/*.ts<br />\n</li>\n</ul>\nthus when running a website the root folder is the base folder of the website, so my projects can reference the library ok.<br />\n",
+    "PostedDate": "2013-07-08T17:01:48.58-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1065938",
+    "ThreadId": "449116",
+    "Html": "Yeah, we used 0.8.3 before and the perf was a lot better. I just reversed our linqjs.d.ts to non-generic and I think it made the perf of 0.9 better too. \r<br />\n<br />\nMy build description works equally well when you have all the code in one repo, of course. I just threw that info in to give you a complete picture.\r<br />\n<br />\nWe also had a post-build-script before. We also tried using aspx to bundle dependencies at runtime. But we settled for having typescript compile to one big JS-file. It should be said that this is for a low traffic client application. For a high traffic consumer site you probably have other priorities.<br />\n",
+    "PostedDate": "2013-07-08T23:35:39.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

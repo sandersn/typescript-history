@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-12-17T13:28:56.647-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "This looks like a regression in TypeScript 0.9.5; it works fine in 0.9.1-1.\r\n\r\nTake the polymorphic identity function:\r\n```\r\nfunction identity<A>(a: A): A {\r\n    return a;\r\n}\r\n```\r\n\r\nIf I try to use this with a higher-order function like `map`, the type variables of `identity` and `map` do not unify correctly:\r\n```\r\nvar x: number = [1,2,3].map(identity)[0];\r\n// error TS2011: Cannot convert '{}' to 'number'.\r\n```\r\n\r\nFor some reason the compiler seems to be instantiating the type of `identity` to `({}) => {}` within the `map` expression, even though it should be able to clearly see that we're mapping an array of `number`s, so the appropriate instantiated type of `identity` here should be `(number) => number`, and thus the type of the mapped array should be `number[]`.\r\n",
+    "LastUpdatedDate": "2014-03-31T16:12:31.083-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-17T12:11:26.747-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Higher-order functions with polymorphic arguments don't unify type variables correctly",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2028
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks.  This was 'by design' previously with our typing rules, but we recognized this is a core scenario that needed to work, and updated the spec to accommodate it (if you have the latest draft - see section 4.12.2 \"Type argument inference\".  \n\nIt's not a \"bug\" per se in 0.9.5, just a work-item we haven't implemented yet.  If you keep an eye on the develop branch, this should start to work before the new year.",
+      "PostedDate": "2013-12-17T13:28:47.863-08:00",
+      "Id": 127828
+    },
+    {
+      "Message": "Is there a ticket for the work item that I could follow so I know when this is working again?",
+      "PostedDate": "2013-12-17T17:30:11.95-08:00",
+      "Id": 127867
+    },
+    {
+      "Message": "It looks like this is already fixed on the develop branch... guess I just have to wait for the next compiler version.",
+      "PostedDate": "2013-12-18T13:48:38.977-08:00",
+      "Id": 127983
+    }
+  ]
+}

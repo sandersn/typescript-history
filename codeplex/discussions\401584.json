@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "935369",
+    "ThreadId": "401584",
+    "Html": "\r\n<p>Brian Harry mentioned the conversion tool as part of the TFS team switching over to using TypeScript:</p>\r\n<p><a href=\"http://blogs.msdn.com/b/bharry/archive/2012/10/24/typescript-a-real-world-story-of-adoption-in-tfs.aspx\">http://blogs.msdn.com/b/bharry/archive/2012/10/24/typescript-a-real-world-story-of-adoption-in-tfs.aspx</a></p>\r\n<p>While Brian mentioned in the comments that he asked that the tool get released, can it be released as part of the typescriptlang.org site as well?</p>\r\n<p>A good example is&nbsp;<a href=\"http://js2coffee.org/\">http://js2coffee.org/</a>&nbsp;which allows conversion in both directions - the 'normal' coffee -&gt; js but also js -&gt; coffee.</p>\r\n<p>Now, due to the 'superset of js' nature, it's not strictly necessary, but clearly there's a lot of low-hanging fruit that such a converter can (and presumably, already does) tackle when the existing js already does the idiomatic js patterns, and that'd be\r\n very useful to have instead of having to do those conversions manually. :)</p>\r\n<p>Thanks!</p>\r\n",
+    "PostedDate": "2012-11-01T10:32:22.553-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935756",
+    "ThreadId": "401584",
+    "Html": "<p>One of the main differences between JS and TS is the type system and annotations.&nbsp; It's not possible to convert JS to full-typed TS in the general case without having type information annotated in the JS (which is what the TFS team did, IIRC).</p>\r\n<p>For different kinds of annotations (VSDoc, JSDoc, etc), there could&nbsp;be&nbsp;tools to help users migrate to TS.&nbsp; Telling users about what tools are available sounds handy -&nbsp;a good suggestion for the website.</p>",
+    "PostedDate": "2012-11-02T08:33:23.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935870",
+    "ThreadId": "401584",
+    "Html": "\r\n<p>agreed - I didn't really mean trying to infer the types and include that in the generated TS (although that would be awesome), I was more thinking of the structural things where TS generates idiomatic JS (the modules and classes in particular). &nbsp;It\r\n seems like there's a lot of existing JS out there that already includes the same idiomatic JS, so having something that catches a lot of those cases and automates switching it to TS class/module declarations would be very helpful, even if its ability to match/convert\r\n isn't exhaustive.</p>\r\n<p>IOW, non-type-annotated js, using idiomatic structures (same structure as the TS output for class/module) would transform to .ts with class/module declarations. &nbsp;Type-annotated js converts over with the type annotations as you mentioned, but I'm just\r\n hoping that's not a requirement. &nbsp;I'd much rather the path from the typical JS codebase today (idiomatic patterns, no type annotation) to a 'clean' TS codebase (class/module, type annotations) didn't require the user to go add type annotations (VSDoc,\r\n JSDoc, etc) on the JS side, and instead allows those to be added to the post-conversion TS. :)</p>\r\n<p>It seems like an easier onboarding/migration path to allow people to get the structure bits converted over in an automated fashion and then let them add the typing as time allows or needs dictate, rather than the conversion tool requiring input source be\r\n fully type annotated before they can have an automated conversion to TS. &nbsp;If nothing else, perhaps the converter could take any places where type annotation is missing and just make it &quot;: any&quot; in the output, so people trying to convert code bases with\r\n partial type annotation coverage could convert 'everything' over.</p>\r\n<p>As a workflow, if I could have a set of JS files that convert over to TS files and load them into VS, even if all the TS files start out with &quot;: any&quot; for the types, I can then leverage all that work you guys have done as I start to replace the &quot;any&quot; instances\r\n with the right type. :)</p>\r\n<p>Worst-case, if the conversion tool requires fully-type-annotated source for the conversion process, I can probably still manage the class/module conversion via regex or the like for most cases, but would much rather leverage the converter tool if possible.\r\n :)</p>\r\n<p>Thanks, Jon!</p>\r\n",
+    "PostedDate": "2012-11-02T13:11:56.093-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935883",
+    "ThreadId": "401584",
+    "Html": "<p>Semi-related, but WRT tooling, is there anything in the ecosystem that will take run-time type determination and persist that out in a way that could allow automated type annotation? &nbsp;With the Source Map support, it could even modify the source TS (or create a modified version of it), although just having it persist out the runtime type info in a way that maps to the generated JS is certainly sufficient. :)</p>\r\n<p>Searching around, I see someone else asking for the V8 team to do this in the context of Node development about a year ago, but I'm having a hard time finding anything that seems to actually do it.</p>\r\n<p><a href=\"http://www.barricane.com/2011/10/06/google-v8-to-annotate-source-with-closure-jsdoc-type-expressions.html\">http://www.barricane.com/2011/10/06/google-v8-to-annotate-source-with-closure-jsdoc-type-expressions.html</a></p>\r\n<p>I'd imagine it doesn't really matter which engine (V8, Chakra, whatever) is used as long as it has the necessary runtime type information (which, for perf reasons, I would imagine at least V8 and Chakra both do), but getting them to persist that info back out is what I'm hoping already exists somewhere (and if not, that one or more of the engines will be willing to add it :)</p>\r\n<p>Being able to automate the type annotations via runtime type information would make the converter requirement of 'input js must be type annotated' not so scary, since there would then be an option for getting an existing JS code base modified with type annotations. &nbsp;Even if it only worked correctly (say) 90% of the time, that's still a better result (IMHO) than 100% manual type annotation before any conversion to TS is possible. :)</p>\r\n<p>Thanks again, Jon!!</p>",
+    "PostedDate": "2012-11-02T13:42:14.033-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "936831",
+    "ThreadId": "401584",
+    "Html": "<p>You can get some of this now - eg, it's possible to rename .js files over to .ts files and start with your types default to :any in most cases. &nbsp;You may get some type warnings, but those you could ignore as you finished converting code over.</p>\r\n<p>That said, being able to detect patterns of use, like detecting class-like behavior, in the JS is non-trivial. &nbsp;It'd likely take a separate tool and a lot of polish to get to a decent user experience.</p>\r\n<p>For the runtime aspect, are you asking if we can detect the runtime type and make it available later for static typing? &nbsp;Perhaps not for the general case, but as a first approximation that may work. &nbsp;</p>\r\n<p>Because TS code is&nbsp;inter-operable&nbsp;with JS, another way to do the conversion is a little at a time. &nbsp;You could take a wholly JS codebase and add a few annotations at first, and over time bring more annotations in. &nbsp;The code would work the whole time, and you're not faced with doing the type annotations all at once.</p>",
+    "PostedDate": "2012-11-05T09:53:06.01-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1253570",
+    "ThreadId": "401584",
+    "Html": "I wrote a tool to convert JSDoc annotations to .d.ts files. It's designed to handle the easy cases correctly, and to produce a useful starting point for manually fixing the difficult cases. \r<br />\n<br />\nIt works best on closure-style modules; it can process the entire google closure library without error, though some ambiguities have to be resolved manually.\r<br />\n<br />\nYou can use it online at:\r<br />\n<a href=\"http://fivetran.github.io/closure-definitions/\" rel=\"nofollow\">http://fivetran.github.io/closure-definitions/</a>\r<br />\n<br />\nSource repo:\r<br />\n<a href=\"https://github.com/fivetran/closure-definitions\" rel=\"nofollow\">https://github.com/fivetran/closure-definitions</a><br />\n",
+    "PostedDate": "2014-06-05T22:20:49.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1314016",
+    "ThreadId": "401584",
+    "Html": "You can try to use Resharper for structurally converting Js to Ts (class/module/external module/lambda/...).<br />\n<a href=\"https://www.google.ru/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=4&amp;ved=0CDcQFjAD&amp;url=http%3A%2F%2Fstackoverflow.com%2Fquestions%2F14412164%2Fis-there-a-tool-to-convert-javascript-files-to-typescript&amp;ei=wOU_VIb7NsXnyQPy-ICADA&amp;usg=AFQjCNF6AihfUUnIFdN_yDbSPqoT6W4qNA&amp;sig2=0a9wW8CQWhKxfWZN5kwWcA&amp;bvm=bv.77648437,d.bGQ&amp;cad=rjt\" rel=\"nofollow\">stackoverflow.com</a><br />\n",
+    "PostedDate": "2014-10-16T08:45:49.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

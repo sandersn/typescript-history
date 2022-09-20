@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1038849",
+    "ThreadId": "442412",
+    "Html": "I read up on a suggestion to add the const keyword (similar to C++ const) to the language, and the main reason it was declined was because it would require too much code injection to make const work in javascript (plus there was no way to make 100% sure that it wouldn't be overridden).\r<br />\n<br />\nI was wondering if it would be a good idea to add a compile-time const that compiles away similar to the interface keyword/structure?\r<br />\n<br />\nThis way it would be easy to tell if class functions were read-only, if variables didn't get altered by a function and to create &quot;pseudo const&quot; values (which can't be edited in typescript using the &quot;.&quot; accessor).\r<br />\n<br />\nIf the last one is too much hassle, the first two would be awesome!\r<br />\n<br />\nConsider the following code: <br />\n<pre><code>class ShaderMaker {\n    ....\n    const compileShaderCode (): compiledshader { ... }\n    ....\n}</code></pre>\n\nThe user would be sure that by calling compileShaderCode the ShaderMaker object will not be modified.\r<br />\n<br />\nIt would also be good to understand how the overloads of certain functions work, for example, jquery's offset():<br />\n<pre><code>interface JQuery {\n    ...\n    const offset(): { top: number; left: number; };\n    offset(const coordinates: any): JQuery;\n    offset(func: (index: any, coords: any) =&gt; any): JQuery;\n    ...\n}\n...\n$(&quot;mydiv&quot;).offset( // -&gt; intellisense now shows that offset() is const, and will not modify the div.</code></pre>\n\nAlso, with the second definition for offset, the coordinates are now declared with a const, which means that the user can be sure that the object will not be modified by the function.<br />\n",
+    "PostedDate": "2013-05-02T19:18:03.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041177",
+    "ThreadId": "442412",
+    "Html": "Did anybody actually read this?\r<br />\nDid I put it in the wrong place?\r<br />\n<br />\nIt's weird going to the effort to post something and not getting any response a week later O.o.<br />\n",
+    "PostedDate": "2013-05-08T20:25:40.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041285",
+    "ThreadId": "442412",
+    "Html": "@Griffork,\r<br />\n<br />\nI didn't comment on the discussion because:\r<br />\n<br />\n(a). There was bound to be someone along from TypeScript with the response &quot;We are at present working on aligning TypeScript to ECMAScript 6. Please feel free to vote on other issues that you would like to see supported so that we can prioritise them&quot;.\r<br />\n<br />\n(b). My personal response to const methods is: &quot;meh&quot;. It will be nice to indicate to users of your API which methods are likely to to mutate your object, but then do they really need to know that? It is a kind of a fine-grained information that is borderline a bit too excessive.\r<br />\n<br />\nMy preference is to be able to mark entire classes as immutable, for example<br />\n<pre><code>immutable class Greeter {\n    greeting: string;\n    constructor(message: string) {\n        this.greeting = message;\n    }\n    greet() {\n        return &quot;Hello, &quot; + this.greeting;\n    }\n}\n\nvar greeter = new Greeter(&quot;world&quot;);\n\ngreeter.greeting = &quot;Hello, hacker&quot;; // Error Class Greeter is immutable</code></pre>\n\nThis can also be enforced at runtime via Object.freeze(...).\r<br />\n<br />\nThis seemed slightly off-topic to your suggestion.<br />\n",
+    "PostedDate": "2013-05-09T03:26:26.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041382",
+    "ThreadId": "442412",
+    "Html": "@nabog - I see what you did there :)\r<br />\n<br />\nWe experimented with a 'readonly' property a while back.  My memory is a little fuzzy, but I believe the issue was that if you introduce 'readonly', where all does it go?  At first you put it on 'const' style things, and if you put it there, then you'll want to be able to annotate function parameters with it, and to do that would introduce it into the type system.  I think the issue was that once it's a part of the type system, it has to play well with type inference and common JS patterns, but as we start writing out examples of how it would work in practice, and the code felt less and less like JavaScript and more like some new language.  In general, we've tried to keep TypeScript feeling just like a lightweight annotation to JavaScript that helps you catch errors, and give you good tooling, but otherwise doesn't get in the way.  <br />\n",
+    "PostedDate": "2013-05-09T07:07:59.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041648",
+    "ThreadId": "442412",
+    "Html": "Isn't const a part of the ECMAScript 6 spec already? From what I've read, FireFox and chrome already support the use of the const keyword and there is partial support in Safari and Opera. From the MDN (<a href=\"https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Constants):\" rel=\"nofollow\">https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Constants):</a><br />\n<pre><code>const a = 7;\nconsole.log(&quot;a is &quot; + a + &quot;.&quot;);</code></pre>\n\n<pre><code>// THIS WILL CAUSE AN ERROR\nfunction f() {};\nconst f = 5;\n \n// THIS WILL CAUSE AN ERROR ALSO\nfunction f() {\n  const g = 5;\n  var g;\n \n  //statements\n}</code></pre>\n\n",
+    "PostedDate": "2013-05-09T17:22:16.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041684",
+    "ThreadId": "442412",
+    "Html": "True, I just read over the draft, and it seems that it was added in ECMAScript 6 rev 3 and hasn't really been disputed since:<br />\n<a href=\"http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts\" rel=\"nofollow\">Draft Specification for ES.next (Ecma-262 Edition 6)</a><br />\n<br />\nAlthough, after hearing your point @jonturner I can understand wanting to put off support for const until it's adopted widely if it's hard to implement, however <a href=\"https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/const\" rel=\"nofollow\">It is supported in Mozilla and Chrome (v8), Safari and Opera will accept const declarations but don't enforce them.</a><br />\n<br />\nAlso, thank you very much for the replies :). I didn't want to whinge, but sometimes a &quot;no&quot; is better than not hearing anything.<br />\n",
+    "PostedDate": "2013-05-09T20:15:49.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041880",
+    "ThreadId": "442412",
+    "Html": "@dflor003 and @Griffork\r<br />\n<br />\nThere's a good chance that if it gets into ES6 that TS will adopt it (though likely after 1.0).  We just would have to work out how it affects the type system, or if it's just a way of making a &quot;simple&quot; constant where we verify that it's never assigned to and call that enough.<br />\n",
+    "PostedDate": "2013-05-10T07:08:10.683-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1041896",
+    "ThreadId": "442412",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\nIn general, we've tried to keep TypeScript feeling just like a lightweight annotation to JavaScript that helps you catch errors, and give you good tooling, but otherwise doesn't get in the way.<br />\n</blockquote>\nYou guys have done a rather good job of doing exactly that. Great work with the generics as well.\r<br />\n<br />\n@dflor003, I don't believe the ECMAScript const extends to const methods.<br />\n",
+    "PostedDate": "2013-05-10T07:36:53.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086596",
+    "ThreadId": "442412",
+    "Html": "I just opened a <a href=\"https://typescript.codeplex.com/workitem/1622\" rel=\"nofollow\">request for const support</a> referencing some comments posted in this thread.<br />\n",
+    "PostedDate": "2013-08-30T05:43:28.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

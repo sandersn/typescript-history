@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting.  We are aware of this issue and tracking it as part of https://typescript.codeplex.com/workitem/1170 ",
+    "ClosedDate": "2013-07-02T13:59:58.17-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Sample code for a file, `test.ts`:\r\n\r\n```TypeScript\r\nmodule a {\r\n        export class Generic<T> {\r\n        }\r\n        export class Item {\r\n        }\r\n}\r\nmodule b {\r\n        export var x: a.Generic<a.Item>;\r\n}\r\n```\r\n\r\nRunning `tsc -d test.ts` yields a file, `test.d.ts`:\r\n\r\n```TypeScript\r\ndeclare module a {\r\n    class Generic<T> {\r\n    }\r\n    class Item {\r\n    }\r\n}\r\ndeclare module b {\r\n    var x: a.Generic<Item>;\r\n}\r\n```\r\n\r\nThis will not compile when referenced by another TypeScript file. It should be:\r\n\r\n```TypeScript\r\ndeclare module a {\r\n    class Generic<T> {\r\n    }\r\n    class Item {\r\n    }\r\n}\r\ndeclare module b {\r\n    var x: a.Generic<a.Item>; // Note the \"a.\"\r\n}\r\n```\r\n\r\nThis works fine if `Generic` and `Item` are in different modules.",
+    "LastUpdatedDate": "2013-07-02T13:59:58.17-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-01T20:02:49.777-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "Generated declaration is wrong for a generic class referring to a class in its own module",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1290
+  },
+  "FileAttachments": [
+    {
+      "FileId": 698347,
+      "FileName": "test.ts",
+      "DownloadUrl": ".\\698347"
+    },
+    {
+      "FileId": 698348,
+      "FileName": "test.ts",
+      "DownloadUrl": ".\\698348"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I found a workaround. Declare module `a` twice, once for `Generic` and once for `Item`:\r\n\r\n```TypeScript\r\nmodule a {\r\n        export class Generic<T> {\r\n        }\r\n}\r\nmodule a {\r\n        export class Item {\r\n        }\r\n}\r\nmodule b {\r\n        export var x: a.Generic<a.Item>;\r\n}\r\n```\r\n\r\nThis yields a declaration file that compiles correctly:\r\n\r\n```TypeScript\r\ndeclare module a {\r\n    class Generic<T> {\r\n    }\r\n}\r\ndeclare module a {\r\n    class Item {\r\n    }\r\n}\r\ndeclare module b {\r\n    var x: a.Generic<a.Item>;\r\n}\r\n```",
+      "PostedDate": "2013-07-01T20:08:30.323-07:00",
+      "Id": 104821
+    }
+  ]
+}

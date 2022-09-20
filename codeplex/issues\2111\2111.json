@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:23:51.973-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I don't have the typescript vocabulary to explain this accurately so let me give an example.\r\n\r\nI have a file, Map.ts:\r\n\r\n```\r\nimport Controller = require(\"app/acme/Controller\");\r\n\r\nclass BaseMap {\r\n    controller: Controller;\r\n}\r\nexport = BaseMap;\r\n```\r\n\r\nAnd another file, Controller.ts:\r\n\r\n```\r\nimport Map = require(\"./geo/Map\");\r\n\r\nclass Controller {\r\n    public createMap() {\r\n        var map = new Map();\r\n        map.controller = this;\r\n    }\r\n}\r\n\r\nexport = Controller;\r\n```\r\n\r\nNotice the Map.ts only uses Controller for type checking, yet the output of Map.js is this:\r\n\r\n```\r\ndefine([\"require\", \"exports\", \"app/acme/Controller\"], function(require, exports, Controller) {\r\n    var BaseMap = (function () {\r\n        function BaseMap() {\r\n        }\r\n        BaseMap.prototype.publish = function (topic, data) {\r\n        };\r\n        return BaseMap;\r\n    })();\r\n \r\n    return BaseMap;\r\n});\r\n\r\n```\r\n\r\nNotice the unnecessary reference to \"app/acme/Controller\".\r\n\r\nIf I save Map.ts in Visual Studio 2013 Map.js changes to the expected output:\r\n\r\n```\r\ndefine([\"require\", \"exports\"], function(require, exports) {\r\n    var BaseMap = (function () {\r\n        function BaseMap() {\r\n        }\r\n        BaseMap.prototype.publish = function (topic, data) {\r\n        };\r\n        return BaseMap;\r\n    })();\r\n\r\n    \r\n    return BaseMap;\r\n});\r\n```\r\n\r\nBut if I build (or F5) the project it reverts to the incorrect output and includes \"app/acme/Controller\" again.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-20T07:15:37.277-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generating unnecessary define dependencies.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2111
+  },
+  "FileAttachments": [
+    {
+      "FileId": 781645,
+      "FileName": "Issue2111.7z",
+      "DownloadUrl": ".\\781645"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Reproducing isn't as trivial as shown above so see readme.txt within attached files.",
+      "PostedDate": "2014-01-21T11:07:59.383-08:00",
+      "Id": 131084
+    },
+    {
+      "Message": "ContainerItem.ts can be reduced to this:\n\n\timport Container = require(\"app/Container\");\n\timport Base = require(\"../_base/ContainerItem\");\n\tclass ContainerItem extends Base {\n\t}\n\texport = Base;\n\nRemoving the ContainerItem class fixes/removes the reference to \"app/Container\" in the js output",
+      "PostedDate": "2014-01-21T11:43:20.223-08:00",
+      "Id": 131088
+    },
+    {
+      "Message": "This is a showstopper for AMD since it creates circular references, causing the application to fail.  The only workaround seems to be to define interfaces by hand.",
+      "PostedDate": "2014-01-21T14:29:27.797-08:00",
+      "Id": 131107
+    },
+    {
+      "Message": "I found one workaround; if I include the two mid's which create the circular references in app.ts or main.ts:\n\n```\nimport bogus1 = require(\"app/Container\");\nimport bogus2 = require(\"app/mixns/vendor/ContainerItem\");\n```\n\nI guess the loader resolves/loads these before dependencies are resolved the other so if finds and actual constructor method and not an empty object.",
+      "PostedDate": "2014-01-22T05:03:40.453-08:00",
+      "Id": 131160
+    },
+    {
+      "Message": "The fix should be visible in the upcoming release. Thanks!\n\r\n\r** Closed by RyanCavanaugh 03/31/2014 5:33PM",
+      "PostedDate": "2014-03-31T17:33:37.44-07:00",
+      "Id": 141502
+    },
+    {
+      "Message": "Reopened because a similar issue happens when importing a module definition with enums and referencing that enum.  The compiler is smart enough to substitute in the numeric value of that enum so there should not be an AMD dependency.",
+      "PostedDate": "2014-04-11T07:49:52.947-07:00",
+      "Id": 141503
+    }
+  ]
+}

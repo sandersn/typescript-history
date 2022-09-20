@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:32:18.177-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I have a definition for RxJS like this:\r\n```ts\r\ndeclare module Rx {\r\n\t...\r\n\texport interface Observable<T> { ... }\r\n\tinterface ObservableStatic {\r\n\t\t...\r\n\t\tamb<T>(...sources: Observable<T>[]): Observable<T>;\r\n\t\tamb<T>(sources: Observable<T>[]): Observable<T>;\r\n\t\t...\r\n\t}\r\n\texport var Observable: ObservableStatic;\r\n\t...\r\n}\r\n```\r\nAnd when I tried to use it:\r\n```ts\r\nvar ss: Rx.Observable<string>;\r\nss = Rx.Observable.amb(ss, ss);\r\nss = Rx.Observable.amb([ss, ss]);\r\n```\r\ncompiler goes to infinite loop.\r\n\r\nI tried to reduce my .ts file, but it is still for attachment only =)\r\nTo reproduce please see my attached .ts file.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-12T04:21:57.097-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Compiler 0.9.5 goes to infinite loop",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 2011
+  },
+  "FileAttachments": [
+    {
+      "FileId": 767585,
+      "FileName": "bug.ts",
+      "DownloadUrl": ".\\767585"
+    },
+    {
+      "FileId": 768208,
+      "FileName": "bug2.ts",
+      "DownloadUrl": ".\\768208"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for the simple repro file. This appears to be fixed in the current bits in the develop branch. I'm able to compile the attached file successfully and when loading it in Visual Studio all the language service features appear to be working as expected.\n\r\n\r** Closed by danquirk 12/12/2013 10:26AM",
+      "PostedDate": "2013-12-12T10:26:39.997-08:00",
+      "Id": 127486
+    },
+    {
+      "Message": "I tried to use LNG (bin) from latest 'develop' sources.\r\nIt compiles ok, but I've found same problem again when keep working with typing definitions.\r\nPlease take a look attached file bug2.ts.",
+      "PostedDate": "2013-12-14T02:58:33.41-08:00",
+      "Id": 127487
+    },
+    {
+      "Message": "Addition: used LNG from commit 33f5e7d7959be9a988d557b017220ec1d13b033d",
+      "PostedDate": "2013-12-14T03:00:24.747-08:00",
+      "Id": 127488
+    },
+    {
+      "Message": "Also tried with latest sources (not LNG) [9f57141dd5c1](https://typescript.codeplex.com/SourceControl/changeset/9f57141dd5c1a67b56a2760657caa32bf5b8c176). Result is the same.",
+      "PostedDate": "2013-12-14T03:15:36.287-08:00",
+      "Id": 127489
+    },
+    {
+      "Message": "Most of time being executed function PullTypeReferenceSymbol._getResolver. Looks like it goes through circular links.",
+      "PostedDate": "2013-12-14T03:50:45.887-08:00",
+      "Id": 127491
+    },
+    {
+      "Message": "Thanks, this new file definitely reproduces the problem.",
+      "PostedDate": "2013-12-16T13:23:50.537-08:00",
+      "Id": 127685
+    },
+    {
+      "Message": "I'm also seeing an infinite loop in the compiler which I think is caused by the same thing.\n\nIn my case, I added the following to the most recent version of jquery.d.ts:\n\n```\ninterface JQueryPromise<T> {\n    done(...doneCallbacks: { (data: T, ...args: any[]): any; }[]): JQueryPromise<T>;\n}\n```\n\nAfter that, any file that attempts to use JQueryPromise will cause tsc.exe to go into an infinite loop.\n\nLet me know if you'd like a full example, or if this is a separate issue that should be rolled out into its own issue.",
+      "PostedDate": "2013-12-17T10:11:50.447-08:00",
+      "Id": 127790
+    },
+    {
+      "Message": "it really makes working in vs a nightmare, as the TS integration blocks the whole devenv for half a minute....",
+      "PostedDate": "2014-01-30T07:56:16.85-08:00",
+      "Id": 132118
+    }
+  ]
+}

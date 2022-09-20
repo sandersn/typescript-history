@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-19T14:21:18.18-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Consider the following code:\r\n\r\n```\r\nmodule MyModule {\r\n    export class ItemData {\r\n        public name: string = '';\r\n        public drawbackFactor: number = 0;\r\n        public baseMultiplier: number = 0;\r\n        public actualMultiplier: (parent: Parent) => number;\r\n    }\r\n\r\n    export function ItemLoader(itemName: string, drawback: number, multiplier: number, target: ItemData) {\r\n        target.baseMultiplier = multiplier;\r\n        target.drawbackFactor = drawback;\r\n        target.name = itemName;\r\n        if (target.name == 'Foo') {\r\n            target.actualMultiplier = (parent: Parent) => {\r\n                var m: number = this.drawbackFactor; //break point here\r\n                m = m / parent.skill;\r\n                return m;\r\n            }\r\n        } else {\r\n            target.actualMultiplier = (parent: Parent) => {\r\n                return parent.skill;\r\n            }\r\n        }\r\n\r\n    }\r\n\r\n    export class ItemSlot {\r\n        public baseItemData: ItemData = null;\r\n    }\r\n\r\n    export class Parent {\r\n        public itemSlots: ItemSlot[] = [];\r\n        public skill: number;\r\n    }\r\n\r\n    \r\n}\r\n\r\nvar p = new MyModule.Parent;\r\np.skill = 10;\r\np.itemSlots.push(new MyModule.ItemSlot)\r\np.itemSlots.push(new MyModule.ItemSlot)\r\np.itemSlots.push(new MyModule.ItemSlot)\r\n\r\np.itemSlots[0].baseItemData = new MyModule.ItemData;\r\np.itemSlots[1].baseItemData = new MyModule.ItemData;\r\np.itemSlots[2].baseItemData = new MyModule.ItemData;\r\n\r\nMyModule.ItemLoader('Bar', 10, 5, p.itemSlots[0].baseItemData);\r\nMyModule.ItemLoader('Foo', 20, 15, p.itemSlots[1].baseItemData);\r\nMyModule.ItemLoader('Bar', 30, 20, p.itemSlots[2].baseItemData);\r\n\r\nconsole.log('Results:');\r\nconsole.log(p.itemSlots[0].baseItemData.actualMultiplier(p));\r\nconsole.log(p.itemSlots[1].baseItemData.actualMultiplier(p));\r\nconsole.log(p.itemSlots[2].baseItemData.actualMultiplier(p));\r\nconsole.log('End of Results.');\r\n```\r\n\r\nThis will output the following to the console:\r\n\r\n```\r\nResults: ThisTest.ts:53\r\n10 ThisTest.ts:54\r\nNaN ThisTest.ts:55\r\n10 ThisTest.ts:56\r\nEnd of Results. \r\n```\r\n\r\nThe output shows NaN for p.itemSlots[1].baseItemData.actualMultiplier(p), when my small brain would have expected 2.  I still sometimes get confused with how \"this\" works, but I was surprised to find out that Visual Studio shared my confusion in this instance:\r\n\r\nPut a break point on the line labeled \"//break point here\".  When the point is hit, hover the mouse pointer over the value of this.drawbackFactor.  You will see that VS thinks that the value of this.drawbackFactor is 20.  Then go to the immediate window and type \"? this\".  You will see the following returned: \r\n\r\n```\r\n{...}\r\n    [Methods]: {...}\r\n    __proto__: {...}\r\n    baseMultiplier: 15\r\n    drawbackFactor: 20\r\n    name: \"Foo\"\r\n```\r\n\r\nClearly Visual Studio thinks that \"this\" points to \"target\".  However, if you hit F10 to step to the next line (after the assignment), you will see that m is undefined still.\r\n\r\nThe fix to my code is to set m to target.drawbackFactor instead of this.drawbackFactor, but why is VS getting confused about what \"this\" is pointing to in this code?  I can't think of a valid reason that the tooltip and the immediate window would think that this.drawbackFactor is 20 and then when you assign a variable to this.drawbackFactor, it remains undefined.\r\n\r\nI apologize profusely if this is just my wild misunderstanding of \"this\".",
+    "LastUpdatedDate": "2017-02-10T19:27:41.547-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-06T19:09:44.533-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Postponed"
+    },
+    "Summary": "VS shows wrong 'this' value in debugger when using fat arrow functions",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1655
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Visual studio is confused by this in arrow functions.  Arrow functions \"bind\" this to the scope of their declaration, overriding javascript's normal usage of this being bound to the object which the function is accessed from.\n\nIf you check the generated source you will see that typescript compiles \"this\" to \"_this\" which is bound to the module (rather than using .bind(this)).\n\nYou can use a regular function instead of => in this case to get normal/javascript this-binding.\n```typescript\n            target.actualMultiplier = function(parent: Parent) {\n                var m: number = this.drawbackFactor; //break point here\n                m = m / parent.skill;\n                return m;\n            }\n```",
+      "PostedDate": "2013-09-09T12:09:27.737-07:00",
+      "Id": 112891
+    },
+    {
+      "Message": "Yep, 'this' is confusing :)\n\nEverything here appears to be working by design. When you hit the breakpoint you described you're inside the call 'p.itemSlots[1].baseItemData.actualMultiplier(p)'. Meaning when you enter actualMultiplier the value of 'this' is the instance that baseItemData points to, so an ItemData, which is what VS is showing. \n\nBut when you setup the actualMultiplier property in the MyModule.ItemLoader call the value of 'this' in ItemLoader was 'MyModule' which is what was captured into your function assigned to actualMultiplier (by virtue of using the fat arrow function, otherwise the new 'this' created by the function itself would've been the one captured). This is why you needed to use target.drawbackFactor, as target is the instance of ItemData that you actually wanted to access, where the 'this' value at that time was just the module instance.\n\nThe VS debugger doesn't handle this case very well so you see the misleading 'this' value where it just uses the most recently understood value. It doesn't understand the captured context from earlier unfortunately (there are more than a few ways you can use 'this' in interesting ways that confuse the VS tooling in this respect).",
+      "PostedDate": "2013-09-09T13:16:05.403-07:00",
+      "Id": 112898
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 09/09/2013 1:16PM",
+      "PostedDate": "2013-09-09T13:16:20.38-07:00",
+      "Id": 113092
+    },
+    {
+      "Message": "Re-opening for tracking purposes so others can see it. Not likely to be fixed in the near term but it is a known issue.",
+      "PostedDate": "2013-09-10T13:22:45.303-07:00",
+      "Id": 113094
+    },
+    {
+      "Message": "hello... is there any to vote for this issue? seems like an important issue that needs fixiing...",
+      "PostedDate": "2014-04-10T15:51:00.033-07:00",
+      "Id": 141437
+    },
+    {
+      "Message": "It's so very frustrating that this bug was closed in 2013 as Postponed, and as far as we can tell, that's the last time anyone at MS even paid attention to it.\n\nChrome's debugger handles this perfectly, but somehow Visual Studio still doesn't in 2017.  How much further out can this get postponed? :(",
+      "PostedDate": "2017-02-10T19:27:41.547-08:00",
+      "Id": 206534
+    }
+  ]
+}

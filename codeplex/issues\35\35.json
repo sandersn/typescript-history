@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reopen if you're still seeing this on 0.8.2.0. Thanks!",
+    "ClosedDate": "2013-01-28T17:08:42.52-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Probably is used as a key in some object which is used to emulate a dictionary and not sanitized.\r\n\r\nwhitestar ~/src/temp ∳ cat test.ts \r\n__proto__(\"I like magical properties!\");\r\nwhitestar ~/src/temp ∳ tsc test.ts\r\n\r\n/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:19974\r\n        while(tok.tokenId != TypeScript.TokenID.EOF) {\r\n                 ^\r\nTypeError: Cannot read property 'tokenId' of undefined\r\n    at Object.preProcessFile (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:19974:18)\r\n    at CodeResolver.resolveCode (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:19731:59)\r\n    at CommandLineHost.resolveCompilationEnvironment (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:21492:22)\r\n    at BatchCompiler.resolve (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:21508:40)\r\n    at BatchCompiler.batchCompile (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:21854:76)\r\n    at Object.<anonymous> (/Users/mraleph/local/node-v0.8.10/lib/node_modules/typescript/bin/tsc.js:21891:7)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)",
+    "LastUpdatedDate": "2014-06-03T07:30:26.147-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T09:47:11.533-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "identifier __proto__ causes compiler crash",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 35
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I can't repro this.  I just get the error that \"The name __proto__ does not exist in the current scope\".  Are other files compiling fine for you?  Can you attach a file containing the exact repro?  Thanks.",
+      "PostedDate": "2012-10-02T10:32:13.757-07:00",
+      "Id": 78310
+    },
+    {
+      "Message": "Full repro is above: single line test.ts file.\n\nI suspect that you are running on a VM that does not actually implement __proto__, e.g. Chakra or Carakan (though Chakra is more likely :-)).\n\nTry a node package or navigate to playground in Chrome or Safari and type __proto__ there.",
+      "PostedDate": "2012-10-02T12:31:57.273-07:00",
+      "Id": 78332
+    },
+    {
+      "Message": "It seems that this is related to node/v8.\n\nfile.ts:\nvar obj:any = {};\nobj.__proto__ = {}; // This produces that exception\nobj['__proto__'] = {}; // This works\n\nnode --version\nv0.8.11\n\nnode_modules\\.bin\\tsc.cmd test.ts\n<this one launches \"node tsc.js test.js\" and fails>\nTypeError: Cannot read property 'tokenId' of undefined\n    at Object.preProcessFile\n\ntsc.exe test.ts\n<runs fine>",
+      "PostedDate": "2012-11-05T22:45:58.877-08:00",
+      "Id": 81746
+    },
+    {
+      "Message": "http://www.2ality.com/2012/11/proto-breaks-webapps.html\n\nProbably that's because the js engine used by tsc.exe is the one from IE.\nMaybe the problem is related to a object/dictionary that holds the keyword/token name and tries to set the __proto__, maybe that object/dictionary should preppend something like \"$\" to all keys to avoid that problem.",
+      "PostedDate": "2012-11-05T23:26:11.667-08:00",
+      "Id": 81748
+    },
+    {
+      "Message": "Equivalent things happens with __defineSetter__ and __defineGetter__.\nThe ['__defineSetter__'] workaround has to be used, or the compiler crashes with no indication of where the problem is.\n",
+      "PostedDate": "2012-11-23T00:11:03.107-08:00",
+      "Id": 82903
+    }
+  ]
+}

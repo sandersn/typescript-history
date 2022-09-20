@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There isn't a way to type this object exactly with our current type system.",
+    "ClosedDate": "2013-08-12T10:52:54.537-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm trying to model Grunt config objects for DefinitelyTyped, but have run into the 0.9 constraint that objects with string indexers can only have named properties of the indexer type.\r\n\r\n\r\nGoogling has produced an entry where someone had the problem with an old jQuery declaration file, but it doesn't say what the workaround was.\r\n\r\nIs there a workaround or is there a way this can be relaxed? Grunt MutliTask config objects have named configurations and an optional \"options\" property. I can't model that with this constraint. Is there another way?\r\nHere's my example:\r\n__error:__\r\nerror TS2171: All named properties must be subtypes of string indexer type 'TTaskWithFilesConfig'.\r\n\r\n__code:__\r\n```\r\ninterface ITaskConfig<TOptions> {\r\n    options?: TOptions;\r\n}\r\n\r\ninterface ITaskWithFilesConfig<TOptions> extends ITaskConfig<TOptions> {\r\n    src: string[];\r\n    dest?: string;\r\n}\r\n\r\ninterface IMultiTaskConfig<TOptions, TTaskWithFilesConfig extends ITaskWithFilesConfig<TOptions>> {\r\n    options?: TOptions;\r\n    [task: string]: TTaskWithFilesConfig;\r\n}\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2013-08-13T12:33:57.417-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-11T14:26:55.117-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Relax named parameter constraint for objects with string indexers",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1485
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I was able to create a workaround. The key is to define the indexer as returning `any`, then cast to the required interface type when defining the property. I get all the intellisense goodness that way.\n\n##Task Config Base Interfaces\n```\ninterface ITaskConfig<TOptions> {\n    options?: TOptions;\n}\n\ninterface ITaskCompactConfig<TOptions> extends ITaskConfig<TOptions> {\n    src: string[];\n    dest?: string;\n}\n\ninterface ITaskFilesConfig<TOptions> extends ITaskConfig<TOptions> {\n    files: {\n        [dest: string]: string[];\n    };\n}\n\ninterface ITaskFilesObject {\n    src: string[];\n    dest?: string;\n}\n\ninterface ITaskFilesArrayConfig<TOptions, TTaskFilesObject extends ITaskFilesObject> extends ITaskConfig<TOptions> {\n    files: TTaskFilesObject[];\n}\n\ninterface IMultiTaskConfig {\n    [task: string]: any;\n}\n\ninterface IMultiTaskConfig<TOptions> {\n    options?: TOptions;\n    [task: string]: any;\n}\n```\n\n##Uglify MultiTask declaration\n```\ninterface IGruntContribUglifyConfigOptions {\n    mangle?: boolean;\n    compress?: boolean;\n    beautify?: boolean;\n    report?: any; // false / 'min' / 'gzip'\n    sourceMap?: any; // String / Function \n    sourceMapRoot?: string;\n    sourceMapIn?: string;\n    sourceMappingURL?: any; // String / Function\n    sourceMapPrefix?: number;\n    wrap?: string;\n    exportAll?: boolean;\n    preserveComments?: any; // boolean / string / function \n    banner?: string;\n}\n\n// Backwards compatability.\ninterface IGruntUglifyConfig extends IGruntContribUglifyConfigOptions { }\n\ninterface ITaskGruntContribUglifyCompactConfig extends ITaskCompactConfig<IGruntContribUglifyConfigOptions> { }\ninterface ITaskGruntContribUglifyFilesConfig extends ITaskFilesConfig<IGruntContribUglifyConfigOptions> { }\ninterface ITaskGruntContribUglifyFilesArrayConfig extends ITaskFilesArrayConfig<IGruntContribUglifyConfigOptions, ITaskFilesObject> { }\n\ninterface IGruntContribUglifyConfig extends IMultiTaskConfig<IGruntContribUglifyConfigOptions> { }\n```\n\n##Usage in Gruntfile.ts\n```\n        uglify: {\n            compile: <ITaskGruntContribUglifyFilesConfig>{\n                options: {\n                    banner: '<%= meta.banner %>',\n                },\n                files: {\n                    '<%= concat.compile_js.dest %>': ['<%= concat.compile_js.dest %>'],\n                },\n            },\n        },\n```\n",
+      "PostedDate": "2013-08-12T13:49:34.227-07:00",
+      "Id": 109519
+    },
+    {
+      "Message": "Oops. Forgot this crucial snipit in the Uglify task declaration:\n\n```\ninterface IGruntConfig {\n    uglify?: IGruntContribUglifyConfig;\n}\n```",
+      "PostedDate": "2013-08-12T13:52:41.52-07:00",
+      "Id": 109521
+    }
+  ]
+}

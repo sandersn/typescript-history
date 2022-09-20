@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.52-07:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "Overridden class member variables are not initialized in correct order and doing it before super() call in constructor is not allowed by the compiler.\r\n\r\n```\r\nclass A {\r\n  MEMBER: string = 'foo';\r\n  constructor() {\r\n    console.log(this.MEMBER);\r\n  }\r\n}\r\n\r\nclass B extends A {\r\n  MEMBER: string = 'bar';\r\n  constructor() {\r\n    super();\r\n    console.log(this.MEMBER);\r\n  }\r\n}\r\n\r\nvar b: B = new B(); // outputs 'foo' + 'bar', expected 'bar' + 'bar'\r\nconsole.log(b.MEMBER); // outputs 'bar'\r\n\r\n```\r\n\r\nA bit borderline which output is correct, however logically I would expect overridden members to work similar way as overridden methods, that is base class uses the overridden one.",
+    "LastUpdatedDate": "2014-07-28T15:20:16.52-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-17T07:34:21.463-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Overridden class members not initialized correctly when accessed in constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2562
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That's how typical JavaScript works - methods are on the prototype, and initialized properties are placed on the instance.  Personally, I think initialized properties need to be on the prototype instead (initially).",
+      "PostedDate": "2014-06-17T10:29:24.957-07:00",
+      "Id": 149932
+    },
+    {
+      "Message": "See this: https://typescript.codeplex.com/workitem/401\nand this: https://typescript.codeplex.com/workitem/1098",
+      "PostedDate": "2014-06-17T10:48:37.57-07:00",
+      "Id": 149936
+    },
+    {
+      "Message": "Just added this: https://typescript.codeplex.com/workitem/2563",
+      "PostedDate": "2014-06-17T10:56:25.227-07:00",
+      "Id": 149937
+    },
+    {
+      "Message": "You are kind of correct. Although it's a bit easy to forget you are working with JavaScript when working with TypeScript.\n\nThe prototype initialization has it's own issues, especially if using classes (even arrays) as default values. Modifying the object, will modify it globally (kind of hybrid of static/instance member).\n\nMy main issue is that the instance member initialization happens after super() calls, which causes some issues. Doing it before has it's own set of problems of course. For now I've overcome this limitation/problem with following pattern:\n\n```\nclass A {\n  MEMBER: string;\n  constructor() {\n    init();\n    console.log(this.MEMBER);\n  }\n  init() {\n    this.MEMBER = 'foo';\n  }\n}\n\nclass B extends A {\n  MEMBER: string;\n  constructor() {\n    super();\n    console.log(this.MEMBER);\n  }\n  init() {\n    super.init();\n    this.MEMBER = 'bar';\n  }\n}\n\nvar b: B = new B(); // outputs 'bar' + 'bar'\nconsole.log(b.MEMBER); // outputs 'bar'\n```",
+      "PostedDate": "2014-06-18T00:36:06.483-07:00",
+      "Id": 149993
+    },
+    {
+      "Message": "@jouniii Sorry, that's not correct.  Modifying properties on prototypes using _object_ references (not directly on the prototype) creates a new local instance property that overrides the prototype one.  There's no issue at all.\n\nHave you looked at the generated code?  It's easy to see why it happens. \nhttp://goo.gl/ghjlYp\n\nMy point is that if variables could be set on the prototype, then what you expect to happen will happen.  Currently, they are set on the instance, so calling \"super()\" first sets \"foo\", then after return, \"bar\" is set.  There is no virtual table (vtable) used to link overridden members like in some OOP langauges (i.e. C++, C#, etc.). It's how JS works when using prototype based inheritance.",
+      "PostedDate": "2014-06-18T10:45:14.233-07:00",
+      "Id": 150045
+    },
+    {
+      "Message": "_(note: I'm referring to non-object prototype properties)_",
+      "PostedDate": "2014-06-18T10:56:45.78-07:00",
+      "Id": 150047
+    },
+    {
+      "Message": "This fixes your problem easily (in regards to what I'm referring to):\n```\n\nclass A {\n  MEMBER: string;\n  constructor() {\n    console.log(this.MEMBER);\n  }\n}\n\nA.prototype.MEMBER = 'foo';\n\nclass B extends A {\n  MEMBER: string;\n  constructor() {\n    super();\n    console.log(this.MEMBER);\n  }\n}\n\nB.prototype.MEMBER = 'bar';\n\nvar b: B = new B(); // outputs 'bar' + 'bar'\nconsole.log(b.MEMBER); // outputs 'bar'\n\n```",
+      "PostedDate": "2014-06-18T10:59:42.84-07:00",
+      "Id": 150048
+    },
+    {
+      "Message": "If the initialization would be to prototypes, you could end up this kind of logic errors (bleeds to other instances). Sure this is how prototypes are supposed to work, but demonstrates the instance/class variable hybrid:\n\n```\nclass A {\n  MEMBER: string[];\n  constructor() {\n  }\n}\n\nA.prototype.MEMBER = ['foo'];\n\nclass B extends A {\n  constructor() {\n    super();\n    this.MEMBER.push('bar');\n    console.log(this.MEMBER);\n  }\n}\n\nclass C extends A {\n  constructor() {\n    super();\n    this.MEMBER.push('hello');\n    console.log(this.MEMBER);\n  }\n}\n\nvar b: B = new B(); // outputs ['foo', 'bar']\nvar c: C = new C(); // outputs ['foo', 'bar', 'hello'], logically you'd expect ['foo', 'hello']\n\nconsole.log(b.MEMBER); // outputs  ['foo', 'bar', 'hello'], logically you'd expect ['foo', 'bar']\n```\n\nAs you pointed out the compiled JS for the current model initializes the per instance variables after call to _super. The best solution might be to have compiler generate code comparable to the init() pattern I posted. This would not cause issues if variables are initialized by using other variables in the instance and the variable initialization overwrite could behave as expected, plus it would not cause problems with prototype with objects. However question is, how this is done in ES6 and how far Typescript should deviate.",
+      "PostedDate": "2014-06-19T04:19:43.15-07:00",
+      "Id": 150114
+    },
+    {
+      "Message": "You created  an object (array) on the prototype, which I said not to do. I said it works if objects are _not_ used. ;)  You where not using objects in your original code example. You used a string. Of course, it doesn't work with objects (except, perhaps, static ones).",
+      "PostedDate": "2014-06-19T08:55:56.037-07:00",
+      "Id": 150142
+    },
+    {
+      "Message": "(Sorry, it was implied when I said \"modify properties\", as in their direct values - I wasn't very clear)\n",
+      "PostedDate": "2014-06-19T09:03:58.657-07:00",
+      "Id": 150145
+    }
+  ]
+}

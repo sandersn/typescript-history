@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. Because TypeScript has a structural type system the use of an 'implements' clause is actually entirely optional as far as runtime behavior is concerned. Its purpose is to explicitly declare your class' contract(s) and then have the implementation of them validated by the compiler. As the language spec states in 8.1.1 Class Heritage Specifications:\n\n\"The heritage specification of a class consists of optional extends and implements clauses. The extends clause specifies the base class of the class and the implements clause specifies a set of interfaces for which to validate the class provides an implementation.\"\n\nWhether the class is ambient or not doesn't affect this sort of contract checking. While there is a little copy/pasting here in some cases it's not clear the benefits of the looser checking and/or inconsistency with non-ambient contexts is worth it.",
+    "ClosedDate": "2014-03-14T18:14:02.903-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I'm creating definitions for files that extend or re-implement existing types, like node's ReadableStream / WritableStream etc.\r\n\r\nCurrently we have to do that ugly with two interfaces (one instance type and one static type with a new()).\r\n\r\nThose should be classes and have a constructor declaration etc.\r\n\r\nBut node's definitions are mostly interfaces, and if we *declare* the class in a `.d.ts` to implement an interface we have to reimplement it in the definition :\r\n\r\n````\r\nerror TS2137: Class BufferStream declares interface ReadWriteStream but does not implement it:\r\n\tType 'BufferStream' is missing property 'readable' from type 'ReadWriteStream'.\r\n````\r\n\r\nThis means copying from the original interface to this class declaration. \r\n\r\nDeclarations are not code so this duplicate information seems a little unnecessary (and everybody would just copy-paste it in anyway).",
+    "LastUpdatedDate": "2014-03-31T16:19:49.18-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-14T14:13:19.16-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "duplicating declared signatures from interfaces when declaring a class definition?",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2314
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "> Its purpose is to explicitly declare your class' contract(s) \n\nThat is what I want to do. But I don't have an implementation because it is a declaration file.\n\n> While there is a little copy/pasting\n\nI think \"a little\" doesn't quite cut it. \n\nYou could verify this and declare a class that implements a ReadWriteStream (two interfaces from node's `stream` module), which means it is also a EventEmitter. Then declare 4 others like it.\n\nThat is quite a lot of code to cart around for every custom stream type. I was hoping to dig into the node.js stream API and the popular npm modules for it but this is not workable. \n\nCopy/paste based polymorphism is not very DRY either (I'm looking at an attempt now, it is not pretty at just a few classes).",
+      "PostedDate": "2014-03-14T19:16:05.497-07:00",
+      "Id": 136926
+    }
+  ]
+}

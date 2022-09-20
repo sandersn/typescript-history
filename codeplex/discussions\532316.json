@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1209405",
+    "ThreadId": "532316",
+    "Html": "It seems like post 0.9.1, the direction of TypeScript has changed. Now the primary goal is to improve compiler speed.\r<br />\n<br />\nThis is fine, however, the way this goal is being achieved is by sacrificing programmer happiness. Bugs such as these - <a href=\"https://typescript.codeplex.com/workitem/1647\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1647</a> are not fixed for efficiency reasons. More and more type inference is being sacrificed (<a href=\"https://typescript.codeplex.com/discussions/471751\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/471751</a>) because to do otherwise would decrease the compiler's speed.\r<br />\n<br />\nIsn't the first rule of speed optimization the one that the output of an optimized program must not differ from the output of the unoptimized one, given the same input? Is it not possible to achieve those performance improvements in other ways? Like for example, introducing aggressive caching of compilation data?\r<br />\n<br />\nI really like TypeScript, but I have serious doubts about the direction where its headed now. Really hoping its just some sort of a temporary pre-1.0 phase where you remove things you're not sure you'd like to support forever...<br />\n",
+    "PostedDate": "2014-02-17T05:36:19.68-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209535",
+    "ThreadId": "532316",
+    "Html": "In large part, the design changes in the language since 0.9.1 have focused on:<br />\n<ol>\n<li>Catching errors</li>\n<li>Not getting in the user's way</li>\n<li>Typing more patterns in JavaScript (while still doing #2)</li>\n<li>\nSimplifying the type system so that errors are easier to reason about<br />\n</li>\n</ol>\nThere were some changes that did have an impact on compile speed mostly because we opted for a simpler, easier-to-understand design.<br />\n<br />\nTo your specific points:<br />\n<br />\nThe thread in <a href=\"https://typescript.codeplex.com/workitem/1647\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1647</a> is around the visibility of types when using external modules.  For separate compilation scenarios where you output a .d.ts file, you need to be able to name the types of symbols and functions.  You can import modules and use only the type information, and the result won't have any impact on the .js file (basically, we never write out a require statement if you only use the module for type information).  The issue is really around the visibility of the type names and if the compiler has enough available to express them.<br />\n<br />\nThe thread on <a href=\"https://typescript.codeplex.com/discussions/471751\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/471751</a> touches on the switch from using 'any' to something that would help catch more errors in code where the user doesn't explicitly annotate ambiguous inference situations.  We had been just using 'any', which meant the user wouldn't get any help.  Making this change did help projects catch these ambiguous situations and fix them.<br />\n<br />\nNeither of these really is about compiler speed, but rather about helping programmers catch bugs and annotate their programs as clearly as possible.  We're trying to, and I like your phrase, &quot;optimize for programmer happiness&quot; by striking a balance for a type system that easier to understand while still strong enough to catch issues.  \n<br />\n",
+    "PostedDate": "2014-02-17T10:18:12.927-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

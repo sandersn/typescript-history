@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The compiler doesn't try to infer a correct file ordering. You need to pass the files in the correct order (or use /// references) if you're using --out",
+    "ClosedDate": "2013-08-26T09:25:08.647-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Extends clause does not work when outputting to single file, the order of files on command line seems to matter. Typescript should generate working code no matter what the order of files on command line is.\r\n\r\nFor example: \r\n\r\nparent.ts\r\n```\r\nclass Parent {\r\n}\r\n```\r\nchild.ts\r\n```\r\nclass Child extends Parent {\r\n}\r\n```\r\nError:\r\n```\r\n$ tsc --out out.js child.ts parent.ts && node out\r\n\r\nC:\\dev\\projects\\tmp\\tsc-bug\\out.js:4\r\n    __.prototype = b.prototype;\r\n                    ^\r\nTypeError: Cannot read property 'prototype' of undefined\r\n    at __extends (C:\\dev\\projects\\tmp\\tsc-bug\\out.js:4:21)\r\n    at C:\\dev\\projects\\tmp\\tsc-bug\\out.js:8:5\r\n    at Object.<anonymous> (C:\\dev\\projects\\tmp\\tsc-bug\\out.js:13:3)\r\n    at Module._compile (module.js:456:26)\r\n    at Object.Module._extensions..js (module.js:474:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Function.Module.runMain (module.js:497:10)\r\n    at startup (node.js:119:16)\r\n    at node.js:901:3\r\n```\r\nAnd when switching the argument file order, no error:\r\n```\r\n$ tsc --out out.js parent.ts child.ts && node out\r\n\r\n```\r\n\r\nVersions used:\r\n```\r\n#$ tsc --version\r\nVersion 0.9.1.0\r\n$ node --version\r\nv0.10.1\r\n```\r\n",
+    "LastUpdatedDate": "2013-08-27T09:50:22.62-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-26T07:23:56.97-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Cannot read property 'prototype' of undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1590
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "\nIn the manual (0.9.1.1) there multiple lines that suggest otherwise:\n\nChapter 11.1 \n\n> When a TypeScript program is compiled, all of the program’s source files are processed together. Statements and declarations in different source files can depend on each other, possibly in a circular \nfashion.\n\n...\n\n> \"Implementation .. source files ... form the single global module.\"\n\nChapter 11.1.1\n\n> \"The TypeScript compiler automatically determines a source file’s dependencies and includes those \ndependencies in the program being compiled.\"\n\n...\n\n\nThis causes a lot of source file re-ordering headache and SHOULD definitiely be fixed in the compiler.",
+      "PostedDate": "2013-08-26T21:31:19.853-07:00",
+      "Id": 111243
+    }
+  ]
+}

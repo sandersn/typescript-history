@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:26.753-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I think more control over classes and modules, such as \"if (true) class T { }\" or \"if (true) module T { }\" should be allowed.  This may be a good way to load a whole minified script WITHOUT also executing code that is NOT NEEDED until later.  I think this could promote dynamic scripts that would run quickly, depending on what page/environment they load on (perhaps not all modules are needed for every page). Something like:\r\n\r\n```\r\nclass CommBase { /*...*/ }\r\nif (clientSide) class ClientClass extends CommBase {\r\n   // ...\r\n} else class ServerClass extends CommBase {\r\n  // ...\r\n}\r\n```\r\nmay become\r\n```\r\nvar __extends = ... ;\r\n\r\nif (clientSide) {\r\n  var ClientClass = (function (_super) {\r\n      __extends(ClientClass, _super);\r\n      function ClientClass() {\r\n          _super.apply(this, arguments);\r\n      }\r\n      return ClientClass;\r\n  })(CommBase);\r\n}\r\nelse {\r\n  var ServerClass = (function (_super) {\r\n      __extends(ServerClass, _super);\r\n      function ServerClass() {\r\n          _super.apply(this, arguments);\r\n      }\r\n      return ServerClass;\r\n  })(CommBase);\r\n}\r\n```\r\n(yes, I'm well aware of var hoisting; but the *value* of the non-set vars would still be \"undefined\" regardless [and besides, they could also be wrapped in another function scope if need be])\r\n\r\nI find sometimes all is needed in some cases (for my API at least) is different types without creating entire new files.  I really son't see why this would be a big deal, and it's not like this is never done in JS.  Even if the way I present it is not the best, I'm sure it can be done another way.  Just remember that some people do like creating single minified .js files, and this may help with that *single* file (where any external modules may instead be merged into one).",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-14T00:23:05.62-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Conditional Types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2432
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "More reasons: https://typescript.codeplex.com/discussions/542113",
+      "PostedDate": "2014-04-14T00:29:21.19-07:00",
+      "Id": 141693
+    },
+    {
+      "Message": "While I agree that it would be nice if classes and modules were first-class citizens along with functions (i.e., hoisted, potentially anonymous, definable at any scope (not just module scope)), in this case I think you could get this feature by writing the correct packaging and do your switches at the file level.\n\ni.e., have client/CommBase.ts and server/CommBase.ts and then concatenate \n```\n<< contents of other files >>\nif (clientSide) {\n  +function() { <<contents of client/CommBase.js>> }();\n} else {\n  +function() { <<contents of server/CommBase.js>> }();\n}\n<< contents of other files >>\n```\njust make sure that the CommBase class is exported from some module which already has been emitted previously and the export should work through the closure.",
+      "PostedDate": "2014-04-14T07:40:21.62-07:00",
+      "Id": 141747
+    },
+    {
+      "Message": "\nI'm not familiar with packaging and switches for TS.  What is this all about?  Is there a page with this info somewhere? Thanks.",
+      "PostedDate": "2014-04-14T14:46:36.253-07:00",
+      "Id": 141801
+    },
+    {
+      "Message": "FYI: Well ... it would seem this works now:\n\n```\nmodule _ {\n\tif (_.A) return;\n\n\texport module A {\n    \texport class B {\n    \t}\n\t}\n}\n```\nhttp://goo.gl/k9eo31\n\nInteresting. :/",
+      "PostedDate": "2014-04-14T16:50:43.587-07:00",
+      "Id": 141809
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1092190",
+    "ThreadId": "456771",
+    "Html": "Looking at the TypeScript sources, I see tests that chase dependencies but only compile, and I see tests that involve the language services but do not chase (external) dependencies.\r<br />\n<br />\nHow would I set up a test case that loads <code>src/compiler/tsc.ts</code> and all its dependencies, then lets me work with the language services (as in the fourslash tests)?\r<br />\n<br />\nI would like to check the following situation:<br />\n<ul>\n<li>load tsc&amp;dependencies</li>\n<li><code>getAllDiagnostics</code></li>\n<li>edit file <code>src/compiler/core/require.ts</code> (just add an empty line or something, don't save)</li>\n<li>\n<code>getAllDiagnostics</code><br />\n</li>\n</ul>\nIn my own language service client, the last step suddenly claims an error in <code>src/compiler/io.ts</code>. I think what happens is that type checking compares the type for the same symbol (<code>IO</code>) in different inference states (<code>any</code> vs <code>IIO</code>), and complains about them being different instead of using only the more specific type. But I don't know why that happens.<br />\n",
+    "PostedDate": "2013-09-13T02:30:10.58-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092515",
+    "ThreadId": "456771",
+    "Html": "If you look in the constructor for the TestState class in src\\harness\\fourslash.ts you can see where we do resolve dependencies with language service related tests. The fourslash tests are the closest test sources to the scenario you're describing.<br />\n",
+    "PostedDate": "2013-09-13T14:23:33.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1092648",
+    "ThreadId": "456771",
+    "Html": "Yes, but the fourslash tests tend to resolve the dependencies from inline sources, via <code>//@Filename:</code>, which is impractical for the whole of <code>tsc</code>. My attempts to import a real, external module, or to reference include <code>tsc</code>, have not yet succeeded, so a working example of doing this would be helpful.\r<br />\n<br />\nMeanwhile, the issue is caused by a conflict between <code>typeScript.ts</code>, which has <code>declare var IO: any</code>, and <code>io.ts</code>, which has a global <code>var IO</code> (inferred type <code>IIO</code>). On first load, this conflict doesn't cause a problem, but when getting semantic diagnostics for <code>io.ts</code> (after updating <code>require.ts</code>), the complaint (<code>TypeScript.DiagnosticCode.Subsequent_variable_declarations_must_have_the_same_type_Variable_0_must_be_of_type_1_but_here_has_type_2</code>) is raised in <code>PullTypeResolver.prototype.validateVariableDeclarationGroups</code>. Removing the declaration of <code>IO</code> in <code>typescript.ts</code> avoids the complaint.<br />\n",
+    "PostedDate": "2013-09-14T02:32:57.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1093031",
+    "ThreadId": "456771",
+    "Html": "<strong>clausreinke wrote:</strong><br />\n<blockquote>\nYes, but the fourslash tests tend to resolve the dependencies from inline sources, via <code>//@Filename:</code>, which is impractical for the whole of <code>tsc</code>. My attempts to import a real, external module, or to reference include <code>tsc</code>, have not yet succeeded, so a working example of doing this would be helpful.<br />\n</blockquote>\nThe <code>TestState</code> constructor instantiates a <code>HarnessCompiler</code> and calls <code>HarnessCompiler.resolve</code>; that delegates to <code>TypeScript.ReferenceResolver.resolve(this.inputFiles, this, this.compiler.settings)</code> where the second parameter is the <code>host</code>, in this case an instance of <code>HarnessCompiler</code>; so when resolution checks <code>fileExists</code>, it only checks for already loaded files, which fails for external imports/references, so they never get loaded.<br />\n",
+    "PostedDate": "2013-09-16T02:24:54.81-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

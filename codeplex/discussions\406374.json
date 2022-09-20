@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "954464",
+    "ThreadId": "406374",
+    "Html": "\r\n<p>Several Javascript libraries use the concept of 'default options' that may be passed to as constructor parameter. The constructor then uses a set of default parameters, but overrides all properties for which the given object has a value.</p>\r\n<p>The following sample illustrates this pattern:</p>\r\n<pre lang=\"javascript\"><span>var</span><span> canvas </span><span>=</span><span> </span><span>new</span><span> fabric</span><span>.</span><span>Canvas</span><span>(</span><span class=\"str\">'c'</span><span>,</span><span> </span><span>{</span><span><br>&nbsp; hoverCursor</span><span>:</span><span> </span><span class=\"str\">'pointer'</span><span>,</span><span><br>&nbsp; selection</span><span>:</span><span> </span><span>false</span><span><br></span><span>});</span><br></pre>\r\n<p>For handling this case right now I need the following TypeScript code:</p>\r\n<p>&nbsp;</p>\r\n<pre>declare var Canvas: {\n        new (element: string, options: {\n            containerClass?: string;\n            defaultCursor?: string;\n            freeDrawingColor?: string;\n            freeDrawingLineWidth?: number;\n            hoverCursor?: string;\n            interactive?: bool;\n            moveCursor?: string;\n            perPixelTargetFind?: bool;\n            rotationCursor?: string;\n            selection?: bool;\n            selectionBorderColor?: string;\n            selectionColor?: string;\n            selectionDashArray?: number[];\n            selectionLineWidth?: number;\n            targetFindTolerance?: number;\n        }): Canvas;\n    }</pre>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>Thus, we need to duplicate the fields which are available on a specific class, as they are also set on the actual class definition itself (without the '?'):</p>\r\n<p>&nbsp;</p>\r\n<pre>interface Canvas extends StaticCanvas {\n   \n        // constructors\n        (element: Element): Canvas;\n        (element: string): Canvas;\n\n        // fields\n        containerClass: string;\n        defaultCursor: string;\n        freeDrawingColor: string;\n        freeDrawingLineWidth: number;\n        hoverCursor: string;\n        interactive: bool;\n        moveCursor: string;\n        perPixelTargetFind: bool;\n        rotationCursor: string;\n        selection: bool;\n        selectionBorderColor: string;\n        selectionColor: string;\n        selectionDashArray: number[];\n        selectionLineWidth: number;\n        targetFindTolerance: number;\n        ...\n}   </pre>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>I think it would be nice to</p>\r\n<p>a.) store such literal types using a name, so they can be re-used across multiple methods and b.) provide a way to prevent duplication at all, for example by mapping the actual type to a &quot;shadow type&quot; which is only used for initialization (see code sample\r\n below)</p>\r\n<p></p>\r\n<pre>new (element: string, options*: Canvas);\n\n// should allow the following use\nvar canvas = new fabric.Canvas('c', {\n  hoverCursor: 'pointer',\n  selection: false\n});</pre>\r\n<p></p>\r\n<p>I have seen the same pattern not only at fabric.js but also at other popular javascript libraries. Jquery is also such an example - in this case the predefined type defintion file for Jquery makes heavy use of 'any' so that all usages are allowed.</p>\r\n<p>Kind Regards,<br>\r\nOliver</p>\r\n",
+    "PostedDate": "2012-12-11T03:31:59.66-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "957165",
+    "ThreadId": "406374",
+    "Html": "\r\n<p>+1 for adding language support for common use cases like this.</p>\r\n",
+    "PostedDate": "2012-12-17T11:45:44.01-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "957768",
+    "ThreadId": "406374",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/564\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-12-18T08:48:40.27-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

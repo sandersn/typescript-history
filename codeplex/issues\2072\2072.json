@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-07T18:20:10.233-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "From here: http://stackoverflow.com/questions/20957174/how-can-i-pass-an-eta-reduced-generic-function-as-a-parameter-in-typescript/20960837\r\n\r\nThe result type of a generic function passed as a parameter cannot be inferred in situations like this:\r\n```\r\ndeclare function foo<x>(arg:number):x; // foo is number=>x    \r\nfunction bar(arg:(a:number)=>number){} // arg is number=>number    \r\nbar(foo); // FAIL\r\n```\r\nI wish I could give the compiler a hint by dojng something like this:\r\n\r\n```\r\nbar (foo <number>) ;\r\n```\r\n\r\n",
+    "LastUpdatedDate": "2014-01-07T18:20:10.233-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-06T15:23:09.773-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Unable to pass a function with generic result type as a parameter. ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 2072
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "One issue here is the bar is stating it requires a function that returns a number, but there are no constraints on the return type of foo (it could return a string, or an empty object, etc...).\n\nYou could write code such as the below:\n\n```typescript\ndeclare function foo<T extends number>(arg: number): T;\nfunction bar(arg: (a: number) => number) { }    \nbar(foo);\n```\n\nHowever even today this gives errors also.  We do however have some changes in flight that means the above will work in the next release.\n\nToday with 0.9.5 you can write working code such as the below:\n\n```typescript\ndeclare function foo<T extends number>(arg: T): T;\nfunction bar(arg: (a: number) => number) { }\nbar(foo);\n```\nHere having T as the param type allows us to infer a type for T, and as it is constrained to number (both the arg and the return type will be \"at least\" number), the function is acceptable.\n\nDoes any of the above work for your scenario?  Please reopen with more details if not.\n",
+      "PostedDate": "2014-01-07T18:18:43.123-08:00",
+      "Id": 129741
+    }
+  ]
+}

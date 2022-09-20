@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:17.507-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I am not sure if it is a design choice,\r\n\r\n```TypeScript\r\nvar o = new Object(\"a string \");\r\nconsole.log(o.constructor.name);  // prints String\r\nconsole.log(o.substring(4, 8)); // prints ring\r\n```\r\n\r\nBut typescript is throwing compilation errors\r\n\r\nThe property 'constructor' does not exist on value of type 'Object'\t\r\nThe property 'substring' does not exist on value of type 'Object'\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "TypeScript 0.9.0",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T09:26:11.957-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "not recognizing object constructors",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 155
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Confirmed bug. \n\nTypeScript appears to try and prevent the spec behaviour of new Object(value) when value is a String, Boolean or Number (15.2.2.1 new Object ( [ value ] )); in these cases, new Object(value) should return a new object of those _specific_ types by explicitly creating the object with appropriate constructor.\n\nIn lib.d.ts, under \"declare var Object: { ... \", the return type for \"new (value?: any): Object;\" should be changed to: \"new (value?: any): any;\". \n",
+      "PostedDate": "2012-10-07T10:00:04.583-07:00",
+      "Id": 78911
+    },
+    {
+      "Message": "Also, on top of the fact that there's no 'constructor' defined in the Object interface, you can't even extend it yourself.\n\ninterface Object {\n    constructor: Function; // Error: Duplicate identifier 'constructor'\n}",
+      "PostedDate": "2012-10-15T07:20:24.633-07:00",
+      "Id": 79755
+    },
+    {
+      "Message": "I'm getting the same issue when I try something like this:\n\nfunction getConstructorNameOf (x:String) {\n\treturn x.constructor.name\n}\n\ngetConstructorNameOf(\"a string\")\n\n=> \"The property 'constructor' does not exist on value of type 'String'\" :(",
+      "PostedDate": "2012-10-30T16:22:11.807-07:00",
+      "Id": 81327
+    },
+    {
+      "Message": "There are a number of these that I have found.  The solution I have been using is just by using:\n\nobject['constructor']\n\nwhen object.constructor fails to compile.  I also ran into this when trying to determine if the browser was opera by using the common:\n\nwindow.opera\n\nand I just refactored to do:\n\nwindow['opera']\n\nI don't get anymore compile time errors and works the same.",
+      "PostedDate": "2012-11-24T19:35:59.927-08:00",
+      "Id": 82960
+    },
+    {
+      "Message": "Yup, this is a pain and doesn't make sense from a typing point of view.",
+      "PostedDate": "2013-01-15T04:28:29.463-08:00",
+      "Id": 86156
+    },
+    {
+      "Message": "More examples...\n\nObjects constructed by regular JavaScript Functions are ok:\n\n```\nfunction Bar() {}\n\nvar bar = new Bar();\n\nconsole.log(bar.constructor.name === 'Bar'); // OK\n```\n\nFunctions are also supposed to have a constructor, but no:\n\n```\nconsole.log(Bar.constructor.name === 'Function'); // FAILS\n```\n\nIt looks as though TypeScript's Class type does not inherit from Function:\n\n```\nclass Foo {}\n\nvar foo = new Foo();\n\nconsole.log(foo.constructor.name === 'Foo'); // FAILS\n```\n\nAnd TypeScript classes also don't seem to have a constructor:\n\n```\nconsole.log(Foo.constructor.name === 'Function'); // FAILS\n```\n\nFunctions created with a fat arrow operator, on the other hand, do have a constructor:\n\n```\nvar baz = () => null;\n\nconsole.log(baz.constructor.name === 'Function'); // FAILS\n```\n\nJust for completeness I'm including the String and Number examples too:\n\n```\nconsole.log((123).constructor.name === 'Number'); // FAILS\n\nconsole.log(('nib').constructor.name === 'String'); // FAILS\n```\n\nHere's the complete script for reference:\n\n```\nfunction Bar() {}\n\nvar bar = new Bar();\n\nconsole.log(bar.constructor.name === 'Bar'); // OK\n\n// ----- //\n\nclass Foo {}\n\nvar foo = new Foo();\n\nconsole.log(foo.constructor.name === 'Foo'); // FAILS\n\n// ----- //\n\nconsole.log(Foo.constructor.name === 'Function'); // FAILS\n\n// ----- //\n\nvar baz = () => null;\n\nconsole.log(baz.constructor.name === 'Function'); // FAILS\n\n// ----- //\n\nconsole.log((123).constructor.name === 'Number'); // FAILS\n\nconsole.log(('nib').constructor.name === 'String'); // FAILS\n```\n\nIt does compile and run, and outputs all `true` on the console.\n\nI struggled to see if I could solve this with an ambient type-declaration... no luck.\n\nI hope fixing this is a high priority, as this is a critical bug breaking JavaScript object semantics.\n",
+      "PostedDate": "2013-11-01T13:54:53.803-07:00",
+      "Id": 120463
+    },
+    {
+      "Message": "Any plans to fix this soon? (Seems like an easy one, and casting to \"any\" is not a desirable workaround.)",
+      "PostedDate": "2013-11-09T00:43:59.263-08:00",
+      "Id": 122489
+    }
+  ]
+}

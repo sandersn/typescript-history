@@ -1,0 +1,122 @@
+[
+  {
+    "Id": "1022473",
+    "ThreadId": "438341",
+    "Html": "I use JSHint and jsbeautifier for node.js (using a grunt.js build file) to clean up our javascript, and I was wondering if there's similar tools for TypeScript as well.\r<br />\n<br />\nIdeally I want the buildfile to be able to lint/clean up for every user on every platform so I'd rather not solely depend on the editor tooling. <br />\n",
+    "PostedDate": "2013-03-28T08:30:35.053-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022705",
+    "ThreadId": "438341",
+    "Html": "I'm not aware of any such tool but I would certainly love to see one.\r<br />\n<br />\nI experimented with applying JsHint to the generated code.  Having to trace the issue back from the generated code is a bit of a pain so I only wanted the most egregious errors pointed out.  Unfortunately a lot of warnings can't be turned off for JsHint and some of them are fundamental to the generated code so I gave up on that.<br />\n",
+    "PostedDate": "2013-03-28T16:38:26.91-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1022992",
+    "ThreadId": "438341",
+    "Html": "I did that also and it was not a great success either, it generates lots of minor lint. I created this issue for it: <a href=\"http://typescript.codeplex.com/workitem/850\" rel=\"nofollow\">http://typescript.codeplex.com/workitem/850</a>\r<br />\n<br />\nBut what I'd really like is linting and beautifying for pure TypeScript. As it;s so similar I'm looking into the JSHint sources now but I'm not confident enough for taking this on myself at acceptable quality level.<br />\n",
+    "PostedDate": "2013-03-29T11:16:08.88-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1023862",
+    "ThreadId": "438341",
+    "Html": "@Bartvds, what exactly is lacking in TypeScript that makes one want to use JSHint? (ignoring the bugs in what is in fact an alpha version at present)<br />\n",
+    "PostedDate": "2013-04-01T10:58:44.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1023904",
+    "ThreadId": "438341",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\n@Bartvds, what exactly is lacking in TypeScript that makes one want to use JSHint? (ignoring the bugs in what is in fact an alpha version at present)<br />\n</blockquote>\nLinters and compilers really have separate jobs.  Compilers follow the letter of the law where a linter warns about things that are technically valid but likely signs of code quality issues.  Assignments inside if statements and unused variables are two of the most common mistakes.  ReSharper's linter for JavaScript warns about unreachable code which is awesome.  If they add TypeScript support I'll be very happy.<br />\n",
+    "PostedDate": "2013-04-01T13:00:48.453-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1023907",
+    "ThreadId": "438341",
+    "Html": "There's a few different things here. I'm not sure where they belong (in core or in wider community) but I'd ask here first:<br />\n<ul>\n<li>\nI would like to be able to enforce a strict linting on the TypeScript files itself. Similar in the way we now use JSHint on Javascript, but I would like something like that for TypeScript itself (eg: it understands TS). Since TS is a superset of JS this would be the same type of lint and possibly more. <br />\n</li>\n<li>\nI would like to be able to auto-format TypeScript using a node.js based module, similar to jsbeautifier, that we can use to standardise the code formatting without conflicting settings between editors. Visual Studio and WebStorm and such have good formatters but we don't want to depend on editor settings in shared project where people might even code in notepad or whatever. This way it could be integrated in a automated build/commit tasks.<br />\n</li>\n<li>\nI don't use JSHint specifically on TypeScript  code, it makes not a lot of sense, but we would like to have the TS generated JS modules (AMD and node) to live between the 'vanilla' JS files from other projects/members without tripping the JSHint. Since TS's code is machine generated it should be 'perfect' code that makes Crockford drool.<br />\n</li>\n</ul>\n",
+    "PostedDate": "2013-04-01T13:03:22.487-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1024928",
+    "ThreadId": "438341",
+    "Html": "JSHint/JSLint is a kind of hybrid tool that checks for both errors in the code and also attempts to enforce a redundant style on the developer. \r<br />\n<br />\nIt doesn't make much sense to want something similar for TypeScript.\r<br />\n<br />\nThere are a couple of tools that are rather useful for C#: FxCop and StyleCop. I think something along those lines would make more sense.\r<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-04-03T08:30:38.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1025927",
+    "ThreadId": "438341",
+    "Html": "Why doesn't this make sense for TypeScript? \r<br />\n<br />\nTypeScript is the same code as JavaScript, so I say if it's useful for JavaScript then it's also useful for TypeScript, since you can make EXACT the same type of lint, and MORE. Unless you disregard everything we've learned over past years of JavaScripting.<br />\n",
+    "PostedDate": "2013-04-05T01:51:57.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1026204",
+    "ThreadId": "438341",
+    "Html": "Because TypeScript is a statically typed language, unlike JavaScript. Furthermore, it supports ECMAScript 6 features that makes it possible to write object-oriented code. That provides a number of assurances with regard to removing errors from written code at compile time.<br />\n<br />\nThat seems pretty obvious, so perhaps you are getting at something else?<br />\n<br />\nI agree with you that we need a linter (like FxCop) to warn about correct but potentially harmful or redundant code, for example as mentioned by @Grajkowski it should be useful to have warnings about unused variables.<br />\n<br />\nWe also need a tool that can enforce a certain style of coding, for example &quot;All private methods must be placed after all public methods&quot; or &quot;The body of the if statement must be wrapped in opening and closing curly brackets.&quot; (That is what StyleCop does for C#.)<br />\n<br />\nThe code we write with TypeScript is generally more stable than any JavaScript. I don't see what further use JSLint (with its &quot;Unexpected '++'&quot; and other lovely nuggets) has in this environment.<br />\n",
+    "PostedDate": "2013-04-05T09:22:59.043-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078195",
+    "ThreadId": "438341",
+    "Html": "Any beautifiers out there yet?  Would love to automate code formatting rules but don't have the time/skill to write my own beautifier.<br />\n",
+    "PostedDate": "2013-08-08T05:45:30.607-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078295",
+    "ThreadId": "438341",
+    "Html": "On a lark, I search for &quot;tslint&quot;.  I have only used this for a couple minutes, but might be something to explore:\r<br />\n<br />\n<a href=\"https://github.com/palantir/tslint\" rel=\"nofollow\">https://github.com/palantir/tslint</a> (with grunt support: <a href=\"https://npmjs.org/package/grunt-tslint\" rel=\"nofollow\">https://npmjs.org/package/grunt-tslint</a>)<br />\n",
+    "PostedDate": "2013-08-08T08:54:28.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078377",
+    "ThreadId": "438341",
+    "Html": "We also just released an Eclipse tslint plug-in so you can get errors as you type:\r<br />\n<a href=\"https://github.com/palantir/eclipse-tslint\" rel=\"nofollow\">https://github.com/palantir/eclipse-tslint</a>\r<br />\n<br />\nIn terms of formatting code, we made a separate Eclipse plug-in which supports that:\r<br />\n<a href=\"https://github.com/palantir/eclipse-typescript\" rel=\"nofollow\">https://github.com/palantir/eclipse-typescript</a><br />\n",
+    "PostedDate": "2013-08-08T11:57:24.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1229221",
+    "ThreadId": "438341",
+    "Html": "I would like to see an extension for visual studio that provides TypeScript linting, primarily for naming conventions and strict type comparisons.   I know the type comparisons are already checked by the compiler but should I need to fall back to editing the generated JS in the future without TypeScript, it would be better if the proper strict comparison operators were already in place.   I'm fairly diligent about it but I miss one once in a while or sometimes I will paste in someone else's code and it helps to clean things up quickly.<br />\n",
+    "PostedDate": "2014-04-01T16:42:33.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1229237",
+    "ThreadId": "438341",
+    "Html": "I was re-reading this old thread and since I started it I'll report back after these months:\r<br />\n<br />\nTSLint is definitely established by now, top stuff:  <a href=\"https://github.com/palantir/tslint\" rel=\"nofollow\">https://github.com/palantir/tslint</a> (has grunt/gulp plugins, and some fancy reporters on npm).\r<br />\n<br />\nFor formatting there is typescript-formatter: <a href=\"https://github.com/vvakame/typescript-formatter/\" rel=\"nofollow\">https://github.com/vvakame/typescript-formatter/</a> (still young, needs some grunt/gulp wrappers etc but is very active developer)\r<br />\n<br />\nI know nothing about visual studio though (I use WebStorm)<br />\n",
+    "PostedDate": "2014-04-01T17:48:39.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1299613",
+    "ThreadId": "438341",
+    "Html": "This  <a href=\"https://github.com/palantir/tslint\" rel=\"nofollow\">https://github.com/palantir/tslint</a> is part of WebEssentials for Visual Studio.  You may need to enable it in the options.<br />\n",
+    "PostedDate": "2014-09-05T03:34:11.09-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

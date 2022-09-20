@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1229860",
+    "ThreadId": "541039",
+    "Html": "I have a project that uses Typescript for both the browser and the server. It has components that I can reuse in other projects.\r<br />\nI'm starting to convert these components to AMD/CommonJS modules.\r<br />\n<br />\nI converted two components into external modules, in their own cloud-hosted git repositories.\r<br />\nThis has required a fair learning curve, and I've encountered a fair bit of complexity.\r<br />\n<br />\nI would appreciate advice for how to best manage this transition.<br />\n<ul>\n<li>Is there a tutorial on how to do this?\r<br />\nI'm sure this is a common problem, but it appears to be fairly involved.</li>\n<li>How can I use an AMD module in code that is not an external module?\r<br />\nThis is a requirement, because I don't want to convert my entire project to external modules, just because I have one. But it seems that the language spec will convert any code that uses an import into an external module. \r<br />\nFor now, I'm just adding a &quot;declare var <em>module_name</em>&quot; to the components that use the AMD module, since I know that the code will not execute until after the module has been loaded.</li>\n<li>\nI can't find a way to write a single type declaration file that works for both (1) the AMD import, and (2) the declare var method above.\r<br />\n In particular, and very confusingly, it seems that the two usages require different name specification for the module in the declaration file: (1) uses &quot;declare module '<em>module_name</em>' {...}&quot; and (2) uses &quot;declare module <em>module_name</em> {...}&quot; (without the quotes).<br />\n</li>\n</ul>\nThanks<br />\n",
+    "PostedDate": "2014-04-03T05:38:50.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230121",
+    "ThreadId": "541039",
+    "Html": "I just discovered that the chai.d.ts declaration file for the chai test package wasn't found by tsc.\r<br />\n<br />\nFile ./test/server/csc.test.ts<br />\n<pre><code>/// &lt;reference path='../../decl/import/chai.d.ts' /&gt;\nimport chai      = require('chai');\n</code></pre>\n\nThe command:  tsc --module commonjs --outDir generated/ test/server/csc.test.ts<br />\nproduces:<br />\n<pre><code>./test/server/csc.test.ts(17,1): error TS2071: Unable to resolve external module ''chai''.\n./test/server/csc.test.ts(17,1): error TS2072: Module cannot be aliased to a non-module type.</code></pre>\n\nI examined decl/import/chai.d.ts (from DefinitelyTyped) , and found that its module definition was:<br />\n<pre><code>declare module chai {\n</code></pre>\n\nwhen I modified this to have quotes around the module name, everything worked!<br />\n<pre><code>declare module &quot;chai&quot; {\n</code></pre>\n\nIs this difference between string and symbol(?) an accident or is it intentional?\r<br />\nIf its intentional, what are the semantics of the difference, as I missed this from the documentation.\r<br />\n<br />\nThanks<br />\n",
+    "PostedDate": "2014-04-03T17:24:55.98-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230136",
+    "ThreadId": "541039",
+    "Html": "The former is an Ambient Module Declaration, it declares an internal module (which you would not use import/require with). The latter declares an Ambient External Module Declaration. These are defined in the language specification in sections 12.1.5 and 12.1.6. You'll want to use the latter. I actually just ran into this myself recently with chai. I was intending to update it further and submit it to DefinitelyTyped but haven't gotten around to it yet.<br />\n",
+    "PostedDate": "2014-04-03T18:23:06.627-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

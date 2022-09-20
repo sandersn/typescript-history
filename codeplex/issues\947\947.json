@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-04-25T12:20:56.547-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi, consider the following compilation error (Not reproducible in the playground, see work item [946](https://typescript.codeplex.com/workitem/946))\r\n\r\n```\r\nclass Foo {\r\n    public bar() {\r\n        return false;\r\n    }\r\n}\r\nvar foo = new Foo();\r\n\r\n//  error TS2012: Cannot convert '<any>() => string' to '() => boolean'\r\nfoo.bar = <any> () => \"\";\r\n```\r\nThe new function being assigned is cast to any, yet the compiler flags this as an error, because the return value is not compatible.\r\n\r\nTo make it work the following is required:\r\n```\r\nfoo.bar = () => <any>\"\";\r\n```\r\n\r\nI believe both should work without error.",
+    "LastUpdatedDate": "2013-04-25T12:20:56.547-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-25T01:22:45.31-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Overzealous return value enforcement",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 947
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design. Generics introduce ambiguity in some cases like this and require parenthesis for the type assertion case. See section 4.9.2 of the current language spec. To match the meaning of the 0.8.3 code would now require this:\n\nfoo.bar = <any>( () => \"\" );\n\nWe prefer to treat this ambiguity as an array function with a generic type parameter as parenthesis allows you to specify the alternate case, while there would be no simple syntactic way to resolve the ambiguity in the other direction if we chose the type assertion as the default.\n\n",
+      "PostedDate": "2013-04-25T12:20:51.977-07:00",
+      "Id": 98494
+    }
+  ]
+}

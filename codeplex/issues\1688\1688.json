@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed feec3f9eebd4fedc8e193a020a26f063d1b253d1",
+    "ClosedDate": "2013-10-15T15:21:40.933-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Consider the following fourslash test case\r\n\r\n```\r\n/// <reference path=\"fourslash.ts\" />\r\n\r\n//@Filename: issue-17-import.ts\r\n////export class Test{\r\n////\r\n////    constructor(){\r\n////\r\n////    }\r\n////\r\n////    public /*1*/start(){\r\n////        return this;\r\n////    }\r\n////\r\n////    public stop(){\r\n////        return this;\r\n////    }\r\n////}\r\n\r\n//@Filename: issue-17.ts\r\n////import Second = require(\"issue-17-import\");\r\n////\r\n////var second = new Second.Test()\r\n////second.start();\r\n////second.stop();\r\n\r\ndiagnostics.setEditValidation(IncrementalEditValidation.None);\r\n\r\ngoTo.file(\"issue-17-import.ts\");\r\ngoTo.marker(\"1\");\r\n\r\nconsole.log( FourSlash.currentTestState.getReferencesAtCaret() ); // one reference\r\nconsole.log( FourSlash.currentTestState.getReferencesAtCaret() ); // two references\r\n```\r\n\r\nThe first issue is in the test runner: the `setEditValidation` comes too late to keep `checkPostEditInvariants` from hiding the main issue - you will need to edit `run.js`:\r\n\r\n```\r\n            // this.editValidation = 2 /* Complete */;\r\n            this.editValidation = 0 /* None */;\r\n```\r\n\r\nThe main issue is that the two calls to `getReferencesAtCaret` give different results (the first call is missing a reference):\r\n```\r\nRunning tests.\r\n[ { fileName: 'tests/cases/fourslash/issue-17-import.ts',\r\n    minChar: 58,\r\n    limChar: 63,\r\n    isWriteAccess: true } ]\r\n[ { fileName: 'tests/cases/fourslash/issue-17-import.ts',\r\n    minChar: 58,\r\n    limChar: 63,\r\n    isWriteAccess: true },\r\n  { fileName: 'tests/cases/fourslash/issue-17.ts',\r\n    minChar: 83,\r\n    limChar: 88,\r\n    isWriteAccess: false } ]\r\n.\r\n\r\n```\r\n(downstream issue: https://github.com/clausreinke/typescript-tools/issues/17)",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-16T01:43:59.82-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "language service: getReferences incomplete",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1688
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We've gotten strong feedback both ways on this and have opted for a design that causes the least-bad set of problems. You are always free to edit the project file to make the JS files dependent on the TS files if that's the most appropriate thing in your situation.\n\nA better configuration story for projects is something we'll be thinking about post-v1, but it's not in scope right now.",
+    "ClosedDate": "2013-10-11T12:29:09.65-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "Based on recent replies to [https://typescript.codeplex.com/discussions/403531](https://typescript.codeplex.com/discussions/403531).\r\n\r\npaulb asked me to upload my project file.  It's attached.\r\n\r\n> I'd prefer if the generated files were NOT in the project. \r\n> \r\n> However, the \"Publish...\" feature won't pick up the .js files if the project has no knowledge of the .js files. \r\n> I'm willing to include the files to simplify the publish process. \r\n> But, if the files are included, I need to manually check them out before making edits (which is annoying). \r\n> \r\n> So, I can either have a manual \"Publish...\" experience; or I can have a manual \"Check Out for Edit...\" experience. I'm opting for the manual \"Check Out for Edit...\" experience, but it's a lesser of two evils. :( \r\n> \r\n> In the best of all worlds, I would have a configuration option to \"Attach generated files to project.\" \r\n> A configurable default \"Build Action\" is available for each generated file-type (\".js\" and \".js.map\"). (Personally, I want the \".js\" file to use \"Content\" and the \".js.map\" file to use \"None\".) \r\n> If the configuration option is turned on:\r\n> * when generated, generated files will be added to the project, if necessary\r\n> * when generated, generated files will be checked-out, if necessary\r\n> * when added to the project, generated files will be sub-items to the original .ts file (using DependentUpon).\r\n> * when added to the project, generated files will use the configurable \"Build Action\"\r\n> \r\n> If the configuration option is turned off, none of these steps are necessary.",
+    "LastUpdatedDate": "2015-03-17T03:13:03.627-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-09T13:59:00.613-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Manual \"Publish\" vs manual \"Check Out\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1772
+  },
+  "FileAttachments": [
+    {
+      "FileId": 742114,
+      "FileName": "Janus.UserInterface.csproj",
+      "DownloadUrl": ".\\742114"
+    },
+    {
+      "FileId": 767634,
+      "FileName": "TypeScriptTfsTest_2013-12-12 09-10-08Z.zip",
+      "DownloadUrl": ".\\767634"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "The generated JavaScript files used to be included as a dependent item by default, just like a designer generated file and the .js files had the build action set to content, which made them publish as you would expect.   The problem was that the generated files would not be checked out when a build resulted in a change in the generated JS file.\n\nRather than fix the problem of auto-checking out the files when changed as part of a build, in their infinite wisdom, the design team decided to remove the files from the project altogether, which lets the build just overwrite the local file without any cares.\n\nBut this yields more problems: \n* Difficulty in making the javascript an embedded resource\n* Publishing issues\n* If developers have differeent versions of TypeScript installed you might get different JS code wind up being deployed and because there is no change checked into scource control you are completely unaware of this happening\n* You also won't be able to get a diff on the generated JS when you upgrade versions of TypeScript because you won't have the JS checked in to TFS (you would have to diff against some existing copy/environment).\n\nI keep saying.. give us the option to include the generated JS files in the project in the same manner that designer files are a part of the project.   Build the generated JS to some temporary location (memory?) and if different than the existing JS, check out the existing JS and overwrite the file, otherwise just delete the temp generated JS file.   This is falling on deaf ears despite the issues with the current behavior.  I think they are looking for an easy way out of the problem rather than delivery a usable product to their customer.",
+      "PostedDate": "2013-10-09T16:13:29.39-07:00",
+      "Id": 117997
+    },
+    {
+      "Message": "Can you try moving this line:\n\n  <Import Project=\"$(VSToolsPath)\\TypeScript\\Microsoft.TypeScript.targets\" />\n\nto be between:\n\n <Import Project=\"$(MSBuildBinPath)\\Microsoft.CSharp.targets\" />\n<!-- HERE -->\n  <Import Project=\"$(VSToolsPath)\\WebApplications\\Microsoft.WebApplication.targets\" Condition=\"'$(VSToolsPath)' != ''\" />\n\nSo from 754 to 752, now publish should work...\n\nMake sure that in Microsoft.TypeScript.Targets the TypeScriptCollectPublishFiles target looks like this:\n\n  <Target Name=\"TypeScriptCollectPublishFiles\" DependsOnTargets=\"CompileTypeScript\">\n\nAlso make sur",
+      "PostedDate": "2013-10-10T15:54:45.73-07:00",
+      "Id": 118081
+    },
+    {
+      "Message": "Hey paulb,\n\nLooks like you most recent comment got cut off.  Can you send the rest of it?\n\nMoving the Import tag did the trick, but I'd love to see the rest of your comments.\n\nThanks!",
+      "PostedDate": "2013-10-11T07:18:24.64-07:00",
+      "Id": 118149
+    },
+    {
+      "Message": "I also have this issue -- the generated .js file is no longer published with the project. \n\nI resolved this by editing my .csproj file and adding:\n    <Content Include=\"Scripts\\app\\PremiumCalculator.js\">\n      <DependentUpon>PremiumCalculator.ts</DependentUpon>\n    </Content>\n",
+      "PostedDate": "2013-11-06T10:20:41.877-08:00",
+      "Id": 122035
+    },
+    {
+      "Message": "After updating to the latest 0.9.5 I am still having the issue where the JS output files (which are excluded from project) are not being included in publishes. I created a brand new C# empty web project from scratch and added one TS file. I noticed by default though the output JS file is part of the project. So, I excluded the JS file from the project (this is especially required for projects using TFS b/c projects fail to build when TS's output JS file are apart of TFS and not checked out). The suggestions by @paulb above seem to be the default setup up now in the *.csproj and TS targets files, so I verified his recommendations were in place already.\r\n\r\nI have attached my simple solution w/ one TS file and if you publish you will see the JS files do not publish still. This seems to be an ongoing issue that isn't getting fixed. Not sure why this is not working still.\r\n",
+      "PostedDate": "2013-12-12T06:20:34.76-08:00",
+      "Id": 127102
+    },
+    {
+      "Message": "So far I've solved the issue by adding a Pre-build event\n\n$(ProjectDir)checkout_ts.bat $(ProjectDir)\n\nwhere the checkout_ts.bat contains\n\n@\"c:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\IDE\\tf\" checkout \"%1Scripts\\*.js.map\"\n@for %%f in (%1Scripts\\*.ts) do \"c:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\IDE\\tf\" checkout \"%1Scripts\\%%~nf.js\"\n\nand then calling an \"External tool\" added to the menu as\n\nTitle: &Undo redundant check outs\nCommand: %windir%\\System32\\cmd.exe\nArguments: /C echo y | \"%ProgramFiles(x86)%\\Microsoft Team Foundation Server 2013 Power Tools\\TFPT.EXE\" uu . /recursive /noget\nInitial directory: $(SolutionDir)\n\nBefore checkin. Far from perfect, but so far the best I can do.\n\nI agree completely with rcollette's post of Oct 10, 2013 at 1:13 AM. THAT would be the right solution.",
+      "PostedDate": "2014-07-31T09:21:26.217-07:00",
+      "Id": 154080
+    },
+    {
+      "Message": "I personally don't view exluding generated javascript-files as a problem. If a buidserver can be configured to compile everything from .net2 upto the latest betas, it can certainly be configured to correctly handle source code of different TypeScript versions.\n\nThere is a bit of an urgent other problem to address: in Visual Studio 2013 Update 4, TypeScript won't be debugged unless the js-files are also included in the project. At this moment the team keeps including and exluding the files again on checking in, resulting in many mistakes where the build breaks because js-files are accendentally checked in.\n\nIt's been over half a year now. When will the debugging experience be repaired?",
+      "PostedDate": "2015-03-17T03:13:03.627-07:00",
+      "Id": 179352
+    }
+  ]
+}

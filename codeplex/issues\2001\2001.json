@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-08T09:32:38.947-08:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Smallest code to reproduce:\r\n\r\n```\r\n\"test\".replace(/a/g, (str, offset) => { });\r\n```\r\n\r\nError:\r\n```\r\n>tsc main.ts\r\nmain.ts(1,8): error TS2082: Supplied parameters do not match any signature of\r\n call target:\r\n        Could not apply type 'string' to argument 1 which is of type 'RegExp'.\r\nmain.ts(1,8): error TS2087: Could not select overload for 'call' expression.\r\n```\r\n\r\nThat's weird because lib.d.ts contains the definition for this method:\r\n```\r\ninterface String {\r\n    // ....\r\n    /**\r\n      * Replaces text in a string, using a regular expression or search string.\r\n      * @param searchValue A Regular Expression object containing the regular expression pattern and applicable flags\r\n      * @param replaceValue A function that returns the replacement text.\r\n      */\r\n    replace(searchValue: RegExp, replaceValue: (substring: string, ...args: any[]) => string): string;\r\n```\r\n\r\nThis code was working with previous version of the typescript compiler.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-10T07:16:41.58-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.5: String.replace(RegExp, Function) fails to compile",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 6,
+    "Id": 2001
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That does look like a bug.  There are a couple of issues here, one arguably \"by design\", the other a bug.\n\nNote that the below code works as expected:\n\n```\n\"test\".replace(/a/g, (str) => \"\");\n```\n\nThis function passed as the second argument returns a string, whereas your original code returned 'void'.  The signature requires a string return type, so this is needed.  (One could argue the return type should be 'any', as the [ES5 spec](http://es5.github.io/#x15.5.4.11) states:\n\n> The result is a String value derived from the original input by replacing each matched substring with the corresponding return value of the function call, __converted to a String if need be__\n\nThe bug however is that if I pass more than one argument to the replace function, it fails to resolve the overload.  This should not be, as the signature has a rest param ( (substring: string, __...args: any[]__) ).\n\nWe'll take a look at this and get it figured out.  Thanks for raising!",
+      "PostedDate": "2013-12-10T09:35:46.757-08:00",
+      "Id": 126808
+    },
+    {
+      "Message": "Not a problem. As you said it seems to be a problem with the rest arguments as this snippet also results in an error:\n\n```\n\"test\".replace(/a/g, (str, offset) => \"\");\n```",
+      "PostedDate": "2013-12-10T10:50:53.967-08:00",
+      "Id": 126833
+    },
+    {
+      "Message": "see https://typescript.codeplex.com/workitem/1812, and several others since.\n\nThe rest param requires optional args (after the first) in the actual callback.\n\nThe error message is not useful at all.",
+      "PostedDate": "2013-12-10T11:26:54.227-08:00",
+      "Id": 126842
+    },
+    {
+      "Message": "Yes, that's the same issue. This one can be closed as a duplicate.",
+      "PostedDate": "2013-12-10T11:30:43.767-08:00",
+      "Id": 126844
+    },
+    {
+      "Message": "This was in 0.9.5 \"by design\". As rest params are defined as \"infinitely expanding optional parameters\", thus any function you provided (such as the callback to string.replace) needing to indicate the params were optional also (by placing a '?' on the parameter). (It only used to not error prior to 0.9.5 due to a bug.\n\n This requirement however, aside from giving a very confusing error message, is unintuitive and of little value. As such, we're removed the requirement with the check-in at http://typescript.codeplex.com/SourceControl/changeset/f3d3c8dab83cde2739ea37a1a5e0757a94a59780 . If you pull on these bits, the above errors should go away.\n\n Thanks",
+      "PostedDate": "2014-01-08T09:32:04.423-08:00",
+      "Id": 129807
+    }
+  ]
+}

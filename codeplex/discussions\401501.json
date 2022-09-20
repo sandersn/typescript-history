@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "935076",
+    "ThreadId": "401501",
+    "Html": "\r\n<p>According the language specification (7.2 Dynamic Type Checks), I think it is simple to generate JavaScript code for dynamically testing whether an object implements a&nbsp;particular interface. We just need to change the&nbsp;code the &quot;instanceof&quot; operator\r\n emits, if an interface as the right argument specified. For example:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module a.b.c\r\n{\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">interface</span> IFoo{\r\n\t\tfoo():<span style=\"color:blue\">void</span>;\r\n\t\tbar():<span style=\"color:blue\">void</span>;\r\n\t}\r\n}\r\n\r\n<span style=\"color:green\">// somethere in code</span>\r\nalert(obj <span style=\"color:blue\">instanceof</span> a.b.c.IFoo);\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>could be translated into:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> a;\r\n(<span style=\"color:blue\">function</span> (a) {\r\n    (<span style=\"color:blue\">function</span> (b) {\r\n        (<span style=\"color:blue\">function</span> (c) {\r\n            <span style=\"color:blue\">var</span> IFoo = {\r\n\t\t\t\t_instanceof: <span style=\"color:blue\">function</span>(arg){\r\n\t\t\t\t\t<span style=\"color:blue\">return</span> <span style=\"color:blue\">typeof</span>(arg) !== <span style=\"color:#a31515\">&quot;undefined&quot;</span> &amp;&amp; arg !== <span style=\"color:blue\">null</span> &amp;&amp; <span style=\"color:blue\">typeof</span>(arg.foo) === <span style=\"color:#a31515\">&quot;function&quot;</span> &amp;&amp; <span style=\"color:blue\">typeof</span>(arg.bar) === <span style=\"color:#a31515\">&quot;function&quot;</span>);\r\n\t\t\t\t}\r\n\t\t\t}\r\n            c.IFoo = IFoo;            \r\n        })(b.c || (b.c = {}));\r\n        <span style=\"color:blue\">var</span> c = b.c;\r\n\r\n    })(a.b || (a.b = {}));\r\n    <span style=\"color:blue\">var</span> b = a.b;\r\n\r\n})(a || (a = {}));\r\n\r\n<span style=\"color:green\">// somethere in code</span>\r\nalert(a.b.c.IFoo._instanceof(obj));\r\n\r\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2012-10-31T17:07:19.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935300",
+    "ThreadId": "401501",
+    "Html": "<p>This will likely not happen.&nbsp;&nbsp;Generally, it's easier for the user to opt to add a tag to their objects telling the system what the object type is (or what interface(s) it implements).&nbsp; Interfaces are a purely structural contract in TypeScript, the name they have is just an easy way to refer to them.&nbsp; To check if an object met an interface at runtime would require reflecting through the whole object's structure (and in some cases this may not be possible to check the whole structure, eg function types or recursive types).</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-11-01T08:25:19.647-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935687",
+    "ThreadId": "401501",
+    "Html": "<p>In the interview with&nbsp;Anders Hejlsberg and Lars Bak on Typescript <a href=\"http://channel9.msdn.com/Shows/Going+Deep/Anders-Hejlsberg-and-Lars-Bak-TypeScript-JavaScript-and-\">here</a>, Anders mentions that adding reflection to JavaScript would be a very expensive operation, both in resource usage and time.</p>\r\n<p>However, Ross Harmes and Dustin Diaz in their book \"Pro JavaScript Design Patterns\" - propose a simple JavaScript run-time type-checking mechanism for testing whether an object implements a particular interface.</p>\r\n<p>I have blogged about how to implement this pattern in TypeScript, and how it can be used to build a simple IoC Container <a title=\"TypeScript: Implementing a Simple IoC Container for Service Location\" href=\"http://blorkfish.wordpress.com/2012/10/17/typescript-implementing-a-simple-ioc-container-for-service-location/\">here</a>.</p>\r\n<p>Have fun,</p>",
+    "PostedDate": "2012-11-02T06:29:59.97-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "937857",
+    "ThreadId": "401501",
+    "Html": "\r\n<p>Here's a simpler technique for testing if a class implements an interface at run time. &nbsp;It's obviously a little brittle because it requires you a) manually define a name for each interface, and b) then tag each object with the interfaces it implements.\r\n &nbsp;But it will in fact work if you absolutely need this capability and it will be more performant then checking an object to see if it implements all of the individual members of an interface. &nbsp;It also supports optional members and interface inheritance\r\n so it covers all of the bases.</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">// Base interface for all named interfaces</span>\n<span style=\"color:blue\">interface</span> IBase {\n\t__implements: string;\n}\n<span style=\"color:blue\">var</span> IBaseName = <span style=\"color:#a31515\">'IBase,'</span>;\n\n<span style=\"color:blue\">function</span> doesImplement(obj: IBase, type: string): bool {\n\t<span style=\"color:blue\">return</span> (obj &amp;&amp; obj.__implements &amp;&amp; obj.__implements.indexOf(type) &gt;= 0);\n}\n\n<span style=\"color:green\">// App specific interfaces</span>\n<span style=\"color:blue\">interface</span> IFoo <span style=\"color:blue\">extends</span> IBase {\n\tmethod1(): <span style=\"color:blue\">void</span>;\n\tmethod2?(): <span style=\"color:blue\">void</span>;\n}\n<span style=\"color:blue\">var</span> IFooName = IBaseName &#43; <span style=\"color:#a31515\">'IFoo,'</span>;\n\n<span style=\"color:blue\">interface</span> IBar <span style=\"color:blue\">extends</span> IBase {\n\tmethod3(): <span style=\"color:blue\">void</span>;\n}\n<span style=\"color:blue\">var</span> IBarName = IBaseName &#43; <span style=\"color:#a31515\">'IBar,'</span>;\n\n<span style=\"color:blue\">class</span> Bar <span style=\"color:blue\">implements</span> IFoo, IBar {\n\t<span style=\"color:blue\">public</span> __implements = IFooName &#43; IBarName;\n\t\n\tmethod1(): <span style=\"color:blue\">void</span> { }\n\tmethod3(): <span style=\"color:blue\">void</span> { }\n}\n\n<span style=\"color:green\">// Runtime checks</span>\n<span style=\"color:blue\">var</span> x = <span style=\"color:blue\">new</span> Bar();\nalert(<span style=\"color:#a31515\">'Implements IFoo: '</span> &#43; doesImplement(x, IFooName));\nalert(<span style=\"color:#a31515\">'Implements IBase: '</span> &#43; doesImplement(x, IBaseName)); \n \n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-11-07T04:25:42.24-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

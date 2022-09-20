@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:18:33.463-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "If a method is overloaded the comments are completely omitted.\r\n\r\nI expect them to be placed above `WebControls.prototype.createControl`.\r\n\r\n    export interface IOptions {\r\n      authorizationKey: string;\r\n      effects: bool;\r\n    }\r\n\r\n    /**\r\n    * The main API endpoint\r\n    * @class\r\n    * @mixins Backbone.Events\r\n    */\r\n    export class WebControls {\r\n      \r\n      /** The library version number.  */\r\n      version = '0.0.1';\r\n\r\n      /** Settings with options interface */\r\n      settings: IOptions;\r\n\r\n      constructor(options?) {\r\n\r\n        this.settings = {\r\n          authorizationKey: null,\r\n          effects: null\r\n        }\r\n\r\n        /**\r\n        * The authorization header key\r\n        * @property {String}\r\n        */\r\n        this.settings.authorizationKey = '';\r\n\r\n        /** Enable or disable effects & animations */\r\n        this.settings.effects = true;\r\n        \r\n      }\r\n      /**\r\n      * Render a control\r\n      * @return {Object} A reference to the Backbone view\r\n      */\r\n      createControl(type: string, containerSelector: string): any;\r\n      createControl(options: Object): any;\r\n      createControl(typeOrOptions: any, containerSelector?: string): any {\r\n        // do something\r\n      };\r\n    }\r\n\r\nWith `tsc --comments --module amd` compiles to: \r\n\r\n    define([\"require\", \"exports\"], function(require, exports) {\r\n        /**\r\n        * The main API endpoint\r\n        * @class\r\n        * @mixins Backbone.Events\r\n        */\r\n        var WebControls = (function () {\r\n            function WebControls(options) {\r\n                /** The library version number.  */\r\n                this.version = '0.0.1';\r\n                this.settings = {\r\n                    authorizationKey: null,\r\n                    effects: null\r\n                };\r\n                /**\r\n                * The authorization header key\r\n                * @property {String}\r\n                */\r\n                this.settings.authorizationKey = '';\r\n                /** Enable or disable effects & animations */\r\n                this.settings.effects = true;\r\n            }\r\n            WebControls.prototype.createControl = function (typeOrOptions, containerSelector) {\r\n                // do something\r\n                        };\r\n            return WebControls;\r\n        })();\r\n        exports.WebControls = WebControls;    \r\n    })\r\n    //@ sourceMappingURL=sandbox.js.map\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-23T07:45:20.407-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "When overload specified no JSDoc comments are output",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 639
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I see what you mean but I see some inconsistent behavior. See this updated example.\n\nSource test: \n\n    // random comment 1\n    export interface IOptions {\n      authorizationKey: string;\n      effects: bool;\n    }\n\n    /**\n    * The main API endpoint\n    * @class\n    * @mixins Backbone.Events\n    */\n    export class WebControls {\n      \n      /** The library version number.  */\n      version = '0.0.1';\n\n      /** Settings with options interface */\n      settings: IOptions;\n\n      // random comment 2\n      constructor(options?) {\n\n        // random comment 3\n        this.settings = {\n          authorizationKey: null,\n          effects: null\n        }\n\n        /**\n        * The authorization header key\n        * @property {String}\n        */\n        this.settings.authorizationKey = '';\n\n        /** Enable or disable effects & animations */\n        this.settings.effects = true;\n        \n      }\n\n      // random comment 4\n      /**\n      * Render a control\n      * @return {Object} A reference to the Backbone view\n      */\n      createControl(type: string, containerSelector: string): any;\n      createControl(options: Object): any;\n      createControl(typeOrOptions: any, containerSelector?: string): any {\n        // do something\n      };\n\n      // random comment 5\n    }\n\nOutput test: \n\n    define([\"require\", \"exports\"], function(require, exports) {\n        \n        /**\n        * The main API endpoint\n        * @class\n        * @mixins Backbone.Events\n        */\n        var WebControls = (function () {\n            // random comment 2\n            function WebControls(options) {\n                /** The library version number.  */\n                this.version = '0.0.1';\n                // random comment 3\n                this.settings = {\n                    authorizationKey: null,\n                    effects: null\n                };\n                /**\n                * The authorization header key\n                * @property {String}\n                */\n                this.settings.authorizationKey = '';\n                /** Enable or disable effects & animations */\n                this.settings.effects = true;\n            }\n            WebControls.prototype.createControl = function (typeOrOptions, containerSelector) {\n                // do something\n                        };\n            return WebControls;\n        })();\n        exports.WebControls = WebControls;    \n        // random comment 5\n        })\n    //@ sourceMappingURL=sandbox.js.map\n\nI went back and looked at one of my actual source files and noticed something else. `// random comment 1` is not included in the output above. Doesn't matter if I add a declare or import at the top, I still can't get it to appear. Take a look at this actual source snippet before/output though\n\n    declare var DEBUG: any;\n    ///<reference path=\"../consolelog.d.ts\"/>\n    ///<reference path=\"../vendor/backbone/backbone.d.ts\"/>\n    import Backbone = module(\"Backbone\");\n    ///<reference path=\"../vendor/backbone/plugins/backbone.shortcuts.d.ts\"/>\n    import BackboneShortcuts = module(\"vendor/backbone/plugins/backbone.shortcuts\")\n    ///<reference path=\"../vendor/jquery/jquery.d.ts\"/>\n    import $ = module(\"jql\")\n    ///<reference path=\"../vendor/underscore/underscore.d.ts\"/>\n    import _ = module(\"underscore\")\n    import EV = module(\"controls/encoder/views/encoder\")\n    import RPV = module(\"controls/research/views/researchpane\")\n    import RV = module(\"controls/references/views/references\")\n    import AV = module(\"controls/authorization/views/auth\")\n    import cfg = module(\"lib/config\")\n\n    // without this export here main.ts won't compile .....\n    export interface TCOptions {\n      _dirtyAuth: bool;\n      authorizationKey: string;\n      authorizationTokenType: string;\n      authorizationTimestamp: Date;\n      authorizationExpired: any;\n      authorizationExpiredParser: any;\n      proxyUrl: string;\n      fatalErrorCallback: (msg: string, textStatus: string, error: any) => void;\n      templates: any;\n      keyboardShortcuts: bool;\n      modalId: string;\n      codingLevel: string;\n      effects: bool;\n    }\n\n    export interface TCEvents {\n      on(events: string, callback: (event) => any): void;\n      off(events?: string, callback?: (event) => any): void;\n      trigger(eventName: string, ...args: any[]): void;\n    }\n\n    export interface TCApi {\n      version: string;\n      settings: TCOptions;\n      Events: any;\n      fatalErrorCallback: (msg: string, textStatus: string, error: any) => void;\n    }\n\n    /**\n    * TC is the global namespace for every class, function and configuration intended to be publicly accessible.\n    * @class\n    * @mixins Backbone.Events\n    */\n    export class WebControls implements TCApi {\n    ...\n\nOutput:\n\n    define([\"require\", \"exports\", \"Backbone\", \"vendor/backbone/plugins/backbone.shortcuts\", \"jql\", \"controls/encoder/views/encoder\", \"controls/research/views/researchpane\", \"controls/references/views/references\", \"lib/config\"], function(require, exports, __Backbone__, __BackboneShortcuts__, __$__, __EV__, __RPV__, __RV__, __cfg__) {\n        ///<reference path=\"../consolelog.d.ts\"/>\n        ///<reference path=\"../vendor/backbone/backbone.d.ts\"/>\n        var Backbone = __Backbone__;\n\n        ///<reference path=\"../vendor/backbone/plugins/backbone.shortcuts.d.ts\"/>\n        var BackboneShortcuts = __BackboneShortcuts__;\n        ///<reference path=\"../vendor/jquery/jquery.d.ts\"/>\n        \n        var $ = __$__;\n        ///<reference path=\"../vendor/underscore/underscore.d.ts\"/>\n        \n        \n        var EV = __EV__;\n\n        var RPV = __RPV__;\n\n        var RV = __RV__;\n\n        \n        var cfg = __cfg__;\n        // without this export here main.ts won't compile .....\n        \n        /**\n        * TC is the global namespace for every class, function and configuration intended to be publicly accessible.\n        * @class\n        * @mixins Backbone.Events\n        */\n        var WebControls = (function () {  \n\nI recompiled this file several times to be sure but every time I see `// without this export here main.ts won't compile .....`.",
+      "PostedDate": "2013-01-23T12:13:31.75-08:00",
+      "Id": 86977
+    },
+    {
+      "Message": "You'll need to place that comment between the signatures and the implementation for it to appear in the emitted JS. Basically, overloads are like interfaces in that they are only a type system feature and thus don't generate code (therefore the attached comments to the signatures don't appear anywhere). Hope that makes sense.\n\r\n\r** Closed by RyanCavanaugh 01/23/2013 10:22AM",
+      "PostedDate": "2013-01-23T10:22:56.67-08:00",
+      "Id": 87121
+    },
+    {
+      "Message": "See latest update",
+      "PostedDate": "2013-01-24T05:28:27.873-08:00",
+      "Id": 87122
+    },
+    {
+      "Message": "Adding to our list of \"things to check when we fix comment preservation\". Thanks!",
+      "PostedDate": "2013-01-28T09:43:18.353-08:00",
+      "Id": 87518
+    }
+  ]
+}

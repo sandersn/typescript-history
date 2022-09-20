@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1106663",
+    "ThreadId": "461963",
+    "Html": "A logical assumption was posted in the form of issue <a href=\"https://typescript.codeplex.com/workitem/1778\" rel=\"nofollow\">1778</a> where the author expects a function, marked explicitly with a return type, with code branches which lead to an inconclusive return value, not to compile. In fact, I expected the same behavior and yet the issue was closed with the mention that this behavior (allowing no return value on a function with an explicit return value) to compile.\r<br />\n<br />\nIn code:<br />\n<pre><code>function x1():number { } // this compiles</code></pre>\n\nNot only is this a source for bugs  in the actual implementation. More so, this will lead to confusion for the consumer or this method. If no conclusive return value was to be allowed, we would expect a function declaration with the return type annotated by an ?, just like that of an optional parameter:<br />\n<pre><code>function x1():number? { } // seems logical to compile</code></pre>\n\nWhen inferring the return type, one can simply look if all code branches lead to a conclusive return value (or raise an exception for that matter).\r<br />\n<br />\nWhy is the current specification of return values designed the way it is?<br />\n",
+    "PostedDate": "2013-10-12T03:15:00.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106884",
+    "ThreadId": "461963",
+    "Html": "In JavaScript it is perfectly valid to &quot;fall out&quot; of a function. It causes the value 'undefined' to be returned, and 'undefined' is in the domain of every type. So, it really becomes an issue of where to put the dial on classifying valid JavaScript functions as errors. We've found that it is almost always an error when there no return statements anywhere in the function body, but beyond that we start to see too many false positives and it turns into an exercise in silencing errors that aren't really errors. It's all about balancing pros and cons. We may at some point introduce stricter modes of checking, but probably not for 1.0.<br />\n",
+    "PostedDate": "2013-10-13T09:40:10.39-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1106971",
+    "ThreadId": "461963",
+    "Html": "Thanks for the reply. I understand the implication of enforcing a valid return type within javascript, therefore I've proposed to allow to the user to declare the return type as optional, in a same way as parameters and members can (in context) be marked optional by appending a ? to the name. This would lead to a number of implications:<br />\n<pre><code>function a(){ return 0; } // type inference will resolve a required numeric return type here which gives consumers a form of guarantee that without exceptional cases, the function will always return a numeric value\n\nfunction b() { if (a) return 0; } // type inference will resolve an optional numeric return type\n\nfunction c(): numeric { return 0; } // this is perfectly valid and will have the same implications as function a\n\nfunction d(): numeric { if (a) return 0; } // this will simply not compile for a numeric return type is enforced\n\nfunction e(): numeric? { if (a) return 0; } // this is allowed for the return type is marked optional(syntax to be disputed)</code></pre>\n\nthe impact of this will logically not only help for quality check on the functions implementation but moreover will give a scenario where its clarity from the function declaration alone will give you enough details on whether to expect undefined results.<br />\n",
+    "PostedDate": "2013-10-13T19:33:56.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1107352",
+    "ThreadId": "461963",
+    "Html": "I'm also wondering why the compiler doesn't have better bug detection around return types. It seems like allowing missing return statements and having undefined leak everywhere and start generating NaNs is a lot worse than just forcing a return statement with a valid value. What is an example of a use case where it's better to just &quot;fall out&quot; of a function?<br />\n",
+    "PostedDate": "2013-10-14T13:56:41.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262949",
+    "ThreadId": "461963",
+    "Html": "Anders Hejlsberg said that there are pros and cons to every options! Clearly this would not create a balance as there are more cons than there are pros!<br />\nObviously TypeScript is a javascript <strong>typed</strong> superset, I can imagine having a poor written function [without return value on all code path] could potentially break other codes and I'm talking null-reference errors, type mismatch, NaN, ... that could be catastrophic in the deployed code!<br />\nThe fact is that when I'm using a TypeScript code in an explicitly typed expression, I don't need all the ugly plumbings, input or type validation, undefined checking, ... I want to be sure to write a code that couldn't break the way a dynamic language like javascript could!<br />\n<br />\nThe following is a valid JavaScript code and it <strong>could</strong> compile within TypeScript<br />\n<pre><code>function SomeMethod() { }</code></pre>\n\nBut when you explicitly mention that the method returns something, the least the compiler should do is to throw an error, if not why bother preventing this code from compiling in the first place? <br />\n<pre><code>function SomeMethod(): number { }</code></pre>\n\nThe followings are all <strong>wrong</strong> in a typed context yet the compiler ignores them as a valid code:<br />\n<pre><code>function SomeMethod(): number {\n    return;\n}\n\nfunction SomeMethod(): number {\n    return null;\n}\n\nfunction SomeMethod(): number {\n    if (false)\n        return 1;\n}\n\nfunction SomeMethod(): number {\n    try {\n    }\n    catch (ex) {\n        return 0;\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2014-07-05T13:02:53.707-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1418632",
+    "ThreadId": "461963",
+    "Html": "Hejlsberg's answer is positioning the dial based on existing JavaScript code.<br />\n<br />\nFor users lucky enough to be developing entirely new codebases strictly in TypeScript allowing e.g.:<br />\n<pre><code>function foo(): boolean { return; }\n</code></pre>\n\nto pass without any way to have it flagged does hurt.  Lack of compile-time safety net resulting in e.g. undefined propagation is the very reason I don't work in JavaScript.  Coming from the warm safety of Java and C# errors like the above clobber me and are in fact my only disappointment so far w/ TypeScript.<br />\n<br />\nGive us something -- a strictness level, a warning message, a toast, something.  Heck even if I had to set the strictness level at the top of every file I could handle it.  Being able to manually turn that dial up a bit in strictness would make TypeScript feel a lot better.<br />\n",
+    "PostedDate": "2015-04-26T19:00:22.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

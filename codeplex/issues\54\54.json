@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:39:00.057-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Test case:\r\n\r\nclass A {\r\n\tprivate time:number;\r\n\tpublic foo() {\r\n\t\tvar jsonEvent = {\r\n\t\t\ttime:null,\r\n\t\t\toldValue:null,\r\n\t\t\tnewValue:null\r\n\t\t};\r\n\r\n\t\tjsonEvent.time = this.time;\r\n\r\n\t}\r\n}\r\n\r\nCompiler issues:\r\n\r\n(10,19): Cannot convert 'number' to 'any'",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-03T03:39:43.87-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler complains about 'can't convert number to any'",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 54
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Actually the problem is that the jsonEvent definition is bogus and should be flagged. The correct code should look like \n\nvar jsonEvent = {\n\ttime = null,\n\toldValue = null,\n\tnewValue = null\n\t};\n\nSomehow the compiler interprets null as a type here",
+      "PostedDate": "2012-10-03T03:50:29.177-07:00",
+      "Id": 78394
+    },
+    {
+      "Message": "Take my last comment back. Got confused with another code snippet. The actual test case is valid.",
+      "PostedDate": "2012-10-03T03:51:41.867-07:00",
+      "Id": 78395
+    },
+    {
+      "Message": "\"this.time\" is a number and \"jsonEvent.time\" is unspecified (defined as null when declared), ie. \"any\".\n\n\nIf you start with a number instead of null, it works fine:\n\nclass A {\n  private time:number;\n  public foo() {\n    var jsonEvent = {\n      time: 0, // <------ use a number\n      oldValue:null,\n      newValue:null\n    };\n\n    jsonEvent.time = this.time;\n\n  }\n}\n\n\n",
+      "PostedDate": "2012-10-03T10:51:05.6-07:00",
+      "Id": 78452
+    },
+    {
+      "Message": "Right - the compiler should reject both 'null' and 'undefined' in type positions.  This is a known issue.",
+      "PostedDate": "2012-10-03T14:21:30.613-07:00",
+      "Id": 78480
+    }
+  ]
+}

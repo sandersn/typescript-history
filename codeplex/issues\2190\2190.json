@@ -1,0 +1,101 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:21:51.987-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I was upgrading the Bluebird definitions I made for DefinitelyTyped (to work with generics) and accidentally a compile-error-report bomb (sort of).\r\n\r\nI'm not sure what is happening but I created a situation where compiling my test file with my .d.ts (both still under construction) creates 12 mb of this madness:\r\n\r\n````\r\nTypes of property 'then' of types 'Promise<number>' and 'Promise<string>' are incompatible:\r\n\t\tCall signatures of types '{ <U>(onFulfill: (value: number) => Thenable<U>, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: number) => Thenable<U>, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: number) => U, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill?: (value: number) => U, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; }' and '{ <U>(onFulfill: (value: string) => Thenable<U>, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: string) => Thenable<U>, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: string) => U, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill?: (value: string) => U, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; }' are incompatible:\r\n\t\t\tTypes of property 'then' of types 'Promise<{}>' and 'Promise<U>' are incompatible:\r\n\t\t\t\tCall signatures of types '{ <U>(onFulfill: (value: {}) => Thenable<U>, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: {}) => Thenable<U>, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: {}) => U, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill?: (value: {}) => U, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; }' and '{ <U>(onFulfill: (value: U) => Thenable<U>, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: U) => Thenable<U>, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill: (value: U) => U, onReject: (error: any) => Thenable<U>, onProgress?: (note: any) => any): Promise<U>; <U>(onFulfill?: (value: U) => U, onReject?: (error: any) => U, onProgress?: (note: any) => any): Promise<U>; }' are incompatible:\r\n\t\t\t\t\tTypes of property 'finally' of types 'Promise<{}>' and 'Promise<U>' are incompatible:\r\n````\r\n\r\nIt is quite an nice structure if you scroll down really fast on a big screen.\r\n\r\nI attached a zip with the 12 MB console dump and code in a zip (which appropriately is just 167 kB :)\r\n\r\nI'm sure I made a mistake in my definition but maybe it is an interesting curiosity.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-18T17:28:15.413-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generics overload resolution can explode compile-error-report",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2190
+  },
+  "FileAttachments": [
+    {
+      "FileId": 801577,
+      "FileName": "epic-overload.zip",
+      "DownloadUrl": ".\\801577"
+    },
+    {
+      "FileId": 802112,
+      "FileName": "epic-q.txt",
+      "DownloadUrl": ".\\802112"
+    },
+    {
+      "FileId": 803076,
+      "FileName": "epic-es6.txt",
+      "DownloadUrl": ".\\803076"
+    },
+    {
+      "FileId": 806245,
+      "FileName": "long-line.txt",
+      "DownloadUrl": ".\\806245"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. The current bits in the develop branch give a much cleaner error now, but I think there is still a bug here. Specifically on line 256 of the test file. Will investigate further.",
+      "PostedDate": "2014-02-19T18:50:13.74-08:00",
+      "Id": 134145
+    },
+    {
+      "Message": "Cool, thanks for looking into it.\n\nPlease note that it might every well be there is a mistake on my part (again, I was just building-out this definition).\n\nSince the report I've progressed further with both definition and test file (still plenty to do), see the development branch: https://github.com/borisyankov/DefinitelyTyped/tree/def/bluebird/bluebird\n\nI have disabled some of the more extreme overloads (like using `Thenable<Thenable<Promise>>`) but I still get the huge stacks when signatures don't match. (I'm trying to use the current state in a project to get some practical feedback but it is very risky).\n\nWe have an general issue for this definition on DT here (as it is such key library): https://github.com/borisyankov/DefinitelyTyped/issues/1563 , maybe some DT collabs have some feedback later.\n\nFor some alternate patterns like this there are the `Q` and `es6-promises` in the DT repo.",
+      "PostedDate": "2014-02-19T19:43:51.86-08:00",
+      "Id": 134152
+    },
+    {
+      "Message": "Apparently it is not just the under-construction bluebird definition that can have these:\r\n\r\nAs Bluebird was not working out today I went back to Q, using these definitions: https://github.com/borisyankov/DefinitelyTyped/blob/master/q/Q.d.ts\r\n\r\nAttached another dump, it is way more limited (only 22kb raw) but looks very similar. \r\n\r\nThe statement at that point is: (this was a incorrect statement, eg: not in the definition)\r\n\r\n````\r\n        return Q.when(() => {\r\n````",
+      "PostedDate": "2014-02-19T21:51:54.283-08:00",
+      "Id": 134156
+    },
+    {
+      "Message": "Q didn't work out either, so at my third attempt I went with the basic `es6-promise` polyfill.\r\n\r\nIt is closer to the `bluebird` I'd like to use at a later point. For TS I used the `es6-promises.d.ts` from DT\r\n\r\nNote I based the generics-pattern of my Bluebird definitions from the original report on these: https://github.com/borisyankov/DefinitelyTyped/blob/master/es6-promises\r\n\r\nIt also generates deep type error, but less massive, only 6KB (it is a smaller interface after all).",
+      "PostedDate": "2014-02-20T14:22:14.437-08:00",
+      "Id": 134258
+    },
+    {
+      "Message": "I see both Q and es6-promises working correctly with the latest bits in the develop branch (ie no errors in either one). If you really want to make headway on updating some of these typings you likely want to get a copy of the latest bits in develop and work against those since we've made a bunch of fixes since 0.9.5 to make Promises behave correctly.",
+      "PostedDate": "2014-02-21T13:58:58.54-08:00",
+      "Id": 134395
+    },
+    {
+      "Message": "That is good to hear, we'll try for the new bits.\n\nRelated question: with Promises now settled for ES6, can we expect an official TS definition in `lib.d.ts` soon? I'm very curious to see what the 'official' take on these is.",
+      "PostedDate": "2014-02-21T16:35:59.847-08:00",
+      "Id": 134415
+    },
+    {
+      "Message": "I'm looking at the develop branch but it is labeled as 1.0.0\n\nHow do you rate the chance this would work in 0.9.7 ?",
+      "PostedDate": "2014-02-21T16:44:40.52-08:00",
+      "Id": 134416
+    },
+    {
+      "Message": "I've tried the devel branch with a v1.0.0 and it works very well now: no more deep errors and mostly reasonable reports.\r\n\r\nAttached a single error that took of horizontally, but was the only one  (long-line.txt)\r\n\r\nUpdated generic bluebird definitions https://github.com/borisyankov/DefinitelyTyped/tree/def/bluebird/bluebird\r\n\r\n\r\n\r\n",
+      "PostedDate": "2014-02-24T20:00:43.617-08:00",
+      "Id": 134628
+    }
+  ]
+}

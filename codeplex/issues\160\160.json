@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-08T13:45:15.393-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "var obj = { \r\n  name:\"foo\";\r\n};\r\n\r\n// somewhere later in the code\r\nobj.age= 25;\r\n\r\nthrows the following compiler error\r\n  The property 'age' does not exist on value of type '{ name: string; }'\r\n\r\nIs it possible to add dynamic properties to object literals with out these errors?\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-07T15:43:19.973-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Adding properties to object literals",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 160
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Possible you already thought about it, but there are three workarounds:\n\n1. Define the property upfront (not truly dynamic). So:\n \nvar obj = {\n   name: \"foo\",\n   age: undefined\n}\n\n2. use \"indexed\" access, so:\n\n obj[\"age\"] = 25;\n\n\n3. Make it an any type:\n\nvar obj:any = {\n     name:\"foo\"\n}\n\nAll of them should avoid the compiler error. Option 3 would be my choice.",
+      "PostedDate": "2012-10-08T01:03:16.74-07:00",
+      "Id": 78962
+    },
+    {
+      "Message": "This is not a bug.\n\n\nDespite the previous response, your real issue is that you have a syntax error that results in the compiler thinking you've made a type definition.\n\nvar obj = { \nname:\"foo\"; <--- semicolon... this made the compiler thinks you defined a type\n};\n\n\nvar obj = { \nname:\"foo\" <--- no semicolon... the compiler knows this is an object literal declaration\n};",
+      "PostedDate": "2012-10-08T08:45:03.747-07:00",
+      "Id": 79005
+    },
+    {
+      "Message": "You can use the indexing operation (like the obj[\"age\"] = 25 mentioned earlier).  To get type checking, you can type something first and then fill out the object, like this:\n\ninterface Foo {\n  length: number;\n}\n\nvar x = <Foo>{};\nx.length = 100;",
+      "PostedDate": "2012-10-08T13:45:03.14-07:00",
+      "Id": 79048
+    }
+  ]
+}

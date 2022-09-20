@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch (we no longer issue implicit any warnings on private static members)",
+    "ClosedDate": "2014-02-26T11:28:48.503-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "When I generate the typeScriptService.d.ts with jake, the result have a lot of 'implicit any' for static variables : \r\n```\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(486,9):\r\n>> error TS7008: Member 'currentAssertionLevel' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(539,9):\r\n>> error TS7008: Member 'FNV_BASE' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(540,9):\r\n>> error TS7008: Member 'FNV_PRIME' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(545,9):\r\n>> error TS7008: Member 'primes' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(3021,9):\r\n>> error TS7008: Member 'triviaWindow' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(7181,9):\r\n>> error TS7008: Member '_defaultSettings' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(10304,9):\r\n>> error TS7008: Member 'keywords' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(10305,9):\r\n>> error TS7008: Member 'keywordCompletions' of object type implicitly has an 'any' type.\r\n>> /Users/kapit/Documents/workspaces/typescript/brackets-typescript/src/declarations/typescriptServices.d.ts(10577,9):\r\n>> error TS7008: Member 'MaximumDepth' of object type implicitly has an 'any' type.\r\n```",
+    "LastUpdatedDate": "2014-02-26T11:28:48.503-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-25T23:12:49.01-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "generated typeScriptServices.d.ts is full of untyped static variable",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2216
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "+1\nI will attach a small code.\n\nlib.ts\n```\nclass Sample {\n\tprivate static str = \"hoge\";\n\n\tgetStr() {\n\t\treturn Sample.str;\n\t}\n}\n```\n\n$ tsc -d lib.ts\n\nmain.ts\n```\n/// <reference path=\"./lib.d.ts\" />\n\nnew Sample();\n```\n\n$ tsc -v\nVersion 0.9.7.0\n$ tsc --noImplicitAny main.ts\nlib.d.ts(2,5): error TS7008: Member 'str' of object type implicitly has an 'any' type.\n\nin 0.9.5\n$ tsc -v\nVersion 0.9.5.0\n$ tsc --noImplicitAny main.ts\n$ echo $?\n0",
+      "PostedDate": "2014-02-25T23:56:49.65-08:00",
+      "Id": 134751
+    }
+  ]
+}

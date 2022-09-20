@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in the latest bits.",
+    "ClosedDate": "2014-03-13T15:58:21.777-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Consider the following code in the following files:\r\n\r\nmoduleA.ts :\r\n```\r\nimport Backbone = require(\"backbone\");\r\n\r\nexport class VisualizationModel extends Backbone.Model {\r\n    // interesting stuff here\r\n}\r\n```\r\n\r\nmoduleB.ts :\r\n```\r\nimport Backbone = require(\"backbone\");\r\n\r\nexport class VisualizationModel extends Backbone.Model {\r\n    // different interesting stuff here\r\n}\r\n```\r\n\r\nmain.ts\r\n```\r\nimport Backbone = require(\"backbone\");\r\nimport moduleA = require(\"moduleA\");\r\nimport moduleB = require(\"moduleB\");\r\n\r\ninterface IHasVisualizationModel {\r\n    VisualizationModel: typeof Backbone.Model;\r\n}\r\n\r\nvar moduleATyped: IHasVisualizationModel = moduleA;\r\n\r\nvar moduleMap: {[key: string]: IHasVisualizationModel} = {\r\n    \"moduleA\": moduleA,\r\n    \"moduleB\": moduleB\r\n};\r\n\r\nvar moduleName: string;\r\nvar visModel = new moduleMap[moduleName].VisualizationModel();\r\n```\r\n\r\nThis is obviously a toy example, but it illustrates the problem. The problem is that while the declaration of moduleATyped compiles without a problem, the declaration of moduleMap fails with the following error: \r\n\r\n```\r\nCannot convert '{ \"moduleA\": moduleA; \"moduleB\": moduleB; [key: string]: moduleA; }' to '{ [key: string]: IHasVisualizationModel; }':\r\n\tIndex signatures of types '{ \"moduleA\": moduleA; \"moduleB\": moduleB; [key: string]: moduleA; }' and '{ [key: string]: IHasVisualizationModel; }' are incompatible:\r\n\t\tType 'moduleA' is missing property 'VisualizationModel' from type 'IHasVisualizationModel'.\r\n```\r\n\r\nwhich is clearly false, as moduleA does in fact have that property -- otherwise the declaration of moduleATyped would have failed. This seems like a compiler bug. Is it? If it isn't, how does one work around such a problem? ",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-24T15:03:08.64-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Cannot properly type the value of a map type if the values are modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2209
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Your intuition is correct, this should work without an error.",
+      "PostedDate": "2014-02-26T18:46:05.243-08:00",
+      "Id": 135229
+    },
+    {
+      "Message": "Awesome, thanks!",
+      "PostedDate": "2014-03-13T17:39:57.59-07:00",
+      "Id": 136794
+    }
+  ]
+}

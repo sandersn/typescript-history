@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1075147",
+    "ThreadId": "451986",
+    "Html": "Given the following code:<br />\n<pre><code>declare function f1( p: (a: any, b: any) =&gt; any );\ndeclare function f2( p: (a: any, b?: any) =&gt; any );\n\nf1( (a: any): any =&gt; a );    // test 1 - ok\nf1( (a: any, b: any): any =&gt; a );  // test 2 - ok \n\nf2( (a: any): any =&gt; a );    // test 3 - ok\nf2( (a: any, b: any): any =&gt; a );  // test 4 - fail\nf2( (a: any, b?: any): any =&gt; a ); // test 5 - ok</code></pre>\n\nI expected that for f1 test 1 will fail (because the parameter passed has a different type than the type specified in the function declaration) and test 2 will pass. For f2 I expect that both test 3 and test 4 will pass because the second parameter is optional in the declaration.\r<br />\n<br />\nHowever the compiler behaves differently as test 1 passes while test 4 fails. I don't understand why.<br />\n",
+    "PostedDate": "2013-07-31T08:28:43.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075181",
+    "ThreadId": "451986",
+    "Html": "The easiest way to reason about these things is to think of <code>p</code> as a callback function. <code>f1</code> or <code>f2</code> will invoke <code>p</code> with 2 or (1 or 2) parameters, respectively. You're allowed to use a function with <em>fewer</em> parameters (e.g. you can pass a one-argument function to Array.forEach), but you can't pass a function with more required parameters than the caller might provide.<br />\n",
+    "PostedDate": "2013-07-31T09:50:10.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075307",
+    "ThreadId": "451986",
+    "Html": "More details on the topic in this thread:\r<br />\n<br />\n<a href=\"http://typescript.codeplex.com/discussions/428458\" rel=\"nofollow\">http://typescript.codeplex.com/discussions/428458</a><br />\n",
+    "PostedDate": "2013-07-31T14:25:34.487-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075442",
+    "ThreadId": "451986",
+    "Html": "Thanks, I think I understand now. <code>f1</code> will always call <code>p</code> with 2 parameters but <code>f2</code> will call <code>p</code> with either 1 or 2 parameters. So an implementation of <code>f1</code> and <code>f2</code> might be:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f1( p: (a: <span style=\"color:Blue;\">any</span>, b: <span style=\"color:Blue;\">any</span>) =&gt; <span style=\"color:Blue;\">any</span> )\n{\n  p(10, 20); <span style=\"color:Green;\">// call p always with 2 parameters</span>\n}\n\n<span style=\"color:Blue;\">function</span> f2( p: (a: <span style=\"color:Blue;\">any</span>, b?: <span style=\"color:Blue;\">any</span>) =&gt; <span style=\"color:Blue;\">any</span> )\n{\n  <span style=\"color:Green;\">// call p with 1 or 2 parameters depending on some condition</span>\n  <span style=\"color:Blue;\">if</span> (some_condition)\n    p(10);\n  <span style=\"color:Blue;\">else</span>\n    p(10,20);\n}\r\n</pre></div>So <code>f1</code> always calls <code>p</code> with 2 parameters and the caller of <code>f1</code> is free the supply a callback that uses 2 or fewer parameters. <code>f2</code> however actually burdens the caller to know which condition causes it to decide on the number of parameters when calling <code>p</code>; not a very useful use case.<br />\n",
+    "PostedDate": "2013-08-01T00:32:36.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

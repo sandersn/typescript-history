@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-04T16:23:32.157-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "An example: knockout.mapping.d.ts had the following declaration:\r\n```\r\n\r\n    declare module \"knockout.mapping\" {\r\n        export = KnockoutMapping;\r\n    }\r\n```\r\n\r\nI could then include \r\n\r\n```\r\n    import mapper = require('knockout.mapping');\r\n```\r\n\r\nbut this fails now with \"Could not find symbol mapper\". when using `mapper.fromJS(..)`\r\n\r\nSo question is, is there a new way in 1.0 that such modules should be defined?\r\n\r\nThis worked fine in 9.7.x (The release candidate).\r\n\r\nReproduce by adding nuget packages for knockout mapping and try import and use it.",
+    "LastUpdatedDate": "2014-04-05T01:14:35.983-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-04T01:36:07.637-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "typescript 1.0 broke AMD declared Modules.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2380
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Seems that the solution is to change : \n\ndeclare module \"knockout.mapping\" {\n    export = mapping;\n}\ndeclare var mapping: KnockoutMapping;\n\nWould love a comment on if this is the way to do it and I will update the type definition.",
+      "PostedDate": "2014-04-04T01:48:13.363-07:00",
+      "Id": 140511
+    },
+    {
+      "Message": "Yes this is working as intended. As it is currently written the knockout.mapping.d.ts defines an ambient external module named 'knockout-mapping.' This module export='s the interface type KnockoutMapping. So when you require 'knockout-mapping' the identifier that is bound to that (ie mapper) is now an interface, not an instance. So you can use mapper in type positions but not value positions as is the case with mapper.fromJS(). With the change you noted in your comment you have now defined an instance of type KnockoutMapping named mapping. Now this is the thing that gets bound against when require'd and of course an instance of type KnockoutMapping does have a fromJS method on it that can be called. I'm unfamiliar with this library in particular but if what it is actually doing is exporting an instance of that type then yeah your update is correct.",
+      "PostedDate": "2014-04-04T16:23:23.607-07:00",
+      "Id": 140621
+    },
+    {
+      "Message": "Thanks.\n\nThe library exposes the fromJS() methods on the export object. ",
+      "PostedDate": "2014-04-05T01:14:35.983-07:00",
+      "Id": 140641
+    }
+  ]
+}

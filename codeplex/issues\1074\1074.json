@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.643-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Hello,\r\n\r\ntypescript uses an internal function called __extends that is used to perform the prototypal inheritance. The function works well but has an important shortcoming, the whole class hierarchy loose the class names, they are substituted by the very inconvenient __ class name. \r\n\r\nI found a succinct and safe way to populate the correct class names, it should work on all browsers, but I have not tested it extensively:\r\n\r\n```\r\n__extends = function (d, b) {\r\n      var name = d.name || d.toString().match(/^function\\s*([^\\s(]+)/)[1];\r\n      var __ = eval('(function(){return function '+name+'(){}})()');\r\n      __.constructor = function(){this.constructor = d};\r\n      __.prototype = b.prototype;\r\n      d.prototype = new __();\r\n    };\r\n```\r\n\r\nBasically what it does it to try to get the super class name by accessing the name property if available (this works on all browsers besides IE), otherwise it makes a regexp match of the function name from its string representation. \r\n\r\nAfter getting the function name it evaluates an expresion that creates a function with the proper name. The expression is compatible with \"strict mode\";. The rest is the same as the original __extends.\r\n\r\nBy using this custom __extends I am getting a very nice class hierarchy that is making debugging easier, while not introducing any significant penalty in performance.\r\n\r\nBest regards,\r\n\r\nManuel Astudillo.\r\n\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-27T03:32:21.983-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Improve class hierarchy names for debugging",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 3,
+    "Id": 1074
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion!  Assigning this to Jonathan for consideration.",
+      "PostedDate": "2013-05-30T16:20:39.243-07:00",
+      "Id": 101734
+    },
+    {
+      "Message": "workaround:\nI use overriden ToString function in every class i create.\nFirebug uses ToString to show the class name.\nGoogle chrome not so smart and does not use it in the debugging.",
+      "PostedDate": "2013-05-31T11:30:40.547-07:00",
+      "Id": 101811
+    },
+    {
+      "Message": "BBGONE:\n\nnice trick. I still think that it is less cumbersome and lightweight to use the proposed method plus it is cross browser...\n",
+      "PostedDate": "2013-05-31T11:58:57.01-07:00",
+      "Id": 101815
+    },
+    {
+      "Message": "I find this method work well for Chrome, and probably Firefox as well:\n\nvar __extends = this.__extends || function (derived: any, base: any) {\n\tfor (var p in base) if (base.hasOwnProperty(p)) derived[p] = base[p];\n\tderived.prototype = Object.create(base.prototype, { constructor: { value: derived } });\n};\n",
+      "PostedDate": "2013-06-27T15:05:16.177-07:00",
+      "Id": 104416
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There is currently no way to only alias a type of an imported module.\n\nThere is a workaround though:\n````\nexport interface Fum extends b.Fum{}\n````",
+    "ClosedDate": "2014-02-21T14:00:24.327-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The following code compiles and runs correctly.\r\n```\r\nmodule a {\r\n  export class Fee {\r\n    x: b.Fum;\r\n  }\r\n}\r\nmodule b {\r\n  export class Fum {\r\n    y: a.Fee;\r\n  }\r\n}\r\n```\r\nIt seems like we should be able to do the same thing with aliases.\r\n```\r\nmodule a {\r\n  import Fum = b.Fum;\r\n  export class Fee {\r\n    x: Fum;\r\n  }\r\n}\r\nmodule b {\r\n  import Fee = a.Fee;\r\n  export class Fum {\r\n    y: Fee;\r\n  }\r\n}\r\n```\r\nThis will compile, but the resulting code will not run correctly because of the assignment statements generated for those aliases.  When it evaluates module a it will try to read b.Fum, which will cause an error since b is undefined.\r\n```\r\nvar a;\r\n(function (a) {\r\n    var Fum = b.Fum;\r\n    // ... code for Fee ...\r\n})(a || (a = {}));\r\nvar b;\r\n(function (b) {\r\n    var Fee = a.Fee;\r\n    // ... code for Fum ...\r\n})(b || (b = {}));\r\n```\r\nIs there no way to create an alias to a type without generating an assignment statement for it?",
+    "LastUpdatedDate": "2014-02-21T14:00:24.327-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-20T09:22:16.573-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Need alias without assignment",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2199
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

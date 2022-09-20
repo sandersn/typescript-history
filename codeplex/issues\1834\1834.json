@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "AMD and CommonJS are the most widely used module systems. Further you can use you're own implementation of 'export' and 'require' when running the code. \n\nThis discussion is more appropriate in the discussion forum.",
+    "ClosedDate": "2013-10-25T11:19:18.25-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "It seems from the documents that only AMD and CommonJS formats are supported for external modules.  First thing, modules are top level and there's no custom way to wrap them in conditionals.  Using \"export\" is the only way to \"wrap\" a module for asynchronous loading (keeping with the TS statements).  I think it's a really bad idea to force people to use libraries that are not even TypeScript related in order to use TYPESCRIPT language semantics such as \"export\" and \"require()\".  There needs to be a way to define how \"export\" and \"require\" will output code, and go that route instead.\r\n\r\nAt the very least, let people wrap modules in custom conditionals/functions, and allow developers to implement something else.  Perhaps a module is not even required?\r\n\r\n```\r\nif (A) {\r\n    module ABC {  }\r\n}\r\nif (B) {\r\n    module ABC {  }\r\n}\r\n```\r\n... or similar.\r\n\r\nAs far as export/imports go, the common theme seems to be \"call a function, with a callback function\", so, perhaps something like this:\r\n\r\n```\r\n/* in another custom file (example) */ \r\nfunction using(modules: string[], filenames: string[], module:(obj)=>void, obj)\r\n{ /* ... custom code ... */ } \r\n// ------------------------\r\n\r\nusing A.B.C;  /// nested modules A, B, and C, where C has class 'D'.\r\n/*...or import A.B.C; if that makes more sense. According to the spec, TS associates\r\n* a filename with each module, so referencing a module should reference (and\r\n* perhaps even pass) the filename to the module.\r\n*/\r\n\r\nmodule X {\r\n    export d: A.B.C.D;\r\n}\r\n\r\n```\r\n... which may produce something like ...\r\n```\r\nvar A.B.C, X;\r\nusing(['A.B.C'/*, etc.*/], ['A.js'/*, etc.*/],\r\n    function (X) { \r\n        /* ... module code ... */\r\n    }, X);\r\n// ('A.js' is known by the compiler for the module 'A.B.C')\r\n```\r\nIf \"using ....;\" is found without a custom declaration, then show an error stating the case.\r\n\r\nFinally, perhaps one last suggestion: Allow putting the \"using/import\" in the module body itself, like so:\r\n\r\n```\r\nmodule X {\r\n    using A.B.C;\r\n    export d: A.B.C.D;\r\n}\r\n```\r\n... which may produce the SAME JS code above, with one difference: Only the module block itself will be placed into a \"using(...)\" call (not the whole TS file, like is does now).\r\n\r\nThe good thing about all this is that the end user doesn't need a compiler option, but can simply \"select\" the correct \"using(...)\" by including the corresponding JS file.",
+    "LastUpdatedDate": "2013-10-25T11:19:18.25-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-24T22:00:11.86-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "\"export\" and \"require()\" custom implementations",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1834
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

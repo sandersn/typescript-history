@@ -1,0 +1,105 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please reactivate if you're still seeing this on the 1.0 build. Thanks!",
+    "ClosedDate": "2014-04-03T14:18:45.027-07:00",
+    "CommentCount": 13,
+    "Custom": null,
+    "Description": "I have 0.9.1.1 installed, and I've followed the [instructions](https://typescript.codeplex.com/wikipage?title=Compile-on-Save) so it's now working. However I've noticed that it's unreliable.\r\n\r\nSometimes, it doesn't capture changes. I've been adding and removing the same line over and over with the js file open in VS so I can see when it changes, but sometimes, (mostly when I remove a line) it doesn't happen.\r\n\r\n__OK, I have a repro for one case but it may not be the same case for other users;__\r\n\r\n 1) I have a web project that contains typescript.\r\n 2) I have a test project that links to those files using <TypeScriptCompile Include=\"..\\www\\Scripts\\**\\*.ts\"/>\r\n\r\nWhen a TypeScript compiler error occurs the \"Error List\" window in VS2013 sometimes lists the reference from the other project. It's actually possible to get TWO editor windows open with the same file in the same solution. I'm not sure that's the *only* way to get two windows open, but basically if you edit and save in the \"wrong\" one, VS doesn't pick up the changes.\r\n\r\nPresumably, it's looking for a save event in the web project instead of watching for filesystem changes. There are several wierd things about this;\r\n\r\n 1) Firstly, the fact that there are two windows open to the same file\r\n 2) You'd think that even if the web project couldn't \"see\" the file changes, the test project would have compiled the file into the same folder - although I've just looked at my csproj is missing the relevant pieces of TypeScript config to do that. Presumably though, I *don't* want to build the files in both projects anyway.\r\n 3) You'd also expect, that if VS thought to open two separate windows for a file that when you saved changes in one it would popup a dialog on the other to say the on-disk version had been modified.\r\n\r\nClearly there's a complex identity here that's screwing up TypeScript at the very least.",
+    "LastUpdatedDate": "2014-08-18T17:28:16.187-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-28T03:39:51.543-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Compile-on-save doesn't always pickup changes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1611
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We have this problem too. \nThe project is fairly small, a standard MVC project where we have added five typescript files, each less than 100 lines.\nThis is a very annoying problem that unfortunately may cause us to abandon TypeScript altogether.",
+      "PostedDate": "2013-09-24T06:31:27.713-07:00",
+      "Id": 115474
+    },
+    {
+      "Message": "We're having this problem too. I'm way too far invested with TypeScript to abandon it, but the support is terrible. I can't easily see changes, and when I save or build I get sporadic compilation. This is a serious serious problem.",
+      "PostedDate": "2013-09-30T21:18:04.74-07:00",
+      "Id": 116067
+    },
+    {
+      "Message": "You chose to use *beta* software, so you're not simply consumers - you chose to take part in the development process. Dealing with bugs is a part of that process.\n",
+      "PostedDate": "2013-10-01T06:40:50.797-07:00",
+      "Id": 116096
+    },
+    {
+      "Message": "I am also experiencing this problem in Visual Studio 2012 with TypeScript 0.9.1.1. A workaround that seems to work is to close the .ts file, reopen it, change a line (just add a space somewhere) and then save it.",
+      "PostedDate": "2013-10-11T01:52:06.39-07:00",
+      "Id": 118122
+    },
+    {
+      "Message": "Clearly, this isn't an isolated issue, others are experiencing it. There seem to be several workarounds, the one I had to resort to last week was to create, compile and remove a brand new TS file before it would start compile-on-save for my existing files.\n\nSomething's clearly amiss, but I've no idea how to get a repo as it seems to be related to transient state within a project.",
+      "PostedDate": "2013-10-14T01:08:59.253-07:00",
+      "Id": 118307
+    },
+    {
+      "Message": "More information - not quite a full repro yet, but it looks like this might be related to locked or in-use files. I've noticed that I typically experience this when saving a file and alt-tabbing to the browser to F5 the changes. My theory is that the web server is hitting the file before tsc.exe can finish writing it, and for some reason it gets into a locked-out state, requiring one of the workarounds.",
+      "PostedDate": "2013-10-16T11:17:13.35-07:00",
+      "Id": 118632
+    },
+    {
+      "Message": "I accidentally upgrade Web Essentiails for VS 2012 today and lost my TypeScript support unexpectedly. I was unable to go back to an earlier Web Essentials as it then lost intellisense, color-coding and the previewing!\n\nAfter installing the TypeScript 0.9.1.1 addin I found that the instructions did not help, for updating an existing project, and even a brand new project did not generate .js files for the TypeScript files.\n\nThe only option left after trying everything we could think of was a full uninstall and reinstall of VS 2012 (which was also not easy, as it appears the VS 2012 service packs made Windows think VS 2012 was not even installed!). It is now working, but I lost a full day (and then some) of work sorting it out. Now I have fully commented (argh), non-minimised (argh), JS output which appears no longer compatible with our in-house TypeScript libraries. *sigh*. It has been a very long day...",
+      "PostedDate": "2013-10-22T13:41:09.03-07:00",
+      "Id": 119262
+    },
+    {
+      "Message": "I'm experiencing this issue since the 0.9.1 release. It's intermintent and I couldn't find a way a to reproduce. Sometimes just a simple open/close of the file restores the change tracking behavior, sometimes not. Using the virtual project seems to mitigate it a little, but not always.\n\nThe project has a mix of js and ts files, also I have resharper 7.1.3 installed. I can provide the project file (in a private way) if needed.",
+      "PostedDate": "2013-11-23T11:15:14.683-08:00",
+      "Id": 124023
+    },
+    {
+      "Message": "I can still see this issue with visual studio 2012 and typescript 0.9.5. It's incredibly frustrating.",
+      "PostedDate": "2013-12-23T23:32:08.333-08:00",
+      "Id": 128356
+    },
+    {
+      "Message": "I am not able to reproduce this issue. Can you give us some more info, for instance the size of the project you're seeing this in? One of the things that may be happening is that the compilation takes some time depending on the line you're changing.. \n\nClosing for more info, if you have more info can you re-open the bug using the button on top.\n\r\n\r** Closed by paulb 08/30/2013 3:09PM",
+      "PostedDate": "2013-08-30T15:09:40.54-07:00",
+      "Id": 137542
+    },
+    {
+      "Message": "I'm experiencing this with VS 2013 + Typescript 0.9.5. I've been seeing this for a while and sorta got used to it after so many times of encountering mind baffling bugs and spending quite some time trying to figure out how to solve a problem that doesnt exist. Anywho my \"workaround\" these days is:\n\n\n1) Hotkey: Ctrl + [ + S  Brings up file in solution explorer\n2) Right arrow key expand to js file, Enter to open it\n3) Ctrl + - to navigate back to ts file\n4) Ctrl + A   then Ctrl + X to cut entire file contents to clipboard\n5) Ctrl + S until reload dialog appear , Enter to Yes all, if doesn't appear Ctrl + S again until it does!\n6) After it compiles the empty file the compiler should \"wake up\" and if you paste the contents back it will compile again :)\n\nI know this sounds long but once these hot keys are mastered you will feel like a one-man Nascar pit crew. After ruling out a time-space warping bug and source of pain in ass is discovered, I can get it working again in like 3.4946 seconds.",
+      "PostedDate": "2014-04-09T19:56:19.18-07:00",
+      "Id": 141280
+    },
+    {
+      "Message": "VS2013 Update 2+WebEssentials 2013 fpr Update 2 RTM (2.2)+ReSharper 8.2.1\n\nSame problem. Have experienced it on VS2012 w/latest TypeScript, WebEssentials and ReSharper as well.\n\n__Solution: Close .ts-file, re-open, change one line, save.__\nALT+SHIFT+L, CTRL+F4, ENTER - if you want to feel like a one-man Formula 1 pit crew.\nhttp://jalopnik.com/what-pit-stops-tell-you-about-the-differences-between-f-1469179642\n",
+      "PostedDate": "2014-07-17T02:15:18.893-07:00",
+      "Id": 152675
+    },
+    {
+      "Message": "Experienced the same issue on VS2013. Quick workaround was to select all from the .ts file -> Ctrl + x -> Save -> Ctrl + v -> Save.\n(Run on save has to be \"true\" on TypeScript settings)",
+      "PostedDate": "2014-08-18T17:28:16.187-07:00",
+      "Id": 155701
+    }
+  ]
+}

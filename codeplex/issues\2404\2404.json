@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I think your fix is good. We're deprecating our copy of WinJS in favor of the version on DefinitelyTyped, so I'd recommend moving to that version if possible.",
+    "ClosedDate": "2014-04-09T11:19:55.18-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "# problem \r\nWriting WinJS + WinRT asynchronous code can be tedious in typescript with the provided interface files winjs.d.ts and winrt.d.ts since the promise APIs declarations replicated and not compatible.\r\n\r\n# example\r\nFor instance, the type of ```file``` in the following expression should be ```Windows.Storage.StorageFile```,\r\n```typescript\r\nWinJS.xhr(...).then((xhr) => {\r\n  return Windows.Storage.ApplicationData.current.localFolder.getFileAsync(filenameFromXhr(xhr));\r\n}).then((file) => { ... });\r\n```\r\nbut without making ```WinJS.Promise``` and ```Windows.Foundation.IPromise``` interoperate, the type of ```file``` will incorrectly be ```Windows.Foundation.IAsyncOperation<Windows.Storage.StorageFile>```.\r\n\r\n# our prototype fix\r\nWe have prototyped this interoperability by creating a wincommon.d.ts file:\r\n```typescript\r\ndeclare module Windows.Common {\r\n    interface IPromise<T> {\r\n        then<U>(success?: (value: T) => IPromise<U>, error?: (error: any) => IPromise<U>, progress?: (progress: any) => void): IPromise<U>;\r\n        then<U>(success?: (value: T) => IPromise<U>, error?: (error: any) => U, progress?: (progress: any) => void): IPromise<U>;\r\n        then<U>(success?: (value: T) => U, error?: (error: any) => IPromise<U>, progress?: (progress: any) => void): IPromise<U>;\r\n        then<U>(success?: (value: T) => U, error?: (error: any) => U, progress?: (progress: any) => void): IPromise<U>;\r\n        done<U>(success?: (value: T) => any, error?: (error: any) => any, progress?: (progress: any) => void): void;\r\n    }\r\n}\r\n```\r\nand now declare ```interface Windows.Foundation.IPromise<T> extends Windows.Common.IPromise<T> {}``` in a modified winrt.d.ts and updated ```class WinJS.Promise``` so that the callbacks refer to Windows.Common.IPromise instead of WinJS.Promise to enable compatibility with Windows.Foundation promises.\r\n\r\n# questions\r\n\r\n1. Are there any pitfalls with this approach?\r\n2. Could this be done without a common interface file?\r\n3. Should this approach be merged into the official winjs/winrt declaration files?",
+    "LastUpdatedDate": "2014-04-09T15:24:04.393-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-08T13:02:06.177-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "WinJS.Promise not compatible with Windows.Foundation.IPromise",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2404
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That's definitely possible.  I didn't think to check if DefinitelyTyped was maintaining a WinJS API.",
+      "PostedDate": "2014-04-09T15:24:04.393-07:00",
+      "Id": 141257
+    }
+  ]
+}

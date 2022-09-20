@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This appears to be working for me in the latest bits in the develop branch. When I compile the 3 snippets you provided in the order provided I get the expected output. That is:\n\ntsc extensions.ts aggregateEvent.ts aggregateCreatedEvent.ts --out events.js\n\nhas events.js with the JS for the files in the order as provided on the command line. The compiler doesn't attempt to do anything smart with ordering so if you had provided those 3 files in a different order you'd get different output (which potentially would not load correctly).",
+    "ClosedDate": "2013-10-16T17:56:41.08-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nI just noticed the compiler is compiling the files in the wrong order.\r\nWhen you complie this:\r\n```\r\ninterface Object {\r\n    getTypeName(): string;\r\n}\r\n\r\nObject.prototype.getTypeName = function () {\r\n    var funcNameRegex = /function (.{1,})\\(/;\r\n    var results = (funcNameRegex).exec(this[\"constructor\"].toString());\r\n    return (results && results.length > 1) ? results[1] : \"\";\r\n}\r\n```\r\n```\r\n/// <reference path=\"./Extensions.ts\" />\r\n// Module\r\nmodule base {\r\n    // Class\r\n    export class AggregateEvent {\r\n\r\n        name = this.getTypeName();\r\n        // Constructor\r\n        constructor(public aggregateId: string) { }\r\n    }\r\n}\r\n```\r\n```\r\n\r\n// Module\r\nmodule base {\r\n    // Class\r\n    export class AggregateCreatedEvent extends AggregateEvent {\r\n         // Constructor\r\n        constructor() {\r\n            super('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx');\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n\r\nThen the compiler generates:\r\n```\r\nvar __extends = this.__extends || function (d, b) {\r\n    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];\r\n    function __() { this.constructor = d; }\r\n    __.prototype = b.prototype;\r\n    d.prototype = new __();\r\n};\r\nvar base;\r\n(function (base) {\r\n    var AggregateCreatedEvent = (function (_super) {\r\n        __extends(AggregateCreatedEvent, _super);\r\n        function AggregateCreatedEvent() {\r\n            _super.call(this, 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx');\r\n        }\r\n        return AggregateCreatedEvent;\r\n    })(base.AggregateEvent);\r\n    base.AggregateCreatedEvent = AggregateCreatedEvent;\r\n})(base || (base = {}));\r\nObject.prototype.getTypeName = function () {\r\n    var funcNameRegex = /function (.{1,})\\(/;\r\n    var results = (funcNameRegex).exec(this[\"constructor\"].toString());\r\n    return (results && results.length > 1) ? results[1] : \"\";\r\n};\r\nvar base;\r\n(function (base) {\r\n    var AggregateEvent = (function () {\r\n        function AggregateEvent(aggregateId) {\r\n            this.aggregateId = aggregateId;\r\n            this.name = this.getTypeName();\r\n        }\r\n        return AggregateEvent;\r\n    })();\r\n    base.AggregateEvent = AggregateEvent;\r\n})(base || (base = {}));\r\n\r\n```\r\n\r\n\r\nThis is loading in the wrong order as AggregateEvent should be loaded before AggregateCreatedEvent\r\n\r\n\r\n",
+    "LastUpdatedDate": "2013-11-19T16:08:29.08-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-16T15:40:48.947-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Compiler Extends Order Wrong",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1796
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thank you or checking this. \n\nI am using Grunt to compile this. I am guessing this logic then needs to be added to Grunt?\nI would assume that it would be easier in the the compiler as it is already aware of the code and and its structure?\n\nI have not checked this in the visual studio integration. There the same might happen.\n\nJan\n",
+      "PostedDate": "2013-10-17T08:38:50.953-07:00",
+      "Id": 118718
+    }
+  ]
+}

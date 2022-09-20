@@ -1,0 +1,71 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:31:11.033-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\n__Version 0.9.5 Beta__\r\n\r\n```TypeScript\r\nclass Promise<T> { }\r\n\r\ninterface Foo {\r\n    foo(): Promise<string>;\r\n}\r\n\r\nclass Bar implements Foo {\r\n    foo() {\r\n        return new Promise();\r\n    }\r\n}\r\n```\r\n\r\nFirstly I would have expected a compilation error for class Bar, because it does not appear to implement interface Foo correctly. However, I reasoned that the return value for method Foo is a Promise<any>, hence that must be correct.\r\n\r\nHowever, mouse-over on method foo indicates that the return value is in fact a Promice<{}>.\r\n\r\nFurthermore the generated declarations file contains the following:\r\n\r\n```TypeScript\r\ndeclare class Bar implements Foo {\r\n    public foo(): Promise<{}>;\r\n}\r\n```\r\n\r\nAnd any other projects that reference this declarations file report a compilation error that Bar does not implement Foo.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-19T06:53:31.177-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Class with omitted generic parameter as returned value ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1919
+  },
+  "FileAttachments": [
+    {
+      "FileId": 759810,
+      "FileName": "Repro.v11.zip",
+      "DownloadUrl": ".\\759810"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "TypeScript uses a structural type system.  As Promise<T> contains no members, any instantiation of it always creates an empty object ( { } ) - regardless of fact it's generic.  Thus foo() in interface Foo always returns an empty object.\n\nPer section 4.12.2 of the spec, an inferred type argument for an empty set of types (which is what you have in \"return new Promise();\" is an empty object, so the function foo returning Promise< { } > appears correct to me.\n\nI see the same declare file generated, but don't get any errors when referencing it.  Do you have any other files open or types referenced which may be at play in your experiments?\n\nI'll close this as by design per the above explanation, but please reopen if the above doesn't make sense, or you are seeing something different and I misunderstood.\n\nThanks!",
+      "PostedDate": "2013-11-19T08:35:34.607-08:00",
+      "Id": 123516
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 11/19/2013 8:35AM",
+      "PostedDate": "2013-11-19T08:35:55.293-08:00",
+      "Id": 123525
+    },
+    {
+      "Message": "@Bill, I am attaching a repro.\r\n\r\nThe solution \"Repro.sln\" contains three projects, all of which are required to reproduce the bug. I have reduced everything to a minimum.\r\n\r\nThe solution should fail with  \"error TS2137: Build: Class Script2 declares interface Script but does not implement it\". The failing project is Project A.\r\n\r\nProject A compiles successfully under the following circumstances:\r\n\r\n1. In A/_references.ts if the reference for C is placed before B\r\n\r\n2. In B/Promise.ts the reference to \"T\" is removed from the \"then\" method's signature:\r\n\r\n```TypeScript\r\n        public then<S>(): Promise<S> {\r\n\r\n            var x: T = undefined;\r\n            console.log(x);\r\n\r\n            return <any>undefined;\r\n        }\r\n```\r\n\r\nIn B/Script.ts in the attached repro there is also a red squiggly under class Script2 with the error - in spite of the project compiling fine in isolation. In my original extended solution there is no such red line.\r\n\r\nPlease let me know if you are having trouble reproducing this.\r\n\r\n(@Ryan, I was in the middle of drafting a response - that's why it was open. Where's the fire friend?! :-)",
+      "PostedDate": "2013-11-19T12:48:42.19-08:00",
+      "Id": 123562
+    },
+    {
+      "Message": "Closing per Bill's comments (not sure why the issue is open). Feel free to reopen though.\n\r\n\r** Closed by RyanCavanaugh 11/19/2013 9:38AM",
+      "PostedDate": "2013-11-19T09:38:40.687-08:00",
+      "Id": 123563
+    },
+    {
+      "Message": "Confirmed we either see the error or not depending on file order",
+      "PostedDate": "2013-11-19T15:15:57.763-08:00",
+      "Id": 123581
+    }
+  ]
+}

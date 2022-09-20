@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is fixed in the develop branch now.",
+    "ClosedDate": "2013-07-26T15:18:52.02-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "It seems like this code should compile (under 0.9 beta):\r\n\r\n    class LazyArray<T> {\r\n        private objects = <{ [objectId: string]: T; }>{};\r\n    \r\n        array() {\r\n            return this.objects;\r\n        }\r\n    }\r\n    \r\n    var lazyArray = new LazyArray<string>();\r\n    var value: string = lazyArray.array()[\"test\"];\r\n\r\nBut tsc returns \"Cannot convert 'T' to 'string'\". \r\n\r\nIs that right?",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-03T18:46:36.693-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "\"Cannot convert 'T' to 'string'\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1103
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report. This should get fixed, marking as active.",
+      "PostedDate": "2013-06-06T15:11:24.687-07:00",
+      "Id": 102334
+    },
+    {
+      "Message": "another reproduction of the error\n```\nmodule RIAPP {\n    export class CollectionItem {\n        _fkey: string;\n        constructor() {\n            this._fkey = null;\n        }\n        get _key() { return this._fkey; }\n        set _key(v) {\n            if (v !== null)\n                v = '' + v;\n            this._fkey = v;\n        }\n        get _collection(): Collection<CollectionItem> { return null; }\n    };\n\n\n    export class Collection<TItem extends CollectionItem> {\n        _isLoading: bool;\n        _itemsByKey: { [key: string]: TItem; };\n\n        constructor() {\n            this._isLoading = false;\n            this._itemsByKey = {};\n        }\n\n        _createNew(): TItem {\n            throw new Error('Not Implemented');\n        }\n        get isLoading() { return this._isLoading; }\n        set isLoading(v: bool) {\n            if (this._isLoading !== v) {\n                this._isLoading = v;\n            }\n        }\n    }\n\n    export class ListItem extends CollectionItem {\n        __coll: List;\n        constructor(coll: List) {\n            super();\n            this.__coll = coll;\n        }\n        get _collection() { return this.__coll; }\n    }\n\n    export class List extends Collection<ListItem> {\n        constructor() {\n            super();\n        }\n        _createNew(): ListItem {\n            var item: ListItem = new ListItem(this);\n            return item;\n        }\n        fillItems() {\n            var oldItem: ListItem = this._itemsByKey[\"key\"];\n        }\n        toString() {\n            return \"List\";\n        }\n    }\n}\n```",
+      "PostedDate": "2013-06-10T21:32:24.213-07:00",
+      "Id": 102746
+    },
+    {
+      "Message": "The error at: var oldItem: ListItem = this._itemsByKey[\"key\"];",
+      "PostedDate": "2013-06-10T21:33:09.563-07:00",
+      "Id": 102747
+    },
+    {
+      "Message": "seems one more reproduction of this error is (but in different manner using interface instead a class)\nhttps://typescript.codeplex.com/workitem/1242",
+      "PostedDate": "2013-06-26T02:16:03.633-07:00",
+      "Id": 104183
+    }
+  ]
+}

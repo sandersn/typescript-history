@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-10-22T09:59:05.63-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "This issue occurs with tsc version 0.9.1.1.\r\n\r\n# For both scenarios:\r\n\r\n__Alpha.ts:__\r\n```\r\ninterface Alpha<T> {\r\n\r\n        getFoo():T;\r\n\r\n}\r\n\r\nexport = Alpha;\r\n```\r\n\r\n# Scenario #1: Generically typed interface consuming interface with method using generic type; Additional methods on Beta interface.\r\n\r\n__Beta.ts:__\r\n```\r\nimport Alpha = require(\"Alpha\");\r\n\r\ninterface Beta {\r\n\r\n        getBar():Alpha<string>;\r\n\r\n        getBaz():string;\r\n\r\n}\r\n\r\nexport = Beta;\r\n```\r\n\r\n__Compiler invocation:__\r\n```\r\ntsc *.ts --module amd -d\r\n```\r\n\r\n__Expected Result for Beta.d.ts:__\r\n```\r\nimport Alpha = require(\"Alpha\");\r\ninterface Beta {\r\n    getBar(): Alpha<string>;\r\n    getBaz(): string;\r\n}\r\nexport = Beta;\r\n```\r\n\r\n__Actual Result for Beta.d.ts:__\r\n```\r\nimport Alpha = require(\"Alpha\");\r\ninterface Beta {\r\n    getBar(): Alpha.Alpha<string>;\r\n    getBaz(): string;\r\n}\r\nexport = Beta;\r\n```\r\n\r\n_Note the erroneous module qualifier on the Alpha type._\r\n\r\n# Scenario #2: Generically typed interface consuming interface with type parameter using generic type; No additional methods on Beta interface.\r\n\r\n__Beta.ts:__\r\n```\r\nimport Alpha = require(\"Alpha\");\r\n\r\ninterface Beta<T extends Alpha> {\r\n\r\n        getBar():T;\r\n\r\n}\r\n\r\nexport = Beta;\r\n```\r\n\r\n__Compiler invocation:__\r\n```\r\ntsc *.ts --module amd -d\r\n```\r\n\r\n__Expected Result for Beta.d.ts:__\r\n```\r\nimport Alpha = require(\"Alpha\");\r\ninterface Beta<T extends Alpha> {\r\n    getBar(): T;\r\n}\r\nexport = Beta;\r\n```\r\n\r\n__Actual Result:__\r\n```\r\ninterface Beta<T extends Alpha.Alpha<any>> {\r\n    getBar(): T;\r\n}\r\nexport = Beta;\r\n```\r\n\r\n_Note the missing import and erroneous module qualifier on the Alpha type._",
+    "LastUpdatedDate": "2013-10-22T09:59:05.63-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-21T21:41:59.81-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Incorrect code generation with imported generic type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 1825
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Both of the issues above are addressed in the bits currently in our 'develop' branch, and the \"Alpha.Alpha\" construct is never emitted, so I'll close these issues as fixed.\n\nUnfortunately I do see 2 entirely new issues related to module resolution and generic parameters, so I'll log those :-/\n\nThanks.",
+      "PostedDate": "2013-10-22T09:56:58.583-07:00",
+      "Id": 119225
+    }
+  ]
+}

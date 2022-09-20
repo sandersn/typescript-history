@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting.\n\nI can confirm it's fixed in the develop branch, are you using 0.9.0.1 it may be fixed in there.",
+    "ClosedDate": "2013-07-05T10:45:05.733-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "It is possible for the compiler to create invalid typescript in a declaration file if part of the namespace is not unique.\r\n\r\nIn this example, a there are 2 distinct \"leaf\" modules - in the \"namespace1\" and \"namespace1.namespace2\" namespaces.\r\n\r\n```\r\nmodule namespace1.leaf {\r\n    export enum EnumValues {\r\n\t\tValue1,\r\n\t\tValue2,\r\n\t\tValue3\r\n    }\r\n}\r\n\r\nmodule namespace1.namespace2.leaf {\r\n    export class MyClass {\r\n\t\tpublic myEnumValue: namespace1.leaf.EnumValues;\r\n    }\r\n}\r\n```\r\nWhen you compile the declaration file for this, you get:\r\n```\r\ndeclare module namespace1.leaf {\r\n    enum EnumValues {\r\n        Value1,\r\n        Value2,\r\n        Value3,\r\n    }\r\n}\r\ndeclare module namespace1.namespace2.leaf {\r\n    class MyClass {\r\n        public myEnumValue: leaf.EnumValues;\r\n    }\r\n}\r\n```\r\nwhich is not valid typescript. Line 10 fails compilation with this message:\r\n\r\n```\r\nThe property 'EnumValues' does not exist on value of type 'leaf'.\r\n```\r\n\r\n__The compiler has missed \"namespace1\" from the type on line 10 of the declaration file.__ Manually editing the .d.ts file to add the additional namespace gives valid code that does compile.\r\n\r\nThe fix would seem to be in the DeclarationEmitter.prototype.emitTypeSignature function of the compiler.\r\n\r\n_This might be the same issue as https://typescript.codeplex.com/workitem/1170, but I am not sure_ - _this is a more succinct example if it is the same problem._",
+    "LastUpdatedDate": "2013-07-05T10:45:05.733-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-05T01:15:36.92-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Modules with the same name in different namespaces can cause the Typescript compiler to produce a declaration file which does not compile",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1308
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

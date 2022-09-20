@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing this since https://typescript.codeplex.com/workitem/1830 covers the newer issue and the original was resolved.",
+    "ClosedDate": "2013-10-23T11:48:14.1-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Here is another issue that only pops up with the 'develop' compiler but not in 0.9.1.1.  We have code that looks like this:\r\n```\r\nexport function doSomething(draftId: string): When.Promise<number> {\r\n    return Jobs.execute(\"documents/getDraft\", draftId).then((document) => {\r\n        // nothing is done with the document\r\n    }).then(() => {\r\n        return Jobs.execute(\"chart/calculate\", draftId);\r\n    }).then((result) => {\r\n        return 5;\r\n    });\r\n}\r\n```\r\n\r\nWhich produces a very lengthy error which basically says:\r\n```\r\nlegendViewFixture.ts(8,12): error TS2012: Cannot convert 'When.Promise<void>' to 'When.Promise<number>':\r\n```\r\n\r\nBut if I change the code so that the first success handler in the chain returns something (anything), then it works:\r\n```\r\nexport function doSomething(draftId: string): When.Promise<number> {\r\n    return Jobs.execute(\"documents/getDraft\", draftId).then((document) => {\r\n        return \"why does this fix it?\";\r\n    }).then(() => {\r\n        return Jobs.execute(\"chart/calculate\", draftId);\r\n    }).then((result) => {\r\n        return 5;\r\n    });\r\n}\r\n```\r\n\r\nI've attached all the necessary files.  The command to reproduce should look something like this:\r\n```\r\ntsc --m amd repro/cometd.d.ts repro/jquery.d.ts repro/jobs.ts repro/libraries.d.ts repro/lodash.d.ts repro/messenger.d.ts repro/when.d.ts repro/legendViewFixture.ts\r\n```\r\n\r\nPlease let me know if you need any further information.",
+    "LastUpdatedDate": "2013-10-23T11:48:14.1-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-18T08:59:27.24-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Promise chain typing error",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1807
+  },
+  "FileAttachments": [
+    {
+      "FileId": 746192,
+      "FileName": "promises.zip",
+      "DownloadUrl": ".\\746192"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.\r\n\r\nThere are 2 issues, we changes the way we do overload resolution, we now pick the first applicable overload, This is a change you have to make in your promise interface, switch the 'then' overloads:\r\n\r\n````\r\n\t\tthen<U>(onFulfilled: (value: T) => U, onRejected?: (reason: any) => Promise<U>, onProgress?: (update: any) => void): Promise<U>;\r\n\t\tthen<U>(onFulfilled: (value: T) => U, onRejected?: (reason: any) => U, onProgress?: (update: any) => void): Promise<U>;\r\n        then<U>(onFulfilled: (value: T) => Promise<U>, onRejected?: (reason: any) => Promise<U>, onProgress?: (update: any) => void): Promise<U>;\r\n        then<U>(onFulfilled: (value: T) => Promise<U>, onRejected?: (reason: any) => U, onProgress?: (update: any) => void): Promise<U>;\r\n````\r\n\r\nCurrently this won't compile due to another bug in the compiler, which we're taking a look at.",
+      "PostedDate": "2013-10-18T13:18:59.337-07:00",
+      "Id": 118869
+    },
+    {
+      "Message": "Cool, thanks for looking into this.  If the overload resolution now picks the first applicable overload, wouldn't it always pick the \"=> U\" variation over the \"=> Promise<U>\" one?  I actually wrote this particular definition and I found that I had to put them in this order to ensure the Promise overload was picked up when it was applicable.",
+      "PostedDate": "2013-10-18T15:05:45.753-07:00",
+      "Id": 118881
+    },
+    {
+      "Message": "Ok, I'm not seeing this issue anymore but I think something else might have been broken because I'm now seeing hundreds of errors across our codebase (previously I was down to ~30).  Most of them look like this:\n```\nThe property 'foobar' does not exist on value of type '{}'.\n```\n\nIt seems like something was broken while fixing this...",
+      "PostedDate": "2013-10-22T14:29:34.02-07:00",
+      "Id": 119273
+    },
+    {
+      "Message": "This is fixed in the develop branch\n\r\n\r** Closed by paulb 10/22/2013 10:58AM",
+      "PostedDate": "2013-10-22T10:58:06.893-07:00",
+      "Id": 119283
+    },
+    {
+      "Message": "We'll take another look. For future reference please feel free to re-open issues like this (or file a new one), we'll notice it more quickly than adding comments to closed issues.",
+      "PostedDate": "2013-10-22T15:58:21.75-07:00",
+      "Id": 119284
+    },
+    {
+      "Message": "Ok cool, I'll do that in the future.  Thanks for looking into this.",
+      "PostedDate": "2013-10-22T16:42:16.947-07:00",
+      "Id": 119287
+    }
+  ]
+}

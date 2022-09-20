@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch. These should have been declared as 'class' instead of 'interface'",
+    "ClosedDate": "2013-02-07T13:53:12.893-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "if you try to inherit from EventEmitter using TypeScript 0.8 (on all platforms) you get an issue where some errors are flagged but the __extends function isnt actually inserted into the compiled/generated file.\r\n\r\nThis is only true if all defined classes in the file extend EventEmitter and no other classes.\r\n\r\nThe other problem here is that there is no super() constructor to call.\r\n\r\nThe following simply wont work:\r\n\r\n<code>\r\n\r\n///<reference path='node.d.ts'/>\r\n\r\nimport events = module(\"events\");\r\nimport util = module(\"util\");\r\n\r\n\r\nvar EventEmitter = events.EventEmitter;\r\n\r\n\r\nexport class Animal extends EventEmitter {\r\n   constructor(public name) {   }\r\n   move(meters) {\r\n       this.emit(\"testEventEmitter\", meters)\r\n   }\r\n}\r\n\r\n\r\nvar a = new Animal(\"hello\");\r\n\r\na.on(\"testEventEmitter\", function (varA) { console.log(varA, \"moved\")});\r\n\r\na.move(5);\r\n\r\n</code>\r\n\r\ncompilation produces\r\n\r\nCraigs-MacBook-Pro:TSTest spud$ tsc animal2.ts \r\n/Users/spud/Projects/Playground/TSTest/animal2.ts(11,0): A export class may only extend other classes, EventEmitter is an interface.\r\n/Users/spud/Projects/Playground/TSTest/animal2.ts(12,3): If a derived class contains initialized properties or constructor parameter properties, the first statement in the constructor body must be a call to the super constructor\r\n\r\nObviously we can't call super(); thus the second error doesn't apply here. The generated js is fine apart from the fact that when run it produces the error:\r\n\r\nCraigs-MacBook-Pro:TSTest spud$ node animal2.js \r\n\r\n/Users/spud/Projects/Playground/TSTest/animal2.js:5\r\n    __extends(Animal, _super);\r\n    ^\r\nReferenceError: __extends is not defined\r\n    at /Users/spud/Projects/Playground/TSTest/animal2.js:5:5\r\n    at Object.<anonymous> (/Users/spud/Projects/Playground/TSTest/animal2.js:12:3)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n    at Module.load (module.js:356:32)\r\n    at Function.Module._load (module.js:312:12)\r\n    at Module.runMain (module.js:492:10)\r\n    at process.startup.processNextTick.process._tickCallback (node.js:244:9)\r\n\r\n\r\nThe generated file, as stated above, does not include the __extends function.\r\n\r\nHowever, you can get a workaround (but it has to be done exactly as below)\r\n\r\n///<reference path='node.d.ts'/>\r\n\r\nimport events = module(\"events\");\r\n\r\n\r\nvar EventEmitter = events.EventEmitter;\r\n\r\nclass EventEmitter2 extends EventEmitter {\r\n  constructor() { }\r\n}\r\n\r\nexport class Animal extends EventEmitter2 {\r\n   constructor(public name) {  super();  }\r\n   move(meters) {\r\n       this.emit(\"test\", meters)\r\n   }\r\n}\r\n\r\nvar a = new Animal(\"hello\");\r\n\r\na.on(\"test\", function (varA) { console.log(varA, \"moved\")});\r\n\r\na.move(5);\r\n\r\nThis \"tricks\" the tsc executable into allowing compilation to proceed and produce a runnable output with minimal warnings.\r\n\r\nCraig",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-15T06:02:30.993-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Inheriting from EventEmitter in node.js",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 255
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Should say this only applicable in projects targeting node.js and where one wants to inherit from a built in node.js module.\n\nInheriting from EventEmitter is common and I have looked into modifying node.d.ts to implement this trick and it should be possible although I'd rather not do this.\n\nThe workaround is sufficient for now but thought I'd flag it up as it may have impacts for other users in similar scenarios. ",
+      "PostedDate": "2012-10-15T06:14:02.987-07:00",
+      "Id": 79745
+    },
+    {
+      "Message": "The correct thing to write here is \"implements EventEmitter\", not \"extends EventEmitter\". It's an interface, not a class.",
+      "PostedDate": "2012-10-15T09:29:56.37-07:00",
+      "Id": 79771
+    },
+    {
+      "Message": "Ryan,\n\nThought about this, and as node.d.js is implemented you are 100% correct. However, I need an instance of my class to be an instance of EventEmitter not just to implement the interface from node.d.js that I would need to implement. For example the below:\n\n\nimport events = module(\"events\");\nimport util = module(\"util\");\n\n\nvar EventEmitter = events.EventEmitter;\n\n//var ee = new EventEmitter();\n\nexport class Animal implements EventEmitter {\n   constructor(public name) {   }\n   move(meters) {\n       this.emit(\"test\", meters)\n   }\n}\n\nvar a = new Animal(\"hello\");\n\na.on(\"test\", function (varA) { console.log(varA, \"moved\")});\n\na.move(5);\n\nwill return:\n\n/Users/spud/Projects/Playground/TSTest/animal2.ts(14,12): The property 'emit' does not exist on value of type 'Animal'\n/Users/spud/Projects/Playground/TSTest/animal2.ts(11,0): Class 'Animal' declares interface 'EventEmitter' but does not implement it: Type 'Animal' is missing property 'addListener' from type 'EventEmitter'\n/Users/spud/Projects/Playground/TSTest/animal2.ts(20,2): The property 'on' does not exist on value of type 'Animal'\n\nAnimal would then need to implement all the members from the node.d.js file and as it is an interface there is no super object to call.\n\nHope this makes sense or perhaps I have completely over-engineered this. The resultant code to my example in my original post is closer to what I am expecting.\n\nCheers for your input\n\nCraig\n\n",
+      "PostedDate": "2012-10-15T14:06:36.117-07:00",
+      "Id": 80032
+    },
+    {
+      "Message": "The problem here is that EventEmitter is defined as an interface instead of a class. This also means that you cannot declare an EventEmitter, which is perfectly valid in nodejs. The following should be valid but is not in typescript:\n\n(Example adapted from http://elegantcode.com/2011/02/21/taking-baby-steps-with-node-js-implementing-events/)\n\nimport events = module('events');\n\nvar eventEmitter = new events.EventEmitter();\n\neventEmitter.on('someOccurence', function(message){\n    console.log(message);\n});\n\neventEmitter.emit('someOccurence', 'Something happened!');",
+      "PostedDate": "2012-10-26T12:27:03.517-07:00",
+      "Id": 81084
+    },
+    {
+      "Message": ":: \"The problem here is that EventEmitter is defined as an interface instead of a class. This also means that you cannot declare an EventEmitter, which is perfectly valid in nodejs.\"\n\nThis is true, in fact it is perfectly valid in any library that has actual class definitions, not just Node.js.  The existing Node.js imageboard example does not actually need to instantiate a Node.js class directly and is not very much help really - it mostly looks like a cut and paste of the code Express generates for you, with a few import statements at the top.  Most Node devs already know how to write an Express app in javascript.  What it doesn't show you is how to do something as basic as instantiating a writeable stream - because with existing node.d.ts declarations file you can't, unless you first implement it into a class of your own, or rewrite the class itself from scratch - in which case you don't need a node declaration file - you can just rewrite the entire Node.js library yourself in typescript.  This is also true of every single module in the NPM community registry.  No dev wants to have to do this as it offsets any potential help the TypeScript compiler is going to provide by catching type-related errors, and then some.\n",
+      "PostedDate": "2012-11-05T10:51:41.013-08:00",
+      "Id": 81687
+    },
+    {
+      "Message": "I don't get it, what is the workaround here now, seriously implemented all interface methods on our own ?",
+      "PostedDate": "2012-11-14T05:00:13.437-08:00",
+      "Id": 82465
+    },
+    {
+      "Message": "This is what I am doing when I need to extends some class with EventEmitter.\n\n///<reference path='../../../../definitions/node.d.ts' />\nvar EventEmitter = require('events').EventEmitter;\nimport util = module('util');\n\nclass SomeCalss { \n    public on: any;\n    public emit: any;\n    public once: any;\n\n    constructor (public name:string) { \n        \n    }\n\n    public say(): void { \n        console.log(\"He says \" + this.name);\n    }\n\n    \n}\n\nutil.inherits(SomeCalss, EventEmitter);\n\nvar some = new SomeCalss('Gaku');\nsome.on('some event', (str: string) => {\n    console.log(\"He says \" + str);\n});\n\nsome.emit('some event', 'Worked!');\n\n",
+      "PostedDate": "2013-01-02T03:37:59.79-08:00",
+      "Id": 85223
+    }
+  ]
+}

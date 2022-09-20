@@ -1,0 +1,106 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Looks like this is fixed in 0.9.5. Can you give it a try? https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta",
+    "ClosedDate": "2013-11-19T11:46:41.56-08:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "Hi Guys,\r\n\r\nEvery now and then I turn on the NoImplicitAny compiler switch and try and pick out all the implicit any's I have in my codebase.  (Unfortunately I can't have it on the whole time as a good portion of 3rd party typing files also contain implicit any's - but that's another story.)\r\n\r\nI just spotted something unusual.  It seems that there are occasions where the compiler thinks that a variable is an implicit any but the tooling in Visual Studio 2012 disagrees.  While the compiler says:\r\n\r\n```error TS7012: Parameter 'event' of lambda function implicitly has an 'any' type.```\r\n\r\nVisual Studio is correctly picking up the type - if you take a look at the enclosed screenshot you can see this in action.\r\n\r\nThe examples where I have seen this happen have all been using the ```arrayFilter```, ```arrayFirst```, ```arrayForEach``` and ```arrayMap``` methods which are part of DefinitelyTyped's Knockout typings at present:\r\n\r\n```ts\r\n    arrayForEach<T>(array: T[], action: (item: T) => void): void;\r\n\r\n    arrayForEach(array: any[], action: (any) => void ): void;\r\n\r\n    arrayFirst<T>(array: T[], predicate: (item: T) => boolean, predicateOwner?: any): T;\r\n\r\n    arrayFirst(array: any[], predicate: (item) => boolean, predicateOwner?: any): any;\r\n\r\n    arrayFilter<T>(array: T[], predicate: (item: T) => boolean): T[];\r\n\r\n    arrayFilter(array: any[], predicate: (item) => boolean): any[];\r\n\r\n    arrayMap<T, U>(array: T[], mapping: (item: T) => U): U[];\r\n\r\n    arrayMap(array: any[], mapping: (item) => any): any[];\r\n\r\n```\r\n\r\nAs you can see, there are both genericised and non-genericised overloads available.  The Visual Studio tooling appears to be selecting the generic overload and the compiler the non-generic overload in each case.  \r\n\r\nWhen I experimented with removing the non-generic overloads from Knockout typings I found I was able to get the Visual Studio and the compiler to behave the same way.  (And since there was only 1 overload available in each case after my tweaks I guess that makes sense)\r\n\r\nThis isn't a major issue but I thought I'd flag it up - it would be great if by default both the compiler and Visual Studio behaved the same way when it comes to selecting overloads.  ",
+    "LastUpdatedDate": "2013-11-22T09:51:31.363-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-05T03:52:36.753-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "NoImplicitAny - Compiler and Visual Studio select different overloads - Please see final comment",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1865
+  },
+  "FileAttachments": [
+    {
+      "FileId": 754933,
+      "FileName": "CompilerAndVisualStudioBegToDiffer.png",
+      "DownloadUrl": ".\\754933"
+    },
+    {
+      "FileId": 756043,
+      "FileName": "TypeScriptErrorDemoForDan.zip",
+      "DownloadUrl": ".\\756043"
+    },
+    {
+      "FileId": 756073,
+      "FileName": "jQueryExample.png",
+      "DownloadUrl": ".\\756073"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I can't repro this using the Knockout typings and a few different iterations that look similar to your code. It's entirely possible this issue has been fixed. If you have any specific small repro that you can share we'd be happy to try that again to be sure, just re-open this issue to let us know.\n\r\n\r** Closed by danquirk 11/07/2013 12:44PM",
+      "PostedDate": "2013-11-07T12:44:22.75-08:00",
+      "Id": 122286
+    },
+    {
+      "Message": "Hi Dan,\r\n\r\nWe've removed the non-generic overloads from the published ```Knockout.d.ts``` now (they were, as I understand, in place for historic reasons; from before TypeScript had generics).  So if testing with the current typings then you wouldn't be able to reproduce the issue.\r\n\r\nI've put together a test project that illustrates the problem for you here though.  It's just an empty MVC 4 project with the relevant csproj changes for TypeScript compilation.  \r\n\r\nI've added a historic version of ```Knockout.d.ts``` (which itself is riddled with \"no implicit any\" issues) and a script called ```error.ts```.  This should allow you to reproduce the issue I described - look at line 21.  Please let me know if it doesn't.\r\n\r\nAs I say, since we've removed the non-generic overloads from the published ```Knockout.d.ts``` this is not an issue causing us any problems.  But I thought a situation of Visual Studio and the compiler having different views was probably a symptom of some kind of minor tooling problem which should probably be resolved if possible.\r\n",
+      "PostedDate": "2013-11-08T01:52:23.493-08:00",
+      "Id": 122287
+    },
+    {
+      "Message": "I always speak too soon!\r\n\r\nIn the process of migrating a JavaScript file over to TypeScript I realised that the same (or at least a similar) issue presents when dealing with the jQuery typings.\r\n\r\nI enclose a screenshot to illustrate.  In the screenshot you can see Visual Studio picking up that ```event``` has a type of ```JQueryEventObject``` whilst the compiler says it's an implicit ```any```.\r\n\r\nLooking at ```jquery.d.ts``` I guess it's mixing these 2 overloads up:\r\n\r\n```ts\r\nsubmit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;\r\nsubmit(handler: (eventObject: JQueryEventObject) => any): JQuery;\r\n```\r\n\r\nFor now I can get round this by specifying the type in my function signature.  Again, not a massive inconvenience - just something that it would be nice to get fixed at some point...\r\n",
+      "PostedDate": "2013-11-08T04:28:50.48-08:00",
+      "Id": 122297
+    },
+    {
+      "Message": "This is by design, but the error could be better. The error is actually in the knockout file.\n\nIn your demo project change:\n    arrayForEach(array: any[], action: (any) => void ): void;\n\nto \n\n    arrayForEach(array: any[], action: (item: any) => void ): void;\n\nthe compiler behaves the same as the language service.",
+      "PostedDate": "2013-11-08T11:10:22.183-08:00",
+      "Id": 122429
+    },
+    {
+      "Message": "Thanks @paulb,\n\nApologies for re-opening but I wasn't sure if you'd spot a comment on a closed issue.\n\nI was just wondering if the explanation you gave for the Knockout typings also covered my experience with the submit handler in the jQuery typings (see previous comment / attached jQueryExample.png screenshot)?\n\nLooking at the submit overloads below it looks like the handler has typings (in the same way that your suggested correction to ```arrayForEach``` had typings) but the compiler error remains unless I specify the type in my supplied function signature.  Does that sound correct to you?  \n\n```ts\nsubmit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;\nsubmit(handler: (eventObject: JQueryEventObject) => any): JQuery;\n```\n\nAgain, sorry for re-opening possibly unnecessarily - I just wanted to double-check.\n\nAs I say I've been able to resolve this for now by specifying the type in my function signature:\n\n```ts\n$(\"form\").submit(function (event: JQueryEventObject) {\n    // Do some stuff\n    // ....\n});\n```",
+      "PostedDate": "2013-11-11T02:59:01.213-08:00",
+      "Id": 122607
+    },
+    {
+      "Message": "\n\r\n\r** Closed by paulb 11/08/2013 11:10AM",
+      "PostedDate": "2013-11-08T11:10:27.143-08:00",
+      "Id": 122608
+    },
+    {
+      "Message": "That's a similar problem, we pick the first overload that 'fits', which in this case ends up being:\n\n````\nsubmit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;\n````\nbecause \"any\" fits everything... I agree the error message is unfortunate. \n\nThe solution is to reverse the overloads, than it works as expected.",
+      "PostedDate": "2013-11-11T10:18:56.273-08:00",
+      "Id": 122654
+    },
+    {
+      "Message": "\n\r\n\r** Closed by paulb 11/11/2013 10:19AM",
+      "PostedDate": "2013-11-11T10:19:01.217-08:00",
+      "Id": 123499
+    },
+    {
+      "Message": "Hi paulb,\r\n\r\nI finally got round to trying your suggestion of reversing the overloads in the jQuery typings file.\r\n\r\nI switched jquery.d.ts from this:\r\n\r\n```ts\r\nsubmit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;\r\nsubmit(handler: (eventObject: JQueryEventObject) => any): JQuery;\r\n```\r\n\r\nTo this:\r\n\r\n```ts\r\nsubmit(handler: (eventObject: JQueryEventObject) => any): JQuery;\r\nsubmit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any): JQuery;\r\n```\r\n\r\nI was expecting that changing the order of the overloads would mean that the compiler picked the first (and the more relevant) overload.\r\n\r\nHowever it's the same situation as before:\r\n\r\n1. Inside the Visual Studio environment the tooling is always picking the more relevant ```submit(handler: (eventObject: JQueryEventObject) => any)``` overload (regardless of the ordering in the jquery.d.ts file).  The event parameter of my method picks up the type ```JQueryEventObject``` flowing through to it without me needing directly specify it; I get intellisense etc inside VS.\r\n\r\n2. The compiler (when I build the solution) reports \"_Parameter 'event' of lamda function implicitly has an 'any' type._\" because it is picking the ```submit(eventData?: any, handler?: (eventObject: JQueryEventObject) => any)``` overload.\r\n\r\nAm I missing something?  It seems that the compiler and the Visual Studio tooling are still behaving slightly differently...",
+      "PostedDate": "2013-11-19T05:53:17.007-08:00",
+      "Id": 123502
+    },
+    {
+      "Message": "Looks good Ryan - thanks.",
+      "PostedDate": "2013-11-20T06:05:38.553-08:00",
+      "Id": 123648
+    }
+  ]
+}

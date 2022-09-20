@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "920885",
+    "ThreadId": "397788",
+    "Html": "\r\n<p>Shouldn't this work according to the spec?</p>\r\n<pre>class SceneNode {\n\tgetNode(index: number): SceneNode {\n\t\t...\n\t}\n\n\tgetNode(name: string): SceneNode {\n\t\t...\n\t}\n}</pre>\r\n<p>Instead, VS complains about the duplicate identifier &quot;getNode&quot;.</p>\r\n",
+    "PostedDate": "2012-10-02T14:23:09.77-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920887",
+    "ThreadId": "397788",
+    "Html": "<p>You need to do it this way:&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> SceneNode {\r\n\tgetNode(index: number): SceneNode;\r\n\tgetNode(name: string): SceneNode;\r\n\tgetNode(key: any): SceneNode {\r\n\t\t<span style=\"color: blue;\">return</span> <span style=\"color: blue;\">null</span>;\r\n\t}\r\n}\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<div id=\"_mcePaste\" class=\"mcePaste\" style=\"position: absolute; width: 1px; height: 1px; overflow: hidden; top: 0px; left: -10000px;\">﻿</div>",
+    "PostedDate": "2012-10-02T14:28:18.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920888",
+    "ThreadId": "397788",
+    "Html": "<p>Ok, and where do I define these declarations? And what's up with the third overload?</p>\r\n<p>Thank you!</p>",
+    "PostedDate": "2012-10-02T14:31:26.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920896",
+    "ThreadId": "397788",
+    "Html": "<p>So you define the overloads above your method definition (notice the semicolon at the end of the first two definitions.)&nbsp; The third overload is the most important one because it defines&nbsp;what variables are available to the code within the method.&nbsp; Notice that I've said there's a 'key' of type 'any'.&nbsp; That's important because within the method you're going to need to check the type of that param before working with it.&nbsp; Here's a more complete example:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> SceneNode {\r\n\tgetNode(index: number): SceneNode;\r\n\tgetNode(name: string): SceneNode;\r\n\tgetNode(key: any): SceneNode {\r\n\t\t<span style=\"color: blue;\">var</span> node = <span style=\"color: blue;\">null</span>;\r\n\t\t<span style=\"color: blue;\">if</span> (<span style=\"color: blue;\">typeof</span> key === <span style=\"color: #a31515;\">'number'</span>) {\r\n\t\t\t<span style=\"color: green;\">// Find node by index</span>\r\n\t\t} <span style=\"color: blue;\">else</span> {\r\n\t\t\t<span style=\"color: green;\">// Find node by name</span>\r\n\t\t}\r\n\t\t<span style=\"color: blue;\">return</span> node;\r\n\t}\r\n}\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-02T14:47:48.23-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920903",
+    "ThreadId": "397788",
+    "Html": "\r\n<p>Ok, thanks. So I have to check the type of the arguments myself. That's not really an imrovement over pure JS, though, is it? Won't plenty of type checks impact performance if the overloads are called often?</p>\r\n<p>EDIT: just stumbled upon this discussion, which explains why it's not possible to do it the C&#43;&#43; way:</p>\r\n<p><a href=\"http://typescript.codeplex.com/discussions/397778\">http://typescript.codeplex.com/discussions/397778</a></p>\r\n",
+    "PostedDate": "2012-10-02T14:55:06.203-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920910",
+    "ThreadId": "397788",
+    "Html": "\r\n<p>The TypeScript guys (I work for Microsoft but I'm not a member of their team) try to keep the amount of magic they introduce into the generated code down to a bare minimum.&nbsp; That means you still have to do what you would do in JavaScript in most cases.&nbsp;\r\n To keep stuff like in your example to a minimum I've found that I just slightly change the way I approach writing my code.&nbsp; In your example I would have simply created two seperate methods getNodeByName() and getNodeByIndex().&nbsp;&nbsp;Anything in common\r\n between these methods I would have broken out to a&nbsp;third private helper method.&nbsp; The advantage of that is that you don't&nbsp;need to do runtime checks like this because the compilers already done those checks for you.&nbsp;</p>\r\n<p>If you want to do it the&nbsp;JavaScript way where parameter types are more loose you certainly still can&nbsp;but you'll need to do the runtime checks you would traditionally have done in JavaScript.&nbsp; Again... No magic added...</p>\r\n<p>-steve</p>\r\n",
+    "PostedDate": "2012-10-02T15:10:51.94-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920916",
+    "ThreadId": "397788",
+    "Html": "<p>Ok, I'll stick with the two separate methods then. Thanks again!</p>",
+    "PostedDate": "2012-10-02T15:27:25.28-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

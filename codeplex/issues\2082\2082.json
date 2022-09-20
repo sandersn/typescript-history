@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-08T14:58:02.45-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "\r\nIn my company, we are using TypeScript to compile a huge (code-generated) codebase, with more than 40MB of source code in .ts files. This raised various performance and memory issues in the tsc compiler - we basically couldn't build our code with a single tsc invocation, so we had to break it down into multiple invocations, processing groups of files. \r\n\r\nBasically, we ended up with a Makefile that contains something like this:\r\n\r\n```\r\nGroup1: foo/foo1.ts foo/foo2.ts foo/foo3.ts ... foo/fooN.ts\r\n        tsc -t ES5 --sourcemap --sourceRoot ... --target ES5 $^\r\n\r\nGroup2: bar/bar1.ts bar/bar2.ts bar/bar3.ts ... bar/barN.ts \r\n        tsc -t ES5 --sourcemap --sourceRoot ... --target ES5 $^\r\n\r\n...\r\n\r\nGroupN: ...\r\n\r\n```\r\n\r\nThe '$^' in the Makefile passes all the arguments on the right hand side of the rule (foo/foo1.ts, foo/foo2.ts, etc) at the end of the tsc command line - so we have instances of 'tsc' running that process groups of .ts files.\r\n\r\nTo make the builds even faster, we are building via  \"make -j6\", which causes 6 instances of tsc run in parallel (6 Groups being compiled at the same time in our 6-core build server).\r\n\r\nThis works fine, in all builds done - under Linux.\r\n\r\nUnfortunately, in builds done under Windows - and most of our developers use Windows -  we have a problem :  if foo1.ts references bar1.ts ...\r\n\r\n```\r\n// Contents of foo1.ts:\r\n\r\n/// <reference path=\"bar1.ts\" />\r\nvar whatever = ...\r\n```\r\n\r\n...then we get this error:\r\n\r\n```\r\nC:/path/to/bar1.js.map(1,1): error TS5011: Emit Error: UNKNOWN, unknown error 'C:\\path\\to\\bar1.js.map'.\r\n```\r\n\r\n...which is caused - I imagine - because at least two concurrently running instances of tsc try to write the same file at the same time. In the example above, one is the 'tsc' that is processing the group of files containing 'bar1.ts'  (and generating bar1.js), and another is the one processing foo1.ts, which, due to the reference, also ends up generating bar1.js. Under Windows, the infamous \"Sharing violation\" feature means that when two processes try to write the same file, one of them fails. \r\n\r\nIn the case of Linux, both invocations of tsc start writing the output, and the one that finishes last is the one that dictates the contents of the file. Which is fine.\r\n\r\nI am therefore in the rather amazing position of seeing a compiler designed and implemented by Microsoft, only work properly... under Linux! :-)\r\n\r\nIs there any way I can cope with this problem?\r\n\r\nThanks for any insights.",
+    "LastUpdatedDate": "2014-01-08T14:58:02.45-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-08T06:01:22.417-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Building big TypeScript projects",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2082
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I neglected to say, that the above explanation about why Windows fails to build, is more than just a theory - when I spawn 'make' without the \"-jN\"  options - that is, when make executes line by line (no concurrent executions of tsc) then the problem disappears... with the unfortunate side effect of compilations being done N times slower! (N = the number of cores in the machine doing the build).",
+      "PostedDate": "2014-01-08T06:04:52.513-08:00",
+      "Id": 129793
+    },
+    {
+      "Message": "We're probably not going to get the Windows file system changed in time for TypeScript v1.0 :-), and locking the files for exclusive write and/or waiting on locks (if possible in the Node and CScript APIs) would possible put you back down to serialized compile level performance, but there are a couple of ways you could possibly approach this.\n\n__Componentize__\nIs it possible that the shared dependencies could be compiled first with the --declaration option to emit the declaration files for the shared components, and then reference those declaration files instead in the parallel builds?  This should also improve compiler perf on all platforms.\n\nIt does mean needing to recompile the .d.ts files separately for changes to get picked up in referencing projects, but at a certain size, breaking up a project like this becomes the best way to scale.\n\n__noResolve__\nThere is an 'experimental' flag currently titled \"--noResolve\".  This does not follow /// references, so they do not get pulled in and compiled automatically if they were not given to the compiler command-line.  This will generate a bunch of type warnings (as the types for referenced files will not be known), but the generated code will be correct.  \n\nNote: There is one codegen gotcha here if you use declaration merging across files and implicitly reference exports - else the code is the same.  e.g.\n\n```typescript\n_file1.ts_\nmodule foo {\n  export var b;\n}\n\n_file2.ts_\n/// <reference path=\"./file1.ts\"/>\nmodule foo {\n  b = \"test\"; // This line will not reference foo.b if compiled with --noResolve\n}\n```\n\n__parallel folders__\nNot ideal, but depending on the size of the codebase, could you make a source copy to a separate folder for each build, so each compile is working with it's own copy of sources, and then merge the output files back for the emitted code once the builds are complete?  This would avoid the filesystem attempting concurrent writes (and reads) to the same files.\n\nWould any of the above options be possible solutions?",
+      "PostedDate": "2014-01-08T14:50:02.917-08:00",
+      "Id": 129854
+    }
+  ]
+}

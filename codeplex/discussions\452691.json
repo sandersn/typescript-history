@@ -1,0 +1,10 @@
+[
+  {
+    "Id": "1077725",
+    "ThreadId": "452691",
+    "Html": "I'd like to propose a new syntax for constructors. Often I would like to have 'closure style' functions on the class (as opposed to prototype style) that close over the arguments of the constructor. Currently, the only way this is possible is to assign closure style functions in the constructor itself rather than as an initializer:<br />\n<pre><code>class MyController {\n    static $inject = [&quot;$scope&quot;];\n    constructor($scope: ng.IScope) {\n        this.alertId = () =&gt; alert($scope.$id.toString());\n    }\n    alertId: () =&gt; void;\n}</code></pre>\n\nThis is cumbersome. Instead, I'd like to lift the constructor arguments to the class definition level, and then make them available to class initializers. The above angular controller would be reduced to the following:<br />\n<pre><code>class MyController($scope: ng.IScope) {\n    static $inject = [&quot;$scope&quot;];\n    alertId = () =&gt; alert($scope.$id.toString());\n}</code></pre>\n\nThe constructor arguments are only available in initializers (the &quot;closure style&quot; functions) like the alert function above. They are not available within the body of a prototype function. A helpful error should be generated if you try.<br />\n<br />\nAlso, you would still be able to define a constructor, but you can only define constructor arguments in one place, either in the constructor function or lifted up to the class name. You would need to do this if you needed to call a base class constructor, for instance. If you lifted the constructor arguments into the class, the constructor function would need to have an empty argument list:<br />\n<pre><code>class BaseClass(_baseField: string) {\n    baseField: string = _baseField;\n}\n\nclass SubClass(_subField: string, _baseField: string) extends BaseClass {\n    constructor() { super(_baseField); }\n    subField: string = _subField;\n}</code></pre>\n\n",
+    "PostedDate": "2013-08-07T06:19:29.33-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

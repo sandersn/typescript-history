@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This was an intentional change because of rest args in callback positions. See http://stackoverflow.com/questions/20619400/typescript-0-9-5-compilation-with-var-args-fails, http://stackoverflow.com/questions/20728598/typescript-0-9-5-args-any-dead-in-the-water-looking-at-q-d-ts?lq=1, and many others.\n\nThe other root cause here is that people keep writing callback function signatures while thinking \"This callback arg is 'optional' because maybe the person on the receiving end doesn't care about it?\", e.g. the suggestion in https://typescript.codeplex.com/workitem/2352. Then when you try to pass a callback that does have a required parameter, the compiler would error (in 0.9.5).\n\nThe fix for both cases was to simply allow bivariance of optionality for function arguments.",
+    "ClosedDate": "2014-03-24T11:02:37.997-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "TypeScript 0.9.7.0 compiles the following code without errors:\r\n\r\n```\r\ndeclare module TestModule {\r\n    interface TestInterface1 {\r\n    }\r\n\r\n    interface TestInterface2 {\r\n        onTest?: (param?:TestInterface1) => any;\r\n    }\r\n}\r\n\r\nvar request:TestModule.TestInterface2 = {};\r\n\r\nrequest.onTest = function (param:TestModule.TestInterface1) {\r\n};\r\n```\r\n\r\nI would consider this an error because (param:TestModule.TestInterface1) and (param?:TestInterface1) are different signatures. What do you think?",
+    "LastUpdatedDate": "2014-03-24T11:02:37.997-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-20T04:42:57.19-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "funtion declaration and use: signature mismatch compiles",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2338
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I agree - this is also accepted in the playground.  The function being set to 'onTest' doesn't err out.  It should, as its signature shows its parameter is NOT optional.",
+      "PostedDate": "2014-03-20T16:54:58.01-07:00",
+      "Id": 137495
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.877-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "A private member is an implementation detail of a class that should not be affected by any other private members declared on subclasses or superclasses, even if those have the same name.\r\n\r\nExample:\r\n\r\n//---------------------------------------------------------\r\nclass A {\r\n\tprivate x:number = 1;\r\n\ttest1() { alert (this.x.toString())\t}\r\n}\r\nclass B extends A {\r\n\tprivate x:string = \"test\";\r\n\ttest2() { alert(this.x) }\r\n}\r\n\r\nvar w = new B;\r\nw.test1();\r\nw.test2();\r\n//---------------------------------------------------------\r\n\r\nQ. What sould be the result?\r\nA. 1 and \"test\"\r\n\r\nQ. What is the actual result?\r\nA. \"test\" and \"test\"\r\n\r\nPlease note that it should make no difference if B.x is public or private, it should never collide with A.x because the later is only known to methods defined on A.\r\n\r\n//---------------------------------------------------------\r\n\r\nRationale:\r\n\r\nSomeone that creates a class inheriting from a third party class (ex: a framework class) should not have to inspect all the source code of that class and of all respective base classes to select a name not in use privately somewhere.\r\n\r\nAlso, someone developing an inheritable class should not have to worry about adding a private member later on for fear of creating conflicts with private (or public) members already existing on subclasses made by other developers somewhere else.\r\n\r\nAs I'm sure you'll agree, encapsulation is very important for the development and maintenance of large-scale software (the main reason for the existence of TypeScript itself, isn't it?).\r\n\r\nThe current implementation of pseudo-private class members breaks encapsulation and it will be the cause of subtle/obscure bugs for many developers.\r\n\r\n//---------------------------------------------------------\r\n\r\nMay I suggest some possible solutions?\r\n\r\n1. Assign different (possibly random) names to every compiled private member.\r\n    - If private members are not supposed to be accessed from outside the class, then their compiled names are irrelevant. Only public members must preserve the name assigned on the source code.\r\n    - An additional benefit of this approach is that accessing w.x outside of its class declaration will always yield undefined (as it should be).\r\n\r\n2. Implement the ES-Harmony \"Private Names\" proposal.\r\n    - See: http://wiki.ecmascript.org/doku.php?id=strawman:private_names\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 0.9.0",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T14:33:45.607-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Private members on subclasses do not shadow same-named members on superclasses",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 15,
+    "Id": 49
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I like suggested solution '1' (though I'd prefer some kind of predictable name decoration rather than 'random').\n\nBut if the philosophy of TS is against modifying names, sticking rigorously to the notion that 'private' is just a compile time concept, then at the very least the compiler could issue a warning/error when this kind of (otherwise silent) name collision is detected.\n\nAs it stands, this seems a huge gotcha in the language, much more serious than the 'but I can still see the private members at run-time' issue which a lot more noise has been made about.\n",
+      "PostedDate": "2012-10-18T12:00:51.98-07:00",
+      "Id": 80370
+    },
+    {
+      "Message": "I would be happy with an generated private name.  For instance, prefix the private name with the class name.  This keeps shadowed privates in subclasses from conflicting and it wold be more efficient than closures.  Prefixing with an underscore would be adequate to let consumers of the Javascript know that they should not use the private member.  So;\n\nclass foo {\n\tprivate bar = \"bar\";\n\tgetBar() { return this.bar; };\n}\ncould generate this javascript\n\nvar foo = (function () {\n    function foo() {\n        this._foo_bar = \"bar\";\n    }\n    foo.prototype.getBar = function () {\n        return this._foo_bar;\n    };\n    return foo;\n})();\n\nThe code is very understandable and avoids a closure.\n\nI'm with those that believe it is NOT necessary to make the private member truly private.  I think it is ok to use a naming convention to do this (C++ coders don't worry about the lack of truly private variables in the generated assembly code).",
+      "PostedDate": "2012-11-04T10:55:35.183-08:00",
+      "Id": 81613
+    },
+    {
+      "Message": "I prefer by a thousand the «warning/error when this kind of (otherwise silent) name collision is detected». Renaming members, even private ones, would break too many things regarding TypeScript/JavaScript compatibility.",
+      "PostedDate": "2012-11-11T03:26:40.05-08:00",
+      "Id": 82182
+    },
+    {
+      "Message": "Python renames \"privates\" by prefixing them with the class name just like Ezward's example (see http://docs.python.org/2/tutorial/classes.html#private-variables-and-class-local-references). It could be good enough for TypeScript.",
+      "PostedDate": "2013-03-27T06:27:25.133-07:00",
+      "Id": 94517
+    },
+    {
+      "Message": "No, the private in typescript just like protected in C#. Inherited members are visible in subclasses. So the result is expected one.  The private should be renamed to protected, and there will not be a confusion any more.",
+      "PostedDate": "2013-09-28T20:45:38.977-07:00",
+      "Id": 115928
+    }
+  ]
+}

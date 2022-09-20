@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-06T15:44:38.83-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "For the life of me I can't understand why both a /// <reference path=\"myModule\" /> and an import myModule = require('myModule'); must be used to use an external module. Why can't the import statement cause the compiler to do what /// <reference... /> does??\r\n\r\nUPDATE:\r\nI didn't look thoroughly for discussions around this issue. I have now. My suggestion is to move references for the compiler for type information outside of source files; like 'ts.refs' in current directory, or path/to specified as cmdln arg, or just the .ts cmd args. File would contain something like:\r\n\r\n<module-name> = <path/to/.ts>                or\r\n<module-name> = <path/to/d.ts> = <path/to/.js>\r\n\r\n<module-name> would be optional and default to '.ts' file name minus extensions. Explicitly specifying module name would handle module name clashes. Examples:\r\n\r\n./d.ts/express.d.ts // defaults to name 'express'\r\noldjs = ./d.ts/oldjs.d.ts = ./vender/oldjs.js\r\nmyMod1 = ./lib/v1/myMod.ts\r\nmyMod2 = ./lib/v2/myMod.ts\r\n\r\nAnd now that the compiler would know the names and locations of modules, import statements in source files could simply be (with CommonJS output):\r\n\r\nimport express; // outputs \"var express = require( 'express' );\"\r\nimport ex = express; // outputs \"var ex = require( 'express' );\"\r\nimport oldjs; // outputs \"var oldjs = require( './vendor/oldjs' );\"\r\nimport myMod1 //output \"var myMod1 = require( './lib/v1/myMod' );\"\r\n\r\nIn cases where multiple legacy AMD modules defined in one '.js' file, then separate 'd.ts' files for each would be needed:\r\n\r\nlegM1 = ./d.ts/legM1.d.ts = ./vendor/leg.js\r\nlegM2 = ./d.ts/legM2.d.ts = ./vendor/leg.js\r\n\r\nwhere './vendor/leg.js' has:\r\n\r\ndefine( 'm1', [], function() {} );\r\ndefine( 'm2', [], function() {} );\r\n\r\nand imports in source '.ts' files being compiled:\r\n\r\nimport myMod;\r\nimport legM1;\r\nimport legM2;\r\n\r\noutputs:\r\n\r\ndefine( [ 'myMod', 'm1', 'm2' ], function( myMod, legM1, legM2 ) {} );",
+    "LastUpdatedDate": "2013-08-06T15:44:38.83-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-05T18:07:14.767-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Simplify import statement using external (to source file) type referencing",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1425
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You may want to read through all the posts in this thread carefully: https://typescript.codeplex.com/discussions/448336\n\nThe particular issue of consolidating the import statement is discussed in JonTurner's post.\n\nSee also: https://typescript.codeplex.com/discussions/433456\n\nYes, something needs to be done about this, but it has been discussed at length. So any _new_ perspectives would be interesting.",
+      "PostedDate": "2013-08-06T01:35:03.74-07:00",
+      "Id": 108634
+    },
+    {
+      "Message": "As per nabog's comment (thanks nabog!) this has been the subject of lengthy discussions and an area we understand is more confusing than we would like (but unfortunately the module systems around typescript are non-trivial).  The discussion forums is the best place to continue these discussions.  Closing this issue now.  Thanks!",
+      "PostedDate": "2013-08-06T15:44:31.637-07:00",
+      "Id": 108720
+    }
+  ]
+}

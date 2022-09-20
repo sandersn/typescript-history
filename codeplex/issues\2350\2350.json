@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Doesn't repro in 1.0 using Q.d.ts from DefinitelyTyped",
+    "ClosedDate": "2014-03-24T10:14:32.237-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "With the following code I'm getting the error `Cannot convert Q.Promise<SomeType> to Q.Promise<SomeType>`\r\n\r\n```ts\r\nclass SomeType {}\r\n\r\nfunction SomeFunction() : Q.Promise<string[]> {\r\n    return Q<string[]>(['']);\r\n}\r\n\r\nfunction SomeOtherFunction() : Q.Promise<SomeType> {\r\n    return SomeFunction().then<SomeType>(function() {\r\n        return new SomeType();\r\n    });\r\n}\r\n```\r\n\r\nI'm on tsc version `0.9.7`\r\n\r\n",
+    "LastUpdatedDate": "2014-03-24T10:14:32.237-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-23T15:13:06.26-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Cannot convert Q.Promise<SomeType> to Q.Promise<SomeType>",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2350
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If Q<T> is a class (returned at end of \"SomeFunction()\"), then I assume \"Q.Promise<T>\" is function?  Otherwise, why are you returning the function as a type \"Q.Promise<T>\" in \"SomeFunction()\"?  But if \"Promise<T>\" is a class, then \"Q\" is a module, and \"Q<T>\" is not valid.  (typo?)\n\nAnyhow, I do see this: http://goo.gl/0gJaqU\nWhich seems to be a bug, but then one must consider I could call a function with a different type as seen here: http://goo.gl/tGfrfF.\n\nI guess then the function type is not the same as the class type, though the type names are the same.  Perhaps just don't include the generic types in the functions themselves, but only what they return.  If that is required, you may have to force the returns using the \"<any>\" type cast.\n",
+      "PostedDate": "2014-03-24T06:12:28.127-07:00",
+      "Id": 138083
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the report. This looks to be working correctly now with the latest bits in the develop branch. Both calls are working as intended, returning string values.",
+    "ClosedDate": "2014-02-12T18:52:06.57-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Apologies if this is a duplicate. \r\n\r\nVersion: 0.9.5 release.\r\nI'm using [this knockout definition file](https://github.com/borisyankov/DefinitelyTyped/blob/master/knockout/knockout.d.ts) for my app, but having trouble with ko.utils.arrayFirst (which just returns the first element in an array that satisfies the predicate). When I define the function locally with the same signature then it infers it correctly, but fails when using the knockout d.ts file.\r\n\r\nHere's the code (apologies for the verbosity):\r\n```\r\nfunction viewModel(firstActionPage) {\r\n    var arrayFirst = function <T>(array: T[], predicate: (item: T) => boolean, predicateOwner?: any): T {\r\n        var i = 0, l = array.length, first: T;\r\n\r\n        for (; i < l && !first; i++) {\r\n            if (predicate(array[i])) {\r\n                first = array[i];\r\n            }\r\n        }\r\n\r\n        return first;\r\n    };\r\n\r\n    return {\r\n        actions: ko.utils.arrayMap(firstActionPage, function (action: any) {\r\n\r\n            return {\r\n                requestType: ko.computed(function () {\r\n\r\n                    var matchOnActionType = function (arr: string[]) {\r\n                        return Boolean(ko.utils.arrayFirst(arr, function (x) {\r\n                            return x === action.type;\r\n                        }));\r\n                    },\r\n                        actionTypeRequestTypeMap = function (actionTypes: string[], requestName: string) {\r\n                            return {\r\n                                actionTypes: actionTypes,\r\n                                requestName: requestName\r\n                            };\r\n                        },\r\n\r\n                        maps = [actionTypeRequestTypeMap(['X', 'Y'], 'Z')];\r\n\r\n                    //Successful\r\n                    return arrayFirst(maps, function (map) {                        \r\n                        return matchOnActionType(map.actionTypes);\r\n                    }).requestName;\r\n\r\n                    //Unsuccessful\r\n                    return ko.utils.arrayFirst(maps, function (map) {\r\n                        return matchOnActionType(map.actionTypes);\r\n                    }).requestName;\r\n\r\n                })\r\n            };\r\n        })\r\n    };\r\n}\r\n\r\n```\r\n\r\nIf you comment out the call to ``` return arrayFirst ... ``` then the compiler gives an error. If you comment out the call to ``` return ko.utils.arrayFirst ... ```, or leave both function calls uncommented then it compiles. ",
+    "LastUpdatedDate": "2014-02-12T18:52:06.57-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-11T04:26:15.26-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Type inference inconsistent for generic function",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2167
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

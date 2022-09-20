@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "921407",
+    "ThreadId": "397928",
+    "Html": "\r\n<p>For example:</p>\r\n<p></p>\r\n<pre>class Greeter { ... }\r\n\r\n// only classes can be assigned to variables or members of type 'Class':\r\nvar c : Class = Greeter;\r\n\r\n// this would trigger a compile time error: \r\nvar c2 : Class = 123;\r\n\r\n// only variables or members of type 'Class' can be instantiated:\r\nvar x = new c();\r\n\r\n// nice to have: typeof() on a  variables or members of type 'Class' return the class name:\r\nvar s = typeof( c );</pre>\r\n<p></p>\r\n<p>Thanks!</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-03T11:23:00.52-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921427",
+    "ThreadId": "397928",
+    "Html": "<p>The typeof piece won't be possible as it's a runtime thing and TypeScript's types do not persist at runtime. The good news is that what you want is already possible! A class in TypeScript is a combination of two things: A construct signature and a brand. Brands are unique to each class, so you don't care about those. Your question then boils down to: what type will be assignment compatible with every class? Consider this:</p>\r\n<pre>interface Class {\r\n    new (... args): any;\r\n}</pre>\r\n<p>This interface will be assignment compatible with any class because all classes will have a construct signature with one or more arguments that returns something assignment compatible with any. You can limit this further depending on your use case.</p>",
+    "PostedDate": "2012-10-03T11:55:54.903-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921449",
+    "ThreadId": "397928",
+    "Html": "<p>But then all of my classes would have to derive from Class, correct?</p>\r\n<p>\r\n<pre>interface Class {\r\n    new (... args): any;\r\n}\r\n\r\nclass Greeter implements Class { ... }\r\n</pre>\r\n</p>\r\n<p>That would also mean that every class would have to implement the new operator, i.e:</p>\r\n<p>\r\n<pre>class Greeter implements Class {\r\n  new (... args ) : any {\r\n    return new Greeter();\r\n  }\r\n}</pre>\r\n</p>\r\n<p>correct?</p>",
+    "PostedDate": "2012-10-03T12:20:53.973-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921455",
+    "ThreadId": "397928",
+    "Html": "<p>That is not the case :)&nbsp;The new (): any; signature is a special signature called a construct signature. It specifies the signature of a constructor when calling it with new. Secondly,&nbsp;TypeScript is structurally typed. The only thing you need to be assignment compatible with the interface Class is an object that has a construct signature. All classes will have a construct signature. Try it out :)</p>",
+    "PostedDate": "2012-10-03T12:28:05.11-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921463",
+    "ThreadId": "397928",
+    "Html": "<p>Hmm, I tried this but it gives me syntax errors:</p>\r\n<p>\r\n<pre>interface Class {\r\n    new (args:any): any;\r\n}\r\n\r\nclass Animal implements Class {\r\n    constructor(public name) { }\r\n    move(meters) {\r\n        alert(this.name + \" moved \" + meters + \"m.\");\r\n    }\r\n}</pre>\r\n</p>\r\n<p>The syntax error is on the 'class Animal' line. It says:</p>\r\n<p>\r\n<pre>Class 'Animal' declares interface 'Class' but does not implement it: <br />Type 'Class' requires a construct signature, but Type 'Animal' lacks one\r\nnew(name: any) =&gt; Animal</pre>\r\n</p>\r\n<p>Did I misunderstand your suggestion?</p>\r\n<p>BTW, this gave me a syntax error:</p>\r\n<p>\r\n<pre>new (... args): any;</pre>\r\n</p>\r\n<p>Cheers,</p>\r\n<p>- Bernd</p>",
+    "PostedDate": "2012-10-03T12:34:03.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921467",
+    "ThreadId": "397928",
+    "Html": "\r\n<p>Your classes do not implement that interface, it describes the class itself. Interfaces that classes implement describe the shape of instances of that class, whereas I believe you are asking how to identify the constructors themselves. Remove the implements\r\n clause and you should be good. Then you can use the type Class for any vars or parameters you want to be classes.</p>\r\n",
+    "PostedDate": "2012-10-03T12:37:33.807-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921491",
+    "ThreadId": "397928",
+    "Html": "\r\n<p>yes, that worked!</p>\r\n<p>&nbsp;</p>\r\n<pre>var SnakeClass : Class = Snake;\nvar sam = new SnakeClass(&quot;Sammy the Python&quot;);\n</pre>\r\n<p>&nbsp;</p>\r\n<p>What's really impressive is that the type inference engine detects signature violations.</p>\r\n<p>This give me an error, which it should but many other languages don't:</p>\r\n<p>&nbsp;</p>\r\n<pre>// flags: &quot;Supplied parameters do not match any signature of call target Class&quot;\nvar sam = new SnakeClass();\n\n</pre>\r\n<p>&nbsp;</p>\r\n<p>Nice work!</p>\r\n<p>- Bernd</p>\r\n",
+    "PostedDate": "2012-10-03T13:15:13.617-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "952703",
+    "ThreadId": "397928",
+    "Html": "\r\n<p>I think the interface you are really looking for is this:</p>\r\n<p></p>\r\n<pre>interface Class {\r\n    new (): any;\r\n    new (...params: any[]): any;\r\n}\r\n</pre>\r\nThis way you aren't forcing all classes to have a constructor signature which requires a parameter.\r\n<p></p>\r\n",
+    "PostedDate": "2012-12-06T21:51:52.22-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

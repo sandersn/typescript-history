@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:28.83-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "When inheritance is used in typescript, the compiler produces javascript that raises JSHint error __W004 - 'Bar' is already defined.__\r\n\r\nHere is some typescript to reproduce the problem.\r\n```\r\nclass Foo {\r\n}\r\n\r\nclass Bar extends Foo {\r\n}\r\n```\r\n\r\nThis resulting javascript is\r\n```\r\nvar Foo = (function () {\r\n    function Foo() {\r\n    }\r\n    return Foo;\r\n})();\r\n\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function Bar() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    return Bar;\r\n})(Foo);\r\n```\r\n\r\nIf you run JSHint against this file you will encounter.\r\n```\r\n[L16:C17] W004: 'Bar' is already defined.\r\n    function Bar() {\r\n```",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-02T18:30:49.263-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Inheritance leads to JSHint Error W004 - 'Bar' is already defined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1632
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I'm not sure what you're proposing we do here instead.\n\r\n\r** Closed by RyanCavanaugh 09/03/2013 9:22AM",
+      "PostedDate": "2013-09-03T09:22:21.75-07:00",
+      "Id": 111940
+    },
+    {
+      "Message": "Renaming the function inside the closure eliminates the JSHint errors.\r\n\r\n```\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function _Bar() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    return _Bar;\r\n})(Foo);\r\n```",
+      "PostedDate": "2013-09-03T10:42:55.707-07:00",
+      "Id": 111941
+    },
+    {
+      "Message": "That's not safe for us to do -- the code inside could be depending on some `_Bar` from the outer scope. We know for sure the name `Bar` is meant to refer to the class constructor function itself.",
+      "PostedDate": "2013-09-03T13:13:55.45-07:00",
+      "Id": 111975
+    },
+    {
+      "Message": "Additionally, we'd have to rewrite every instance of static calls from `Bar` to `_Bar`. It would also change the name of the constructor function name, which would make call stacks a lot uglier.",
+      "PostedDate": "2013-09-03T13:23:54.317-07:00",
+      "Id": 111976
+    },
+    {
+      "Message": "Have this problem as well, is there a workaround?",
+      "PostedDate": "2014-01-09T00:06:18.58-08:00",
+      "Id": 129904
+    }
+  ]
+}

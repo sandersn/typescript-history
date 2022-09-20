@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1288608",
+    "ThreadId": "560769",
+    "Html": "My question is how to use libraries like AmpersandJS or other libraries that parse configs to build your (class) objects (I'm not sure if this pattern has a name) with Typescript. For example Ampersand.JS uses a function (.extend) to build up a prototype based on your configuration:<br />\n<pre><code>        // This object contains the configuration that Ampersand uses to build my model.\n        var config = {\n            props: {\n                firstName: 'string',\n                lastName: 'string'\n            }\n        };\n\n        // Create a Person model with getters, setters, validation etc. \n        var Person = AmpersandModel.extend(config);\n\n        // A basic usage to create an instance of a Person object\n        var myPerson = new Person({firstName:&quot;John&quot;, lastName:&quot;Doe&quot;});\n        myPerson.firstName = &quot;NewJohn&quot;; // runs the first name setter build by ampersand\n</code></pre>\n\nI'm struggling how to use implement the above example with Typescript. With other libraries like Backbone, you can use the normal / straightforward Typescript approach: <br />\n<pre><code>        MyModel extends Backbone.Model{}</code></pre>\n\nHowever, with libraries like Ampersand.JS I cannot use:<br />\n<pre><code>        Person extends AmpersandModel{}</code></pre>\n\nas this would never execute the AmpersandModel's custom extend() code that builds the prototype based on the configuration passed to the extend() function.\r<br />\n<br />\nI'm not sure what other libraries face this same problem, and what solutions they use. Any example of libraries that use the Ampersand's pattern could be of help.<br />\n",
+    "PostedDate": "2014-08-10T02:53:17.95-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1288790",
+    "ThreadId": "560769",
+    "Html": "If you are doing custom extending work, you probably need to &quot;declare&quot; these new classes as extended from the base class.<br />\n<pre><code> class AmpersandModel { }\n declare class Person extends AmpersandModel { }</code></pre>\n\nYou can use interfaces for this also (note also: interface types can be later merged, but classes cannot).   The only other alternative I can think of is to redefined the global '__extends()' function as an option for that library (since I'm assuming a user would not be using the TS extends, which is the point of the library, correct?).<br />\n",
+    "PostedDate": "2014-08-11T02:05:25.233-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design, consider that a rest parameters is shorthand for an infinite expansion of optional parameters. So you can rewrite call as follows:\n\n````\nfunction call (g: (a?,b?,c?,d?,e?,f?) => void) {\n   // but calling g as follows is legal\n    g();\n}\n````\nNow since test only has required parameters _test_ can not be assigned to _g_. The change you need to make to test is the following:\n````\nfunction test (x?, y?) {\n   call(test)\n}\n````\n\nSee 3.8.4 in the spec",
+    "ClosedDate": "2013-10-25T10:38:09.873-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Is the following program valid? 0.9.1-1 says \"yea\", the develop branch says \"nay\". I've been told to trust the develop branch, so I wonder if this means the language has changed?\r\n\r\n    function call (g: (...xs) => void) {\r\n       // do something\r\n    }\r\n\r\n    function test (x, y) {\r\n       call(test)\r\n    }\r\n\r\nIf so, what's the idiom for passing a function as an argument without having to specify its precise signature? (But still wanting to type it as a function.)\r\n",
+    "LastUpdatedDate": "2013-10-25T10:38:09.873-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-25T00:13:00.917-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "\"Supplied parameters do not match any signature of call target\" using rest parameter",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1836
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Similar problem with constructor signatures; below accepted by 0.9.1-1 but rejected by \"develop\":\n\n    function typeCheck <a> (v: a, type: new (...args: any[]) => a): a {\n       return null\n    }\n\n    class X {\n       constructor (x: number, y: number) {\n       }\n    }\n\n    function test (x: X): X {\n       return typeCheck(x, X)\n    }\n",
+      "PostedDate": "2013-10-25T00:31:05.007-07:00",
+      "Id": 119614
+    }
+  ]
+}

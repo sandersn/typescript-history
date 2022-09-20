@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1064325",
+    "ThreadId": "449016",
+    "Html": "Is there some built-in way to test TypeScript files and show results on Test Explorer? If not, any plans to add it?\r<br />\n<br />\nAnd what could I use today to do that, using TypeScript 0.9.0.1 and Generics?<br />\n",
+    "PostedDate": "2013-07-03T16:20:56.103-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064424",
+    "ThreadId": "449016",
+    "Html": "Chutzpah works with QUnit and Jasmine tests written in TypeScript. Find it in the extension manager, there's a Test Runner and a Test Adapter, you want the latter.\r\n<div><br>\r\n</div>\r\n<div>HTH.</div>\r\n<div><br>\r\n</div>\r\n<div>Mark<span></span><br>\r\n<br>\r\nOn Thursday, July 4, 2013, brunolm7 wrote:<br>\r\n<blockquote style=\"margin:0 0 0 .8ex; border-left:1px #ccc solid; padding-left:1ex\">\r\n<div>\r\n<p>From: brunolm7</p>\r\n<div>Is there some built-in way to test TypeScript files and show results on Test Explorer? If not, any plans to add it?\r\n<br>\r\n<br>\r\nAnd what could I use today to do that, using TypeScript 0.9.0.1 and Generics?<br>\r\n</div>\r\n<div>\r\n<p>Read the <a href=\"http://typescript.codeplex.com/discussions/449016#post1064325\" target=\"_blank\">\r\nfull discussion online</a>.</p>\r\n<p>To add a post to this discussion, reply to this email (<a href=\"\" target=\"_blank\">[email removed]</a>)</p>\r\n<p>To start a new discussion for this project, email <a href=\"\" target=\"_blank\">[email removed]</a></p>\r\n<p>You are receiving this email because you subscribed to this discussion on CodePlex. You can\r\n<a href=\"http://typescript.codeplex.com/subscriptions/thread/project/edit\" target=\"_blank\">\r\nunsubscribe or change your settings</a> on codePlex.com.</p>\r\n<p>Please note: Images and attachments will be removed from emails. Any posts to this discussion will also be available online at\r\n<a href=\"http://codeplex.com\" target=\"_blank\">codeplex.com</a></p>\r\n</div>\r\n</div>\r\n</blockquote>\r\n</div>\r\n<br>\r\n<br>\r\n-- <br>\r\n<div dir=\"ltr\"><b><font face=\"arial black, sans-serif\" color=\"#666666\">Mark Rendle</font></b>\r\n<div><font><i>Founder & CEO</i></font></div>\r\n<div><font><i>Oort Corporation</i></font></div>\r\n<div><font><i>Makers of</i> <a href=\"https://zud.io/\" target=\"_blank\"><b><font color=\"#0000ff\">Zudio</font></b></a></font></div>\r\n</div>\r\n<br>\r\n",
+    "PostedDate": "2013-07-04T01:08:45.227-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064629",
+    "ThreadId": "449016",
+    "Html": "Unfortunately that doesn't work with Generics. I hope they release an update.\r<br />\n<br />\nExample:\r<br />\n<br />\nlinq.ts<br />\n<pre><code>module TSLinq\n{\n    export class Linq\n    {\n        constructor(private a:any[] = [])\n        {\n            Object.defineProperty(this, &quot;a&quot;, { value: a, writable: false });\n        }\n\n        Aggregate(selector: (previousValue: any, currentValue: any, currentIndex?: number, array?: any[]) =&gt; any, initialValue?: any): any\n        {\n            return this.a.reduce(selector);\n        }\n    }\n}\n\ninterface Array\n{\n    AsLinq(): TSLinq.Linq;\n}\nArray.prototype.AsLinq = function(): TSLinq.Linq\n{\n    return new TSLinq.Linq(this);\n}</code></pre>\n\nlinq.ts (generics)<br />\n<pre><code>module TSLinq\n{\n    export class Linq&lt;T&gt;\n    {\n        constructor(private a: T[] = [])\n        {\n            Object.defineProperty(this, &quot;a&quot;, { value: a, writable: false });\n        }\n\n        Aggregate&lt;TResult&gt;(selector: (previousValue: T, currentValue: T, currentIndex?: number, array?: T[]) =&gt; TResult, initialValue?: T): T\n        {\n            return this.a.reduce(selector);\n        }\n    }\n}\n\ninterface Array\n{\n    AsLinq&lt;T&gt;(): TSLinq.Linq&lt;T&gt;;\n}\nArray.prototype.AsLinq = function&lt;T&gt;(): TSLinq.Linq&lt;T&gt;\n{\n    return new TSLinq.Linq&lt;T&gt;(this);\n}</code></pre>\n\nlinq.test.ts<br />\n<pre><code>/// &lt;reference path=&quot;qunit.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;linq.ts&quot; /&gt;\n\ntest(&quot;Aggregate&quot;, () =&gt;\n{\n    var result: number;\n    \n    result = [3, 1, 2].AsLinq().Aggregate((a, b) =&gt; a + b);\n\n    equal(16, 16);\n});\n</code></pre>\n\nWith the non generic code the test works, when I use generics it crashes at<br />\n<pre><code>linq.ts (3,23): Expected '{'</code></pre>\n\n",
+    "PostedDate": "2013-07-04T09:30:58.38-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1103456",
+    "ThreadId": "449016",
+    "Html": "I just tried this with the latest release of <em>Chutzpah</em> and the generic version worked fine.  That said, there is an outstanding bug with the latest <em>Chutzpah</em>; hopefully this will be fixed soon.<br />\n",
+    "PostedDate": "2013-10-03T19:32:49.3-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

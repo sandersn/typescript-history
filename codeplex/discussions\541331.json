@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1230817",
+    "ThreadId": "541331",
+    "Html": "(For some context, I compile my TS code using a custom build task that uses the TypeScriptCompiler API instead of of calling tsc. I do this because I run the generated JS and sourcemap strings through other tasks without needing to read and write to intermediate files.)<br />\n<br />\nI was looking for a way to add JSDoc annotations - @constructor, @extends, @memberOf, @private and @static - by walking over the TS AST exposed via <code>TypeScriptCompiler.getDocument(...).syntaxTree().sourceUnit()</code><br />\n<br />\nThe walker is an implementation similar to src/services/getScriptLexicalStructureWalker.ts except that it adds the above JSDoc annotations to the leadingTriviaInfo of AST nodes that need it. For example, if it walks over a class declaration that has an extends clause, it adds <code>* @extends {namespace.BaseClass}</code> to its leadingTriviaInfo comment.<br />\n<br />\nWhen doing this using typescript.js built from the develop branch, I was able to modify node._fullText and node._leadingTriviaInfo (calculating the latter appropriately - shift by 2 and OR the flags from the lower two bits). Then calling compiler.compile(...) would generate JS that included the added annotations.<br />\n<br />\nBut this doesn't work with 1.0.0 (1.0.0 also seems to use the old syntax tree structure and API that was in 0.9.x instead of what develop has). compiler.compile() eventually fails with this:<br />\n<pre><code>Error: Argument out of range: position\n    at Function.Errors.argumentOutOfRange (evalmachine.&lt;anonymous&gt;:1168:20)\n    at LineMap.fillLineAndCharacterFromPosition (evalmachine.&lt;anonymous&gt;:1868:41)\n    at Emitter.recordSourceMappingStart (evalmachine.&lt;anonymous&gt;:31177:25)\n    at Emitter.emitIfStatement (evalmachine.&lt;anonymous&gt;:32286:18)\n    at Emitter.emitWorker (evalmachine.&lt;anonymous&gt;:32752:33)\n    at Emitter.emit (evalmachine.&lt;anonymous&gt;:32658:18)\n    at Emitter.emitJavascript (evalmachine.&lt;anonymous&gt;:31581:18)\n    at Emitter.emitList (evalmachine.&lt;anonymous&gt;:31324:26)\n    ...</code></pre>\n\nIt appears to be in code related to generating the sourcemap from the AST. (The line numbers correspond to typescript.js in the npm package.)<br />\n<br />\nOf course I understand fiddling with the lengths of individual nodes probably violates the data structures' invariants and it's understandable that it breaks the compiler, but is there a better (proper) way to do this (edit the trivia info of AST nodes)?<br />\n",
+    "PostedDate": "2014-04-05T16:59:49.36-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1231106",
+    "ThreadId": "541331",
+    "Html": "I managed to do this by overriding Emitter.prototype.emitComments instead. In it, before calling the original implementation, I change the value of ast.preComments()[0]._trivia._fullText and ._fullWidth. This doesn't cause the error in the OP and the generated sourcemaps are fine too.\r<br />\n<br />\nStill looking for a proper way to do this, if any.<br />\n",
+    "PostedDate": "2014-04-06T21:33:02.483-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

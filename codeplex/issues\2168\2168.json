@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This was by design in 0.9.5, see https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9&referringTitle=Documentation specifically the section \"Rest arguments are now properly checked for function arity\". The reason for this was because rest params were treated as optional arguments which when used in callbacks is more restrictive than non-optional arguments (somewhat unintuitively, see https://typescript.codeplex.com/discussions/428458). We have some design changes coming on this front to better match peoples' expectations though.",
+    "ClosedDate": "2014-02-12T18:57:07.027-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I'm working with a codebase using JQuery Promises which is using jquery.d.ts.  I have a simple continuation like:\r\n\r\n    foo( ... ).then(\r\n        success => { ... },\r\n        error => { ... });\r\n\r\nI'm receiving compile error:\r\n\r\n    Error\t103\tSupplied parameters do not match any signature of call target:\r\n\tCall signatures of types '(error: any) => void' and '(...reasons: any[]) => void' are incompatible:\r\n\t\tCall signature expects 0 or fewer parameters.\r\n\r\nIf I manually duplicate the line in jquery.d.ts from:\r\n\r\n    then<U>(onFulfill: (value: T) => U, onReject?: (...reasons: any[]) => U, onProgress?: (...progression: any[]) => any): JQueryPromise<U>;\r\n\r\ninto\r\n\r\n    then<U>(onFulfill: (value: T) => U, onReject?: (reason: any) => U, onProgress?: (...progression: any[]) => any): JQueryPromise<U>;\r\n\r\nit will work.  This seems to me to be an error how params arrays are interpreted, at least it would be from a C# perspective of params arrays.\r\n\r\nDid not seem to be an issue in vanilla VS 2013.  I checked there and it seems to come with TS 0.9.1.  When I installed the TS 0.9.5 upgrade, the error surfaced.",
+    "LastUpdatedDate": "2014-02-12T18:57:07.027-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-11T07:22:24.177-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Issues with params array (...values: any[])",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2168
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "See related: https://github.com/borisyankov/DefinitelyTyped/issues/1681",
+      "PostedDate": "2014-02-11T07:53:37.54-08:00",
+      "Id": 133259
+    }
+  ]
+}

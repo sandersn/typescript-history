@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The error building 'ground' seems to be fixed with 0.9.1.1 - I cannot reproduce the issue with that release\n\nThe error building 'jriapp' has been fixed post-0.9.1.1 in the develop branch.",
+    "ClosedDate": "2013-08-26T09:38:48.3-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Seems like this compiler bug is still present in latest version of the compiler 0.9.1.1:\r\n\r\n```\r\nusr/local/lib/node_modules/typescript/bin/tsc.js:30393\r\n            throw e;\r\n                  ^\r\nTypeError: Cannot read property 'flags' of null\r\n    at Emitter.emitVariableDeclarator (/usr/local/lib/node_modules/typescript/bin/tsc.js:29590:26)\r\n    at VariableDeclarator.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53999:21)\r\n    at Emitter.emitVariableDeclaration (/usr/local/lib/node_modules/typescript/bin/tsc.js:29579:32)\r\n    at VariableDeclaration.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:54391:21)\r\n    at VariableStatement.emitWorker (/usr/local/lib/node_modules/typescript/bin/tsc.js:54424:34)\r\n    at VariableStatement.AST.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53260:18)\r\n    at Emitter.emitJavascript (/usr/local/lib/node_modules/typescript/bin/tsc.js:30084:17)\r\n    at Emitter.emitModuleElements (/usr/local/lib/node_modules/typescript/bin/tsc.js:29918:26)\r\n    at Block.emitWorker (/usr/local/lib/node_modules/typescript/bin/tsc.js:54456:25)\r\n    at Block.AST.emit (/usr/local/lib/node_modules/typescript/bin/tsc.js:53260:18)\r\n    at TryStatement.emitWorker (/usr/local/lib/node_modules/typescript/bin/tsc.js:54949:26)\r\n```",
+    "LastUpdatedDate": "2013-09-06T15:27:51.243-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-23T08:47:00.367-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "compiler crash: TypeError: Cannot read property 'flags' of null",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1578
+  },
+  "FileAttachments": [
+    {
+      "FileId": 721519,
+      "FileName": "jriappTS_bugs.zip",
+      "DownloadUrl": ".\\721519"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Yes, in fact it is possible to reproduce but it is quite a large project:\n\nyou need to clone it: git@github.com:OptimalBits/ground.git\n\nthen, npm install\n\nif you use typescript 0.9.0 you can compile it using ./build.sh\nand it will compile without errors, if you upgrade you will get the flags of null error...\n\n",
+      "PostedDate": "2013-08-23T13:36:44.163-07:00",
+      "Id": 110989
+    },
+    {
+      "Message": "git@github.com:OptimalBits/ground.git",
+      "PostedDate": "2013-08-23T13:37:02.4-07:00",
+      "Id": 110990
+    },
+    {
+      "Message": "Thanks for reporting, but we'll need a repro or a copy of the project you're seeing this in.\n\nPlease re-open using the button on top if you can share more information.\n\r\n\r** Closed by paulb 08/23/2013 11:53AM",
+      "PostedDate": "2013-08-23T11:53:16.29-07:00",
+      "Id": 110991
+    },
+    {
+      "Message": "I have the same error. I attached the project to reproduce the bug. Open the solution in VS2012 and then rebuild project. There are three errors.\r\nError\t2\tUnable to get property 'flags' of undefined or null reference\tC:\\DATA\\jriappTS\\jriappTS\\VSTSC\tjriappTS\r\nError\t1\tConstructors for derived classes must contain a 'super' call.\tC:/DATA/jriappTS/jriappTS/modules/db.ts\t2619\t17\tjriappTS\r\nError\t3\tConstructors for derived classes must contain a 'super' call.\tC:\\DATA\\jriappTS\\jriappTS\\modules\\db.ts\t2619\t17\tjriapp.ts\r\n",
+      "PostedDate": "2013-08-25T01:41:41.673-07:00",
+      "Id": 111064
+    },
+    {
+      "Message": "i tried 0.9.1.1 version of the compiler. Please check this error, because it appears in large projects and i don't know how it can be reproduced in small one.",
+      "PostedDate": "2013-08-25T01:43:37.457-07:00",
+      "Id": 111065
+    },
+    {
+      "Message": "I created a new (stub) class and started getting this compiler error, when I comment out the class it goes away. The class looks like this:\n\n```\nmodule V3 {\n    export class Form<T> extends ViewModel<T> {\n        constructor() {\n            super()\n            }\n\n}\n```\nIf I comment it out then the error disappears, also if I add a reference to the base class:\n\n```\n/// <reference path=\"./viewmodel.ts\" />\n```\n\nThe error goes away, which leads me to think that it is due to the (incorrect) order in which TypeScript is compiling the files when generating a single --out file. You can fix the compile order issue by adding references like the one above.\n",
+      "PostedDate": "2013-08-29T01:59:00.663-07:00",
+      "Id": 111515
+    }
+  ]
+}

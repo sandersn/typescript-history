@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We took a look at the proposed solution and found that the performance for the 'for loop' is noticeably better than the performance of the 'slice' call.\n",
+    "ClosedDate": "2013-06-14T12:02:21.93-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Simple function like this:\r\nfun(a, b, ...args: any[]){        }\r\n\r\nTranslates into:\r\n\r\n    1: Example.prototype.fun = function (a, b) {\r\n    2:      var args = [];\r\n    3:      for (var _i = 0; _i < (arguments.length - 2); _i++) {\r\n    4:         args[_i] = arguments[_i + 2];\r\n    5:      }\r\n    6: };\r\n\r\nWhy call to slice method isn't used instead of for loop? Just like that:\r\n\r\n    var args =  (arguments || []).slice(x);\r\n\r\nI'm suggesting this improvement because I experienced very odd behaviour in Firefox 21.0 . There is exception thown while copying parameters from arguments array( line 4 of example), because index is out of range.\r\n\r\nI'tried to isolate this for loop bug, I simplified it into\r\n\r\n    var func = function() {\r\n                for (var i = 0; i < 1; ) {\r\n                    i = 3;\r\n                }\r\n            };\r\n    func();\r\n\r\nIn this example body of for loop is executed twice. But I was unable to reproduce it in JsFiddle.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-13T01:38:12.347-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Variable number of parameters improvement",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 1,
+    "Id": 1146
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "i think the slice can be used only with arrays.\nthe arguments is not array.\nYou need to call Array.prototype.call so this will work.",
+      "PostedDate": "2013-06-13T02:43:41.27-07:00",
+      "Id": 102939
+    },
+    {
+      "Message": "pardon please, i meant\nArray.prototype.slice.call ",
+      "PostedDate": "2013-06-13T02:44:33.22-07:00",
+      "Id": 102940
+    },
+    {
+      "Message": "Thanks for the suggestion assigning to Jon to take a look.",
+      "PostedDate": "2013-06-14T09:52:17.623-07:00",
+      "Id": 103077
+    }
+  ]
+}

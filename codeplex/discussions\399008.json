@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "925382",
+    "ThreadId": "399008",
+    "Html": "\r\n<p>When I try this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>            <span style=\"color:blue\">if</span> (!window.requestAnimationFrame) {\n                window.requestAnimationFrame = <span style=\"color:blue\">this</span>.addSetTime;\n            }\n\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>I get an error complaining that the signature for addSetTime doesn't match requestAnimationFrame. This isn't a valid error however&nbsp;because I'm only re-assigning it when window.requestAnimationFrame doesn't exist.</p>\r\n<p>Is there a way to force the compiler to accept this new function?</p>\r\n",
+    "PostedDate": "2012-10-11T10:31:24.767-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925402",
+    "ThreadId": "399008",
+    "Html": "<p>It's a valid error because any time you refer to requestAnimationFrame subsequently the compiler will be using the type that's defined on the window for that method.</p>\r\n<p>If your method is actually compatible (that is, it can be called using the existing signature for requestAnimationFrame even though the types are different), you can cast your method to the type that the compiler is expecting. (Use an intermediate cast to &lt;any&gt; if necessary).</p>\r\n<p>If your method is not compatible, you could change your definition of addSetTime so that it matches the expected signature and semantics.</p>\r\n<p>Alternatively, you can change the definition of window.requestAnimationFrame, but you shouldn't do that unless you really think the existing definition is incorrect.</p>\r\n<p>In typescript, casts are type annotations that appear in angle brackets in front of the expression being cast.</p>",
+    "PostedDate": "2012-10-11T10:54:02.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925414",
+    "ThreadId": "399008",
+    "Html": "<p>I understand why the compiler does it, but it makes adding shims extremely difficult (if not impossible).</p>",
+    "PostedDate": "2012-10-11T11:05:38.573-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925423",
+    "ThreadId": "399008",
+    "Html": "<p>Not difficult or impossible. I outlined 3 ways:</p>\r\n<p>1. Cast</p>\r\n<p>2. Adjust your method definition so that it actually matches</p>\r\n<p>3. Redefine window.requestAnimationFrame</p>\r\n<p>I should have added a 4th:</p>\r\n<p>4. Use a lambda to convert from the types expected by window.requestAnimationFrame to the types used by your function</p>\r\n<p>All of these are easy to do. Do you need to see the code for these?&nbsp;</p>",
+    "PostedDate": "2012-10-11T11:19:18.073-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925436",
+    "ThreadId": "399008",
+    "Html": "\r\n<p>You can cast like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">if</span> (!window.requestAnimationFrame) {\n\n&nbsp; &nbsp; window.requestAnimationFrame = &lt;(callback:FrameRequestCallback) =&gt; number&gt;&lt;any&gt;<span style=\"color:blue\">this</span>.addSetTime;\n\n}</pre>\r\n</div>\r\n<p><span>or simply like this:</span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">if</span> (!window.requestAnimationFrame) {\n\n&nbsp; &nbsp; window.requestAnimationFrame = &lt;any&gt;<span style=\"color:blue\">this</span>.addSetTime;\n\n}\n</pre>\r\n</div>\r\n<p>Or you can adapt like this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">if</span> (!window.requestAnimationFrame) {\n\n&nbsp; &nbsp; window.requestAnimationFrame = (callback) =&gt; {\n\n&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; this.addSetTime(); <span style=\"color:blue\">return</span> 0;\n\n&nbsp; &nbsp; };\n\n}\n</pre>\r\n</div>\r\n<p>Let me know if you need more info.</p>\r\n",
+    "PostedDate": "2012-10-11T11:34:14.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925440",
+    "ThreadId": "399008",
+    "Html": "\r\n<p>Edit as I review your post (which was made as I typed my reply)</p>\r\n",
+    "PostedDate": "2012-10-11T11:36:24.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925734",
+    "ThreadId": "399008",
+    "Html": "<p>Thank you for posting the examples, but they all suffer from the same problem - if window.x doesn't exist the compiler won't let it through. Here's a better example to demonstrate what I mean:</p>\r\n<p>Microsoft use URL.createObjectURL and URL.revokeObjectURL which I use when handling the data from xhr requests. However most vendors use window.URL or even window.webkit.URL.</p>\r\n<p>You cannot do:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">if</span> (!window.URL) { blah blah }\r\n</pre>\r\n</div>\r\n</p>\r\n<p>because Visual Studio will error-mark the URL part claiming \"The property URL does not exist on the object window\". It only doesn't exist because TypeScript is using Microsoft's supplied definition file. Now I really don't want to edit this file, but unless you can think of a way to allow the above through the compiler I'm a bit stuck.</p>",
+    "PostedDate": "2012-10-12T04:14:22.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925799",
+    "ThreadId": "399008",
+    "Html": "\r\n<p><span style=\"color:blue\"><span style=\"color:#000000\">Have you tried:</span></span></p>\r\n<p><span style=\"color:blue\"><span style=\"color:#000000\">&nbsp;</span></span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> Window { URL: string; }\r\n\r\n<span style=\"color:blue\">if</span> (!window.URL) { blah blah }\r\n\r\n</pre>\r\n</div>\r\n<p>Hope this helps</p>\r\n<p>Jay</p>\r\n",
+    "PostedDate": "2012-10-12T06:30:17.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925810",
+    "ThreadId": "399008",
+    "Html": "<p>Nice, trying that now. Also trying:</p>\r\n<p>\r\n<pre>window['URL']</pre>\r\nOne of them must surely work!</p>",
+    "PostedDate": "2012-10-12T06:53:40.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

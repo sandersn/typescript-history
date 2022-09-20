@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.393-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "We have a typescript application and we use a file per class approach in visual studio. There are lots of benefits to this such as source control etc.\r\n\r\nAnyways we compile our app using the --out compiler flag but I think there is room for some serious optimization of the compilers output for modules. \r\n\r\nCurrently if you have two classes defined in separate files you get this spat out of the compiler. \r\n\r\n```\r\nvar Example;\r\n(function (Example) {\r\n    (function (Nested) {\r\n        (function (Issue) {\r\n            var bar = (function () {\r\n                function bar() {\r\n                }\r\n                return bar;\r\n            })();\r\n            Issue.bar = bar;\r\n        })(Nested.Issue || (Nested.Issue = {}));\r\n        var Issue = Nested.Issue;\r\n    })(Example.Nested || (Example.Nested = {}));\r\n    var Nested = Example.Nested;\r\n})(Example || (Example = {}));\r\n\r\nvar Example;\r\n(function (Example) {\r\n    (function (Nested) {\r\n        (function (Issue) {\r\n            var foo = (function () {\r\n                function foo() {\r\n                }\r\n                return foo;\r\n            })();\r\n            Issue.foo = foo;\r\n        })(Nested.Issue || (Nested.Issue = {}));\r\n        var Issue = Nested.Issue;\r\n    })(Example.Nested || (Example.Nested = {}));\r\n    var Nested = Example.Nested;\r\n})(Example || (Example = {}));\r\n \r\n```\r\n\r\nIs there a compiler flag or could there be one which composes all classes/ functions etch under a single module declaration? So the output code would be like this instead. This would dramatically reduce the size of the output js.  I estimate that our app which currently compiles to around 15,000 lines of js would probably only be 2000 lines if this were the case\r\n\r\n```\r\nvar Example;\r\n(function (Example) {\r\n    (function (Nested) {\r\n        (function (Issue) {\r\n            var bar = (function () {\r\n                function bar() {\r\n                }\r\n                return bar;\r\n            })();\r\n            Issue.bar = bar;\r\n            var foo = (function () {\r\n                function foo() {\r\n                }\r\n                return foo;\r\n            })();\r\n            Issue.foo = foo;\r\n        })(Nested.Issue || (Nested.Issue = {}));\r\n        var Issue = Nested.Issue;\r\n    })(Example.Nested || (Example.Nested = {}));\r\n    var Nested = Example.Nested;\r\n})(Example || (Example = {}));\r\n\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-09T22:41:37.757-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Optimise module output when using --out",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 5,
+    "Id": 2499
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Totally agree with this. We are also trying to stick with one file per class.\n\nThis would also have the side effect of allowing classes inside the same module (but residing in different files) to be able to access \"internal\" objects within the module (closure).\n\nFor example, I would love to split the following:\n```\nmodule App {\n\tvar i: number = 0;\n\tfunction secretAlgorithm() {\n\t\t// long, private algorithm goes here\n\t}\n\t\n\texport class Foo {\n        bar() {\n\t\t\tsecretAlgorithm();\n\t\t\ti++;\n        }\n    }\n}\n```\n\ninto two files:\n```\nmodule App {\n\tvar i: number = 0;\n\tfunction secretAlgorithm() {\n\t\t// long, private algorithm goes here\n\t}\n}\n```\nand\n```\nmodule App {\n\texport class Foo {\n        bar() {\n\t\t\tsecretAlgorithm();\n\t\t\ti++;\n        }\n    }\n}\n```\n\nThe caller of such code would have access to App.Foo.bar, but not to the \"internal\" members inside the App closure:\n```\nvar baz = new App.Foo();\nbaz.bar();\n```\n\nFinally, one could allow for one export assignment in internal modules, so in the above example we could change the file containing the Foo class definition to:\n```\nmodule App {\n\tclass Foo {\n        bar() {\n\t\t\tsecretAlgorithm();\n\t\t\ti++;\n        }\n    }\n    export = Foo;\n}\n```\nThe calling code would look like the following:\n```\nvar baz = new App();\nbaz.bar();\n```\nThe Foo class inside the App module could have access to many classes internal to the App module which are not exposed to the outside, and each internal class or part of the module could reside in a different file.",
+      "PostedDate": "2014-05-12T09:47:32.81-07:00",
+      "Id": 146304
+    },
+    {
+      "Message": "So essentially you're proposing a language change to support a feature similar to \"partials\" in .net? \n\nI like that idea. :)",
+      "PostedDate": "2014-05-12T10:39:15.14-07:00",
+      "Id": 146311
+    },
+    {
+      "Message": "See also: https://typescript.codeplex.com/discussions/407063\n",
+      "PostedDate": "2014-05-12T12:44:59.687-07:00",
+      "Id": 146331
+    },
+    {
+      "Message": "@davidhanson90 : No, they are asking to have two modules in two different classes to merge into one module (add see private variables only visible to the module closure).  They are not asking for partial classes.  Modules are only like partial classes in the way that they sort of become one instance object.  If you want partial classes, then you need to ask for class merging, or vote here: https://typescript.codeplex.com/workitem/917\n",
+      "PostedDate": "2014-05-12T16:43:28.677-07:00",
+      "Id": 146357
+    }
+  ]
+}

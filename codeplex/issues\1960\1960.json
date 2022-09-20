@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:11.017-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "__UPD__: This is by design, but I don't like it. Please vote for issue if you support the propose to proper generic type parameter inference.\r\n\r\nI'm working on ix.js typings in DefinitelyTyped project.\r\nSome of bugs was fixed in 0.9.5 beta, but I catch the new one.\r\n```TypeScript\r\ndeclare module Ix {\r\n\texport interface Enumerable<T> {\r\n\t\treduce<TAccumulate>(func: (accumulate: TAccumulate, current: T, index: number, self: Enumerable<T>) => TAccumulate, seed: TAccumulate): TAccumulate;\r\n\t\t_reduce<TAccumulate>(seed: TAccumulate, func: (accumulate: TAccumulate, current: T, index: number, self: Enumerable<T>) => TAccumulate): TAccumulate;\r\n\t}\r\n}\r\n\r\nvar ax: Ix.Enumerable<number>;\r\n\r\nax.reduce<number>((acc, i) => acc + i, 100);\t\t// ok\r\nax.reduce((acc: number, i) => acc + i, 100);\t\t// ok\r\nax.reduce((acc, i) => acc + i, 100);\t\t\t\t// Invalid '+' expression - types not known to support the addition operator.\r\n// full qualified lambda\r\nax.reduce((acc, i, index, self) => acc + i, 100);\t// Invalid '+' expression - types not known to support the addition operator.\r\n// move seed parameter before lambda\r\nax._reduce(100, (acc, i) => acc + i);\t\t\t\t// ok\r\n```\r\n\r\nSo, when typed parameter which should be used to infer type parameter of the method placed after parameter which uses it, inference fails.\r\nIn the example, `TAccamulate` infered as `{}` instead of `number` by the parameter `seed`. If parameter `seed` moved at first place, inference works fine.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-02T05:53:19.303-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Generic type isn't inferred when typed parameter after lambda used the type [0.9.5 beta]",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 10,
+    "Id": 1960
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "To add a little more detail, specifically for cases like this:\n\nax.reduce((acc, i) => acc + i, 100);\n\nWhen doing type argument inference for a generic call the compiler will stop making inferences for a type argument when it sees that type argument used in a parameter position in an argument of a function type (in the language spec this process is referred to as 'fixing' as type argument). When it stops like this it considers the type of the type argument to be the best common type of all currently available candidates. When there are no candidates the choice is now {} instead of 'any.' \n\nIn practice what this means is that when you have functions like this which take functions as arguments you'll want to define them with 'seed' arguments preceding the function typed arguments as you did with _reduce. Alternatively (as in the case where you're just writing the typing for an existing JS library and can't reorder the parameter list) the caller will be required to explicitly pass type arguments.",
+      "PostedDate": "2013-12-02T17:40:15.063-08:00",
+      "Id": 125889
+    },
+    {
+      "Message": "That is really strange behavior of the inference. It still looks like bug for me. I created [the discussion](https://typescript.codeplex.com/discussions/471751) for specification related to this issue.",
+      "PostedDate": "2013-12-02T22:09:16.953-08:00",
+      "Id": 125905
+    },
+    {
+      "Message": "This is due to changed inference rules for generic type arguments in the presence of zero inferences. Instead of inferring 'any', we now infer '{}' when a generic type can't be inferred. See https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9\n\r\n\r** Closed by RyanCavanaugh 12/02/2013 9:09AM",
+      "PostedDate": "2013-12-02T09:09:53.133-08:00",
+      "Id": 126769
+    },
+    {
+      "Message": "I'm reopening the issue for ability to vote for propose of changing behavior of generic type parameter inference.\r\n(If it's not valid, sorry, close it again)",
+      "PostedDate": "2013-12-10T05:40:03.737-08:00",
+      "Id": 126770
+    },
+    {
+      "Message": "+1, as per discussion thread. \n\nNeither directionality shortcut nor use of `{}` as default type are good choices. The former is design-by-premature-optimization, the latter is a hack that does not quite achieve its goal.",
+      "PostedDate": "2013-12-10T11:51:40.237-08:00",
+      "Id": 126863
+    },
+    {
+      "Message": "This also affects Array.reduce method that has accumulator parameter after callback.\n\nFor example this snippet will not compile without explicit types:\n\n``` TypeScript\n[\"this\", \"is\", \"test\"].reduce((a, b) => a + b.length, 0)\n```",
+      "PostedDate": "2014-01-11T08:33:06.557-08:00",
+      "Id": 130163
+    }
+  ]
+}

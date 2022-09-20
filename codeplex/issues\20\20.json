@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2012-10-03T13:50:47.84-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "A coworker has brought to my attention that support for Object.defineProperty is broken in Internet Explorer 8 and does not support the way properties are defined.",
+    "LastUpdatedDate": "2013-08-23T10:27:53.51-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T01:02:31.777-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Properties are not supported in Internet Explorer 8",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 20
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That's right - \"Accessor properties\" were added in ECMAScript 5 which is not available in IE8.  TypeScript provides the ability to define accessor properties in object literals (as in ES5) and in classes (as in proposals for ES6) only when you pass the \"-target ES5\" flag to the compiler.  So you have to intentionally choose to target ES5 environments to make use of accessor properties.\n\nThis decision to not allow generating accessor properties to ES3 code was needed to ensure that there are not API-level name changes involved in the TS->JS code generation process.  We aim to ensure that the names you define in your TS code are exactly the names that get defined in the emitted JS.  So we do not use approaches like compiling an accessor properties into get_foo/set_foo functions.\n\nLuke",
+      "PostedDate": "2012-10-02T03:14:27.683-07:00",
+      "Id": 78256
+    },
+    {
+      "Message": "> This decision to not allow generating accessor properties to ES3 code was needed to ensure that there are not API-level name changes involved in the TS->JS code generation process. We aim to ensure that the names you define in your TS code are exactly the names that get defined in the emitted JS. So we do not use approaches like compiling an accessor properties into get_foo/set_foo functions.\n\nThis explains what you're doing, but not why.\n\nIs it really wise to neglect support for IE8 and possibly other browsers that do not support accessors?\n\nWhy would it be so bad to have accessors optionally compile into get/set-methods for broader JavaScript compatibility?\n\nI can see the issues with having the API change - since TS is a superset of JS, having the API \"break\" on compile, puts up a barrier between the existing direct TS vs JS interoperability, which I see as one of the unique and key strengths of TS compared to other compile-to-JS languages.\n\nHowever, broad compatibility is also important, and you could work around this issue.\n\nFor example, you could add annotations (comments) to the generated get/set-methods, which would identify accessor-methods in JS code to the TS compiler. Or add a single annotation at the top of the file, telling the TS compiler that this file was built using a different convention for accessor-methods.\n\nOr alternatively (perhaps better) simply add a switch that automatically infers between get/set-accessors and properties (at compile-time) if and when they are available. With this switch turned on, code that has both a \"name\" property and a getName() or setName() method would have to be considered invalid code, but that's probably okay in a lot of cases, since most people regard that as bad practice anyway.\n\nIt doesn't sound like this would be extremely difficult to implement, nor do I see this as damaging to the language in any way?\n\nSome JS developers may actually prefer having generated JS files generated with get/set-accessor methods instead of actual properties, if the generated JS has to fit into an existing eco-system, e.g. a larger suite of existing/legacy JS applications that already use get/set-accessor methods by convention.\n\nAnd I realize you can still manually write get/set-methods - but using accessor-syntax in the TS source code has greater advantages, such as the ability to easily refactor between public properties and accessors without breaking anything, or (potentially) consume existing JS APIs with get/set-methods using accessor-syntax.\n\nMany companies may not be willing or able to drop support for IE8 at this time, which means they may have to wait several years before TS is an option for them.\n\nI realize you have stated objectives, but I would like to hear a really good argument against providing an option for more backwards-compatible development with TS?\n",
+      "PostedDate": "2013-08-23T07:31:14.583-07:00",
+      "Id": 110908
+    },
+    {
+      "Message": "In addition, I find it odd that accessors are part of the official language specification, but are unsupported by the compiler by default - without explicitly adding the `--target ES5` switch.\n",
+      "PostedDate": "2013-08-23T10:27:53.51-07:00",
+      "Id": 110934
+    }
+  ]
+}

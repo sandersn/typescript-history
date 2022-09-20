@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1133088",
+    "ThreadId": "472270",
+    "Html": "Hello ! \r<br />\n<br />\nI cannot find any information on changes to .d.ts definition files in the 0.9.5 compiler. The following definition file is not compiling:\r<br />\n<br />\n<a href=\"https://github.com/away3d/away3d-core-ts/blob/master/build/ref/webgl.d.ts\" rel=\"nofollow\">https://github.com/away3d/away3d-core-ts/blob/master/build/ref/webgl.d.ts</a>\r<br />\n<br />\nThrows the following error in the compiler:\r<br />\n<br />\n/src/away/core/display3D/Context3D.ts(83,22): error TS2094: The property 'width' does not exist on value of type '(x: number, y: number, width: number, height: number) =&gt; void'.\r<br />\n/src/away/core/display3D/Context3D.ts(84,22): error TS2094: The property 'height' does not exist on value of type '(x: number, y: number, width: number, height: number) =&gt; void'.\r<br />\n/src/away/core/display3D/Context3D.ts(645,22): error TS2094: The property 'width' does not exist on value of type '(x: number, y: number, width: number, height: number) =&gt; void'.\r<br />\n/src/away/core/display3D/Context3D.ts(646,22): error TS2094: The property 'height' does not exist on value of type '(x: number, y: number, width: number, height: number) =&gt; void'.\r<br />\n<br />\nAny pointers appreciated. \r<br />\n<br />\nThank you . <br />\n",
+    "PostedDate": "2013-12-09T03:44:13.383-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133230",
+    "ThreadId": "472270",
+    "Html": "Do you have some of the code you're using to call webgl.d.ts?  The lines the errors are pointing at are in Context3D.ts and might be helpful to figure out what is causing the error.<br />\n",
+    "PostedDate": "2013-12-09T10:27:34.457-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133235",
+    "ThreadId": "472270",
+    "Html": "Thank you Jon.\r<br />\n<br />\nHere are the lines causing that error from Context3D:<br />\n\r<br />\nthis._gl.viewport.width = width;\r<br />\nthis._gl.viewport.height = height;\r<br />\n<br />\nLink to Context3D: <a href=\"https://github.com/away3d/away3d-core-ts/blob/master/src/away/core/display3D/Context3D.ts\" rel=\"nofollow\">https://github.com/away3d/away3d-core-ts/blob/master/src/away/core/display3D/Context3D.ts</a>\r<br />\n<br />\nI think there might be more errors in there than that one - but that is all that is showing up for now. <br />\n",
+    "PostedDate": "2013-12-09T10:36:39.393-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135289",
+    "ThreadId": "472270",
+    "Html": "this._gl.viewport is a function, it doesn't have a width or height property to assign to which is exactly what the error message is saying. The old version of this code worked because it was written as an index operation:\r<br />\n<br />\nthis._gl.viewport['width'] = width;\r<br />\n<br />\nwhich returns an 'any' that can then be assigned anything. Your viewport function now has a width property in the underlying JavaScript but not in the TypeScript type system. It's possible to use a merged declaration to represent the viewport function as a function with a width property but my guess is this code just wasn't correct before either.<br />\n",
+    "PostedDate": "2013-12-12T15:15:14.297-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

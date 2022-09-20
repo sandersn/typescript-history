@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-02-06T14:16:07.917-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Because of the translation of the rest parameter, the transpiled Javascript will shadow the variable defined in the outer scope, causing incorrect run-time behavior:\r\n\r\n```\r\nvar _i = \"This is what I'd expect to see\";\r\n\r\nclass Foo {\r\n    constructor (...args: any[]) {\r\n        console.log(_i);\r\n    }\r\n}\r\n\r\nnew Foo(); // should log \"This is what I'd expect to see\"\r\n```\r\n\r\nThe transpiled code:\r\n\r\n```\r\nvar _i = \"This is what I'd expect to see\";\r\n\r\nvar Foo = (function () {\r\n    function Foo() {\r\n        var args = [];\r\n        for (var _i = 0; _i < (arguments.length - 0); _i++) {\r\n            args[_i] = arguments[_i + 0];\r\n        }\r\n        console.log(_i);\r\n    }\r\n    return Foo;\r\n})();\r\n\r\nnew Foo();\r\n```\r\n\r\nAs you can see, Typescript doesn't care that a variable named `_i` already exists in this scope (defined in a containing scope). So on Typescript side, the compiler is happy because the variable exists, but on Javascript side the transpiled code will shadow that variable and cause unexpected behavior, because the actual output is now `0`.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-08T13:07:51.94-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Rest parameter translation shadows variable in outer scope",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1986
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Note that implementing the idea proposed in the comments in the following issue would solve this automatically: https://typescript.codeplex.com/workitem/66",
+      "PostedDate": "2013-12-08T13:16:20.127-08:00",
+      "Id": 126542
+    },
+    {
+      "Message": "A similar issue exists for nested modules, though it can be argued whether it can be considered a bug there or not (both ways make sense), but I just wanted to point it out as well:\n\n```\nmodule A {\n    export var someProp = \"The cake is a lie!\";\n\n    export module B {\n        export module A {\n            export var someProp = \"Still Alive\";\n\n            export function foo () {\n                console.log(A.someProp);\n            }\n        }\n    }\n}\n\nA.B.A.foo(); // \"Still Alive\"\n```",
+      "PostedDate": "2013-12-09T10:34:36.74-08:00",
+      "Id": 126639
+    },
+    {
+      "Message": "The module example is by design.  As you walk out of the nested scopes the first \"A\" encountered is the inner A.\n\nFor the _i reference, a fix was checked in with commit http://typescript.codeplex.com/SourceControl/changeset/a45b59158fd6b1e3d601b9be3bced1b2a929d24d .  This will now error if a collision is going to occur.",
+      "PostedDate": "2014-02-06T14:16:02.597-08:00",
+      "Id": 132872
+    },
+    {
+      "Message": "Why was this way chosen? I don't think this is a good solution. Wouldn't it be better to wrap the loop in an anonymous function which has its own local scope? ",
+      "PostedDate": "2014-02-06T14:39:27.25-08:00",
+      "Id": 132876
+    },
+    {
+      "Message": "We try to emit the JS you would expect. Changing the scope of a loop and introducing additional performance overhead would definitely be unexpected. I would argue a set of names like this is pretty undesirable just from the perspective of human readability, let alone how the compiler handles it.",
+      "PostedDate": "2014-03-31T16:34:02.32-07:00",
+      "Id": 140114
+    },
+    {
+      "Message": "Thanks for the response. That makes sense, but why not move from a loop to using arguments? That would both avoid the scoping overhead and remove the issue.",
+      "PostedDate": "2014-04-01T02:09:00.263-07:00",
+      "Id": 140151
+    }
+  ]
+}

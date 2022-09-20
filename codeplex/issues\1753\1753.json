@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As specified in the most recent version of the Spec section 5.3 using the 'with' statement is an error in TypeScript.\n\nUse of the ‘with’ statement in TypeScript is an error, as is the case in ECMAScript 5’s strict mode. Furthermore, within the body of a ‘with’ statement, TypeScript considers every identifier occurring in an expression (section 4.3) to be of the Any type regardless of its declared type. Because the ‘with’ statement puts a statically unknown set of identifiers in scope in front of those that are statically known, it is not possible to meaningfully assign a static type to any identifier.",
+    "ClosedDate": "2013-10-04T10:09:38.983-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Please add proper \"with\" by rewriting unqualified access to variable access, i.e. translate\r\n\r\n```\r\nwith (foo) {\r\n   bar();\r\n}\r\n```\r\n\r\nto\r\n\r\n```\r\nfoo.bar();\r\n```\r\n\r\nwhen bar() is defined in foo.\r\n",
+    "LastUpdatedDate": "2013-10-11T15:42:49.717-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-10-04T01:41:05.53-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "properly support \"with\" statement",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1753
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "And why is it prohibited by spec ?\nUnless I'm missing something, that set of imported identifiers is very much known as long as `with` expression evaluates to a known type.",
+      "PostedDate": "2013-10-04T11:59:04.397-07:00",
+      "Id": 117498
+    },
+    {
+      "Message": "It is not.",
+      "PostedDate": "2013-10-07T12:57:33.327-07:00",
+      "Id": 117698
+    },
+    {
+      "Message": "I now understand that `with` cannot be added because it has no way of preserving semantics of existing javascript code.\n\nBut out of curiosity, can you give an example when a set of members for statically typed variable that has a type different than `any` cannot be determined (I'm talking only about statically visible members) and more importantly why this would have any effect on rewriting scheme proposed above given that statically unresolved symbols would simply fail the compilation. Thanks.\n",
+      "PostedDate": "2013-10-07T13:33:20.37-07:00",
+      "Id": 117701
+    },
+    {
+      "Message": "I proposed the same thing [here](https://typescript.codeplex.com/workitem/1730) and the idea of permitting the resolution of properties within a `with` statement *only* when the type is known seems simple enough to me - I may be missing something, but the idea was rejected.",
+      "PostedDate": "2013-10-08T19:02:26.343-07:00",
+      "Id": 117892
+    },
+    {
+      "Message": "The idea was rejected [because](https://typescript.codeplex.com/discussions/403571):\n> A core language principle is that we don't change the semantics of existing JavaScript code.\n\nand it's not possible to preserve dynamic resolution of `with` via compile time rewriting.\nI'd stil like to know why set of identifiers wouldn't be known at compile time if only using static resolution.",
+      "PostedDate": "2013-10-09T00:42:46.937-07:00",
+      "Id": 117899
+    }
+  ]
+}

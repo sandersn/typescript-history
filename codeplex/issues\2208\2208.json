@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Please post on the forum if you want to continue discussion on this topic -- it's not that we don't think this would be a fantastic feature (if it were possible), but the performance and theoretical problems here are huge. Other people might be able to weigh in more on the specifics.",
+    "ClosedDate": "2014-02-25T15:16:20.253-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\nfunction add(x:number, y:number): number {\r\n  return x + y;\r\n}\r\n\r\nvar addTwo = (y) => add(2,y);\r\n\r\n```\r\n\r\nFrom the usage of the argument `y`, it can be inferred that the type of `y` is `number`. Without this kind of type inference, using lambdas is unattractive because usually the argument types have to be given explicitly; this ruins the brevity and simplicity of lambdas.\r\n\r\nA practical (and common) case is partial application, which is demonstrated in the sample.\r\n",
+    "LastUpdatedDate": "2014-02-25T15:16:20.253-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-23T16:51:59.91-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Better lambdas if argument types infer from argument usage",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2208
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the response Ryan. This is quite interesting.\n\nWhile the general solution may be inefficient, a reasonable compromise can be made that still works for most cases and maintains efficiency of the compiler.\n\nBecause you provided an example using overloading, I will use it in the discussion with the hope that it can be easily related to subtyping.\n\nOne answer is to only infer arguments when overloading is not involved. I suspect that most functions are not overloaded, so the left-over type inference is still widely applicable.\n\nA second answer is to offer limited inference for overloaded functions. I give pseudo-code for a possible algorithm. The key feature is that it ignores most of the type dependencies while still retaining some usefulness.\n\n```\nInferring argument types of fn.\n\nForeach implicitly typed argument (x) of fn:\n  Let us = [u | u <- foreach usage of x:\n                       the independent set of candidate types for x]\n  Let ts = intersect us\n  Case ts:\n    ts is singleton: type of x is in ts\n    ts is empty: no possible type for x\n    otherwise: type of x was not inferred\n\nAdditional notes:\n_us_ is the list of type constraint sets\n_ts_ is the intersection of all sets in the list\n\n\nApplied to the example case (<= is used as \"RHS determines LHS\"):\n\ntypeof x <= intersect [{A, C}, {A, B}]\n         <= {A}\ntherefore, type of x is A\n\ntypeof y <= intersect [{B, D}, {A, C}]\n         <= {}\ntherefore, no type is possible for y\n\ntypeof z <= intersect [{D, B}, {C, A}]\n         <= {}\ntherefore, no type is possible for z\n```\n\nBy the \"independent set of candidate types\" for a usage of a variable _x_, it is meant the set of possible types that can be determined for _x_ at the usage site without consideration for dependencies on the _implicit_ types of other variables or values. Particularly, when _x_ is used as an argument on a overloaded function, the set of immediate possible types for _x_ is the set of parameter types that occur in the same position for all (candidate) overloads of that function.\n\nBefore performing this type inference, the candidate overloads for overloaded functions should already be constrained. In the following example, before inferring the type of _x_ it is pre-determined that there is only one candidate override for _foo_, and therefore the type of _x_ can be inferred as _number_ by the algorithm.\n\n```\nfunction foo(_:number): number;\nfunction foo(_:String): String;\n\nfunction add(x: number, y: number);\n\nfunction fn(x) {\n  return add(foo(x), 1);\n}\n```\n\nBy strengthening type inference, TypeScript lambdas become more concise (as they should be) and thus the language as a whole becomes more flexible (because now lambdas can be used where they otherwise would be cumbersome). Even if types cannot be inferred in all cases involving overloading or subtyping, that still leaves a (likely) majority of cases where inference is possible using a compromised algorithm.",
+      "PostedDate": "2014-02-24T20:21:19.277-08:00",
+      "Id": 134629
+    },
+    {
+      "Message": "Global type inference in the presence of overloads and subtypes is well-studied academically. Short answer: don't do it.\n\nHandwavy proof of NP-completeness: Any boolean satisifiability problem is translatable to a type inference in the presence of overloads:\n\n```\ninterface A { a; }\ninterface B { b; }\ninterface C { c; }\ninterface D { d; }\n\nfunction cnd1(p1: A, p2: B);\nfunction cnd1(p1: C, p2: D);\nfunction cnd1() {}\n\nfunction cnd2(a: A, p2: D);\nfunction cnd2(a: C, p2: B);\nfunction cnd2() {}\n\nfunction cnd3(a: A, p2: C);\nfunction cnd3(a: B, p2: A);\nfunction cnd3() {}\n\nfunction fn(x, y, z) {\n\tcnd1(x, y);\n\tcnd2(y, z);\n\tcnd3(x, z);\n}\n```\n\r\n\r** Closed by RyanCavanaugh 02/24/2014 9:16AM",
+      "PostedDate": "2014-02-24T09:16:41.693-08:00",
+      "Id": 134703
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.017-07:00",
+    "CommentCount": 17,
+    "Custom": null,
+    "Description": "From the discussion at http://typescript.codeplex.com/discussions/397594.\r\n\r\nFutures/Promises and the await keyword make async call patterns much easier to read and write!\r\n\r\nMore on \"await\" here: http://msdn.microsoft.com/en-us/library/hh156528.aspx",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Medium",
+      "Severity": 100,
+      "Id": 2
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-02T11:47:42.76-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "implement the \"await\" keyword for async calls",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 162,
+    "Id": 38
+  },
+  "FileAttachments": [
+    {
+      "FileId": 500523,
+      "FileName": "01 Async-Await.mp3",
+      "DownloadUrl": ".\\500523"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "If anything, generators and yield should be implemented before \"await\"",
+      "PostedDate": "2012-10-02T12:13:14.953-07:00",
+      "Id": 78324
+    },
+    {
+      "Message": "If yield is implemented with same semantics as in Mozilla, then it is practically equivalent to async/await. The yield keyword works like await, and async is not needed (it is implicit).\n\nKey difference from C# yield return is you can say:\n\n   var b = yield $.get('blah');\n\nThat is, the generator can pass a value out of itself (as in C# yield return), but also when it is resumed it can receive a value (as in C# await). In this case we call jQuery.get which returns a Deferred. So the generator would just need to be managed by a very simple bit of general code that resumes the generator when the Deferred signals it is done.",
+      "PostedDate": "2012-10-03T03:31:42.757-07:00",
+      "Id": 78391
+    },
+    {
+      "Message": "Have attached musical support for this request",
+      "PostedDate": "2012-10-03T13:09:53.4-07:00",
+      "Id": 78468
+    },
+    {
+      "Message": "@rwaldron - agreed. The demand for \"await/async\" appears to be driven purely by C# developers unfamiliar/unaware of generators and yield. I fear if await gets pushed into the language, then the cat calls and accusations of \"embrace and extend\" will no longer be baseless.",
+      "PostedDate": "2012-12-06T07:37:14.083-08:00",
+      "Id": 83686
+    },
+    {
+      "Message": "I voted for this myself weeks ago, but now I have repented. Unfortunately there's no way to recall my vote.",
+      "PostedDate": "2012-12-06T07:38:31.4-08:00",
+      "Id": 83687
+    },
+    {
+      "Message": "@danielearwicker I do not believe that yield is a valid substitute for async/await. When you use yield, the function in which yield is called may be suspended, but control flow is synchronously returned to the calling function.\n\nThe point of async/await is that a function that returns a Deferred (or in the case of C#, a Task) can be declared an async function, and its result can be await'ed, during which time the control flow can be passed to another thread of execution. The await'ing code will be resumed when the Deferred gets a value (or fails with an exception) without any additional work by the programmer. This allows a developer to write async code in a linear style.\n\nAlthough task.js (http://taskjs.org/) suggests that the \"await style\" can be achieved with yield, it glosses over two important limitations of task.js:\n\n(1) Blocks of code that call async functions must be wrapped up in a no-arg function and passed to spawn().\n(2) The scheduling of code blocks passed to spawn() is managed by the task.js library rather than the JavaScript interpreter in which the code is being executed.\n\n(1) is less elegant than built-in language support for async/await, and (2) is likely less-performant than if async/await were supported as part of the interpreter.\n\nI have been trying to wrap my head around the various source translators for this type of thing all day, so please let me know if my assessment of the tradeoffs is inaccurate.\n",
+      "PostedDate": "2012-12-30T17:04:40.837-08:00",
+      "Id": 85072
+    },
+    {
+      "Message": "@oisin:\nI disagree with the comment stating that await/async is driven \"purely by C# developers\".\n\nI have been an avid user of IcedCoffeeScript because of this very feature (called await/defer).\nTamejs is another attempt at this, in pure javascript.\n\nJavascript has many asynchronous methods, e.g. anything ajax, and being able to simplify control flow greatly helps in complex cases.\n\nI agree that javascript is not .net, so I'm unsure how exactly it should translate. Maybe IcedCoffeeScript can be an inspiration. Continuation functions are common place in js so they should be supported, not just the deferred pattern.",
+      "PostedDate": "2013-01-22T02:26:16.333-08:00",
+      "Id": 86838
+    },
+    {
+      "Message": "You don't even have to like C# to appreciate async/await. No new language should be made without it. It is more than just a coroutine (which is what a function with yield is). They are similar in that they are both rewritten into state machines but the difference is that coroutines have multiple returns while await still has only a single return. Await simply transforms code from a continuation passing style into a synchronous style. Unless there is something special about Mozilla yield that I'm not understanding, I think this is true.",
+      "PostedDate": "2013-02-18T14:07:36.05-08:00",
+      "Id": 90689
+    },
+    {
+      "Message": "__@justinc__\n> the difference is that coroutines have multiple returns while await still has only a single return.\n\n\nYou can use await many times in an async method, and each time you are effectively feeding a separate Task into a parallel routine. These multiple Tasks are analogous to the multiple values you can feed to Mozilla-yield or C#-yield-return during execution.\n\n[You may find this helpful](http://smellegantcode.wordpress.com/2010/12/14/unification-of-async-await-and-yield-return/) - then again you may not (some of the details are out-of-date because it's based on the ancient CTP code).\n\n__@bolinfest__\n> I do not believe that yield is a valid substitute for async/await.\n\n\nBy itself, it's not. But it only needs a [simple utility function to provide the plumbing](http://smellegantcode.wordpress.com/2012/10/09/a-way-that-asyncawait-style-functionality-might-make-it-into-browsers/).\n\n> When you use yield, the function in which yield is called may be suspended, but control flow is synchronously returned to the calling function.\n\n\nDepends what you yield. If you yielded a Task<T> you could do _exactly_ what the standard async/await plumbing does. Indeed people have been doing this with yield-return since it was added in C# 2.\n\nThe only pain is that whereas I can say:\n\n```\nvar result = await SlowCalculation(a, b);\n```\n\nI cannot say:\n\n```\nvar result = yield return SlowCalculation(a, b);\n```\n\nInstead I have to say something like:\n\n```\nint result;\nyield return SlowCalculation(a, b, v => result = v);\n```\n\nThat is, yield return is a statement (void) rather than an expression. And this is because the external interface to a C# iterator method is IEnumerable<T>, which provides no way for the parallel routine to pass in a value that will become the \"return value\" of yield return.\n\nMozilla-yield does not suffer from these limitations (the iterator object has a \"send\" function). In that respect, it more closely resembles C#-await than it does C#-yield-return.\n\nThe thing about C# async/await is that it assumes some library-defined plumbing will be present to manage execution. The await keyword is given a Task<T> and now has to decide how to schedule the continuation when the task finishes. Library code makes that decision, and in a GUI application it always schedules continuation on the same GUI thread as it ran on before, whereas in server applications it can use a random thread-pool thread (these defaults can be overridden with library calls).\n\nIt would be to Typescript's advantage to leave all that undecided. It can do that by implementing Mozilla-yield. Then [as demonstrated here](http://smellegantcode.wordpress.com/2012/10/09/a-way-that-asyncawait-style-functionality-might-make-it-into-browsers/) the plumbing for a given scenario can be encapsulated in a simple wrapper function.\n\nSo the exact details of how a Deferred works, how to deal with exceptions, etc. can be under the control of libraries, in a very simple, open, transparent way.",
+      "PostedDate": "2013-02-19T08:39:38.74-08:00",
+      "Id": 90778
+    },
+    {
+      "Message": "@danielearwicker:\nyes it is true that your examples using 'yield' and a helper function are close enough.\n\nBut keep in mind that this is currently Firefox only. It's a sad state of affairs but none of my clients use firefox. :(\nAnd even inside Firefox, what will happen exactly when ECMAScript Harmony is out is not 100% clear.\n\nMaybe the TypeScript team should wait and see if Generators catch up in other browsers before implementing this complex feature inside their compiler?\n\nBut on the other hand it is clear that _as of today_ the problem isn't solved.",
+      "PostedDate": "2013-02-20T01:40:09.013-08:00",
+      "Id": 90916
+    },
+    {
+      "Message": "Agree, while async/await would be very handy, the key thing to get working first would be generators.  We're looking into supporting them, though this might come after the 1.0 release.  After generators are in place, the code generation could use them, keep the code we output much cleaner than if we did a full-rewriting (a la C#).\n",
+      "PostedDate": "2013-03-07T15:54:33.267-08:00",
+      "Id": 92607
+    },
+    {
+      "Message": "An `async/await` feature is now proposed for ECMAScript 7, see details on the proposal here: https://github.com/lukehoban/ecmascript-asyncawait.  This is a general outline of what TypeScript could provide in advance of engines implementing the feature directly.",
+      "PostedDate": "2014-02-11T10:16:05.39-08:00",
+      "Id": 133277
+    },
+    {
+      "Message": "I haven been using a little trick for a while to get this behaviour:\n\nFirst you have to use Q, promises and node.js >= 0.11 or traceur compiler to get this into the browser.\n\nThen you add to the Q definition from DefinitelyTyped:\n\ndeclare function yield<T>(promise:__Q.Promise<T>):T;\ndeclare module __Q {\n    export function spawn<T>(generatorFunction: any):void;\n}\n\nthen you create a little script that replaces all \"Q.spawn(function(\" to \"Q.spawn(function*(\" in all your javascript sources before your application is executed.\nThen you use yield as if it was a normal function.\n\nhttps://github.com/soywiz/heroku-typescript-generators-sample/blob/master/package.json\nhttps://github.com/soywiz/heroku-typescript-generators-sample/blob/master/typings/q/Q.d.ts\nhttps://github.com/soywiz/heroku-typescript-generators-sample/blob/master/bootstrap.ts\nhttps://github.com/soywiz/heroku-typescript-generators-sample/blob/master/updateasync.ts\n\nThen you can create code like this:\nhttps://github.com/soywiz/heroku-typescript-generators-sample/blob/master/test/models_test.ts\n\nRegards.",
+      "PostedDate": "2014-03-12T03:40:11.687-07:00",
+      "Id": 136599
+    },
+    {
+      "Message": "Huge vote for generators before async/await. \n\n@soywlz - wow that's a great workaround. Thanks for the suggestion!",
+      "PostedDate": "2014-04-29T08:29:19.047-07:00",
+      "Id": 145089
+    },
+    {
+      "Message": "@seanhess http://github.com/soywiz/tspromise",
+      "PostedDate": "2014-04-29T09:15:45.8-07:00",
+      "Id": 145097
+    },
+    {
+      "Message": "Given that now generators are specified in ES6 and async/await is proposed in ES7, I think that the path is clear for Typescript: implement those features the way they are in ES6/7.\n\nMy wish is that Typescript can be a bit like traceurjs and offer the great productivity enhancements of ES6/7 today. That is: cross-compile generators, async/await, destructuring assigments and the likes into ES5 today; and provide an option to let the javascript pass-through unchanged in capable browsers (I heard IE12 will support ES6).\n\nIt's a bit sad that as of today I have to choose between type-safety (Typescript) and great language features (ES6/7, either native or with traceurjs).",
+      "PostedDate": "2014-04-29T09:19:57.307-07:00",
+      "Id": 145098
+    },
+    {
+      "Message": "Guys, look at this: https://github.com/yortus/asyncawait !!! this work",
+      "PostedDate": "2014-07-14T07:13:47.987-07:00",
+      "Id": 152327
+    }
+  ]
+}

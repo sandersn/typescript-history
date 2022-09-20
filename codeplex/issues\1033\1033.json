@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This should be fixed now as of 8808ac8b16236d ",
+    "ClosedDate": "2013-05-23T16:34:22.37-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I'm using overload-on-constants to provide interface descriptions for an object that can be passed through as a parameter to a function. The interface of the object can change depending on what constant is passed through before (i.e. if you pass through \"apple\" as the first parameter, then the second parameter is expected to be an object defining the apple interface).\r\nThis is because one of our methods can have hundreds of different possible values for the second parameter based on what the first parameter is, and it is difficult to remember exactly what is needed.\r\n\r\nI tried to implement something like this, but I ran into an error. After further testing I managed to narrow down the error into three tests:\r\n__Test 1 (works):__\r\n```\r\ninterface A {\r\n\tblah(input: \"something\"): { that: string; };\r\n\tblah(input: string): any;\r\n\ttesttwo(input: { test: string }): bool;\r\n\ttesttwo(input: { test: string; tester: string; }): bool;\r\n\ttesttwo(input: any): bool;\r\n\ttestthree(input: \"something\", second: { test: string; });\r\n\ttestthree(input: \"something\", second: { tester: string; });\r\n\ttestthree(input: string, second: any);\r\n}\r\n```\r\n__Test 2 (works):__\r\n```\r\ninterface A {\r\n\tblah(input: string): any;\r\n\ttesttwo(input: any): bool;\r\n\ttestthree(input: string, second: any);\r\n}\r\n\r\ninterface A {\r\n\tblah(input: \"something\"): { that: string; };\r\n\ttesttwo(input: { test: string }): bool;\r\n\ttesttwo(input: { test: string; tester: string; }): bool;\r\n\ttestthree(input: \"something\", second: { test: string; });\r\n\ttestthree(input: \"something\", second: { tester: string; });\r\n}\r\n```\r\n__Test 3 (doesn't work):__\r\nFile 1:\r\n```\r\ninterface A {\r\n\tblah(input: string): any;\r\n\ttesttwo(input: any): bool;\r\n\ttestthree(input: string, second: any);\r\n}\r\n```\r\nFile 2:\r\n```\r\n/// <reference path=\"File1.ts\" />\r\ninterface A {\r\n\tblah(input: \"something\"): { that: string; };\r\n\ttesttwo(input: { test: string }): bool;\r\n\ttesttwo(input: { test: string; tester: string; }): bool;\r\n\ttestthree(input: \"something\", second: { test: string; }); //Errors here!\r\n\ttestthree(input: \"something\", second: { tester: string; }); //Errors here!\r\n}\r\n```\r\n\r\n__IMPORTANT:__ This error only appears if there is more than one specialized definition in the second file!\r\n\r\nCheers,\r\n\r\nGriffork",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-13T21:13:39.34-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Referenced Interfaces and Overload-On-Constants not working properly.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1033
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  I see the same behavior.  I believe it should work as you expect.  I'll clarify and we'll take a look.",
+      "PostedDate": "2013-05-16T16:49:19.18-07:00",
+      "Id": 100412
+    }
+  ]
+}

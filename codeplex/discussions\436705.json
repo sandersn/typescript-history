@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1015593",
+    "ThreadId": "436705",
+    "Html": "I'm trying to map some existing code to typescript using ambient declarations.  I have an example like this:<br />\n<pre><code>var data = require(&quot;./common.js&quot;);\n\ndeclare class User{\n    constructor(name:String);\n    public name: String;\n    public getName():String;\n}\n\nimport User = data.User;\n\nexport var group = {\n    test: (t) =&gt;{\n        var user:User = new User(&quot;test&quot;);\n        console.log(user.getName());\n        t.done();\n    }\n}\n</code></pre>\n\nWhere <code>common.js</code> is<br />\n<pre><code>var userProxy = function(){\n    return function(name){\n        this.name = name;\n        this.getName = function(){\n            &quot;use strict&quot;;\n            return name;\n        }\n    }\n}\n\nmodule.exports.User = userProxy();\n</code></pre>\n\nThis runs in my unit test (via nodeunit) just fine.<br />\n\r<br />\nHowever, I'm confused as to how to move the ambient class declaration into somewhere else so that it is reusable among classes?  I need an instance of the user, which comes from an instance <code>common.js</code>  via the require.  Ambient declarations, I'm assuming, must map directly to the variable name that they are defining. With CommonJs though all fields are modularized. On top of that, if I try and do something like this<br />\n<pre><code>import data = module(&quot;common&quot;);\n</code></pre>\n\nThen it compiles to <br />\n<pre><code>var data = require(&quot;common&quot;)\n</code></pre>\n\nWhich never finds my local <code>common.js</code>.<br />\n\r<br />\nDoes anyone have any suggestions on how to do properly do this?<br />\n",
+    "PostedDate": "2013-03-14T15:17:25.54-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1017099",
+    "ThreadId": "436705",
+    "Html": "Generally, when working with external modules, there are a few options.\r<br />\n<br />\nIf you're importing another file using the import data = module(&quot;common&quot;) syntax, the name &quot;common&quot; can be as you put it, or it can start with a &quot;.&quot; as in &quot;./common&quot;.  The latter is a way to say &quot;the module file named common in the current directory&quot;.\r<br />\n<br />\nYou're trying to load the .js file directly.  Instead, what you want to do is to load the types and declarations for what will be in that .js file.  If you look at the <a href=\"http://typescript.codeplex.com/SourceControl/BrowseLatest#samples/node/README.txt\" rel=\"nofollow\">Node example in the samples directory</a>, you'll see an example of this.  The HttpServer.ts references the node.d.ts to get the declarations of the modules it can load, and then it proceeds to load the one named &quot;http&quot;.  If you look in node.d.ts in the same directory, you'll see the &quot;http&quot; module being declared (it starts with &quot;declare module &quot;http&quot; &quot;).  The declares are a way to give type information to the compiler about a symbol that will be visible at runtime.\r<br />\n<br />\nThe .js files aren't referenced directly.  Instead, we output code that module loaders like Common.js/Require.js/AMD/etc can use.  They will handle the loading of the module with the name you've declared.<br />\n",
+    "PostedDate": "2013-03-18T08:06:08.2-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

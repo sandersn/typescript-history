@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-08T18:35:59.55-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "Since only one `export =` is allowed it is not possible to use `exports =` with lots of interfaces when defining external only modules. e.g.   \r\n\r\n```typescript\r\ndeclare module 'foo'{\r\n\t\r\n\tinterface Foo{\r\n\t\t():string;\r\n\t}\r\n\t\r\n\tvar foo:Foo;  // Error exported variable foo is using private type Foo\r\n\texport = foo;\r\n}\r\n```\r\n\r\n## Workaround Simple\r\nIf all you need is a single interface you can replace the interface with an inline declaration i.e. for the above example : \r\n\r\n```typescript\r\ndeclare module 'foo'{\r\n\t\r\n\tvar foo: {\r\n\t\t():string;\r\n\t}\r\n\t\r\n\texport = foo:\r\n}\r\n```\r\n\r\n## Workaround Complex\r\nIf you have multiple interfaces you need to export e.g. : \r\n\r\n```typescript\r\ndeclare module 'foo'{\r\n\tinterface Bar{\r\n\t\tbar: string;\r\n\t}\r\n\tinterface Foo{\r\n\t\t():Bar;\r\n\t}\r\n\t\r\n\tvar foo:Foo; // ERROR\r\n\texport = foo;\r\n}\r\n```\r\nputting *everything* inline is not a option (e.g multiple things might return `Bar` for given example). In this case you are forced to claim a name in the global namespace (an internal module name): \r\n\r\n```typescript\r\ndeclare module Foo{  // Claim a name in the global namespace\r\n\texport interface Bar{\r\n\t\tbar: string;\r\n\t}\r\n\texport interface Foo{\r\n\t\t():Bar;\r\n\t}\r\n}\r\n\r\ndeclare module 'foo'{\r\n\tvar foo:Foo.Foo;\r\n\texport = foo;\r\n}\r\n```\r\n\r\n# Solution\r\nI do not have a good solution and am open for suggestions\r\n",
+    "LastUpdatedDate": "2014-04-08T18:35:59.55-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-05T06:22:23.17-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "`export =` not usable without claiming a name in the global namespace",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2387
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "+1\n\nThis is one of a few patterns where the external module system can't quite encapsulate everything and we need to bail into global space. The workaround of adding an internal module works in a single case but it gets problematic as it doesn't scale because it claims random words in the combined application and module-name vocabularies.\n\nEg: a workaround like this breaks one the the main benefits of using external modules. If you look at npm and the crazy names people use for libraries: imagine the fun when you have an existing project and need to add some library that has the name of one of your own types, modules or popular identifiers.",
+      "PostedDate": "2014-04-06T15:25:03.897-07:00",
+      "Id": 140750
+    },
+    {
+      "Message": "A possible solution:\n\n```javascript\ndeclare module 'foo' {\n    import Foo = require('foo/Foo');\n    \n    var foo:Foo; // Works\n    export = foo;\n}\n\ndeclare module 'foo/Bar' {\n    interface Bar {\n        bar: string;\n    }\n    export = Bar;\n}\n\ndeclare module 'foo/Foo' {\n    import Bar = require('foo/Bar');\n    interface Foo{\n        (): Bar;\n    }\n    export = Foo;\n}\n\n```",
+      "PostedDate": "2014-04-06T19:18:14.007-07:00",
+      "Id": 140763
+    },
+    {
+      "Message": "@yortus that pollutes the external module namespace (e.g. `require('foo/Bar')`) so not a solution. ",
+      "PostedDate": "2014-04-06T20:01:55.73-07:00",
+      "Id": 140765
+    },
+    {
+      "Message": "@basarat it's namespaced within the top-level `foo`, not separately. CommonJS and AMD would both look for it within `foo` using their own resolution methods.\n\nIf `foo` is considered 'taken' at the global namespace level, then `foo/X`, `foo/Y/Z` and all other such names should be considered 'taken' as well, so there is no additional pollution in any meaningful sense.",
+      "PostedDate": "2014-04-06T20:15:13.453-07:00",
+      "Id": 140766
+    },
+    {
+      "Message": "@yortus It still creates artefacts to work around a language limitation. Less evil as it is more isolated to jsut external module-name space but is is a bit wonky.\n\nIf the module is a real external `module 'foo'` (from npm or whatever) then ideally we shouldn't have to hack using `module Foo` nor `module 'foo/Foo'` to get it working.",
+      "PostedDate": "2014-04-07T06:32:41.847-07:00",
+      "Id": 140805
+    },
+    {
+      "Message": "Okaaay if you want to be academic. I thought this might be about reducing global namespace pollution, especially going forward on DefinitelyTyped.\n\nHere's a practical example. On DT, node-fibers.d.ts includes the declarations:\n\n```javascript\ninterface Fiber {\n    reset: () => any;\n    run: (param?: any) => any;\n    throwInto: (ex: any) => any;\n}\ndeclare module \"fibers\" {\n    function Fiber(fn: Function): Fiber;\n    module Fiber {\n        export var current: Fiber;\n        export function yield(value?: any): any\n    }\n    export = Fiber;\n}\n```\n\nThis is a real case of what this issue describes. The interface `Fiber` pollutes the global namespace. But if you move it into the `module \"Fibers\"` declaration, you get the `exported ... is using private type` error message. And you can't export the interface because there is already the `export =`.\n\nHere's the same code in an alternative form:\n```javascript\ndeclare module \"fibers/Fiber\" {\n    interface Fiber {\n        reset: () => any;\n        run: (param?: any) => any;\n        throwInto: (ex: any) => any;\n    }\n    export = Fiber;\n}\ndeclare module \"fibers\" {\n    import Fiber = require(\"fibers/Fiber\");\n    function FiberStatic(fn: Function): Fiber;\n    module FiberStatic {\n        export var current: Fiber;\n        export function yield(value?: any): any\n    }\n    export = FiberStatic;\n}\n```\n\nBy claiming the global module name `\"fibers\"`, you are effectively claiming all slash-delimited descendent names (at least in every CommonJS/AMD implementation I can think of, including node.js and requirejs). So the claim to `\"fibers\"` already covers `\"fibers/Fiber\"`. So no pollution beyond `\"fibers\"` which you are claiming anyway. This version is a practical solution to the problem described in this issue.\n\nThis is purely used within the type declaration file at TypeScript compile-time. User code would be no different, using `import Fiber = require(\"fibers\")` as before. Anyone silly enough to do `require('Fibers/anything')` would get the same runtime error message they got before, as for any library.\n\nAnd it's hardly a hack. Look a little further down in node-fibers.d.ts and you'll see:\n```javascript\ndeclare module \"fibers/future\" {\n\n    class Future {\n        constructor();\n        ...\n```\n... as per how the fibers module is actually defined. Using namespaced module identifiers may not be common, but its perfectly valid and used to good effect by some libraries out there.\n",
+      "PostedDate": "2014-04-07T18:07:34.44-07:00",
+      "Id": 140904
+    },
+    {
+      "Message": "@yortus That is still adding things that aren't there. The \"fibers/future\" module actually exists, but this `\"fibers/Fiber\"` is another construct to bypass the language.\n\nAnd this pattern has been seen before (but using external modules that has names with underscore prefix). \n\nI would hope to keep the DT discussion on DT where we had it going? I personally was hoping to get some input on this as abstract general case.",
+      "PostedDate": "2014-04-07T19:51:22.55-07:00",
+      "Id": 140913
+    },
+    {
+      "Message": "@bartvds sorry, was just trying to help since @basarat ended with:\n\n> I do not have a good solution and am open for suggestions\n\nand I know you guys are mostly concerned with DT issues.\n\nWe can keep it there and I'll make no further comments here, beyond the following:\n\n> That is still adding things that aren't there\n\nThat's exactly what TypeScript is for. Adding type information that is there at compile-time and not there at runtime.\n\n> And this pattern has been seen before (but using external modules that has names with underscore prefix)\n\nThis is not the same thing at all. Slashes have special meaning in CommonJS/AMD module identifiers. Underscores create unrelated names and hence additional global pollution.\n\n\n",
+      "PostedDate": "2014-04-07T20:23:30.467-07:00",
+      "Id": 140915
+    },
+    {
+      "Message": "Definitely hear you that this pattern can feel a little awkward at times. That said, it does allow you to model the patterns that are necessary with JavaScript. I'm going to close this issue though since this seems better suited to a forum post for now where more people will see it and we all can discuss the current organization people are using and any other alternatives people feel would be an improvement. You may want to look at the amd-dependency /// method as well.",
+      "PostedDate": "2014-04-08T18:35:54.057-07:00",
+      "Id": 141041
+    }
+  ]
+}

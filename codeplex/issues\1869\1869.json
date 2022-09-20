@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:41.02-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "JavaScript supports factory constructors (constructors that return something other than `this`), and TypeScript does appear to support/accept them too:\r\n\r\n```\r\nclass Foo {\r\n    constructor() {\r\n        return something_else();\r\n    }\r\n}\r\n```\r\n\r\nHowever, the auto-generated default constructor in a subclass does not correctly support factory constructors:\r\n\r\n```\r\nclass Bar extends Foo {}\r\n```\r\n\r\nThe compiled output looks like this:\r\n\r\n```\r\nvar Foo = (function () {\r\n    function Foo() {\r\n        return something_else();\r\n    }\r\n    return Foo;\r\n})();\r\n\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function Bar() {\r\n        _super.apply(this, arguments);\r\n    }\r\n    return Bar;\r\n})(Foo);\r\n```\r\n\r\n`new Bar()` doesn't work as expected - it returns an instance of `Bar`, rather than inheriting the return value from the parent factory-constructor.\r\n\r\nIn order to support factory constructors, the compiled Bar class should look like this:\r\n\r\n```\r\nvar Bar = (function (_super) {\r\n    __extends(Bar, _super);\r\n    function Bar() {\r\n        return _super.apply(this, arguments) || this;\r\n    }\r\n    return Bar;\r\n})(Foo);\r\n```\r\n\r\nOr in other words, if the parent constructor returns something (other than null/undefined) it's a factory constructor, and we should return that instead of `this`.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-06T07:37:43.2-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "default constructor in sub-classes do not support factory constructors",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1869
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "> This doesn't seem universally applicable. something_else() isn't necessarily a factory method that's deferring to some other logic for construction.\n\n`something_else()` isn't the factory constructor - the constructor is... that method is just there to point out the fact that this constructor returns something other than `this`.\n\n> It could simply be an initialization function specifically for Foo that Bar doesn't want anything to do with.\n\nI don't see your point. If the return-value of `something_else()` wasn't what you wanted from this factory constructor, you wouldn't use the `return` statement, and it would work like a regular constructor.\n\n> It feels to me like if you're trying to use a factory pattern like this you'd just want to be explicit about its use in a derived class anyway.\n\nYou would need to be explicit about it, if you actually *implemented* a constructor in the derived class - but since that's optional, *if* the parent class uses a factory constructor, it seems really unnatural not to inherit that behavior in the default constructor.\n\nIf you didn't implement a constructor, you should expect the constructor to behave like the parent constructor - in the same way you expect any other method to behave like the parent method if you don't override it.\n\nI don't see how this is not universally applicable.\n\nThis is a JavaScript feature, plain and simple, and the default constructor breaks this feature.\n\nHaving given this some more thought, I also think the following should be supported:\n\n    class Foo {\n        constructor(...): Bar {\n            return new Bar(...);\n        }\n    }\n\nWhy? Because it models a real JavaScript feature.\n\nYou already have constructor signatures permitted as part of interfaces:\n\n```\nclass Bar {}\n\ninterface BarFactory {\n\tnew(): Bar;\n}\n\nclass Foo /* implements BarFactory */ {\n\tconstructor() /* : Bar */ {\n\t\treturn new Bar();\n\t}\n}\n```\n\nI shouldn't have to comment out these statements, because having multiple constructor signatures with different return types is possible with plain JavaScript.\n\nTo further prove my point: I can already write the above code using plain JavaScript, and write a `.d.ts` file for it, declaring my constructor signatures, and it'll work with TypeScript - you already have this behavior supported by the type-system, it's just not properly supported by the code-generator.\n\nWhat you have currently is not \"universally applicable\", because it breaks inheritance of factory constructors.\n",
+      "PostedDate": "2013-11-07T14:22:42.57-08:00",
+      "Id": 122211
+    },
+    {
+      "Message": "This doesn't seem universally applicable. something_else() isn't necessarily a factory method that's deferring to some other logic for construction. It could simply be an initialization function specifically for Foo that Bar doesn't want anything to do with. It feels to me like if you're trying to use a factory pattern like this you'd just want to be explicit about its use in a derived class anyway.\n\r\n\r** Closed by danquirk 11/07/2013 12:03PM",
+      "PostedDate": "2013-11-07T12:03:33.847-08:00",
+      "Id": 123595
+    }
+  ]
+}

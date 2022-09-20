@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-04-30T14:49:11.967-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I have the following code in a TypeScript file:\r\n\r\n```\r\ndefine('myModule', [], function () {\r\n\r\n    var self = {\r\n        init: function () {\r\n            doSomething();\r\n        }\r\n    };\r\n\r\n    var dayNames:string[] = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\r\n\r\n    function doSomething () {\r\n        var current = new Date();\r\n        var day = dayNames[current.getDay()];\r\n    }\r\n\r\n    return self;\r\n});\r\n```\r\n\r\nHowever it does not compile with Visual Studio 2012/Web Essentials 2012.\r\n\r\n> Compile Error. See error list for details tsc.js(19148, 13) Microsoft JScript runtime error: Unable to get value of the property 'elementType': object is null or undefined\r\n\r\nStrangely the same code seems to compile fine on the TypeScript playground. I have checked the version of _C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\tsc.js_ which is the current latest on CodePlex (0.8.3.0).\r\n\r\nIf I comment out the following line, it compiles fine:\r\n\r\n```\r\nvar day = dayNames[current.getDay()];\r\n```\r\n\r\nAnd the following code block in isolation also compiles fine:\r\n\r\n```\r\nvar dayNames:string[] = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\r\n\r\nfunction doSomething () {\r\n    var current = new Date();\r\n    var day = dayNames[current.getDay()];\r\n}\r\n```\r\n\r\nMoving the declaration of dayNames above the \"self\" declaration also compiles.\r\n\r\nWhy is this?",
+    "LastUpdatedDate": "2013-08-13T09:57:46.63-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-04-30T05:21:25.4-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Need More Info"
+    },
+    "Summary": "Unable to get value of the property 'elementType': object is null or undefined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 981
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I tried the above code in both the latest 0.9 bits under development, and in the playground (which is running the same bits as 0.8.3).  I do not get any errors in either (after I add \"declare var define: any;\" to the top).\r\n\r\nDo you have any other TypeScript files open or part of the project that could be interfering?  Are you able to reproduce without WebEssentials?\r\n\r\nPlease reopen if you are able to provide more data that could help us isolate the behavior you are seeing.  Thanks!",
+      "PostedDate": "2013-04-30T14:49:06.507-07:00",
+      "Id": 98977
+    },
+    {
+      "Message": "Just a note... I do see we had a bug with a similar error message on 0.8.2, so you might want to ensure your bits are up to date (if you want to be super-sure, uninstall, then delete any typescript*, tsc* files if left behind under Program Files, then reinstall).",
+      "PostedDate": "2013-04-30T14:51:22.96-07:00",
+      "Id": 98978
+    },
+    {
+      "Message": "I can confirm the same behaviour with TS 0.8.3.1. The order of declarations makes a difference. As long as you declare (from top to bottom) self > dayNames > doSomething you get the error described, but only in VS (not the Playground). If you change the order to dayNames > self > doSomething, then the error goes away.\n\nMy setup is VS2012/Update 2 with all the latest web bits and Web Essentials 2.6. The project is a single file set up to test this issue, so no interference from anything else.\n\nI have also noticed a similar error regarding inheritance, and again related to apparent top-down parsing of items. If you have Class A and Class B in the same file, and if Class B extends Class A, then Class A needs to come above Class B in the physical file, otherwise the compiler complains that it cannot be found.",
+      "PostedDate": "2013-05-01T00:40:52.46-07:00",
+      "Id": 99015
+    },
+    {
+      "Message": "This seems to be resolved after updating to 0.9.\n\nMany thanks.",
+      "PostedDate": "2013-05-01T02:06:54.02-07:00",
+      "Id": 99021
+    }
+  ]
+}

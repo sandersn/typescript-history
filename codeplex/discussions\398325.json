@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "922887",
+    "ThreadId": "398325",
+    "Html": "\r\n<p>I've seen a couple of posts talking about&nbsp;the lack of 'protected' access in TypeScript and I totally agree, it's useful and I'd love to see it added to the language. I just thought I'd throw out a quick technique for how you can use modules and interfaces\r\n to simulate protected visibility:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>module Foo {\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Foo\r\n\t{\r\n\t\t<span style=\"color:blue\">private</span> bar = <span style=\"color:blue\">new</span> Bar();\r\n\r\n\t\t<span style=\"color:blue\">public</span> getBar(): IBar {\r\n\t\t\t<span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>.bar;\r\n\t\t}\t\t\r\n\t}\r\n\t\r\n\t<span style=\"color:blue\">export</span> <span style=\"color:blue\">interface</span> IBar {\r\n\t\tdoSomething();\r\n\t}\r\n\t\r\n\t<span style=\"color:blue\">class</span> Bar <span style=\"color:blue\">implements</span> IBar {\r\n\t\tdoSomething() { }\r\n\t\tdoSomethingProtected() { }\r\n\t}\r\n}\r\n\r\n<span style=\"color:blue\">var</span> foo = <span style=\"color:blue\">new</span> Foo.Foo();\r\n<span style=\"color:blue\">var</span> bar = foo.getBar();\r\n\r\n</pre>\r\n</div>\r\n<p>In the example code I have a Foo module that exposes a Foo class that anyone can create.&nbsp; It also contains a Bar class but since it's not exported it's only visible to other classes within the Foo module.&nbsp; What is exported is an IBar view of the\r\n Bar class. Since you have to go through Foo.getBar() to get an instance of IBar, code outside of the Foo module is only allowed to call the public non-protected members of Bar.&nbsp;The Foo class itself is free to call any method on Bar so you can consider\r\n any public members&nbsp;not exposed via IBar as protected.</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-06T11:19:12.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934991",
+    "ThreadId": "398325",
+    "Html": "<p>This is a nice idea. But the point about base and derived classes is there are likely to be many derived classes for any given base type.</p>\r\n<p>According to this pattern all derived types will need to be declared in the same module.</p>\r\n<p>So it doesn't scale very well.</p>",
+    "PostedDate": "2012-10-31T13:56:14.4-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935395",
+    "ThreadId": "398325",
+    "Html": "<p>Yes... This is limited to classes within the same module.</p>",
+    "PostedDate": "2012-11-01T11:43:14.637-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Every JavaScript program is a TypeScript program from a syntax perspective, not a typing perspective. Disallowing arbitrary property access in cases like this is by design.",
+    "ClosedDate": "2013-01-11T12:05:56.673-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "The following is valid JavaScript:\r\n```\r\nvar obj = new Object(); // or {}\r\nobj.prop = \"Hello, World!\";\r\n```\r\nHowever, when attempting to compile it in TypeScript the following compilation error occurs: \"The property 'prop' does not exist on value of type 'Object'\"\r\n\r\nA workaround is to give 'obj' a type of of 'any':\r\n```\r\nvar obj:any = new Object(); // or {}\r\nobj.prop = \"Hello, World!\";\r\n```\r\nThat compiles and behaves as expected. However, if TypeScript is a superset of JavaScript (\"Every JavaScript program is also a TypeScript program.\"), it should not be necessary to workaround it.\r\n\r\nThe issue matters because this is a common pattern in JavaScript.",
+    "LastUpdatedDate": "2013-08-13T12:12:00.917-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-10T13:11:38.667-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Cannot extend object without giving it a type",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 606
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I understand where you're coming from, but that is correct behavior. The return from `new Object()` is the Object interface, which is declared in the lib.d.ts as having a specific set of functions. That is its type. `prop` is not defined on the Object interface, therefore you can't call it without using a cast to any, or defining your own object. \n\nCalling without the new keyword, however, returns an instance of type any:\n\n```\nvar obj = Object();\nobj.prop = 'works';\n```\n\n> \"Every JavaScript program is also a TypeScript program\"\n\nI know that line is in the specs, but I think it's a confusing statement since POJS cannot be ran through the compiler if it has TS-enforced issues, like undeclared variable usage or missing properties.\n\nTypeScript is a step towards strongly-typed JavaScript, making these compiler errors the meat and potatoes of its appeal. The Object interface is subject to the same static checking as any other declaration in TypeScript. \n\nYou also have the following options to solve your problem:\n\n* Object literal type, instantiated with () => any\n```\nvar x: { props: string; } = Object();\nx.props= 'hello';\n```\n\n* Object literal type, instantiated with compatible object literal\n```\nvar x: { props: string} = {props: 'hello'};\n```\n* Interface, casting a new object\n```\ninterface MyObj { props:string; }\nvar x: MyObj = <MyObj>{};\nx.props = 'hello';\n```\n\n\n\n",
+      "PostedDate": "2013-01-10T18:50:36.647-08:00",
+      "Id": 85748
+    },
+    {
+      "Message": "@RyanCavanaugh:\n>Every JavaScript program is a TypeScript program from a syntax perspective, not a typing perspective. Disallowing arbitrary property access in cases like this is by design.\n\nI think this design is flawed. JS distinguishes between frozen and extensible objects, TS default-coerces all objects to frozen. It is a good thing to raise compiletime errors for things that are likely to fail at runtime (update to frozen object), but it doesn't seem to be a good idea to raise compiletime errors for things that can be checked at compiletime not to raise a runtime error (update to extensible object).\n\nYou are mixing prefered-style-checking/linting with type-safety-checking. A linter with access to static type info would be a great separate project.\n\nOnce TS can do control-flow-dependent typing, it can infer object structure from assignments (likely inferring optional properties only for lack of precision) and raise errors for read-before-write or warnings for read-of-optional-property.",
+      "PostedDate": "2013-01-12T01:49:16.017-08:00",
+      "Id": 85822
+    }
+  ]
+}

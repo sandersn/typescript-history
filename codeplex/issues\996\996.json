@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in latest",
+    "ClosedDate": "2013-05-06T12:45:28.017-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "```JS\r\n// File: IStuff.ts\r\nexport interface IStuff{\r\n  a();\r\n}\r\n \r\n// File: stuff.ts\r\nimport IStuff = module('IStuff');\r\nexport class implements IStuff.IStuff{\r\n  a(){\r\n    // do stuff\r\n  }\r\n}\r\n```\r\nInterfaces have no meaning in JS, that's ok. The problem arises when interface is the only thing in the file and there is no resulting JS file generated. 'import' statement is still converted to JS and this results in require() of a missing file.\r\n\r\nCurrently, we can not write something like this in TS:\r\n```JS\r\nimport IStuff = module('IStuff').IStuff;\r\n```\r\nSo, I guess you can't decide if import is pointless in JS. Interface files should remain in output until you fix imports.",
+    "LastUpdatedDate": "2013-05-06T12:45:28.017-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-04T11:15:16.143-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Interface import remains in output JS",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 996
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@v3nom - Looks like there were two issues there.  First, IStuff.js should have been generating an empty file, and second, the runtime dependency on 'IStuff' should have been skipped in the generated code for 'stuff.js', since it is only referenced in type positions.\n\nIn the 0.9 develop branch, these appear fixed.",
+      "PostedDate": "2013-05-06T09:17:39.047-07:00",
+      "Id": 99483
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for the proposed fixes. This was fixed in the 0.8.3 branch when we were making other sourcemap fixes.",
+    "ClosedDate": "2013-02-15T13:30:25.737-08:00",
+    "CommentCount": 10,
+    "Custom": null,
+    "Description": "Repro steps:\r\n\r\n1) Create a file called bug.ts:\r\n    class Foo {}\r\n    class Bar extends Foo { bar() {} }\r\n2) Compile the file:\r\n    tsc -sourcemap bug.ts\r\n3) Install the source map parser:\r\n    npm install source-map\r\n4) Run this in node:\r\n    var SourceMapConsumer = require('source-map').SourceMapConsumer;\r\n    new SourceMapConsumer(require('fs').readFileSync('bug.js.map', 'utf8'));\r\n\r\nError: No element indexed by 4\r\n    at ArraySet_at [as at] (array-set.js:93:11)\r\n    at SourceMapConsumer_parseMappings [as _parseMappings] (source-map-consumer.js:183:42)\r\n    at new SourceMapConsumer (source-map-consumer.js:93:10)\r\n",
+    "LastUpdatedDate": "2013-08-13T09:48:30.74-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-18T02:02:14.223-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Compiler generates invalid source map",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 618
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thank you for reporting this issue. Marking it as active. We'll be looking into fixing this issue.",
+      "PostedDate": "2013-01-18T10:56:11.123-08:00",
+      "Id": 86509
+    },
+    {
+      "Message": "Any idea when this will be fixed? It seems to happen any time there are two classes in a single file (whether in a module or not) and the second one has at least one member. Here's a simple example:\n\n```\nmodule example {\n\texport class Test {\n\n\t}\n\n\texport class Test2 {\n\t\tfn() { }\n\t}\n}\n```",
+      "PostedDate": "2013-02-01T23:17:34.803-08:00",
+      "Id": 88087
+    },
+    {
+      "Message": "Here's a fix for the issue!\n\nIn the recordSourceMappingNameStart function in emitter.ts:1209, change:\n\n```\nfinalName = this.sourceMapper.names[this.sourceMapper.currentNameIndex.length - 1] + \".\" + name;\n```\nto...\n```\nvar prefixNameIdx = this.sourceMapper.currentNameIndex[this.sourceMapper.currentNameIndex.length - 1];\nfinalName = this.sourceMapper.names[prefixNameIdx] + \".\" + name;\n```",
+      "PostedDate": "2013-02-02T00:52:38.623-08:00",
+      "Id": 88089
+    },
+    {
+      "Message": "I made an additional change to handle duplicate declarations within a single file when generating a source map - for example, this previously would cause an invalid source map but now works correctly:\n```\nmodule example {\n   //...\n}\n\nmodule example.foo {\n   //...\n}\n```\n\nBoth changes can be found here: http://typescript.codeplex.com/SourceControl/network/forks/jddunlap/sourcemapfix/changeset/26240961a5ad",
+      "PostedDate": "2013-02-04T11:35:45.883-08:00",
+      "Id": 88215
+    },
+    {
+      "Message": "Note - This was fixed with f1fe43897bba4d6385b7df7b3308936421a5124d.",
+      "PostedDate": "2013-02-26T11:39:52.94-08:00",
+      "Id": 91586
+    },
+    {
+      "Message": "I'm not sure, but it looks like this is still happening in 0.8.3. (maybe it's just me though)",
+      "PostedDate": "2013-02-28T11:00:30.31-08:00",
+      "Id": 91831
+    },
+    {
+      "Message": "BTW, applying jddunlap's fix below to 0.8.2 fixed the problem for me.\n0.8.3 still has the problem though.",
+      "PostedDate": "2013-02-28T11:09:13.637-08:00",
+      "Id": 91833
+    },
+    {
+      "Message": "Update: Using the actual test above doesn't cause the error, but it looks like there is something else in my typescript code base that is causing it which jddunlap's fix fixed.\n\nI'll open a new issue if I can find the cause / exact reproducible code.",
+      "PostedDate": "2013-02-28T11:19:45.537-08:00",
+      "Id": 91835
+    },
+    {
+      "Message": "Update: \nActually the test case in jddunlap's post below (jddunlap wrote Feb 2 at 2:17 PM) can trigger the same error.",
+      "PostedDate": "2013-02-28T11:23:03.657-08:00",
+      "Id": 91837
+    },
+    {
+      "Message": "I will open a new issue with the reproducible code.",
+      "PostedDate": "2013-02-28T19:13:14.787-08:00",
+      "Id": 91904
+    }
+  ]
+}

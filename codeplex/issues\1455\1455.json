@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The second bug has been fixed in the release 0.9.1.1 branch",
+    "ClosedDate": "2013-08-14T14:53:35.183-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "__0.9.1.1 REOPEN UPDATE:__\r\n\r\nI just got the develop branch from an hour ago, and while the most obvious occurance of this bug have been fixed, I am still getting the error under my usage scenarios.      here is a repro:\r\n\r\n```\r\nexport class A<T1>{\r\n\tconstructor(\r\n\t\tpublic callback: (self: A<T1>) => void) {\r\n\t\tvar child = new B(this);\r\n\t}\r\n}\r\n\r\nexport class B<T2> {\r\n\tconstructor(public parent: T2) { }\r\n}\r\n\r\n```\r\nthe error i am getting for this update (develop branch as of 2013-08-09) is:\r\n```\r\n>tsc --module amd test.ts\r\n/test.ts(5,21): error TS2049: Parameter 'self' of exported function is using inaccessible module 'D:/repos/typescript-production/novaleaf/test.ts'.\r\n```\r\n\r\n__ORIGINAL 0.9.1 BUG (mostly fixed)__\r\nrepro step:  build a file with the following:\r\n\r\n```\r\nexport class A<T1> {\r\n\tconstructor(fcn: (arg: T1)=>void) {\r\n\t}\r\n}\r\nexport class B<T2>{\r\n\tpublic meth(arg: A<T2>);\r\n\tpublic meth(arg: any) {\r\n\t}\r\n}\r\n```\r\n\r\nyou will get the following error:\r\n```\r\ntsc --module amd --sourcemap test.ts\r\ntest.ts(3,20): error TS2049: Parameter 'arg' of exported function is using inaccessible module 'D:/repos/typescript-production/novaleaf/test.ts'.\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-07T20:59:51.053-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "0.9.1.1 regression bug: method overload with generic type arg doesn't compile",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 1455
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "this code also causes the problem.   basically using a generic type in the same file seems to be a fail\n\n\n```\n\nexport class A<T1> {\n\tconstructor(fcn: (arg: T1)=>void) {\n\t}\n}\n//export class B<T2>{\n//\tpublic meth(arg: A<T2>);\n//\tpublic meth(arg: any) {\n//\t}\n//}\n\nclass C {\n\tpublic meth() {\n\t\tvar a = new A<string>(() => { });\n\t}\n}\n```",
+      "PostedDate": "2013-08-07T21:08:29.207-07:00",
+      "Id": 108960
+    },
+    {
+      "Message": "fyi, this is a very serious issue as it means i can not use exported generic types from within the same file they are defined.\n\nseems strange that this was not caught by your unit tests, so if there is some \"best practice\" on splitting one-class-per-file or something of the sort, please provide guidance.",
+      "PostedDate": "2013-08-07T21:34:38.507-07:00",
+      "Id": 108961
+    },
+    {
+      "Message": "Thanks for the report. This has already been fixed in the develop branch.\n\r\n\r** Closed by danquirk 08/08/2013 11:45AM",
+      "PostedDate": "2013-08-08T11:45:18.363-07:00",
+      "Id": 109138
+    },
+    {
+      "Message": "Thanks for re-opening and updating the bug. We're taking a look at the updated repro!",
+      "PostedDate": "2013-08-09T10:16:05.46-07:00",
+      "Id": 109220
+    }
+  ]
+}

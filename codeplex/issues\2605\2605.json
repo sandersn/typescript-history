@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.923-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Hi there,\r\n\r\nWe are using angular and grunt in our TypeScript project and would like to include the grunt.d.ts file. Unfortunately, when we add grunt.d.ts, we also must add node.d.ts since this is a grunt dependency. Node.d.ts defines a duplicate ```module``` declaration (it's also defined in angular-mocks.d.ts). This causes the TypeScript compiler in the VS IDE to display the following error:\r\n\r\n_error TS2134: Build: Subsequent variable declarations must have the same type.  Variable 'module' must be of type '{ exports: any; require(id: string): any; id: string; filename: string; loaded: boolean; parent: any; children: any[]; }', but here has type '(...modules: any[]) => any'_\r\n\r\nIn node.d.ts\r\n```\r\ndeclare var module: {\r\n    exports: any;\r\n    require(id: string): any;\r\n    id: string;\r\n    filename: string;\r\n    loaded: boolean;\r\n    parent: any;\r\n    children: any[];\r\n};\r\n```\r\n\r\nIn angular-mocks.d.ts\r\n```\r\ndeclare var module: (...modules: any[]) => any;\r\n```\r\nWe are not explicitly adding Reference Tags in our .ts files. VS seems to be trying to compile all of the .d.ts files in our project at once. Is there a way to tell VS to exclude node.d.ts and grunt.d.ts and only compile them when building our gruntfile.ts file? \r\n\r\nI tried to set the __BuildAction__ for node.d.ts and grunt.d.ts to __\"None\"__, then explicitly add reference tags to gruntfile.ts like so:\r\n```\r\n/// <reference path=\"typings/node/node.d.ts\" />\r\n/// <reference path=\"typings/gruntjs/gruntjs.d.ts\" />\r\n```\r\nUnfortunately, I get the same compiler error above that indicates a conflict between node.d.ts and angular-mocks.d.ts when I build in the VS IDE.\r\n\r\nI'm at a loss as to how to handle this case?\r\n\r\nAny help would be greatly appreciated!\r\n\r\n_Environment: VS 2013 Update 2, TypeScript 0.9.7.0_\r\n\r\nCheers,\r\nRichard\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-07-28T15:17:23.923-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-04T09:08:22.337-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Can't integrate grunt, node and angular in a single TypeScript project",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2605
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "If grunt/angular is dependent on node then shouldn't grunt.d.ts and angular.d.ts simply not define a second variable called modules?",
+      "PostedDate": "2014-07-07T13:04:47.51-07:00",
+      "Id": 151778
+    },
+    {
+      "Message": "Actually, angular is not dependant on node. The __node.d.ts__ file is only required if we pull in the __grunt.d.ts__ file (we're also trying to go 100% typescript by converting our __gruntfile.js__ to __gruntfile.ts__) . \n\nRegardless of whether or not we use Reference Tags explicitly or leave them out of our .ts files and let VS resolve references, the VS tooling still seems to try and compile at __all__ the .ts and .d.ts files in the Project. When this happens, the declaration conflict is detected.\n\nI would have thought that I could avoid this problem if I explicitly added the appropriate Reference Tags to each .ts file and that I would have some control over how VS compiles .d.ts file dependencies. However, this doesn't appear to be the case.\n\nHere's what I'd like to do:\n\nOur __gruntfile.ts__ would have a Reference Tag that references __grunt.d.ts__ (which indirectly references __node.d.ts__):\n```\n/// <reference path=\"gruntjs/gruntjs.d.ts\" /> \netc...\n```\nIn all our other .ts files we would include __all.d.ts__ which would not reference __gruntjs.d.ts__ or __node.d.ts__ and would look like:\n```\n/// <reference path=\"angularjs/angular.d.ts\" />\n/// <reference path=\"angularjs/angular-mocks.d.ts\" />\n\netc...\n```\n\nHowever, this doesn't work for some reason. We're still getting the duplicate declaration problem. \n\nHow can we prevent VS from trying to compile all .d.ts files it finds together at once?\n\n",
+      "PostedDate": "2014-07-07T14:59:53.19-07:00",
+      "Id": 151793
+    },
+    {
+      "Message": "I've found the only solution for this, within VS itself, is to have a separate project that contains the grunt file, and potentially custom grunt tasks.  I would have it's own .d.ts references and everything.  It doesn't have to be in a different folder necessarily, but just a different project so that VS plays nice.\n\nI've also found this is helpful because when you start really digging into grunt / gulp then you want to customize it by making custom tasks, if you are using AMD for the app, then the tasks are also compiled to AMD.  Having a second project allows he files to be compiled to CommonJS instead.",
+      "PostedDate": "2014-07-07T20:59:24.003-07:00",
+      "Id": 151803
+    },
+    {
+      "Message": "That's an interesting suggestion. I'll have to give that some thought and see what impact that will have on my project structure. \n\nIt would be really nice to be able to scope TypeScript compiler settings to areas within a VS project. This would give much more control over how the code is compiled without having to have separate project files.\n\nIt's certainly feels like the VS TypeScript tooling has a long way to go before it's ready to deal with more complex JavaScript projects that rely on build tools like grunt / gulp or that may mix module formats.",
+      "PostedDate": "2014-07-08T09:41:02.043-07:00",
+      "Id": 151852
+    }
+  ]
+}

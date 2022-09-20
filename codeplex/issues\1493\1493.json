@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:30:24.11-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "I'm getting the following error in a couple of situations when compiling with the -d command line option to generate declarations:\r\n```\r\ntsc.js(30809, 13) Microsoft JScript runtime error : Unable to get value of the property 'getScopedNameEx': object is null or undefined.\r\n```\r\n\r\nThe first situation is that reported in issue 1161, which has been marked as closed:\r\n\r\n```\r\ninterface IFoo<T>{\r\n\r\n    }\r\n\r\n    class Bar<T> implements IFoo<T> { }\r\n\r\n    class Foo<T> extends Bar<T> implements IFoo<T> {\r\n    }\r\n```\r\n\r\n\r\nThe second situation is the following:\r\n\r\n```\r\ninterface IFoo {\r\n    baz: Baz;\r\n}\r\n\r\nclass Base<T> { }\r\n\r\nclass Derived<T> extends Base<T> { }\r\n\r\ninterface IBar<T> {\r\n    derived: Derived<T>;\r\n}\r\n\r\nclass Baz implements IBar<Baz> {\r\n    derived: Derived<Baz>;\r\n}\r\n```\r\n\r\nIn this second case, the ordering of the definitions matters: moving the definition of IFoo to the bottom of the file gets rid of the error.\r\n\r\nIn both cases it is only when compiling with the -d option that the error arises.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-12T09:23:56.627-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "getScopedNameEx error with 0.9.1",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1493
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Also seeing this issue with 0.9.1.1\n\n```\nC:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:29934\n            throw e;\n                  ^\nTypeError: Cannot call method 'getScopedNameEx' of null\n    at DeclarationEmitter.emitTypeSignature (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:30901:40)\n    at DeclarationEmitter.emitBaseExpression (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:31191:18)\n    at DeclarationEmitter.emitBaseList (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:31204:26)\n    at DeclarationEmitter.classDeclarationCallback (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:31288:22)\n    at walk (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:30713:38)\n    at AstWalker.pre (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:30730:45)\n    at AstWalker.walk (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:26947:31)\n    at Array.walkListChildren [as 1] (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:27127:44)\n    at AstWalker.walk (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:26952:53)\n    at Array.walkModuleDeclChildren [as 16] (C:\\Users\\developer\\AppData\\Roaming\\npm\\node_modules\\typescript\\bin\\tsc.js:27447:41)\n```",
+      "PostedDate": "2013-09-02T11:16:58.92-07:00",
+      "Id": 111861
+    },
+    {
+      "Message": "Any solutions? Got this error too with 0.9.1.1.",
+      "PostedDate": "2013-09-27T15:46:01.677-07:00",
+      "Id": 115873
+    }
+  ]
+}

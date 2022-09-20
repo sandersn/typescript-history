@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "923379",
+    "ThreadId": "398460",
+    "Html": "\r\n<p>Over the weekend I hacked together a IDL parser which exports .idl files to .d.ts files.&nbsp;</p>\r\n<p>You can see my efforts here:&nbsp;<a href=\"https://github.com/RicoP/idl2typings\">https://github.com/RicoP/idl2typings</a>&nbsp;</p>\r\n<p>I successfully converted the WebGL IDL file, so WebGL programmers can now be more confident about their code.&nbsp;</p>\r\n<p>Try this example program: <em>(Edit: replaced with a better version)</em></p>\r\n<pre>///&lt;reference path=&quot;webgl.d.ts&quot; /&gt;<br>\nwindow.onload = () =&gt; { \n\tvar canvas = &lt;HTMLCanvasElement&gt; document.createElement(&quot;canvas&quot;); \n\tdocument.body.appendChild(canvas); <br>\n\tvar context : any = canvas.getContext(&quot;experimental-webgl&quot;); \n\tvar gl = &lt;WebGLRenderingContext&gt; context; <br>\n\tgl.clearColor(1,0,0,1);\n\tgl.clear(gl.COLOR_BUFFER_BIT); \n}</pre>\r\n",
+    "PostedDate": "2012-10-08T05:07:23.703-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923392",
+    "ThreadId": "398460",
+    "Html": "<p>Great. just what I've been waiting for! Thank you!</p>\r\n<p>However, the code you've posted throws an error in Visual Studio. I had the error with the WebGL.d.ts file by spongman:</p>\r\n<p><em>Cannot convert 'CanvasRenderingContext2D' to 'WebGLRenderingContext': Type 'WebGLRenderingContext' is missing property 'restore' from type 'CanvasRenderingContext2D': Type 'CanvasRenderingContext2D' is missing property 'getContextAttributes' from type 'WebGLRenderingContext'</em></p>",
+    "PostedDate": "2012-10-08T05:44:02.883-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923400",
+    "ThreadId": "398460",
+    "Html": "<p>Strange... I don't have VS, I use the console command and I don't have issues with the example. Is the webgl.d.ts file in the projectfolder?&nbsp;</p>\r\n<pre>&lt;WebGLRenderingContext&gt; canvas.getContext(\"experimental-webgl\")&nbsp;</pre>\r\n<p>should convert the Context2D object &nbsp;to a WebGL Object. Maybe you can send me the project folder and I can see more...&nbsp;</p>",
+    "PostedDate": "2012-10-08T06:00:19.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923406",
+    "ThreadId": "398460",
+    "Html": "\r\n<p>You can also try this very minimal App &nbsp;and see if that works&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<pre><p>///&lt;reference path=&quot;webgl.d.ts&quot; /&gt;<br>var gl : WebGLRenderingContext;&nbsp;gl.clear(0);&nbsp;</p>\n</pre>\r\n",
+    "PostedDate": "2012-10-08T06:14:23.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923412",
+    "ThreadId": "398460",
+    "Html": "\r\n<p>yeah, that works and all the interfaces and properties are there as well.</p>\r\n<p>It's only the cast from CanvasRenderingContext2D to&nbsp;WebGLRenderingContext that is reported as an error.</p>\r\n",
+    "PostedDate": "2012-10-08T06:21:12.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923425",
+    "ThreadId": "398460",
+    "Html": "<p>does this work?&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<pre>///&lt;reference path=\"webgl.d.ts\" /&gt;<br />\r\nwindow.onload = () =&gt; { \r\n\tvar canvas = &lt;HTMLCanvasElement&gt; document.createElement(\"canvas\"); \r\n\tdocument.body.appendChild(canvas); <br />\r\n\tvar context : any = canvas.getContext(\"experimental-webgl\"); \r\n\tvar gl = &lt;WebGLRenderingContext&gt; context; <br />\r\n\tgl.clearColor(1,0,0,1);\r\n\tgl.clear(gl.COLOR_BUFFER_BIT); \r\n}<br />\r\n</pre>",
+    "PostedDate": "2012-10-08T06:48:42.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923427",
+    "ThreadId": "398460",
+    "Html": "<p>Yes.</p>",
+    "PostedDate": "2012-10-08T06:58:26.5-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923429",
+    "ThreadId": "398460",
+    "Html": "<p>Yay :)&nbsp;</p>",
+    "PostedDate": "2012-10-08T07:01:47.657-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923450",
+    "ThreadId": "398460",
+    "Html": "\r\n<p>It doesn't solve the actual problem though - there seems to be a mismatch between the declaration of the two classes (that's not your fault, of course).</p>\r\n<p>If I understand correctly, I need node.js to run your script?</p>\r\n",
+    "PostedDate": "2012-10-08T08:01:38.613-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923468",
+    "ThreadId": "398460",
+    "Html": "\r\n<p>The problem is that HTMLCanvasElement in the lib.d.ts file is declared as the following:</p>\r\n<p>&nbsp;</p>\r\n<pre>interface HTMLCanvasElement extends HTMLElement {\n    width: number;\n    height: number;\n    toDataURL(): string;\n    toDataURL(type: string, ...args: any[]): string;\n    getContext(contextId: string): CanvasRenderingContext2D;\n}\n</pre>\r\n<p>&nbsp;</p>\r\n<p>You see getContext allways returns a Canvas2D context. The correct return value would be &quot;object&quot; (see\r\n<a href=\"http://www.w3.org/wiki/HTML/Elements/canvas\">http://www.w3.org/wiki/HTML/Elements/canvas</a>).&nbsp;</p>\r\n<p>I assume that is because Internet Explorer does not support WebGL and so it is assumed that getContext will always return a 2D object.&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>You could fix this by editing the lib.d.ts file in the typescript installation folder and change the return value to &quot;any&quot;.</p>\r\n<p>I guess as long Microsoft does not want to support WebGL this bug will stay as it is.&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>To execute my IDL exporter you need node. My build script is optimized for unix, I can add windows support later.&nbsp;</p>\r\n",
+    "PostedDate": "2012-10-08T08:21:50.943-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923531",
+    "ThreadId": "398460",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/179\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-10-08T09:52:58.593-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "923611",
+    "ThreadId": "398460",
+    "Html": "<p>I found a dirty workaround for that problem, so there not a&nbsp;explicit&nbsp;cast necessary. Checkout&nbsp;<a href=\"https://github.com/RicoP/webgl.d.ts\">https://github.com/RicoP/webgl.d.ts</a>&nbsp;for more info.&nbsp;</p>",
+    "PostedDate": "2012-10-08T11:33:53.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

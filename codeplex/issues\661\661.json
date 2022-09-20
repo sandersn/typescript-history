@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As per Ryan's comment.\n\nA simple workaround would be to encapsulate the eventemitter class.",
+    "ClosedDate": "2013-01-30T11:29:47.947-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I am trying to subclass my TS class with EventEmitter from node. Looking into the node.d.ts file I can only see EventEmitter being declared as an interface. How would it be possible then to subclass from EventEmitter, e.g. \"class Foo extends EventEmitter\" would not compile.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-28T03:07:42.343-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "How to subclass from existing node.js types?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 661
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I see, so with this there would be no way to inherit from the super type nor call super on it. Is this the story for existing Java types?",
+      "PostedDate": "2013-01-28T13:26:42.127-08:00",
+      "Id": 87555
+    },
+    {
+      "Message": "With inherit I mean, getting all the members like methods.",
+      "PostedDate": "2013-01-28T13:27:07.517-08:00",
+      "Id": 87556
+    },
+    {
+      "Message": "Use the 'implements' keyword if you want a class to implement the interface; use \"interface X extends Y\" to make a new interface with additional members\n\r\n\r** Closed by RyanCavanaugh 01/28/2013 11:11AM",
+      "PostedDate": "2013-01-28T11:11:48.817-08:00",
+      "Id": 87651
+    },
+    {
+      "Message": "Reopening to get some feedback as I think the solution is not very nice. Can you please verify that in order to subclass an existing JS type in node one has to implement all methods by calling onto the prototype of the super type?\n\nexport class SubclassOfNodeEventEmitter implements events.NodeEventEmitter {\n\t\n\tconstructor() {\n\t\t(<any>events.EventEmitter).call(this);\n\t}\n\t\n\tpublic addListener(event:string, listener:Function) {\n\t\t(<any>events.EventEmitter).prototype.addListener.call(this, event, listener);\n\t}\n\t\n    public on(event:string, listener:Function):any {\n\t\treturn (<any>events.EventEmitter).prototype.on.call(this, event, listener);\n\t}\n\t\n    public once(event:string, listener:Function):void {\n\t\t(<any>events.EventEmitter).prototype.once.call(this, event, listener);\n\t}\n\t\n    public removeListener(event:string, listener:Function):void {\n\t\t(<any>events.EventEmitter).prototype.removeListener.call(this, event, listener);\n\t}\n\t\n    public removeAllListener(event:string):void {\n\t\t(<any>events.EventEmitter).prototype.removeAllListener.call(this, event);\n\t}\n\t\n    public setMaxListeners(n:number):void {\n\t\t(<any>events.EventEmitter).prototype.setMaxListeners.call(this, n);\n\t}\n\t\n    public listeners(event:string):{ Function; }[] {\n\t\treturn (<any>events.EventEmitter).prototype.listeners.call(this, event);\n\t}\n\t\n    public emit(event:string, arg1?:any, arg2?:any):void {\n\t\t(<any>events.EventEmitter).prototype.emit.call(this, event, arg1, arg2);\n\t}\n}",
+      "PostedDate": "2013-01-29T03:30:03.467-08:00",
+      "Id": 87652
+    },
+    {
+      "Message": "I fully agree with Ben. Forcing someone who wants to subclass EventEmitter (which in Node behaves like a class) to implement all properties of EventEmitter is not a good idea. Especially if EventEmitter changes in the future. Consider the case were Node adds additional methods to EventEmitter. Than every 'subclass' has to add the method as well.",
+      "PostedDate": "2013-01-29T03:38:41.86-08:00",
+      "Id": 87653
+    },
+    {
+      "Message": "In addition EventEmitter is newable in node. So one can write \n\nvar myEmitter = new EventEmitter();\n\nSo as a user of TS and node I would like to:\n\n- being able to create an instance of EventEmitter\n- being able to subclass EventEmitter as supported by node",
+      "PostedDate": "2013-01-29T03:53:22.5-08:00",
+      "Id": 87654
+    }
+  ]
+}

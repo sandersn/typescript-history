@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1111504",
+    "ThreadId": "463383",
+    "Html": "how can i create ActiveX object using TypeScript, as there is no support for CreateObject<br />\n",
+    "PostedDate": "2013-10-24T03:17:01.137-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1111711",
+    "ThreadId": "463383",
+    "Html": "Use 'new ActiveXObject(...)'. Documented here: <a href=\"http://msdn.microsoft.com/en-us/library/ie/7sw4ddf8(v=vs.94).aspx\" rel=\"nofollow\">http://msdn.microsoft.com/en-us/library/ie/7sw4ddf8(v=vs.94).aspx</a><br />\n",
+    "PostedDate": "2013-10-24T09:22:04.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1111714",
+    "ThreadId": "463383",
+    "Html": "To call use any symbol, or call any function, that TypeScript doesn't have type information for out of the box, you need to 'declare' this symbol as being available to script.  You might have seen the .d.ts files like jquery.d.ts, which do this for the jQuery library.\r<br />\n<br />\nFor CreateObject, you can do a simple trick to be able to call it:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">var</span> CreateObject;\n<span style=\"color:Blue;\">var</span> myObj = CreateObject(<span style=\"color:#A31515;\">&quot;Excel.Application&quot;</span>, <span style=\"color:#A31515;\">&quot;MyServer&quot;</span>);\r\n</pre></div>This lets you call CreateObject however you like.  \r<br />\n",
+    "PostedDate": "2013-10-24T09:23:12.927-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1111794",
+    "ThreadId": "463383",
+    "Html": "i have used \r<br />\n<br />\nvar helper1 = new ActiveXObject(&quot;Helper.WebHelper&quot;); which is working but when i tried \r<br />\nhelper1.InitManager(&quot;172.18.96.101&quot;);\r<br />\n<br />\nvar objElement = document.createElement('object');<br />\n<pre><code>        objElement.classid = 'clsid:2F3BC10B-45B6-472D-859C-200197E7D9C7';\n        objElement.id = 'PlayerComponentX1';\n        objElement.name = objectId;\n        objElement.data = 'data:application / x - oleobject; base64, C8E7L7ZFLUeFnCABl + fZxwAIAABqJQAAxRoAAA =='; \n        this.config.element.appendChild(objElement);\n</code></pre>\n\nvar helper = document.getElementById('PlayerComponentX1');\r<br />\nhelper.InitManager(&quot;172.18.96.101&quot;);\r<br />\n<br />\ntypescript dont compile and i get exception in the web page<br />\n",
+    "PostedDate": "2013-10-24T11:42:28.997-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1112207",
+    "ThreadId": "463383",
+    "Html": "For the TypeScript errors, I see two:<br />\n<ul>\n<li>Could not find symbol 'objectId'</li>\n<li>\nThe property 'InitManager' does not exist on value of type 'HTMLElement'<br />\n</li>\n</ul>\nFor the first error, I assume you have objectId getted set somewhere outside of your example.\r<br />\n<br />\nFor the second error, you're dynamically getting an object from the web page called &quot;PlayerComponentX1&quot;.  You need to tell TypeScript what the type of this element is, or it will default to the simplest one called 'HTMLElement', which won't have the special methods you're invoking.\r<br />\n<br />\nYou do this by creating an interface for the type, like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> PlayerComponentElement <span style=\"color:Blue;\">extends</span> HTMLElement {\n    InitManager(<span style=\"color:Blue;\">string</span>): <span style=\"color:Blue;\">any</span>;\n}\n\n<span style=\"color:Blue;\">var</span> helper = &lt;PlayerComponentElement&gt;document.getElementById(<span style=\"color:#A31515;\">&#39;PlayerComponentX1&#39;</span>); \nhelper.InitManager(<span style=\"color:#A31515;\">&quot;172.18.96.101&quot;</span>); \r\n</pre></div>If you're having exceptions on the web page, I would simplify and write this piece in JavaScript and try to get that to work.  Once the code runs without exception, you should be able to port it to TypeScript using the steps mentioned above.<br />\n",
+    "PostedDate": "2013-10-25T11:25:48.17-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

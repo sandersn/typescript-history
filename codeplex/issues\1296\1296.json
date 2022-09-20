@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:38:07.753-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "This code does not produce any error:\r\n\r\n```\r\nclass AA<T> {\r\n    static aa<T>(func: () => T, context?: any) {\r\n        return new AA<T>();\r\n    }\r\n}\r\n\r\nclass BB {\r\n    b: number;\r\n    aa: AA<boolean>;\r\n\r\n    constructor() {\r\n        this.b = \"10\"; // Compiles and presents no error\r\n\r\n        this.aa = AA.aa(() => true, this);\r\n    }\r\n}\r\n```\r\n\r\nI noticed that if 'AA.aa' does not have the 'context' parameter, the error is displayed as expected.\r\nTo keep the 'context' parameter and get the expected error, I would have to identify the generic parameter when assigning like:\r\n\r\n```\r\nthis.aa = AA.aa<boolean>(() => true, this);\r\n```\r\n\r\nIs this a property of the generic inference? If so, I don't think it should be related since the 'context' parameter doesn't use the generic T",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-02T10:05:29.973-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Validations fail when generics are used in functions with extra parameters",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 1296
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Bizarre.  Not sure how that is related at all, and it's definitely a bug.  Thanks for reporting.  We'll take a look.",
+      "PostedDate": "2013-07-02T12:11:32.32-07:00",
+      "Id": 104901
+    },
+    {
+      "Message": "Below code also appears to suffer the same issue (was reported in issue 1295, which I'm duplicating to this issue)\n\n```typescript\ndeclare var something: {\n    <T>(func: () => T, context: any): any;\n}\n\nclass Ha {\n\n    public thing: Nonexistent.Modules.And.Stuff; // Should get error here\n\n    public isAnyThreadSelected: any;\n\n    public bla() {\n        this.isAnyThreadSelected = something(() => true, /* change to any other value to show error */ this);\n    }\n}\n```",
+      "PostedDate": "2013-07-02T12:24:51.597-07:00",
+      "Id": 104904
+    }
+  ]
+}

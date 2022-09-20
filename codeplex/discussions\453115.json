@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "1079377",
+    "ThreadId": "453115",
+    "Html": "First of all I'd just like to thank everyone who is working on TypeScript, because it really has made my life so much easier and it's a great thing we have.<br />\n<br />\nSo I'm sorry to have to say that the new compiler is really seriously broken, to the point of being unworkable. I have Visual Studio Pro 2012 on Windows 8 (with 32GB RAM), but the issue I have is that the compiler freaks out whenever it encounters an error in my code. For example if I had a simple typo in a class, when I try to compile (shift + f6) instead of getting an error about the typo, I will get literally hundreds of duplicate error messages which are absolutely nothing to do with the typo. For example here is what I have to put up with:<br />\n<br />\n<a href=\"https://www.dropbox.com/s/44ib5212qhyl612/vsbugout.png\" rel=\"nofollow\">https://www.dropbox.com/s/44ib5212qhyl612/vsbugout.png</a><br />\n<br />\n647 errors! And the &quot;Project&quot; is listing one of my FILES, not the project name at all, and even more the line numbers might as well have been generated at random for all the good they do.<br />\n<br />\nNow if I scroll down far enough I may find the actual error buried away in that list. But it gets REALLY confused and starts erroring all over my codebase in utterly random places. Things like claiming that comparing a number with the length of an array is an invalid comparison. The error is &quot;Cannot compare type number with type number&quot;. That's really handy guys.<br />\n<br />\nDebugging for me has gone from a breeze with 0.8.4 to something of a nightmare, that is taking forever to scroll through a huge stack of meaningless rubbish just to find the actual error. What's more the 'red squiggly underline' that is supposed to just underline errors will now underline all kinds of random stuff. I've seen it underline a period character before an object property, I've even seen it underline blank space and new-lines - heck 10mins ago it underlined an ENTIRE class. Hovering over the class just said &quot;duplicate identifier&quot;, which was utter tosh - it was perfectly fine.<br />\n<br />\nSo right now I'm stuck. I can't roll back to 0.8 because you guys have made 0.9.1 the default download on the web site which is why I had to upgrade - I was getting too many emails from people saying they had downloaded 0.9.1 but couldn't compile my framework. So I upgraded to support it, but it's been nothing but pain. Surely I can't be alone here?<br />\n",
+    "PostedDate": "2013-08-11T19:17:46.62-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079383",
+    "ThreadId": "453115",
+    "Html": "I've come to the conclusion that the errors are utterly bogus, and that the actual real error is simply this:\r<br />\n<br />\n1&gt;VSTSC : tsc.js(40622, 13) JavaScript runtime error : Unable to get property 'type' of undefined or null reference\r<br />\n<br />\nAm I right in thinking this is the new IE JS VM doing it's thing? It appears that I can hit compile over and over, and sometimes (if the luck of the Gods are on my side) it will compile successfully, but most of the time it errors with the above. It's as if my project is too large for the compiler to cope with and by some fluke it will occasionally make it through. But most the time the JS parser is erroring before maybe the compiler has finished building the output file?  Not sure if that's even how it works, but it would make sense given the inconsistent results I'm getting. There is no way on earth that a compiler should work sometimes and not others without changing code in between.\r<br />\n<br />\nRight now I can't in all seriousness recommend anyone use TypeScript for any real project. I think it's time to re-evaluate dropping it entirely and returning my framework back to native JavaScript. I'd rather not do this, but this is beyond a joke really.<br />\n",
+    "PostedDate": "2013-08-11T20:00:54.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079451",
+    "ThreadId": "453115",
+    "Html": "\r\n<div dir=\"ltr\">I've seen this weird behavior also. I had upgraded fresh to 0.9.1.1 for evaluation.\r\n<div>It seems that an error in a module is bubbled in all modules that import it!</div>\r\n<div>I use AMD.</div>\r\n</div>\r\n<div><br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-08-12T01:27:06.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079503",
+    "ThreadId": "453115",
+    "Html": "I've found a &quot;solution&quot; to my current troubles. I've got another PC, installed TypeScript 0.8.3 on it, pull from my repo, do a 'search and replace' on &quot;boolean&quot; back to &quot;bool&quot; and then compile it. From 0.8.3 I get meaningful errors that actually make sense. I can then fix them on my main PC.\r<br />\n<br />\nIt is batshit crazy that I should have to be doing this, but it solves my troubles for now.<br />\n",
+    "PostedDate": "2013-08-12T04:18:20.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079603",
+    "ThreadId": "453115",
+    "Html": "If you're seeing this:\r<br />\n<br />\n1&gt;VSTSC : tsc.js(40622, 13) JavaScript runtime error : Unable to get property 'type' of undefined or null reference \r<br />\n<br />\nIt sounds like the compiler is crashing on something in the code.  I'm going to copy this over to a work item.  If you have a file we can investigate, we could look into what's throwing the compiler off.<br />\n",
+    "PostedDate": "2013-08-12T07:42:23.79-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079604",
+    "ThreadId": "453115",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/1491\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n",
+    "PostedDate": "2013-08-12T07:42:53.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1079612",
+    "ThreadId": "453115",
+    "Html": "Is there any way you could create a compiler that dumps out something when it crashes? Like a log of where it currently got to, a dumpfile, anything similar? Then I could send you that rather than my current solution (which is several hundred TS files).<br />\n",
+    "PostedDate": "2013-08-12T07:59:34.573-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082370",
+    "ThreadId": "453115",
+    "Html": "We might be able to add that functionality in the long term.  In the short term, if you can, it might make sense to run the compiler via the debug of node or a browser and catch the issue that way.  The repro is the key for us to investigate fixing, and you might also be able to get a stack trace, too.<br />\n",
+    "PostedDate": "2013-08-19T14:42:01.53-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082588",
+    "ThreadId": "453115",
+    "Html": "Note (probably obvious, but just in case;-): the 40622 in that message is a line number, so you can already see where the code breaks. You could try wrapping the last line (which starts the compiler) in <code>tsc.js</code> in a <code>try {...} catch(e) {console.log(e.stack)}</code>, if your JS engine supports <code>e.stack</code> (node does).\r<br />\n<br />\n<code>node-inspector</code> is a great help, if you run <code>tsc.js</code> via node, as is instrumenting the <code>tsc.js</code> source (in a throw-away copy) to get more details on which compiled sources are involved.\r<br />\n<br />\nYou still need a test case to reproduce (and to know when the bug is fixed), but it will be easier to shrink the example when you've got an idea of what goes wrong.<br />\n",
+    "PostedDate": "2013-08-20T02:48:21.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1082595",
+    "ThreadId": "453115",
+    "Html": "then again, just running <code>tsc.js</code> via node should print a stack trace, unless the error is caught somewhere (then adding <code>e.stack</code> to the output would help).<br />\n",
+    "PostedDate": "2013-08-20T02:54:40.077-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084671",
+    "ThreadId": "453115",
+    "Html": "I don't compile via node.js but I'm tempted to do so just to use the inspector as you suggest. I was aware the 40622 was a line number but sadly the output file isn't retained after the compiler dies, so I can't actually inspect it. I don't know where, or even if tsc keeps its work files somewhere when compiling? But as no final output file was created I couldn't ever inspect it to see how far it had got.<br />\n",
+    "PostedDate": "2013-08-25T09:31:43.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1084726",
+    "ThreadId": "453115",
+    "Html": "If it is a compiler crash, the error message gives a line number in the compiler source (which also is a JS file, generated from TS), not in your sources.\r<br />\n<br />\nIf you can run the compiler in a debugger, or get a stack trace some other way, you can find a function in that trace which knows which of your sources the compiler is looking at when it crashes. You can then see the file name in the debugger, or console.log it by modifying the compiler source. That might, with some luck or patience, allow you to shrink your project sources into a tiny project consisting of just enough code to trigger the compiler crash. With that in hand, the TS team can reproduce the bug, and they will know when they have fixed the bug.\r<br />\n<br />\nThe TS team seems to be willing to look into larger codebases as well, if those reproduce a crash reliably. I'm just suggesting that if you can shrink the codebase, their task will be easier, so they can be more productive in fixing bugs, so we all get to profit.<br />\n",
+    "PostedDate": "2013-08-25T14:56:17.763-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

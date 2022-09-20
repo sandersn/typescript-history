@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "983011",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>From what I have seem, so far TypeScript cannot support type information for most jquery plugins because they use strings as parameters for the main function.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>$.plugin(<span style=\"color:#a31515\">&quot;doSomething&quot;</span>);\r\n</pre>\r\n</div>\r\n<p>As I understand that there are better ways to do this, there could be a simple way to support this without adding the feature to the whole language.</p>\r\n<p>Interface definitions could to support having magic strings in the signature, so we can have typed information for existing plugins. Instead of:</p>\r\n<pre><div style=\"color:black; background-color:white\"><pre><span style=\"color:blue\">interface</span> JqueryPlugin {\r\n\tmethod(action : string): any;\r\n}\r\n</pre>\r\n</div>\r\n</pre>\r\n<p>We could have:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> JqueryPlugin {\r\n\tmethod(action : string <span style=\"color:#a31515\">&quot;getObject&quot;</span>): CustomType;\r\n\tmethod(action : string <span style=\"color:#a31515\">&quot;runSomething&quot;</span>): number;\r\n\tmethod(action : string <span style=\"color:#a31515\">&quot;doSomething&quot;</span>): <span style=\"color:blue\">void</span>;\r\n}\r\n</pre>\r\n</div>\r\n<div style=\"color:black; background-color:white\"><br>\r\nI believe that if applied only to interfaces could be a nice addition to the language and help support existing code.</div>\r\n<div style=\"color:black; background-color:white\"></div>\r\n",
+    "PostedDate": "2013-01-04T04:55:16.58-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983105",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>I agree that overloading based on constants would be very handy (we've actually talked about it a few times in design meetings).&nbsp; In fleshing it out, there are a couple subtle points.</p>\r\n<p>The compiler&nbsp;could give an error&nbsp;if you pass a string constant that isn't one listed in the overload set.&nbsp; This doesn't quite work, as the user may pass something that isn't a constant, so&nbsp;we need to be sure that there is at least a default overload.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> JqueryPlugin {\r\n    method(action : <span style=\"color:#a31515\">&quot;getObject&quot;</span>): CustomType;\r\n    method(action : <span style=\"color:#a31515\">&quot;runSomething&quot;</span>): number;\r\n    method(action : <span style=\"color:#a31515\">&quot;doSomething&quot;</span>): <span style=\"color:blue\">void</span>;\r\n    method(action : string) : string;\r\n}\r\n</pre>\r\n</div>\r\n<p>Things are a little weird when you allow them to be mixed.&nbsp; We'd also need to require default overloads there, too:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> JqueryPlugin {\r\n    method(action : <span style=\"color:#a31515\">&quot;getObject&quot;</span>, data: string): CustomType;\r\n    method(action : string, data: <span style=\"color:#a31515\">&quot;myData&quot;</span>): number;<br>    method(action : string, data: string): string;\r\n}\r\n</pre>\r\n</div>\r\n<p>We'd also need to be careful that when doing contextual typing, we keep things simple enough that typechecking can stay pretty fast.&nbsp;</p>\r\n<p>All that said, it's probably doable and would be helpful for just the kinds of things you mention.</p>\r\n",
+    "PostedDate": "2013-01-04T09:48:06.293-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983108",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>The problem is that string values are a runtime properties, so difficult for the type checker to find out at compile time. However the good news is that you should be able to do something like this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> e:Element2;\ne.addListener(EventName.onMouseMove, <span style=\"color:blue\">function</span>(ev) {});\ne.addListener(EventName.onKeyDown, <span style=\"color:blue\">function</span>(ev) {});\n\n\n<span style=\"color:blue\">interface</span> Element2 {\n    addListener(name:MouseEventName, handler: (event:MouseEvent) =&gt; <span style=\"color:blue\">void</span>);\n    addListener(name:KeyboardEventName, handler: (event:KeyboardEvent) =&gt; <span style=\"color:blue\">void</span>);\n}\n\n<span style=\"color:blue\">class</span> EventName {\n   <span style=\"color:blue\">static</span> onMouseMove:MouseEventName = &lt;MouseEventName&gt;&lt;any&gt;<span style=\"color:#a31515\">&quot;onmousemove&quot;</span>;\t\n   <span style=\"color:blue\">static</span> onKeyUp:KeyboardEventName = &lt;KeyboardEventName&gt;&lt;any&gt;<span style=\"color:#a31515\">&quot;onkeyup&quot;</span>;\n   <span style=\"color:blue\">static</span> onKeyDown:KeyboardEventName = &lt;KeyboardEventName&gt;&lt;any&gt;<span style=\"color:#a31515\">&quot;onkeydown&quot;</span>;\n}\n\n<span style=\"color:blue\">interface</span> MouseEventName{__a;};\n<span style=\"color:blue\">interface</span> KeyboardEventName{__b;};\n\n</pre>\r\n</div>\r\n<p>// Peter</p>\r\n",
+    "PostedDate": "2013-01-04T09:50:29.96-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "985657",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>I really liked the idea of &quot;method(action : &quot;getObject&quot;): CustomType;&quot;. Looks better.&nbsp;</p>\r\n<p>Anyway, regarding Peter's suggestion, I don't think parsing variables would be a good idea, it would really complicate for the compiler, as the string could be the return of a function, etc. The idea is just to support existing code that use this pattern,\r\n so we can have code completion for everything correctly.</p>\r\n<p>As for the default overload, after giving it some thought, I believe it is a good idea. Looking at this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">interface</span> Foo {\r\n     method(<span style=\"color:#a31515\">&quot;bar&quot;</span>) : bool;\r\n} \r\n\r\n<span style=\"color:blue\">class</span> X <span style=\"color:blue\">implements</span> Foo {\r\n    method(arg : string) : bool { ... }\r\n}\r\n</pre>\r\n</div>\r\n<p>It looks a little bit strange without the default overload. Also, if you don't have it, would require the compiler to throw an error if the string doesn't match, and that would open the door for other parameter value checks, people would use it for strings\r\n and ask why it is not available for integers... better to keep it simple.</p>\r\n<p>The following rules could be applied:</p>\r\n<ul>\r\n<li>The value can only be a string literal </li><li>Only interfaces would be allowed to have this kind of signature </li><li>Must have a default overload without the values </li><li>Literal parameters must be the firtst parameters, never in the middle or in the end (opposite&nbsp;rule of optional parameters)\r\n</li></ul>\r\n<p>As for the speed, I don't think would make much difference if made only for strings and not all literals.</p>\r\n",
+    "PostedDate": "2013-01-11T13:38:07.63-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "985682",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>I guess my post was not that clear. The solution in there already works today. Just cut&paste that piece of code in the playground to see it work. So there is no need to add any complexity to the compiler.</p>\r\n<p>I do think however it might not be the easiest to read or understand. The literal solution does look nicer.</p>\r\n<p>// Peter</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-11T14:19:40.553-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987293",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>Maybe add typed values as more general solution? Something like that:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>declare type JQueryEvent;\n\ndeclare type JEventClick: JQueryEvent = <span style=\"color:#a31515\">'click'</span>;\n\ndeclare type JEventComplex: JQueryEvent = [<span style=\"color:#a31515\">'click'</span>, <span style=\"color:#a31515\">'hover'</span>];\n\n<span style=\"color:blue\">interface</span> JQuery {\n    bind(event: JEventClick, fn: (e: ClickEvent) =&gt; any): JQuery;\n    bind(event: JQueryEvent, fn: (e: Event) =&gt; any)): JQuery;\n}\n\n$(<span style=\"color:#a31515\">'body'</span>).bind(JEventClick, (e) =&gt; console.log(<span style=\"color:#a31515\">'click at '</span> &#43; e.x)); <span style=\"color:green\">// ok</span>\n\n$(<span style=\"color:#a31515\">'body'</span>).bind(JEventComplex, (e) =&gt; console.log(<span style=\"color:#a31515\">'some event'</span>)); <span style=\"color:green\">// ok</span>\n\n$(<span style=\"color:#a31515\">'body'</span>).bind(JQueryEvent, (e) =&gt; <span style=\"color:blue\">false</span>); <span style=\"color:green\">// compile time error - JQueryEvent don't has emmited value</span></pre>\r\n</div>\r\n",
+    "PostedDate": "2013-01-15T13:22:03.28-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987648",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>@irezvov - I'm not sure why the last line would be a compile time error.&nbsp; The types look like they would match, unless I'm reading it wrong.</p>\r\n",
+    "PostedDate": "2013-01-16T08:35:52.907-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "987653",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>JQueryEvent is a abstract phantom type here. We can use it only as &quot;interface&quot; for other typed values.&nbsp;</p>\r\n<p>$('body').bind(JEventClick, (e) =&gt; console.log('click at ' + e.x)); emited into&nbsp;$('body').bind('click', function(e) =&gt; { console.log('click at ' + e.x) });</p>\r\n<p>but&nbsp;</p>\r\n<p>$('body').bind(JQueryEvent, (e) =&gt; false); in $('body').bind( , function(e) { return false; }); coz JQueryEvent doesn't have runtime value</p>\r\n",
+    "PostedDate": "2013-01-16T08:44:58.397-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "988476",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>A feature&nbsp;like this would also work well for defining event signatures&nbsp;in nodejs. You bind to them using .on(eventName, handler), but the signature of the handler differs depending on which eventName you specify, e.g.</p>\r\n<p>requestStream.on(&quot;data&quot;, function(data) { ...&nbsp;});<br>\r\nrequestStream.on(&quot;end&quot;, function() { ...&nbsp;});<br>\r\nrequestStream.on(&quot;error&quot;, function(exception) { ...&nbsp;});</p>\r\n",
+    "PostedDate": "2013-01-17T17:56:48.987-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "993789",
+    "ThreadId": "428482",
+    "Html": "\r\n<p>Hi,</p>\r\n<p><span style=\"font-size:10pt\">Should I create a workitem for this to be considered for future releases?</span></p>\r\n",
+    "PostedDate": "2013-01-29T11:01:46.93-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

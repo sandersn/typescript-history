@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "When using -d to generate .d.ts declarations for commonjs modules, the resulting .d.ts is designed for use by an import statement directly to the source (eg: a using an absolute or relative path) - and can not be used as an ambient external module declaration.\r\n\r\nThis makes declarations somewhat cumbersome in node.js scenarios, where you either have to duplicate dependent modules in your code base (to ensure relative paths are always correct when distributed), or you have to manually write your own .d.ts declarations in ambient external module form (which defeats the purpose of typescript being able to generate declaration files in this case...).\r\n\r\nExample library module sometype.ts:\r\n```\r\nclass SomeType\r\n{\r\n        public value = \"test\";\r\n}\r\nexport = SomeType;\r\n```\r\n\r\nExample generated sometype.d.ts:\r\n```\r\ndeclare class SomeType {\r\n    public value: string;\r\n}\r\nexport = SomeType;\r\n```\r\n\r\nIf one then deploys this compiled typescript (as .js and .d.ts) as a commonjs module for other people to use (for example, in a node_modules directory) - there's no way for dependent typescript files to simply import SomeType = require(\"sometype\"), users are forced to require(\"../../node_modules/sometype/sometype\") to reference it from it's deployed location, or duplicate the source locally and use a relative require(\"../thirdparty/sometype/sometype\").\r\n\r\nI propose one of two solutions:\r\n1. Add an additional tsc flag for generating ambient external module syntax in addition to the current flag that generates 'explicit' external module syntax (simpler, but dodges the fact typescript seems to have misleading usage of the 'module' keyword which differs between typescript source, and two different scenarios in typescript declarations - be it quoted or unquoted module declarations - where quoted declares ambient external modules - despite the fact 'export' is used for external modules everywhere else in typescript)\r\n2. Unify the definition syntax s.t. the export keyword defines an external ambient module named after the .d.ts file containing the export keyword. (eg: the current generated .d.ts tells typescript that an ambient external module named \"sometype\" (from the .d.ts filename) is exported as the type value SomeType.)\r\n\r\nNote: This is a modified version of my original bug report (which was incorrectly misguided by the use of the module keyword between source/definitions - which originally got the workitem closed).",
+    "LastUpdatedDate": "2014-04-03T14:33:16.62-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-06T19:03:03.63-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Add ability to generated ambient declarations for external commonjs modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2076
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "The above is behaving as expected.  Your example input is declaring an external module which is exporting an internal module with an identifier of \"A\", that has a member \"value\" of type \"string\".\n\nModules can be a confusing topic, especially the distinction between internal and external modules.  We've started trying to document some of this more clearly.  See if the page at https://typescript.codeplex.com/wikipage?title=Modules%20in%20TypeScript&referringTitle=TypeScript%20Documentation helps at all.  If not, the language spec chapters 10 & 11, (and understanding the module system for NodeJS or RequireJS), should provide the necessary background.\n\nPlease reopen if none of the above guidance clears up the behavior.",
+      "PostedDate": "2014-01-07T18:04:44.057-08:00",
+      "Id": 129740
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 01/07/2014 6:04PM",
+      "PostedDate": "2014-01-07T18:04:49.003-08:00",
+      "Id": 129759
+    },
+    {
+      "Message": "I've re-opened the workitem after clarifying the underlying problem, correctly using external modules this time (sorry about the mis-use of internal modules originally - the use of the 'module' keyword in declarations got me mixed up in my example source).",
+      "PostedDate": "2014-01-08T01:05:51.787-08:00",
+      "Id": 129760
+    },
+    {
+      "Message": "This might be a good discussion the forum for best practices. I believe you can achieve what you want with ambient external modules in a .d.ts. Look at node.d.ts for an example of this pattern. You would /// the .d.ts, then import/require the relevant modules it contains without needing paths in each import/require.",
+      "PostedDate": "2014-04-03T14:33:16.62-07:00",
+      "Id": 140464
+    }
+  ]
+}

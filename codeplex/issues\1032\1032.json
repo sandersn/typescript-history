@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:56:49.33-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Created from a comment in this issue: https://typescript.codeplex.com/workitem/772 \r\n\r\n\r\nTypeScript compiler creates an invalid sourcemap when combining the following 2 files\r\n\r\n@animal.ts\r\n\r\n````\r\nmodule animals {\r\n\r\n  export class Animal {\r\n    private killed;\r\n\r\n    kill() {\r\n      this.killed = true;\r\n    }\r\n  }\r\n\r\n}\r\n\r\n````\r\n@dog.ts\r\n\r\n````\r\nmodule animals {\r\n\r\n  class Dog extends Animal {\r\n    bark() {\r\n      console.log('bark')\r\n    }\r\n  }\r\n\r\n}\r\n````\r\n\r\nvalidate using source-map module in node\r\n\r\n````\r\nvar SourceMapConsumer = require('source-map').SourceMapConsumer;\r\nnew SourceMapConsumer(require('fs').readFileSync('bug.js.map', 'utf8'));\r\n````",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-13T15:00:35.123-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Invalid sourcemap when combining 2 files",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 4,
+    "Id": 1032
+  },
+  "FileAttachments": [
+    {
+      "FileId": 681409,
+      "FileName": "1032.fix.patch",
+      "DownloadUrl": ".\\681409"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "It seems this problem comes from the fact that the TypeScript compiler uses a list to store mapping names (therefore allowing duplicates):\n\n[\"animals\",\"animals.Animal\",\"animals.Animal.constructor\",\"animals.Animal.kill\",\"animals\",\"animals.Dog\",\"animals.Dog.constructor\",\"animals.Dog.bark\"]\n\nSourceMapConsumer uses a set, so all duplicate names disappear, leading to an incorrect offset during mapping name translation.\n\nI'll submit a patch if I can figure out how this Codeplex thing works.",
+      "PostedDate": "2013-05-18T02:43:27.423-07:00",
+      "Id": 100520
+    },
+    {
+      "Message": "Please find attached a patch which I believe fixes the issue.",
+      "PostedDate": "2013-05-18T07:28:49.897-07:00",
+      "Id": 100527
+    }
+  ]
+}

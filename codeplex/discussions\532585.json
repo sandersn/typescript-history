@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1210101",
+    "ThreadId": "532585",
+    "Html": "&quot;jake runtests&quot; will run the entire test suite. There is a touch of documentation hinting at a tests=&lt;testpath&gt; feature for this command but I don't know how this works. Can you shed some light on this functionality?<br />\n",
+    "PostedDate": "2014-02-18T14:18:20.247-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210153",
+    "ThreadId": "532585",
+    "Html": "You can use tests= to run either individual tests or specific suites/sets of suites. You can see the full list of suite options and which suites are involved in src\\harness\\runner.ts, ex to run only compiler tests:\r<br />\n<br />\njake runtests tests=--compiler\r<br />\n<br />\nor just language service tests in our fourslash suite:\r<br />\n<br />\njake runtests tests=--fourslash\r<br />\n<br />\nTo run individual tests you just pass the relative path to the test and the right test runner will be used, ex\r<br />\n<br />\njake runtests tests=tests\\cases\\compiler\\2dArrays.ts<br />\n",
+    "PostedDate": "2014-02-18T16:28:33.27-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1210719",
+    "ThreadId": "532585",
+    "Html": "Thanks! That helps a lot. And now a general testing question: Is there anyway to run a test that compares the compiled output?\r<br />\n<br />\nI have a basic modification to the compiler to look anywhere in the file for amd-dependency comments and I'm trying to create a simple test case for this functionality.<br />\n",
+    "PostedDate": "2014-02-19T11:40:56.543-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1211361",
+    "ThreadId": "532585",
+    "Html": "The compiler baseline tests are the type of tests you're looking for. They're in tests\\cases\\compiler (the conformance suite in tests\\cases\\conformance are also of this style). If you simply add a .ts file under tests\\cases\\compiler the test will be picked up (and included if you run tests=--compiler or --compiler-baselines). This will cause a set of baseline files to be placed in tests\\baselines\\local and a baseline-report.html file to be placed at the root of your typescript repo which will show you a diff of the codegen, errors (if any) and types (if the test had no errors) for the changed tests/results. If you are happy with the baseline results you run 'jake baseline-accept' which will blindly replace the entire contents of tests\\baseline\\reference with everything in tests\\baseline\\local (meaning don't run 'jake baseline-accept' if you've just run a subset of the full test suite, do a full 'jake runtests' so that the baseline folders have baselines for all tests). Then you would check in your new .ts files and the new baseline files in tests\\baseline\\reference.<br />\n",
+    "PostedDate": "2014-02-20T12:33:38.907-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

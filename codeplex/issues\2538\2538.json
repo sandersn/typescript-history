@@ -1,0 +1,80 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "https://typescript.codeplex.com/workitem/507",
+    "ClosedDate": "2014-07-21T17:33:24.663-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "While using the forEach function to iterate over an array, I noticed that the `this` inside the forEach function was not correctly inferred. So I made this minimal example:\r\n\r\n```typescript\r\nclass A {\r\n\t// Correctly typechecks and gives an error\r\n\tfoo() : void {\r\n\t\t[].forEach((item) => {\r\n\t\t\tthis.abc()\r\n\t\t}, this)\r\n\t}\r\n\r\n\t// Should not typecheck, but does. this assumed to be of type any?\r\n\tbar() : void {\r\n\t\t[].forEach(function(item) {\r\n\t\t\tthis.fubar()\r\n\t\t}, this)\r\n\t}\r\n\r\n\t// Should typecheck, but doesn't. this is assumed to be of type A?\r\n\tfooBar() : void {\r\n\t\t[].forEach((item) => {\r\n\t\t\tthis.abc();\r\n\t\t}, B)\r\n\t}\r\n}\r\n\r\nclass B {\r\n\tstatic abc() : void {}\r\n}\r\n```\r\n\r\nIs there a reason for this behaviour?",
+    "LastUpdatedDate": "2014-07-21T17:33:24.663-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-02T10:27:22.967-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Duplicate"
+    },
+    "Summary": "thisArg type inference",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2538
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think what you are looking for was already asked in this request:\nhttps://typescript.codeplex.com/workitem/507\n\n",
+      "PostedDate": "2014-06-02T14:17:41.64-07:00",
+      "Id": 148617
+    },
+    {
+      "Message": "The type-checked code is type-checked correctly: see the generated javascript. (because you're using => functions).",
+      "PostedDate": "2014-06-03T11:12:08.763-07:00",
+      "Id": 148719
+    },
+    {
+      "Message": "You are right, the arrow function captures the `this` from the surrounding scope.\nDoesn't mean that I find the behaviour as expected though, which is probably grounded in Javascript compatibility. I would expect that the `this` in the given function assumes the same type as that of the given `thisArg`.",
+      "PostedDate": "2014-06-03T12:30:41.143-07:00",
+      "Id": 148732
+    },
+    {
+      "Message": "I posted that link because you were using a function in the second part. You asked 'this assumed to be of type any?', hence the reference.\n\nThis is expected ES6 behavior.",
+      "PostedDate": "2014-06-03T14:43:07.21-07:00",
+      "Id": 148749
+    },
+    {
+      "Message": "I'm not sure what you mean by you last comment, ES6 does not enforce types. But I expect Typescript to enforce correct typing on these _standard_ functions. The type of the thisArgs should be found by the compiler and taken over into the declared function.",
+      "PostedDate": "2014-06-03T15:30:08.83-07:00",
+      "Id": 148755
+    },
+    {
+      "Message": "I was not referring to types.  Are we not talking about arrow functions? It's how they should work, because of ES6, which is what I meant.",
+      "PostedDate": "2014-06-04T07:01:59.953-07:00",
+      "Id": 148808
+    },
+    {
+      "Message": "Indeed, for arrow functions I found out after my post that is specified as such in ES6.\nHowever, in normal functions what type should `this` have? As far as I can see the type should be inferrable by the compiler from the `thisArg`.",
+      "PostedDate": "2014-06-04T07:37:18.447-07:00",
+      "Id": 148809
+    },
+    {
+      "Message": "Yes, hence my original link. ;)",
+      "PostedDate": "2014-06-04T08:17:52.49-07:00",
+      "Id": 148812
+    }
+  ]
+}

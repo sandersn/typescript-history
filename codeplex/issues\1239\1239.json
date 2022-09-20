@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:57:59.31-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The following typescript code:\r\n\r\n```\r\nmodule M\r\n{\r\n  export class N {}\r\n  export module N {\r\n    export var v = 0;\r\n  };\r\n};\r\n\r\nmodule M\r\n{\r\n  export class O extends M.N {\r\n  }\r\n};\r\n```\r\n\r\ncrashes the typescript compiler with:\r\n\r\n```\r\n/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:3215\r\n                throw TypeScript.Errors.argumentOutOfRange(\"position\");\r\n                                        ^\r\nError: Argument out of range: position.\r\n    at Function.Errors.argumentOutOfRange (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:1980:20)\r\n    at LineMap.fillLineAndCharacterFromPosition (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:3215:41)\r\n    at ErrorReporter.addDiagnostic (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:56203:21)\r\n    at TypeScriptCompiler.reportDiagnostics (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:55536:31)\r\n    at BatchCompiler.compile (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:56346:26)\r\n    at BatchCompiler.batchCompile (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:56683:22)\r\n    at Object.<anonymous> (/usr/local/share/npm/lib/node_modules/typescript/bin/tsc.js:56803:7)\r\n    at Module._compile (module.js:449:26)\r\n    at Object.Module._extensions..js (module.js:467:10)\r\n    at Module.load (module.js:356:32)\r\n```",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-25T13:51:51.85-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Typescript crash: Argument out of range: position",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 1239
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks. I see the same behavior in the latest bits under development.  We'll look into what's going on here.",
+      "PostedDate": "2013-06-25T17:09:51.95-07:00",
+      "Id": 104153
+    },
+    {
+      "Message": "The underlying problem is that you have a class and module with the same name.  The compiler should report this as an error, not crash.I\n\nf you change the name of either the class or sub-module it should work.",
+      "PostedDate": "2013-07-25T17:51:59.23-07:00",
+      "Id": 107498
+    },
+    {
+      "Message": "But I thought you're supposed to be able to extend a class with a module (of the same name).\n\n``\ndeclare module M\n{\n  class N {}\n  module N {\n    export var v = 0;\n  }\n  export = N;\n}\n``\n\nseems to work fine for me...\n",
+      "PostedDate": "2013-07-26T01:24:52.863-07:00",
+      "Id": 107531
+    },
+    {
+      "Message": "Let me report another case.\n\nWhen I created two sources as follows, and compiled,\n\n```\n# Animal.ts\nexport module MyExample {\nexport class Animal {\n\tconstructor(private name:string){}\n\tcry() : void {\n\t\tconsole.log(this.name + ': Cry!');\n\t}\n}\n}\n\n```\n```\n#Dog.ts\nimport Animal = module(\"Animal\");\n\nexport module MyExample {\nexport class Dog extends Animal {\n\tcry () : void {\n\t\tsuper.cry();\n\t\tconsole.log('Bow!');\n\t}\n}\n}\n\n```\ncompiling crashes with the following error messages.\n```\n/opt/local/lib/node_modules/typescript/bin/tsc.js:3228\n                throw TypeScript.Errors.argumentOutOfRange(\"position\");\n                                        ^\nError: Argument out of range: position.\n    at Function.Errors.argumentOutOfRange (/opt/local/lib/node_modules/typescript/bin/tsc.js:1986:20)\n    at LineMap.fillLineAndCharacterFromPosition (/opt/local/lib/node_modules/typescript/bin/tsc.js:3228:41)\n    at ErrorReporter.addDiagnostic (/opt/local/lib/node_modules/typescript/bin/tsc.js:56296:21)\n    at TypeScriptCompiler.reportDiagnostics (/opt/local/lib/node_modules/typescript/bin/tsc.js:55629:31)\n    at BatchCompiler.compile (/opt/local/lib/node_modules/typescript/bin/tsc.js:56445:26)\n    at BatchCompiler.batchCompile (/opt/local/lib/node_modules/typescript/bin/tsc.js:56788:22)\n    at Object.<anonymous> (/opt/local/lib/node_modules/typescript/bin/tsc.js:56908:7)\n    at Module._compile (module.js:456:26)\n    at Object.Module._extensions..js (module.js:474:10)\n    at Module.load (module.js:356:32)\n```\n\nBut, when I tried to compile the file that was created by concatenating Dog.ts and Animal.ts and deleting importing, the compiling was successfully completed.\n```\nexport module MyExample {\nexport class Animal {\n\tconstructor(private name:string){}\n\tcry() : void {\n\t\tconsole.log(this.name + ': Cry!');\n\t}\n}\n}\n\nexport module MyExample {\nexport class Dog extends Animal {\n\tcry () : void {\n\t\t\n\t\tsuper.cry();\n\t\tconsole.log('Bow!');\n\t}\n}\n}\n\n```\nHope this report is helpful to you.",
+      "PostedDate": "2013-07-27T08:18:20.463-07:00",
+      "Id": 107677
+    }
+  ]
+}

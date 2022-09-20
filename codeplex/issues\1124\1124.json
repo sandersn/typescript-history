@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.55-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I noticed we cannot express certain variable signatures in declarations:\r\n\r\nIn asynchronous javascript the callback always comes as the final parameter but I cannot declare this if the total number of arguments is variable. Because to get the variable arguments I need to use the ..rest argument and it cannot be followed by another more strictly defined parameter.\r\n\r\nWhat I want is something like this:\r\n\r\n``\r\nfn(...values:any[], callback:AsyncCallback):void;\r\n``\r\nAlso with optional callback:\r\n``\r\nfn(...values:any[], callback?:AsyncCallback):void;\r\n``\r\nWhile currently I have to settle for\r\n``\r\nfn(...args:any[]):void;\r\n``\r\n\r\nMy first use case is the `waterfall()` method in `async.js`: their api allows to pass a variable amount of arguments to the next function in the chain but with the final argument always being the callback. I want to declare this in updated DefinitelyTyped declarations but it's impossible to model now so I have to make them any[] and hope people remember the callback.\r\n\r\nFor actual TypeScript code it'll work with additional code generation but could be undesirable. \r\n\r\nI think this should work in declarations at least.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-07T08:47:38.673-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Allow additional parameters after ..rest in declarations",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1124
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Why is that not possible for the definition? \n\nIf the final argument is non-optional it's always the last one (which can then be checked for validity).\n\nFor example:\n``\nfn(...values:any[], callback:AsyncCallback):void;\n\nfn(1,2,3, (value) => {\n  ..\n})\n\nfn((value) => {\n  ..\n})\n\n//error\nfn(1, 2, 3);\n//error\nfn();\n``",
+      "PostedDate": "2013-06-07T15:48:51.823-07:00",
+      "Id": 102498
+    },
+    {
+      "Message": "FYI: the lib I try to re-model currently: https://github.com/caolan/async. \n\nWith 5000 github stars it's a prominent package and it depends heavy on the async-callback-last convention. The methods [`waterfall()`](https://github.com/caolan/async#waterfall) and [`applyEach()`](https://github.com/caolan/async#applyEach) both use the optional arguments length with the callback last.\n\nSo in plain javascript this apparently works fine: I'm not clear why this is impossible in TypeScript if the parameters after the ...rest are required. \n\nIf it's problematic in the generated code then please do allow it in declarations since otherwise we cannot fully re-model one of *the* main patterns in modern JS coding.",
+      "PostedDate": "2013-06-08T02:03:00.247-07:00",
+      "Id": 102533
+    },
+    {
+      "Message": "This is by design, there is no way to separate the last variable from the rest args..\n \nThe best I can come up with is to have the user create the array of arguments passed to the next function.\n\r\n\r** Closed by paulb 06/07/2013 10:13AM",
+      "PostedDate": "2013-06-07T10:13:16.673-07:00",
+      "Id": 139037
+    },
+    {
+      "Message": "I have another real-world case for this so I re-open:\r\n\r\nI'm writing a type definition for XRegExp and it has a method (XRegExp.replace) that you call with a parameter that is a function with this description:\r\n\r\n\r\n>    Replacement functions are invoked with three or more arguments:\r\n>\r\n>    - The matched substring (corresponds to $& above). Named backreferences are accessible as properties of this first argument.\r\n>    - 0..n arguments, one for each backreference (corresponding to $1, $2, etc. above).\r\n>    - The zero-based index of the match within the total search string.\r\n>    - The total string being searched.\r\n\r\n\r\nSo this should be legal:\r\n\r\n````\r\n(match: string, ...refs: string[], index: number, input: string) => string;\r\n````\r\n\r\nA requirement could be that it is not allowed to have other optional parameters. The rest can be verified reliably (as there is a hard minimum and a known place where it resizes).\r\n",
+      "PostedDate": "2014-03-27T13:49:04.693-07:00",
+      "Id": 139039
+    },
+    {
+      "Message": "I recently needed this also, and will have to resort to simply informing my API end users that the last argument is always a reference to a special object instance.  I would love to allow users to specify a \", obj?: Type)\" at the end in case they wanted it for their callback (I have my own special reasons for this, one of which being that I'm using genetics to pull call signature details for callbacks that usually don't care about the sender).",
+      "PostedDate": "2014-03-27T14:53:19.073-07:00",
+      "Id": 139052
+    },
+    {
+      "Message": "Possible in principle. If you're using a library that makes extensive use of this, please upvote this issue and leave a comment with the API so we can get an idea of how widespread this pattern is.",
+      "PostedDate": "2014-03-31T11:03:28.797-07:00",
+      "Id": 140080
+    },
+    {
+      "Message": "Sure. Keep in mind many of these cases now have `Function` as type or a signature using `..any[]`, as the type as definition authors who have encountered this have given up on it; so it might take a while before we gather some more votes. \n\nAnyway, there are the `asyc.waterfall` and the `XRegExp.replace` I mentioned earlier.\n\nThere is one in `lib.d.ts` too: the callback in `String.prototype.replace` https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_function_as_a_parameter\n\nIs now:\n````\nreplace(searchValue: RegExp, replaceValue: (substring: string, ...args: any[]) => string): string;\n````\nShould be:\n````\nreplace (searchValue: RegExp, replaceValue: (match: string, ...refs: string[], index: number, input: string) => string): string;\n````",
+      "PostedDate": "2014-03-31T11:48:02.38-07:00",
+      "Id": 140085
+    }
+  ]
+}

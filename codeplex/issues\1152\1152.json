@@ -1,0 +1,51 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is due to a bug we have in the Compile On Save feature that is fixed in the upcoming 0.9.0.0 release.",
+    "ClosedDate": "2013-06-17T09:26:00.643-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I have a .ts file that performs a normal:\r\n\"import mongo = module('mongodb');\"\r\n\r\nSometimes, without touching anything in that .ts file, the linked .js file is updated removing the require call in that statement:\r\n\r\n\"var mongo = require('mongodb');\"\r\n->\r\n\"var mongo = 'mongodb';\"\r\n\r\nThat's a bit awkward because it yields to several problems not realted with my code.\r\nI'm using the lastest 0.9 LKG and it happens with the released beta too.\r\nI'm including the related code and a couple of screenshots showing the problem.",
+    "LastUpdatedDate": "2013-08-13T10:27:56.627-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-16T01:50:17.187-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "module -> require removed \"randomly\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1152
+  },
+  "FileAttachments": [
+    {
+      "FileId": 693360,
+      "FileName": "removed_required.7z",
+      "DownloadUrl": ".\\693360"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Still happens but now I know the source of the problem.\nWhen calling the tsc command line utility:\n\ntsc mymongo.ts\n_typings.d.ts(6,1): error TS5007: Cannot resolve referenced file: 'typings/mongodb.d.ts'.\n\nThe file exists. I have removed lines to see what makes it fail and it seems that the file was in ansi instead of utf-8 and had some special characters in comments. Example: \"//- sets strict mode , if true then existing collections can’t be “recreated” etc.\"\n\nIf I convert the file from ANSI to UTF-8 the problem disappears.\n\nSo if it just supports utf-8 it should yield a more descriptive error instead of just saying it cannot be resolved.",
+      "PostedDate": "2013-06-25T04:48:41.82-07:00",
+      "Id": 104032
+    }
+  ]
+}

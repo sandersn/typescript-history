@@ -1,0 +1,75 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "There's nothing illegal about the `export =` declaration here.\n\n`export =` exports all meanings of the specified symbol. That can be any combination of value, type, or namespace.\n\n`import f = require(...)` imports all meanings of the specified module. You might import a value, type, namespace, or some combination thereof.\n\nIn this example, only a type name is exported, and only a type name is imported.\n\nIt's exactly as if you had written\n```\ninterface Foo { test(); }\nFoo.test(); // Also an error.\n```",
+    "ClosedDate": "2014-04-03T14:17:51.83-07:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I'm happy 1.0.0 is released!\r\n\r\nbut unexpected error occured, tsc said 'Could not find symbol'.\r\n\r\nsample.d.ts\r\n```\r\ndeclare module \"foo\" {\r\n\tinterface Foo {\r\n\t\ttest(value: string): string;\r\n\t}\r\n\r\n\texport = Foo;\r\n}\r\n```\r\n\r\nsample-test.ts\r\n```\r\n/// <reference path=\"sample.d.ts\" />\r\n\r\nimport Foo = require(\"foo\");\r\n\r\nFoo.test(\"Hi!\");\r\n```\r\n\r\ndo compile.\r\n\r\n```\r\n$ tsc -v\r\ntscVersion 1.0.0.0\r\n$ tsc --module commonjs sample-test.ts\r\n/Users/vvakame/Downloads/ts-breaking-change/sample-test.ts(5,1): error TS2095: Could not find symbol 'Foo'.\r\n$ ./node_modules/.bin/tsc -v\r\nVersion 0.9.7.0\r\n$ ./node_modules/.bin/tsc --module commonjs sample-test.ts\r\n$ echo $?\r\n0\r\n```\r\n\r\nI think TypeScript don't have a breaking change betweet 0.9.7 and 1.0.0.\r\nis it right?\r\n\r\nreal world example https://github.com/borisyankov/DefinitelyTyped/pull/1972/ \r\nshould/should-tests.ts and nomnom/nomnom-tests.ts had a problem.",
+    "LastUpdatedDate": "2014-04-04T23:58:52.033-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-02T22:17:03.587-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Unexpected error occured, Could not find symbol",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2373
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Well, you can't set \"export = Foo;\" inside a declaration (or add any code for that matter). ",
+      "PostedDate": "2014-04-02T23:39:02.603-07:00",
+      "Id": 140380
+    },
+    {
+      "Message": "@vvakame this is what I reported here : https://github.com/borisyankov/DefinitelyTyped/issues/1929 \n\nThis was a bug fix for codeplex issue https://typescript.codeplex.com/workitem/2356#CommentContainer2\n\n`export = SomeInterface` should never have been used. Since it exports an *interface* not a variable of that interface. ",
+      "PostedDate": "2014-04-03T03:55:14.61-07:00",
+      "Id": 140388
+    },
+    {
+      "Message": "However the error `Could not find symbol 'Foo'.` is misleading",
+      "PostedDate": "2014-04-03T03:57:53.217-07:00",
+      "Id": 140389
+    },
+    {
+      "Message": "We are also hitting this after upgrading to 1.0.0. It would great if an error was produced at the location of the illegal \"export =\" statement (instead of every place where the module is imported).",
+      "PostedDate": "2014-04-03T09:25:14.037-07:00",
+      "Id": 140422
+    },
+    {
+      "Message": "@jamesnw if we can't export interface, we have forced declare extra identifier(e.g. value and internal modules).\nI think this stain namescope with extra identifier.\nDo you know how to avoid this?\n\n@basarat Thanks for the good information!\nI was also thinking in the same way as\n```\nvar foo:Foo = require('foo');\n```\n\n@derekcicerone and @basarat +1",
+      "PostedDate": "2014-04-04T21:54:23.877-07:00",
+      "Id": 140629
+    },
+    {
+      "Message": "Well, according to Ryan, the \"Foo\" in \"import Foo = require(\"foo\");\" would represent the type \"Foo\".   I love TS, but I don't like nor use the TS module semantics (not flexible enough for my needs, so I do it my own way), and I'm not sure what use-case requires importing interfaces.  Usually you import type definitions for usage in code.  If you import a type declaration only, I can only guess/assume that the .js file is to be loaded before hand.  If this is the case, then you'd also need to \"declare var Foo:Foo;\" after import.  Not sure what you need to accomplish.",
+      "PostedDate": "2014-04-04T23:03:45.08-07:00",
+      "Id": 140632
+    },
+    {
+      "Message": "FYI I agree with the error statement now: \n\n```typescript\nCould not find symbol 'Foo'.\n```\nBecause `Foo` does not exist in the *variable* declaration space, only in the  *type* declaration space (since it is an interface) and therefore cannot be found if used as a `var`",
+      "PostedDate": "2014-04-04T23:58:52.033-07:00",
+      "Id": 140637
+    }
+  ]
+}

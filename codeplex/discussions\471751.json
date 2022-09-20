@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "1131129",
+    "ThreadId": "471751",
+    "Html": "I've found strange behavior of type inference of function call and filed as <a href=\"https://typescript.codeplex.com/workitem/1960\" rel=\"nofollow\">#1960</a>.<br />\nIssue was closed with explanation that it follows the specification.<br />\n<br />\nBut it looks as bug for me. I think it should not depend on the order of arguments.<br />\n<br />\nSpecification says [4.12.2 Type Argument Inference]: &quot;Proceeding <strong>from left to right</strong>, each argument expression e is inferentially typed by its corresponding parameter type P, possibly causing some inferred type arguments to become fixed, and candidate type inferences (section 3.8.6) are made for unfixed inferred type arguments from the type computed for e to P.&quot;<br />\n<br />\nI propose to separate this processing into phases (on each phase arguments still be processing from left to right). And the phase of fixing types referred by argument which is anonymous function call will be <em>after</em> the phase of contextually typing arguments.<br />\nIn this case, more specific types referred by argument will be fixed earlier even if it appear later in the argument list.<br />\n",
+    "PostedDate": "2013-12-02T22:07:37.987-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1131255",
+    "ThreadId": "471751",
+    "Html": "I have argued elsewhere that <code>{}</code> is not a good default type (neither for overload resolution, not for generics instantiation). \r<br />\nCombining that with directional inference results in type-level coercion effects, where I would expect type propagation and type constraint checking.\r<br />\n<br />\nConsider<br />\n<pre><code>function caller&lt;T&gt;(cb:(t:T)=&gt;T,t:T) { return cb(t) }\n\ncaller(t=&gt;t,1)+2; // 1 coerced to {}\n\ncaller(t=&gt;t,undefined).toString(); // undefined coerced to {}\n\nObject.keys( caller(t=&gt;t,1) ); // 1 coerced to {}</code></pre>\n\nWe get a static type error only for the first call, which is the only one that doesn't lead to a runtime type error. Almost a worst-case scenario for a type system.\r<br />\n<br />\nIf <code>t=&gt;t</code> ensured that in and out type are identical, <code>number</code> and <code>undefined</code> would not only have to be assignable to <code>{}</code>, but vice versa as well.<br />\n",
+    "PostedDate": "2013-12-03T07:01:16.973-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1131260",
+    "ThreadId": "471751",
+    "Html": "And new one reason. I know the type system of TypeScript and C# is different, but lot of developers come from .Net C# world. And in C# type inference have another behavior, and I, as a C# developer, expect same from TypeScript.<br />\n",
+    "PostedDate": "2013-12-03T07:14:07.383-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1131424",
+    "ThreadId": "471751",
+    "Html": "Perhaps Anders will jump in here, as he probably will remember better than I do.\r<br />\n<br />\nThe type inference algorithm we chose is a compromise between getting local inference and trying to type check quickly.  To avoid doing things like multiple passes, inferring to a fixpoint, or unification, we picked a set of rules that would give good (but not perfect) inference in a single pass.  We knew that there would be cases (right to left instead of left to right, for example) where the inference wouldn't bind to types in an order that could be solved in one pass.<br />\n\r<br />\nThat said, I agree that it's tempting to think of multi-pass algorithms (eg, looking at * before <em>-&gt;</em>), which would let you move the dial enough to get some more inference.  That would probably an additional cost to type-checking.  I would be interested, if someone did decide to explore this, what the added cost was for the additional checking, and what additional examples work for that added cost.  Lots of exploration here that's possible.  <br />\n",
+    "PostedDate": "2013-12-03T14:08:07.65-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132739",
+    "ThreadId": "471751",
+    "Html": "I've nothing additional to add to what has already been said but I just wanted to voice my support of this being investigated.<br />\n",
+    "PostedDate": "2013-12-07T05:00:11.32-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133145",
+    "ThreadId": "471751",
+    "Html": "I dont mind too much the reduction in the type inference, especially if it speeds up the type checking. \r<br />\n<br />\nThe problem I see with it is the change to defaulting to <code>{}</code> when it cant infer a type parameter, which can cause compiler errors. If it defaulted to <code>any</code> the code could still compile, perhaps there could be a compiler warning when it cant infer a generic type so users could explicitly set it if they wanted to. \r<br />\n<br />\nAt the moment I am considering stripping out the generics from some of the definition files I have done and just replacing those parameters with <code>any</code>. That way the definition is usable without having to add in a lot of typescript specific syntax. \r<br />\n<br />\nForcing users to explicitly state generic parameters just raises the barrier to using typescript. Typing should be optional not a requirement.<br />\n",
+    "PostedDate": "2013-12-09T06:59:26.95-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133664",
+    "ThreadId": "471751",
+    "Html": "@nestalk - We ended up switching to {} instead of 'any' for when a type couldn't be inferred because it's like saying &quot;we don't have any information at all about this type&quot;.  It's the same thing we default to inside of a generic function when you don't tell the compiler anything about the constraints on the generic type:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f&lt;T&gt;(x?:T) {\n  x.test();  <span style=\"color:Green;\">// error because x has shape {}, as we don&#39;t know anything about it</span>\n  <span style=\"color:Blue;\">return</span> x;\n}\n\n<span style=\"color:Blue;\">var</span> y = f();  <span style=\"color:Green;\">// y has shape {} for the same reason, we have nothing that tells us about the generic type T</span>\r\n</pre></div>Using generics is like a way to work with types more directly, and it has a sense of being more about stricter typing rather than looser typing.  If we inferred 'any' instead, 1) we're arguably less consistent, looking at the example and 2) we get into situations where you aren't being type-checked because you missed one thing.  This comes up with the &quot;best common type&quot; algorithm, which is used quite a lot in our type system. \r<br />\n<br />\nFor example, &quot;best common type&quot; is used to figure out T in the example below:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f&lt;T&gt;(x:T, y:T): T {\n  <span style=\"color:Blue;\">return</span> x;\n}\n\n<span style=\"color:Blue;\">var</span> y = f(2, {x:2})\n<span style=\"color:Blue;\">var</span> z = y.x;  <span style=\"color:Green;\">// now this errors, catching an issue that had snuck in</span>\r\n</pre></div>We could have kept the 'any' and made the type system a bit looser, and there definitely advantages to being loose.  That said, we're hearing back that the tightening we've been doing has also been helping people find real bugs in their code.  <br />\n",
+    "PostedDate": "2013-12-10T09:07:09.697-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1133803",
+    "ThreadId": "471751",
+    "Html": "<strong>jonturner wrote:</strong><br />\n<blockquote>\n@nestalk - We ended up switching to {} instead of 'any' for when a type couldn't be inferred because it's like saying &quot;we don't have any information at all about this type&quot;.  It's the same thing we default to inside of a generic function when you don't tell the compiler anything about the constraints on the generic type:<br />\n</blockquote>\nBut what you implemented does not match your declared intention - it is a hack that does not quite work (cf my examples above):<br />\n<ul>\n<li><code>{}</code> is an <em>object type</em></li>\n<li>not everything in JS is an object, not every JS context coerces primitives into objects</li>\n<li>\n<code>{}</code> does not represent an inference failure, but is a valid type in many JS contexts, so the wrong type bubbles through further inferences, raising errors that are not obvious to trace back to their cause<br />\n</li>\n</ul>\nUsing <code>any</code> is slightly wrong, because while it means &quot;no info&quot;, it is used for &quot;you probably know what you're doing&quot;, not for &quot;you probably missed something here&quot;. But this can be remedied by flagging all implicit uses of <code>any</code> whereas there is no such option for <code>{}</code>.\r<br />\n<br />\nUsing <code>{}</code> is more wrong than using <code>any</code>, even though it highlights more errors, because it hides inconsistencies without any explicit flag that type inference has failed.\r<br />\n<br />\nUsing <code>void</code> might work better than <code>{}</code>, as it assumes no object-ness.\r<br />\n<br />\nNone of this addresses the directionality hack - proper unification does not need to be slow, fixpoints might be slow, but only for cases which the current type system cannot handle at all.<br />\n",
+    "PostedDate": "2013-12-10T11:48:08.373-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134001",
+    "ThreadId": "471751",
+    "Html": "I agree that picking {} was more consistent, but it too is a compromise.  We could have errored at any place where the best common type could not be calculated.  Unfortunately, this would have broken quite a bit of existing JavaScript code.  One pattern comes from creating an array of JSON objects:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = [{a: 3, b: 4}, {a: 3, c: 5}];\r\n</pre></div>As we don't try to fabricate a new type from the options of {a: number; b: number} and {a: number; c: number}, we're left to either error or pick a simple type that represents not converging.  One of the goals for TypeScript was, as much as possible, for the type system to not get in the way when you're trying to do common patterns.  This isn't always possible, but we occasionally do instead try to &quot;pick a type and keep going&quot; to cut down on the amount of noise the type system generates.  This is what we opted to do in this situation.<br />\n\r<br />\nI agree this has some drawbacks.  Like you mention, this will sometimes error later on, forcing the user to backtrack.  The idea is to help focus on bugs that come from how you use what you provide rather than saying what you've done is wrong from the outset.  This helps porting existing JavaScript, and is definitely a trade-off.<br />\n",
+    "PostedDate": "2013-12-10T15:33:35.363-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1134891",
+    "ThreadId": "471751",
+    "Html": "I agree with Igorbek, clausreinke and nestalk.<br />\n<br />\nAfter having seen the example given by clausreinke, I wonder if I should use Typescript at all.<br />\nI do not want to deal with more weird stuff than Javascript already offers.<br />\n",
+    "PostedDate": "2013-12-11T23:30:44.027-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135420",
+    "ThreadId": "471751",
+    "Html": "Just to clarify again. Simple example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f&lt;T&gt;(func: (value: T) =&gt; T, T value): <span style=\"color:Blue;\">void</span>;\nf(value =&gt; value + 1, 100); <span style=\"color:Green;\">// error</span>\r\n</pre></div>We have all the information to infer <code>T</code> is <code>number</code> by second argument. TS 0.9.5 will infer <code>T</code> is <code>{}</code>.\r<br />\nWhen we change order of parameters:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f&lt;T&gt;(T value, func: (value: T) =&gt; T): <span style=\"color:Blue;\">void</span>;\nf(100, value =&gt; value + 1); <span style=\"color:Green;\">// ok</span>\r\n</pre></div>Type was inferred right with same information.<br />\n",
+    "PostedDate": "2013-12-13T02:20:57.78-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135582",
+    "ThreadId": "471751",
+    "Html": "@aa2, forgive me but you're being a bit silly to say that you don't want to use TypeScript at all.<br />\n<br />\nThe &quot;weird stuff&quot; that TypeScript throws up (and I can only think of two cases, this one and <a href=\"https://typescript.codeplex.com/discussions/447628\" rel=\"nofollow\">this one</a> ) is the result of attempting to type a completely dynamic language. For both these cases the decision has been made on the basis of practicality rather than theoretical mumbo-jumbo. Practicality to me means identifying the most number of errors at compile time; and this is sometimes rooted on a best guess of intention rather than mathematical correctness.<br />\n",
+    "PostedDate": "2013-12-13T09:04:19.77-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1135742",
+    "ThreadId": "471751",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\n@aa2, forgive me but you're being a bit silly to say that you don't want to use TypeScript at all.<br />\n<br />\nThe &quot;weird stuff&quot; that TypeScript throws up (and I can only think of two cases, this one and <a href=\"https://typescript.codeplex.com/discussions/447628\" rel=\"nofollow\">this one</a> ) is the result of attempting to type a completely dynamic language. For both these cases the decision has been made on the basis of practicality rather than theoretical mumbo-jumbo. Practicality to me means identifying the most number of errors at compile time; and this is sometimes rooted on a best guess of intention rather than mathematical correctness.<br />\n</blockquote>\nI prefer no types or the &quot;any&quot; type to weird and annoying behavior.\r<br />\nFalse positives and false negatives as in the given examples are a complete no go for me. \r<br />\nAll the hassle for the programmer and compiler writer for what benefit ?\r<br />\n<br />\nI am no expert so maybe I do not fully understand the reasons behind the decisions of the Typescript team.\r<br />\nBut since experienced people with real world requirements share my concern and even showed them to me, there is something (very) wrong with the current form of Typescript.<br />\n",
+    "PostedDate": "2013-12-14T06:13:18.57-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

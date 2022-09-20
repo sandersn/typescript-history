@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1077337",
+    "ThreadId": "452585",
+    "Html": "Hi,\r<br />\n<br />\nDon't want to rush you guys... =) But when will the 0.9.1 VS addin be released?\r<br />\n<br />\nI'm currently compiling my code with the develop build, but would be better to get some of the fixes and new features (like the typeof)  inside VS.\r<br />\n<br />\nEven if it is not stable, would be nice for us testing the builds.<br />\n",
+    "PostedDate": "2013-08-06T10:08:50.947-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077399",
+    "ThreadId": "452585",
+    "Html": "It's been <a href=\"http://blogs.msdn.com/b/typescript/archive/2013/08/06/announcing-0-9-1.aspx\" rel=\"nofollow\">released</a>.<br />\n",
+    "PostedDate": "2013-08-06T12:22:42.667-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077429",
+    "ThreadId": "452585",
+    "Html": "Wow, missed that!\r\n<div><br>\r\n</div>\r\n<div>Thanks!<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-08-06T13:49:05.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077445",
+    "ThreadId": "452585",
+    "Html": "Unfortunately, I'm still finding the performance to be a major issue. It takes several minutes before the compiler builds up the information necessary to give member info, completions lists, etc. Only after it's finished that process (which has no visible indicator in the IDE) do the various functionalities happen quickly. Since 0.9, I have also been unable to reference the typings for Linq.js as it just causes the whole compiler to blow up under the pressure of all those generics. \r<br />\n<br />\nWorst of all, as of 0.9.1, Visual Studio now consumes more and more memory until it eventually crashes, even when I'm not doing anything. I <em>wasn't</em> experiencing this as of 0.9.0.1. I'm going to have to uninstall and reinstall 0.9.0.1.\r<br />\n<br />\nI don't think you guys are testing the compiler with large enough projects. I have on the order of tens of thousands of lines of TypeScript and a fairly modest use of generics, and I never get anywhere close to good performance. <br />\n",
+    "PostedDate": "2013-08-06T14:22:52.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077463",
+    "ThreadId": "452585",
+    "Html": "I have updated to the latest Web Essentials after 0.9.1 installation, tried uninstall/install/repair... Couldn't get compiler work on Ctrl + S. Have to restart machine couple of times. Noticed great performance improvements with Intellisense but totally unusable for other stuff for me. Going back to 0.9.0.1. Hope some fix will be provided soon, probably from Web Essentials.<br />\n",
+    "PostedDate": "2013-08-06T15:15:37.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077468",
+    "ThreadId": "452585",
+    "Html": "@MgSam: Looks like I can repro it using the linq.d.ts file from the v3 on CodePlex. (<a href=\"https://linqjs.codeplex.com/\" rel=\"nofollow\">https://linqjs.codeplex.com/</a>)<br />\n<br />\nIs that the version you're using?<br />\n",
+    "PostedDate": "2013-08-06T15:54:53.983-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077484",
+    "ThreadId": "452585",
+    "Html": "\r\n<div>\r\n<div style=\"font-size:11pt; font-family:Calibri,sans-serif\">No, I'm actually using a definition file I wrote for v2. I haven't submitted it to DefinitelyTyped because of being unable to test it due to compiler issues. It is extremely similar to the v3 file\r\n you have though, the biggest changes are the names.<br>\r\n<br>\r\nIf you want me to send you my exact definition file let me know.</div>\r\n</div>\r\n<div dir=\"ltr\">\r\n<hr>\r\n<span style=\"font-size:11pt; font-family:Calibri,sans-serif; font-weight:bold\"></span></div>\r\n",
+    "PostedDate": "2013-08-06T16:28:25.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077515",
+    "ThreadId": "452585",
+    "Html": "I am using linq.d.ts, and I too get massive memory consumption. VS 2012 just gorges on RAM until it hits ~3.3GB then it locks up, crashes.<br />\n",
+    "PostedDate": "2013-08-06T19:50:06.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077820",
+    "ThreadId": "452585",
+    "Html": "For the v3 linq.d.ts from codeplex we have a workaround:\r<br />\n<br />\nUsing Notepad, add an interface above the IDictionary&lt;TKey, TValue&gt; interface (line 223):<br />\n<pre><code>interface Pair&lt;TKey, TValue&gt;{\n    key:TKey;\n    value:TValue;\n}</code></pre>\n\nAnd replace the toEnumerable method in the IDictionary&lt;TKey, TValue&gt; interface with the following:<br />\n<pre><code>toEnumerable(): IEnumerable&lt;Pair&lt;TKey,TValue&gt;&gt;;</code></pre>\n\nWe are working on a real fix, but this should help unblock.<br />\n",
+    "PostedDate": "2013-08-07T09:22:48.343-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1077975",
+    "ThreadId": "452585",
+    "Html": "Thanks. I definitely appreciate you guys getting right on the new issues that have come up.\r<br />\n<br />\nNow I see the reason why even though I remove the reference to linq.d.ts this issue was still occurring:<br />\n<blockquote>\nIn Visual Studio, all TypeScript files in a project are considered to be referencing each other<br />\n</blockquote>\nSource: <a href=\"https://typescript.codeplex.com/wikipage?title=Known%20breaking%20changes%20between%200.8%20and%200.9&amp;referringTitle=Documentation\" rel=\"nofollow\">Breaking changes</a><br />\n",
+    "PostedDate": "2013-08-07T14:13:30.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

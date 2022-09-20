@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is basically a structural typing thing; the compiler can only relate generic types through their instantiation in members, not through their heritage. The inference works as long as `Def<T>` uses its type parameter, which it really ought to:\n\n```\n    class Def<T> {\n\t\tn: T;\n    }\n\n    class NumberDef extends Def<number> {\n    }\n\n    class Attr<T> {\n        constructor(def: Def<T>) { }\n    }\n\n    var a = new Attr(new Def<number>()); // Attr<number> -> OK\n    var b = new Attr(new NumberDef());   // OK\n    var b: Attr<number>;\n```\n\nGeneral guidance for testing these things is to *not* use empty classes or interfaces to make determinations about the type system.",
+    "ClosedDate": "2014-02-27T09:51:19.933-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "With the following code:\r\n```\r\n    class Def<T> {\r\n    }\r\n\r\n    class NumberDef extends Def<number> {\r\n    }\r\n\r\n    class Attr<T> {\r\n        constructor(def: Def<T>) { }\r\n    }\r\n\r\n    var a = new Attr(new Def<number>()); // Attr<number> -> OK\r\n    var b = new Attr(new NumberDef());   // Attr<{}> -> NOK, expecting Attr<number>\r\n\r\n    // I can get the expected result that way, but...\r\n    var c = new Attr<number>(new NumberDef());\r\n```\r\nIs it a limitation?\r\nShould I write the code differently to get the correct type inferred?",
+    "LastUpdatedDate": "2014-03-31T16:47:28.063-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-27T07:14:57.823-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic type inference lost with specialized classes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2239
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks.\nIn fact my real case was not with empty classes, but indeed no members nor methods exposed T directly (T is used internally through an object containing a value of T exchanged between Def and Attr objects).\nI've exposed a private dummy member (left unset) and this works.",
+      "PostedDate": "2014-02-28T03:21:05.267-08:00",
+      "Id": 135381
+    }
+  ]
+}

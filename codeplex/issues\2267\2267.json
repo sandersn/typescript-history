@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "When compiling the file with 'class Object' you get the following error in 1.0rc\n\n````\nfile1.ts(1,7): error TS2000: Duplicate identifier 'Object'. Additional locations:\n      lib.d.ts(95,1)\n````\n\nWe will this is enough of an indication to the user, that he's doing something that's not supported.\n",
+    "ClosedDate": "2014-03-06T15:32:31.17-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "```\r\nclass Object {\r\n\tget foo() {\r\n\t\t\r\n\t}\r\n}\r\n```\r\n\r\ncompiles into:\r\n\r\n```\r\nvar Object = (function () {\r\n    function Object() {\r\n    }\r\n    Object.defineProperty(Object.prototype, \"foo\", {\r\n        get: function () {\r\n        },\r\n        enumerable: true,\r\n        configurable: true\r\n    });\r\n    return Object;\r\n})();\r\n```\r\n\r\nwhich doesn't work since Object.defineProperty is undefined. The original Object.defineProperty should be used.",
+    "LastUpdatedDate": "2014-03-31T19:01:25.947-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-06T02:31:27.187-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Shadowing Object class breaks getter / setter definitions.",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2267
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Sorry, I didn't provide the entire example. Try putting the class definition in a module.",
+      "PostedDate": "2014-03-08T13:37:04.227-08:00",
+      "Id": 136303
+    },
+    {
+      "Message": "What would you expect to be emitted here?",
+      "PostedDate": "2014-03-31T16:24:25.677-07:00",
+      "Id": 140111
+    },
+    {
+      "Message": "This simply doesn't work because the identifier \"Object\" has been changed.  It is pure common sense that the line \"Object.defineProperty\" cannot work in such as case.\n\nI'm doing something similar for a (yes, yet another) framework I'm building, but I had to SAVE the original value of \"Object\" and the static declaration first.  Try this:\n\n```\ndeclare var StaticObject: typeof Object;\n\nmodule Mod {\n\tvar __Object:typeof StaticObject = (function(){return this.Object;})();\n\texport class Base  {\n\t\tstatic defineProperty = __Object.defineProperty;\n\t} \n\texport class Object extends Base {\n\t    get foo() {\n\t       return 123; \n\t    }\n \t}\n}\n\nalert(new Mod.Object().foo);\n```\n\nhttp://goo.gl/PvWuqr\n\n\n",
+      "PostedDate": "2014-03-31T18:58:19.107-07:00",
+      "Id": 140134
+    },
+    {
+      "Message": "Why this works? It works because it takes advantage of the fact that static properties are copied forward from base types.\n\nNote: You may be thinking down the line \"Why not create a static constructor?! [i.e. initializing a static variable with a function return]\"; but unfortunately, the JS output for that is always placed as the last thing to execute when setting up the class (so it won't work).",
+      "PostedDate": "2014-03-31T19:01:25.947-07:00",
+      "Id": 140135
+    }
+  ]
+}

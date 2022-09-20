@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-05-20T16:05:41.53-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I'm pretty sure the following is undesired behavior.\r\n\r\nThe following fails to compile, since `Window.Foo` has type `any`:\r\n\r\n```\r\nmodule Foo {\r\n  export function Bar<U>(baz: U): U {\r\n    return baz;\r\n  }\r\n}\r\n\r\ninterface Sad {\r\n  Foo: typeof Foo;\r\n}\r\ndeclare var l: Sad;\r\nl.Foo.Bar<string>(\"hello\");\r\n```\r\n\r\nThe following also fails to compile, because `Window.Foo2` has type `string`:\r\n\r\n```\r\nmodule Foo {\r\n  export function Bar<U>(baz: U): U {\r\n    return baz;\r\n  }\r\n}\r\n\r\ninterface Sad {\r\n  Foo: string;\r\n  Foo2: typeof Foo;\r\n}\r\ndeclare var l: Sad;\r\nl.Foo2.Bar<string>(\"hello\");\r\n```\r\n\r\nLooks like a scoping issue. However, I also recognize that it is illegal to specify `typeof Sad.Foo`, so this may be a hack around that limitation.\r\n\r\nIs this desired? It's certainly making my life more difficult.\r\n\r\nFor anyone else suffering from this issue: You can hackfix this with a simple 'proxy' variable declaration. Note that because I'm using `declare` here, it doesn't emit any unwanted code.\r\n\r\n```\r\nmodule Foo {\r\n  export function Bar<U>(baz: U): U {\r\n    return baz;\r\n  }\r\n}\r\ndeclare var FooProxy: typeof Foo;\r\n\r\ninterface Sad {\r\n  Foo: typeof FooProxy;\r\n}\r\ndeclare var l: Sad;\r\nl.Foo.Bar<string>(\"hello\");\r\n```\r\n",
+    "LastUpdatedDate": "2014-05-28T10:51:11.237-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-05-20T09:52:50.597-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "typeof <id> resolves to local field type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2515
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "You can also simply put in `import FooMod = Foo;` and use `FooMod` instead.\n\nIf there was a way to refer to the global namespace, it would help: https://typescript.codeplex.com/workitem/2287\n\nBottom line I think, this is expected.  In fact, I use the behaviour `Foo2: typeof Foo;` in a more complex usage (to pull types from other members), and I'm sure many others do as well.  This is an expected behavior unfortunately.\n\nUntil you can reference the global scope, consider making your own if possible:\n\n```\nmodule global {\n\texport module Foo {\n\t  export function Bar<U>(baz: U): U {\n\t    return baz;\n\t  }\n\t}\n\t\n\texport interface Sad {\n\t  Foo: typeof global.Foo;\n\t}\n\t\n\tdeclare var l: Sad;\n\t\n\tl.Foo.Bar<string>(\"hello\");\n}\n```\n",
+      "PostedDate": "2014-05-20T11:45:08.72-07:00",
+      "Id": 147225
+    },
+    {
+      "Message": "This should actually be an error, although not the one you're seeing. It was recently fixed in our latest bits: https://typescript.codeplex.com/SourceControl/changeset/4e278e535a39cea029ae792ce3217521d96ff790",
+      "PostedDate": "2014-05-20T16:05:33.063-07:00",
+      "Id": 147269
+    },
+    {
+      "Message": "Interesting - looks like I'll need to watch out for new bugs to pop in when installing the next release.  ;)",
+      "PostedDate": "2014-05-20T16:29:41.85-07:00",
+      "Id": 147273
+    },
+    {
+      "Message": "Side note: My solution doesn't work if you are referencing automatically produced `.d.ts` files from the code, since the TypeScript compiler will automatically inline the proxied type, tickling the bug again. Just learned this the Hard Way.",
+      "PostedDate": "2014-05-28T10:51:11.237-07:00",
+      "Id": 148145
+    }
+  ]
+}

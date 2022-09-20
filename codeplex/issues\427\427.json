@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.973-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "It's not only about syntax, see below. Admit that it is unnatural to write \nobj[\"prop\"] when you can write obj.prop. I would rather write <DesiredType>obj.prop to specify the type but I would expect TypeScript to do it for me. I realize that according to specs indexers should not do that.\n\nAgain, the sample in my previous post is a second priority scenario. The main problem is that I cannot require a method parameter to be a typed hash. Here is a function that expects a hash of columns and a function call that violates the implied type restriction:\n\n \n\n\nfunction somethingThatExpectsColumns(columns: { [key: string]: Column; }) {\n  // ...\n}\n\nsomethingThatExpectsColumns({ notAColumn: \"a string\" })\n\n\n \n\nThe best tool for this scenario that TS provides is indexers, but as I wrote earlier the problem is that an indexer actually does not require an object to have all properties of the same type. In this example, it does not require (does not raise a compilation\n error) when I pass an argument of an obviously wrong type. \n\nSo, in other words, despite TS tries to defend developers from making \"typing\" mistakes, this particular scenario of a typed hash is not covered by TypeScript. I find it a problem in the type-system design.\n\nThat's why I propose a new element of the type-system. Think of a typed hash as a typed array, because both are collections and sometimes hashes are used instead of arrays. When you check whether an array instance is a sub-type of certain target array type\n (e.g. Column[]), you make sure that a type of every element is a sub-type of the target element type. Same here, but you should check property values of an object, not array elements.\n\nSincerely,\n-Nodir",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-15T12:32:28.103-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Type errors on indexed object literal types not detected",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 5,
+    "Id": 427
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Original discussion:\nhttp://typescript.codeplex.com/discussions/401497#post941667",
+      "PostedDate": "2012-11-15T13:27:43.53-08:00",
+      "Id": 82562
+    },
+    {
+      "Message": "I think this problem with type checking of arrays indexed by a string is related:\n\n```\nclass MyType\n{\n   private _p1: number;\n\n   public set P(p: number)\n   {\n      this._p1 = p;\n   }\n}\n\nclass MTuser\n{\n   private _vector1: MyType[] = [];\n   private _vector2: MyType[] = [];\n\n   constructor(a: number)\n   {\n      this._vector1['first'] = new MyType;\n      this._vector1['first'] = a;                           // type mismatch not detected\n      this._vector1.first = a;                              // unknown property correctly identified\n      this._vector1['first'].P = a;                         // should be like this\n\n      this._vector2[0] = new MyType;\n      this._vector2[0] = a;                                 // type mismatch correctly identified\n   }\n}\n```\nWhen the array is indexed by a string, the type mismatch in _this._vector1['first'] = a_ is not detected. (Should be _this._vector1['first'].P = a_)\n\nWhen the array is indexed by a number, the type mismatch is detected. Error message \"Cannot convert 'number' to 'MyType'\".\n\nUsing property and type notation, _this._vector1.first = a_, is correctly identified as an error. Error message \"The property 'first' does not exist on value of type 'MyType[]'\".\n\n\n\nTo link with another issue, I should probably have indexed the array with an enum (javascript hangover). [http://typescript.codeplex.com/workitem/459](http://typescript.codeplex.com/workitem/459)\n",
+      "PostedDate": "2013-03-29T15:43:24.403-07:00",
+      "Id": 95323
+    },
+    {
+      "Message": "Changed to an enum for the array index and all type conformance is properly checked. Should have done it this way the first time and avoided a 'bang head against desk' typo.\n\nDefine this enum:\n```\nenum e_id { first };\n```\nand use (see code in earlier comment):\n```\n      this._vector1[e_id.first] = new MyType;\n      this._vector1[e_id.first] = a;                        // type mismatch correctly identified\n      this._vector1[e_id.first].P = a;                      // should be like this\n\n```\n\nTypeScript 0.8.3, VS2012",
+      "PostedDate": "2013-03-30T07:16:58.117-07:00",
+      "Id": 95355
+    }
+  ]
+}

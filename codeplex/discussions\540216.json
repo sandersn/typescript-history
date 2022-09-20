@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1226953",
+    "ThreadId": "540216",
+    "Html": "Consider:<br />\n<pre><code>function testA() : string {\n    return Math.random() &gt; 0.5 ? 1 : null;                              // a problem\n}\n\nfunction ifThenElse&lt;r&gt;(condition: boolean, thenResult: r, elseResult: r) : r {\n    return condition ? thenResult : elseResult;\n}\n\nfunction testB() : string {\n    return ifThenElse(Math.random() &gt; 0.5, 1, null);                    // a problem\n}\n\nfunction lazyIfThenElse&lt;r&gt;(condition: boolean, toThenResult: () =&gt; r, toElseResult: () =&gt; r) : r {\n    return condition ? toThenResult() : toElseResult();\n}\n\nfunction testC() : string {\n    return lazyIfThenElse(Math.random() &gt; 0.5, () =&gt; 1, () =&gt; null);    // expected a problem, but everything is fine!\n}\n</code></pre>\n\nThe problem is that <code>testC</code> compiles as if everything was fine. Is there a way to get around this problem?<br />\n",
+    "PostedDate": "2014-03-26T08:28:30.983-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1227513",
+    "ThreadId": "540216",
+    "Html": "There is some talk similar to this here: <a href=\"https://typescript.codeplex.com/discussions/397565\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/397565</a><br />\n",
+    "PostedDate": "2014-03-27T11:57:42.203-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1227521",
+    "ThreadId": "540216",
+    "Html": "The best thing to do would be to pass <code>--noImplicitAny</code> to the compiler. This would require you to write e.g. <code>(): number =&gt; null</code> in the third argument and prevent the 'any' type from leaking out.<br />\n",
+    "PostedDate": "2014-03-27T12:07:29.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

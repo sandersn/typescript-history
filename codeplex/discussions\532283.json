@@ -1,0 +1,82 @@
+[
+  {
+    "Id": "1209313",
+    "ThreadId": "532283",
+    "Html": "What's the best method of importing a class into another purely for the purpose of referencing it's type?<br />\n<br />\ne.g.<br />\n<pre><code>class Hello {\n\n    constructor(private world: World) {\n    }\n\n}</code></pre>\n\nShould the 'World' type be imported via a reference or an import statement? <br />\n<pre><code>/// &lt;reference path=&quot;World.ts&quot; /&gt;</code></pre>\n\nThe reference method doesn't seem to work consistently. Sometimes it will allow us to reference the type World, others not (we haven't managed to pin down the reason yet).<br />\n<pre><code>import World = require('World');</code></pre>\n\nImport works consistently but causes code to be rendered out to the JavaScript that is completely unnecessary:<br />\n<pre><code>// Require statement that's not needed in rendered code\nvar World = require('World');\n\nvar Hello = (function () {\n    function Hello(world) {\n        this.world = world;\n    }\n   \n    return Hello;\n})();\n\nmodule.exports = Hello;</code></pre>\n\n",
+    "PostedDate": "2014-02-17T02:05:11.093-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209475",
+    "ThreadId": "532283",
+    "Html": "<strong>Dan_s wrote:</strong><br />\n<blockquote>\nWhat's the best method of importing a class into another purely for the purpose of referencing it's type?<br />\n</blockquote>\nThe bit &quot;purely for the purpose of referencing its type&quot; kind of answers the question itself. When you reference a type with &lt;reference&gt;, you're basically saying &quot;Trust me, there is such and such a type, and it will be available at runtime&quot;.\r<br />\n<br />\nImport on the other hand depends on the existence of a <em>physical file</em> at the import location.\r<br />\n<br />\nThere used to be a number of bugs on the &lt;reference&gt; tag, but at the moment I believe they've all been resolved.<br />\n",
+    "PostedDate": "2014-02-17T07:36:46.777-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209501",
+    "ThreadId": "532283",
+    "Html": "So just to clarify, the following should work?<br />\n<br />\n<strong>World.ts</strong><br />\n<pre><code>class World {\n\n    constructor(private name: string) {\n\n    }\n\n}\n\nexport = World;</code></pre>\n\n<strong>Hello.ts</strong><br />\n<pre><code>/// &lt;reference path=&quot;World.ts&quot; /&gt;\n\nclass Hello {\n\n    constructor(world: World) {\n\n    }\n\n}</code></pre>\n\nAt the moment this causes the following error when compiled with &quot;tsc Hello.ts --module commonjs&quot;:<br />\n<blockquote>\nerror TS2095: Could not find symbol 'World'.<br />\n</blockquote>\nThere's also no way to alias the imported type when using the &lt;reference&gt; tag (unlike when import is used), which could easily cause issues.<br />\n",
+    "PostedDate": "2014-02-17T08:38:49.45-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209531",
+    "ThreadId": "532283",
+    "Html": "@Dan_s, depends on what you want to do.\r<br />\n<br />\nI inferred from your comment &quot;Require statement that's not needed in rendered code&quot; that you're probably writing something for the browser, and you're loading the script via a &lt;script&gt; tag.\r<br />\n<br />\nFor that case, you'd need to namespace your code using modules like the following:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n\n<span style=\"color:Blue;\">module</span> foo {\n    <span style=\"color:Blue;\">export</span> <span style=\"color:Blue;\">class</span> World {\n        <span style=\"color:Blue;\">constructor</span>(<span style=\"color:Blue;\">private</span> name: <span style=\"color:Blue;\">string</span>) {\n    }\n  }\n}\n\r\n</pre></div>And in the calling code<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">/// &lt;reference path=&quot;World.ts&quot; /&gt;</span>\n\n<span style=\"color:Blue;\">class</span> Hello {\n    <span style=\"color:Blue;\">constructor</span>(world: foo.World) {\n    }\n}\r\n</pre></div>There are a few different ways to structure modules. See also <a href=\"https://typescript.codeplex.com/discussions/532302\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/532302</a><br />\n",
+    "PostedDate": "2014-02-17T09:59:17.78-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209563",
+    "ThreadId": "532283",
+    "Html": "/// reference path vs import/require is not really about types vs values. With either one you can use only types from the referenced file(s). In the case of import/require the compiler will not emit the module loading code in the JavaScript if it determines the module was imported only for purposes of type information (which doesn't need to be available at runtime). You should choose between internal modules (/// reference path) or external modules (import/require) for other reasons than this. You appear to be confused about the difference based on your second example (mixing export= and /// reference path), I would recommend starting here to better understand the difference: <a href=\"https://typescript.codeplex.com/wikipage?title=Modules%20in%20TypeScript&amp;version=12\" rel=\"nofollow\">https://typescript.codeplex.com/wikipage?title=Modules%20in%20TypeScript&version=12</a><br />\n",
+    "PostedDate": "2014-02-17T11:51:22.467-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209616",
+    "ThreadId": "532283",
+    "Html": "We currently use 'import' combined with 'export ='. The query about reference is because the module loading code is being generated when the import is being used purely for type information. Perhaps a bug? \r<br />\n<br />\nReal world example:<br />\n<pre><code>import Screenshot = require('../Image/Screenshot');\n\nclass Capture {\n\n  private _resultCounter: number;\n\n  constructor(private _screenshot: Screenshot,\n              private _testName: string) {\n\n\n    this._resultCounter = 1;\n  }\n\n  public resultImage(done: () =&gt; void) {\n    this._screenshot.take(this._testName + '/' + this._resultCounter + '_actual.png', done);\n\n    this._resultCounter++;\n  }\n\n}\n\nexport = Capture;</code></pre>\n\nIs being rendered to:<br />\n<pre><code>var Screenshot = require('../Image/Screenshot');\n\nvar Capture = (function () {\n    function Capture(_screenshot, _testName) {\n        this._screenshot = _screenshot;\n        this._testName = _testName;\n        this._resultCounter = 1;\n    }\n    Capture.prototype.resultImage = function (done) {\n        this._screenshot.take(this._testName + '/' + this._resultCounter + '_actual.png', done);\n\n        this._resultCounter++;\n    };\n    return Capture;\n})();\n\nmodule.exports = Capture;</code></pre>\n\nNote that the Screenshot object is being injected and the import is only for type information, but the require statement is still in the JavaScript.<br />\n",
+    "PostedDate": "2014-02-17T14:25:30.507-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209621",
+    "ThreadId": "532283",
+    "Html": "Yeah could be a bug that still exists, or it was possibly fixed already, I can't be sure yet. Can you share the contents of the Screenshot module? With the latest bits in the develop branch I see the correct codegen for the Capture module (ie no require codegen'd) with a trivial version of a Screenshot module like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Screenshot {\n    x: <span style=\"color:Blue;\">number</span>;\n    y: <span style=\"color:Blue;\">number</span>;\n    take(name: <span style=\"color:Blue;\">string</span>, done: <span style=\"color:Blue;\">any</span>): <span style=\"color:Blue;\">any</span>;\n}\n\n<span style=\"color:Blue;\">export</span> = Screenshot\r\n</pre></div>so either the bug has been fixed already in the latest bits (I'm assuming you're using 0.9.5) or there's something specific to the way your Screenshot module is authored that's confusing the compiler and making me unable to repro it with a simple case.<br />\n",
+    "PostedDate": "2014-02-17T14:43:58.183-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209626",
+    "ThreadId": "532283",
+    "Html": "The Screenshot code is: <br />\n<pre><code>import fs = require('fs');\nimport webdriver = require('selenium-webdriver');\n\nclass Screenshot {\n\n  constructor(private _fs: typeof fs,\n              private _driver: webdriver.Driver) {\n\n  }\n\n  public take(saveAs: string,\n              callback: () =&gt; void) {\n\n    this._driver\n      .takeScreenshot()\n      .then((result) =&gt; {\n        var buffer = new Buffer(result, 'base64');\n\n        this._fs.writeFileSync(saveAs, buffer);\n\n        callback();\n      });\n  }\n\n}\n\nexport = Screenshot;</code></pre>\n\n",
+    "PostedDate": "2014-02-17T14:59:45-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209631",
+    "ThreadId": "532283",
+    "Html": "Thanks. It looks like this has been fixed in our latest bits. I was able to repro what you're seeing with 0.9.5 but the latest bits in the develop branch properly omit the require from the codegen.<br />\n",
+    "PostedDate": "2014-02-17T15:28:40.697-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1209637",
+    "ThreadId": "532283",
+    "Html": "Great, thanks for the feedback. I was seeing the module require statement rendered out in all the classes I'd checked so had assumed that it was the expected behavior; hence the confusion on if we should be using &lt;reference&gt; tag.<br />\n",
+    "PostedDate": "2014-02-17T15:53:50.98-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

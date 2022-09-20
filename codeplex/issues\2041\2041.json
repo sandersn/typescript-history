@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is pretty far outside our intended design scope. This would be a great place for someone to fork the compiler and develop this kind of thing independently.",
+    "ClosedDate": "2013-12-23T10:37:19.407-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I do like TypeScript a lot, but unfortunately not all JS developers are fond of compile-to-JS languages. This can lead to [developers contributing less to open-source-projects if such a language is used](http://gaslight.co/blog/does-coffeescript-have-a-future):\r\n\r\n> I’m not even going to read this because I don’t know CoffeeScript\r\n\r\nand\r\n\r\n> Every CoffeeScript developer knows JavaScript. The inverse is not true.\r\n\r\n\r\nReplace \"CoffeeScript\" with \"TypeScript\" and the quotes are still valid.\r\n\r\nHaving to give up static type-checking to encourage open-source contribution and verse visa is a tough decision. \r\n\r\nI thus propose to provide a special mode for the typescript compiler that works on plain-old JavaScript files and uses .d.ts files or JS comments for type information (or both). This way, the maintainer of an open-source project can still use type checking whereas other contributors don't have to (obviously the maintainer would need to add the type information). \r\n\r\nUsing .js files for the TS compiler does not work currently. Ideally I imagine it like this:\r\n\r\nA.js\r\n```\r\n/// <reference path=\"./A.d.ts\" />\r\n\r\nfunction getStringLength(str) { return str.length; }\r\n```\r\n\r\nA.d.ts\r\n```\r\ndeclare function getStringLength(str: string): number;\r\n```\r\n\r\nB.js\r\n```\r\n/// <reference path=\"./A.js\" />\r\n\r\ngetStringLength(\"foobar\");\r\n```\r\n\r\nBut using tsc gives us the following error:\r\n\r\n```\r\n> tsc --out Temp.js B.js\r\nerror TS5007: Cannot resolve referenced file: 'B.js'.\r\n```\r\n\r\nThe nature of the type information annotations in comments is still up to question. It would be possible to simply use normal TS declarations in the comments:\r\n\r\n```\r\n/*\r\n * @tsdecl function getStringLength(str: string): number\r\n */\r\nfunction getStringLength(str) { return str.length; }\r\n\r\n\r\n/*\r\n * @tsdecl class Vector2 implements IVector2\r\n * @tsdecl constructor(x: number, y: number)\r\n */\r\nfunction Vector2(x, y) { }\r\n```\r\n\r\nType inference could still work the same way and parsing of JS files should not be a big problem as TS is a superset of JS.\r\n\r\nThanks for the consideration!",
+    "LastUpdatedDate": "2013-12-23T10:37:19.407-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-21T07:03:07.417-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Postponed"
+    },
+    "Summary": "TypeScript as an optional typechecker for Javascript files (type annotations in .d.ts files or comments)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2041
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Short update:\n\nI thought, I could get this to work with an intermediary build-step that copies all JS files to TS files, but using TSC would give me the following error: \n\n>A.ts(3,1): error TS2152: Overload signatures must all be ambient or non-ambient.\n\nNot exactly sure what that means though...",
+      "PostedDate": "2013-12-21T07:11:27.833-08:00",
+      "Id": 128225
+    }
+  ]
+}

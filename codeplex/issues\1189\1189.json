@@ -1,0 +1,91 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:57:37.203-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "This simple code causes the internal compiler error: __tsc.js(38161, 15) Microsoft JScript runtime error: Unable to get value of the property 'isError': object is null or undefined__\r\n\r\n```\r\nclass Foo {\r\n    constructor(public x: X) {\r\n    }\r\n}\r\nvar foo = new Foo( 0 );\r\n\r\n```\r\n\r\nI'm, of course, expecting __error TS2095: Could not find symbol  'X'__, which you do get if you remove __public__ in the constructor.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-20T01:30:11.733-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "tsc 0.9.0.0: tsc.js(38161, 15) Microsoft JScript runtime error: Unable to get value of the property 'isError': object is null or undefined",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 7,
+    "Id": 1189
+  },
+  "FileAttachments": [
+    {
+      "FileId": 695266,
+      "FileName": "EditableList.ts",
+      "DownloadUrl": ".\\695266"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Reproduced with this problem on this code.\n\nI have the same problem on a larger project, still not able to find the reason and workaround.\n",
+      "PostedDate": "2013-06-20T06:05:41.273-07:00",
+      "Id": 103602
+    },
+    {
+      "Message": "Thanks for the report.  Strange such a serious error is occurring on such a simple snippet.  We'll take a look.",
+      "PostedDate": "2013-06-20T10:00:29.673-07:00",
+      "Id": 103627
+    },
+    {
+      "Message": "I have the same issue with the code I have attached, though I cannot narrow down where it is occurring.\r\n",
+      "PostedDate": "2013-06-20T12:21:12.443-07:00",
+      "Id": 103650
+    },
+    {
+      "Message": "I'm a bit baffled.  In trying to diagnose this further, I started with devenv.exe /log in admin mode ( I normally run in admin mode) and it started working.   I closed and restarted again and it remains working.   I also had a ton of issues with parsing the jquery.d.ts file, but removed that to attempt to isolate this problem.  Now I have added the jquery.d.ts reference back and I am not getting any errors with it.  \n\nI kind of wonder if there was some sort of cache that was cleared by using the /log switch.\n\nI have to say a big thank you for the automatic check out of both the source and generated .js file working in 0.9",
+      "PostedDate": "2013-06-20T13:42:52.513-07:00",
+      "Id": 103681
+    },
+    {
+      "Message": "Just to help a bit, I'm reproducing this error on the following code:\n\n```\nfunction c<T>( func: () => T ) {}\n\nc( () => {\n\tvar n = 0;\n\treturn [new A()]\n\t\t.filter( (t: A) => t.Array.indexOf( n ) >= 0 )\n\t\t.sort( (a: A, b: A) => 0 );\n} );\n\nclass A {\n\tArray: number[];\n}\n```\n\nI have absolutely no idea what is causing it, but this is the very minimal example I was able to produce by iterative reduction from my original code. Removing any more parts from this snippet gets rid of the error.",
+      "PostedDate": "2013-06-20T21:13:52.627-07:00",
+      "Id": 103744
+    },
+    {
+      "Message": "FYI: See http://blogs.msdn.com/b/typescript/archive/2013/06/28/announcing-typescript-0-9-0-1.aspx .  This release should address the issue originally reported.",
+      "PostedDate": "2013-06-28T17:26:23.66-07:00",
+      "Id": 104617
+    },
+    {
+      "Message": "Sorry, it is not fixed, the problem persists.\n",
+      "PostedDate": "2013-07-02T02:59:03.917-07:00",
+      "Id": 104842
+    },
+    {
+      "Message": "Anyone knows how to work around this or what causes it? Just got this after making a bunch of refactorings and can't trace it.",
+      "PostedDate": "2013-07-31T03:07:15.977-07:00",
+      "Id": 108042
+    },
+    {
+      "Message": "For me, it seems to be related to caching. \n\nI had several files with classes that implemented Ui.IFoo\nI then deleted Ui.IFoo and classes would have to now implement Ui.Other.IBar\nHowever, when updating references, I missed one => this one compilation error ** when compiling a file within VStudio that referenced the one that I missed **",
+      "PostedDate": "2013-07-31T03:22:39.25-07:00",
+      "Id": 108043
+    }
+  ]
+}

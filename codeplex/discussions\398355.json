@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "922999",
+    "ThreadId": "398355",
+    "Html": "\r\n<p>Getter and Setter are supported, but currently the typechecking only handles them as normal properties. It would be nice to check the use of properties that have only a getter or only a setter:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>class Test {<br>&nbsp;&nbsp;&nbsp; private counter: number;<br>&nbsp;&nbsp;&nbsp; get name(): string { return 'My Test' }<br>&nbsp;&nbsp;&nbsp; set hiddenCounter(v: number) { counter = v; }<br>}<br>var test = new Test;<br>test.name = 'Error';<br>var error = test.hiddenCounter;\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>These two errors should be recognized by type checking and in the code completion could be an icon G (only getter) and S (only setter) for these properties.</p>\r\n<p>And it should be possible to declare such a class:</p>\r\n<p></p>\r\n<pre>declare class Test {\r\n\tprivate counter: number;\r\n\tget name(): string;\r\n\tset hiddenCounter(v: number);\r\n}\r\n</pre>\r\nCurrently I get the error: &quot;Property accessors may not be declared in ambient classes&quot;.\r\n<p></p>\r\n",
+    "PostedDate": "2012-10-07T01:59:36.893-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "924860",
+    "ThreadId": "398355",
+    "Html": "<p>Hi Andy,</p>\r\n<p>The first example you give actually matches the semantics of JavaScript, which is something we want to do.&nbsp; Though, we get requests to address this quite often, and are looking into introducing an error for it in the future.</p>\r\n<p>For ambient classes, the reason why we don't allow getters and setters is because from a the type system's point of view, it's really just a normal property.&nbsp; (For typing purposes, the fact that a property may be backed by a getter or setter isn't relevant.)&nbsp; So technically you'd want to use \"name: string\" or \"hiddenCounter: number\".</p>\r\n<p>Thanks!</p>\r\n<p>- Joe</p>",
+    "PostedDate": "2012-10-10T11:55:34.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "924986",
+    "ThreadId": "398355",
+    "Html": "<p>Hi Joe,</p>\r\n<p>thank you for your reply.</p>\r\n<p>In strict mode JS throws an error if I try to \"Writing to a read-only property\" e.g. if it has only a getter (http://msdn.microsoft.com/en-US/library/br230269%28v=vs.94%29.aspx).</p>\r\n<p>So I hope that you will add more infos to a property for the type system in the future than only the type, to get errors for read-only properties at compile time.</p>",
+    "PostedDate": "2012-10-10T17:10:44.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "925130",
+    "ThreadId": "398355",
+    "Html": "<p>Hi Andy,</p>\r\n<p>I agree with you that is would be nice to add additional info to properties. Support for property accessors in ambient declarations would be indeed be great idea.</p>\r\n<p>For example when you look at the DOM API, there are so many properties that are officially defined as read-only. To assist developers to not make mistakes and try to assign a value to these properties would be a huge benefit. Right now there is no way of knowing&nbsp;which&nbsp;properties can be set and&nbsp;which are read-only.</p>\r\n<p>So I also hope that the TypeScript team would at least consider to put this on the roadmap (to be fair, i guess this ain't a small change).</p>\r\n<p>--Peter</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-11T02:23:09.823-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

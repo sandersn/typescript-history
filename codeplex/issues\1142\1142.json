@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "You can't have two call signatures with the same arguments and different return types. In the latest bits, an error will be issued in the interfaces.",
+    "ClosedDate": "2013-06-12T10:25:37.54-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "See the following code:\r\n\r\n```ts\r\ninterface FulfillFunction<ValueType, ReturnType> {\r\n    (value: ValueType): ReturnType;\r\n    (value: ValueType): IPromise<ReturnType>;\r\n}\r\n\r\ninterface RejectFunction<ExceptionType, ReturnType> {\r\n    (reason: ExceptionType): ReturnType;\r\n    (reason: ExceptionType): IPromise<ReturnType>;\r\n}\r\n\r\ninterface IPromise<T> {\r\n    then<U>(onFulfilled?: FulfillFunction<T,U>, onReject?: RejectFunction<any,U>): IPromise<U>;\r\n}\r\n\r\nvar y = <IPromise<number>>{};\r\n\r\ny.then<string>((value: number) => {\r\n    return <IPromise<string>>{};\r\n}, (reason) => {\r\n    return \"asdf\";\r\n});\r\n\r\ny.then<string>((value: number) => {\r\n    return \"blah\";\r\n});\r\n```\r\n\r\nCurrently getting this error list:\r\n```js\r\n/*\r\n\r\nCompile Error. \r\nSee error list for details\r\n C:/Users/Andrew/Projects/Ping/server/accessors/IPromise.ts(17,3): error TS2082: Supplied parameters do not match any signature of call target:\r\n\r\n\tCall signatures of types '(value: number) => IPromise<string>' and 'FulfillFunction<number, string>' are incompatible.\r\nC:/Users/Andrew/Projects/Ping/server/accessors/IPromise.ts(17,3): error TS2087: Could not select overload for 'call' expression.\r\nC:/Users/Andrew/Projects/Ping/server/accessors/IPromise.ts(23,3): error TS2082: Supplied parameters do not match any signature of call target:\r\n\r\n\tCall signatures of types '(value: number) => string' and 'FulfillFunction<number, string>' are incompatible:\r\n\r\n\t\tType 'String' is missing property 'then' from type 'IPromise<string>'.\r\nC:/Users/Andrew/Projects/Ping/server/accessors/IPromise.ts(23,3): error TS2087: Could not select overload for 'call' expression.\r\n\r\n\r\n*/\r\n```\r\n\r\nNeither return IPromise<string> or string for a function of type FulfillFunction is considered to match the function interface. I get the same problem with the following code that does not use generics in the v0.9 compiler:\r\n\r\n```ts\r\ninterface MultiReturnFunction {\r\n    (value: number): string;\r\n    (value: number): number;\r\n}\r\n\r\ninterface MultiReturnFunction2 {\r\n    (value): string;\r\n    (value): number;\r\n}\r\n\r\ninterface OtherInterface {\r\n    func(first?: MultiReturnFunction, second?: MultiReturnFunction2): OtherInterface;\r\n}\r\n\r\nvar x = <OtherInterface>{};\r\n\r\nx.func((val: number) => {\r\n    return \"\";\r\n});\r\n```\r\n\r\nWith it saying the function passed to func does not match the call signatures of MultiReturnFunction. However, the code __compiles correctly in the TypeScript Playground.__\r\n\r\nIs what I'm attempting not correct? I would think it would be.",
+    "LastUpdatedDate": "2013-06-12T10:25:37.54-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-11T23:21:21.42-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Named Function Types with Generics Cannot Overload in v0.9 Beta",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1142
+  },
+  "FileAttachments": [
+    {
+      "FileId": 691844,
+      "FileName": "IPromise.ts",
+      "DownloadUrl": ".\\691844"
+    }
+  ],
+  "Comments": []
+}

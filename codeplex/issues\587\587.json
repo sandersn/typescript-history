@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:16:42.813-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "The following code has an error \"Ambiguous call expression - could not choose overload\", and it repros in the playground:\n\nclass TestClass {\n\tpublic foo(x: any): void {\n\t\tthis.bar(x);\n\t}\n\t\n\tpublic bar(x: string): void;\n\tpublic bar(x: string[]): void;\n\tpublic bar(x: any): void {\n\t}\n}\n\nIs there a way to resolve this other than casting this to any (ex. (<any>this).bar(x)), or is this a bug?\n\nThe real situation we have run into is slightly different, but the essence is the same.\n\nclass TestClass {\n\tpublic foo(x: string): void;\n\tpublic foo(x: string[]): void;\n\tpublic foo(x: any): void {\n\t\tthis.bar(x);\n\t}\n\t\n\tpublic bar(x: string): void;\n\tpublic bar(x: string[]): void;\n\tpublic bar(x: any): void {\n\t}\n}\n\nIn the second example it certainly seems counter-intuitive that it cannot be called.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-01-02T15:23:32.703-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Calling an overloaded function with \"any\" type",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 587
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Also worth noting that this code compiled without errors in the 0.8.0 version of the compiler.",
+      "PostedDate": "2013-01-02T15:24:13.327-08:00",
+      "Id": 85262
+    },
+    {
+      "Message": "Assigning to Luke for design consideration",
+      "PostedDate": "2013-01-03T13:09:39.323-08:00",
+      "Id": 85315
+    },
+    {
+      "Message": "@ian320 - this is a bug in the compiler, according to the spec, the \"best common type\" should be computed on the return types of each signature in the set of applicable candidates.  In this case, that should resolve the ambiguity since both applicable overloads return \"void\".",
+      "PostedDate": "2013-01-04T11:55:36.637-08:00",
+      "Id": 85378
+    },
+    {
+      "Message": "Marking 'active'",
+      "PostedDate": "2013-01-04T12:11:12.92-08:00",
+      "Id": 85380
+    }
+  ]
+}

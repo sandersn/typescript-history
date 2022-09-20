@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:23.86-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Consider the following code\r\n\r\n```\r\nmodule X {\r\n    export class ViewModel {\r\n    }\r\n\r\n    export class Widget<TViewModel extends ViewModel> {\r\n        public options: TViewModel;\r\n\r\n        constructor(viewModel: TViewModel) {\r\n        }\r\n    }\r\n}\r\n\r\nmodule Y {\r\n    export class ViewModel extends X.ViewModel {\r\n        public value: number;\r\n    }\r\n\r\n    // We would like to write \"export class Widget<T, TViewModel extends ViewModel = ViewModel> extends X.Widget<TViewModel> {\"\r\n    export class Widget<T, TViewModel extends ViewModel> extends X.Widget<TViewModel> {\r\n        \r\n        constructor(viewModel: TViewModel = new ViewModel()) {\r\n            super(viewModel);\r\n        }\r\n    }\r\n}\r\n\r\n// This line works fine\r\nvar k = new Y.Widget<string, Y.ViewModel>();\r\n\r\n// We would like also to be able to write this though\r\nvar k = new Y.Widget<string>();\r\n```\r\nBasically, we would like to allow Y.Widget to be constructed by specifying only the first type argument.\r\n\r\nIn this C#, this would be enabled by creating another definition of the class with one of the generic parameters specialized. For example:\r\n\r\n```\r\nclass X<T, U>\r\n{\r\n}\r\n\r\nclass X<T> : X<T, int>\r\n{\r\n}\r\n```\r\n\r\nThanks",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-16T02:14:52.337-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support for default generic arguments",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 8,
+    "Id": 1044
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "@WilliamMoy, interesting bit of code there. Is this some kind of JavaScript UI framework?",
+      "PostedDate": "2013-05-16T06:10:01.297-07:00",
+      "Id": 100344
+    },
+    {
+      "Message": "Thanks for the suggestion!  Assigning to Jonathan for consideration.",
+      "PostedDate": "2013-05-16T13:53:15.803-07:00",
+      "Id": 100392
+    },
+    {
+      "Message": "Since generics are a compile type only things - i recommend the syntax\n\nclass X<T, U = int>{\n}\n\nthis is also usefull in some other cases like this:\n\ninterface IMap<T, K = string> {\n  [key: K]: T;\n}\n\nmost maps use strings for their key types (as does JS internally) so most usage will be without specifing key type\nvar myMap: IMap<ValueType> = {}; // to start a new empty map\n\nbut sometimes you want the compiler to guard you from using the wrong key\nenum ErrorCodes {\n  NO_ERROR, ERROR_1, ERROR_2\n}\nvar errorMessages: IMap<string, ErrorCodes> = {};\n\nerrorMessage[ErrorCodes.ERROR_1] = 'Error description'; // should be ok\nerrorMessage[5] = 'Another error description'; // compiler should at least give a warning\nerrorMessage['ERROR_2'] = 'Yet another error description'; // compiler should give an error\n",
+      "PostedDate": "2014-07-09T06:38:55.667-07:00",
+      "Id": 151903
+    }
+  ]
+}

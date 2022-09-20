@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments",
+    "ClosedDate": "2013-10-07T12:39:25.533-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "tsc does not import a module (amd) if it's not used in the file where it should be imported.\r\n\r\nConsider the following\r\n# File a.ts\r\n```\r\nimport b = require('b');\r\n```\r\n\r\n# File b.ts\r\n```\r\n() => {\r\n    console.log('b says hello');\r\n} ();\r\n```\r\n\r\nAs you can imagine, b gets never imported and the code is never called. However, it should. You can't say for sure that there isn't some kind of initialization logic, or code which extends existing objects, but no public exports.\r\n\r\n# File a.ts (modified)\r\n```\r\nimport b = require('b');\r\n\r\nvar a = new b.A();\r\n```\r\n\r\n# File b.ts (modified)\r\n```\r\nexport class A {\r\n}\r\n\r\n() => {\r\n    console.log('b says hello');\r\n} ();\r\n```\r\n\r\nTo get a working import you have to add an exported type and have to instantiate it. This is a very annoying workaround and at the moment I am building my imports using require.js on my own.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-19T11:43:59.183-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Module not imported when not used (but it should ...)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1531
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We're looking in to what exactly should happen here. As a workaround, you can simply write 'b;' anywhere in the referencing file and the compiler will emit the reference.",
+      "PostedDate": "2013-08-21T09:47:39.293-07:00",
+      "Id": 110608
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:27:36.863-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hi, we often mock up methods for testing. Just stumbled across this error:\r\n\r\n```TypeScript\r\ninterface Foo {\r\n\r\n    getFoo(bar: number): void;\r\n    getFoo(bar: string): void;\r\n}\r\n\r\nvar foo: Foo;\r\n\r\n// Error TS2012: \r\n// Cannot convert '(bar: number) => void' \r\n//      to '{ (bar: number): void; (bar: string): void; }':\r\nfoo.getFoo = bar => {\r\n};\r\n```\r\nThe compiler doesn't know which overload we are reassigning hence it errors out.\r\n\r\nHowever, even adding annotation does not make the error go away, as one would expect:\r\n\r\n```TypeScript \r\nfoo.getFoo = (bar:number) => {};\r\n```\r\n\r\nThe error only goes away with\r\n\r\n```TypeScript \r\nfoo.getFoo = (bar:any) => {};\r\n```\r\n\r\nThis may not be a bug, but at least there should be a better error message, because it's confusing.\r\n",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-10T03:32:11.153-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Overloaded method re-assignment",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1667
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks.  Definitely shouldn't be an error in the first case.  I still see this repro'ing in our latest bits.  We'll take a look.",
+      "PostedDate": "2013-09-11T15:45:27.833-07:00",
+      "Id": 113281
+    },
+    {
+      "Message": "You can get around the error by restructuring the interface, so that you can name the overload set\n```\ninterface F {\n\t(bar: number): void;\n\t(bar: string): void\n}\n\t\t\t  \ninterface Foo { getFoo: F }\n\nvar foo: Foo;\n\nfoo.getFoo = <F>((bar) => {\n});\n```\nbut that won't help much. There are several issues here:\n\n1 you can't just override one of the overloads; your assignment has to provide an implementation for all overloads (though you could add an implementation for `number` and fall back to the original for `string`)\n\n2 TypeScript doesn't have a type `number|string`, so when moving into the body, there is no precise single type to use for `bar` \n\n3 TypeScript playground assumes `bar:number` for completion (incomplete) and for your error message (incorrect), and seems to use `any` otherwise, which is inaccurate\n\nBecause of 2, completion and type are not accurate in the body. I consider this an incompleteness in TypeScript's type system - it can't do the type restructuring necessary to move from overloaded method to overloaded method parameter. Because of 3, imprecision is partially replaced by incompleteness/incorrectness.\n\nSo, even when 3 gets fixed (by typechecking once per overload, then merging the results?), the result might not be what you want.",
+      "PostedDate": "2013-09-13T07:24:40.833-07:00",
+      "Id": 113472
+    }
+  ]
+}

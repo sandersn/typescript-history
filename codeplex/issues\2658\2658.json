@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "```\r\ninterface A extends B, C {\r\n}\r\n\r\ninterface B {\r\n    close(): void;\r\n}\r\n\r\ninterface C extends B {\r\n    close(): void;\r\n    close(overloaded: boolean): void;\r\n}\r\n```\r\n\r\nIn the example above, compilation fails with:\r\n\r\nError\tInterface 'A' cannot simultaneously extend types 'B' and 'C'.\r\n  Named properties 'close' of types 'B' and 'C' are not identical.\r\n\r\nThe fact A extends both B and C is redundant, since C already  extends B. However it doesn't make the construction incorrect. Shouldn't the code above compile correctly?\r\n\r\nTS compiler version: 1.4",
+    "LastUpdatedDate": "2015-04-22T11:02:16.99-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2015-02-27T18:54:47.213-08:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Method overload on extended interface",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2658
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "They are not the same.  The 'C' implementation is overloaded.  I think 'A extends B' is like a contract, stating that by calling {A}.close() you are expecting {B}.close(), when in fact, you are ALSO supporting the {C}.close() implementation/version as well, which, because of ther overload, would most likely have a completely different implementation.  In fact, if you remove `close(overloaded: boolean): void;`, then it works.",
+      "PostedDate": "2015-02-27T19:42:23.95-08:00",
+      "Id": 175686
+    },
+    {
+      "Message": "Redefine the method in A such that A is a subtype of B and C, e.g:\n\n```\ninterface A extends B, C {\n    close(): void;\n    close(overloaded: boolean): void;\n}\n```\n\nNote: TypeScript has moved to [github](https://github.com/Microsoft/TypeScript)",
+      "PostedDate": "2015-02-28T04:56:33.233-08:00",
+      "Id": 175710
+    },
+    {
+      "Message": "@mhegazy, I understand we could change the code to archive the same purpose.\n\nWhat I'm wondering is if there is any design decision or language restriction that led to this behavior (like supporting [explicit interface implementation of methods](https://msdn.microsoft.com/en-us/library/aa288461%28v=vs.71%29.aspx) in the future) - or if this is a compiler issue.",
+      "PostedDate": "2015-03-02T12:32:00.147-08:00",
+      "Id": 176839
+    },
+    {
+      "Message": "I have a similar situation:\n\n    declare class Super {\n        set(property:string, value:any);\n    }\n    \n    declare class SubA extends Super {\n        set(property:string, value:any);\n        set(property:\"name\", value:string);\n    }\n    \n    declare class SubB extends Super {\n        set(property:string, value:any);\n        set(property:\"size\", value:number);\n    }\n    \n    \n    interface BothA extends SubA, SubB { \n        // Error:  TS2320: Interface 'BothA' cannot simultaneously extend types 'SubA' and 'SubB'.  Named properties 'set' of types 'SubA' and 'SubB' are not identical.\n    \n    }",
+      "PostedDate": "2015-04-22T11:02:16.99-07:00",
+      "Id": 183249
+    }
+  ]
+}

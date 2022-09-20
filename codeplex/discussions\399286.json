@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "926349",
+    "ThreadId": "399286",
+    "Html": "\r\n<p>Say I want to have one class per .ts file. I have two .ts files, that look like so:</p>\r\n<p>&nbsp; &nbsp; export module MyClasses { export class A {} }</p>\r\n<p>and</p>\r\n<p>&nbsp; &nbsp; export module MyClasses { export class B {} }</p>\r\n<p>I can't do this:</p>\r\n<p>&nbsp; &nbsp; import MyClasses = module('A');<br>\r\n&nbsp; &nbsp; import MyClasses = module('B');</p>\r\n<p>How do I define classes in separate files and put them into the same &quot;namespace&quot;? Furthermore, we end up having to do something like:</p>\r\n<p>&nbsp; &nbsp; MyClasses.MyClasses.A</p>\r\n<p>instead of</p>\r\n<p>&nbsp; &nbsp; MyClasses.A</p>\r\n<p>What's the point of this additional level of&nbsp;hierarchy? So that you can have more than one exported module in a module file? The best solution I've figure out so far is to remove &quot;export module&quot; (since &quot;export class&quot; seems to be sufficient when compiling\r\n AMD), which moves the class up one hierarchical level. Then:</p>\r\n<p>&nbsp; &nbsp; import AModule = module('A');<br>\r\n&nbsp; &nbsp; module MyClasses{ var A = AModule.A; }<br>\r\n&nbsp; &nbsp; import BModule = module('B');<br>\r\n&nbsp; &nbsp; module MyClasses { var B = BModule.B; }</p>\r\n<p>Though it works perfectly, it's not exactly succinct. Is there not a better way to do this? Honestly, I'd rather have something like:</p>\r\n<p>&nbsp; &nbsp; import &quot;A&quot;;</p>\r\n<p>that imports all the top level exports (modules, classes, etc) into the current scope.</p>\r\n",
+    "PostedDate": "2012-10-14T07:03:02.813-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926351",
+    "ThreadId": "399286",
+    "Html": "<p>For multiple files as one module see this post: <a href=\"http://typescript.codeplex.com/discussions/398574\">http://typescript.codeplex.com/discussions/398574</a>&nbsp;(although not a great solution).</p>\r\n<p>For the extra level of indirection, try skipping the module altogether.&nbsp; In your module file use:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">export</span> <span style=\"color: blue;\">class</span> MyClass {\r\n...\r\n}</pre>\r\n</div>\r\n<p>Then in the consuming code use:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">import</span> mymodule = <span style=\"color: blue;\">module</span>(\"myclass\")<span style=\"color: #000000;\">;</span>\r\n</pre>\r\n<pre>::</pre>\r\n<pre>var x = new mymodule.MyClass();</pre>\r\n</div>\r\n<p>I would say that the module keyword is now a bit misleading.&nbsp; If a module is always a file, then this is fine&nbsp;- but then I don't understand what we gain by having \"export module\" for external modules.</p>",
+    "PostedDate": "2012-10-14T07:18:12.037-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "926367",
+    "ThreadId": "399286",
+    "Html": "<p>If all you want the import for is compile-time checking, and your code will eventually be compiled into a single .js file, you can just use a &lt;reference&gt; instead of an import.</p>\r\n<p>a.ts:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>module MyClasses {\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">class</span> A {\r\n        constructor(<span style=\"color: blue;\">public</span> a: string) {}\r\n    }\r\n}\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>b.ts:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>module MyClasses {\r\n    <span style=\"color: blue;\">export</span> <span style=\"color: blue;\">class</span> B {\r\n        constructor(<span style=\"color: blue;\">public</span> b: string) {}\r\n    }\r\n}\r\n</pre>\r\n</div>\r\n<p>app.ts:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: green;\">/// &lt;reference path=\"a.ts\" /&gt;</span>\r\n<span style=\"color: green;\">/// &lt;reference path=\"b.ts\" /&gt;</span>\r\n<span style=\"color: blue;\">var</span> a = <span style=\"color: blue;\">new</span> MyClasses.A(<span style=\"color: #a31515;\">\"foo\"</span>);\r\n<span style=\"color: blue;\">var</span> b = <span style=\"color: blue;\">new</span> MyClasses.B(<span style=\"color: #a31515;\">\"bar\"</span>);\r\nconsole.log(a.a + b.b);\r\n</pre>\r\n</div>\r\n</p>\r\n<p>Compile:</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre>tsc <span style=\"color: gray;\">--</span>out app.js app.ts a.ts b.ts\r\n</pre>\r\n</div>\r\n</p>",
+    "PostedDate": "2012-10-14T08:20:52.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932132",
+    "ThreadId": "399286",
+    "Html": "\r\n<p>@markrendle,</p>\r\n<p>The big 'IF' implied by your solution is &quot;<span style=\"color:#808080\"><em>if ... your code will eventually be compiled into a single .js file ...</em></span>&quot;. &nbsp;</p>\r\n<p>Now for my NodeJs development I use VS 2012 with the Web Essentials extension (which is great by the way) and on save, it compiles your TS file it into a corresponding .js file. &nbsp;So that eliminates the assumption of your solution.</p>\r\n<p>Also, we are undertaking a large NodeJS project and what is a common pattern in our 'modular' system is to extend/configure these 'namespaces' based on a target platform/audience by including various TS files in various combinations.</p>\r\n<p>In other words, say we had a 'Models' namespace we may have a core set of entities in that Models, say 'Entity' and 'NamedEntity'. &nbsp;Now in plain JS we can extend that Models namespace by simply assigning another model to 'Models', say 'Person'. &nbsp;This\r\n means 'Models' now contains all our models, 'Entity', 'NamedEntity' and 'Person'. &nbsp;Having all our models in a common 'namespace' means I can write libraries (such as an ORM) that can provide common behaviour to all models collectively.</p>\r\n<p>If someone can show me how to achieve this (in NodeJs specifically) and still have the benefits of TypeScripts intellisense I'll be a happy camper!</p>\r\n<p>I see being able to extend a 'namespace' in NodeJS by importing multiple modules into a single 'namespace' as a important, if not critical, mechainsm missing from TypeScript. &nbsp;This mechanism is as a common mechanism for extending base libraries in NodeJs\r\n and in the browser.</p>\r\n",
+    "PostedDate": "2012-10-24T23:16:56.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

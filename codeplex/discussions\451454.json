@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "1073257",
+    "ThreadId": "451454",
+    "Html": "When the typescript classes are built using AMD modules, you cannot define the module name.  This means that you rely either the path, a require config and diligence of developer to import consistently.<br />\n<br />\nFor example...<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// File: app/classes/Timer.ts</span>\n\n<span style=\"color:Blue;\">class</span> Timer {\n}\n\n<span style=\"color:Blue;\">export</span> = Timer;\r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// File: app/classes/Greeter.ts</span>\n<span style=\"color:Blue;\">import</span> Timer = require(<span style=\"color:#A31515;\">&quot;Timer&quot;</span>);\n\n<span style=\"color:Blue;\">class</span> Greeter <span style=\"color:Blue;\">extends</span> Timer {\n}\r\n</pre></div>In the above code because Timer and Greeter files are in the same folder, the compiler can locate the import.  You can also replace the import with <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">import</span> Timer = require(<span style=\"color:#A31515;\">&quot;app/classes/Timer&quot;</span>);\r\n</pre></div>Now it is a fully qualified path, and this still works. <br />\nHowever there is a difference in the define statement generated<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Timer.ts</span>\n<span style=\"color:Blue;\">import</span> Timer = require(<span style=\"color:#A31515;\">&quot;Timer&quot;</span>);\n\n<span style=\"color:Green;\">// Timer.js</span>\ndefine([<span style=\"color:#A31515;\">&quot;require&quot;</span>, <span style=\"color:#A31515;\">&quot;exports&quot;</span>, <span style=\"color:#A31515;\">&#39;Timer&#39;</span>], <span style=\"color:Blue;\">function</span>(require, exports, __Timer__) {\n...\n});\r\n</pre></div><div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Greeter.ts</span>\n<span style=\"color:Blue;\">import</span> Timer = require(<span style=\"color:#A31515;\">&quot;app/classes/Timer&quot;</span>);\n\n<span style=\"color:Green;\">// Greeter.js</span>\ndefine([<span style=\"color:#A31515;\">&quot;require&quot;</span>, <span style=\"color:#A31515;\">&quot;exports&quot;</span>, <span style=\"color:#A31515;\">&#39;app/classes/Timer&#39;</span>], <span style=\"color:Blue;\">function</span>(require, exports, __Timer__) {\n...\n});\r\n</pre></div>You can see that the name of the dependency has changed.<br />\n<br />\nIn both cases, the Timer module and Greeter module do not have a name defined so you will be relying on a implicit path or an explicit require config paths find the module.<br />\n<br />\nThis situation is completely broken if you then combine javascript files ( for example using ASP.NET MVC bundles ), you no longer have any way of locating these modules as each module has no name and the combined javascript file will contain many modules.<br />\n<br />\nWe need a way of being able to name each module on the export statement, or the compiler always uses the full path to the typescript file as the module name.<br />\n",
+    "PostedDate": "2013-07-25T17:35:01.917-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1074311",
+    "ThreadId": "451454",
+    "Html": "There's a feature request for this you may want to upvote:  <a href=\"https://typescript.codeplex.com/workitem/285\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/285</a><br />\n",
+    "PostedDate": "2013-07-29T07:04:35.457-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075319",
+    "ThreadId": "451454",
+    "Html": "The AMD convention is to author anonymous modules and then use tools like r.js from RequireJS to combine the individual modules. This could conceivably be a feature of the TypeScript compiler (as could minification, for example), but no such plans for 1.0.<br />\n",
+    "PostedDate": "2013-07-31T14:54:08.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1075771",
+    "ThreadId": "451454",
+    "Html": "I think that the inconsistency of the import name is much more of a problem than the ability to combine.<br />\n<br />\nThe TS compiler should ALWAYS name the module, and it should be full path.  If that means only 1 class per file then so be it ( but you can only have 1 export statement per file anyway ).<br />\n<br />\nImporting the module should also always refer to the full path in the definition.  According to RequireJS, the AMD loader will name the module internally anyway<br />\n<br />\n<a href=\"http://requirejs.org/docs/whyamd.html#namedmodules\" rel=\"nofollow\">http://requirejs.org/docs/whyamd.html#namedmodules</a><br />\n",
+    "PostedDate": "2013-08-01T15:12:31.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design currently. The comment in the code you mention is about sections 4.1 (Values and References) and 4.3 (Identifiers) in the language specification where this rule is defined. You'll note that you also can't reassign a function declaration in TypeScript at the moment (while you can reassign a function typed var). While there are patterns where these reassignments are useful they're relatively rare. More problematic is that the only other design approach to solve this involved making the type system generally aware of 'readable' and 'writeable' on everything which proved to be very difficult to come up with a satisfactory design. It's something we may revisit in the future though.",
+    "ClosedDate": "2014-02-04T16:32:51.023-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "```ts\r\nfunction wrap<T>(Ctor:T):T {\r\n\treturn Ctor;\r\n}\r\n\r\nclass A {}\r\n\r\nA = wrap(A);\r\n```\r\n\r\nExpected: A is reassigned\r\nActual: error TS2130: Invalid left-hand side of assignment expression.\r\nVersion: 0.9.5, develop 66b8561\r\n\r\nWhy would you want to do this? Here is a more practical wrap function:\r\n\r\n```ts\r\nfunction wrap<T extends { new (...args:any[]):any; }>(Ctor:T):T {\r\n\tvar ChainedCtor:T = <any> function () {};\r\n\tChainedCtor.prototype = Ctor.prototype;\r\n\r\n\treturn <T> <any> function () {\r\n\t\tvar instance = new ChainedCtor();\r\n\t\tinstance = Ctor.apply(instance, arguments) || instance;\r\n\t\tinstance['postConstruct'] && instance['postConstruct'].apply(instance, arguments);\r\n\t\treturn instance;\r\n\t};\r\n}\r\n```\r\n\r\nAs far as I can tell from reviewing the spec, running Traceur, etc., this does not appear to be any limitation of ES6, but a defect in TS class implementation.",
+    "LastUpdatedDate": "2014-03-31T17:37:06.993-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-02-04T08:56:00.203-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Cannot reassign to class constructor’s identifier",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2150
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is due to the following code in `PullTypeResolver#isReference`:\n\n```ts\nif (astSymbol.kind === PullElementKind.ConstructorMethod || astSymbol.kind === PullElementKind.Function) {\n    return false;\n}\n```\n\nThere is some commentary here about “An identifier expression that references any other kind of entity is classified as a value(and therefore cannot be the target of an assignment).” but I don’t see why this should be the case. You can reassign function declarations in JS just like any other variable.",
+      "PostedDate": "2014-02-04T09:11:36.543-08:00",
+      "Id": 132512
+    },
+    {
+      "Message": "Hi,\n\nThis pattern may not be necessary at all if TypeScript put class properties on the prototype instead of in the constructor, but since it does the latter, it does raise its importance somewhat.\n\nConsider the common pattern of passing a keyword arguments object to initialise an object, using a standard base class to handle the bulk assignment from the constructor:\n\n```ts\nclass Base {\n  propA:string = 'foo';\n\n  constructor(kwArgs?:Object) {\n    kwArgs && this.set(kwArgs);\n  }\n\n  set(kwArgs?:Object):void;\n  set(key:string, value:any):void;\n  set(key:string, value?:any):void {\n    if (isObject(key)) {\n      var kwArgs:Object = key;\n      for (key in kwArgs) {\n        this.set(key, kwArgs[key]);\n      }\n    }\n  }\n}\n\nclass Child extends Base {\n  propA:string = 'bar';\n}\n\nclass Child2 extends Base {\n  propA:string;\n\n  constructor(kwArgs?:Object) {\n    this.propA = 'bar';\n    super(kwArgs);\n  }\n}\n\nvar wrong = new Child({ propA: 'blah' }); // propA incorrectly defaults to 'bar', should be 'blah'\nvar wrong2 = new Child2(); // propA incorrectly defaults to 'foo', should be 'bar'\n```\n\nSo what are our options? Here’s all I can see:\n\n1. Force authors to not use TypeScript property defaults, and instead use some extra `defaults` method that needs to be defined on all subclasses which gets called by the base class constructor and sets the defaults before calling `set`.\n2. Write the common base class in plain JavaScript, which does allow this, and then put a `d.ts` next to it for TS authors (as TS does not allow classes to extend anything except a class).\n\nAlmost every object in Dojo follows this pattern, and there’s no way to describe it in TypeScript. This issue is aggravating to me because the only thing preventing this from working today are those three lines in the type resolver that force it to not work. Delete them, and everything is OK, using the wrapper in the description. There may be some unintended side-effects, but it seems to me (as a naïve non-language-designer) the specification could simply say “behaviour is undefined” for now and allow it until you can deal with making the design more robust in future versions.\n\nBest,",
+      "PostedDate": "2014-02-04T18:14:36.74-08:00",
+      "Id": 132587
+    },
+    {
+      "Message": "Workaround for now is to use window['className'] = ...",
+      "PostedDate": "2014-03-31T16:04:32.347-07:00",
+      "Id": 140108
+    },
+    {
+      "Message": "Note: This works also:\n\n```\nmodule M {\n\texport class A {}\n}\n\nM.A = wrap(M.A);\n```\nhttp://goo.gl/FyyhKD",
+      "PostedDate": "2014-03-31T17:37:06.993-07:00",
+      "Id": 140126
+    }
+  ]
+}

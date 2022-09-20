@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "What gscshoyru said (thanks!).",
+    "ClosedDate": "2014-03-27T09:46:29.72-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Unless I'm misunderstanding something I believe the following should work without errors:\r\n\r\n```\r\nclass Animal {\r\n    name: string;\r\n}\r\nclass Mammal extends Animal {\r\n    height: number;\r\n}\r\nclass Horse extends Mammal {\r\n    speed: number;\r\n}\r\nfunction someFunction<T extends Animal>(x: T): T {\r\n    return new Animal(); //Getting an error here: Cannot convert 'Animal' to 'T'\r\n    return new Mammal(); //Same error but this is ultimately what I want to work\r\n}\r\n```",
+    "LastUpdatedDate": "2014-03-31T16:06:46.167-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-27T06:59:42.397-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Generic constraint return type error",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2359
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This doesn't work because it doesn't know what T is, and since you're supposed to be returning T, T may have attributes that Animal or Mammal does not have. Let's say you have some other class:\n\n```\nclass Reptile extends Animal {\n    numScales: number;\n}\n```\n\nAnd you call someFunction<Reptile>(reptile). someFunction is supposed to return a Reptile, which should be guaranteed to have numScales. But Mammals don't have that attribute, and neither do Animals. You may actually want something like\n\n```\nfunction someFunction<T extends Animal>(x: T): Animal {\n```\n\nor \n\n```\nreturn new T();\n```\n\ndepending on what your code is supposed to be doing. ",
+      "PostedDate": "2014-03-27T08:54:15.393-07:00",
+      "Id": 139005
+    },
+    {
+      "Message": "Thanks for the comments.  Here is what I did to get the code to compile without errors:\n\n```\nfunction someFunction<T extends Animal>(x: T): T {\n    return <T><Animal>new Horse(); //No errors now if I first cast to <Animal> and then to <T>\n    return <T><Animal>new Mammal(); //No errors here either\n}\n```",
+      "PostedDate": "2014-03-27T11:20:02.857-07:00",
+      "Id": 139025
+    },
+    {
+      "Message": "That... will... work... but really isn't what you want it to do. That is incredibly bad practice. You're basically lying about the return type of your function, which can easily cause runtime errors that would otherwise have been caught at compile time, defeating the entire point of using typescript instead of javascript. Is there a reason why the function should be returning T and not Animal, or Mammal? Because if you really want to return Mammal from that function no matter what, the return type of the function should be Mammal, not T. ",
+      "PostedDate": "2014-03-27T14:22:09.23-07:00",
+      "Id": 139044
+    }
+  ]
+}

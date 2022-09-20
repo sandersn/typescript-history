@@ -1,0 +1,86 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:39:42.54-07:00",
+    "CommentCount": 8,
+    "Custom": null,
+    "Description": "I realize this might be an edge case but the following code causes a problem that it would be nice to have some kind of warning for:\r\n\r\n```TypeScript\r\n\tclass Tracker {\r\n\t\tcount = 0;\r\n\t\tstart() {\r\n\t\t\twindow.onmousemove = e => {\r\n\t\t\t\tvar _this = 'foo';\r\n\t\t\t\tthis.count++;\r\n\t\t\t\tconsole.log(this.count);\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\tvar t = new Tracker();\r\n\tt.start();\r\n```\r\n\r\nEXPECTED Behavior is one of the following:\r\n\ta) Log outputs mouse movements correctly (since the captured \"this\" was given a different name so it wouldn't conflict)\r\n\tb) A warning or error is displayed by TypeScript alerting me that I should change the variable name\r\n\r\nACTUAL Behavior: \"undefined\" is logged every time I move the mouse.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-01T14:35:13.033-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Local \"_this\" silently conflicts in arrow function",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 12,
+    "Id": 11
+  },
+  "FileAttachments": [
+    {
+      "FileId": 499818,
+      "FileName": "sample.ts",
+      "DownloadUrl": ".\\499818"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Oof, the formatting got stomped on. I've added an attachment with the code. Also, I'm using the online playground, so if there is a warning in VS, this can probably be closed. I'll check that when I get a chance to play with VS.",
+      "PostedDate": "2012-10-01T14:36:31.877-07:00",
+      "Id": 78210
+    },
+    {
+      "Message": "The generated code should definitely be using bind() whenever possible instead of the alias pattern, whenever alias pattern _must_ be used it should assign to something that doesn't conflict with any other identifiers in scope",
+      "PostedDate": "2012-10-01T14:43:47.32-07:00",
+      "Id": 78213
+    },
+    {
+      "Message": "When using --target ES5 it should use .bind(this).",
+      "PostedDate": "2012-10-01T15:29:33.077-07:00",
+      "Id": 78219
+    },
+    {
+      "Message": "@bmuon Great, thanks for the tip—that still doesn't address the OP's issue. The generated code shouldn't create identifier collision.",
+      "PostedDate": "2012-10-01T17:54:04.717-07:00",
+      "Id": 78235
+    },
+    {
+      "Message": "Here's a better example of the issue:\n\n\n{{ \nvar foo = () => {\n\tconsole.log(this);\n};\n\nfoo();\n}}\n\nCompiles to:\n\n{{ \nvar foo = function() {\n\tconsole.log(_this);\n};\n\nfoo();\n}}\n\nWhich throws a ReferenceError, _this is not defined\n\n",
+      "PostedDate": "2012-10-01T18:04:26.7-07:00",
+      "Id": 78236
+    },
+    {
+      "Message": "Sorry, codeplex lied and said wiki formatting would work. http://codeplex.codeplex.com/wikipage?title=Wiki%20Formatting&referringTitle=CodePlex%20Wiki%20Markup%20Guide&ANCHOR#Code\n\n\nThat's a bug too",
+      "PostedDate": "2012-10-01T18:05:09.187-07:00",
+      "Id": 78237
+    },
+    {
+      "Message": "I've verified this is still occurring.  Thanks for raising.  We'll try and get this fixed.",
+      "PostedDate": "2013-02-26T15:54:30.66-08:00",
+      "Id": 91617
+    },
+    {
+      "Message": "I realized .bind() is not the best solution here, given that there are differences between arrow functions and normal functions. For example, arrows can't be used as constructors and bound functions can. I propose the following local transformation:\n\n    var foo = (a, b, c) => a + b + c;\n    \n    var foo = (function (thisArg, fn) {\n      return function (a, b, c) {\n        return fn.call(thisArg, a, b, c);\n      };\n    }).call(this, function (a, b, c) {\n      return a + b + c;\n    });\n\nWhile this doesn't maintain some properties of arrow functions it should be consistently faster than bind() in most browsers. Using apply() and arguments wouldn't preserve the arrows length property and it would be slower (dramatically slower in Firefox).\n\nOptionally it could throw a TypeError when trying to be called with new (it can check if this instanceof the returned function).",
+      "PostedDate": "2013-07-13T13:33:24.767-07:00",
+      "Id": 105968
+    }
+  ]
+}

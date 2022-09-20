@@ -1,0 +1,98 @@
+[
+  {
+    "Id": "1238854",
+    "ThreadId": "543598",
+    "Html": "Agenda<br />\n<ul>\n<li>Contextual type/BCT change</li>\n<li>\nES6 alignment\n<ul>\n<li>Symbol types</li>\n</ul>\n</li>\n<li>\nDestructuring<br />\n</li>\n</ul>\n[meeting cut short, so these agenda items were not covered]<br />\n<ul>\n<li>'protected'</li>\n<li>\nAbstract classes/methods<br />\n</li>\n</ul>\n<strong>Contextual Type/BCT Change</strong><br />\n<br />\n<strong>Background:</strong> Our Best Common Type algorithm currently has some corner cases where no subtype can be found, resulting in the BCT becoming {}, the empty object type.  Users with large codebases seem to be tripping over this in moving to 1.0, and there may be a fix we can use in future versions.<br />\n<br />\nExample 1:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Point {\n    x: <span style=\"color:Blue;\">number</span>;\n    y: <span style=\"color:Blue;\">number</span>;\n}\n \n<span style=\"color:Blue;\">var</span> <span style=\"color:Blue;\">any</span>: <span style=\"color:Blue;\">any</span>;\n<span style=\"color:Green;\">// Unexpected error: Cannot convert {}[] to Point[]</span>\n<span style=\"color:Blue;\">var</span> pts: Point[] = [{ x: <span style=\"color:Blue;\">null</span>, y: <span style=\"color:Blue;\">any</span> }];\r\n</pre></div>Example 2:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">enum</span> Size { Small, Medium, Large }\n<span style=\"color:Blue;\">interface</span> Shirt {\n    color: <span style=\"color:Blue;\">string</span>;\n    size?: Size;\n}\n<span style=\"color:Green;\">// Unexpected error: Cannot convert {}[] to Shirt[]</span>\n<span style=\"color:Blue;\">var</span> sizes: Shirt[] = [{ color: <span style=\"color:#A31515;\">&#39;blue&#39;</span>, size: 1 }];\r\n</pre></div>Example 3:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Green;\">// Poor error message: Type of conditional &#39;{}&#39; must be identical to &#39;number&#39;, &#39;number&#39; or &#39;string&#39;</span>\n<span style=\"color:Green;\">// Desired error: Cannot convert &#39;number&#39; to &#39;string&#39;</span>\n<span style=\"color:Blue;\">var</span> s: <span style=\"color:Blue;\">string</span> = foo ? 1 : 0;\r\n</pre></div>New proposed Best Common Type algorithm:<br />\n<ul>\n<li>Check the contextual type to see if it's the supertype of all candidates</li>\n<li>\nIf it is not, next check all candidates (excluding the contextual type) for BCT<br />\n</li>\n</ul>\nAdvantages:<br />\n<ul>\n<li>This will actually be faster, as many cases will be handled by the more optimized first bullet  (O(n) rather than O(n^2))</li>\n<li>This should fix the issues above, where the contextual type is causing us to lose type information during BCT</li>\n<li>\nShould be compatible with existing approach<br />\n</li>\n</ul>\nDisadvantages<br />\n<ul>\n<li>\nAs this is a different algorithm, we still need to vet that this is observably the same as the 1.0 BCT algorithm.  More investigation is necessary.<br />\n</li>\n</ul>\n<strong>Destructuring</strong><br />\n<br />\n<strong>Background:</strong> Our current type system treats heterogeneous arrays as arrays of the empty type because of BCT.  This won't allow us to get precise type information when users use the ES6 destructuring capabilities.  Are there ways we can support this in the type system?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> f() {\n    <span style=\"color:Blue;\">return</span> [<span style=\"color:#A31515;\">&quot;hello&quot;</span>, 2];\n}  <span style=\"color:Green;\">// today returns {}[]</span>\n\n<span style=\"color:Blue;\">var</span> {a,b} = f();  <span style=\"color:Green;\">// not enough to destructure</span>\r\n</pre></div><em>Proposal</em><br />\n<br />\nArrays can have element types.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = [<span style=\"color:#A31515;\">&quot;hello&quot;</span>, 2];   <span style=\"color:Green;\">// would infer {}[string, number]</span>\n\n<span style=\"color:Green;\">// Note: {}[string, number] ==&gt; [string, number, {}, {}, …]</span>\n\nx[0] <span style=\"color:Green;\">// type string</span>\n\nx = [];  <span style=\"color:Green;\">// also allowed</span>\r\n</pre></div>Key piece of the proposal: this needs to be backward compatible.  To do so, we don't check the element types.<br />\n<br />\n<strong>Issues to investigate:</strong><br />\n<ul>\n<li>How do you assign between x[0] and x[i]?  We get two different types, even if i == 0</li>\n<li>Also wouldn't catch x = [&quot;&quot;,&quot;&quot;]</li>\n<li>\nWhat about x[0] = 2?  Would error with this proposal but not with 1.0 semantics.  Perhaps we never check the element types, we only use it when destructuring.<br />\n</li>\n</ul>\nWhat about having a tuple type?  This would mean splitting into two forms of the type, {}[string, number] and [string, number].  The former is a heterogeneous array that starts with a string element followed by a number element, with all successive elements being of the type {}.  The latter is a 'tuple' that only has the two slots.<br />\n<br />\nWe could opt to never infer [string, number] and to only infer {}[string, number].  If you explicitly specify the stricter tuple type, then we enforce it.<br />\n<br />\n<strong>Question:</strong> what is the canonical form of the tuple type?  We don't have a way to put this in an interface.<br />\n<br />\n<strong>Action Item:</strong> finish a completed proposal that addresses these issues.<br />\n<br />\n<strong>Protected Accessibility</strong><br />\n<br />\nStill the top-most voted issue.  More requests this week.  Request to discuss abstract classes/methods first.  Meeting ran out of time before these could be covered.<br />\n",
+    "PostedDate": "2014-04-28T08:45:00.42-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239057",
+    "ThreadId": "543598",
+    "Html": "Thanks, Jon. It is great to have these meeting notes available to the community. Has the language design committee discussed union types recently? I'd be interested to see what the thoughts were on that. The typed array syntax looks interesting.<br />\n",
+    "PostedDate": "2014-04-28T15:55:50.447-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239340",
+    "ThreadId": "543598",
+    "Html": "We've talked some about union types just amongst ourselves but not as part of a recent design meeting.  There are some examples where .d.ts typings would get much easier to do with them.  Next steps there is to put together a proposal to present at a meeting.\r<br />\n<br />\nThe gotcha here is that we'd need to work out exactly how union types affect type inference and what the shape of a union type is (what's the completion list when you dot off it?)<br />\n",
+    "PostedDate": "2014-04-29T07:22:27.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239696",
+    "ThreadId": "543598",
+    "Html": "Hi @jonturner,\r<br />\n<br />\nFantastic to hear union types are being discussed.  I'll let the rest of the Definitely Typed team know as I know they have opinions on the topic.\r<br />\n<br />\nMy own (not massively developed) thoughts are that the shape of a union type would initially be the &quot;shared sum&quot; of the available types specified. So if a union type specified <code>boolean</code> and <code>string</code> then the resulting type would have both <code>boolean</code> and <code>string</code> properties for the purpose of type inference.  eg.<br />\n<pre><code>var union: &lt;boolean | string&gt;; // The compiler treats union as a combination of both boolean and string in the absence of further info</code></pre>\n\nLet's use jQuery's <code>val</code> as an example.  The <code>val</code> getter returns either <a href=\"http://api.jquery.com/val/#val\" rel=\"nofollow\">String or Number or Array (of strings)</a>.  Without type unions this getter can only be modelled like this in TypeScript:<br />\n<pre><code>    val(): any;</code></pre>\n\nMy guess / hope is that with type unions it might look something like this:<br />\n<pre><code>    val(): &lt;string | number | string[]&gt;;</code></pre>\n\nAnd consumption would look like this:<br />\n<pre><code>var union = $(&quot;#other&quot;).val(); // The compiler treats this as a combination of string, number and string[] in the absence of further info</code></pre>\n\nIf a specific type could be determined in the consuming file then usage of that type union would resolve to the specified type eg:<br />\n<pre><code>var str: string = $(&quot;#input1&quot;).val(); // The compiler treats this as a string\nvar num: number = $(&quot;#input2&quot;).val(); // The compiler treats this as a number\nvar arr: string[] = $(&quot;#select1&quot;).val(); // The compiler treats this as a string array\n\nvar error: boolean = $(&quot;#input1&quot;).val(); // The compiler recognises this as an error as boolean is not part of the type union</code></pre>\n\nSomething else to consider would allowing the use of type assertions to achieve the same behaviour (and there is possibly some collision with the implementation of generics here but I throw it out as an idea):<br />\n<pre><code>var str = $(&quot;#input1&quot;).val&lt;string&gt;(); // The compiler treats this as a string\nvar num = $(&quot;#input2&quot;).val&lt;number&gt;(); // The compiler treats this as a number\nvar arr = $(&quot;#select1&quot;).val&lt;string[]&gt;(); // The compiler treats this as a string array\n\nvar error = $(&quot;#input1&quot;).val&lt;boolean&gt;(); // The compiler recognises this as an error as boolean is not part of the type union</code></pre>\n\nFinally if having the compiler combine various types together has hidden troubles I'd still value the concept of union types where the specific type in the type union being used has to be provided in some way.  (as in the previous 2 code examples)\r<br />\n<br />\nThis would prevent users (again looking at jQuery's <code>val</code> getter) treating what will definitely be either a <code>string</code>, <code>number</code> or  <code>string[]</code> as a boolean for instance.<br />\n",
+    "PostedDate": "2014-04-30T01:42:16.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239888",
+    "ThreadId": "543598",
+    "Html": "Definitely also happy that union types are being discussed. Good points by @johnny_reilly .<br />\n<br />\nThanks for posting these meeting notes online!<br />\n",
+    "PostedDate": "2014-04-30T09:21:12.837-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240781",
+    "ThreadId": "543598",
+    "Html": "Good points by @johnny_reilly\r<br />\n<br />\nUnion types would be very welcome to create typings that cover more existing JavaScript libraries. I'm not 100% sure how union types are defined, but I am hopeful they can simplify some of the method/type overload scenarios or as a 'shortlist' that limits the need to use <code>any</code>.\r<br />\n<br />\nI've also seen some cases in the wild for heterogeneous arrays, like tuples (I got a ticket open in the work items). Looking at the meeting report I think it would be great if the implementation provides a way to specify what happens after the specified indices, eg; a pure tuple might have a fixed length, while a heterogeneous array could overflow it's type somehow (like a rest parameter does for function arguments).<br />\n",
+    "PostedDate": "2014-05-02T11:14:25.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240917",
+    "ThreadId": "543598",
+    "Html": "The example we ended up with on the whiteboard today was:<br />\n<pre><code>function foo&lt;T,U&gt;(x: T|U, y: T|U): T {\n    /* ... */\n}\n\nvar x = foo('', 3);\n// What happens here?\n// T is string, U is number: x is string\n// T is number, U is string: y is number\n// T is string|number, U is &lt;anything&gt;: x is string|number\n// U is string|number, T is &lt;anything&gt;: x is &lt;anything&gt;?</code></pre>\n\n",
+    "PostedDate": "2014-05-02T17:35:26.103-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240958",
+    "ThreadId": "543598",
+    "Html": "Exciting to hear! \r<br />\n<br />\nPersonally I think this result makes most intuitive sense out of the possibilities listed:<br />\n<pre><code>// T is string, U is number: x is string</code></pre>\n\nI say that as it seems to be the embodiment of the rule:\r<br />\n<em>If generic then types are inferred based on the order of supply</em>\r<br />\n<br />\nIn this example a <code>string</code> then a <code>number</code> is supplied:<br />\n<pre><code>var x = foo('', 3);</code></pre>\n\nSo in <code>foo&lt;T,U&gt;</code> <code>T</code> will be inferred as a <code>string</code> (as supplied first) and <code>U</code> as a <code>number</code> (as supplied second).\r<br />\n<br />\nBy the way, I prefer your syntax of just pipes (<code>|</code>) to represent union types rather than the angle brackets + pipes (<code>&lt; | &gt;</code>) in my examples.<br />\n",
+    "PostedDate": "2014-05-03T01:28:02.653-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1240992",
+    "ThreadId": "543598",
+    "Html": "Agree with <a href=\"mailto:@johnny_reilly\" rel=\"nofollow\">@johnny_reilly</a>. \r<br />\n<br />\nAs for possibilities 3 &amp; 4, it seems like you shouldn't ever bind a generic to a union type unless the type supplied is explicitly a union type.<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo&lt;T,U&gt;(x: T|U, y: T|U): T {\n    <span style=\"color:Green;\">/* ... */</span>\n}\n\n<span style=\"color:Blue;\">var</span> a: <span style=\"color:Blue;\">string</span>|<span style=\"color:Blue;\">number</span> = <span style=\"color:#A31515;\">&#39;&#39;</span>;\n<span style=\"color:Blue;\">var</span> x = foo(a, 3); <span style=\"color:Green;\">//T is string|number, U is number, x is string|number</span>\r\n</pre></div>",
+    "PostedDate": "2014-05-03T06:22:25.35-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1241070",
+    "ThreadId": "543598",
+    "Html": "TypeScript does duck typing with object types.  As long as members exist, it will be a match. This would also allow passing object literals as parameters to union types (as expected).\r<br />\n<br />\nFYI: I like the  (val:A|B) syntax also, and &lt;|&gt; when casting.<br />\n",
+    "PostedDate": "2014-05-03T10:42:04.743-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1241606",
+    "ThreadId": "543598",
+    "Html": "I think that because the type of T and U can't be determined the return type should assume the safest possible value, which is {}.  I think that still makes sense if U could be considered of type string|number.\r<br />\n<br />\nIt's similar to what TypeScript does in this situation:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> foo&lt;T&gt;(input: (param: T) =&gt; T): T;\n<span style=\"color:Blue;\">var</span> t = foo(x =&gt; x);\r\n</pre></div>The generic type is under-determined so t takes on type {}.<br />\n",
+    "PostedDate": "2014-05-05T08:41:56.56-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1245212",
+    "ThreadId": "543598",
+    "Html": "More than union type I would be interested in hearing about mixins. Does proposal alike the one described by @jonturner on this <a href=\"https://typescript.codeplex.com/discussions/471154\" rel=\"nofollow\">thread</a> have been discussed among the typescript team members ?<br />\n",
+    "PostedDate": "2014-05-14T03:12:17.853-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

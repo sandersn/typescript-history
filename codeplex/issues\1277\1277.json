@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-07-01T10:04:30.54-07:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Here's my generic interface:\r\n\r\n```ts\r\ninterface APlusPromise<T> {\r\n    then<U>(onFulfill: (value: T) => U): APlusPromise<U>;\r\n    then<U>(onFulfill: (value: T) => APlusPromise<U>): APlusPromise<U>;\r\n    then<U>(onFulfill: (value: T) => U, onReject: (reason) => U);\r\n    then<U>(onFulfill: (value: T) => APlusPromise<U>, onReject: (reason) => U);\r\n    then<U>(onFulfill: (value: T) => U, onReject: (reason) => APlusPromise<U>);\r\n    then<U>(onFulfill: (value: T) => APlusPromise<U>, onReject: (reason) => APlusPromise<U>);\r\n}\r\n```\r\n\r\nThis may or may not be correct code, but basic examples compile against it. For example, the following does type inference and compiles correctly:\r\n\r\n```ts\r\n// Definitely correct\r\n// Compiles correctly\r\ndeclare var x: APlusPromise<number>;\r\n\r\nx.then(a => a.toExponential())\r\n    .then(b => document.createElement(\"canvas\"))\r\n    .then(c => c.getContext(\"2d\"))\r\n    .then(d => d.arc(1,2,3,4,5,true));\r\n```\r\n\r\nHowever, the following case causes the first `then` to return type APlusPromise<any>.\r\n\r\n```ts\r\n// Definitely incorrect\r\n// Compiles\r\nx.then(a => a.toExponential(), reason => \"error\")\r\n    .then(b => b.garbageProp);\r\n```\r\n\r\nAdding type hints doesn't help either:\r\n\r\n```ts\r\n// Definitely incorrect\r\n// Compiles\r\nx.then<string>(a => a.toExponential(), reason => \"error\")\r\n    .then(b => b.garbageProp);\r\n```\r\n\r\nActually return a promise type from the `onFulfill` or `onReject` functions completely throws it off:\r\n\r\n```ts\r\n// Might be correct\r\n// Does not compile\r\ndeclare var x: APlusPromise<number>;\r\ndeclare var y: APlusPromise<HTMLCanvasElement>;\r\n\r\nx.then(a => y)\r\n    .then(b => b.getContext(\"2d\")); // error: thinks b is APlusPromise<HTMLCanvasElement>\r\n```\r\n\r\nThat error is understandable - I could see the compiler not knowing to use the version that returns a promise. Specifying the type on the first `then` fixes the problem and `b` is interpreted as the correct type:\r\n\r\n```ts\r\n// Is correct\r\n// Compiles correctly\r\nx.then<HTMLCanvasElement>(a => y)\r\n    .then(b => b.getContext(\"2d\"));\r\n```\r\n\r\nThis also works as expected:\r\n\r\n```ts\r\n// Is correct\r\n// Compiles correctly\r\nx.then<HTMLCanvasElement>(a => document.createElement(\"canvas\"))\r\n    .then(b => b.getContext(\"2d\"));\r\n```\r\n\r\nBut adding an `onReject` function allows this code to compile:\r\n\r\n```ts\r\n// Definitely incorrect\r\n// Compiles\r\nx.then<HTMLCanvasElement>(a => y, reason => document.createElement(\"canvas\"))\r\n    .then(b => b.infiniteCollectionOfKeys);\r\n```\r\n\r\nThis is just an assortment of problems I've found with the type inference and the generic typing in general. It could very well be that my original interface is incorrect, but there were no compilation errors on it.",
+    "LastUpdatedDate": "2013-07-01T10:04:30.54-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-28T23:57:49.25-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "No way to specify behavior of ",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1277
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I didn't read through all of your code, but the last four definitions don't specify a return type:\n\n``` Typescript\nthen<U>(onFulfill: (value: T) => U, onReject: (reason) => U); //Returns any\nthen<U>(onFulfill: (value: T) => APlusPromise<U>, onReject: (reason) => U); //Returns any\nthen<U>(onFulfill: (value: T) => U, onReject: (reason) => APlusPromise<U>); //Returns any\nthen<U>(onFulfill: (value: T) => APlusPromise<U>, onReject: (reason) => APlusPromise<U>); //Returns any\n```\n\nYou might want to check that?",
+      "PostedDate": "2013-06-30T00:45:12.353-07:00",
+      "Id": 104679
+    },
+    {
+      "Message": "Oops! You are absolutely right. Go ahead the close this issue. The following code still has problems, though:\r\n\r\n```ts\r\n// Might be correct\r\n// Does not compile\r\ndeclare var x: APlusPromise<number>;\r\ndeclare var y: APlusPromise<HTMLCanvasElement>;\r\n\r\nx.then(a => y)\r\n    .then(b => b.getContext(\"2d\")); // error: thinks b is APlusPromise<HTMLCanvasElement>\r\n```\r\n\r\nThough I imagine this is by design and that there can't be much done to fix it.",
+      "PostedDate": "2013-06-30T17:00:39.147-07:00",
+      "Id": 104710
+    }
+  ]
+}

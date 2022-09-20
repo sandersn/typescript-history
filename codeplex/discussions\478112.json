@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1142568",
+    "ThreadId": "478112",
+    "Html": "I recently updated my project from 0.8.3 to 0.9.5. I am compiling to ES3 and using AMD. I do not combine the JS into a single file. At development time I load the modules dynamically using RequireJS. At compile time I use the RequireJS optimizer for single file generation.<br />\n<br />\nAfter refactoring a few things I am stuck at two distinct errors (several occurrences).<br />\n<pre><code>Module cannot be aliased to a non-module type.\nUnable to resolve external module '...'\n</code></pre>\n\nI have 84 typescript files and 21 definition files in my project. When using the node compiler I am able to pass in all 105 ts/d.ts files in <em>any order</em> and it compiles the JS for each without any errors or warnings. However, when I only specific a single ts file with the node compiler I am able to see the same module import errors that VS shows.<br />\n<br />\nI read about <code>_references.ts</code> but I'm not sure that will help me in my scenario as it reads like it will only be used when using the <code>--out</code> option.<br />\n<br />\nI compared my <code>.csproj</code> with a basic HTML TypeScript application one and I noticed that mine has several <code>DependentUpon</code> entries that new typescript project does not (see below). I'm not sure if these are harmful or not. My project type is a Class Library but I correctly setup the TypeScript Build settings tab as well as Tools-&gt;Options-&gt;Text Editor-&gt;TypeScript-&gt;Project.<br />\n<pre><code>&lt;Content Include=&quot;js\\controls\\abc\\models\\xyz\\baseRow.js&quot;&gt;\n  &lt;DependentUpon&gt;baseRow.ts&lt;/DependentUpon&gt;\n&lt;/Content&gt;\n</code></pre>\n\nI want to take advantage of VS's error reporting but I am unsure how to resolve these errors at this point. Any suggestions are appreciated<br />\n",
+    "PostedDate": "2013-12-27T07:59:14.757-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1142863",
+    "ThreadId": "478112",
+    "Html": "Which line of code is generating that error?\r<br />\n<br />\nRegarding the &lt;Content&gt; element, as of version 0.9 TypeScript no longer includes the generated JavaScript in the project. You should simply delete baseRow.js and all other .js files that have a corresponding .ts file. Just think of the JavaScript as output, similar to a compiled dll.<br />\n",
+    "PostedDate": "2013-12-27T12:53:13.57-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1142883",
+    "ThreadId": "478112",
+    "Html": "From one of my <code>.d.ts</code> files I have the following. This from controls/abc/templates/templates.d.ts<br />\n<pre><code>declare module &quot;text!controls/abc/templates/xyz.html&quot; { }\n</code></pre>\n\nAnd then in the <code>.ts</code> file I have the import. This from controls/abc/views/someView.ts<br />\n<pre><code>///&lt;reference path=&quot;../templates/templates.d.ts&quot;/&gt;\nimport someViewTemplate = require(&quot;text!controls/abc/templates/someView/empty.html&quot;)\n</code></pre>\n\nThe error is on the import statement line. I have mirrored this setup in a basic HTML TypeScript app and am able to import &quot;text!...&quot; controls with this setup.<br />\n<br />\nI am convinced that this is not a code error as it compiles with the node tsc compiler. I don't want to guess, but if I had to I'd say that VS is starting from one of my top level ts files, tracing the dependencies, and then a reference directive is either ignored or the path is incorrectly resolved.<br />\n",
+    "PostedDate": "2013-12-27T13:09:28.367-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144258",
+    "ThreadId": "478112",
+    "Html": "I'm trying to reproduce your issue and don't see any problem.  (Though I notice above you are declaring a different path than you are importing - I assume you are declaring the module you are importing in your problem solution?)\r<br />\n<br />\nIf you can provide more info (preferably a solution that reproduces this problem), then please open an issue on the &quot;Issues&quot; section of this project and someone will take a look into it further.\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-12-31T09:21:39.697-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144759",
+    "ThreadId": "478112",
+    "Html": "I found the problem.  I used to have the top of my typescript files have mixed ///&lt;references... and imports such as:<br />\n<pre><code>///&lt;reference path=&quot;../../../vendor/underscore/underscore.d.ts&quot;/&gt;\nimport _ = require(&quot;underscore&quot;)\n///&lt;reference path=&quot;../../../vendor/jquery/jquery.d.ts&quot;/&gt;\nimport $ = require(&quot;jql&quot;)\n\n///&lt;reference path=&quot;../templates/templates.d.ts&quot;/&gt;\nimport ET = require(&quot;text!controls/research/templates/edits-pane/result.html&quot;)\n</code></pre>\n\nMost of my .d.ts files have ambient module declarations inside of them. Once I moved all of the ///&lt;reference... to the top, VS stopped throwing errors and compiling as expected.<br />\n<pre><code>///&lt;reference path=&quot;../../../vendor/underscore/underscore.d.ts&quot;/&gt;\n///&lt;reference path=&quot;../../../vendor/jquery/jquery.d.ts&quot;/&gt;\n///&lt;reference path=&quot;../templates/templates.d.ts&quot;/&gt;\nimport _ = require(&quot;underscore&quot;)\nimport $ = require(&quot;jql&quot;)\n\nimport ET = require(&quot;text!controls/research/templates/edits-pane/result.html&quot;)\n</code></pre>\n\nI'm not sure if this is by design or not but I feel two things should happen -- this should be communicated in the 0.9.x upgrade notes and the VS tooling should provide a better indication of the error. Before I refactored there was no indication that this was the problem.<br />\n",
+    "PostedDate": "2014-01-02T11:20:48.343-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1236784",
+    "ThreadId": "542985",
+    "Html": "Not sure if this was the correct forum for this, but my attempts at getting typescript working with the 2.0 jasmine.d.ts typefile aren't going as expected.\r<br />\nI've updated the jasmine typescript definition file with the lastest 2.0 version from here:\r<br />\n<a href=\"https://github.com/borisyankov/DefinitelyTyped/tree/master/jasmine\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped/tree/master/jasmine</a>\r<br />\n<br />\nAs such, I was expecting see new/changed functionality/syntax added within my typescript scripts (within the ts editor in VS 2013) to do such things as 'jasmine.addmatchers', etc...\r<br />\nBut trying to use that is undefined as far as the editor is concerned.\r<br />\nCan anyone help on getting this worked out?\r<br />\n<br />\nthanks,\r<br />\nKarl<br />\n",
+    "PostedDate": "2014-04-22T14:11:04.863-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236842",
+    "ThreadId": "542985",
+    "Html": "There is no &quot;addmatchers&quot; in the &quot;jasmine&quot; module space.  It's in the &quot;Spec&quot; interface.  Can you post some example code?<br />\n<br />\nI took a quick peek at the jasmine.js file and I only see a reference to &quot;window.jasmineRequire&quot;, not &quot;window.jasmine&quot;...?<br />\n<br />\nAnyhow, you are only defining interfaces, and the interfaces only look like they are mixing both static and instance declarations. For example, you could do this:<br />\n<pre><code>    interface Any {\n        jasmineMatches(other: any): boolean;\n        jasmineToString(): string;\n    }\n    var Any: {\n        new (expectedClass: any): Any;\n    }</code></pre>\n\nor this<br />\n<pre><code>    class Any {\n\n        constructor(expectedClass: any);\n\n        jasmineMatches(other: any): boolean;\n        jasmineToString(): string;\n    }</code></pre>\n\nYou had this:<br />\n<pre><code>   interface Any {\n        new (expectedClass: any): Any;\n        jasmineMatches(other: any): boolean;\n        jasmineToString(): string;\n    }</code></pre>\n\nWhich is not correct.  You are saying here that an object instance of type &quot;Any&quot; is a constructor function (because of &quot;new (...)&quot;) but also that the FUNCTION itself (static object) contains the listed <em>instance</em> methods (which doesn't seem to be the case in the file I saw).  As well, you cannot reference &quot;interface Any&quot; in actual JS code (it's only a type).<br />\n",
+    "PostedDate": "2014-04-22T16:59:09.82-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236876",
+    "ThreadId": "542985",
+    "Html": "well, on checking around on how to do the migration.. I've found this:\r<br />\n<a href=\"https://coderwall.com/p/a_sd-a\" rel=\"nofollow\">https://coderwall.com/p/a_sd-a</a>   and \r<br />\n<a href=\"https://www.packtpub.com/sites/default/files/downloads/7204OS_The_Future_Jasmine_2_0.pdf\" rel=\"nofollow\">https://www.packtpub.com/sites/default/files/downloads/7204OS_The_Future_Jasmine_2_0.pdf</a>\r<br />\n<br />\n<br />\nboth of which would appear to be wrong.<br />\n",
+    "PostedDate": "2014-04-22T20:37:36.663-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1236916",
+    "ThreadId": "542985",
+    "Html": "Is there a specific question in all this? It would be better to try fixing it up as I explained and post code to get more help (unless you are looking for someone to read the whole spec for you and create the definitions ;) ). It's really not that hard - just take it one type at a time. Look at other .d.ts files for examples (such as lib.d.ts).<br />\n",
+    "PostedDate": "2014-04-23T00:58:10.877-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237130",
+    "ThreadId": "542985",
+    "Html": "yes, I''m sorry, I should have been a bit more clear on my question.\r<br />\nI'm having to move my 1.3 jasmine custom matchers to 2.0, so for example this currently:<br />\n<pre><code>beforeEach(function () {\n    this.addMatchers(toBeDivisibleByTwo);\n});\n\nvar toBeDivisibleByTwo = function () {\n    return (this.actual % 2) === 0;\n}</code></pre>\n\nneeds to be migrated.\r<br />\nthose two bits of docs I previously referenced show two different approaches on using the 2.0 matcher interface that don't seem to be correct.\r<br />\n<br />\ndoes that clarify my question?<br />\n",
+    "PostedDate": "2014-04-23T09:08:36.61-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237156",
+    "ThreadId": "542985",
+    "Html": "While I can't comment on the migration process, I can only comment on the TypeScript definition file.  The new migration shows this example:<br />\n<pre><code> beforeEach(function() {\n    jasmine.addMatchers(customMatchers);\n  });\n</code></pre>\n\nThe &quot;jasmine.d.ts&quot; file (from Definitely Typed) doesn't seem correct.  As I stated earlier, there is no &quot;addMatchers&quot; function declared directly in the &quot;jasmine&quot; module. How should &quot;jasmine.addMatchers&quot; be expected to work? For that matter, the &quot;jasmine.js&quot; file doesn't even create a &quot;jasmine&quot; variable in the global scope - I only see &quot;window.jasmineRequire&quot;.<br />\n<br />\nThe definition file needs to be corrected <em>first</em> before you post code to be migrated.<br />\n<br />\n<em>(FYI: Just for the record, I've never heard of Jasmine until now; I just read the .js file ;) )</em><br />\n",
+    "PostedDate": "2014-04-23T09:48:09.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237169",
+    "ThreadId": "542985",
+    "Html": "Okay, granted... the definition file appears incorrect. So no one using typescript and jasmine unit tests has been able to move from 1.3 to 2.0 (assuming they need custom matchers and/or async support) without some sort of hackery of the description file(s)?<br />\n",
+    "PostedDate": "2014-04-23T10:04:21.003-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239052",
+    "ThreadId": "542985",
+    "Html": "There is no guarantee the declaration on DefinitelyTyped are correct or up-2-date. Looks like nobody got around to updating jasmine to 2.0, or they didn't use this feature. \r<br />\n<br />\nHackery in the declaration file is part of working with TypeScript, but we can all pool effort by pushing fixes back to DT.<br />\n",
+    "PostedDate": "2014-04-28T15:38:40.563-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

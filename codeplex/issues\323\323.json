@@ -1,0 +1,105 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:17.74-07:00",
+    "CommentCount": 13,
+    "Custom": "lukeh",
+    "Description": "Currently the compiler replaces THIS variable in closures with _this variable.\r\nIn some cases the THIS variables can not be replaced like in knockout events (due to fundamental javascript behavior)\r\nsee:\r\nhttp://typescript.codeplex.com/workitem/315\r\nAnd i don't think that introducing _this  simplifies anything in programm development.\r\nthe programmers can do this themselves, for example using self, _this or any other variable which they choose.\r\nwhen the compiler introduces _this, it tries to hide fundamental javascript behavior, it may give false sensation of C# style behavior of javascript.\r\n\r\nSuggestion:\r\nI suggest to remove \"this\" manipulation with typescript -> javascript translation.\r\nAll javascript programmers must know about closures and THIS variables.\r\nthe Code could be more transparent in this case, and understandable.\r\nI think the main purpose of the compiler is to introduce type safety in javascript world,\r\nso the programs could be easily refactored later and be less buggy.\r\n\r\nIMHO:\r\nClasses, modules and type safety is enough.\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-23T23:23:57.157-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Remove compiler manipulation with this variable",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 323
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Duplicate. http://typescript.codeplex.com/workitem/71",
+      "PostedDate": "2012-10-24T11:27:59.377-07:00",
+      "Id": 80913
+    },
+    {
+      "Message": "and to me it looks like another issue, although they have something in common. this is more specific.",
+      "PostedDate": "2012-10-24T19:32:26.49-07:00",
+      "Id": 80947
+    },
+    {
+      "Message": "this issue is not about a bug, but about the reason of the behavior",
+      "PostedDate": "2012-10-24T19:46:47.467-07:00",
+      "Id": 80949
+    },
+    {
+      "Message": "Actually after digging a little in previous issues i had found several different posts about THIS variable.\r\nI think they address to treat 'this' replacement more correctly.\r\nI think to solve the problem by stopping to replace the variable at all.",
+      "PostedDate": "2012-10-25T03:16:24.127-07:00",
+      "Id": 80979
+    },
+    {
+      "Message": "RyanCavanaugh, that isn't the issue and your answer is hand-wavy. The issue is that the _this compilation is naive and basically just sucks (for reference, look at every single ticket that's been reported). I can assure you that the ArrowFunction semantics are understood, TypeScript is messing up compilation by assuming too much about the IdentifierName to use for aliasing |this|",
+      "PostedDate": "2012-11-05T19:57:20.553-08:00",
+      "Id": 81740
+    },
+    {
+      "Message": "We are aligning the => behavior with the ECMAScript 6 proposal that maintains the lexical value of the 'this' reference. Feel free to follow up with the ES6 design committee - the standard isn't finalized yet. Thanks!\n\r\n\r** Closed by RyanCavanaugh 11/05/2012 5:16PM",
+      "PostedDate": "2012-11-05T17:16:42.017-08:00",
+      "Id": 81760
+    },
+    {
+      "Message": "The issue is not about => behavior.\nIt is about replacing 'this' variable with _this in the closures  inside the class method.\nWhat if i we dont want the compiler to assume that 'this' variable inside a closure is the same as it is outside?\nThose who program the code should decide the context, not the compiler.",
+      "PostedDate": "2012-11-06T04:57:23.26-08:00",
+      "Id": 81761
+    },
+    {
+      "Message": "Oops, seems @rwaldron wrote more correct comment than me.\nThis is really the ES6 proposal, but then another issue which is open - the name of the identifier.\nPlease see comment, @rwaldron wrote 6 November at 7:57 AM.",
+      "PostedDate": "2012-11-06T05:28:16.827-08:00",
+      "Id": 81763
+    },
+    {
+      "Message": "@rwaldron - I'm not sure I follow what you believe should be changed here.  There are two bugs I am aware of with the code generation for => in TS currently:  #11 and #181.  Both of these will be addressed.   We do not generate .bind because it depends on ES5 and is still meaningfully slower even on modern engines.  Is there anything else you are identifying here?",
+      "PostedDate": "2012-11-06T09:43:51.867-08:00",
+      "Id": 81780
+    },
+    {
+      "Message": "LukeH, the code generation issues are exactly what I'm referring to; RyanCavanaugh's response indicated that he believed this was an ArrowFunction semantics issue, which it's not.\n\nAs noted in my original response, this is a duplicate of the same, previously reported and apparently now fixed, code generation issue.\n\nThanks for the follow up.",
+      "PostedDate": "2012-11-06T09:58:43.62-08:00",
+      "Id": 81788
+    },
+    {
+      "Message": "@LukeH: bind can be shimmed via call/apply, and is the standard way of passing arguments to the implicit 'this' parameter. Performance is secondary to correctness, and getting the '_this = this' scheme correct is going to be difficult at best. For instance, it involves a complete scope-aware variable renaming pass, or you get into other kinds of trouble\n\n   var y = {y: (_this) => this };\n\n",
+      "PostedDate": "2012-11-06T11:06:32.143-08:00",
+      "Id": 81798
+    },
+    {
+      "Message": "So when the issue is understood it can be closed.",
+      "PostedDate": "2012-11-07T00:03:21.463-08:00",
+      "Id": 81854
+    },
+    {
+      "Message": "Luke - please hande this as you see fit",
+      "PostedDate": "2013-02-25T16:15:16.527-08:00",
+      "Id": 91501
+    }
+  ]
+}

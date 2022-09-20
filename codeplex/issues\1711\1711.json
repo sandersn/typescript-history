@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I believe this has been fixed (I can't reproduce the issue using up-to-date sources).\n\nWe recently refactored how the compiler does type resolution in some cases similar to this. The renaming likely changed the order in which the compiler received the files, which (in the old code) would affect how theses cases got treated.\n\nIf you update to the latest from the develop branch and still see this, please re-open the issue and we can dig deeper (let me know the commit ID you built from so we can be sure we're looking at the same bits). Thanks!",
+    "ClosedDate": "2013-09-23T09:10:03.973-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "Apologies for not having simpler steps to reproduce this.\r\n\r\nI am using the latest typescriptServices.js, and Visual Studio 2012. I don't believe this is an issue in 0.9.1.1\r\n\r\nI create a class that extends a Backbone view - I'm using the latest jQuery and Backbone definition files. \r\n\r\n    class MyView extends Backbone.View {\r\n        initialize() {\r\n            var w1 = $('#item').width();\r\n            var w2 = this.$('#item').width();\r\n        }\r\n    }\r\n\r\nThe first line uses the global jQuery object. The second uses Backbone's function scoped to the view's dom element. Both are of type JQuery.\r\n\r\nSuppose I also have a jQuery plugin that needs a definition, saved in MyPlugin.d.ts:\r\n\r\n    interface JQuery {\r\n        myPlugin(): JQuery;\r\n    }\r\n\r\n\r\nThe second width() in the view gets a red squiggly, saying \"The property 'width' does not exist on value of type 'JQuery'\"\r\n\r\nInterestingly, this error will not occur if the first line in the view is removed, i.e. no prior reference to jQuery.\r\n\r\nIn addition, the error only occurs if the plugin definition interface is in a separate file. Not if it's included in the same file as the view.\r\n\r\nMost strangely, sometimes I can't recreate the error if I rename files. I saved the plugin definition originally as extra.d.ts - got the error. Then I renamed it to MyPlugin.d.ts - didn't get it. Changed it back - error appears. Could this be a VS caching issue?\r\n\r\nMore generally, this is the most impossible frustration in my limited TS experience - it's so hard to reproduce errors from the TLS - they come and go seemingly at random sometimes.\r\n\r\nVS project attached - hopefully you'll see it too.",
+    "LastUpdatedDate": "2013-09-23T09:10:03.973-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-22T11:27:53.817-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Issue with definitions / multiple interfaces",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1711
+  },
+  "FileAttachments": [
+    {
+      "FileId": 732788,
+      "FileName": "TypeScriptHTMLApp1.zip",
+      "DownloadUrl": ".\\732788"
+    }
+  ],
+  "Comments": []
+}

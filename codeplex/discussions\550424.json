@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1262220",
+    "ThreadId": "550424",
+    "Html": "Hi,\r<br />\n<br />\nI have a problem with Type Inference and I am not entirely sure if this is intentional or a bug:\r<br />\n<br />\n<br />\nIf the line with instance in the Required class is uncommented it works. If the line is not there the result2 line in Test.test() has an error:<br />\n<pre><code>module Test {\n\n    class Base {\n        baseMember: number;\n    }\n\n    class Derived extends Base {\n        derivedMember: number;\n    }\n\n    class Required&lt;T extends Base&gt; {\n        someMember: number;\n        //instance: T; //&lt;&lt;&lt; result2 line only works if this is uncommented\n    }\n\n    class ExtendedRequired extends Required&lt;Derived&gt; {\n        someOtherMember: number;\n    }\n\n    class Test {\n        func&lt;T extends  Base&gt;(arg: Required&lt;T&gt;): T {\n            return null;\n        }\n\n        test(): void {\n            var instance = new Required&lt;Derived&gt;();\n            var result = this.func(instance).derivedMember;\n\n            var instance2 = new ExtendedRequired();\n            var result2 = this.func(instance2).derivedMember;\n        }\n    }\n}</code></pre>\n\nThanks<br />\n",
+    "PostedDate": "2014-07-02T19:18:29.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262244",
+    "ThreadId": "550424",
+    "Html": "Type inference in TypeScript works <em>structurally</em>, just like the rest of the type system. When inferring a type, the compiler (usually) relates <em>members</em> of the candidate types to determine generic type parameters. What this means is that if you have a class with a type parameter that isn't used, it's as if the type parameter simply didn't exist (for the purposes of inference).\r<br />\n<br />\nPut more simply, <em>do not have unused type parameters</em>. In a more perfect world, this might be a compile error because it's so rarely the correct thing to do.<br />\n",
+    "PostedDate": "2014-07-02T22:45:39.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

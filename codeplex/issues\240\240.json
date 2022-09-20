@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "By design for now (this might be fixable in 0.9.x; we can reconsider at that time)",
+    "ClosedDate": "2013-02-25T16:21:07.917-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "In JS, i can do:\r\nconsole.log(new Number(5) + new Number(10)); //15\r\n\r\nor\r\n\r\nvar i = new Number(5);\r\n++ i; \r\n\r\nTypeScript throws an errors:\r\n\"Operator '+' cannot be applied to types 'Number' and 'Number'\"\r\n\"Operator '++' cannot be applied to type 'Number'\"\r\n\r\nAnd this, in turn, raises a number of issues:\r\nFor example, if i want to create alias(typedef) for a Number:\r\n\r\ninterface float extends Number {\r\n}\r\n\r\ndeclare var float: {\r\n    new (value?: any): Number;\r\n    (value?: any): Number;\r\n    prototype: Number;\r\n}\r\n\r\ni can't use \"float\" in for loop, in math expressions etc..\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.097-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-12T02:51:42.033-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Incorrect handling numeric types",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 240
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I modified the compiler to support operator overloading using static methods as in C#\n\nclass MyNumber\n{\n     public static opAdd(a : MyNumber, b : MyNumber ) : MyNumber {..}\n}\n\nvar n1,n2 : MyNumber; \nvar n3 = n1 + n2; // in JS gets generated : var n3 = MyNumber.opAdd(n1,n2);\n\nthe changes must be done in typeFlow.ts, ast.ts and you should recompile all tsc compiler files.\nYou should also patch the language service dll to use the typescriptServices.js from disk...\netc\n\n",
+      "PostedDate": "2012-10-12T04:57:29.157-07:00",
+      "Id": 79602
+    },
+    {
+      "Message": "The behavior described in the original report is by design based on the current TypeScript language design.  \n\nJust as in JavaScript, there are separate types for numbers values and Number objects.  In JavaScript, the numeric operations are only defined on number values, but Number objects have a valueOf that causes them to be implicitly converted to their corresponding number value when used in these positions.  The TypeScript type system allows number values in mathematical operations, but does not currently have any mechanism for a type to indicate that it is convertible to number (has a valueOf member which returns a number value).  \n\nWe have considered the idea of adding a type system notion of \"convertible to number\" that types could be annotated with (possibly just the existence of an explicit valueOf member).  This is likely the way we would enable the kinds of scenarios raised above in the TS type system.",
+      "PostedDate": "2012-10-15T18:58:53.23-07:00",
+      "Id": 80066
+    }
+  ]
+}

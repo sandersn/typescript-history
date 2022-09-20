@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.457-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "So I have an application that uses a Web Worker to do background processing. Sending messages is fine:\r\n\r\n```\r\n// mainpage.js\r\nworker.postMessage({a: \"b\"});\r\n```\r\n\r\nBut in the worker, posting messages back is not:\r\n\r\n```\r\n// worker.js\r\npostMessage({a: \"b\"});\r\n```\r\n\r\nThis results in error messages:\r\n_Supplied parameters do not match signature of call target._\r\n_Could not select overload for 'call' expression._\r\n\r\nThis is because the Window.postMessage call has the signature `postMessage(message: any, targetOrigin: string, ports?: any): void` while the worker's postMessage call has the signature `postMessage(message: any, ports?: any): void` signature. And `lib.d.ts` only has the Window version.\r\n\r\nIn order to work around this, I tried putting this at the top of my source file:\r\n\r\n```\r\ndeclare function postMessage(message: any): void;\r\n```\r\n\r\nHowever, that did not work. I think it was just complaining that the version in lib.d.ts did not match, and the new overload resolution rules caused it to disregard the additional overload.\r\n\r\nEventually, I was able to make it work:\r\n\r\n```\r\n(<any>postMessage)({a: \"b\"});\r\n```\r\n\r\nHurray for `<any>`! :-)\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-16T15:27:22.69-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "postMessage() not defined correctly inside Web Worker",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2325
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "```\n postMessage(message: any, targetOrigin: string, ports?: any): void\n```\n\ni think this is wrong. you can only send strings between two window object. What will happen when you close window A and window A shared a object with window B.",
+      "PostedDate": "2014-03-17T10:23:46.707-07:00",
+      "Id": 137099
+    },
+    {
+      "Message": "We probably need a different lib.d.ts for Web Worker files?",
+      "PostedDate": "2014-03-17T15:01:26.943-07:00",
+      "Id": 137158
+    },
+    {
+      "Message": "@mientjan:\nSee https://developer.mozilla.org/en-US/docs/Web/API/Window.postMessage - in earlier versions of Firefox the message did have to be a string, but in later versions, if it's not a string, it's serialized and the serialized version of the object is passed and then deserialized on the other end. The two windows don't share objects.\n\nAFAIK other browsers behave similarly to the later versions of Firefox.\n\n@RyanCavanaugh:\nI don't think a different lib.d.ts file is a good thing as long as it's possible to do it with one. I think the Worker postMessage call should just be included as an alternate signature and the inline documentation should point out which is which.\n\nThat, or have the bare function version be the worker version and force something like \"window.postMessage\" for the window version.",
+      "PostedDate": "2014-03-18T09:40:45.34-07:00",
+      "Id": 137214
+    },
+    {
+      "Message": "Funny, I thought I posted this same exact issue a couple of days ago, but maybe I forgot to hit Submit.\n\nAnyway, yes, I think Workers need a different lib.d.ts where self is of type Worker instead of Window and all the Window-owned globals are not present (stuff like localStorage).\n\nIn the meantime, I've been working around this using an IIFE like this:\n\n```\n((self: Worker) => {\n  self.addEventListener(\"message\", () => {\n    self.postMessage(\"Hello\");\n  });\n})(<any>self);\n```",
+      "PostedDate": "2014-03-28T02:34:41.14-07:00",
+      "Id": 139875
+    },
+    {
+      "Message": "@GeoffArmstrong A separate lib.d.ts file for workers _is_ necessary, otherwise TypeScript is OKing calls to \"global\" (i.e. Window.*) functions which aren't going to work in production, thus missing the point of static type-checking and compilation.",
+      "PostedDate": "2014-03-28T02:36:36.423-07:00",
+      "Id": 139876
+    },
+    {
+      "Message": "We have done some [work](https://typescript.codeplex.com/SourceControl/changeset/5d29bd2b2570bef3e1fe27902f6064c07c8eca22) in develop to split lib.d.ts into more modular components. part of that is to create a new library for webworkers. You can include this file (lib.webworker.d.ts) directly in your project/compilation unit, and that should be sufficient to code against.\n\nThe caveat here is that you will need to split your code into webworker (use lib.webworker.d.ts) and non-webworker (use normal lib.d.ts). But I do not see how you would do it otherwise with the global polluter object being different in the two cases.\n\nhere is the reference to the change for splitting the library file:\n[https://typescript.codeplex.com/SourceControl/changeset/5d29bd2b2570bef3e1fe27902f6064c07c8eca22](https://typescript.codeplex.com/SourceControl/changeset/5d29bd2b2570bef3e1fe27902f6064c07c8eca22)\n\n",
+      "PostedDate": "2014-04-01T17:42:14.74-07:00",
+      "Id": 140236
+    }
+  ]
+}

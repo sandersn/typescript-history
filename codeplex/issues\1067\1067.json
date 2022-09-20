@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.207-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I would really like to be able to implement Action and Func as they are in C#. I wrote the following code. The interfaces themselves compile file, but I get a compiler error when I try to use one as the type of an argument to a function.\r\n\r\nBecause the interfaces compile, I think this may be a bug in function compilation. But whether it's a bug in interface compilation or function compilation, I ask that you please support the scenario of being able to declare a single interface with multiple type parameters.\r\n\r\n```\r\n//#region Action\r\n\r\n//Represents a void returning function with no arguments.\r\ninterface Action {\r\n    (): void;\r\n}\r\n\r\n//Represents a void returning function with one argument.\r\ninterface Action<T> {\r\n    (arg: T): void;\r\n}\r\n\r\n//Represents a void returning function with two arguments.\r\ninterface Action<T1, T2> {\r\n    (arg1: T1, arg2: T2): void;\r\n}\r\n\r\n//Represents a void returning function with three arguments.\r\ninterface Action<T1, T2, T3> {\r\n    (arg1: T1, arg2: T2, arg3: T3): void;\r\n}\r\n\r\n//Represents a void returning function with four arguments.\r\ninterface Action<T1, T2, T3, T4> {\r\n    (arg1: T1, arg2: T2, arg3: T3, arg4: T4): void;\r\n}\r\n\r\n//Represents a void returning function with five arguments.\r\ninterface Action<T1, T2, T3, T4, T5> {\r\n    (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5): void;\r\n}\r\n\r\n//#endregion Action\r\n\r\n//#region Func\r\n\r\n//Represents a function with no arguments returning TResult.\r\ninterface Func<TResult> {\r\n    (): TResult;\r\n}\r\n\r\n//Represents a function with one argument returning TResult.\r\ninterface Func<T, TResult> {\r\n    (arg: T): TResult;\r\n}\r\n\r\n//Represents a function with two arguments returning TResult.\r\ninterface Func<T1, T2, TResult> {\r\n    (arg1: T1, arg2: T2): TResult;\r\n}\r\n\r\n//Represents a function with three arguments returning TResult.\r\ninterface Func<T1, T2, T3, TResult> {\r\n    (arg1: T1, arg2: T2, arg3: T3): TResult;\r\n}\r\n\r\n//Represents a function with four arguments returning TResult.\r\ninterface Func<T1, T2, T3, T4, TResult> {\r\n    (arg1: T1, arg2: T2, arg3: T3, arg4: T4): TResult;\r\n}\r\n\r\n//Represents a function with five arguments returning TResult.\r\ninterface Func<T1, T2, T3, T4, T5, TResult> {\r\n    (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5): TResult;\r\n}\r\n\r\n//#endregion Action\r\n\r\n//Compile Error\r\n//error TS2090: Generic type 'Func<TResult, T, T1, T2, T3, T4, T5>' requires 7 type argument(s).\r\nfunction select<TSource, TResult>(source: Array<TSource>, selector: Func<TSource, TResult>) {\r\n    throw 'not implemented';\r\n}\r\n```\r\n\r\nThank you for your time.\r\n\r\nBest,\r\nDoug Rubino",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-05-24T23:43:51.26-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Support for generic interfaces with different numbers of type parameters",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 8,
+    "Id": 1067
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion, I've assigned this to Jonathon who handles those. This is by design at the moment. If you have any compelling examples for the use of this feature feel free to add them.\r\n\r\nNote that there's no real need for these interfaces to exist in Typescript because functions are first class values and types are compared structurally rather than by name, unlike C#. There's no need for a name to represent what the type of a function with one arg and returning a value is, because a statically checked type for that function signature already exists in the type system. Consider:\r\n\r\n```\r\n//Represents a function with one argument returning TResult.\r\ninterface Func<T, TResult> {\r\n    (arg: T): TResult;\r\n}\r\n\r\ninterface NotFunc<T, U> {\r\n    (x: T): U;\r\n    doStuff(): string;\r\n}\r\n\r\nfunction select<T, U>(source: T[], selector: (x:T) => U) {\r\n    throw 'not implemented'\r\n}\r\n\r\nfunction select2<TSource, TResult>(source: TSource[], selector: Func<TSource, TResult>) {\r\n    throw 'not implemented';\r\n}\r\n\r\nselect([\"\"], (x) => x.length); // ok\r\nselect([\"\"], (x) => x.foo); // error, string doesn't have a property foo\r\nselect([\"\"], (x, y) => x.length);  // error, call signature expects 1 or fewer parameters\r\n\r\n// exact same results using Func as the argument type\r\nselect2([\"\"], (x) => x.length);\r\nselect2([\"\"], (x) => x.foo); \r\nselect2([\"\"], (x, y) => x.length);  \r\n\r\nvar y: NotFunc<string, number>;\r\ny.doStuff();\r\nselect2([\"\"], y); // no error, NotFunc is structurally equally to Func\r\n```",
+      "PostedDate": "2013-05-30T20:12:13.013-07:00",
+      "Id": 101755
+    },
+    {
+      "Message": "Hi Dan, \n\nThanks for the response.\n\nIf it is by design that interfaces with the same name cannot have different numbers of type parameters, then I think the compiler needs to throw an error when you declare\n\n```\ninterface MyInterface<T> { }\ninterface MyInterface<T, U> { }\n```\n\nAs for the Func and Action values, it's more stylistic than anything else. When declaring a function, I have multiple options:\n\n```\ninterface Doer {\n   (first: string, second: number, third: boolean): void;\n}\n\ninterface Action<T1, T2, T3> {\n    (arg1: T1, arg2: T2, arg3: T3): void;\n}\n\nclass ClassWithDoer {\n       doSomething(doer: Doer): void { throw 'not implemented'; }\n}\n\nclass ClassWithLambda {\n       doSomething(doer: (first: string, second: number, third: boolean) => void): void { \n               throw 'not implemented'; \n       }\n}\n\nclass ClassWithAction {\n       doSomething(doer: Action<string, number, boolean>): void { \n               throw 'not implemented'; \n       }\n}\n```\n\nOf these three options, no one is clearly better than the others, but here's my experience with each: \n\n__ClassWithDoer.doSomething:__\nVisualStudio intellisense right now doesn't tell me the structure of my Doer interface, so I don't know what sort of function to pass in.\n\n__ClassWithLambda.doSomething:__\nI have all the information I need, but the lambda declaration is quite long. It also has a syntax that feels like it requires too much whitespace for more complex function declarations. But the parameter names add value.\n\n__ClassWithAction:__\nI've lost parameter names, but still have all the type information to know what function to pass in, which is often enough information for me. Often times, it's the option I would prefer.\n\nI'll try to think of compelling reasons for why I'd like generic overloading on interfaces, but it's a pattern I use frequently. Sometimes there is an odd parameter that I need to make generic for extensibility, but that I expect to rarely be used. For instance, something like this:\n\n```\ninterface ITextConverter<TInput, TOutput> {\n     format(input: TInput): TOutput;\n}\n\ninterface ITextConverter<TInput> extends ITextConverter<TInput, string> { }\n```\n\nIn this case, for whatever reason, I know that string is frequently going to be the output of a TextConverter, so I like it provide it as an interface too. But I want the interfaces to have the same name, to should the strong link between them.\n\nI think the value for having interfaces that differ only by type parameter is the same as the value added by method overloading.\n\nAgain, thanks for the response.",
+      "PostedDate": "2013-05-31T10:11:17.113-07:00",
+      "Id": 101796
+    },
+    {
+      "Message": "Another compelling example is Tuples:\n\nhttp://msdn.microsoft.com/en-us/library/system.tuple.aspx",
+      "PostedDate": "2013-09-18T11:34:18.087-07:00",
+      "Id": 114940
+    },
+    {
+      "Message": "It would be quite nice to implement tuples in TypeScript as well.",
+      "PostedDate": "2013-09-18T22:48:02.38-07:00",
+      "Id": 115005
+    }
+  ]
+}

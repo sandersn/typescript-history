@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments - feel free to start a thread on the language spec forum if you have more questions (Anders or Jonathan are more likely to chime in over there). Thanks!",
+    "ClosedDate": "2014-01-15T09:41:32.033-08:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Re-opened - see comments.\r\n\r\nHi Guys,\r\n\r\nI'm not quite sure if I've phrased the issue title quite right but I've encountered a problem with the TypeScript compiler considering ```Number``` and ```number``` to be different things.  \r\n\r\n```ts\r\ninterface CapitalizedNumber { \r\n    step: (now: Number) => any; \r\n}\r\n\r\nfunction yearsOld(age: number){\r\n\treturn \"You are \" + age.toString() + \" years old\";\r\n}\r\n\r\nfunction problem(age: CapitalizedNumber){\r\n\t\r\n}\r\n\r\nproblem({\r\n    step: function (now) {\r\n        yearsOld(now);\r\n    }\r\n});\r\n```\r\n\r\nThe above code errors with:\r\n\r\n```\r\nerror TS2082: Supplied parameters do not match any signature of call target: Could not apply type 'number' to argument 1 which is of type 'Number'.\r\nerror TS2087: Could not select overload for 'call' expression.\r\n```\r\n\r\nIt can be made to compile by changing ```Number``` to ```number```.  Is this correct behaviour for the compiler?\r\n\r\n[Here's a playground to illustrate.](http://www.typescriptlang.org/Playground/#src=interface%20CapitalizedNumber%20%7B%20%0A%20%20%20%20step%3A%20(now%3A%20Number)%20%3D%3E%20any%3B%20%0A%7D%0A%0Afunction%20yearsOld(age%3A%20number)%7B%0A%09return%20%22You%20are%20%22%20%2B%20age.toString()%20%2B%20%22%20years%20old%22%3B%0A%7D%0A%0Afunction%20problem(age%3A%20CapitalizedNumber)%7B%0A%09%0A%7D%0A%0Aproblem(%7B%0A%20%20%20%20step%3A%20function%20(now)%20%7B%0A%20%20%20%20%20%20%20%20yearsOld(now)%3B%0A%20%20%20%20%7D%0A%7D)%3B)",
+    "LastUpdatedDate": "2014-03-31T16:16:45.287-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-13T02:41:22.347-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "number / Number aliasing not flowing through",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2094
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for responding Ryan.  I'm a little confused looking at the [spec](http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf) as it refers to ```Number``` as a primitive type rather than ```number```:\n\n> The number keyword references the Number primitive type and numeric literals may be used to write \nvalues of the Number primitive type. \n\nTo my mind this suggests that the 2 are interchangeable.  However you say:\n\n> Number is an object type; number is a primitive type\n\nI'm sure I'm being a little dense here but there seems to be a slight contradiction here.  Would you be able to clarify this for a simple man please? :-)\n\nI've reopened the issue as I don't think you see closed issue comments - obviously feel free to close again!\n\n\n",
+      "PostedDate": "2014-01-15T01:32:51.04-08:00",
+      "Id": 130471
+    },
+    {
+      "Message": "Number is an object type; number is a primitive type. They are not intended to be aliases of each other.\n\r\n\r** Closed by RyanCavanaugh 01/14/2014 10:17AM",
+      "PostedDate": "2014-01-14T10:17:43.567-08:00",
+      "Id": 130472
+    },
+    {
+      "Message": "When the spec says \"Number\" it doesn't mean `Number` the global interface, it means *the Number primitive type*. The spec consistently uses the qualifier \"global interface\" to refer to the `Number` global interface (typographically rendered in `fixed width` here). Later in 3.2.1:\n\n > For purposes of determining type relationships (section 3.8) and accessing properties (section 4.10), the Number primitive type behaves as an object type with the same properties as the global interface type ‘Number’.\n\nSo there are two separate things here:\n * The keyword `number`, which refers to the Number primitive type (*not* `Number` the global interface)\n * The global interface `Number`, which is an object type\n\nExpressions like `3.14` are of the Number primitive type. Primitive types have no members, but *appear* to have the members of their corresponding global interface types (see section 3.8.1 'Apparent Type').\n\nYou can think of this as the difference between actual numbers in JavaScript and their 'boxed' equivalents:\n```\n> var x = 3; // x: number\nundefined\n> typeof x\n\"number\"\n> var n = new Number(3) // n: Number\nundefined\n> typeof n\n\"object\"\n> x + 1\n4\n> n + 1\n4\n> x instanceof Number\nfalse\n> n instanceof Number\ntrue\n> +n instanceof Number\nfalse\n```",
+      "PostedDate": "2014-01-15T09:40:51.1-08:00",
+      "Id": 130503
+    },
+    {
+      "Message": "Thanks for the clarification Ryan. I think I follow. I guess the key part from my perspective is this:\n\n> For purposes of determining type relationships (section 3.8) and accessing properties (section 4.10), the Number primitive type behaves as an object type with the same properties as the global interface type ‘Number’.\n\nWhich means, if I read it right, that whilst the primitive and the object are different types they *are* clearly related and share behaviour.\n\nI'll give apparent types a good read. Thanks again.",
+      "PostedDate": "2014-01-15T10:56:19.373-08:00",
+      "Id": 130505
+    }
+  ]
+}

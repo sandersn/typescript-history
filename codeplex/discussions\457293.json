@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1093995",
+    "ThreadId": "457293",
+    "Html": "Based on responses by the development team, TSC won't organize the dependencies automatically, so the only way to compile to single files correctly is to add a &lt;references /&gt; clause for each file in the correct order.\r<br />\n<br />\nI believe I'm experiencing what I'd call a &quot;reference hell&quot;. Trying to keep all references in order without using a global &quot;references.ts&quot; seems to be completely unmanageable.\r<br />\n<br />\nI have some &quot;components&quot; folder, similar to how &quot;Controls&quot; are in win/web forms. In a page, I'd like to have access to all components and just build the page, but instead I need to keep adding a reference for each component I use in each page because adding a global &quot;references&quot; makes the output out of order eventually.\r<br />\n<br />\nThis is leading to to pages with things like 50 references and growing.\r<br />\n<br />\nAt the end I just gave up on using TSC for single file output, and have added grunt and batch scripts to do this.\r<br />\n<br />\nIs there anyone else experiencing this problem? Have anyone tried to create single-file output without global references? Are there better solutions?\r<br />\n<br />\nThanks,\r<br />\nNatan<br />\n",
+    "PostedDate": "2013-09-18T06:28:12.643-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094104",
+    "ThreadId": "457293",
+    "Html": "Compiling the .ts files to .js files and then running the results through RequireJS to create a single file should work.\r<br />\n<br />\n<a href=\"http://requirejs.org/docs/optimization.html\" rel=\"nofollow\">http://requirejs.org/docs/optimization.html</a><br />\n",
+    "PostedDate": "2013-09-18T09:23:43.31-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1094512",
+    "ThreadId": "457293",
+    "Html": "Hi Dan_s,\r<br />\n<br />\nIn this respect, grunt can do that as well.\r<br />\nI guess the only solution then is to do this kind of thing, running a post processor outside VS.<br />\n",
+    "PostedDate": "2013-09-19T08:17:50.173-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237068",
+    "ThreadId": "457293",
+    "Html": "Struggled with this myself, so definately same problem here! I'm still amazed why this issue isn't addressed by the official typescript project, isn't the goal to develop enterprise scale javascript applications after all.\r<br />\n<br />\nI created a makeshift dependency tree analyzer with bash/sed/awk that automatically puts correct references annotations on top of each 100+ .ts files I have. Now it broke when I started using modules and more structured items. Of well, back to drawing board.<br />\n",
+    "PostedDate": "2014-04-23T07:27:42.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237113",
+    "ThreadId": "457293",
+    "Html": "At work I use Visual Studio and managed to make single file output work using references.  It's been a struggle though.\r<br />\n<br />\nAt home I use IntelliJ and was thinking of using <a href=\"http://browserify.org/\" rel=\"nofollow\">Browserify</a> to do the single file creation.  Unfortunately I think that will mangle the source map.<br />\n",
+    "PostedDate": "2014-04-23T08:33:24.077-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239051",
+    "ThreadId": "457293",
+    "Html": "Browserify will merge the source-map of files that have them when generating the bundle, it is pretty clever in that.\r<br />\n<br />\nAlso this will allow you to use external-module pattern (using commonJS modules) and get rid of those horrible global references, by using <code>import</code> so you know exactly what is visible in each file. \r<br />\n<br />\nAnd as a bonus browserify has shims for most of the node.js standard lib, and you can use modules from npm and bower, which opens you projects for a huge wealth of open-source modules.<br />\n",
+    "PostedDate": "2014-04-28T15:35:51.45-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1239987",
+    "ThreadId": "457293",
+    "Html": "So in my game which has TS libs shared between projects, I use AMD modules for all my TS projects. This makes it easy to import without going through the reference hell you speak of, all I do is declare my dependencies at the top of my files and everything works pretty well. The only dance is copying the required shared files to each dependent lib. I'd much rather have a reference system similar to C# class libraries and such, where I can make a TypeScript Library which I can import easily between projects (including Web App and Node.js Apps).<br />\n",
+    "PostedDate": "2014-04-30T11:57:30.357-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

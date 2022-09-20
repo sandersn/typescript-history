@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1248637",
+    "ThreadId": "546303",
+    "Html": "I have the need to read and write to the window object from within an AMD module.<br />\n<pre><code>interface Window {\n    test : string;\n}\n\nwindow.test = 'test';</code></pre>\n\nThis works without AMD, but if the file exports a module:<br />\n<br />\nerror TS2094: The property 'MyTest' does not exist on value of type 'Window'.<br />\n<br />\nThe only workaround I have found is:<br />\n<pre><code>window['test'] = 'test';</code></pre>\n\nHowever, that eliminates the ability to use the noImplicityAny option, which I would prefer not to lose.<br />\n<br />\nI understand that accessing the global context is not good practice, but there are times when it must be done.  Is there a proper way to do this?<br />\n",
+    "PostedDate": "2014-05-22T15:57:36.757-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1248640",
+    "ThreadId": "546303",
+    "Html": "The right way to do this is to move the <code>interface Window</code> declaration into a separate .d.ts file and <code>/// &lt;reference&gt;</code> that. That will properly extend the global <code>window</code> object.<br />\n",
+    "PostedDate": "2014-05-22T16:04:32.873-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1248652",
+    "ThreadId": "546303",
+    "Html": "Wow, that would never have occurred to me.  Thanks, that does work.\r<br />\n<br />\nThis strikes me as a crazy workaround.  Can you describe why this makes sense?<br />\n",
+    "PostedDate": "2014-05-22T17:08:55.567-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1248758",
+    "ThreadId": "546303",
+    "Html": "It's exactly the same reason that this is an error:<br />\n<pre><code>module M {\n    interface Window { }\n    var x: Window;\n    console.log(x.document);\n}</code></pre>\n\nOr why this code is fine:<br />\n<pre><code>var x = 4;\nmodule N {\n    var x = 'foo'; // was number, now string\n}</code></pre>\n\nAny time you're in a child of some scope, declaring an object with some name <em>always</em> introduces a new object rather than merging with the object from the parent scope. Top-level objects in external modules are in a scope that is a child of the global scope, so attempts to merge with objects from the global scope results instead in the creation of a new object.\r<br />\n<br />\nThis is inconvenient in a few cases, but the converse is much much worse -- imagine if every name in lib.d.ts became unusable as the name of an exported object from an internal or external module. The language would be literally unusable.<br />\n",
+    "PostedDate": "2014-05-23T01:12:59.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1249002",
+    "ThreadId": "546303",
+    "Html": "That makes sense, thanks very much for the detailed explanation.<br />\n",
+    "PostedDate": "2014-05-23T10:58:47.243-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

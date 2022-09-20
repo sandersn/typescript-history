@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "984145",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>I've got a moderately-sized TypeScript project - about 5000 lines spread over about 30 files. I've discovered that as the project gets larger, the TypeScript plugin for Visual Studio starts slowing down, sometimes dramatically, to the point where Visual\r\n Studio will frequently lock up for 10-20 seconds before accepting input again. So far as I can tell, this seems to happen because of the TS language service trying to parse the files. It especially seems to happen when there's a syntax error of some sort within\r\n the file I'm editing - the sort you get and fix a thousand times a day while you're in the process of editing your code.</p>\r\n<p>It's getting worse, and is beginning to affect productivity.</p>\r\n<p>Do you know when the next drop of the VS plugin is going to be? Any tips for getting the best performance until then?</p>\r\n",
+    "PostedDate": "2013-01-08T10:02:42.47-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984150",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>Speak from personal&nbsp;experience --</p>\r\n<p>For 2500+ lines of TS, I am <strong>not </strong>noticing a significant lag in design-time syntax/type checking. Though, this could purely be&nbsp;attributable&nbsp;to hardware.&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-08T10:30:56.323-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984152",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>Is it possible that you also have the Web Essentials plugin installed and have it set to compile after save?</p>\r\n",
+    "PostedDate": "2013-01-08T10:40:12.593-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984162",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>I have seen this&nbsp;occasionally in certain situations when the code is malformed in certain ways (e.g. missing braces, etc). &nbsp;I can't put my finger on a pattern for it.</p>\r\n<p>However, in general it seems that perf is not an issue (I'm very sensitive about perf too). &nbsp;I have a&nbsp;similar&nbsp;sized project: roughly about 10K LOC over about 60+ files.</p>\r\n<p>I have Web Essentials set to compile on save, not on build.</p>\r\n<p>Do you have an SSD by any chance? &nbsp;I had to switch to one to be able to accomplish any medium to heavy JS work in VS.</p>\r\n",
+    "PostedDate": "2013-01-08T11:07:19.677-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984167",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>Thanks for the responses. Some more data:</p>\r\n<p>- I'm using WebEssentials 2.2.5, configured to compile on save but not on build. The evidence that it's not related to Web Essentials is that the freeze generally happens when I'm in the process of making live edits, before I save anything. Once I'm able\r\n to save a file, it generally builds within a second or so.</p>\r\n<p>- My machine is a 32-bit machine, 3-4 years old, 4 GB of RAM, and a good SSD. It's not a great machine, but not bad. VS normally performs fine.</p>\r\n<p>- Restarting Visual Studio definitely seems to help, at least for a while.</p>\r\n",
+    "PostedDate": "2013-01-08T11:35:37.663-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984168",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>We have noticed this occurring with certainty in the following circumstance:&nbsp;</p>\r\n<p>There is a duplicate declaration of a type or variable in the project (or projects).</p>\r\n<p>I believe this causes the intellisense mechanism to lock itself up, but only for a short while - the 10 to 20 seconds sounds about right.</p>\r\n<p>&nbsp;</p>\r\n<p>By chance we've discovered the following black magic for unlocking the spell:</p>\r\n<ul>\r\n<li>When Visual Studio locks up, click on any other open window on the operating system.\r\n</li><li>Click back in Visual Studio and hit Control+break multiple times. </li><li>Stop doing that and immediately try clicking on another open document tab within Visual Studio\r\n</li></ul>\r\n<p>At this point the cursor should start being active again.</p>\r\n<p>May or may not work for you!</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2013-01-08T11:36:40.59-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984200",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>I believe this can also happen when declaration files (&quot;.d.ts&quot;) are referenced from within the same project as the actual source files declaring those types.</p>\r\n",
+    "PostedDate": "2013-01-08T13:24:32.537-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984271",
+    "ThreadId": "428909",
+    "Html": "\r\n<div dir=\"ltr\">I have a decent size TS project, ~200 files. The issue with duplicate declaration issue is easily reproduced by copy/pasting an existing TS file and then immediately open the new copied file = VS will freeze for quite some time. This behavior\r\n seems to be related to WebEssentials, if I disable it the freeze doesn't happen.<br>\r\n---bjorn<br>\r\n<br>\r\n<div>\r\n<div id=\"SkyDrivePlaceholder\"></div>\r\n<hr id=\"stopSpelling\">\r\nFrom: [email removed]<br>\r\nTo: [email removed]<br>\r\nDate: Tue, 8 Jan 2013 17:15:38 -0800<br>\r\nSubject: Re: Performance issues in Visual Studio [typescript:428909]<br>\r\n<br>\r\nFrom: nabog<br>\r\n<div id=\"ecxThreadNotificationPostBody\">We have noticed this occurring with certainty in the following circumstance:\r\n<br>\r\nThere is a duplicate declaration of a type or variable in the project (or projects).<br>\r\nI believe this causes the intellisense mechanism to lock itself up, but only for a short while - the 10 to 20 seconds sounds about right.<br>\r\n<br>\r\nBy chance we've discovered the following black magic for unlocking the spell:<br>\r\n<ul>\r\n<li>When Visual Studio locks up, click on any other open window on the operating system.\r\n</li><li>Click back in Visual Studio and hit Control&#43;break multiple times. </li><li>Stop doing that and immediately try clicking on another open document tab within Visual Studio\r\n</li></ul>\r\nAt this point the cursor should start being active again.<br>\r\nMay or may not work for you!<br>\r\nNoel<br>\r\n</div>\r\n<div id=\"ecxThreadNotificationFooter\">Read the <a href=\"http://typescript.codeplex.com/discussions/428909#post984168\" target=\"_blank\">\r\nfull discussion online</a>.<br>\r\nTo add a post to this discussion, reply to this email (<a href=\"mailto:typescript@discussions.codeplex.com?subject=[typescript:428909]\">typescript@discussions.codeplex.com</a>)<br>\r\nTo start a new discussion for this project, email <a href=\"mailto:typescript@discussions.codeplex.com\">\r\ntypescript@discussions.codeplex.com</a><br>\r\nYou are receiving this email because you subscribed to this discussion on CodePlex. You can\r\n<a href=\"https://typescript.codeplex.com/subscriptions/thread/project/edit\" target=\"_blank\">\r\nunsubscribe or change your settings</a> on codePlex.com.<br>\r\nPlease note: Images and attachments will be removed from emails. Any posts to this discussion will also be available online at codeplex.com<br>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2013-01-08T18:33:29.24-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984597",
+    "ThreadId": "428909",
+    "Html": "\r\n<p>As a side note - we're also actively working to improve the compiler to make it faster for larger projects.&nbsp; One such project is on CodePlex, and is a major re-write of the parser frontend to make it faster, simpler, and more capable (<a href=\"http://typescript.codeplex.com/SourceControl/network/forks/cyrusn/fidelity\">http://typescript.codeplex.com/SourceControl/network/forks/cyrusn/fidelity</a>).&nbsp;</p>\r\n",
+    "PostedDate": "2013-01-09T10:28:24.583-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

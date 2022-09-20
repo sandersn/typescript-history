@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design.\n\nBy declaring the 'parser' variable you shadow the imported 'parser'. The following new call references the 'parser' variable and not the import. \n\nThis explains why the import is omitted from the code-gen.",
+    "ClosedDate": "2014-01-14T13:44:19.157-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "This code compiles correct. However, if I rename ```_parser``` to ```parser``` in ```main()``` (which clashes with the ```import parser``` variable) then ```tsc``` generates JavaScript without the import line ```var parser = require(\"./parser\")``` (using --module commonjs).\r\n\r\n__Solution:__ An error message that states that the variable name clashes with the import name would be very nice. :) I use TypeScript 0.9.0.1 with nodejs.\r\n\r\nmain.ts:\r\n```typescript\r\nimport parser = require(\"./parser\")\r\n\r\nfunction main() {\r\n  var _parser = new parser.Parser()\r\n  console.log(_parser.parse(\"foo\"))\r\n}\r\n\r\nif (require.main === module) {\r\n  main()\r\n}\r\n```\r\n\r\nparser.ts:\r\n```typescript\r\nexport class Parser {\r\n  parse(text: string): string {\r\n    return text\r\n  }\r\n}\r\n```",
+    "LastUpdatedDate": "2014-01-14T13:44:19.157-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "High",
+      "Severity": 150,
+      "Id": 3
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-07-16T19:57:22.513-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "import/require statement is omitted if variable names clash",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 1358
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting.  The variable name is not clashing, and what you are seeing there is entirely by design - both in TypeScript/JavaScript and many other languages.  Using the same identifier name in a nested scope creates a new identifier which shadows the identifier in the outer scope.  It does not clash or override it, when the main function exits, the original 'parser' identifier is still present globally with its original value.\n\nHowever the compiler not emitting the module import because a nested scope is shadowing the identifier name is a terrible bug.  Thanks for reporting!  We'll get on this one right away.",
+      "PostedDate": "2013-07-17T12:57:42.56-07:00",
+      "Id": 106330
+    },
+    {
+      "Message": "Actually, this is not a bug at all.  The fact you are shadowing the 'parser' identifier with a var, means the actual module is then not referenced at all.  As we optimize away any module references you don't actually use, we correctly remove the line that imports it in the emitted code.\n\nIf you do use the module somewhere (e.g. \"var x = new parser.Parser();\" outside of where 'parser' is shadowed), then we correctly emit the module import.",
+      "PostedDate": "2013-07-17T15:41:42.12-07:00",
+      "Id": 106368
+    },
+    {
+      "Message": "Thanks for your comments.\n\n>As we optimize away any module references you don't actually use, we correctly remove the line that imports it in the emitted code.\n\nI actually use the parser import variable before I overwrite it.\n\nLet's simplify the example a bit:\n\n```typescript\nimport parser = require(\"./parser\")\nvar parser = new parser.Parser()\nconsole.log(parser)\n```\n\ngenerates\n\n```javascript\n\nvar parser = new parser.Parser();\nconsole.log(parser);\n```\n\nThis will throw \"TypeError: Cannot read property 'Parser' of undefined\" in node/v8.\n\nbut I think it should be (if I am not mistaken)\n\n```javascript\nvar parser = require(\"./parser\");\nvar parser = new parser.Parser();\nconsole.log(parser);\n```\n\nwhich outputs \"foo\" to the console.",
+      "PostedDate": "2013-07-17T21:23:08.877-07:00",
+      "Id": 106398
+    },
+    {
+      "Message": "Small correction: ```console.log(parser)``` should be ```console.log(parser.parse(\"foo\"))``` to output \"foo\" of course.\n\n",
+      "PostedDate": "2013-07-17T21:29:27.593-07:00",
+      "Id": 106399
+    },
+    {
+      "Message": "\n\r\n\r** Closed by billti 07/17/2013 3:41PM",
+      "PostedDate": "2013-07-17T15:41:47.22-07:00",
+      "Id": 106400
+    },
+    {
+      "Message": "Hi, I have a similar error in Typescript 0.9.1.\n\nmodule1.ts\n```\nexport var test = {};\nexport var test2 = {};\n\n// we append data to theses variables\n```\n\nmodule*.ts\n```\nimport module1 = require(\"../module1\");\n//...\nko.utils.extend(aVar, module1.test);\n```\n\nSometimes module1 import is removed from resulted javascript\nAny idea.\n\nMy workaround for now\n\nmodule2.ts\n```\n/// <reference path=\"require.d.ts\" />\n/// <amd-dependency path=\"../module1\" />\nimport module1 = require(\"../module1\");\n//...\nko.utils.extend(aVar, require(\"../module1\").test);\n```\n\nIt's ugly but it works for now. \nAny idea",
+      "PostedDate": "2013-10-10T15:25:18.163-07:00",
+      "Id": 118076
+    }
+  ]
+}

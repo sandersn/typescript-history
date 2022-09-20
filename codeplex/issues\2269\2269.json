@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:27.97-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "If you have some code using a global like this:\r\n\r\n```\r\ndeclare var bar\r\nmodule foo {\r\n\tvar x = bar;\r\n}\r\n```\r\nThis generates the following code, with `bar` being used directly. \r\n```\r\nvar foo;\r\n(function (foo) {\r\n    var x = bar;\r\n})(foo || (foo = {}));\r\n```\r\nNow if (somewhere far away, but in the same project) you define the following:\r\n```\r\nmodule foo.bar\r\n{\r\n\tclass Foo {}\r\n}\r\n```\r\nDefining this changes the generated code for the *first* snippet to:\r\n```\r\nvar foo;\r\n(function (foo) {\r\n    var x = foo.bar;\r\n})(foo || (foo = {}));\r\n```\r\nNotice that it's now generating `foo.bar` for the access to `bar`. \r\n\r\nI understand why this is happening: the second snippet is extending the `foo` namespace with a `bar` namespace, which shadows the global `bar` variable. But I think this is a bad idea: it makes for very brittle code, where changes in one place can break completely unrelated code.\r\n\r\nIn general globals should of course mostly be avoided, but think of the `document` global, for example. That's a very common word, and likely to show up in a namespace as well...",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-06T08:38:57.89-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Global variables can be shadowed by other modules",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2269
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the suggestion, this is something we may add a warning for in the future. Or something a Linter can warn you about. \r\n\r\nAssigning to Jon who handles suggestions.",
+      "PostedDate": "2014-03-06T13:47:38.877-08:00",
+      "Id": 136085
+    }
+  ]
+}

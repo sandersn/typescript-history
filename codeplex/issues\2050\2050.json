@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design and more appropriate as a discussion.",
+    "ClosedDate": "2013-12-26T11:52:21.68-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Because of [the lack of class expressions in TypeScript](https://typescript.codeplex.com/workitem/1712), I had to create my own little hack, call it `bindClass`. Works similar to `Function.bind` - i.e. creates a new class that has the same behavior as the original class, only the constructor parameters are bound to particular values.\r\n\r\n[Here is a full example on Playground](http://www.typescriptlang.org/Playground/#src=class%20C%3CT%3E%20%7B%0D%0A%09X%20%3D%205%3B%0D%0A%09constructor(s%3A%20string)%20%7B%7D%0D%0A%7D%0D%0A%0D%0Afunction%20bindClass%3CTClass%2C%20TArgs%3E(%20theClass%3A%20%7B%20new(args%3A%20TArgs)%3A%20TClass%20%7D%2C%20args%3A%20TArgs%20)%3A%20%7B%20new()%3A%20TClass%20%7D%20%7B%20%0D%0A%09function%20_f()%20%7B%0D%0A%09%09this.constructor%20%3D%20theClass%3B%0D%0A%09%09theClass.call(%20this%2C%20args%20)%3B%0D%0A%09%7D%0D%0A%09_f.prototype%20%3D%20theClass.prototype%3B%0D%0A%09return%20%3Cany%3E_f%3B%0D%0A%7D%0D%0A%0D%0Avar%20C2%20%3D%20bindClass(C%2C%20%22abc%22)%3B%0D%0Avar%20c%20%3D%20new%20C2()%3B%0D%0A%0D%0Aconsole.log(%20c.X%20)%3B).\r\n\r\nIt works perfectly well with regular classes, but as soon as the class is generic, it stops working. The reason is understandable: without generic arguments, the compiler cannot infer the return type, but generic arguments cannot be specified, because, [as I have learned recently](http://typescript.codeplex.com/workitem/1424), that can only be done in a call expression.\r\n\r\nThe situation can be remedied by specifying type arguments for `bindClass` explicitly, but that is by no means a viable alternative, because the type of class's constructor argument may be very large and unnamed. In fact, large property bag for argument is the most common scenario where one would need to use the bind pattern.\r\n\r\nI have also tried to explore workarounds. For example, what if I make a dummy function that changes my type:\r\n\r\n    function cast<T>(t: any): T { return t; }\r\n\r\nAnd then I would call it like this:\r\n\r\n    bindClass( cast<typeof C>(C), ... )\r\n\r\nAnd it works fine with a regular class. But not with generic. [Apparently](http://www.typescriptlang.org/Playground/#src=class%20C%3CT%3E%20%7B%7D%0D%0A%0D%0Afunction%20cast%3CT%3E(t%3A%20any)%3A%20T%20%7B%20return%20t%3B%20%7D%0D%0A%0D%0Avar%20openGenericC%20%3D%20cast%3Ctypeof%20C%3E(%20C%20)%3B%0D%0Avar%20x%20%3D%20new%20openGenericC%3Cnumber%3E()%3B%20%2F%2F%20x%20has%20type%20C%3Cnumber%3E%20-%20good%0D%0A%0D%0Avar%20cOfNumber%20%3D%20cast%3Ctypeof%20C%3Cnumber%3E%3E(%20C%20)%3B%20%2F%2F%20red%20squiggly%20-%20can't%20specify%20generic%20argument%20in%20that%20context), you cannot specify type arguments with `typeof` operator.\r\n\r\nSo it appears that there is no legitimate strongly-typed way to achieve the `bindClass` behavior with generic classes.",
+    "LastUpdatedDate": "2014-03-31T16:21:15.917-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-26T09:22:51.903-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Cannot pass generic class as argument or use it in typeof",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2050
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Yes, I understand that this is by design. That means that there is a bug in the design.\n\nIt affects real-life scenarios, there is no workaround.\nHow is this not a legitimate bug?",
+      "PostedDate": "2013-12-26T12:19:51.95-08:00",
+      "Id": 128452
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1065996",
+    "ThreadId": "449410",
+    "Html": "How are we supposed to do this? See this simple Knockout/TypeScript sample:<br />\n<pre><code>&lt;i class=&quot;icon-edit&quot; data-bind=&quot;click: $parent.GetEditForm&quot;&gt;&lt;/i&gt;</code></pre>\n\n<pre><code>export class Foo\n{\n    public ID: KnockoutObservable&lt;Number&gt;;\n}\n\nexport class FooEditor\n{\n    private get me() { return this; }\n\n    public Items: KnockoutObservableArray&lt;Foo&gt;;\n\n    public GetEditForm(item: Foo, event)\n    {\n        console.log(self);\n        console.log(me); // Could not find symbol 'me'.\n        console.log(this.me);\n        console.log(this);\n    }\n}</code></pre>\n\n<ul>\n<li><code>self</code> refers to <code>Window</code>, making a class property with this name has no use.</li>\n<li><code>me</code> doesn't compile.</li>\n<li><code>this.me</code> refers to the instance of <code>FooEditor</code> according to TypeScript, but in reality it refers to the instance of <code>Foo</code> (making this output <code>undefined</code>) so type safety is non-existent at this point. I can no longer trust the compiler or IntelliSense!</li>\n<li>\n<code>this</code> has the same remark as <code>this.me</code><br />\n</li>\n</ul>\nArrow expressions are not an option, unless you can show me how these can be used with overloading.<br />\n<pre><code>public Foo(item: Bar): void;\npublic Foo(item: Baz): void;\npublic Foo(item: any)\n{\n\n}</code></pre>\n\n",
+    "PostedDate": "2013-07-09T02:20:47.413-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066078",
+    "ThreadId": "449410",
+    "Html": "I've found various workarounds for this issue, using arrow functions and proxy functions. I've settled for a combination.<br />\n<pre><code>constructor()\n{\n    this.GetEditForm = (item: any) =&gt; {\n        this.GetEditFormProxy.apply(this, arguments);\n}\n\npublic GetEditForm(item: Bar): void;\npublic GetEditForm(item: Baz): void;\npublic GetEditForm(item: any) { }\nprivate GetEditFormProxy(item: any\n{\n    console.log(this);\n}</code></pre>\n\n",
+    "PostedDate": "2013-07-09T05:29:00.12-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066109",
+    "ThreadId": "449410",
+    "Html": "I don't know what goes on in Knockout these days, but using<br />\n<pre><code>class FooEditor {\n  getEditForm;\n\n  constructor() {\n    this.getEditForm = this._getEditForm.bind(this);\n  }\n\n  private _getEditForm(item: any) {\n    console.log(this);\n  }\n}</code></pre>\n\n(Of course, in AngularJS you can bind directly to objects from your markup, rendering all this sort of thing moot. Just sayin'.)<br />\n",
+    "PostedDate": "2013-07-09T06:28:56.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066115",
+    "ThreadId": "449410",
+    "Html": "@markrendle I'm not really sure what you're saying? I am binding from my markup.\r<br />\nThe code you posted is similar to mine, except you use <code>bind</code> instead of <code>apply</code>. Perhaps you didn't see my reply?<br />\n",
+    "PostedDate": "2013-07-09T06:40:17.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1066132",
+    "ThreadId": "449410",
+    "Html": "Similar, yes, but shorter and more to the point.\r<br />\n<br />\nIn AngularJS, I add my controller class to the <code>$scope</code>, i.e. <code>$scope[&quot;c&quot;] = this;</code>. In my bindings, I can use something like <code>ng-click=&quot;c.save()&quot;</code> and the method is called as a method, as opposed to being detached from the object and called as a function (which is what is causing you problems).<br />\n",
+    "PostedDate": "2013-07-09T07:10:40.353-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

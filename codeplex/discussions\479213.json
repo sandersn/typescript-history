@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1144346",
+    "ThreadId": "479213",
+    "Html": "Everything in TypeScript seems well-designed for me except that it doesn't support sum types.  I will illustrate it in two steps to show why this may be necessary for some of us.\r<br />\n<br />\nStep 1: Occasionally we have to accept <code>options</code> (a hash) to a function.  Suppose we use it in the following scenario:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo(options) {\n    <span style=\"color:Blue;\">if</span> (Array.isArray(options.data))\n        <span style=\"color:Blue;\">return</span> options.data.length;  <span style=\"color:Green;\">// an array of data points</span>\n    <span style=\"color:Blue;\">else</span>\n        <span style=\"color:Blue;\">return</span> 1;  <span style=\"color:Green;\">// user is passing a single data point</span>\n}\r\n</pre></div>That means <code>options.data</code> is of type either <code>T</code> or <code>T[]</code> (let's say <code>T</code> is fixed).  But in TypeScript I can only express it like<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo(options: { data: <span style=\"color:Blue;\">any</span> })\r\n</pre></div>because there is no such a syntax like (the bar here represents the sum type)<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> foo(options: { data: T|T[] })\r\n</pre></div>Using <code>any</code> as the type annotation here makes it accept calls of any type, not only <code>T</code> and <code>T[]</code>.\r<br />\n<br />\nStep 2:  One more thing that both JS and TS annoys me is <code>null</code>. In TypeScript everything is nullable because Null type is the subtype of everything other than undefined (got the idea from the spec, if I remember it right).  Suppose we now have sum types, and treat Null type as a standalone type just like everything else (so it is not a subtype of anything).  Then we can have<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> bar(x: Dog) { x.bark(); }\r\n</pre></div>to ensure the call of <code>bark</code> will never fail because of undefined error, also for<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">function</span> bar(x: Dog|Null) { x.bark(); }\r\n</pre></div>the compiler can safely complains x maybe null so the programmer should at least do something (e.g. IsMissing in VB).\r<br />\n<br />\nOf course I am pretty new to TypeScript so the discussions above may inevitably ignore some other parts of TS.  Anyway I hope we can have some discussions on this topic so potentially we can make TS better :-)<br />\n",
+    "PostedDate": "2013-12-31T19:39:18.973-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144407",
+    "ThreadId": "479213",
+    "Html": "There's a related discussion:  <a href=\"https://typescript.codeplex.com/discussions/461057\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/461057</a>\r<br />\n<br />\nand a work item on the issue tracker: <a href=\"https://typescript.codeplex.com/workitem/1364\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1364</a><br />\n",
+    "PostedDate": "2014-01-01T08:49:25.317-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

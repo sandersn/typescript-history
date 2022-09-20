@@ -1,0 +1,65 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design as Jason explained. ",
+    "ClosedDate": "2014-03-26T17:26:34.907-07:00",
+    "CommentCount": 5,
+    "Custom": null,
+    "Description": "Hi, I use Array.reduce in a few places in my code, often with the initialValue parameter.\r\n\r\nCurrently, they are defined this way in lib.d.ts:\r\n```\r\nreduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue?: T): T;\r\nreduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;\r\n```\r\nHowever, with the new overload resolution rules, this means that if you have an initial value that is a different type than the array type (such as when you're making a sum, or something) then it still always matches the first declaration.\r\n\r\nI think what would be more correct would be to change the order:\r\n```\r\nreduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;\r\nreduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue?: T): T;\r\n```\r\n\r\nAlso, just for fun, currentIndex and array should be marked as optional parameters:\r\n```\r\nreduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex?: number, array?: T[]) => U, initialValue: U): U;\r\nreduce(callbackfn: (previousValue: T, currentValue: T, currentIndex?: number, array?: T[]) => T, initialValue?: T): T;\r\n```\r\nThanks for the excellent work!",
+    "LastUpdatedDate": "2014-04-13T13:08:18.493-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-24T10:51:46.62-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Array<T>.reduce wrong order in lib.d.ts",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2352
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Can you give an example where the type of the initialValue is different from T, and yet it still picks the first overload? The first overload should be incompatible in this case.",
+      "PostedDate": "2014-03-24T11:01:45.25-07:00",
+      "Id": 138124
+    },
+    {
+      "Message": "Sure. Here's some code:\n\n```\nfunction getHours(periods: { start: Date; finish: Date; }[]) {\n\treturn periods.reduce((prev, cur) => prev + (cur.finish.getTime() - cur.start.getTime()) / 3600000, 0);\n}\n```\nThis should be able to be just plain reduce (because the initialValue is zero, which is a number) but if you hover over \"reduce\" then you see that it's detecting the type of initialValue as `{}` instead of `number`.\n\nActually, this means the overload resolution is happening correctly and the order doesn't need to be changed in lib.d.ts. But there's something wrong with the type inferencing that is detecting the type of 0 to be `{}` here instead of `number`.",
+      "PostedDate": "2014-03-25T14:04:00.903-07:00",
+      "Id": 138806
+    },
+    {
+      "Message": "Correct. The order of the overloads is not the issue. What you're observing is a known design limitation. \n\nOur type argument inference algorithm (the thing that tries to figure out what U is) processes arguments left to right. So it tries to deduce type arguments from the callback before the initial value, since the callback \"comes first\". The trouble is, in this case the type of the callback depends on the type of the initial value, so the dependency is in the opposite direction. When a type argument needs to be \"fixed\" (in your example to determine the type of \"prev\"), if we have no candidates for it, we fix it to {}, and it is stuck that way. Anything more that we learn about it must be discarded. This is a design limitation that we would like to fix, but as far as I know there are no concrete plans for it now.\n\nOne thing you can do to avoid \"fixing\" is to include a type annotation on \"prev\" and \"cur\". I know it seems superfluous, but it will prevent the compiler from fixing U, and it will correctly infer it to be number in your example.",
+      "PostedDate": "2014-03-25T18:12:09.383-07:00",
+      "Id": 138828
+    },
+    {
+      "Message": "\"currentIndex and array should be marked as optional parameters\"\n\nNo.  They are not optional, they are always provided.\n\n__Question__\nwhat's wrong with only having\n```typescript\nreduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex?: number, array?: T[]) => U, initialValue: U): U;\n```\nand omitting the other declaration?\n",
+      "PostedDate": "2014-04-13T13:02:48.957-07:00",
+      "Id": 141652
+    },
+    {
+      "Message": "Sorry, I didn't realize that the initialValue parameter could be omitted.\n\n__Question__ answered by self.",
+      "PostedDate": "2014-04-13T13:08:18.493-07:00",
+      "Id": 141653
+    }
+  ]
+}

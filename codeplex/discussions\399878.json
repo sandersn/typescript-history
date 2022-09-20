@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "928670",
+    "ThreadId": "399878",
+    "Html": "\r\n<p><span>I would like suggest to be able to 'inject' verbatim plain old JavaScript into the code generated from my TypeScript source file.</span></p>\r\n<p><span>This could be done by surrounding the JavaScript to be injected with a commented region much like regions work. i.e. basically this would be code that is simply passed through the compiler and injected into the generated code at the same point as in\r\n the source. e.g.</span></p>\r\n<p><span></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> MyTypescriptClass {\n    name: <span style=\"color:#0000ff\">string</span>;\n    <span style=\"color:#0000ff\">constructor</span>(name: <span style=\"color:#0000ff\">string</span>) {\n        <span style=\"color:blue\">this</span>.name = name;\n    }\n    <span style=\"color:green\">//#javascript</span>\n    <span style=\"color:green\">// emit all content between #javascript and #endjavascript</span>\n    <span style=\"color:green\">// at this point in the target jsvascript output and don't</span>\n    <span style=\"color:green\">// do any TypeScript checking...</span>\n    <span style=\"color:blue\">this</span>.myFunc = <span style=\"color:blue\">function</span>() {\n        <span style=\"color:green\">// do whatever...</span>\n    }\n    <span style=\"color:green\">//#endjavascript</span>\n}\n\n</pre>\r\n</div>\r\n<br>\r\n</span>\r\n<p></p>\r\n",
+    "PostedDate": "2012-10-18T04:04:22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928737",
+    "ThreadId": "399878",
+    "Html": "<p>I do not understand why you would need to disable typescript in your example, but I agree it would be nice to be able to do so sometimes, for example to&nbsp;use reserved keywords.</p>\r\n<p>&nbsp;</p>\r\n<pre>define(function (require) {\r\n\r\n#javascript\r\n    module(\"some tests\");\r\n#endjavascript\r\n\r\n    test(\"foo should return 199\", ()=&gt; { \r\n        equal(foo(),199);\r\n    });\r\n});</pre>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-18T06:10:54.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928756",
+    "ThreadId": "399878",
+    "Html": "<p>@prgjonas,</p>\r\n<p>My example is crap because it does nothing; but it does express the idea of being able to pass raw JavaScript through the compiler and inject it into the generated code at the point it appears in the .ts file. &nbsp;</p>\r\n<p>This capability would then allow us to live in a TypeScript and raw JavaScript world all in the same file (and do&nbsp;lots of magic)! &nbsp;I guess some of the more practical uses would be to utilise/inject existing JavaScript code without the need for definition files. &nbsp;Yes this detracts from the type-safe world that we love from TypeScript but like many others coming from a Java/C# (or more formal languages) world we also love the unsafe world of JavaScript...</p>",
+    "PostedDate": "2012-10-18T07:09:00.267-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928771",
+    "ThreadId": "399878",
+    "Html": "<p>Ok I see,&nbsp;</p>\r\n<p>usually I just declare the undefined stuff as any in those cases.</p>\r\n<p>\r\n<pre>declare var someNiceLibrary: any;\r\nsomeNiceLibrary.what.ever = \"123\";\r\n</pre>\r\n</p>",
+    "PostedDate": "2012-10-18T07:44:37.22-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "928924",
+    "ThreadId": "399878",
+    "Html": "<p>Yes... All you should ever need to do is cast to &lt;any&gt; (or don't just declare a type for things.)&nbsp; I've posted serveral example bits of code to the forums where I'm adding methods to a class after the fact using its prototype, binding a classes methods to its 'this' pointer dynamically at runtime, etc.&nbsp; The tricky bit is getting TypeScript to understand this magical thing you did for intelisense purposes.&nbsp; But even then it usually just comes down to using declares &amp; interfaces.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-18T11:21:06.347-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929185",
+    "ThreadId": "399878",
+    "Html": "<p>@ickman, yes you can create TypeScript ambients until the cows come home but that misses what I'm suggesting.</p>\r\n<p>What I'm suggesting is to be able to mix both TypeScript and JavaScript in the same file via a scoped region. &nbsp;The raw JavaScript would be ignored by intellisense. &nbsp; This would be similar to what we were able to do in 'C' with the 'asm' keyword. &nbsp;In 'C' the block of code (assembler) within the braces was passed directly to output by the compiler.</p>\r\n<p>I'm suggesting something similar to 'C's 'asm' keyword for passing JavaScript right through the TypeScript compiler.</p>",
+    "PostedDate": "2012-10-18T22:36:05.9-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929206",
+    "ThreadId": "399878",
+    "Html": "<p>I get what you're asking for but TypeScript IS JavaScript so you should be able to type vanilla JavaScript without the compiler caring... Granted there are some exceptions to this rule, for instance the code below would yield an error due to type inferance:</p>\r\n<pre>var x = 'foo';\r\nx = 7;</pre>\r\n<p>But that's a pretty simple fix if type 'x' as an &lt;any&gt;:</p>\r\n<pre>var x: any = 'foo';\r\nx = 7;</pre>\r\n<p>So with the exception of type inferance issues like above you should be able to type vanilla JavaScript without any compiler errors.&nbsp; I guess there may be some value in using a mechanisim like you suggest to turn off the type inferance for a block&nbsp;of code.&nbsp; I will say that I've been programming in&nbsp;TypeScript for over 6 months now and I jump back and forth between TypeScript &amp; JavaScript all the time and really haven't found this to be much of an issue.&nbsp; Every once in a while you need the odd &lt;any&gt; cast but it's really not too bad... Others may have a heavier need&nbsp;to be dynamically typed so I'm willing to conceed that this feature might be really useful to some.&nbsp;</p>",
+    "PostedDate": "2012-10-18T23:37:09.817-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

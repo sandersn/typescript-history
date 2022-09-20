@@ -1,0 +1,34 @@
+[
+  {
+    "Id": "935292",
+    "ThreadId": "401561",
+    "Html": "\r\n<p>During the migration of some JS code to TS I found out that TS compiler doesn't really scope variables correctly. What I mean with that is that it doesn't scope variables to the function level. &nbsp;An example of an error I made that went undetected:<br>\r\n<br>\r\n</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">import</span> path = module(<span style=\"color:#a31515\">&quot;path&quot;</span>);\r\n\r\n<span style=\"color:blue\">function</span> foo() {\r\n  ... \r\n  <span style=\"color:blue\">var</span> path = path.join(<span style=\"color:#a31515\">&quot;.....&quot;,&quot;.....&quot;</span>); \r\n  ... \r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>TS is happy with the above code snippet. Of course what happens when you run this code is that &quot;var path&quot; has actually function level scope and&nbsp;as a result path.join doesn't know the join method.&nbsp;</p>\r\n<p><br>\r\nOf course I should have used a different name than &quot;path&quot;, but still it would be great if the TS compiler could detect these type of errors. On the other hand I guess it is not trivial to support the above since it means rearranging the AST.</p>\r\n<p><br>\r\n//Peter</p>\r\n",
+    "PostedDate": "2012-11-01T07:52:21.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935451",
+    "ThreadId": "401561",
+    "Html": "<p>Did some more testing, looks like the compiler only don't detect \"var abc = abc\" type of mistakes.</p>\r\n<p>Most other scenarios are flagged correctly. For example</p>\r\n<p>var x = 12;</p>\r\n<p>function foo() {<br />&nbsp; &nbsp; &nbsp;x = 13;&nbsp;<br />&nbsp; &nbsp; &nbsp;var x:string;<br />}</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-11-01T14:34:02.333-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "937403",
+    "ThreadId": "401561",
+    "Html": "<p>Variable scoping behaves the same in TypeScript as in JavaScript.&nbsp; In cases like \"var abc = abc.xyz\", type inference tries to infer the type of \"abc\" from the right hand side expression.&nbsp; Since that expression references the variable being declared, it infers \"any\".&nbsp; While in these simple cases it seems clear that this is a programmer error, other cases are not as clear:</p>\r\n<p>var abc = function() { return abc; }</p>\r\n<p>var abc = (function() { return abc; }).xyz</p>\r\n<p>Type inference currently handles all of these in a uniform way, inferring 'any'.&nbsp;</p>\r\n<p>Keeping this item active to track adding additional static analysis to identify the more clearly incorrect cases here, like the original repro.</p>",
+    "PostedDate": "2012-11-06T10:44:56.84-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "937433",
+    "ThreadId": "401561",
+    "Html": "<p>Thanks for the explanation and indeed it does now make sense to me and is indeed consistent.</p>\r\n<p>Just an idea, perhaps the static analysis could warn about invoking properties/methods on non-initialized&nbsp;variables. That feature would have warned me what was actually going on here. Especially since non-initialized variables (without any type info that is) are inferred \"any\", you also don't get any other warnings till you try to run the code.</p>\r\n<p>(of course only those cases that could be easily determined).</p>",
+    "PostedDate": "2012-11-06T11:38:13.693-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

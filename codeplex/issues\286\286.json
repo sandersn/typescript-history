@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Believe this to be fixed as well.",
+    "ClosedDate": "2013-02-19T17:02:59.023-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "The attached code compiles and executes without error in its current form -- however, as soon as the type declaration of 'getNextAsyncTasks' on line 19 is uncommented the compiler crashes with the following errors:\r\n\r\nInternal error: Unable to get value of the property 'publicMembers': object is null or undefined\r\n\r\nInternal error: IntelliSense features are disabled. Try making edits to source files to restore a valid compilation state.\r\n\r\nUnable to get value of the property 'publicMembers': object is null or undefined\r\n\r\nThe command \"\"C:\\Program Files (x86)\\Microsoft SDKs\\TypeScript\\0.8.0.0\\tsc\" ... \" exited with code 1.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-18T20:51:16.147-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Compiler crash: publicMembers is null or undefined",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 8,
+    "Id": 286
+  },
+  "FileAttachments": [
+    {
+      "FileId": 515625,
+      "FileName": "async.ts",
+      "DownloadUrl": ".\\515625"
+    },
+    {
+      "FileId": 528864,
+      "FileName": "Repro.ts",
+      "DownloadUrl": ".\\528864"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I'm running into a very similar error, though my repro is a little simpler (see attached). For what it's worth, I think that that its impact-level (given that it causes the compiler to crash) ranks higher then \"Low\".",
+      "PostedDate": "2012-11-12T15:05:49.943-08:00",
+      "Id": 82309
+    },
+    {
+      "Message": "Here is another case reported on Stack Overflow:\n\nhttp://stackoverflow.com/questions/13353033/typescript-compiler-error-unable-to-get-value-of-the-property-publicmembers\n\ninterface Callback { (data: any): void; }\n\nclass EventSource1 {\n    addEventHandler(callback: Callback): void { }\n}\n\nclass EventSource2 {\n    onSomeEvent: Callback;\n}\n\nexport class Controller {\n    constructor () {\n        var eventSource = new EventSource1();\n        // Commenting the next line will allow it to compile.\n        eventSource.addEventHandler(msg => this.handleEventFromSource1(msg));\n    }\n    private handleEventFromSource1(signalState) {\n        console.log('Handle event from source 1');\n        var eventSource2 = new EventSource2();\n        // Commenting the next line will allow it to compile.\n        eventSource2.onSomeEvent = msg => this.handleEventFromSource2(msg);\n    }\n    private handleEventFromSource2(event) {\n        console.log(\"Handling event from source 2.\");\n    }\n}",
+      "PostedDate": "2012-11-12T15:56:58.967-08:00",
+      "Id": 82313
+    },
+    {
+      "Message": "This seems to have been fixed in 0.8.1; at least, I can't get my repro from above to crash the compiler anymore.",
+      "PostedDate": "2012-11-27T15:34:05.91-08:00",
+      "Id": 83141
+    }
+  ]
+}

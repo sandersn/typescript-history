@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "942953",
+    "ThreadId": "403531",
+    "Html": "\r\n<p>I think not. Only .ts files should be included in the .csproj file.</p>\r\n<p>I'm talking about this:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">&lt;</span><span style=\"color:#a31515\">Content</span> <span style=\"color:red\">Include</span><span style=\"color:blue\">=</span><span style=\"color:black\">&quot;</span><span style=\"color:blue\">app.js</span><span style=\"color:black\">&quot;</span><span style=\"color:blue\">&gt;</span>\n  <span style=\"color:blue\">&lt;</span><span style=\"color:#a31515\">DependentUpon</span><span style=\"color:blue\">&gt;</span>app.ts<span style=\"color:blue\">&lt;/</span><span style=\"color:#a31515\">DependentUpon</span><span style=\"color:blue\">&gt;</span>\n<span style=\"color:blue\">&lt;/</span><span style=\"color:#a31515\">Content</span><span style=\"color:blue\">&gt;</span>\n</pre>\r\n</div>\r\n<p>I look at generated .js and .map files the same way I look at generated .dlls in the bin folder. These files should be considered build output only and not included in source control systems.</p>\r\n<p>Many source control systems (TFS included) will set these files to readonly when the project is checked in and suddenly you get compiler errors on rebuild.</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>1&gt;EXEC : error : EPERM, operation not permitted 'D:\\TFS\\TypeScriptHTMLApp1\\app.js'\n1&gt;      at Object.fs.openSync (fs.js:338:18)\n1&gt;      at IO.createFile (C:\\Program Files\\nodejs\\node_modules\\typescript\\bin\\tsc.js:23909:30)\n1&gt;      at TypeScriptCompiler.emit (C:\\Program Files\\nodejs\\node_modules\\typescript\\bin\\tsc.js:23324:31)\n1&gt;      at BatchCompiler.compile (C:\\Program Files\\nodejs\\node_modules\\typescript\\bin\\tsc.js:24382:26)\n1&gt;      at BatchCompiler.batchCompile (C:\\Program Files\\nodejs\\node_modules\\typescript\\bin\\tsc.js:24671:18)\n1&gt;      at Object. (C:\\Program Files\\nodejs\\node_modules\\typescript\\bin\\tsc.js:24680:7)\n1&gt;      at Module._compile (module.js:449:26)\n1&gt;      at Object.Module._extensions..js (module.js:467:10)\n1&gt;      at Module.load (module.js:356:32)\n1&gt;      at Function.Module._load (module.js:312:12)\n1&gt;D:\\TFS\\TypeScriptHTMLApp1\\TypeScriptHTMLApp1.csproj(74,5): error MSB3073: The command &quot;tsc --sourcemap &quot;D:\\TFS\\TypeScriptHTMLApp1\\app.ts&quot;&quot; exited with code 1.</pre>\r\n</div>\r\n<p>Please fix and/or advise.</p>\r\n<p>And thanks for the great work!</p>\r\n",
+    "PostedDate": "2012-11-16T11:25:52.557-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "942969",
+    "ThreadId": "403531",
+    "Html": "\r\n<p>Furthermore, it appears that in the 0.8.1 release, we no longer can remove the dependent .js file from the TypeScript project because VS 2012 will crash every time when you start with debugging if you remove or delete the generated .js file.</p>\r\n<p>This is pretty annoying because that means that I now have to check out my entire project just to rebuild it.</p>\r\n",
+    "PostedDate": "2012-11-16T12:16:51.91-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "946106",
+    "ThreadId": "403531",
+    "Html": "\r\n<p>I agree with you. Having the same annoyance.</p>\r\n",
+    "PostedDate": "2012-11-23T05:22:40.397-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "947106",
+    "ThreadId": "403531",
+    "Html": "\r\n<p>We'll be releasing a bug fix release shortly that will help with the crashes, though we'll still have the limitation that the .js files will need to be part of the project.</p>\r\n<p>Ultimately, we don't want to have to require them in the project.&nbsp; Like you point out, they interact with source control like TFS and you don't really want to have to see them if you don't want to.&nbsp;</p>\r\n",
+    "PostedDate": "2012-11-26T09:19:19.883-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1001460",
+    "ThreadId": "403531",
+    "Html": "@jonturner, \r<br />\n<br />\nI have a need to include the .js file in the project because the generated .js is an embedded resource for a web control.   We should definitely have the option for including the generated .js file in the project and having it work appropriately with TFS, much the same way that that code behind files generated for aspx pages behave with regards to the project inclusion and TFS checkin/checkout.\r<br />\n<br />\nPlease do not remove them from the project by default but please do insure that they check out when the built file is different.  It would be nice if the build is done somewhere temporary (memory?) and then compared with the on disk file so that a checkout is not done on every single build of the project.<br />\n",
+    "PostedDate": "2013-02-14T12:58:51.32-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105696",
+    "ThreadId": "403531",
+    "Html": "I'd prefer if the generated files were NOT in the project.\r<br />\n<br />\nHowever, the &quot;Publish...&quot; feature won't pick up the .js files if the project has no knowledge of the .js files.\r<br />\nI'm willing to include the files to simplify the publish process.\r<br />\nBut, if the files are included, I need to manually check them out before making edits (which is annoying).\r<br />\n<br />\nSo, I can either have a manual &quot;Publish...&quot; experience; or I can have a manual &quot;Check Out for Edit...&quot; experience.  I'm opting for the manual &quot;Check Out for Edit...&quot; experience, but it's a lesser of two evils. :(\r<br />\n<br />\nIn the best of all worlds, I would have a configuration option to &quot;Attach generated files to project.&quot;\r<br />\nA configurable default &quot;Build Action&quot; is available for each generated file-type (&quot;.js&quot; and &quot;.js.map&quot;).  (Personally, I want the &quot;.js&quot; file to use &quot;Content&quot; and the &quot;.js.map&quot; file to use &quot;None&quot;.)\r<br />\nIf the configuration option is turned on:<br />\n<ul>\n<li>when generated, generated files will be added to the project, if necessary</li>\n<li>when generated, generated files will be checked-out, if necessary</li>\n<li>when added to the project, generated files will be sub-items to the original .ts file (using DependentUpon).</li>\n<li>\nwhen added to the project, generated files will use the configurable &quot;Build Action&quot;<br />\n</li>\n</ul>\nIf the configuration option is turned off, none of these steps are necessary.<br />\n",
+    "PostedDate": "2013-10-09T13:00:56.263-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105708",
+    "ThreadId": "403531",
+    "Html": "Publish should pick up the generated .js files.. what kind of project do you see this in?\r<br />\n<br />\nThe order of the targets in the csproj file matters... and we did fix a bug recently. If you open a bug and upload you're csproj file, we should be able to help.<br />\n",
+    "PostedDate": "2013-10-09T13:29:13.743-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1105715",
+    "ThreadId": "403531",
+    "Html": "<a href=\"https://typescript.codeplex.com/workitem/1772\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1772</a>\r<br />\n<br />\nThanks for the quick reply!<br />\n",
+    "PostedDate": "2013-10-09T14:00:25.6-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

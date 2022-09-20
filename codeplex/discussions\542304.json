@@ -1,0 +1,130 @@
+[
+  {
+    "Id": "1234314",
+    "ThreadId": "542304",
+    "Html": "I'm trying to find a typesafe way to declare mongoose models in node.js / typescript. We have the type definitions setup something like this:<br />\n<pre><code>interface IEntity {\n  _id?: string;\n  name?: string;\n  age?: number;\n}</code></pre>\n\nThen, when constructing a model...<br />\n<pre><code>var x  = new Entity({ name: 'name', age: 90 });</code></pre>\n\nHowever, this also works:<br />\n<pre><code>var x = new Entity({ nme: 'typo' });</code></pre>\n\nI know there are good reasons that interfaces behave like they do now, but in this case I want them to behave a little differently. I want the interface definition to mean &quot;These fields are optional, but only these fields are allowed&quot;. This would catch the typo above where the name field wasn't getting set.\r<br />\n<br />\nThe only type safe way I can see to do this now is like so:<br />\n<pre><code>var x = new Entity();\nx.name = 'name';\nx.age = 90;</code></pre>\n\nThis will catch typos, but is also really verbose once you start creating sub entities and the like.\r<br />\n<br />\nAny ideas on how to improve this pattern? Any chance that TS might support interfaces in the way I described some time in the future?<br />\n",
+    "PostedDate": "2014-04-15T07:18:45.99-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234348",
+    "ThreadId": "542304",
+    "Html": "AFAIK, interfaces are not much different than any other interface from other languages (such as C#), in which a custom type can contain anything it wants (even typos), as long as the required properties are specified.  This also promotes injection of types that have the minimum supported properties.<br />\n<br />\nAnyhow, you could try constructor overloading: <a href=\"http://goo.gl/syiGwO\" rel=\"nofollow\">http://goo.gl/syiGwO</a> <em>(edit: ignore this, doesn't work actually, except to require at least something is given)</em><br />\n",
+    "PostedDate": "2014-04-15T08:31:42.873-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234383",
+    "ThreadId": "542304",
+    "Html": "@jamesnw, \r<br />\n<br />\nI'm not sure that constructor overloading solves the problem. One could still add something like the following and not have the compiler complain about it:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = <span style=\"color:Blue;\">new</span> Entity({ name: <span style=\"color:#A31515;\">&#39;name&#39;</span>, age: 90, _iid:<span style=\"color:#A31515;\">&quot;typo&quot;</span> });\r\n</pre></div>It's just not feasible to have overloads for all the possible permutations.\r<br />\n<br />\nI agree with @scriby on this point. In fact this was one of the <a href=\"https://typescript.codeplex.com/discussions/431704\" rel=\"nofollow\">first problems I had with TypeScript</a>, but so far there has been no actual solution for it.\r<br />\n<br />\nIn practice, this has been a significant source for bugs in the code-base.<br />\n",
+    "PostedDate": "2014-04-15T09:44:01.08-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234399",
+    "ThreadId": "542304",
+    "Html": "Ah yes, true.  Should have tested it further. <br />\n<br />\nGiven that this is JS, it makes sense it works as it does.  I know there is a request for &quot;sealed&quot;/&quot;frozen&quot; modifiers because of this as well.<br />\n",
+    "PostedDate": "2014-04-15T10:22:13.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234413",
+    "ThreadId": "542304",
+    "Html": "These requests may help add the neseccary constraints required if ever implemented:\r<br />\nsealed: <a href=\"https://typescript.codeplex.com/workitem/1275\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1275</a>\r<br />\nfreeze: <a href=\"https://typescript.codeplex.com/workitem/332\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/332</a><br />\n",
+    "PostedDate": "2014-04-15T11:01:54.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234429",
+    "ThreadId": "542304",
+    "Html": "&quot;Freezing&quot; seems like the closest concept, if we take &quot;freezing&quot; an interface to mean that implementors of the interface may not have any features not in the interface. But I would guess &quot;freezing an interface&quot; means &quot;don't allow the interface itself to be extended&quot; later, not necessarily that implementing classes can't have additional features.\r<br />\n<br />\nI think we're charting new territory here in a sense. For instance, I've never seen interfaces in another language that allow optional parameters. Additionally, I haven't worked in another language where you can insert object literals with &quot;structure&quot; (meaning stuff like { a: { b: [ 2 } }.\r<br />\n<br />\nI think the combination of both of those things give rise to my current problem, and I think it's pretty unique to TypeScript. Meaning that we may need to invent a new term or concept to meet the need. Maybe &quot;closed&quot; interfaces or something like that, which have the property that implementors may implement optional properties, but may not implement anything outside of the interface.\r<br />\n<br />\nThanks,\r<br />\n<br />\nChris<br />\n",
+    "PostedDate": "2014-04-15T11:40:34.377-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234447",
+    "ThreadId": "542304",
+    "Html": "It's fairly straightforward to write a linting tool that can catch the <code>new Entity({ nme: 'typo' });</code> error. As long as the object literal exists in a place with a contextual type, any extraneous properties of the literal can be flagged as a warning.\r<br />\n<br />\nAs for the idea of a 'closed' interface, it's hard to reason about in a structural type system. Example:<br />\n<pre><code>/* closed */ interface Entity {\n    id?: string;\n}\n\n/* closed */ interface NamedEntity {\n    id?: string;\n    name?: string;\n}\n\n// Error: 'name' is not on closed interface 'Entity'\nvar x: Entity = { name: 'foo' };\n\nfunction printEntity(x: Entity) {\n    console.log('id is ' + x.id);\n}\n\nvar y: NamedEntity = { id: 'bar' };\nprintEntity(y); // OK? Or error?</code></pre>\n\nShould the call to <code>printEntity</code> be an error? Why/how?<br />\n",
+    "PostedDate": "2014-04-15T12:37:00.097-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234458",
+    "ThreadId": "542304",
+    "Html": "I think you raise a good point that this feature is more along the lines of a linting tool than a language construct. It should only check object literals, and nothing beyond that.<br />\n<br />\nI do wonder what percent of programs have unexpected typing &quot;gaps&quot; due to this (just because it's different than what someone coming from another strongly typed language might expect). If it's a high enough amount, it might make sense to try to address this in some way in TS core (whether it's just education, compiler flag, whatever). But I'm sure it wouldn't be a priority for a while.<br />\n<br />\nIt probably would be easy to write a linting tool... if you have intimate knowledge of the typescript compiler :) It would be nice to integrate into tslint, so I can start on that front.<br />\n<br />\nP.S:<br />\n<br />\nI think structural typing takes some getting used to. Here's another instance that surprised me initially:<br />\n<pre><code>class Enum1 {\n  constructor(private val: string) {}\n\n  static val1 = new Enum1('val1');\n  static val2 = new Enum1('val2');\n}\n\nclass Enum2 {\n  constructor(private val: string) {}\n\n  static val3 = new Enum2('val3');\n  static val4 = new Enum2('val4');\n}\n\nvar x = Enum1.val1;\nvar y = Enum2.val3;\nx = y; //No compile error, because Enum1 and Enum2 are structurally equivalent\n//Similar issue where Enum2 can be passed to a method accepting an Enum1\n//We worked around this by adding a private member of a different name to each enum so they wouldn't be interchangeable. Not sure if that's the best approach...</code></pre>\n\n",
+    "PostedDate": "2014-04-15T13:13:52.15-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234482",
+    "ThreadId": "542304",
+    "Html": "@Scriby<br />\n<blockquote>\nI haven't worked in another language where you can insert object literals with &quot;structure&quot; (meaning stuff like { a: { b: [ 2 } }.<br />\n</blockquote>\nWell, I'd say this is pretty close (C#):<br />\n<pre><code>var obj = new { name = &quot;value&quot;,  obj = new {  name = &quot;value&quot; } };</code></pre>\n\n<em>(not to mention dynamic class objects also)</em><br />\n<br />\nAlso, &quot;closing&quot; objects works against any concepts of injection support (what if I want to inject my own custom object with the specified properties? [unless the idea is to force people to be confined to the API restrictions]).  The only place I see this being needed is when being used to supply function arguments in object form (usually as options to initialize something).  I'm not even sure using interfaces would even be related in this case.  Seems like this would/should be a function parameter modifier.<br />\n<pre><code>class Entity {\n   constructor(sealed e: IEntity) { /*...*/ }\n}</code></pre>\n\n",
+    "PostedDate": "2014-04-15T14:03:21.277-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234494",
+    "ThreadId": "542304",
+    "Html": "Ah yeah, I forgot C# had anonymous types that you could construct like that. That is fairly similar.\r<br />\n<br />\nOverall, I'm just looking for a solution to catch typos in object arguments for optional properties. I don't really care about actually restricting the data that can be accepted by the function (who cares if it has an extra property or two?).\r<br />\n<br />\nIn a sense it's kind of funny that this compiles:<br />\n<pre><code>function x(args: { b?: number }) {\n\n}\n\nx({ c: 1 });</code></pre>\n\nYou accept an args.b? Have an args.c instead. :0\r<br />\n<br />\nSo sealing doesn't quite seem like the right solution to the problem (and would probably make it a pain to work with. Oh, you want to pass an object that happens to have a few extra properties, but has what this method needs? Sorry.)\r<br />\n<br />\nPerhaps the rule looks more like this:\r<br />\n<br />\n&quot;When a field is specified in an object literal function argument, it should exist in the interface of the parameter type&quot;.\r<br />\n<br />\nThat would catch the &quot;typo&quot; case, and not interfere with anything else.<br />\n",
+    "PostedDate": "2014-04-15T14:46:19.557-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234505",
+    "ThreadId": "542304",
+    "Html": "Well, &quot;sealed&quot; (in JS terms) just means &quot;this object is fixed to given properties, but properties can be modified&quot;.  As well, it does not required that &quot;Object .seal()&quot; be called/used at all.  It is what is <em>expected</em> (in contract terms only).  Changing the rules as mentioned would be a huge breaking change for hundreds of people, and possibly introduce it's own set of bugs (and introduce a double standard).  Having people add a modifier means &quot;if you want it, now you can do it&quot;, rather that forcing a new change.<br />\n",
+    "PostedDate": "2014-04-15T15:23:43.4-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234517",
+    "ThreadId": "542304",
+    "Html": "\r\n<div>Could you give some examples of things you think my suggestion would break? I was thinking it would be pretty safe, but there might be some cases I'm not thinking about.</div>\r\n<div><br>\r\n</div>\r\n<div>Just to be clear, I'm only talking about validation on object literals directly passed to functions or assigned.</div>\r\n<div><br>\r\n</div>\r\n<div>For example, x({ c: 1 }) would be subject to validation, but x(y) would not. At the point you're directly specifying an arg that the callee doesn't expect, something seems off.</div>\r\n<div><br>\r\n</div>\r\n<div>It could be hidden behind a compiler flag if it's not generally applicable.</div>\r\n<div><br>\r\n</div>\r\n<div>Adding a sealed keyword to function definitions is in the same ball park, but not quite what I want. First, it doesn't help with any code I don't control. Second, I really see this as a concern of the caller and not the callee. It's the caller's responsibility\r\n to make sure they don't have typos - it seems odd to require a keyword on the callee to prevent typos when calling it.</div>\r\n<div><br>\r\n</div>\r\n<div>Thanks,</div>\r\n<div><br>\r\n</div>\r\n<div>Chris</div>\r\n<div><br>\r\n</div>\r\n<blockquote type=\"cite\">\r\n<div></div>\r\n</blockquote>\r\n",
+    "PostedDate": "2014-04-15T16:57:14.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234538",
+    "ThreadId": "542304",
+    "Html": "<blockquote>\nCould you give some examples of things you think my suggestion would break?<br />\n</blockquote>\nI'm pretty sure someone is passing in object literals with other properties for their own special purposes (somewhere, in one form or another). ;)<br />\n<br />\nI don't see the hang up on the function parameter modifier.  Perhaps you misunderstand.  It would be no different than specifying an <em>expected type</em> for the parameter.  The compiler would see the modifier and enforce the object literals being passed in to conform to the expected object <em>exactly</em> (ignoring optional properties of course - just not allowing new ones).  This does make it the concern of the caller, but it's the API developers job to make the rules.<br />\n",
+    "PostedDate": "2014-04-15T20:14:24.843-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234793",
+    "ThreadId": "542304",
+    "Html": "\r\n<div>I'd say that in your scenario, they would augment the function signature with the param being passed (or use &quot;any&quot;). Looks like a good trade-off for catching mistakes at least.</div>\r\n<div><br>\r\n</div>\r\n<div>I'd guess we have a difference in perspective, which leads us to wanting to solve the problem differently. I'll try to share a little about where I'm coming from.</div>\r\n<div><br>\r\n</div>\r\n<div>I've been using TypeScript for about a year at work in a group that's pioneering the new language. Recently, I made a change to a model and expected it to cause compilation errors. When it didn't, I ran the tests which indeed reported errors. As you can\r\n guess, the cause was that I had changed property names that are specified as optional parameters within an object.</div>\r\n<div><br>\r\n</div>\r\n<div>Now I wonder how many bugs are in the code due to the same cause. And if I've encountered this, won't others? Or are they like I used to be - blissfully unaware?</div>\r\n<div><br>\r\n</div>\r\n<div>Currently we have about 10 people writing typescript at my company. By next year it may be 20. Within 5 years it may be 100. We will produce hundreds of thousand or millions of lines of code. Having to get everyone to sprinkle a keyword on every object\r\n parameter with optional params on every function to avoid mistakes when calling it is not a palatable solution. And that's only on the code we control.</div>\r\n<div><br>\r\n</div>\r\n<div>I understand TS is at 1.0 and rightfully doesn't want to break existing code. This is a sticky problem, and perhaps there are even better solutions than those we've explored. It may be something that gets tackled in the future based on similar feedback\r\n from others.</div>\r\n<div><br>\r\n</div>\r\n<div>Thanks,</div>\r\n<div><br>\r\n</div>\r\n<div>Chris</div>\r\n<div><br>\r\n</div>\r\n<div><br>\r\n</div>\r\n<blockquote type=\"cite\">\r\n<div></div>\r\n</blockquote>\r\n",
+    "PostedDate": "2014-04-16T10:29:14.537-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1234822",
+    "ThreadId": "542304",
+    "Html": "BTW: I don't disagree with you (I do see your point).  In fact, I'm more inclined to agree with you. :) If one was to consider the benefits of adding errors/warnings to object literals passed in as function arguments, it may do <em>more</em> to help <em>prevent bugs</em> than cause them.   In fact, anyone whose code broke would simply have to force it using &quot;&lt;any&gt;&quot; (to allow special cases).  I guess it comes down to the flexibility of the compiler and type system to handle the special case of literals as arguments.  The modifier idea was to limit possibilities of breaking code, and hopefully provide an easier &quot;flag&quot; for the compiler to enforce a type; but, implicit direct literal enforcement may be the best route for common JavaScript scenarios (if bug catching is a priority over simplicity).\r<br />\n<br />\nPersonally, I would never be caught dead using object literals in place of function arguments because I'm a stickler for performance. :) (and not taxing the GC in special cases [such as game development])  In all my years of JS development, I've never had need of it myself.  I do see the appeal of named arguments (typically why object literals are used), as I use named arguments in C# as well.  Perhaps TypeScript can support this sometime also, and fill in the other arguments with void(0). ;) (useful only in TS I know)  <br />\n",
+    "PostedDate": "2014-04-16T11:50:09.793-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1237368",
+    "ThreadId": "542304",
+    "Html": "Maybe I've been doing line-of-business apps for too long where the performance/memory overhead of the named arguments pattern is &quot;nothing&quot; :)\r<br />\n<br />\nIt really has grown on me over the years. The readability / &quot;structurability&quot; is nice, and of course the fact that it can be updated without breaking all the call sites or requiring funky argument detection code is nice (or really nice in pure javascript).\r<br />\n<br />\nAnd then add a document oriented database and mapper, and you've got a lot of functions that are going to take complex structures as arguments.\r<br />\n<br />\nThanks for the discussion. I'm happy if I've effectively communicated the need and the team can consider it going forward as it gathers more community feedback.<br />\n",
+    "PostedDate": "2014-04-23T22:22:16.293-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

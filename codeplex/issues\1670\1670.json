@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-09-11T15:59:53.023-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "I'm curious if this is a known issue or not.\r\n\r\nI have one particular file (and one only) that encounters this error randomly. Sometimes when I compile it, it leaves out the \"var this = _this\" line, and sometimes it includes it. I'm not changing the file itself, so it seems pretty random.\r\n\r\nI've tried both compiling from Webstorm (which calls tsc), and from the command line calling tsc directly. Both seem to exhibit the same behavior.\r\n\r\nIf this isn't already a known issue, I can try to put together a small reproduction of the issue. I probably can't share the code for the exact file with the problem.",
+    "LastUpdatedDate": "2013-09-11T15:59:53.023-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-10T13:29:23.873-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "ReferenceError: _this is not defined",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 1670
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "That's a nice bug.  Arrow functions only cause the production of the \"var _this = this\" line if an appropriate reference to \"this\" is detected in the body of the arrow.  I have seen other cases where the order of compilation causes typescript to sometimes not detect a local var in the same body as in scope or a class as not implementing an interface (in typescript 0.8.3.1, I believe these issues are fixed on later branches).\n\nYou are running the latest version (0.9.1.1) of typescript?",
+      "PostedDate": "2013-09-10T15:17:24.08-07:00",
+      "Id": 113105
+    },
+    {
+      "Message": "I originally reproduced this under 0.9.1, but I updated to 0.9.1.1 and can still reproduce it.\n\nI think I did narrow down the cause, though. If I run the tsc compiler on just that one file, it works correctly. If I run the tsc compiler and pass in all my files, it does not. (This explains what I thought was \"random\" behavior before.)\n\nThe fat arrow function that's not working correctly is in the constructor of a class that takes a generic parameter.\n\nHere's a basic outline:\n\n```\nexport class Test<T> {\n    private x = false;\n    //some more stuff here\n\n    constructor() {\n        process.nextTick(() => {\n            if(!this.x){\n                //some more stuff here\n            }\n        });\n    }\n\n    //some more stuff here\n```\n\nIt's interesting to note that if I move the code out of the constructor and into a separate method, and call the method from the constructor, it compiles just fine. So it seems that being in the constructor is related. (I did do this to work around the problem.)\n\nBTW, here is the command I run to compile all my typescript code, and which triggers the error case:\n\n```\nfind . -name \"*.ts\" -not -path \"./node_modules/*\" -print0 | xargs -0 tsc --sourcemap --module commonjs -noImplicitAny\n```",
+      "PostedDate": "2013-09-10T16:03:00.18-07:00",
+      "Id": 113112
+    },
+    {
+      "Message": "I once had a problem similar to this, where multiple-file compiles worked differently than single-file compiles.\nI managed to boil the example down from the entire project to a single file. (it wasn't as hard as you might think, but then again, I live an hour's bus ride away from work so that provided a sort-of incentive)\n\nsee the comment on lines 28--29:\n\nhttps://typescript.codeplex.com/SourceControl/network/forks/AdamFreidin/typescript/contribution/4672#tests/cases/compiler/resolutionsInSuperCall.ts\n\nI'm sure the maintainers would be very grateful if you could boil down this issue to a single file, I suspect from experience that it can be done. ;)",
+      "PostedDate": "2013-09-10T23:33:08.27-07:00",
+      "Id": 113127
+    },
+    {
+      "Message": "I can't reproduce this with the latest bits in our 'develop' branch and experimenting with the description given above.  I see the _this capture working correctly.  It may be already fixed.\n\nAre you able to try this with our 'develop' bits?  Reopen if it still repros there (and preferably attach a full project if it does take multiple files to reproduce).\n\nThanks.",
+      "PostedDate": "2013-09-11T15:59:46.833-07:00",
+      "Id": 113286
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1252645",
+    "ThreadId": "547482",
+    "Html": "Hi! I'm attempting to add single file output support to an Eclipse TypeScript plug-in (<a href=\"https://github.com/palantir/eclipse-typescript\" rel=\"nofollow\">https://github.com/palantir/eclipse-typescript</a>) and I'm having some problems with the file ordering via the language services.  Specifically, it seems like the only place to set the files in the proper order is in the ILanguageServiceHost implementation which I'm doing via code that looks like this:<br />\n<pre><code>    public getScriptFileNames(): string[] {\n            var scriptFileNames = Object.getOwnPropertyNames(this.fileInfos);\n\n            if (!isEmpty(this.compilationSettings.outFileOption)) {\n                var resolutionResults = TypeScript.ReferenceResolver.resolve(scriptFileNames, this, true);\n\n                scriptFileNames = resolutionResults.resolvedFiles.map(resolvedFile =&gt; resolvedFile.path);\n            }\n\n            return scriptFileNames;\n        }</code></pre>\n\n(from <a href=\"https://github.com/palantir/eclipse-typescript/blob/master/Bridge/src/languageServiceHost.ts\" rel=\"nofollow\">https://github.com/palantir/eclipse-typescript/blob/master/Bridge/src/languageServiceHost.ts</a>)\r<br />\n<br />\nThis works but it severely degrades performance of the plug-in since getScriptFileNames() is called frequently.  I considered caching the file ordering and only invalidating the cache when a file is touched but I'm worried that this still won't help much in cases like completion calls where the user is frequently editing a file while making language service calls. It seems like maybe file ordering is something the language service should be handling natively (perhaps by only getting the file ordering when compilation is requested) but I'm not entirely sure where file references fit into the design of the system so its also possible (likely?) I'm just doing something wrong.\r<br />\n<br />\nCurrently I'm using the getEmitOutput() API to get the single output file but perhaps it would be better to use the compiler directly for this use case?\r<br />\n<br />\nI'd love some suggestions on how to implement this properly - thanks in advance for any assistance!<br />\n",
+    "PostedDate": "2014-06-03T17:56:14.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252648",
+    "ThreadId": "547482",
+    "Html": "Hey Derek,<br />\n<br />\nYou're definitely right that getScriptFileNames needs to return the files in the &quot;right&quot; order.   While not necessary for getting errors and getting general language services (like completion, or parameter help), it is necessary so that code is correctly emitted in the right order.<br />\n<br />\nThat said, it's unclear why you'd need to recompute this once you have the initial ordering determined.  From that point on you should just return the same array of file names in the same order.<br />\n<br />\n<br />\n<br />\n<br />\nOf course, when a file is touched, you do need to figure out what the new set of file names should be.  However, you don't need to do that in getScriptFileNames.  In VS, for example, we do that on another thread entirely.  This thread operates at low pri, and only processes after all other requests have gone through.  Once that new set of files names is computed, it can become the 'official' set of file names for all future calls to getScriptFileNames.<br />\n<br />\nPlease let me know if you have any further questions.  I'm happy to help out with this!<br />\n<ul>\n<li>Cyrus</li>\n</ul>\n",
+    "PostedDate": "2014-06-03T18:11:49.767-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252659",
+    "ThreadId": "547482",
+    "Html": "Thanks, that's good context.  I'll try to think about how I can do something similar in the Eclipse plug-in.\r<br />\n<br />\nI think there may be a related issue: after the language service calls getScriptFileNames() on the host, it doesn't seem like it has a supported/working mechanism for flushing that ordering later on (if the ordering changes). I tried to call cleanupSemanticCache() before compiling but it throws a null pointer exception if the compiler inside the language service hasn't been initialized prior to the call.  I could try to make that call work but its hard to detect when the compiler would be null from the outside - it might be better to make that API safe to call at all times. For now I've resorted to re-creating the language service each time before compiling but that seems pretty heavy.<br />\n",
+    "PostedDate": "2014-06-03T19:24:22.57-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252663",
+    "ThreadId": "547482",
+    "Html": "Hey Derek,<br />\n<br />\nYou're right.  We are missing that capability right now.  And we should certainly consider adding it later.<br />\n<br />\nRight now we do what you do.  If the host detects a file ordering change, it totally dumps the language service and creates a new one.  This is due to limitations we had early on (our original compiler simply couldn't handle this sort of change).  Our current compiler would be totally ok with this, so we should support this in the future.<br />\n<br />\n&quot;but that seems pretty heavy.&quot;  It is heavy.  But ordering changes are rare... so it doesn't seem like a huge deal.<br />\n<br />\nFeel free to file a suggestion bug on this topic and link it back to this discussion so we can track things.<br />\n<br />\nThanks!<br />\n<ul>\n<li>Cyrus</li>\n</ul>\n",
+    "PostedDate": "2014-06-03T19:31:33.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252665",
+    "ThreadId": "547482",
+    "Html": "Ok cool, I'll file 2 issues: one for better tracking of referenced files and one for the somewhat dangerous cleanupSemanticCache() API.  Thanks for all the info - this is really helpful!<br />\n",
+    "PostedDate": "2014-06-03T19:42:09.4-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1252667",
+    "ThreadId": "547482",
+    "Html": "Done:\r<br />\n<a href=\"https://typescript.codeplex.com/workitem/2542\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2542</a>\r<br />\n<a href=\"https://typescript.codeplex.com/workitem/2543\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2543</a><br />\n",
+    "PostedDate": "2014-06-03T19:52:19.783-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

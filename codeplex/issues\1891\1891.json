@@ -1,0 +1,81 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This will be fixed in the next release of the TypeScript tools for Visual Studio.",
+    "ClosedDate": "2014-02-12T15:38:45.327-08:00",
+    "CommentCount": 7,
+    "Custom": null,
+    "Description": "I use the \"no generated .js files in source control\" workflow.\r\nWhen using the visual studio Publish method, the js files are copied, but on the build server they don't (they get compiled in the Sources folder but not copied after).\r\n\r\nLooking at the log, I see the CompileTypeScript step is OK, but in the _CopyWebApplicationLegacy step, it's missing the generated .js files.\r\n\r\nAny idea how to solve that?\r\n(I already tried the <Target Name=\"TypeScriptCollectPublishFiles\" DependsOnTargets=\"CompileTypeScript\">modification suggested for azure deployment).\r\n\r\nthanks in advance",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-14T03:06:35.32-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "TFS Team Build don't copy .js files compiled from my .ts files to _PublishedWebsites",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 1891
+  },
+  "FileAttachments": [
+    {
+      "FileId": 758215,
+      "FileName": "Hrweb.log",
+      "DownloadUrl": ".\\758215"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Can you send a detailed log from the buildserver?\n\nWhat kind of project are compiling? An Asp.net project or an Azure project?\n\nClosing for tracking, please re-open using the button on top when you have more info.",
+      "PostedDate": "2013-11-14T15:04:35.837-08:00",
+      "Id": 123078
+    },
+    {
+      "Message": "It's an ASP.NET Web application.\r\nI attached the log file, interesting parts are line 231 (CompileTypeScript) and line 272 (_CopyWebApplicationLegacy).",
+      "PostedDate": "2013-11-15T00:28:24.52-08:00",
+      "Id": 123108
+    },
+    {
+      "Message": "\n\r\n\r** Closed by paulb 11/14/2013 3:04PM",
+      "PostedDate": "2013-11-14T15:04:40.907-08:00",
+      "Id": 123109
+    },
+    {
+      "Message": "Thanks for the log, we're taking a look.",
+      "PostedDate": "2013-11-15T11:59:11.347-08:00",
+      "Id": 123216
+    },
+    {
+      "Message": "I'm having the same issue. I installed TypeScript extension on the build server. I was still getting .target missing errors in v11.0 folder in the build however. So, I coped the contents of the MSBuild/Microsoft folder form my machine to the build server. Then after still having .target missing issues, I copied v12.0/TypeScript into v11.0/TypeScript and that seemed to have made the build work. \n\nHowever, the .js files are not being generated and copied to _PublishedWebsites like I would expect.",
+      "PostedDate": "2013-11-21T05:22:40.647-08:00",
+      "Id": 123759
+    },
+    {
+      "Message": "In my case the .js files do get generated (I checked the source folder), but not \"Published\" with the Web Application.",
+      "PostedDate": "2013-11-21T08:37:39.243-08:00",
+      "Id": 123774
+    },
+    {
+      "Message": "I fixed it by adding MsBuild arguments:\n/p:UseWPP_CopyWebApplication=True;PipelineDependsOnBuild=False\nto the build definition",
+      "PostedDate": "2014-02-14T05:23:59.383-08:00",
+      "Id": 133572
+    }
+  ]
+}

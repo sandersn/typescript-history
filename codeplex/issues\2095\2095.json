@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The .d.ts file specified two overloads; the class only implemented one of them. The class should implement both signatures of the function.",
+    "ClosedDate": "2014-01-14T10:29:13.213-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "Hi,\r\n\r\nWe have the following code that does not compile.\r\n\r\n```\r\n\t/** CttDataSource, kendo framework */\r\n\texport class CttDataSource extends kendo.data.DataSource\r\n\t{\r\n\t\t/** Asyn aggregates (gekopieerd uit de DataSourceOptions) */\r\n\t\tasyncAggregate: kendo.data.DataSourceAggregateItem[];\r\n\r\n\t\t/** Aggregates worden gezet */\r\n\t\tpublic aggregate(val: any): void\r\n\t\t{\r\n\t\t\tif ((<CttDataSourceOptions>this.options).asyncAggregates)\r\n\t\t\t{\r\n\t\t\t\tthis.asyncAggregate = val;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tsuper.aggregate(val);\r\n\t\t\t}\r\n\t\t}\r\n...\r\n```\r\n\r\nI get a syntax error on the 'aggregate(val: any): void' with the following message:\r\n```\r\nError\t5\tClass 'kendoWrappers.CttDataSource' cannot extend class 'kendo.data.DataSource':\r\n\tTypes of property 'aggregate' of types 'kendoWrappers.CttDataSource' and 'kendo.data.DataSource' are incompatible:\r\n\t\tCall signatures of types '(val: any) => void' and '{ (val: any): void; (): any; }' are incompatible:\r\n\t\t\tCall signature expects 0 or fewer parameters.\tC:\\NotScanned\\Ontwikkeling\\ControlIT\\trunk\\Projecten.WebApplication\\Scripts\\contractors\\kendoWrappers\\KendoWrappers.ts\t85\t15\tWerkpakket.ts\r\n\r\n```\r\nIn the d.ts file (called Kendo.all.d.ts) the following is declared:\r\n\r\n```\r\n    class DataSource extends Observable{\r\n        constructor(options?: DataSourceOptions);\r\n        init(options?: DataSourceOptions): void;\r\n        static create(options?: DataSourceOptions): DataSource;\r\n        options: DataSourceOptions;\r\n        add(model: Object): kendo.data.Model;\r\n        add(model: kendo.data.Model): kendo.data.Model;\r\n        aggregate(val: any): void;\r\n        aggregate(): any;\r\n        aggregates(): any;\r\n        at(index: number): kendo.data.ObservableObject;\r\n        cancelChanges(model?: kendo.data.Model): void;\r\n        data(): kendo.data.ObservableArray;\r\n...\r\n```\r\n\r\nSo there are 2 signatures ('aggregate(val: any): void' and 'aggregate(): any'). What I notice is that both functions have different return values, is that supported and possibly the problem here?\r\n\r\nRegards\r\nPaul\r\n",
+    "LastUpdatedDate": "2014-01-14T10:29:13.213-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-13T03:06:16.403-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Signature not recognized",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2095
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Telerik proposed the following change to the definition:\n\n```\n\t\taggregate(val?: any): any;\n\t\t// aggregate(): any;\n```\n\nThe override:\n\n```\n\t\tpublic aggregate(val?: any): void\n\t\t{\n\t\t\tsuper.aggregate(val);\n\t\t}\n```\n\nThis compiles to:\n\n```\n        CttDataSource.prototype.aggregate = function (val) {\n            _super.prototype.aggregate.call(this, val);\n        };\n```\n\nwhich seems to call the aggregate() instead of the aggregate(val) and breaks the functionality.\n",
+      "PostedDate": "2014-01-14T00:14:14.697-08:00",
+      "Id": 130365
+    },
+    {
+      "Message": "Changing the override to:\n\n```\n\t\tpublic aggregate(val?: any): any\n\t\t{\n\t\t\treturn super.aggregate(val);\n\t\t}\n```\n\ncompiles to:\n\n```\n        CttDataSource.prototype.aggregate = function (val) {\n            return _super.prototype.aggregate.call(this, val);\n        };\n```\n\nand does work correctly.\n\nSo the question remains. I can not have multiple signatures in the d.ts. Is it a bug or by design?",
+      "PostedDate": "2014-01-14T00:17:36.497-08:00",
+      "Id": 130366
+    }
+  ]
+}

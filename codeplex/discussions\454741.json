@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1085703",
+    "ThreadId": "454741",
+    "Html": "Hi,\r<br />\n<br />\nI understand that in Typescript 0.9 all files somehow reference each without explicit reference paths. But if i add the setting to compile to single file the order in which the ts files from the project are concatenated does not seem to respect the order of dependencies between files.\r<br />\n<br />\nsimple example: b.ts defines an enum type, and a.ts uses this enum, but the order in the output file is a.ts followed by b.ts, which is clearly wrong.\r<br />\n<br />\nThere doesn't seem to be any official documentation on this.\r<br />\nAny help?<br />\n",
+    "PostedDate": "2013-08-28T02:41:02.493-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085924",
+    "ThreadId": "454741",
+    "Html": "If your example has a.ts referencing b.ts but not vice versa, does it put b before a in the output?  Curious if it's related to circular or implied dependencies at all.<br />\n",
+    "PostedDate": "2013-08-28T13:02:48.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1085929",
+    "ThreadId": "454741",
+    "Html": "Hi,<br />\n<br />\n is an implied dependency.<br />\nIf Typescript compiler already knows the implied references between files, why does it fail to put the output in correct order?<br />\nI tried creating class inheritance, class A in file1 and class B extends A in file2.<br />\n<br />\nThe output is still in reverse order.<br />\n",
+    "PostedDate": "2013-08-28T13:17:39.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086015",
+    "ThreadId": "454741",
+    "Html": "The last time I followed a discussion on this topic the conclusion was that TS will <strong>not</strong> guarantee the correct order of file1 and file2 in the output in regards to the class hierarchy. \r<br />\nThe order is solely determined by the processing of <code>&lt;reference&gt;</code> tags which can be tricky to unmanageable in more complex scenarios. See ticket <a href=\"https://typescript.codeplex.com/workitem/913\" rel=\"nofollow\">#913</a>.\r<br />\n<br />\nA common approach is to have a single file as entry-point for the compiler that defines all files in the project in the correct order via <code>reference</code> tags. Individual files in the project all reference this 'master' file. (This approach is explained in more detail in the comments to the ticket linked above.)\r<br />\n<br />\nI've read that Visual Studio has recently introduced a new behavior where all TS files in a project automatically reference each other. It would be interesting to hear from VS users whether VS will take care of the correct order when compiling to a single output file.\r<br />\n<br />\nNot sure if there have been other changes in regards to the ordering issue in recent releases, maybe @jonturner can clarify.\r<br />\n<br />\nPersonally, I would like to see the TS team describe the recommended approach for a project setup that uses the pattern of one class per file, with the entire project being compiled into one output file.\r<br />\n<br />\nAfter the recent changes in the compiler (cleanup of command line switches) and VS, I assume that this is not something that will be handled inside the compiler, but is rather expected to be dealt with on tool level. Again, I would appreciate the TS team commenting hereon as well. <br />\n",
+    "PostedDate": "2013-08-28T21:09:20.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086043",
+    "ThreadId": "454741",
+    "Html": "Thank you for the reply,\r<br />\n<br />\nI discovered googling that other developers use this trick with the file that defines all the references in the project.\r<br />\nI am trying this approach, and i notice that the reference comments are always included in the middle of the output file not grouped on start, and my comments are not always honored.\r<br />\nThe compiler is behaving very strange...I remember that I modified the ts sources in the past to cleanup the output file....\r<br />\nTypescript roadmap follows the tradition at Microsoft, take Entity Framework:  a great tool in its core, but very slow in improvement of small things for developers, and unusable in its Visual Studio Add-in.<br />\n",
+    "PostedDate": "2013-08-29T00:11:36.397-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1086461",
+    "ThreadId": "454741",
+    "Html": "My guess is that the compiler collects all <code>reference</code> tags of the current file, then recurses into these files and includes the output before including the actual contents of the current file (including the original <code>reference</code> tags). \r<br />\n<br />\nPreserving comments in the output is a very nice feature IMHO - it appears that there are efforts to have readable JavaScript output that could also be used without TS sources. Personally, I like that the code generated by the compiler is very slick. \r<br />\n<br />\nI do hope that the focus of the TS team now shifts to making a developer's life easier after what appeared to be major internal changes in the compiler in the 0.9 release.<br />\n",
+    "PostedDate": "2013-08-29T21:48:24.827-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

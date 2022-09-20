@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1054638",
+    "ThreadId": "446503",
+    "Html": "<pre><code>class SomeTediousLongClassName {\n\n    static count : number;\n\n    public getCount () {\n        return SomeTediousLongClassName.count;\n        // if would be nice if I could write\n        //    return self.count;\n    }\n}\n</code></pre>\n\nIt looks nicer and if you ever were to rename the class, you wouldn't have to rename all references to statics within the class itself.  (PHP uses the self keyword in that way).  I realize you can reference static member data within static member functions without a class name prefix, but within non-static member functions you'll have to prefix with the class name.<br />\n",
+    "PostedDate": "2013-06-09T14:58:11.98-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054824",
+    "ThreadId": "446503",
+    "Html": "If both members are 'static', you can use:<br />\n<pre><code>class SomeTediousLongClassName {\n\n    static count : number;\n\n    public static getCount () {\n        return count;\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-06-10T05:32:21.29-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054904",
+    "ThreadId": "446503",
+    "Html": "You can, but my issue is that I have to prefix a reference to a static member with the full class name, when that reference is within a non-static method.  For the example it's OK to have the getCount() function be static since it doesn't reference any instance data (this.*), but what if it did? E.g.<br />\n<pre><code>class SomeTediousLongClassName {\n\n    private static ccount : number = 0;\n    private        icount : number = 0;\n\n    public getCounts () {\n        return {classCount:    SomeTediousLongClassName.ccount,\n                instanceCount: this.icount};\n        // if would be nice if I could write it like this instead\n        //    return {classCount:self.ccount, instanceCount:this.icount};\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2013-06-10T08:12:48.293-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054995",
+    "ThreadId": "446503",
+    "Html": "Peter,\r<br />\n<br />\nSince you can reference a class in a variable, you can do this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> SomeTediousLongClassName {\n\n    <span style=\"color:Blue;\">private</span> <span style=\"color:Blue;\">static</span> ccount : <span style=\"color:Blue;\">number</span> = 0;\n    <span style=\"color:Blue;\">private</span>        icount : <span style=\"color:Blue;\">number</span> = 0;\n\n    <span style=\"color:Blue;\">public</span> getCounts () {\n        <span style=\"color:Blue;\">var</span> self = SomeTediousLongClassName;\n        <span style=\"color:Blue;\">return</span> {\n                classCount:    self.ccount,\n                instanceCount: <span style=\"color:Blue;\">this</span>.icount\n     };\n  }\n}\r\n</pre></div>Not exactly what you want but useful. I doubt alias to static classes make into TypeScript any time.<br />\n",
+    "PostedDate": "2013-06-10T10:50:18.507-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1057513",
+    "ThreadId": "446503",
+    "Html": "Thanks.  This will limit the refactoring work somewhat, if I were to change the class name.  Not ideal though.  Just for kicks I tried this:<br />\n<pre><code>class SomeTediousLongClassName {\n\n    private static ccount : number = 0;\n    private        icount : number = 0;\n    private static self = SomeTediousLongClassName;\n\n    public getCounts () {\n        return {\n                classCount:    SomeTediousLongClassName.self.ccount,\n                instanceCount: this.icount\n     };\n  }\n}\n</code></pre>\n\nIt gave me an internal compiler error:<br />\n<pre><code>/usr/local/lib/node_modules/typescript/bin/tsc.js:24488\n                throw err;\n                      ^\nRangeError: Maximum call stack size exceeded\n</code></pre>\n\n",
+    "PostedDate": "2013-06-16T18:38:01.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "932822",
+    "ThreadId": "400882",
+    "Html": "\r\n<p>Due to the dynamic nature of JS, it is common practice to wrap a function in order to add some&nbsp;functionality. A simple example would be the standard &quot;bind&quot; function.</p>\r\n<p>However in TypeScript you cannot express this in a declaration file. It would be nice to have&nbsp;a special type (lets say CallerType) that would inform the compiler (and of course intellisense) of this construct.&nbsp;For example:</p>\r\n<pre>interface Function { \r\n   bind(thisArg: any, ...argArray: any[]): CallerType;\r\n}\r\n</pre>\r\n<p>Now the compiler knows that we don't talk about just any Function that is returned, but about a function that has the same signature as the function on which bind is invoked.</p>\r\n<p>-- Peter</p>\r\n",
+    "PostedDate": "2012-10-26T00:45:35.553-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933043",
+    "ThreadId": "400882",
+    "Html": "<p>There's been a lot of discussion around 'generics', which would help you describe situations like this (among others).&nbsp; We're definitely looking into that area.</p>",
+    "PostedDate": "2012-10-26T08:50:14.533-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933081",
+    "ThreadId": "400882",
+    "Html": "<p>I'm aware of generics&nbsp;coming&nbsp;to TS in the future, but was not sure that would help in the above situation.&nbsp;So it would be possible to declare something like this:</p>\r\n<pre></pre>\r\n<pre>interface Function&lt;A&gt;<a> { \r\n   bind(thisArg: any, ...argArray: any[]): A;\r\n}\r\n</a></pre>\r\n<p><a></a></p>\r\n<pre><br /></pre>\r\n<pre>And automatically any function would match the above interface definition?&nbsp;</pre>\r\n<pre>That would be great.</pre>\r\n<pre><br /></pre>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-26T10:23:51.973-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "933904",
+    "ThreadId": "400882",
+    "Html": "<p>Ahh, I think I see the part of your question I missed earlier.&nbsp;</p>\r\n<p>In addition to generics, it looks like you're asking about 'thisType' or 'selfType', where an object that implements an interface could have the interface reference the implementing type.&nbsp; Something like this:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> Serializable {\r\n    deserialize(s:string): selfType;\r\n}\r\n\r\n<span style=\"color: blue;\">class</span> Foo <span style=\"color: blue;\">implements</span> Serializable {\r\n    deserialize(s:string): Foo { return this; }\r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>Does this sound&nbsp;like what you're suggesting?&nbsp;</p>\r\n<p>If so, this particular approach doesn't quite have the utility users would need.&nbsp; While we could check to make sure that the class indeed does have a method that returns the class itself as the type, this isn't quite enough.&nbsp; What I think you're suggesting, is to have the interface itself become more expressive, so that if you say:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">function</span> f (s: Serializable) {\r\n    <span style=\"color: green;\">// Now we know s.deserialize returns specific type</span>\r\n}\r\n</pre>\r\n</div>\r\n<p>Unfortunately, we can't know that.&nbsp; While we can check the interface is implemented, we can't also carry along the info about what type implemented the interface (this is actually intentional so that we can separately type-check&nbsp;separate sections of code).&nbsp; To get this, you'd have to&nbsp;pass in the type with&nbsp;Serializable, like you mention:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> Serializable&lt;T&gt; {\r\n    deserialize(s:string): T;\r\n}\r\n\r\n<span style=\"color: blue;\">function</span> f (s: Serializable&lt;Foo&gt;) : Foo {\r\n    <span style=\"color: blue;\">return</span> s.deserialize(<span style=\"color: #a31515;\">\"foo\"</span>);\r\n}\r\n\r\n</pre>\r\n</div>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-29T10:41:06.403-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934008",
+    "ThreadId": "400882",
+    "Html": "<p>Thanks for the extensive reply. What you called selfType (and I called CallerType) is indeed what I was looking for. But the way I envisioned it to work is slightly different from your examples (i believe).</p>\r\n<p>Perhaps a simple example can demonstrate more clearly what I was looking for (my previous example used a function,which is perhaps not the clearest example, so this time a Node).</p>\r\n<p>Normally the following code snippet would cause the compiler to throw an error:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> elem:Element = ....;\r\nelem.cloneNode().tagName;\r\n\r\n</pre>\r\n</div>\r\n<p>Because cloneNode is declared to return a Node and of course a Node doesn't have the attribute tagName.&nbsp;If we now introduce the SelfType:<br /><br />\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> Node { \r\n   .... \r\n   cloneNode(deep?:bool): selfType\r\n}\r\n\r\n</pre>\r\n</div>\r\nThe same code would now compile just fine:<br /><br />\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> elem:Element = ....;\r\nelem.cloneNode().tagName;\r\n\r\n</pre>\r\n</div>\r\n</p>\r\n<p>The compiler knows that the caller of the method cloneNode (elem) is of the type Element. So then it also knows that the return type of cloneNode is of the type Element (that is what SelfType indicates). And tagName is a known attribute of the Element type, so the compiler is happy again.</p>\r\n<p>However after your examples I realized you could do the same with generics:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">interface</span> Node&lt;T&gt; {\r\n   cloneNode(deep?: bool): T;\r\n}\r\n\r\n<span style=\"color: blue;\">interface</span> Element <span style=\"color: blue;\">extends</span> Node&lt;Element&gt; {\r\n}\r\n\r\n\r\n</pre>\r\n</div>\r\n<p>Is this what would be possible with generics, even for declarations for things like DOM API ?</p>\r\n<p>&nbsp;</p>\r\n<p>P.S Even without this features, I think the TypeScript team doing a great job capturing the dynamic nature of JS in&nbsp;a type system.&nbsp;</p>",
+    "PostedDate": "2012-10-29T16:19:43.04-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "934393",
+    "ThreadId": "400882",
+    "Html": "<p>Right, with generics you have a way of passing in a type that captures what the expected return of cloneNode is.&nbsp; It's arguably a little more verbose, but it does address that issue.&nbsp;</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-30T13:29:50.16-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

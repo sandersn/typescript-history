@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-11-20T14:52:03.203-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Now this result type is incompatable to number[] type, althougth number is also an object, isn't it?\r\nNow a lot of errors of this kind\r\nError\t191\tCannot convert '{}[]' to 'number[]':\r\n\tTypes of property 'pop' of types '{}[]' and 'number[]' are incompatible:\r\n\t\tCall signatures of types '() => {}' and '() => number' are incompatible.\tC:\\DATA\\NEW_SVM\\jriappTS\\jriappTS\\user_modules2\\mail.ts\t993\t17\tjriappTS\r\n\r\n ",
+    "LastUpdatedDate": "2013-11-20T14:52:03.203-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-20T02:58:02.39-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TS 0.95 array.map return strange resylt type {}[]",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1924
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "And the same with  assigning to 'string[]\nWITH\nError\t3\tCannot convert '{}[]' to 'string[]':\n\tTypes of property 'pop' of types '{}[]' and 'string[]' are incompatible:\n\t\tCall signatures of types '() => {}' and '() => string' are incompatible.\tC:\\DATA\\NEW_SVM\\jriappTS\\jriappTS\\user_modules2\\mail.ts\t1151\t17\tjriappTS\n\n```\nvar ids = Object.keys(this._selected), arr = [];\n                ids.forEach(function (id) {\n                    arr.push(self._selected[id]);\n                });\nids = arr.map(function (v) { return v.mcod }); //here is error\n \n```",
+      "PostedDate": "2013-11-20T03:01:17.437-08:00",
+      "Id": 123637
+    },
+    {
+      "Message": "P.S. close this case. I figured it out that map function returns the type you return from the function.\nAlthough it is difficult to undestand why you can not assing number type to {} type.\n\n",
+      "PostedDate": "2013-11-20T03:31:55.673-08:00",
+      "Id": 123640
+    },
+    {
+      "Message": "This is usually because something in your code required the computation of a best common type (like a heterogeneous array literal) for which one could not be found so the compiler selects {} as the best common type (so a heterogeneous array may end up typed as {}[]). Number is assignable to {}, but that is not the same as saying () => number is assignable to () => {}. Consider:\n\n```Typescript\nvar a: {};\nvar b = 2;\na = b; // ok\n\nvar y: () => number;\nvar z: () => {} = () => { return { greeting: 'hello' } };\ny = z; // this is an error\nvar r = y() + 1; // otherwise this would surely not do what you expect\n```",
+      "PostedDate": "2013-11-20T14:51:57.01-08:00",
+      "Id": 123710
+    }
+  ]
+}

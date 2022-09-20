@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The intent is to catch indexing of objects that weren't intended to be indexed by arbitrary values (e.g. classes).\n\nNote that this is only an error when using the --noImplicitAny switch.",
+    "ClosedDate": "2014-01-14T12:18:08.067-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I encounter this error with the latest develop branch on code like below:\r\n\r\n\tclass Base {\r\n\t\tconstructor(private _name: string, ... private _propertyNames: string[]) { }\r\n\r\n\t\t// A formatting method that prints the derived class name and its properties\r\n\t\ttoString(): string {\r\n\t\t\treturn (\r\n\t\t\t\tthis._name + \" { \" +\r\n\t\t\t\tthis._propertyNames.map(name => name + \": \" + this[name]).join(\", \") +\r\n\t\t\t\t((this._propertyNames.length > 0) ? \" \" : \"\") +\r\n\t\t\t\t\"}\"\r\n\t\t\t);\r\n\t\t}\r\n\t}\r\n\r\n\tclass Derived {\r\n\t\tconstructor(private _value: string) {\r\n\t\t\tsuper(\"Derived\", \"value\");\r\n\t\t}\r\n\r\n\t\tget value(): string {\r\n\t\t\treturn this._value;\r\n\t\t}\r\n\t}\r\n\r\n\t// new Derived(\"foo\").toString() would this print \"Derived { value: foo }\"\r\n\r\nIt seems to be complaining that ```this[name]``` is of any type. Is this supposed to happen? Is the error supposed to prevent indexers on objects which don't have them defined explicitly?\r\n\r\nI could define an indexer in the base class but that advertises to outside callers that an indexer exists when it's really just a way to get at its own properties. (I realize that accessing properties by keys circumvents the type system.)\r\n\r\nOne could even argue that Object in Javascript has an implicit indexer:\r\n\r\n\tinterface Object {\r\n\t\t[key: string]: any\r\n\t}\r\n\r\nWhat are some of the actual problems this error is supposed to catch?",
+    "LastUpdatedDate": "2014-04-01T01:20:26.317-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-14T11:43:43.95-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TS7017 \"Index signature of object type implicitly has an 'any' type.\"",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2097
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "So is the expected workaround to cast the object to <any> before indexing it?",
+      "PostedDate": "2014-01-14T12:36:38.813-08:00",
+      "Id": 130421
+    },
+    {
+      "Message": "Cast to any or an object type with an appropriate index signature",
+      "PostedDate": "2014-03-31T16:02:34.677-07:00",
+      "Id": 140106
+    },
+    {
+      "Message": "FYI: \"this[name]\" compiles fine in the playground, and is of type \"Base\".  Not sure where the issue is.\nhttp://goo.gl/Rb63jL",
+      "PostedDate": "2014-03-31T17:44:56.07-07:00",
+      "Id": 140128
+    },
+    {
+      "Message": "jamesnw: I presume the playground doesn't use ```noImplicitAny = true```. Also ```this[name]``` is of <any> type, not Base. (It is ```this``` that is of type Base, not ```this[name]```. Assign it to a variable like ```var foo = this[name];``` and look at the type of ```foo```.)",
+      "PostedDate": "2014-04-01T00:10:29.977-07:00",
+      "Id": 140145
+    },
+    {
+      "Message": "Ah ok, I see.",
+      "PostedDate": "2014-04-01T01:09:35.143-07:00",
+      "Id": 140149
+    },
+    {
+      "Message": "BTW: I meant \"this\" was of type \"Base\", not the value returned (I didn't word it right); but I see what you mean now.  I didn't understand that the return type of \"any\" - which was working in the PG - was actually an issue (or could even possibly be one! - I wasn't aware of this switch before).\n\nOn another note - I think the playground could use some of these switch options for better testing. :)",
+      "PostedDate": "2014-04-01T01:20:26.317-07:00",
+      "Id": 140150
+    }
+  ]
+}

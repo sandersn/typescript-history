@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1222290",
+    "ThreadId": "538883",
+    "Html": "Hello,\r<br />\n<br />\nI found that the syntax to import external modules was a bit too heavy because of the module prefix in front of each type, so I decided to switch to one type per file (like in Java, where you create a new file for each class) and use the &quot;export =&quot; syntax, so that I could use my imported type without any prefix.\r<br />\n<br />\nWhile doing that change I run into a problem : some of my files were containing interfaces, so to comply with my new approach, i moved them into some dedicated external module. While the code was working fine, I realize it was a kind of nonsense because typescript interface do not generate javascript code when compiled, so I was basically dynamically loading (through an HTTP query) an empty javascript file.\r<br />\n<br />\nThen, I wonder, because interface do not generate javascript code, would an &quot;d.ts&quot; ambient declaration more appropriate. Then i discovered that only class could be &quot;declared&quot; and not interface, so i decided to swith to an internal module for my interface, and keep external module for the implementation.\r<br />\n<br />\nAccording to you, does this pattern of mixing internal module (for declaration that do not generate javascript code) and external module (for implementations, concrete classes) makes sense ? Have you got something better ? \r<br />\n<br />\nAnd don't you think there is a kind of redundancy between the &quot;ambient declaration&quot; part of the spec  and non-ambient object like interface, enum that feeds only the type system without generating code. \r<br />\n<br />\nWhile we have both ambient class and interface ? Aren't them the same thing with two different syntax ?<br />\n",
+    "PostedDate": "2014-03-13T04:24:47.2-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1222499",
+    "ThreadId": "538883",
+    "Html": "Just put interfaces in the .d.ts along with the ambient class definitions. The reason you can't add 'declare' to an interface is because it's a completely redundant modifier. Declare is saying 'this is a type information for something but do not generate JavaScript code for it,' but an interface is already exactly that kind of thing. That's different from needing to define type information for something which does ultimately have JavaScript code defining an implementation like a class definition.\r<br />\n<br />\nDo not mix internal and external modules, you will have a bad time.<br />\n",
+    "PostedDate": "2014-03-13T12:40:16.227-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

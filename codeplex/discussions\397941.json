@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "921461",
+    "ThreadId": "397941",
+    "Html": "\r\n<p>It would be nice to have an option which controls whether the output is written to a single file (which already exists) or to\r\n<strong><em>stdout</em> stream</strong>.</p>\r\n",
+    "PostedDate": "2012-10-03T12:33:12.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921464",
+    "ThreadId": "397941",
+    "Html": "<p>+1 , I actually assumed there must be a way to do this already that I'm just missing or so.</p>\r\n<p>This helps when trying to call the compiler from another process, integrate it with some asset pipeline manager like ASP.NET bunlding or so.</p>",
+    "PostedDate": "2012-10-03T12:35:35.267-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921676",
+    "ThreadId": "397941",
+    "Html": "<p>+1 - would be a great compiler feature.</p>\r\n<p>I just checked - the IIO interface (in src/compiler/io.ts) supports streaming to stderr but not stdio.</p>",
+    "PostedDate": "2012-10-03T23:19:53.193-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921960",
+    "ThreadId": "397941",
+    "Html": "\r\n<blockquote style=\"padding-bottom:0px; font-style:italic; padding-top:0px; padding-left:0.25em; margin:0.25em 1em 0px; padding-right:0.25em; border:#ccc 0.1em solid\">\r\n<strong>jasondenizac wrote:</strong><br>\r\n<p>&#43;1 - would be a great compiler feature.</p>\r\n<p>I just checked - the IIO interface (in src/compiler/io.ts) supports streaming to stderr but not stdio.</p>\r\n</blockquote>\r\n<p>Have you looked at the two print() (one is for Windows and the other for native NodeJS) functions?<br>\r\nI've just done a quick research in the code. Here is my current and probably uncomplete list of things which have to be changed:</p>\r\n<ul>\r\n<li>src/compiler/io.ts\r\n<ul>\r\n<li>Add 'stdout'&nbsp;as ITextWriter to the IIO interface. Line #24 </li><li>Add 'stdout' property as 'WScript.StdOut' to the IO object for Windows. Line #203.\r\n</li><li>Add 'stdout' property to the IO object for native NodeJS:\r\n<div style=\"color:black; background-color:white\">\r\n<pre> stdout: {\r\n  Write: <span style=\"color:blue\">function</span>(str) { process.stdout.write(str); },\r\n  WriteLine: <span style=\"color:blue\">function</span>(str) { process.stdout.write(str &#43; <span style=\"color:#a31515\">'\\n'</span>); },\r\n  Close: <span style=\"color:blue\">function</span>() { }\r\n},\r\n</pre>\r\n</div>\r\nLine #363 </li></ul>\r\n</li><li>src/compiler/typescript.ts\r\n<ul>\r\n<li>This file have to be refactored so the containing functions do not assume the output to be a file.<br>\r\nWe probably need a more abstract interface for the output. </li></ul>\r\n</li></ul>\r\n",
+    "PostedDate": "2012-10-04T09:40:37.45-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "922511",
+    "ThreadId": "397941",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"http://typescript.codeplex.com/workitem/115\">here</a> to go to the work item and continue the discussion.",
+    "PostedDate": "2012-10-05T09:12:27.38-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

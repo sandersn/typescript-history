@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "We talked about doing this, but the problem basically comes down to the scenario where you're working on some code and you decide to comment out all the non-interface code in a file; for example you might be debugging something and you want to not have some initialization code in foo.ts run, but still leave the type definitions in place.\n\nNow we have to decide what to do under the \"don't emit empty files\" rule in the case where the previous compilation of foo.js is still on disk. Some candidate rules:\n\n1. Don't touch foo.js. This is terrible, because you tried to remove code but it's still there when you re-run your application. Extremely confusing for anyone.\n2. Delete foo.js. No one expects a compiler to delete files; this might also cause a problem in e.g. require.js scenarios where the js file actually does have to exist even if it is empty\n3. Don't emit foo.js if it doesn't exist, but truncate the file if it does exist. We're getting into \"what did you really mean to do, actually?\" territory here.\n4. Something else? We haven't been able to come up with anything sane.\n\nCompounding this is that even an \"empty\" type file will typically have comments that you'd like to be preserved. Many people tell us that comments are a semantic part of their programs because of external tools. So, we'd have to come up with more rules to define what \"truly empty\" means, any selection of which would annoy some subset of people.\n\nMuch like how gcc isn't used for big projects without make, we really don't expect tsc to be used as the end-all build step. If you have some scenario where .d.ts isn't appropriate, deleting the 'empty' .js files can be part of your build process.",
+    "ClosedDate": "2014-03-10T10:37:30.183-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "I have a lot of `.ts` files that contain only interfaces, usually just one interface. When I compile with `tsc`, it generates one JavaScript file for each TypeScript file, which is generally what I want because I'm using external modules exclusively.\r\n\r\nThe issue is that JavaScript files are generated for files containing only interfaces. These JavaScript files are empty and no other JavaScript files refer to them in any way. In TypeScript, I import these interfaces using (for example) `import IMyService = require('./IMyService');` and `tsc` correctly strips these out. So why keep these empty JavaScript files laying around?\r\n\r\nIt would be nice to either have an option to suppress generating these empty JavaScript files. Even better, if you can't imagine a scenario in which these files would need to exist, the only behaviour should be to just not generate these files.\r\n\r\nNote: I have tried putting my interfaces in `.d.ts` files instead of `.ts` files, but this doesn't seem to work as `.d.ts` files seem unsuitable for anything beyond type definitions for third-party JavaScript libraries.",
+    "LastUpdatedDate": "2014-03-31T16:40:05.053-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-05T16:17:06.757-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "tsc option to not generate empty .js files",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2265
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "What issue did you run into with the d.ts file, do you have an example?\n",
+      "PostedDate": "2014-03-05T17:43:38.01-08:00",
+      "Id": 135992
+    },
+    {
+      "Message": "Actually, now that you mentioned it, I just tried renaming all my interface-only `.ts` files back to `.d.ts` and it works. My interface files were previously structured differently (when they were `.d.ts`) - I had many interfaces in one file. I tried with and without a surrounding module, import require vs. reference, all combinations thereof and various other crazy stuff. Still, I think this is a valid bug (albeit a minor one) as I can't see how this could possibly be \"by design\".\n\nMy interface files have only one interface each and look like this now:\n\n```\n// IFoo.d.ts\n\ninterface IFoo {\n    foo(): void;\n}\n\nexport = IFoo;\n```\n\nand I consume them as follows:\n\n```\n// Foo.ts\n\nimport IFoo = require('./IFoo');\n\nclass Foo implements IFoo {\n    foo(): void {\n        // Do something\n    }\n}\n\nexport = Foo;\n```\n\n```\n// Bar.ts\n\nimport IFoo = require('./IFoo');\n\nclass Bar {\n    constructor(private _foo: IFoo) {}\n    // etc...\n}\n\nexport = Bar;\n```\n\nand this all works. I hadn't arrived at this structure before trying `.d.ts` files again as the behaviour I was experiencing with these kind of files was bizarre to say the least (e.g. with many interfaces in one file, the compiler could see only one of them).\n\nThe TypeScript documentation is extremely thin, which I have to say is unusual for Microsoft products. I could have avoided all this module confusion. Let's hope this situation changes when TypeScript goes GA.\n\nAs I said above, I still consider this a bug although I have found a workaround and that workaround appears to be the right way to do what I was doing.",
+      "PostedDate": "2014-03-05T19:10:07.347-08:00",
+      "Id": 136000
+    },
+    {
+      "Message": "It's asking a bit much of a build tool to parse every JavaScript file to determine which ones to delete based on whether or not they contain actual code or are `require`d by any other generated JavaScript file(s). And if people are annoyed and confused by a new option, they can simply choose not to use it, as was the case before the option became available.",
+      "PostedDate": "2014-03-11T01:11:55.833-07:00",
+      "Id": 136476
+    }
+  ]
+}

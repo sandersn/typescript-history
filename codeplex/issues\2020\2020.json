@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This is by design. An instance of mod.A cannot be used in a 'new' expression (I don't know why this was allowed previously). If you want \"mod/a\" to refer to the constructor function, you should use the 'typeof' keyword to indicate that \"mod/a\".a is referring to the constructor function of A rather than an instance of A. Your code in test.d.ts would be:\n\n```\n(...)\n\ndeclare module \"mod/a\"\n{\n    var a: typeof mod.A;\n    export = a;\n}\n```",
+    "ClosedDate": "2013-12-16T14:56:25.807-08:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "This code used to work fine in 0.9.1.1:\r\n\r\ntest.d.ts:\r\n```\r\ndeclare module mod {\r\n    class A {\r\n        constructor(n: string);\r\n    }\r\n}\r\n\r\ndeclare module \"mod/a\"\r\n{\r\n    var a: mod.A;\r\n    export = a;\r\n}\r\n```\r\nmain.ts\r\n```\r\n/// <reference path=\"test.d.ts\"/>\r\n\r\nimport A = require(\"mod/a\");\r\n\r\nvar t1 = new A(\"n\");\r\n```\r\n\r\nOutput main.js\r\n```\r\n/// <reference path=\"test.d.ts\"/>\r\ndefine([\"require\", \"exports\", \"mod/a\"], function(require, exports, __A__) {\r\n    var A = __A__;\r\n\r\n    var t1 = new A(\"n\");\r\n});\r\n```\r\n\r\nAfter upgrading to 0.9.5, `tsc -m amd main.ts` returns the error `TS2083: Invalid 'new' expression.` It will compile with no errors if main.ts is changed to:\r\n```\r\n/// <reference path=\"test.d.ts\"/>\r\n\r\nimport A = require(\"mod/a\");\r\n\r\nvar t2 = new mod.A(\"n\");\r\n```\r\nbut then the output is:\r\n```\r\n/// <reference path=\"test.d.ts\"/>\r\ndefine([\"require\", \"exports\", \"mod/a\"], function(require, exports, A) {\r\n    var t2 = new mod.A(\"n\");\r\n});\r\n```\r\n\r\nIs this a bug in 0.9.5 or is there another syntax that will get 0.9.5 to output the same JS as 0.9.1.1 did?",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-12-14T17:11:27.58-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "0.9.5 regression calling constructor",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2020
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

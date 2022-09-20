@@ -1,0 +1,296 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Fixed in develop branch",
+    "ClosedDate": "2013-06-13T11:21:46.793-07:00",
+    "CommentCount": 49,
+    "Custom": null,
+    "Description": "(from https://typescript.codeplex.com/discussions/435257)\r\n\r\nI have just started investigating TypeScript and the performance of the editor is horrid!  It is so bad that I expected to see a flood of complaints but haven't been able to find any.  I'm using the default template in VS2012 with a single code file that is only 100 lines long.  The formatter (which I understand is written in TypeScript) takes an unacceptably long amount of time to indent and format code.  For example, hitting enter 4 times at the bottom of the file which changes nothing in the file results in the following status messages:\r\n\r\nSmart Indenting task took more than 1 second(s) to complete. Try again later.\r\nFormatting task took more than 2 second(s) to complete. Try again later.\r\nSmart Indenting task took more than 1 second(s) to complete. Try again later.\r\nFormatting task took more than 2 second(s) to complete. Try again later.\r\nSmart Indenting task took more than 1 second(s) to complete. Try again later.\r\nFormatting task took more than 2 second(s) to complete. Try again later.\r\nSmart Indenting task took more than 1 second(s) to complete. Try again later.\r\nFormatting task took more than 2 second(s) to complete. Try again later.\r\n\r\nThe whole process of adding four blank lines takes 12 seconds.  I've tried the Microsoft fix of restarting and reinstalling with no luck.  I'm running a quad core i7-950, so I'm doubting it's that.\r\n\r\nAm I the only one with this problem?",
+    "LastUpdatedDate": "2014-05-01T09:23:16.03-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-04T07:03:34.843-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Does anyone else have terrible performance with the editor in Visual Studio 2012?",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 22,
+    "Id": 779
+  },
+  "FileAttachments": [
+    {
+      "FileId": 634247,
+      "FileName": "example-hang.zip",
+      "DownloadUrl": ".\\634247"
+    },
+    {
+      "FileId": 638273,
+      "FileName": "VS Process Screen Shot.JPG",
+      "DownloadUrl": ".\\638273"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I have a clear way to reproduce the problem.\nI am using TypeScript v.0.8.3\n\n1. Somewhere in a method in a class type the following:\n```\nvar data = {}\n```\n\n2. Now place your cursor between the curly brackets and press ENTER x2 times.\n```\nvar data = {\n\n}\n```\n\n3. Get your cursor to the blank line between the curly brackets and type\n```\nvar data = {\n    value: 3\n}\n```\n\n4. Make sure your cursor is at the end of the \"value: 3\" line. Type \";\" (semicolon). So your code looks like:\n```\nvar data = {\n   value: 3;\n}\n```\n\nThis is where (at step 4) the VS starts saying: Formatting task took more than 2 second(s) to complete. Try again later.\n\nIf you look at the running processes there will be another instance of \"devenv.exe\" which needs to be taken down manually because when you close your VS that process remains there running.",
+      "PostedDate": "2013-03-04T07:48:02.793-08:00",
+      "Id": 92186
+    },
+    {
+      "Message": "another test case that fails is when you type semicolon instead of comma as a separator in the list of the constructor parameters",
+      "PostedDate": "2013-03-04T08:07:52.887-08:00",
+      "Id": 92190
+    },
+    {
+      "Message": "Another test case that triggers poor performance:\n\n```\nclass Foo extends Foo { }\n//Formatting task took more than 2 second(s) to complete. Try again later. \n```",
+      "PostedDate": "2013-03-04T09:31:42.92-08:00",
+      "Id": 92201
+    },
+    {
+      "Message": "Tracking for 0.9.x.",
+      "PostedDate": "2013-03-04T17:00:12.183-08:00",
+      "Id": 92262
+    },
+    {
+      "Message": "Confirming middlewest's 'data' repro as a very good way to check this",
+      "PostedDate": "2013-03-04T17:09:42.74-08:00",
+      "Id": 92264
+    },
+    {
+      "Message": "I logged the following as a separate report that was marked a duplicate.  Here's my reproducible (for me!) example that causes VS 2012 SR1 (with TS 0.8.3 and Web Essentials extension) to hang/lock up completely:\r\n\r\n(1)  Create a new HTML with TypeScript application.\r\n(2)  Open app.ts, Select All, then paste the following code over the top of the entire file and save it:\r\n\r\n```\r\nmodule M {\r\n\texport static class S {\r\n\t\tstatic f(): bool { return false; }\r\n\t}\r\n\r\n\texport class D extends S {\r\n\t}\r\n}\r\n```\r\n\r\nFor me, VS locks up and clicking anywhere in the editor window does nothing.  *Sometimes* using the arrow keys lets you cursor around and remove the syntax error (the \"static\") and that then unlocks VS.",
+      "PostedDate": "2013-03-05T07:03:30.797-08:00",
+      "Id": 92307
+    },
+    {
+      "Message": "One more test case:\n\nThe following snippet\n```\nmodule foo {\n    class Bar {\n        doSomthing() {\n        }\n    }\n}\n```\n\nbreaks on typing \";\" (semicolon) between the method brackets and the curly bracket of the method body\n\n```\nmodule foo {\n    class Bar {\n        doSomthing() ;{\n        }\n    }\n}\n```",
+      "PostedDate": "2013-03-08T05:37:36.267-08:00",
+      "Id": 92639
+    },
+    {
+      "Message": "Another test case\n\nThe following sinppet\n```\nmodule foo {\n    class Bar {\n        doSomthing() {\n\n        }\n    }\n}\n```\n\nbreaks on inserting \";\" (semicolon) between method parameter list brackets\n\n```\nmodule foo {\n    class Bar {\n        doSomthing(;) {\n\n        }\n    }\n}\n```",
+      "PostedDate": "2013-03-08T05:40:17.273-08:00",
+      "Id": 92640
+    },
+    {
+      "Message": "Yet another test case\n\nThe following snippet:\n\n```\nmodule foo {\n    class Bar {\n        doSomething() {\n\n            }\n        }\n    }\n}\n\n```\n\nbreaks on inserting a semicolon like this:\n\n```\nmodule foo {\n    class Bar {\n        doSomething() {\n;\n            }\n        }\n    }\n}\n\n```",
+      "PostedDate": "2013-03-08T05:43:02.323-08:00",
+      "Id": 92641
+    },
+    {
+      "Message": "Thanks for the repro, middlewest. Seeing the same thing here...",
+      "PostedDate": "2013-03-08T09:03:04.003-08:00",
+      "Id": 92669
+    },
+    {
+      "Message": "We're going to take a look, thanks for all the repros!",
+      "PostedDate": "2013-03-08T09:09:00.143-08:00",
+      "Id": 92670
+    },
+    {
+      "Message": "This is caused by an infinite loop in the logic that detects the extent of the statement that needs formatting after semicolon. we did change that logic in a recent bug fix. I believe i have a fix for it. I am not sure yet how or when this fix will be released. but I presume sometime soon. for now, go to your Tools\\Options dialog then to Text Editor\\Typescript\\Formatting and check off \"Format completed statements on ;\". this will disable formatting after semicolon obviously, but should make VS usable again; this should not affect other formatting trigger points like new line and closing parenthesis.",
+      "PostedDate": "2013-03-08T10:32:37.807-08:00",
+      "Id": 92697
+    },
+    {
+      "Message": "This is caused by an infinite loop in the logic that detects the extent of the statement that needs formatting after semicolon. we did change that logic in a recent bug fix. I believe i have a fix for it. I am not sure yet how or when this fix will be released. but I presume sometime soon. for now, go to your Tools\\Options dialog then to Text Editor\\Typescript\\Formatting and check off \"Format completed statements on ;\". this will disable formatting after semicolon obviously, but should make VS usable again; this should not affect other formatting trigger points like new line and closing parenthesis.",
+      "PostedDate": "2013-03-08T10:34:30.847-08:00",
+      "Id": 92699
+    },
+    {
+      "Message": "Same problems encountered... let us know if there is any bug fix for this.",
+      "PostedDate": "2013-03-08T13:13:03.323-08:00",
+      "Id": 92753
+    },
+    {
+      "Message": "I am also experiencing the vs2012 ts editor freezing anywhere from 10-45 seconds when editing large ts script files. I tried breaking my ts file up into 7 different ts files and still am experiencing the same problem. It's very painful and impossible to work with. I can't get anything done. It is taking way to long.",
+      "PostedDate": "2013-03-11T08:45:57.123-07:00",
+      "Id": 92931
+    },
+    {
+      "Message": "I too am experiencing the same problem w/ large ts files. I tried breaking my ts file up into smaller ones, but still the same problem. Keep in mind that I have to reference all the ts files I broke up. I have actually tried turning off all formatting in the options and still to no luck.",
+      "PostedDate": "2013-03-11T09:11:23.89-07:00",
+      "Id": 92932
+    },
+    {
+      "Message": "@djarekg: I have 3,300 lines of TypeScript in 25 files.  I only hit this bug when there are errors in the TypeScript.  Valid TypeScript seems to build fine and not cause Visual Studio to hang.",
+      "PostedDate": "2013-03-11T09:45:05.023-07:00",
+      "Id": 92936
+    },
+    {
+      "Message": "@rb126 My ts file had about 6000 lines of code, which I now have split up into 9 ts files. And to no luck the same issue persist. This issue started at the end of last week. I don't know if I hit some threshold or what, but it is unbearable.\n\nIf it gets to bad, which it almost always is when it happens. I close and re-open VS and it goes away for a lil bit. But, within 5 mins or so it starts slowly getting worse again until I can't take it anymore and restart VS.",
+      "PostedDate": "2013-03-11T10:44:31.7-07:00",
+      "Id": 92946
+    },
+    {
+      "Message": "Fix checked in release-0.8.3 branch\n\n[http://typescript.codeplex.com/SourceControl/changeset/651903c2072e](http://typescript.codeplex.com/SourceControl/changeset/651903c2072e)",
+      "PostedDate": "2013-03-11T11:49:58.383-07:00",
+      "Id": 92957
+    },
+    {
+      "Message": "I downloaded the fix to release 0.8.3 today and swapped out the typescriptservices.js with the one included in the latest fix and it hasn't fixed my issue. I've noticed that the VS IDE freezes more often when I click around with the mouse in the ts editor. It also does it when using the keyboard to type/navigate the ts file, but it definitely freezes the worst and almost all the time once it starts freezing when using the mouse in the ts editor.",
+      "PostedDate": "2013-03-11T13:29:37.233-07:00",
+      "Id": 92964
+    },
+    {
+      "Message": "On one of our projects we had around 30 TypeScript files with lots of errors in them (we were converting from JavaScript).  Every time I saved a file and a build was initiated 30-odd copies of tsc.exe plus the same number of conhost.exe processes leaked, consuming up to 2GB or RAM.  It seemed that these processes were started but failed to terminate. A colleague on a machine with 4GB of RAM rapidly found that his whole machine hung after a while as it started swapping.  Fortunately for me I had 24GB RAM in my machine so I was able to make progress and make some changes and saves, losing 2GB of available RAM at a time, before available memory ran short.  Closing and re-opening Visual Studio seemed to clear up all these leaked processes, allowing me to fix errors in batches, restarting VS periodically to release leaked memory.  Eventually the number of errors was reduced such that these copies of tsc.exe stopped leaking and now we can all edit the code again.",
+      "PostedDate": "2013-03-11T14:23:01.347-07:00",
+      "Id": 92968
+    },
+    {
+      "Message": "how to obtain a new LKG which includes this fix?",
+      "PostedDate": "2013-03-12T02:32:06.837-07:00",
+      "Id": 93012
+    },
+    {
+      "Message": "@djarekg a couple of questions:\n- When you said you swapped the typescriptservices.js included in the fix, I am assuming that you did build your own copy not that you used the checked in LKG version, is that correct?\n- Does the slowness change when you enable/disable formatting features through tools options?\n- Does it only happen when you hover over symbols to get type information or is that visible in other Language Service features like completion after dot, indentation on close curly.. etc.\n\n\n@Paul0515 LKG updated in branch release 0.8.3: \n[http://typescript.codeplex.com/SourceControl/changeset/e44dbae94e04](http://typescript.codeplex.com/SourceControl/changeset/e44dbae94e04)",
+      "PostedDate": "2013-03-12T13:27:10.627-07:00",
+      "Id": 93067
+    },
+    {
+      "Message": "◾When you said you swapped the typescriptservices.js included in the fix, I am assuming that you did build your own copy not that you used the checked in LKG version, is that correct?\n\nAnswer: I downloaded the latest LKG source and copied the typescriptservices.js from that bin directory and overwrote the one in the VS2012 directory per instructions... http://blogs.msdn.com/b/typescript/archive/2013/01/29/trying-the-latest-typescript-build.aspx\n\n◾Does the slowness change when you enable/disable formatting features through tools options?\n\nAnswer: I disabled on formatting options and that didn't make any difference.\n\n◾ Does it only happen when you hover over symbols to get type information or is that visible in other Language Service features like completion after dot, indentation on close curly.. etc.\n\nAnswer: It slowly gets worse as I work in the ts files. Within about 2-3 mins after restarting VS it starts to get worse and worse again. The navigating around and editing the ts file with the keyboard does not freeze VS as much as navigating around with the mouse in the ts file. Once the freezing starts to get bad, anytime I click around the ts file w/ the mouse it freezes everytime. For example once the freezing has started again I may be able to edit a couple of words or create a few new lines of code before it freezes, but then as soon as I click in that same ts file w/ the mouse it freezes up for quite a while. And during this time of freezing the VS cpu process is running at about 53% until it stops.\n\nI have removed a lot of the references from my ts files to other ts files and created interfaces for classes that exists in other ts files that I am no longer referencing and that seems to have helped a lil....I guess.",
+      "PostedDate": "2013-03-12T14:03:06.583-07:00",
+      "Id": 93069
+    },
+    {
+      "Message": "for my second answer I meant to say...\n\nAnswer: I disabled __ALL__ formatting options and that didn't make any difference.",
+      "PostedDate": "2013-03-12T14:03:57.33-07:00",
+      "Id": 93070
+    },
+    {
+      "Message": "@djarekg: Have you checked the RAM usage on your machine?  Is it leaking memory like I had happen on my project, each time a build is initiated (possibly in the background)?  If so you'll soon start swapping, which will cause everything to grind to a halt.  And shutting down and restarting VS would produce a temporary fix like what you see because that leaked memory would be reclaimed (until the memory usage starts creeping up again).  A colleague of mine saw exactly this behaviour - after just a minute or two's use the VS and the machine started grinding to a halt and restarting VS solver the problem.  It turned out to be leaking tsc.exe processes, easily visible in Task Manager.",
+      "PostedDate": "2013-03-12T15:28:14.02-07:00",
+      "Id": 93084
+    },
+    {
+      "Message": "@rb126 I am pretty sure it's a memory leak, but it doesn't appear to be related to the ts complier process (but don't quote me on that). When VS is hanging and you look at the running threads in Process Explorer for the devenv.exe process, the thread \"clr.dll!DllGetClassObjectInternal\" is always consuming 50-60% of the cpu and then when VS stops hanging, that thread's cpu consumption drops.",
+      "PostedDate": "2013-03-13T05:30:35.307-07:00",
+      "Id": 93129
+    },
+    {
+      "Message": "Here is a screen shot of the devenv.exe process and the running threads sorted by CPU consumption using process explorer when VS is in the middle of freezing due to TS. Hope this helps.",
+      "PostedDate": "2013-03-14T07:17:23.347-07:00",
+      "Id": 93246
+    },
+    {
+      "Message": "I also opened up a new issue (#815) about intellisense getting really really slow too. Not sure, but seems like it may be related to this same problem here.",
+      "PostedDate": "2013-03-14T07:22:42.947-07:00",
+      "Id": 93247
+    },
+    {
+      "Message": "@djarekg - what is the size of the project you're working with when the intellisense gets slow?",
+      "PostedDate": "2013-03-14T07:47:10.267-07:00",
+      "Id": 93248
+    },
+    {
+      "Message": "If you mean file size the total size of all my TS files (includes TS files being referenced) is 343KB. I attached to this issue a screen shot of the devenv process which should show its memory consumption and cpu consumption during the issue as well the screen shot image is called \"VS Process Screen Shot.JPG\"",
+      "PostedDate": "2013-03-14T08:20:31.25-07:00",
+      "Id": 93251
+    },
+    {
+      "Message": "@djarekg - in terms of project size, how many lines of code is that?\n\nI ask because the current TypeScript language service can only handle between 8,000 - 10,000 lines before you will notice significant slowness.  We're working to dramatically improve that limit in the coming release, but for the 0.8.x series that's the most it will comfortably handle for any one project.",
+      "PostedDate": "2013-03-14T08:42:28.873-07:00",
+      "Id": 93253
+    },
+    {
+      "Message": "Just my project TS files totals 7888 lines. If you include the jQuery and Kendo declaration files because they are be referenced, that's adding another 5713 lines of code to the 7888. And obviously more if I were to also include other smaller declaration files for libraries that I use in my project (i.e. ampliy, toastr, etc.).\n\nI really hope you guys get this resolved quickly for an 8-10k line of code limit it pretty easy to reach and this \"slowness\" if unbarable. Its hard to get anything done. What should take me 10 mins is taking me 30 mins to do. That's absolutely crazy.\n\nDo you guys have any fixes related to this in your development branches yet that I could try using. I would rather deal with other bugs then have to work with a VS studio that freezes every 30 secs for 30-60 secs at a time?????",
+      "PostedDate": "2013-03-14T10:05:10.687-07:00",
+      "Id": 93270
+    },
+    {
+      "Message": "@djarekg - for what I described, you should see some slowness, but you shouldn't be seeing long pauses.  If you see those, it sounds like this is a different issue that we should track down.  I just wanted to make sure you weren't trying to do a 100k+ line project, because then you would be seeing substantial delays.\n\nAlso, have you tried the same project in 0.8.2 to see if the delays are present?  That would help give us another data point as to when it was introduced.  ",
+      "PostedDate": "2013-03-14T10:41:15.023-07:00",
+      "Id": 93273
+    },
+    {
+      "Message": "@djarekg are you running WebEssentials or another extension for Visual Studio. Do you have Compile on Save enabled either in the TypeScript or the WebEssential options?\n\n",
+      "PostedDate": "2013-03-18T16:21:50.133-07:00",
+      "Id": 93596
+    },
+    {
+      "Message": "@paulb I am using Web Essentials and I have WE compile on save turned on and the TS compile on save turned off.\n\nMy last comment I said that I created declaration files for all of my TS files that just has my public APIs and it seemed to fix my slowness problem w/ VS, but yesterday afternoon it started slowing up again. It was quite as bad, but was still freezing up. Referencing the declaration files instead of the actual TS has reduced the number of lines from roughly 7800 to 2346.",
+      "PostedDate": "2013-03-19T05:42:56.68-07:00",
+      "Id": 93638
+    },
+    {
+      "Message": "@djarekg Thanks for persevering and taking the time to post your updates.  We really want to get this resolved.  At this point, looking back over the thread and having investigated similar issues, I see two candidates a likely causes (assuming you have applied the formatting fix discussed in this thread)\n\n1. Issues with Web Essentials 'compile-on-save' (or other conflict).  Is it possible for you to uninstall Web Essentials to see if you can repro (should be really quick and easy to uninstall, then reinstall after testing).\n\n2. Some other syntax issue causing crashing/looping we are not aware of.  Are you seeing this in all projects?  Or just one project?  Are you able to repro the issue with a different code base?  If not, are you able to reduce the problem project to the minimal problematic code?\n\nSorry you are hitting issues trying to use TypeScript. We'll try and get this resolved ASAP.",
+      "PostedDate": "2013-03-19T15:07:30.89-07:00",
+      "Id": 93727
+    },
+    {
+      "Message": "@billti \n\nI mentioned yesterday that it seemed like the issue was still occurring even though I had created declaration files for each of my TS files and referenced those instead of the actual TS file and this was based on some slowness I experienced Monday, but it was for only a brief time and I don't think it was related to TS now thinking back. All yesterday I didn't have any problems. The TS editor was working fast (i.e. intellisense and code editing). So, I strongly believe it has to do with the number of lines of code, which was mentioned by another one of your team members that I was talking to last week on this post. Because, once I created declaration files for each of my TS files and reference those instead, the issue has gone away.\n\nUnfortunately, I have no other projects even close to this size in regards to using TS. I have another experimental projects that I toy around with, but they are much smaller and I have not encountered any TS editing issues with those projects.\n\nAlso, yes I am using the latest LKG 0.8.3 (March 12th build)",
+      "PostedDate": "2013-03-20T06:35:07.483-07:00",
+      "Id": 93772
+    },
+    {
+      "Message": "middlewest, thanks for the easy reproduction. \nI have the same odd behavior here. :-(\n\nAre there any plans or hints for a solution?",
+      "PostedDate": "2013-03-21T01:00:14.327-07:00",
+      "Id": 93862
+    },
+    {
+      "Message": "@idev71\nUncheck formatting on \";\" in the Options.",
+      "PostedDate": "2013-03-22T00:53:58.487-07:00",
+      "Id": 94040
+    },
+    {
+      "Message": "@djarekg\n\nI started getting freezes in TypeScript right after I installed WebEssentials.\nAfter removing it everything went back to normal.\nJust get rid of that crap.",
+      "PostedDate": "2013-03-22T00:57:50.093-07:00",
+      "Id": 94041
+    },
+    {
+      "Message": "I had the same issue since I've installed _\"productivity power tools 2012\"_ extension. Disabling the power tools fixed it for me.",
+      "PostedDate": "2013-03-24T06:21:40.803-07:00",
+      "Id": 94218
+    },
+    {
+      "Message": "Yay! The semicolon issue has been fixed in the latest hotfix: http://blogs.msdn.com/b/typescript/archive/2013/04/01/announcing-typescript-0-8-3-1.aspx",
+      "PostedDate": "2013-04-01T12:01:03.01-07:00",
+      "Id": 95501
+    },
+    {
+      "Message": "I get really terrible performance with TypeScript 0.9 in VS2012 after upgrading from 0.8 too. The metadata seems to struggle to overcome compile errors that were fixed ages ago (close and reopen the file fixes this) and intellisense takes several seconds to come up.",
+      "PostedDate": "2013-07-25T08:57:36.64-07:00",
+      "Id": 107400
+    },
+    {
+      "Message": "Sorry to bring this old thread back to life but I'm getting the exact same errors in TS 1.0 VS2012, don't really know how to reproduce but it is happening usually when I create a new enum.  The only solution I have found so far is to close VS and re-open it (obviously not ideal) but it gets rid of the issue for a while.",
+      "PostedDate": "2014-04-17T15:04:51.443-07:00",
+      "Id": 142278
+    },
+    {
+      "Message": "I'm joining in on the this bug is dead bandwagon.(I guess this could be an unrelated issue)",
+      "PostedDate": "2014-04-21T08:24:20.557-07:00",
+      "Id": 142465
+    },
+    {
+      "Message": "*not dead",
+      "PostedDate": "2014-04-21T10:42:45.157-07:00",
+      "Id": 142483
+    },
+    {
+      "Message": "Yep, seeing same issue in TS 1.0, in VS 2013.  \n\nPlease reopen this issue.",
+      "PostedDate": "2014-05-01T02:53:52.63-07:00",
+      "Id": 145315
+    },
+    {
+      "Message": "There is an open version of this bug at [https://typescript.codeplex.com/workitem/2386](https://typescript.codeplex.com/workitem/2386)",
+      "PostedDate": "2014-05-01T09:23:16.03-07:00",
+      "Id": 145337
+    }
+  ]
+}

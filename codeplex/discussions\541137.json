@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1230191",
+    "ThreadId": "541137",
+    "Html": "JavaScript is a powerful and flexible language, if used properly. TypeScript and VisualStudio is a step in the right direction.  But, to only run it on typical JavaScript runtime platforms such as NodeJS and web browsers is very, very limiting.\r<br />\n<br />\nWhat we need is running TypeScript and more importantly, run JavaScript on the .NET CLR (Virtual Machine) with full debugger support to enable stepping thru code in Visual Studio.\r<br />\n<br />\nOnce the above is accomplished, I would run Amber Smalltalk on top of such a JavaScript development / deployment platform.\r<br />\nAmber Smalltalk: <a href=\"http://amber-lang.net/\" rel=\"nofollow\">http://amber-lang.net/</a>\r<br />\nLearn Smalltalk in 5 minutes: <a href=\"http://amber-lang.net/learn.html\" rel=\"nofollow\">http://amber-lang.net/learn.html</a>\r<br />\n<br />\nQuestion:  Are there plans or some way to run JavaScript (or TypeScript) on .NET for deployment?  \r<br />\n",
+    "PostedDate": "2014-04-03T22:01:24.677-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230193",
+    "ThreadId": "541137",
+    "Html": "Hosting the IE11 script engine in a managed process is already supported. See <a href=\"http://code.msdn.microsoft.com/JavaScript-Runtime-Hosting-d3a13880\" rel=\"nofollow\">http://code.msdn.microsoft.com/JavaScript-Runtime-Hosting-d3a13880</a> - it's as close as you're likely to get to directly running JavaScript on top of .NET given the huge disparity in their architectures.<br />\n",
+    "PostedDate": "2014-04-03T22:15:12.647-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230196",
+    "ThreadId": "541137",
+    "Html": "There's also ClearScript and V8.Net.<br />\n",
+    "PostedDate": "2014-04-03T22:19:39.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230490",
+    "ThreadId": "541137",
+    "Html": "Thank you for the references to the IE11 script engin, ClearScript and Google's V8 JavaScript VM integration.  These projects are only viable for light weight execution of scripts to extend .NET apps.  Very limiting and not viable for actually building apps in JavaScript to run on the .NET runtime.\r<br />\n<br />\nI've also looked at Jurassic, which seems the best option, so far. <a href=\"https://jurassic.codeplex.com/\" rel=\"nofollow\">https://jurassic.codeplex.com/</a>  Jurassic compiles JavaScript into .NET bytecode (CIL); not an interpreter.  This is the start of what I'm looking for.  Debugger support and JavaScript as a first-class citizen in Visual Studio would be the most powerful and flexible development environment.<br />\n\r<br />\nI've been developing in Smalltalk since the 90's. Using C# is like reverting to a typewriter, after using a Wordprocessor (Smalltalk &amp; it's development environment).  Sadly, I need to deploy on a .NET runtime so am limited to the current state of Visual Studio's support for dynamic languages.  Iron Python, Ruby just don't compete with Smalltalk's productivity.  JavaScript compiled to .NET, with Amber Smalltalk would bring me closer to the kind of flexibility, interactiveness, productivity and joy I've experienced.  Here's a comparison: <a href=\"http://www.cincomsmalltalk.com/main/products/why-smalltalk/cincom-smalltalk-vs-visual-studio/\" rel=\"nofollow\">http://www.cincomsmalltalk.com/main/products/why-smalltalk/cincom-smalltalk-vs-visual-studio/</a>\r<br />\n<br />\nSo far, Jurassic seems my best option, but is still not ready to use in a first-class way, within Visual Studio.  Is Dave Simmons still at Microsoft?  He developed a working prototype of Smalltalk on .NET, called S#\r<br />\n  <a href=\"http://www.bitwisemag.com/2/S-Smalltalk-The-Next-Generation\" rel=\"nofollow\">http://www.bitwisemag.com/2/S-Smalltalk-The-Next-Generation</a>\r<br />\n<br />\nIn the mean while, I'll keep using my C# typewriter and dream of using a wordprocessor once again. <br />\n",
+    "PostedDate": "2014-04-04T11:57:46.937-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230627",
+    "ThreadId": "541137",
+    "Html": "Not sure what you mean be &quot;light weight&quot;.  You can expose any CLR object to the script environment and use it.  In fact, V8 has the fastest execution time around (see this Jurassic page: <a href=\"https://jurassic.codeplex.com/wikipage?title=Benchmarks&amp;referringTitle=Home\" rel=\"nofollow\">https://jurassic.codeplex.com/wikipage?title=Benchmarks&referringTitle=Home</a>).  That said, if speed is not an issue, and VS debugging is a requirement, then Jurassic sure seems the best bet.  If cross-platform integration is important, then V8.Net has had a successful port to Mono already, and Jurassic is Windows only at the moment.\r<br />\n<br />\nAlso, important to note, ALL of the script engines I know of currently (including Jurassic) do not expose .NET to the script world by default.  See this link:\r<br />\n<a href=\"https://jurassic.codeplex.com/wikipage?title=Calling%20a%20single%20.NET%20method%20from%20JavaScript&amp;referringTitle=Using%20the%20console%20API\" rel=\"nofollow\">https://jurassic.codeplex.com/wikipage?title=Calling%20a%20single%20.NET%20method%20from%20JavaScript&referringTitle=Using%20the%20console%20API</a>\r<br />\nYou have to REGISTER the .NET types first (perhaps for security reasons).  Same thing with ClearScript and V8.Net.  In fact, their quote &quot;An exception thrown within the provided delegate cannot be caught within JavaScript (unless it is a JavaScriptException).&quot; means that any normal .NET exception in callbacks will not be caught, unless you catch it and pass along the error as another exception object.  Similar things can be done with the other engines also.<br />\n",
+    "PostedDate": "2014-04-04T22:31:34.58-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230740",
+    "ThreadId": "541137",
+    "Html": "\r\n<div>\r\n<div style=\"font-size:11pt; font-family:Calibri,sans-serif\">A CLR Smalltalk seems like a much better idea than trying to compile a prototypal dynamically typed scripting language to bytecode for a classical statically typed VM.</div>\r\n</div>\r\n<div dir=\"ltr\">\r\n<hr>\r\n<span style=\"font-size:11pt; font-family:Calibri,sans-serif; font-weight:bold\"></span></div>\r\n",
+    "PostedDate": "2014-04-05T10:04:24.63-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

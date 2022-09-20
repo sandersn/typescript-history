@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:34:27.08-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "__Given these files:__\r\n\r\n_moduleDef.d.ts :_\r\n```\r\ndeclare module \"moduleC\" {\r\n    import self = require(\"moduleC\");\r\n    export = self;\r\n}\r\n```\r\n\r\n_moduleB.ts :_\r\n```\r\nclass ClassB{}\r\nexport = ClassB;\r\n```\r\n\r\n_moduleA.ts :_\r\n```\r\n/// <reference path=\"moduleDef.d.ts\"/>\r\nimport moduleC = require(\"moduleC\");\r\nimport ClassB = require(\"moduleB\");    // import order matters\r\nexport var b:ClassB;\r\n```\r\n\r\n__when compiling moduleA.ts__\r\n\r\ntsc (0.9.7) gives:\r\n(function (exports, require, module, __filename, __dirname) { /*! ************\r\n^\r\nRangeError: Maximum call stack size exceeded",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-19T06:48:03.037-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Self-referencing module declaration causes RangeError: Maximum call stack size exceeded",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2336
+  },
+  "FileAttachments": [
+    {
+      "FileId": 815620,
+      "FileName": "moduleReferences_tsc_error_reproduction.zip",
+      "DownloadUrl": ".\\815620"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "Marked as active, we don't want to be crashing like this. That said, it's not clear to me what you're actually trying to do. How can a module require itself as your moduleC is doing? It's not too surprising that this doesn't work, we should just be cutting off the infinite recursion and giving a proper error before overflowing.",
+      "PostedDate": "2014-03-19T14:57:43.053-07:00",
+      "Id": 137374
+    },
+    {
+      "Message": "Hi danquirk, indeed, this scenario has no real-world usage (as far as I can imagine) but I came across it by mistake. It took me a while to figure out what was wrong with my code base, but at last I could track the issue down to this constellation.\nThe interesting thing is, that the queer declaration in file _moduleDef.d.ts_ itself compiles just fine. Please let me know if you can reproduce this crash with just one file.\n\nBackground: First, relying on WebStorm's behavior, I thought that require(\"moduleC\") would point to a module (file) with that name at the side of the declaration file. Now I've read the specification and it is pretty clear about the external module resolution in \"11.2.1 External Module Names\".",
+      "PostedDate": "2014-03-21T02:44:01.747-07:00",
+      "Id": 137532
+    },
+    {
+      "Message": "just wanted to add that this is still a problem.\nI just started converting a 100+ file large project from internal modules to external modules.\nI accidentally had one module refer to itself at some point, and from then on I got the same compiler error as above. Took quite a bit of searching to find out where the self referencing module was. \nIt would be really helpfull if the compiler would give a warning or error when a module references to itself.",
+      "PostedDate": "2014-11-01T05:07:23.717-07:00",
+      "Id": 163763
+    },
+    {
+      "Message": "Hi Flion, can you provide code / a set of files to reproduce your issue? Then I will re-open the issue. Please note that the dev moved to github. maybe you want to refer to https://github.com/Microsoft/TypeScript/issues/806 ",
+      "PostedDate": "2014-11-04T00:42:14.603-08:00",
+      "Id": 163933
+    }
+  ]
+}

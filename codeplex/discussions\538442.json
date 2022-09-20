@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1220784",
+    "ThreadId": "538442",
+    "Html": "After upgrading from Typescript 0.9.5 to 1.0RC, I see new compilation errors in code like this:<br />\n<pre><code>interface Dispatch {\n    load&lt;A extends Action&lt;T&gt;, T&gt;(action: A, onSuccess: (t: T) =&gt; any): void;\n}</code></pre>\n\nor like this:<br />\n<pre><code>class TableSection&lt;R extends TableRow&lt;C&gt;, C extends TableCell&gt; {\n}</code></pre>\n\nThe compilation error is: <strong>Constraint of a type parameter cannot reference any type parameter from the same type parameter list.</strong>\r<br />\n<br />\nSuch constructs work in Java and C#, and used to work in Typescript 0.9.5. Why were they prohibited in 1.0RC and is there a chance to get them back? The above examples demonstrate that it's a useful language feature.<br />\n",
+    "PostedDate": "2014-03-09T10:28:18.58-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221114",
+    "ThreadId": "538442",
+    "Html": "The primary reason we now disallow this is that <em>recursive constraints</em> (i.e. constrains that reference their own type parameter) introduce significant complexities in the type checker. However, in your examples above the constraints aren't actually recursive, but rather some of the type parameters look to just be shorthand for types constructed from other type parameters. That's usually not a good idea as it limits what kind of type inferences can be made. In general you'll do better by always reducing the number of type parameters to the smallest possible set of truly independent types. For example, a better way to write the first declaration is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> Dispatch {\n    load&lt;T&gt;(action: Action&lt;T&gt;, onSuccess: (t: T) =&gt; <span style=\"color:Blue;\">any</span>): <span style=\"color:Blue;\">void</span>;\n}\r\n</pre></div>This more accurately reflects that there is only one type, T, that varies and allows inferences made from an argument for 'action' to flow into the callback:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> a: Action&lt;<span style=\"color:Blue;\">string</span>&gt;;\n<span style=\"color:Blue;\">var</span> d: Dispatch;\nd.load(a, t =&gt; <span style=\"color:Green;\">/* Type of t is inferred to be string */</span> ...);\r\n</pre></div>The same is true for your second example. It is probably better to write:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> TableSection&lt;C <span style=\"color:Blue;\">extends</span> TableCell&gt; {\n    <span style=\"color:Green;\">// Substitute TableRow&lt;C&gt; for usages of R everywhere</span>\n}\r\n</pre></div>",
+    "PostedDate": "2014-03-10T09:45:32.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1221189",
+    "ThreadId": "538442",
+    "Html": "Thanks, I was able to redesign my code according to your suggestions. \r<br />\n<br />\nP.S.: Anders, thank you for TypeScript, it's a wonderful language for making complex web applications, it's superior to other technologies, and it's a pleasure to write in it.<br />\n",
+    "PostedDate": "2014-03-10T13:30:03.323-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

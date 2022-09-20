@@ -1,0 +1,76 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "I looked at the error.zip -- the constructor is trying to set a member of an uninitialized field. You need to initialize 'settings' to something before trying to set fields on it (this is the same as JavaScript behavior).",
+    "ClosedDate": "2013-01-30T14:10:53.39-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "This problem stems from me trying to keep my js comments in the correct place. The comment must be above the property which only works correctly when the property is set like this.settings.propertyName. When doing that, settings is never initialized to an empty object and the generated js is invalid. The other property creation style puts my comments in the wrong place (jsduck won't be able to automatically infer the property name anymore).\r\n\r\ninterface Settings {\r\n    test: string;\r\n}\r\n\r\nclass MyClass {\r\n    //settings: Settings;\r\n    \r\n    constructor () {\r\n        //this.settings = {}; // error\r\n        //this.settings = Settings; // error\r\n        \r\n        /** Comment */\r\n        this.settings.test = 'something';\r\n    }\r\n\r\n    settings: Settings = {\r\n        /** Comment */\r\n        test: 'something'\r\n    }\r\n}\r\n\r\nGenerates the following with my compiler options to keep comments:\r\n\r\nvar MyClass = (function () {\r\n    //settings: Settings;\r\n    function MyClass() {\r\n        this.settings = {\r\n            test: /** Comment */\r\n            'something'\r\n        };\r\n        //this.settings = {}; // error\r\n        //this.settings = Settings; // error\r\n        /** Comment */\r\n        this.settings.test = 'something';\r\n    }\r\n    return MyClass;\r\n})();\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:35-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-01T05:27:06.887-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Invalid javascript generated for class property object",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 2,
+    "Id": 357
+  },
+  "FileAttachments": [
+    {
+      "FileId": 531081,
+      "FileName": "error.zip",
+      "DownloadUrl": ".\\531081"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "I don't understand what the issue is here. The generated code seems to work. Can you post a small example, without any extra annotation, of a piece of code that should work but doesn't?",
+      "PostedDate": "2012-11-06T12:21:54-08:00",
+      "Id": 81806
+    },
+    {
+      "Message": "interface Settings {\n    test: string;\n}\n\ninterface IMyClass {\n    settings: Settings;\n}\n\nclass MyClass implements IMyClass {\n\n    settings: Settings;\n    \n    constructor () {\n        this.settings.test = 'something';\n    }\n}\n\nvar me = new MyClass();\n\n// TypeError: this.settings is undefined",
+      "PostedDate": "2012-11-07T05:07:13.747-08:00",
+      "Id": 81876
+    },
+    {
+      "Message": "The only workaround is the code below but the comment gets inserted as this which breaks the documentation generator we use.\n\ntest: /* comment */\n'something'\n\n------\n\ninterface Settings {\n    test: string;\n}\n\ninterface IMyClass {\n    settings: Settings;\n}\n\nclass MyClass implements IMyClass {\n\n    settings: Settings;\n    \n    constructor () {\n        this.settings = {\n\n            /* comment */\n            test: 'something'\n        }\n    }\n}\n\nvar me = new MyClass();",
+      "PostedDate": "2012-11-07T05:13:02.157-08:00",
+      "Id": 81877
+    },
+    {
+      "Message": "Both of the snippets you pasted compile without error for me. Maybe you can upload the actual file that's causing the problem?",
+      "PostedDate": "2012-11-13T16:37:08.177-08:00",
+      "Id": 82436
+    },
+    {
+      "Message": "They compile without any problem but generate errors at runtime. I've attached the sample. Error message from console is below. Let me know if you have any questions.\r\n\r\nTypeError: this.settings is undefined\r\nfile:///C:/Users/Ryan/Desktop/error/sandbox.js\r\nLine 3",
+      "PostedDate": "2012-11-14T05:36:08.057-08:00",
+      "Id": 82466
+    },
+    {
+      "Message": "Hi, I wanted to follow up and make sure you didn't have any questions still. This is actually two issues. 1) invalid javascript generated 2) the comment placement. I am unable to generate documentation using jsduck because of 2. Should I file another report?",
+      "PostedDate": "2013-01-07T06:45:24.39-08:00",
+      "Id": 85489
+    }
+  ]
+}

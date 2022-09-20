@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.703-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Sometimes it happens so that some code logically belongs in one module, but there is just too much of it to put in one file. For example, here is my use case:\r\n\r\n```\r\n// base.ts\r\nexport interface SomeCoreType { ... }\r\n\r\nexport interface MyStandardAjaxResponse { ... }\r\nexport function doAjax( url: string, onSuccess: (r: MyStandardAjaxResponse) => void ) { ... }\r\n\r\nexport interface User { ... }\r\nexport function isUserOk( u: User ) { return ... }\r\n// and so on\r\n```\r\n\r\n```\r\n// customer.ts\r\nimport b = module( \"./base.ts\" );\r\n\r\nexport class Customer {\r\n    constructor( id: number, someArg: b.SomeCoreType ) {\r\n        b.doAjax( '/api/getCustomer', r => this.loadData( r ) );\r\n    }\r\n\r\n    loadData( r: b.MyStandardAjaxResponse ) { ... }\r\n}\r\n// and so on\r\n```\r\n\r\nOver time, that __base.ts__ file tends to grow with all kinds of enums, utility functions, common types, etc. At some point, it becomes so large that I want to partition it across several files. For example, I'd like to extract __SomeCoreType__ into its own module __coreType.ts__, then extract __MyStandardAjaxResponse__ and __doAjax__ into __ajax.ts__, and extract __User__ and __isUserOk__ into __user.ts__. Just for my sanity's sake. Makes sense?\r\n\r\nBut if I do that, I'll have to import a gazillion of modules every time.\r\nSo my next logical step - consolidate them all back into base.ts:\r\n\r\n```\r\n// base.ts\r\nimport _coreType = module(\"./coreType\");\r\nexport var CoreType = _coreType;\r\n\r\nimport _ajax = module(\"./ajax\");\r\nexport var Ajax = _ajax;\r\n\r\nimport _user = module(\"./user\");\r\nexport var User = _user;\r\n// and so on\r\n```\r\n\r\nThat's better. Now I only have to import base.ts.\r\nHowever, I still have to write __b.Ajax.doAjax__ instead of just __b.doAjax__. That's inconvenient.\r\nBut an even bigger issue is that now I can't use interfaces declared in those modules. TypeScript just doesn't pick them up.\r\n\r\n\r\nWhat I'd like to be able to do is something like this:\r\n\r\n```\r\nimport Ajax = module(\"./ajax\");\r\nexport Ajax.*;\r\n```\r\n\r\nOr, perhaps, the infamous __export import__:\r\n\r\n```\r\nexport import Ajax = module(\"./ajax\");\r\n```\r\n\r\nOr, maybe, something like:\r\n\r\n```\r\nreexport module(\"./ajax\");\r\n```\r\n\r\n\r\n\r\nAnd the output code could look something like this:\r\n\r\n```\r\ndefine(['module', 'exports', './ajax'], function(module, exports, __ajax__) {\r\n    for( var k in __ajax__ ) exports[k] = __ajax__[k];\r\n});\r\n```\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-26T07:54:27.88-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "\"reexport\" a module, aka Ability to partition an ambient module across several files",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 8,
+    "Id": 845
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "We are expecting to align more closely with the [ES6 module syntax](http://wiki.ecmascript.org/doku.php?id=harmony:modules) once it stabilizes more completely.  The  ES6 proposal contains a syntax for this re-export case that we dont' currently have in TypeScript. \n\n```TypeScript\nexport * from \"crypto\";    // re-exporting another module's exports\n```\n\nThis is something we'll be considering adding as part of ES6 syntax alignment.",
+      "PostedDate": "2013-03-27T09:41:52.583-07:00",
+      "Id": 94536
+    },
+    {
+      "Message": "Great, thank you Luke!",
+      "PostedDate": "2013-03-27T10:21:55.08-07:00",
+      "Id": 94543
+    },
+    {
+      "Message": "We are making improvement to modules that will hopefully address some of your desires, but these are a complex area and we're not going to get everything for v1 unfortunately.  I'm assigning to Jonathan to address your suggestions.  Thanks!",
+      "PostedDate": "2013-03-27T11:14:05.013-07:00",
+      "Id": 94558
+    },
+    {
+      "Message": "This would help a lot in organizing Typescript code.",
+      "PostedDate": "2014-05-23T08:56:36.183-07:00",
+      "Id": 147543
+    }
+  ]
+}

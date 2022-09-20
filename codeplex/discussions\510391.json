@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1180042",
+    "ThreadId": "510391",
+    "Html": "I have whittled this problem down as far as I can. This issue only happens on multiple files, nested internal modules, and a reference to an external module altogether. I cannot replicate it otherwise. Take the following three files:\r<br />\n<br />\nFoo/Bar/Baz/One.ts:<br />\n<pre><code>module Foo.Bar.Baz.One {\n    export interface IFace {\n    }\n}</code></pre>\n\nFoo/Bar/Two.ts:<br />\n<pre><code>/// &lt;reference path=&quot;../../other.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;Baz/One.ts&quot; /&gt;\n\nimport other = require(&quot;other&quot;);\n\nmodule Foo.Bar {\n    import IFace = Foo.Bar.Baz.One.IFace;\n}</code></pre>\n\nother.d.ts:<br />\n<pre><code>declare module &quot;other&quot; { }</code></pre>\n\nWith tsc 0.9.5.0 compiling with this command (though the --module option doesn't matter, happens no matter what):<br />\n<pre><code>tsc --module commonjs &quot;Foo/Bar/Baz/One.ts&quot; &quot;Foo/Bar/Two.ts&quot; &quot;other.d.ts&quot;</code></pre>\n\nI get<br />\n<pre><code>Foo/Bar/Two.ts(7,28): error TS2180: Could not find module 'Baz' in module 'Foo.Bar'.</code></pre>\n\nI am posting here just in case it's not a bug and I am doing something wrong. I have a large project and this is happening, but I tried to break down the problem. Am I doing something wrong or should I file a bug?<br />\n",
+    "PostedDate": "2014-01-19T02:22:38.96-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1180080",
+    "ThreadId": "510391",
+    "Html": "Hrmm, this may be related to <a href=\"https://typescript.codeplex.com/workitem/1846\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/1846</a> (see discussion and SO post referenced). Is there a general rule that modules will not merge across files? Why does the presence of the unrelated external import trigger the bug whereas if I replace it with some innocuous global code (e.g. var a = &quot;b&quot;) it does not fail?<br />\n",
+    "PostedDate": "2014-01-19T02:36:34.387-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1184709",
+    "ThreadId": "510391",
+    "Html": "This is actually by design. An external module (a file containing top level imports and/or exports) has its own namespace and internal modules (or anything else) declared within it belong to that namespace. A key point of external modules is to provide this level of isolation.\r<br />\n<br />\nIt may help to visualize the namespace hierarchy declared by your program (pardon the ASCII graphics):<br />\n<pre><code>Global\n|\n+---Foo\n|   +---Bar\n|       +---Baz\n|           +---IFace\n|\n+---&quot;Foo/Bar/Two&quot;\n|   +---Foo\n|       +---Bar\n|           +---IFace\n|\n+---&quot;other&quot;</code></pre>\n\nNote that the top level <code>Foo</code> is distinct and different from the <code>Foo</code> located inside the <code>&quot;Foo/Bar/Two&quot;</code> external module. The only way to declare (or merge with) anything in the global module is to put it in a file that isn't an external module. In your example, if you remove the 'import' statement in 'Foo/Bar/Two.ts', that file will no longer be considered an external module and it's declaration of <code>Foo.Bar</code> would merge with the one in 'Foo/Bar/Baz/One.ts'.<br />\n",
+    "PostedDate": "2014-01-20T08:21:14.11-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1186175",
+    "ThreadId": "510391",
+    "Html": "Thank you very much for the response...from the man himself!<br />\n<br />\nMy biggest struggle is that I want to import an external module in a file at the top level where I can use it in my module. I cannot import the external inside the module. Assuming in one my my classes inside of the Foo.Bar module I wanted to use the &quot;other&quot; external module, how might I do that? My current workaround is to do my &quot;require&quot; inside the functions that need them. Otherwise, I cannot seem to require an external node.js module for use in my internal modules' functions. Should I just be doing a &quot;var other = require('other')&quot; instead? How come I can't replicate this if I put all the contents of the files together into a single file?<br />\n",
+    "PostedDate": "2014-01-20T21:11:55.593-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1188098",
+    "ThreadId": "510391",
+    "Html": "The feature we're missing here (and considering for post-1.0) is multi-file external modules. Currently, a TypeScript source file is either (a) a &quot;script-like&quot; file that contributes to the single global module, or (b) an external module with its own namespace. There is no way to have multiple distinct source files contribute to the same external module.\r<br />\n<br />\nTechnically, when compiling for node.js, you should put everything in an external module. By design, node.js doesn't provide a way to place user defined code in the global module. This is unlike AMD where you can place code in the global module (using script tags) as well as in dynamically loaded external modules. TypeScript sort of stays neutral on this point and doesn't enforce &quot;external modules only&quot; when compiling for CommonJS modules since it really is an implementation detail of node.js. Also, for single file programs there really isn't much of a difference and compiler enforcement would just be an irritant.<br />\n",
+    "PostedDate": "2014-01-21T10:25:34.463-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1188782",
+    "ThreadId": "510391",
+    "Html": "For a more real life situation, imagine if Two.ts from the original post looked like this:<br />\n<pre><code>/// &lt;reference path=&quot;../../other.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;Baz/One.ts&quot; /&gt;\n\nimport http = require(&quot;http&quot;);\n\nmodule Foo.Bar {\n    import IFace = Foo.Bar.Baz.One.IFace;\n\n    export function doSomething(url: string, cb: (resp: IFace) =&gt; void) {\n        http.get(&quot;http://www.google.com/index.html&quot;, res =&gt; cb(IFace.factoryFromStatusCode(res.statusCode)));\n    }\n}</code></pre>\n\nSo that's impossible just because how I use internal modules? I was hoping a third type of type script file was possible: c) a file of source that may be broken off for legibility and organization purposes but otherwise doesn't detract from the project as a whole. I do understand now that I am either building an external module per file (like I would in native JS) or a &quot;main&quot; script of sorts. Which means that my code above, which is not an external module, references an internal module and references an external module, can never be written. At the least it may be worth having a better error because the error given is hard to understand it's the result of module type mixing.<br />\n<br />\nThanks again for the info.<br />\n",
+    "PostedDate": "2014-01-21T16:46:43.16-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

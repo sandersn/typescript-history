@@ -1,0 +1,61 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This has been fixed in the release-1.0.1 branch",
+    "ClosedDate": "2014-03-27T10:08:58.367-07:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "We can use a typescript interface to declare what is exported from an external module e.g.: \r\n\r\n#Sample 1 (works but should be an error)\r\n```typescript \r\ninterface Foo {\r\n    bar: string;\r\n}\r\n\r\ndeclare module 'foo' {\r\n    export = Foo;\r\n}\r\n```\r\n\r\nand usage \r\n```typescript\r\n/// <reference path=\"foo.d.ts\" />\r\n\r\nimport foo = require('foo');\r\nfoo.bar;\r\n```\r\nPlease see https://typescript.codeplex.com/workitem/2356#CommentContainer2 for bug report regarding this sample\r\n\r\n#Sample 2 (Error)\r\nThis works fine unless the interface is callable i.e the following combination is an error: \r\n\r\n```typescript\r\ninterface Foo {\r\n    (): string; // Notice it is callable\r\n}\r\n\r\ndeclare module 'foo' {\r\n    export = Foo;\r\n}\r\n```\r\nusage (gives an error): \r\n```typescript\r\n/// <reference path=\"foo.d.ts\" />\r\n\r\nimport foo = require('foo');\r\nfoo(); // ERROR \r\n```\r\n#Sample 3 (Workaround)\r\nThe current workaround is to introduce an intermediate variable e.g.: \r\n```typescript\r\ninterface Foo {\r\n    (): string;\r\n}\r\n\r\ndeclare var intermediateVar:Foo; // Useless but required intermediate variable. Pollutes the namespace though\r\n\r\ndeclare module 'foo' {\r\n    export = intermediateVar;\r\n}\r\n```\r\n\r\nAnd now it compiles: \r\n```typescript\r\n/// <reference path=\"foo.d.ts\" />\r\n\r\nimport foo = require('foo');\r\nfoo(); // Okay\r\n```\r\n\r\nPS: I've also attached all three samples in a zip file.",
+    "LastUpdatedDate": "2014-03-27T10:08:58.367-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-25T23:18:10.02-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Interface Driven, External Module Declaration is broken",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 4,
+    "Id": 2356
+  },
+  "FileAttachments": [
+    {
+      "FileId": 818787,
+      "FileName": "interfaceDrivenExternalModules.zip",
+      "DownloadUrl": ".\\818787"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "This is by design. The workaround you mention is not just introducing an intermediate variable, it's completely changing the meaning of the code. In the first case you are exporting an interface definition (Foo), which indeed is not callable, only instances of Foo are callable. In your workaround case you are exporting a single variable whose type is Foo, which is callable.",
+      "PostedDate": "2014-03-26T16:27:36.42-07:00",
+      "Id": 138951
+    },
+    {
+      "Message": "\n\r\n\r** Closed by danquirk 03/26/2014 4:27PM",
+      "PostedDate": "2014-03-26T16:27:43.097-07:00",
+      "Id": 138983
+    },
+    {
+      "Message": "> In the first case you are exporting an interface definition (Foo), which indeed is not callable, only instances of Foo are callable. \r\n\r\nThanks for clearing that up. I thought (from observation) that \r\n\r\n```typescript\r\ninterface Foo {\r\n    bar: string;\r\n}\r\n\r\ndeclare module 'foo' {\r\n    export = Foo;\r\n}\r\n```\r\nwith \r\n\r\n```typescript\r\nimport foo = require('foo');\r\n```\r\nwas equivalent to\r\n\r\n```typescript\r\nvar foo:Foo = require('foo');\r\n```\r\n\r\nBut based on your comment I think it is *actually* equivalent to : \r\n\r\n```typescript\r\ninterface foo extends Foo{}\r\n```\r\n\r\n#NEW BUG REPORT\r\nIf so then we have a different bug on our hands. If we are exporting an interface why *does* it behave like an instance. i.e. why can we do `foo.bar` (from Sample #1): \r\n\r\n```typescript\r\nimport foo = require('foo');\r\nfoo.bar; // Why is this allowed?\r\n```\r\n\r\nWhen we cannot do: \r\n\r\n```typescript\r\ninterface Foo{\r\n    bar: string;\r\n}\r\n\r\nFoo.bar; // Error \r\n```\r\n\r\n#Another Bug Report \r\nI can live without this but worth mentioning : the language service infers `foo` to be a `function` in sample #2, just doesn't let us call it i.e. foo()",
+      "PostedDate": "2014-03-27T04:22:24.867-07:00",
+      "Id": 138984
+    }
+  ]
+}

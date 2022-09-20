@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This would be nice to have one day. It's been on our radar for a long time but it's not clear if or when we'll ever find a satisfactory way to do it.",
+    "ClosedDate": "2014-03-03T15:35:58.98-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Someone must have already asked for this, but I can't find it. Apologies for duplicate in that case.\r\n\r\nI have a JavaScript API that I'd like to cover with a .d.ts file. It has some functions in which each of the arguments can either be a string or a function that returns a string.\r\n\r\nThe advice I've seen is to solve this problem with overloading, e.g.\r\n\r\n```\r\ninterface MyApi {\r\n    doStuff(arg: string): void;\r\n    doStuff(arg: () => string): void;\r\n}\r\n```\r\n\r\nBut what if a function has four such parameters? I would need 2^4 = 16 overloads. Just to illustrate/share the pain/provide amusement, here's how it looks:\r\n\r\n```\r\ninterface MyApi {\r\n    doStuff(arg1: string, arg2: string, arg3: string, arg4: string): void;\r\n    doStuff(arg1: string, arg2: string, arg3: string, arg4: () => string): void;\r\n    doStuff(arg1: string, arg2: string, arg3: () => string, arg4: string): void;\r\n    doStuff(arg1: string, arg2: string, arg3: () => string, arg4: () => string): void;\r\n    doStuff(arg1: string, arg2: () => string, arg3: string, arg4: string): void;\r\n    doStuff(arg1: string, arg2: () => string, arg3: string, arg4: () => string): void;\r\n    doStuff(arg1: string, arg2: () => string, arg3: () => string, arg4: string): void;\r\n    doStuff(arg1: string, arg2: () => string, arg3: () => string, arg4: () => string): void;\r\n    doStuff(arg1: () => string, arg2: string, arg3: string, arg4: string): void;\r\n    doStuff(arg1: () => string, arg2: string, arg3: string, arg4: () => string): void;\r\n    doStuff(arg1: () => string, arg2: string, arg3: () => string, arg4: string): void;\r\n    doStuff(arg1: () => string, arg2: string, arg3: () => string, arg4: () => string): void;\r\n    doStuff(arg1: () => string, arg2: () => string, arg3: string, arg4: string): void;\r\n    doStuff(arg1: () => string, arg2: () => string, arg3: string, arg4: () => string): void;\r\n    doStuff(arg1: () => string, arg2: () => string, arg3: () => string, arg4: string): void;\r\n    doStuff(arg1: () => string, arg2: () => string, arg3: () => string, arg4: () => string): void;\r\n}\r\n```\r\n\r\nMy crazy dream is to have something like Haskell's ability to declare a data type to be one of a number of possible types, using |. Not a serious suggestion for syntax:\r\n\r\n```\r\ninterface FunkyString\r\n    either string \r\n    or () => string;\r\n```\r\n\r\nBut then I could say:\r\n\r\n```\r\ninterface MyApi {\r\n    doStuff(arg1: FunkyString, arg2: FunkyString, arg3: FunkyString, arg4: FunkyString): void;\r\n}\r\n```",
+    "LastUpdatedDate": "2014-03-03T15:35:58.98-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-03T14:07:26.453-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Allow function parameters to be one of a number of types",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2254
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "It sounds like you're asking for union types / sum types. There is a closed workitem for that https://typescript.codeplex.com/workitem/120 and it has a reason why it was closed.",
+      "PostedDate": "2014-03-03T14:33:46.47-08:00",
+      "Id": 135704
+    },
+    {
+      "Message": "Thanks. I see from the reason: _there will also be workarounds once we have generics._ Now we we generics, what workarounds exist?",
+      "PostedDate": "2014-03-03T14:51:22.417-08:00",
+      "Id": 135706
+    },
+    {
+      "Message": "Depending on the particular scenario you could create an interface describing the intersection of properties you care about and use that as the constraint for a generic parameter. For example:\n\n```TypeScript\n// describing the intersection of properties you care about between many potential types\ninterface HasNameAndAddress {\n    name: string;\n    address: string;\n}\n\ndeclare function doStuff<T extends HasNameAndAddress>(x: T, y: T);\ndeclare function doStuff<T extends HasNameAndAddress>(x: T, y: (arg: T) => T);\n\n// describing the union of potential properties you care about between many potential types\ninterface HasNameOrAddress {\n    name?: string;\n    address?: string;\n}\n\ndeclare function doOtherStuff<T extends HasNameOrAddress>(x: T, y: T);\ndeclare function doOtherStuff<T extends HasNameOrAddress>(x: T, y: (arg: T) => T);\n```\n\nIn your particular scenario it's not necessarily as doable because the types are fairly disparate.",
+      "PostedDate": "2014-03-03T15:35:02.57-08:00",
+      "Id": 135713
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "Id": "1220445",
+    "ThreadId": "538334",
+    "Html": "I'm modularising some TypeScript based code and am thinking about publishing the JS modules to npm.\r<br />\n<br />\nBut I would then use the modules in a TS project, so I would like to keep some type info.\r<br />\n<br />\nI could either bundle the TS code in the npm package, or bundle the the declarations and come-up with a method to expose these to &lt;references&gt; (element in package.json or whatever).\r<br />\n<br />\nHas anybody done this before?<br />\n",
+    "PostedDate": "2014-03-07T12:58:40.257-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220496",
+    "ThreadId": "538334",
+    "Html": "In my <a href=\"https://github.com/AndrewGaspar/TypedPromises\" rel=\"nofollow\">TypedPromises</a> library, my npm prepublish step compiles the file to JavaScript and also outputs TypeScript definitions using the -d flag. I include both the compiled JavaScript and the definition file in the package install so anybody who wishes to use the TypeScript definitions can do so. However, I also have to include an extra file <a href=\"https://github.com/AndrewGaspar/TypedPromises/blob/master/TypedPromises.node.d.ts\" rel=\"nofollow\">TypedPromises.node.d.ts</a> to declare the module. To use the module, a consumer of the module must do the following:<br />\n<pre><code>/// &lt;reference path=&quot;./node_modules/TypedPromises/TypedPromises.node.d.ts&quot; /&gt;\n\nimport TypedPromises = require(&quot;TypedPromises&quot;);</code></pre>\n\nThis is a little more work than I'd like, but it seems to work well enough. I wish there was someway to tell the TypeScript compiler to just look in node_modules. If there was some standard, TypeScript modules could always just put their definition file in the same place in their module and the compiler would know where to look.<br />\n",
+    "PostedDate": "2014-03-07T19:13:10.123-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220500",
+    "ThreadId": "538334",
+    "Html": "JavaScript output and definitions seems the cleanest way as it is basically what you do for any npm module (but without having to source definitions yourself).<br />\n<br />\nTo make it easier to import in a project we could try for a community standardised <code>typescript</code> field in <code>package.json</code> (and <code>bower.json</code> etc).<br />\n<br />\nLike so, and make it a sub-object so there is room for more fields:<br />\n<pre><code>{\n    &quot;version&quot;: &quot;0.1.2&quot;,\n    &quot;name&quot;: &quot;typedwidget&quot;,\n    &quot;main&quot;: &quot;./dist/TypedWidget.js&quot;,\n    //..\n    &quot;typescript&quot;: {\n        &quot;definitions&quot;: &quot;./dist/TypedWidget.module.d.ts&quot;\n    }\n}</code></pre>\n\nThen it is easy to write some tooling to scan your <code>node_modules</code> for this and bundle the references in a <code>.d.ts</code> file (I could add this to TSD too). <br />\n",
+    "PostedDate": "2014-03-07T20:29:04.53-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220557",
+    "ThreadId": "538334",
+    "Html": "@bartvds would love to see it become a feature request we can vote on. \r<br />\n<br />\nfor reference of folders that will need to scanned <a href=\"http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders\" rel=\"nofollow\">http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders</a><br />\n",
+    "PostedDate": "2014-03-08T02:10:16.96-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220592",
+    "ThreadId": "538334",
+    "Html": "@basarat Good point!\r<br />\n<br />\nI created a work item for the linked definitions, with some more explanations and an alternate solution:\r<br />\n<br />\n<a href=\"https://typescript.codeplex.com/workitem/2279\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/2279</a><br />\n",
+    "PostedDate": "2014-03-08T06:22:31.47-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1220849",
+    "ThreadId": "538334",
+    "Html": "@AndrewGaspar\r<br />\n<br />\nI just found this grunt module, looks like it tries to solve the problem of wrapping the module (like you mentioned): <a href=\"https://github.com/andreyvit/grunt-typescript-export\" rel=\"nofollow\">https://github.com/andreyvit/grunt-typescript-export</a><br />\n",
+    "PostedDate": "2014-03-09T15:33:07.933-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1256178",
+    "ThreadId": "538334",
+    "Html": "The problem with the d.ts file wrapping the module as demonstrated is that any package that decides to use it now will compile not just their own source code, but also your package's source code along with it. I've already been using this approach and this is the issue I've had. If there was a way, instead, for the TypeScript compiler to somehow generate this d.ts file for a Node.js package, that would be idea.\r<br />\n<br />\nEven the typescript package on npm doesn't have a proper module export. Maybe when they start talking about how to expose an API we can see how they do it, but for now, I'm kinda' lost.<br />\n",
+    "PostedDate": "2014-06-13T14:14:49.297-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1256184",
+    "ThreadId": "538334",
+    "Html": "Definitions for commonJS and AMD modules need module definition wrapping with a proper encapsulated module that exports only the visible types:<br />\n<pre><code>declare module 'my-module' {\n    // stuff here, only exporting visible parts\n}</code></pre>\n\nOne big problem when trying to hack this is how when you write TS code using external module pattern you get a huge pile of individual definition files which you need to process and transform into a single module. \r<br />\n<br />\n So far the low-tech methods to automate this fail to do this reliably as even those individual files are not correct declarations for external modules and de-duplicating is impossible (the limitations around single exports mess it up).<br />\n",
+    "PostedDate": "2014-06-13T14:40:53.26-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1256185",
+    "ThreadId": "538334",
+    "Html": "Bartvds, I'm experiencing the same problem. I have to manually copy and paste the generated d.ts files into something I can actually distribute. Such a pain!<br />\n",
+    "PostedDate": "2014-06-13T14:42:35.74-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "This bug has been fixed. If you're still seeing this issue, please re-open the bug (click \"Re-open Issue\" below the \"ISSUES\" tab). Thanks!",
+    "ClosedDate": "2013-08-07T11:57:43.82-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "Sorry for the issue name, but I couldn't think of a better way to describe it.\r\n\r\nSee the following (incomplete) generic interface for a promise:\r\n\r\n```ts\r\ninterface Promise<T> {\r\n    then<U>(onFulfill?: (value: T) => U, onReject?: (reason: any) => U): Promise<U>;\r\n}\r\n```\r\n\r\nI'm currently running into a problem with the following code:\r\n\r\n```ts\r\ndeclare var x: Promise<number>;\r\n\r\nvar z = x.then(num => num.toFixed()).then(str => str.length);\r\n\r\nz.then(num => num.toExponential());\r\n```\r\n\r\nTooling is telling me that z should be a Promise<string>, and the compiler fails on .toExponential, pointing out that num should be a string, even though length is of type number.\r\n\r\nLabeling the second then as a number doesn't fix it either:\r\n\r\n```ts\r\ndeclare var x: Promise<number>;\r\n\r\nvar z = x.then(num => num.toFixed()).then<number>(str => str.length);\r\n\r\nz.then(num => num.toExponential());\r\n```\r\n\r\nHowever, the following compiles, but tooling fails, again thinking the second num is a string:\r\n\r\n```ts\r\ndeclare var x: Promise<number>;\r\n\r\nvar z = x.then(num => num.toFixed())\r\n    .then(str => str.length)\r\n    .then(num => num.toExponential());\r\n```\r\n\r\nThough this fixes it:\r\n\r\n```ts\r\nvar z: Promise<string> = x.then(num => num.toFixed())\r\n    .then(str => str.length)\r\n    .then(num => num.toExponential());\r\n```\r\n\r\nAs does this:\r\n```ts\r\nvar z: Promise<number> = x.then(num => num.toFixed())\r\n    .then(str => str.length);\r\n\r\nz.then(num => num.toExponential());\r\n```\r\n\r\nThis also works, and y is correctly interpreted as Promise<string>:\r\n\r\n```ts\r\ndeclare var x: Promise<number>;\r\n\r\nvar z: Promise<string> = x.then(num => num.toFixed());\r\n\r\nvar y = z.then(str => str.length).then(num => num.toExponential());\r\n```\r\n\r\nAlso, this compiles correctly for some reason, but it shouldn't:\r\n\r\n```ts\r\ndeclare var x: Promise<number>;\r\n\r\nvar z: Promise<string> = x.then(num => num.toFixed());\r\n\r\nvar y = z.then(str => str.length);\r\n\r\nvar g: Promise<string> = y.then<string>(num => num.toExponential());\r\n\r\ng = g.then<number>(y => y.length);\r\n```\r\n\r\nPoint is, weird stuff is going on with generics and I hope these examples help you pinpoint the problem.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-06-20T00:22:07.5-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Problem with type inference on generic types with functions that return the type with different generic type",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1188
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for the report, definitely some weirdness there we'll want to take a look at.",
+      "PostedDate": "2013-06-20T20:21:57.207-07:00",
+      "Id": 103742
+    },
+    {
+      "Message": "We'll have a hotfix out soon that fixes a bunch of the bugs here.",
+      "PostedDate": "2013-06-28T11:58:22.247-07:00",
+      "Id": 104564
+    },
+    {
+      "Message": "Thanks!",
+      "PostedDate": "2013-06-28T15:46:45.723-07:00",
+      "Id": 104606
+    },
+    {
+      "Message": "FYI: See FYI: See http://blogs.msdn.com/b/typescript/archive/2013/06/28/announcing-typescript-0-9-0-1.aspx . This release should address the core issue reported above (some of the other bugs will be fixed in a subsequent release).",
+      "PostedDate": "2013-06-28T17:31:47.127-07:00",
+      "Id": 104620
+    }
+  ]
+}

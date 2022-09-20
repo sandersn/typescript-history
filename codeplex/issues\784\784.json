@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "'Fixed' was because we added an intelligible error message :)\n\nThis is actually by design that we don't allow it. Since we don't have any notion of what exceptions a function might throw, allowing a type annotation on 'catch' variable would be highly misleading - it's not an exception filter and it's not anything resembling a guarantee of type safety.",
+    "ClosedDate": "2014-02-17T08:27:03.723-08:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "Hi, it doesn't seem to be possible to do the following:\r\n\r\n```\r\n try {\r\n      throw new Error(\"invalid foo\");\r\n }\r\ncatch (error:Error /*Not possible*/   ) {\r\n      error.message = \"Failed op \" + error.message;\r\n      throw error;\r\n }\r\n```\r\n\r\nIs this by design? The only reason I can think why that may be so is that it's possible to just write `throw \"some error\";` which would make the error object just a string. But then again shouldn't that be left to the person writing the code to decide?\r\n",
+    "LastUpdatedDate": "2014-07-18T06:51:26.08-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Medium",
+      "Severity": 100,
+      "Id": 2
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-03-05T08:44:58.56-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Typing for error object in catch statement",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 3,
+    "Id": 784
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Thanks for reporting!  I'll log this for discussion, and we should be explicit in the spec and I don't see this called out, but I would speculate this might be 'by design'.  By definition, an exception is an 'exceptional' condition, and could occur for a number of reason (e.g. syntax error, stack overflow, etc...).  And while most of these errors do derive from the Error type, it is also possible something you call into could throw anything, e.g.\r\n\r\n```\r\ntry { throw undefined; } catch(e) { console.log( typeof e ); }  // => undefined\r\n```\r\n\r\nThat said, I do see typing it as Error (http://es5.github.com/#x15.11) as being the common case, what with the internal errors, and most user errors deriving from this.  I see value in being able to type it as such.  We'll look into it.",
+      "PostedDate": "2013-03-05T09:32:08.007-08:00",
+      "Id": 92322
+    },
+    {
+      "Message": "It would be cool if we could write code like this:\n\n```\ntry {\n\t// processing...\n\n\tif (meltdown)\n\t\tthrow new MyDerivedErrorEx(\"invalid foo\", \"my context\");\n}\ncatch (error: MyDerivedErrorEx) {\n\terror.message = \"Failed op \" + error.message + \" (\" + error.context + \")\";\n\tthrow error;\n}\ncatch (error: MyDerivedError) {\n\terror.message = \"Failed op \" + error.message;\n\tthrow error;\n}\n// Note that we let Error, or string, etc., propagate up to caller to handle if necessary\n// because we don't know how to handle them *here*\n```\n\nand have it work as expected, possibly using this \"catch (e if e instanceof ...)\" syntax for the JavaScript:\n\n  [ https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/try...catch](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/try...catch)",
+      "PostedDate": "2013-03-06T02:12:54.457-08:00",
+      "Id": 92401
+    },
+    {
+      "Message": "How is this fixed? I've cloned the repo, switched to `devel` branch and the `catch (error:Error)` is still showing `TS1013: Catch clause parameter cannot have a type annotation.`.\n\nThe `catch (e if e instanceof ...)` is also not supported:\n```\nerror TS1005: ')' expected.\nerror TS1005: '(' expected.\n```\n\n`tsc --version` shows `Version 0.9.7.0`",
+      "PostedDate": "2014-02-16T07:02:49.32-08:00",
+      "Id": 133701
+    },
+    {
+      "Message": "Fixed in develop branch\n\r\n\r** Closed by RyanCavanaugh 06/13/2013 11:21AM",
+      "PostedDate": "2013-06-13T11:21:55.093-07:00",
+      "Id": 133708
+    },
+    {
+      "Message": "@maciejsz is right: this issue has not been fixed.\r\n\r\nRe-opening.",
+      "PostedDate": "2014-02-16T08:08:12.66-08:00",
+      "Id": 133709
+    },
+    {
+      "Message": "Personally I would like to see the type of any error caught be {} instead of any...\n\nThe following code compiles without warning, but fails at runtime, even with the compiler flag --noImplicitAny\n\n```\nfunction handle(e: Error) {\n\talert(e.message);\n}\n\ntry {\n\tthrow \"foobar\";\n} catch(ex) {\n    handle(ex);\n}\n```\n\nTo me, the type of ```ex``` should not be ```any``` when I provided the --noImplicitAny flag. \n\n",
+      "PostedDate": "2014-07-18T06:51:26.08-07:00",
+      "Id": 152842
+    }
+  ]
+}

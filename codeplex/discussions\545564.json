@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1246150",
+    "ThreadId": "545564",
+    "Html": "I have the following:<br />\n<pre><code>import ChildModule = require('./ChildModule');\n\nangular.module('app', ['myChildModule']);</code></pre>\n\nI want RequireJS to load in my ChildModule script, which contains a definition for an Angular module called <code>myChildModule</code>.  The problem is that it seems the TSC detects that the imported <code>ChildModule</code> isn't used in this script, so the resulting AMD module doesn't include this as a dependency.  I get the following JS, which omits the expected <code>'./ChildModule'</code> dependency:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {\n    angular.module('app', ['myChildModule']);\n});</code></pre>\n\nIf I reference the ChildModule import in my app script with something like <code>var a = ChildModule</code>, then TSC keeps the AMD dependency and all is well.  But this doesn't feel quite right.<br />\n<br />\nIs there a better way to ensure I can ensure my script dependencies are loaded so Angular can use them?<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2014-05-16T07:37:21.02-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246230",
+    "ThreadId": "545564",
+    "Html": "This is definitely a problem and I've had to fix it in a similar fashion in my project.\r<br />\n<br />\n<a href=\"https://github.com/ShamnaSkor/WafleProject/blob/DurandalUI/Wafle/Wafle.WebUI/app/about.ts\" rel=\"nofollow\">https://github.com/ShamnaSkor/WafleProject/blob/DurandalUI/Wafle/Wafle.WebUI/app/about.ts</a>\r<br />\n<br />\nThere are a few bug reports already around this and also just generally the idea that TypeScript 1.0 does a bad job regarding separating the logical concept of external modules from the physical realities of how AMD modules actually work in folder structures on web servers:\r<br />\n<a href=\"https://typescript.codeplex.com/workitem/934\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/934</a>\r<br />\n<a href=\"https://typescript.codeplex.com/workitem/911\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/911</a>\r<br />\n<br />\nSome members of the TypeScript team have expressed that they are thinking about how to make this better, but as of today there are still a lot of rough edges to work around with regards to external modules.<br />\n",
+    "PostedDate": "2014-05-16T10:03:42.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-05-17T02:27:51.713-07:00"
+  },
+  {
+    "Id": "1246261",
+    "ThreadId": "545564",
+    "Html": "Consider writing <br />\n<pre><code>angular.module('app', [ChildModule.name]);\n</code></pre>\n\ninstead of<br />\n<pre><code>angular.module('app', ['myChildModule']);\n</code></pre>\n\nThat's what <a href=\"https://google-styleguide.googlecode.com/svn/trunk/angularjs-google-style.html\" rel=\"nofollow\">Google's AngularJS Style Guide</a> suggests.<br />\n",
+    "PostedDate": "2014-05-16T11:03:38.31-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246428",
+    "ThreadId": "545564",
+    "Html": "@thorn0 - this would necessitate adding the module to the global window scope, which isn't desirable.  The google styleguide is also targeted towards those using Closure, which is the main reason why they recommend doing it in this way:<br />\n<blockquote>\nWhy? Using a property of my.submoduleA prevents Closure presubmit failures complaining that the file is required but never used. Using the .name property avoids duplicating strings.<br />\n</blockquote>\n",
+    "PostedDate": "2014-05-17T02:32:55.913-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1246435",
+    "ThreadId": "545564",
+    "Html": "<strong>MarcusWhit wrote:</strong><br />\n<blockquote>\n@thorn0 - this would necessitate adding the module to the global window scope<br />\n</blockquote>\nNo, it absolutely wouldn't. <code>ChildModule</code> is an AMD module that is <code>require</code>d by some other module. What stops you from accessing its <code>name</code> property inside of this other module? Just use <code>export =</code> in <code>ChildModule.ts</code>.<br />\n<br />\n<strong>ChildModule.ts</strong>:<br />\n<pre><code>var mod = angular.module('myChildModule', [])\n    .config(...)\n    .directive(...)\n    // etc\nexport = mod;\n</code></pre>\n\n(I wish we could leave out <code>var mod</code> and write just <code>export = angular.module(...)</code>, but alas, it doesn't work. Created an <a href=\"https://typescript.codeplex.com/workitem/2516\" rel=\"nofollow\">issue</a> about it.)<br />\n<br />\n<strong>app.ts</strong>;<br />\n<pre><code>import ChildModule = require('./ChildModule');\nangular.module('app', [ChildModule.name]);\n</code></pre>\n\ncompiled JS for <strong>ChildModule.ts</strong>:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;], function(require, exports) {\n    var mod = angular.module('myChildModule', [])\n        .config(...)\n        .directive(...)\n        // etc\n    return mod;\n});\n</code></pre>\n\ncompiled JS for <strong>app.ts</strong>:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, &quot;./ChildModule&quot;], function(require, exports, ChildModule) {\n    angular.module('app', [ChildModule.name]);\n});\n</code></pre>\n\nAnother thing you can use instead of <code>import</code>s is <code>&lt;amd-dependency&gt;</code> tags.<br />\n",
+    "PostedDate": "2014-05-17T03:28:36.063-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

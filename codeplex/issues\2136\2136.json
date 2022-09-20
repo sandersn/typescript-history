@@ -1,0 +1,66 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-29T18:21:02.13-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Consider the following code (in a functional style) that tries to process the first element of an array with a continuation passed from the outside or to fall back to a default continuation (passed from the outside too) if the array is empty:\r\n\r\n```\r\n    function head<a, r>(values: a[], haveFirst: (first: a, rest: a[]) => r, haveNone: (message: string) => r): r {\r\n        if (values.length > 0) {\r\n            return haveFirst(values[0], values.splice(0, 1));\r\n        } else {\r\n            return haveNone('Array is empty.');\r\n        }\r\n    }\r\n```\r\nNow I wish I was able to use this method to get a tail of the array or fail with an exception if the given array is empty. So I define a helper function for failure:\r\n```\r\n    function fail<r>(message: string): r {\r\n        throw new Error(message);\r\n    }\r\n```\r\n__A__. Now all I want to do is to use it like this:\r\n```\r\nvar tail = head(['a', 'b'], (first, rest) => rest, fail);\r\n```\r\nUnfortunately the inferred type of tail is {}\r\n\r\n__B__. In the following example I specify the type parameters explicitly and I get a compiler error (see the screenshots):\r\n```\r\nvar tail = head<string, string[]>(['a', 'b'], (first, rest) => rest, fail);\r\n```\r\n\r\n__C__. In order to trick the compiler I create a helper function that returns the generic fail method\r\n```\r\n    function failOver<r>(): (message: string) => r {\r\n        return function(message: string): r {\r\n            throw new Error(message);\r\n        }\r\n    }\r\n```\r\nNow I am trying to use it like this:\r\n```\r\nvar tail = head(['a', 'b'], (first, rest) => rest, failOver<string[]>());\r\n```\r\nUnfortunately the tail is still {}.\r\n\r\n__D__. Lastly I tried to make it work with the following code:\r\n```\r\nvar tail = head<string, string[]>(['a', 'b'], (first, rest) => rest, failOver<string[]>());\r\n```\r\nThis finally gets me tail of string[]!\r\n\r\n\r\nSo it all seems that something is wrong with the type inference system, because it takes 2 places with the explicit type parameters in order to make the compiler work as expected. If I am doing something wrong and it's not designed to be used like that please explain how it is supposed to be written otherwise.\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-01-29T18:21:10.6-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-29T11:04:57.087-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Type inference doesn't work (TypeScript v0.9.5)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2136
+  },
+  "FileAttachments": [
+    {
+      "FileId": 784744,
+      "FileName": "screen_16.png",
+      "DownloadUrl": ".\\784744"
+    },
+    {
+      "FileId": 784745,
+      "FileName": "screen_15.png",
+      "DownloadUrl": ".\\784745"
+    },
+    {
+      "FileId": 784746,
+      "FileName": "screen_14.png",
+      "DownloadUrl": ".\\784746"
+    },
+    {
+      "FileId": 784747,
+      "FileName": "screen_13.png",
+      "DownloadUrl": ".\\784747"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "There was a bug here in 0.9.5 that has since been fixed, specifically with what happens when you pass a generic signature to an argument that uses type parameter types (ie the way you pass ```fail```). On our latest bits everything here appears to be working as intended.\n\nThat said, you should be careful with signatures like the one used by ```fail```. When type argument types are not used in parameter type annotations quite often type inference will not be able to make any inferences for that type argument, which leads to the selection of {} (the empty object type) for that type argument. The only way in which candidates are generated for type inference is via relating parameter types or in certain conditions relating return types of arguments of a function type with their associated parameter type. Which is to say, in our current bits ```tail``` will still be {} as above (sections 4.12.2 and 3.8.6 in the language specification are relevant here). \n\nIf you'd like to walk through exactly what happens in some more detail feel free to create a discussion thread and we can walkthrough it, then other people will be more likely to see it and learn/agree/disagree/etc.",
+      "PostedDate": "2014-01-29T18:20:56.997-08:00",
+      "Id": 132075
+    }
+  ]
+}

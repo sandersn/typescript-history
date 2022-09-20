@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1078074",
+    "ThreadId": "452770",
+    "Html": "I finally bit the bullet and installed 0.9.1 (previously on 0.8). I've gone through my substantial code base and done the obvious things like swapping 'bool' for 'boolean' and removing the ? from parameters but I'm left with this error which I can't fathom out:\r<br />\n<br />\nError\t302\tAll named properties must be subtypes of string indexer type 'any'.\tlib.d.ts\t1692\t5\ttween loop 2.ts\r<br />\n<br />\nI honestly have no idea what that means. It appears hundreds of times (302!). Double-click the error just takes me to the lib.d.ts file, so I'm at a complete loss.<br />\n",
+    "PostedDate": "2013-08-07T23:15:10.527-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078091",
+    "ThreadId": "452770",
+    "Html": "It appears after restarting Visual  Studio those errors have gone and I'm just left with the massively unhelpful:\r<br />\n<br />\nError\t1\tUnable to get property 'type' of undefined or null reference\tD:\\wamp\\www\\phaser\\Phaser\\VSTSC\tPhaser\r<br />\n<br />\nNo line number, not even a file telling me where to look. Literally no clue what to do now :-/<br />\n",
+    "PostedDate": "2013-08-08T00:00:27.67-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078281",
+    "ThreadId": "452770",
+    "Html": "Wait.. it's getting better. I've now got really helpful compiler errors like:\r<br />\n<br />\nError\t106\tCannot convert 'number' to 'number'\r<br />\n<br />\nHere is the offending code:\r<br />\n<br />\npublic get total(): number {\r<br />\n  return this._frames.length;\r<br />\n}\r<br />\n<br />\nIf anyone has the slightest clue what may cause this I'd love to know :( I have literally spent several days on this now, struggling to upgrade my project to 0.9.1 and am still getting rafts of really really strange and unhelpful errors.<br />\n",
+    "PostedDate": "2013-08-08T08:36:09.64-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078339",
+    "ThreadId": "452770",
+    "Html": "I know I'm talking to myself now, but I've finally finally got my project compiling (with no thanks to the compilers error messages!).\r<br />\n<br />\nI'm pretty sure I've found a bug in the compiler, but I just can't figure out where.\r<br />\n<br />\nI have a class called Group. Inside it is a property called transform, which is of the type Phaser.Components.TransformManager:<br />\n<pre><code>    public transform: Phaser.Components.TransformManager;\n</code></pre>\n\nIf I compile with the type set to that above it errors with &quot;Error\t102\tUnable to get property 'type' of undefined or null reference\tD:\\wamp\\www\\phaser\\Phaser\\VSTSC\tPhaser&quot; followed by 100 errors of &quot;All named properties must be subtypes of string indexer type 'any'&quot;.\r<br />\n<br />\nIf remove the type from the property:<br />\n<pre><code>    public transform;\n</code></pre>\n\nIt all compiles and runs with no errors. I can compile the TransformManager quite happily, there are no errors in it and I'm using it extensively elsewhere in other classes that reference it in exactly the same way as Group does. If I add the type back in, all hell breaks lose in the compiler.\r<br />\n<br />\nI've uploaded the complete VS project here in case anyone from MS cares: <a href=\"https://dl.dropboxusercontent.com/u/182996/PhaserTS091Compile.zip\" rel=\"nofollow\">https://dl.dropboxusercontent.com/u/182996/PhaserTS091Compile.zip</a>\r<br />\n<br />\nYou can replicate the error by opening core/Group.ts and un-commenting line 103.\r<br />\n<br />\nA whole day wasted just boiling it down to this :(<br />\n",
+    "PostedDate": "2013-08-08T10:55:17.033-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078458",
+    "ThreadId": "452770",
+    "Html": "I'll try to take a look at your project.\r<br />\n<br />\nFor reference, the original error you were getting:\r<br />\n<br />\n&quot;All named properties must be subtypes of string indexer type 'any'.&quot;\r<br />\n<br />\nis because of new rules around how indexers work introduced in 0.9.0. The basic idea being that type A's string indexer's return type applies a constraint on the valid return types of all other properties of type A. Consider:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">interface</span> C {\n    [idx: <span style=\"color:Blue;\">string</span>]: HTMLElement\n    data: <span style=\"color:Blue;\">string</span>;\n}\n\n<span style=\"color:Blue;\">var</span> c: C;\n<span style=\"color:Blue;\">var</span> r1 = c.data;\n<span style=\"color:Blue;\">var</span> r2 = c[<span style=\"color:#A31515;\">&#39;data&#39;</span>]; <span style=\"color:Green;\">// what type does this return? and is it not the same as c.data?}</span>\r\n</pre></div>",
+    "PostedDate": "2013-08-08T14:16:02.993-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078461",
+    "ThreadId": "452770",
+    "Html": "Thanks Dan. The first issue I posted about was throwing index issues in the actual TypeScript lib.d.ts file, not in my code. Although I'm quite sure it was something in my code causing the compiler to freak out, having 100+ errors all pointing to lib.d isn't going to help me narrow down what caused it :(<br />\n",
+    "PostedDate": "2013-08-08T14:27:16.253-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1078489",
+    "ThreadId": "452770",
+    "Html": "This discussion has been copied to a work item. Click <a href=\"https://typescript.codeplex.com/workitem/1465\" rel=\"nofollow\">here</a> to go to the work item and continue the discussion.<br />\n<br />\nI wasn't able to narrow down the repro significantly so we might have to just step through the compiler a bit and see what's might be going wrong.<br />\n",
+    "PostedDate": "2013-08-08T16:04:47.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

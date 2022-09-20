@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-04-14T12:07:39.447-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "The following code:\r\n```typescript\r\nclass X {\r\n\tprivate static x: number = 0;\r\n}\r\n\r\nclass Y extends X {\r\n\tprivate static x: number = 0;\r\n}\r\n```\r\nproduces the error\r\n```\r\nClass 'Y' cannot extend class 'X':\r\nTypes 'Y' and 'X' define static property 'x' as private.\r\n```\r\n\r\nThis is a great error for non-static properties but as static members are declared on their distinct class objects, I really don't see the need for this to be an error.\r\n\r\nI realize that they are now inherited (that was a surprise!), but I don't understand why we need this case to be an error.",
+    "LastUpdatedDate": "2014-05-20T21:55:49.743-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-04-03T08:48:39.967-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "TypeScript 1.0: private static conflict",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2377
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I have to agree as well.  This does actually make sense if private static members are required between each derived class type.  In fact, though the property 'x' is copied forward, 'Y' gets its own private property initialized with X.x, so it can still be private.",
+      "PostedDate": "2014-04-03T12:56:43.393-07:00",
+      "Id": 140454
+    },
+    {
+      "Message": "Is static member inheritance an alignment with ES6?",
+      "PostedDate": "2014-04-08T11:43:31.177-07:00",
+      "Id": 140995
+    },
+    {
+      "Message": "I'm reopening this, because, as each subclass gets a copy of x, I think it's arguably the \"wrong\" value if it's being changed.\n\nI don't think it's obvious that the single private static symbol has multiple instantiations.\n\nIf it's about the type and not the value, then it should be allowed to redefine static values so long as the type doesn't change (this would imply that private static members would need to include their types in definition files).\n\nAlso, I'd really like an answer to my previous question.",
+      "PostedDate": "2014-04-11T07:01:43.12-07:00",
+      "Id": 141495
+    },
+    {
+      "Message": "TypeScript has static-side inheritance. To explain why this has to be an error, consider:\n\n```\nclass X {\n    private static x: number = 0;\n\t\n\tstatic print() {\n\t\t// Ends up accessing Y.x\n\t\tconsole.log(this.x);\n\t}\n}\n\nclass Y extends X {\n\tstatic doSomething() {\n\t\tthis.print();\n\t}\n}\n\nY.doSomething();\n```\n\nIf `Y` were allowed to declare a new different `x`, this access of `this.X` in `print` would get the wrong value. This is the same problem as declaring instance-side private members.\n\r\n\r** Closed by RyanCavanaugh 04/03/2014 3:03PM",
+      "PostedDate": "2014-04-03T15:03:39.307-07:00",
+      "Id": 141496
+    },
+    {
+      "Message": "I think the point Ryan is trying to make is that if someone writes a base class to expect certain functionality on private values, it may be disastrous if end consumers of that class (perhaps unaware) create similar private properties that may overwrite the base ones.  If properties are not public, then derived types shouldn't touch them.  In your case, I'm guessing you have control of both the base type and derived type.  This is not always the case.",
+      "PostedDate": "2014-04-11T08:19:08.677-07:00",
+      "Id": 141505
+    },
+    {
+      "Message": "I may also add, this is the very reason why others (myself included) are requesting a PROTECTED modifier.\n\nhttps://typescript.codeplex.com/workitem/125\n",
+      "PostedDate": "2014-04-11T08:22:28.28-07:00",
+      "Id": 141507
+    },
+    {
+      "Message": "ES6 classes create an internal prototype link on the static side as well as the instance side so property lookups on a constructor will do a walk of all of the parent constructors. These semantics are not identical to TS, which does a copy of parent static members to child at class instantiation time, but should be close in practice.",
+      "PostedDate": "2014-04-14T10:06:36.9-07:00",
+      "Id": 141770
+    },
+    {
+      "Message": "bterlson: Thanks for replying.  While I personally think that the ES6 approach is horrifying I agree that typescript's alignment with it is close-enough.\n\nFeel free to close this issue, I think this may be the wrong forum for this debate.",
+      "PostedDate": "2014-04-14T10:58:27.1-07:00",
+      "Id": 141778
+    },
+    {
+      "Message": "@AdamFreidin I agree - coming from the C++/C# worlds, that approach makes no sense to me also (nor will it ever).  It's the only thing that makes me disappointed about the direction of JS (I think it creates more limitations than useful situations IMHO).",
+      "PostedDate": "2014-05-20T21:55:49.743-07:00",
+      "Id": 147302
+    }
+  ]
+}

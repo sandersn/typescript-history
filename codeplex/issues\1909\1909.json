@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "See comments",
+    "ClosedDate": "2013-11-19T10:12:19.157-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "There are some scenarios where using a string named modules as a variable type would be extremely useful. For example in cases where it make sense to use an AMD module directly as opposed to using a require statement. \r\n\r\nExample 1:\r\nUsing AMD syntax modules in node.js via requirejs. Typescript does not generate the correct definitions for AMD modules in node.js because the compiler ommits the \"module\" import. This is a good thing for browser based AMD modules, but for node modules, it is unacceptable. In these cases it would be great to have the ability to use module definitions as variable types so that I can create custom module declares.\r\n\r\n```\r\ndefine([\"module\", \"require\", \"exports\", \"express\"], \r\n         (__module, require, exports, express : module(\"express\")) => {\r\n    var app = express();\r\n});\r\n```\r\nexample 2:\r\n\r\nIn cases where I want to configure require.js and also use typescript string named modules, I can't use the require keyword since it refers to require.js. E.g.\r\n\r\n```\r\n///<reference path=\"../typings/requirejs/require.d.ts\"/>\r\n///<reference path=\"../typings/durandal/durandal.d.ts\"/>\r\n\r\nrequire.config({\r\n    paths: {\r\n        \"libs\": \"../scripts\",\r\n        \"knockout\": \"../lib/knockout-3.0.0\",\r\n        'knockout.validation': '../lib/knockout.validation'\r\n    },\r\n    shim: {\r\n        'knockout.validation': {\r\n            deps: [\"knockout\"]\r\n        }\r\n    }\r\n});\r\n\r\ndefine(['durandal/system', 'durandal/app', 'durandal/viewLocator'], function (system : module(\"durandal/system\"), app : module(\"durandal/app\"), \r\nviewLocator : module(\"durandal/viewLocator\")) {\r\n    system.debug(true);\r\n\r\n    app.title = 'Durandal Starter Kit';\r\n\r\n    app.configurePlugins({\r\n        router: true,\r\n        dialog: true,\r\n        widget: true\r\n    });\r\n\r\n    app.start().then(function () {\r\n        viewLocator.useConvention();\r\n        app.setRoot('viewmodels/shell', 'entrance');\r\n    });\r\n});\r\n\r\n```\r\n\r\n\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2013-11-19T10:12:19.157-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-19T01:10:04.637-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "string named modules as datatypes",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1909
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "I think what you're requesting is already supported:\n\n```\n// In file libraries.d.ts\ndeclare module \"Foo\" {\n\tfunction getBar(): string;\n}\n```\n```\n// In some other file that references libraries.d.ts\n// Note: Do not use f in a value position\nimport f = require('Foo');\n\n// Use require\nvar x: typeof f = require('Foo');\nvar y = x.getBar(); // y: string\n\n// Use define\ndefine([\"module\", \"require\", \"exports\", \"Foo\"], \n         (__module, require, exports, Foo: typeof f) => {\n    var y = Foo.getBar(); // y: string\n});\n```\n\nPlease reopen and clarify if this isn't what you're trying to do. Thanks!",
+      "PostedDate": "2013-11-19T10:12:10.14-08:00",
+      "Id": 123532
+    }
+  ]
+}

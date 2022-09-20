@@ -1,0 +1,474 @@
+[
+  {
+    "Id": "920427",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>The following TypeScript allows the variable to be treated as private in TypeScript but doesn't result in a scoped variable in JavaScript:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> MyClass {\r\n\t<span style=\"color:blue\">private</span> example: string;\r\n    constructor() { \r\n\t\t<span style=\"color:blue\">this</span>.example = <span style=\"color:#a31515\">&quot;Test&quot;</span>;\r\n\t}\r\n}\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>Results in:</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> MyClass = (<span style=\"color:blue\">function</span> () {\r\n    <span style=\"color:blue\">function</span> MyClass() {\r\n        <span style=\"color:blue\">this</span>.example = <span style=\"color:#a31515\">&quot;Test&quot;</span>;\r\n    }\r\n    <span style=\"color:blue\">return</span> MyClass;\r\n})();\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>It would be great if private really meant private - for example, but resulting in the following JavaScript:</p>\r\n<p></p>\r\n<pre><div style=\"color:black; background-color:white\"><pre><span style=\"color:blue\">var</span> MyClass = (<span style=\"color:blue\">function</span> () {\r\n    <span style=\"color:blue\">var</span> example;\r\n    <span style=\"color:blue\">function</span> MyClass() {\r\n        example = <span style=\"color:#a31515\">&quot;Test&quot;</span>;\r\n    }\r\n    <span style=\"color:blue\">return</span> MyClass;\r\n})();\r\n</pre>\r\n</div>\r\nThis means that in plain JavaScript, example is still private as it is scoped.<br></pre>\r\n<p></p>\r\n",
+    "PostedDate": "2012-10-02T01:40:09.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "920545",
+    "ThreadId": "397651",
+    "Html": "<p>The problem with using constructor function local variables for private storage is that they can't be accessed from functions on the prototype object (which is what methods on a class become in the generated JavaScript). Instead you need to create local function objects and that consumes a lot more memory. It would look something like this:</p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">class</span> StringBox {\r\n    getValue: () =&gt; string;\r\n    constructor (value: string) {\r\n        <span style=\"color: blue;\">this</span>.getValue = () =&gt; value;\r\n    }\r\n}\r\n</pre>\r\n</div>\r\n<p>As you can see, you need to create one function object per instance instead of a single function object shared by all instances through the prototype.</p>\r\n<p>Anders</p>",
+    "PostedDate": "2012-10-02T05:49:20.327-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-04-01T13:18:05.55-07:00"
+  },
+  {
+    "Id": "921120",
+    "ThreadId": "397651",
+    "Html": "<p>Hi Anders,</p>\r\n<p>That is a compelling reason to leave it as it is.</p>\r\n<p>This is really just an education issue for people writing libraries with TypeScript that are being consumed from vanilla JavaScript.</p>\r\n<p>Thanks</p>\r\n<p>Steve</p>",
+    "PostedDate": "2012-10-03T02:17:51.173-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921235",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>It makes sense to use the underscore convention for &quot;private&quot; variables. &nbsp;So that this:</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> MyClass {\n  <span style=\"color:blue\">private</span> foo: string;\n\n  constructor() {\n    <span style=\"color:blue\">this</span>.foo = <span style=\"color:#a31515\">&quot;bar&quot;</span>;\n  }\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>Will result in this JavaScript:</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> MyClass = (<span style=\"color:blue\">function</span>() {\n  <span style=\"color:blue\">function</span> MyClass() {\n    <span style=\"color:blue\">this</span>._foo = <span style=\"color:#a31515\">&quot;bar&quot;</span>;\n  }\n\n  <span style=\"color:blue\">return</span> MyClass;\n})();\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>JavaScript developers are familiar with this convention and are aware that an underscore property/function is use-at-your-own-peril.</p>\r\n",
+    "PostedDate": "2012-10-03T06:30:40.183-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "921388",
+    "ThreadId": "397651",
+    "Html": "<p>Agree. Private members should be at least somehow distinguished from public members.</p>",
+    "PostedDate": "2012-10-03T10:43:04.013-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "929863",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>I wanted to give my two cents on this. With regards to the criticism above... that is talking about accessing inherited private members (which is&nbsp;a protected scope, not a private scope).</p>\r\n<p>If we are talking solely about a private scope and the point of TypeScript is to make javascript suitable for &quot;application scale projects&quot; I don't see why you would dismiss or minimize the importance of private scope at runtime. It can save a lot of grief\r\n when working with other peoples code!</p>\r\n<p>Consider a scenario where you write a redistributable&nbsp;framework in TypeScript but consumers write javascript code against the compiled library.&nbsp;To me that feels like the most likely TypeScript usage scenario, where a few core maintainers work with\r\n TypeScript and the consumers largely do not.</p>\r\n<p>Furthermore, why use a coding convention when it is technically possible to simulate private scope in javascript, by&nbsp;taking advantage of javascript's closure scope.&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">function</span> SomeConstructor() {\n     <span style=\"color:blue\">var</span> _<span style=\"color:blue\">private</span> = <span style=\"color:#a31515\">&quot;private&quot;</span>;\n\n     <span style=\"color:blue\">this</span>.getPrivate = <span style=\"color:blue\">function</span> () {\n          <span style=\"color:blue\">return</span> _<span style=\"color:blue\">private</span>;\n     }\n}</pre>\r\n</div>\r\n<p>TypeScript simulates all kinds of other abstractions that aren't explicitly part of javascript (like class based inheritance), why not simulate runtime private scope as well? All the technical means to do it are part of ES standards.</p>\r\n",
+    "PostedDate": "2012-10-20T12:50:00.247-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930277",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>I'd better&nbsp;give my &quot;plus one&quot; to the topic starter. I'm not quite sure I understand why everybody try to declare private variables\r\n<strong>inside the constructor</strong>?! We have a perfect closure as a class body provided by compiler. I don't see no probrem at all to have all our privates compiled just like this:</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> MyClass = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">var</span> example;\n    <span style=\"color:blue\">function</span> MyClass() {\n        example = <span style=\"color:#a31515\">&quot;Test&quot;</span>;\n    }\n    <span style=\"color:blue\">return</span> MyClass;\n})();</pre>\r\n</div>\r\n<p>In this case they are perfectly accessable from any prototype function defined in the scope of the closure (and this is exectly how the js code generated, btw). No need of any unnecessery &quot;internal&quot; getters-setters-helper-functions to reach them (as it was\r\n mention in some similiar thread here).</p>\r\n<p>The only purpose of the way it's implemented now is variables with&nbsp;sort of protected access in case of inheritance.</p>\r\n<p>Correct me if I miss the point somewhere.</p>\r\n<p>&nbsp;</p>\r\n<p><strong><br>\r\n</strong></p>\r\n",
+    "PostedDate": "2012-10-21T23:47:59.503-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "930996",
+    "ThreadId": "397651",
+    "Html": "<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">var</span> MyClass = (<span style=\"color: blue;\">function</span> () {\r\n    <span style=\"color: blue;\">var</span> example;\r\n    <span style=\"color: blue;\">function</span> MyClass(value) {\r\n        example = value;\r\n    }\r\n    MyClass.prototype.getExample = <span style=\"color: blue;\">function</span>() {\r\n        <span style=\"color: blue;\">return</span> example\r\n    }\r\n    <span style=\"color: blue;\">return</span> MyClass;\r\n})();\r\n\r\n<span style=\"color: blue;\">var</span> test1 = <span style=\"color: blue;\">new</span> MyClass(<span style=\"color: #a31515;\">\"test1\"</span>);\r\n<span style=\"color: blue;\">var</span> test2 = <span style=\"color: blue;\">new</span> MyClass(<span style=\"color: #a31515;\">\"test2\"</span>);\r\n\r\nconsole.log(test1.getExample()) <span style=\"color: green;\">//test2</span>\r\nconsole.log(test2.getExample()) <span style=\"color: green;\">//test2</span>\r\n</pre>\r\n</div>\r\n<p>Here is the problem with what you described hyperartist</p>",
+    "PostedDate": "2012-10-23T04:53:15.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "931109",
+    "ThreadId": "397651",
+    "Html": "<p>JavaScript doesn't support private variables, full stop. Any attempt to hack it on, such as putting everything in the constructor (horrible idea) will just result in degraded performance.</p>\r\n<p>The rather obvious solution, one that practically every JavaScript developer already does, is to make \"private\" variables begin with an underscore, thus telling anyone using the code \"use at your own risk\".</p>",
+    "PostedDate": "2012-10-23T07:42:28.363-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932035",
+    "ThreadId": "397651",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>mateo2 wrote:</strong><br>\r\n<p>JavaScript doesn't support private variables, full stop.&nbsp;</p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>Douglas Crockford thinks it does.</p>\r\n<p><a href=\"http://www.crockford.com/javascript/private.html\">http://www.crockford.com/javascript/private.html</a></p>\r\n<p>&nbsp;</p>\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>mateo2 wrote:</strong><br>\r\n<p><span>Any attempt to hack it on, such as putting everything in the constructor (horrible idea) will just result in degraded performance.</span></p>\r\n</blockquote>\r\n<p>&nbsp;</p>\r\n<p>RE: &quot;Hacks&quot;</p>\r\n<p>So it's OK to &quot;hack in&quot; class based inheritance patterns using javascript prototypes, but it is not OK to &quot;hack in&quot; private variables using javascript's&nbsp;closure&nbsp;scope.&nbsp;I guess I don't see consistency in this thought process.</p>\r\n<p>&nbsp;</p>\r\n<p>RE: &quot;Performance Concerns&quot;</p>\r\n<p>The inheritance abstraction chosen in TypeScript has some trivial memory overhead affiliated with it as well as does any abstraction. This doesn't mean abstractions are a &quot;horrible idea&quot;, sometimes they are a reasonable trade off.&nbsp;The goal of TypeScript\r\n is to introduce maintainability and productivity and I'd argue private scope (at both compile time and runtime) is a part of that vision.</p>\r\n",
+    "PostedDate": "2012-10-24T15:07:21.25-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932386",
+    "ThreadId": "397651",
+    "Html": "<p>&nbsp;</p>\r\n<p>Eric, constructors have \"private\" variables like every other closure. But JavaScript OBJECTS do not, ever. &nbsp;For example, a \"private\" variable declared in the constructor is not available to any members of the prototype. Example:</p>\r\n<p>&nbsp;</p>\r\n<p>\r\n<div style=\"color: black; background-color: white;\">\r\n<pre><span style=\"color: blue;\">function</span> SomeConstructor() {\r\n  <span style=\"color: blue;\">var</span> imPrivate = <span style=\"color: #a31515;\">\"ha!\"</span>;\r\n}\r\n\r\nSomeConstructor.prototype.getImPrivate = <span style=\"color: blue;\">function</span>() {\r\n  <span style=\"color: blue;\">return</span> <span style=\"color: blue;\">this</span>.imPrivate;\r\n};\r\n</pre>\r\n</div>\r\n</p>\r\n<p>The latter will always return undefined. imPrivate is only available within the constructor.</p>\r\n<p>Adding class inheritance isn't a hack. The Constructor/Prototype combination is a very close parallel to how classes work in other languages. There is no downside to doing it.</p>\r\n<p>Hacking in private variables, which JavaScript does not support, has an obvious downside: your code will run slow. There seems to be very little (if any) upside compared to just adding a leading underscore.</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-10-25T06:23:21.577-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "932469",
+    "ThreadId": "397651",
+    "Html": "<p>Currently, TypeScript doesn't have private properties, either (only intent, 8.2.1):</p>\r\n<p>\r\n<pre>class MyClass {\r\n\tprivate secret: string;\r\n\tconstructor () {\r\n\t\tthis.secret = Math.random();\r\n\t}\r\n}\r\nvar obj = new MyClass();\r\nalert(obj[\"secret\"]);</pre>\r\n</p>\r\n<p>As Anders already points out, access to instance-private data seems to require methods-per-instance.&nbsp;That doesn't mean copies of function bodies, though: implementations are free to store closures (function pointers+private env). It is a trade-off, not an impossibility, and there are alternatives.</p>\r\n<p>hypeartist shows a class-private property, which could be used as a secret map, to store per-instance data behind per-instance, public keys. That would protect the instance-private data from the outside, though other class instances could accidentally gain access. It would not require methods-per-instance.</p>\r\n<p>Here is another approach (untested:-):</p>\r\n<p>\r\n<pre>var MyClass = (function () {\r\n\r\n    function MyClass(id) {\r\n       this.id = id;\r\n       var private_this = Object.create(this);  // this and more\r\n       private_this.secret = Math.random().toString();\r\n       this.guess = guess.bind(private_this);\r\n    }\r\n\r\n    function guess(guess) {\r\n      var check = guess===this.secret\r\n                ? \"I'm not telling!\"\r\n                : \"That guess is wrong!\";\r\n      console.log(\"(\"+this.id+\"'s secret is: \"+this.secret+\")\");\r\n      console.log(this.id+' says: '+check);\r\n    }\r\n\r\n    return MyClass;\r\n})();\r\n\r\nvar myObj1 = new MyClass(\"instance1\");\r\nvar myObj2 = new MyClass(\"instance2\");\r\n\r\nconsole.log(myObj1,myObj2);\r\n\r\nvar guess = Math.random().toString();\r\nconsole.log(\"guessing: \"+guess);\r\nmyObj1.guess(guess);\r\nmyObj2.guess(guess);\r\n</pre>\r\nDepending on how method binding is implemented, this requires only method-pointers-per-instance, giving private methods access to an extended this.</p>",
+    "PostedDate": "2012-10-25T08:25:52.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "981542",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>There's a couple of ways you can get the desired private member variables and still maintain the current style of placing all method declarations on the prototype. The first possibility is to simply place the private member declaration outside of the constructor\r\n function,&nbsp;and at the same scope level that the prototype function declarations are at. The other option is to move the prototype function declarations inside of the constructor definition. This would definitely give the prototype methods access to the\r\n private members for the Greeter constructor without causing a single shared instance of the private member. I've included some examples below:</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\r\n    <span style=\"color:blue\">var</span> greeting = message;\r\n    <span style=\"color:blue\">function</span> Greeter(message) {\r\n        \r\n    }\r\n    Greeter.prototype.greet = <span style=\"color:blue\">function</span> () {\r\n        <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> &#43; greeting;\r\n    };\r\n    <span style=\"color:blue\">return</span> Greeter;\r\n})();\r\n<span style=\"color:blue\">var</span> greeter = <span style=\"color:blue\">new</span> Greeter(<span style=\"color:#a31515\">&quot;world&quot;</span>);\r\n<span style=\"color:blue\">var</span> button = document.createElement(<span style=\"color:#a31515\">'button'</span>);\r\nbutton.innerText = <span style=\"color:#a31515\">&quot;Say Hello&quot;</span>;\r\nbutton.onclick = <span style=\"color:blue\">function</span> () {\r\n    alert(greeter.greet());\r\n};\r\ndocument.body.appendChild(button);\r\n</pre>\r\n<pre>&nbsp;<div style=\"color:black; background-color:white\"><pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\r\n    \r\n    <span style=\"color:blue\">function</span> Greeter(message) {\r\n        <span style=\"color:blue\">var</span> greeting = message;\r\n        Greeter.prototype.greet = <span style=\"color:blue\">function</span> () {\r\n            <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> &#43; greeting;\r\n        };\r\n    }\r\n    \r\n    <span style=\"color:blue\">return</span> Greeter;\r\n})();\r\n<span style=\"color:blue\">var</span> greeter = <span style=\"color:blue\">new</span> Greeter(<span style=\"color:#a31515\">&quot;world&quot;</span>);\r\n<span style=\"color:blue\">var</span> button = document.createElement(<span style=\"color:#a31515\">'button'</span>);\r\nbutton.innerText = <span style=\"color:#a31515\">&quot;Say Hello&quot;</span>;\r\nbutton.onclick = <span style=\"color:blue\">function</span> () {\r\n    alert(greeter.greet());\r\n};\r\ndocument.body.appendChild(button);\r\n\r\n\r\n</pre>\n</div>\n</pre>\r\n</div>\r\n",
+    "PostedDate": "2012-12-28T22:42:44.117-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "981769",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>@dharric, as pointed out by @fdcamderron the first example will fail because the &quot;greeting&quot; variable is shared across instances:</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\r\n    <span style=\"color:blue\">var</span> greeting;\r\n    <span style=\"color:blue\">function</span> Greeter(message) {\r\n        greeting = message;\r\n    }\r\n    Greeter.prototype.greet = <span style=\"color:blue\">function</span> () {\r\n        <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> + greeting;\r\n    };\r\n    <span style=\"color:blue\">return</span> Greeter;\r\n})();\r\n<span style=\"color:blue\">var</span> greeter = <span style=\"color:blue\">new</span> Greeter(<span style=\"color:#a31515\">&quot;world&quot;</span>);\r\n<span style=\"color:blue\">var</span> greeter2 = <span style=\"color:blue\">new</span> Greeter(<span style=\"color:#a31515\">&quot;armageddon&quot;</span>);\r\n\r\n<span style=\"color:blue\">var</span> button = document.createElement(<span style=\"color:#a31515\">'button'</span>);\r\nbutton.innerText = <span style=\"color:#a31515\">&quot;Say Hello&quot;</span>;\r\nbutton.onclick = <span style=\"color:blue\">function</span> () {\r\n    alert(greeter.greet()); <span style=\"color:green\">// Hello, armageddon</span>\r\n};\r\ndocument.body.appendChild(button);\r\n</pre>\r\n</div>\r\n<p></p>\r\n<p>The second example will also fail for the same reason. In addition it is more inefficient because the &quot;greet&quot; function is redefined every time the constructor runs.</p>\r\n<p>&nbsp;</p>\r\n<p>Noel</p>\r\n",
+    "PostedDate": "2012-12-30T05:57:31.303-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "982855",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>After having played (ie rewritten a project that was in JavaScript) with TypeScript for a good portion of the holidays, I would agree with the convention of prefixing an underscore on private variables. &nbsp;It follows what every other JavaScript library does\r\n 90% of the time to handle private variables.</p>\r\n<p>Now TypeScript does have it's own conventions that already prefix items with _, like the this scope in lamba functions, as an example, so it may make sense to prefix private variables with two underscores, or perhaps modify the existing convention, if there\r\n is any chance of a collision.</p>\r\n",
+    "PostedDate": "2013-01-03T15:22:28.457-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "983300",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>TypeScript doesn't prevent you from adopting underscore prefix, neither does it prevent any other naming convention.</p>\r\n<p>&nbsp;</p>\r\n<p>It would be bad for TypeScript to enforce a convention though.</p>\r\n",
+    "PostedDate": "2013-01-05T03:24:04.247-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984171",
+    "ThreadId": "397651",
+    "Html": "\r\n<blockquote style=\"border:solid .1em #ccc; font-style:italic; margin:.25em 1em 0 1em; padding:0 .25em 0 .25em\">\r\n<strong>mihailik wrote:</strong><br>\r\n<p>TypeScript doesn't prevent you from adopting underscore prefix, neither does it prevent any other naming convention.</p>\r\n<p>&nbsp;</p>\r\n<p>It would be bad for TypeScript to enforce a convention though.</p>\r\n</blockquote>\r\n<p>I agree on this. As a C# developer I'm used to the convention of prefixing private members with an underscore. I follow that convention when I'm doing TypeScript and Javascript development too.</p>\r\n<p>As you can mix TypeScript and Javascript it would be very annoying if the TypeScript compiler would alter private member names of the TypeScript specific parts of a script while the Javascript specific parts of the script stayed unaltered. That would result\r\n in broken conventions in the compiled Javascript, and that would suck.</p>\r\n<p>C#/Javascript doesn't enforce me to follow any convention and TypeScript shouldn't either.</p>\r\n",
+    "PostedDate": "2013-01-08T11:47:34.083-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "984273",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>The typescript &quot;private&quot; seems leading in too much problems in my point of view, mainly because it's allowing on the subclass to override properties and method without any error.</p>\r\n<p>Why not just give up the private and completely replace it by &quot;protected&quot;, i think that at least it will allow us to receive proper warning/error.</p>\r\n",
+    "PostedDate": "2013-01-08T18:41:46.99-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "991418",
+    "ThreadId": "397651",
+    "Html": "\r\n<p>Why can not we make a <strong>PRIVATE METHOD</strong> to a closure?</p>\r\n<p>&nbsp;</p>\r\n<p>example:</p>\r\n<p><span style=\"text-decoration:underline\">Typescript:</span></p>\r\n<pre><span style=\"color:blue\">class</span> Greeter {\n    greeting: <span style=\"color:blue\">string</span>;\n    <span style=\"color:blue\">private</span> hello(){\n        <span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>.greeting;\n    }\n    <span style=\"color:blue\">public</span> hi(){\n        alert(<span style=\"color:blue\">this</span>.hello());\n    }\n    constructor(message: <span style=\"color:blue\">string</span>) {\n        <span style=\"color:blue\">this</span>.greeting = message;\n    }\n    greet() {\n        <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> &#43; <span style=\"color:blue\">this</span>.greeting;\n    }\n}\n</pre>\r\n<p><span style=\"text-decoration:underline\">JavaScript:</span></p>\r\n<pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">var</span> hello = <span style=\"color:blue\">function</span>(){\n       <span style=\"color:blue\">return</span> <span style=\"color:blue\">this</span>.greeting;\n    }\n    <span style=\"color:blue\">function</span> Greeter(message) {\n        <span style=\"color:blue\">this</span>.greeting = message;\n    }\n    Greeter.prototype.hi = <span style=\"color:blue\">function</span> () {\n        alert(hello.call(<span style=\"color:blue\">this</span>));\n    };\n    Greeter.prototype.greet = <span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> &#43; <span style=\"color:blue\">this</span>.greeting;\n    };\n    <span style=\"color:blue\">return</span> Greeter;\n})();\n</pre>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<p><em>p.s. Another implementation of private members:</em></p>\r\n<pre><span style=\"color:blue\">var</span> Greeter = (<span style=\"color:blue\">function</span> () {\n    <span style=\"color:blue\">var</span> privates = {};\n\n    <span style=\"color:blue\">var</span> setPrivate = <span style=\"color:blue\">function</span>(key, value){\n          privates[<span style=\"color:blue\">this</span>.__id][key] = value;\n    };\n\n    <span style=\"color:blue\">var</span> getPrivate = <span style=\"color:blue\">function</span>(key){\n         <span style=\"color:blue\">return</span> privates[<span style=\"color:blue\">this</span>.__id][key];\n    }\n    <span style=\"color:blue\">function</span> Greeter(message) {\n        <span style=\"color:blue\">this</span>.__id = generateUniqId();\n        <span style=\"color:blue\">private</span>[<span style=\"color:blue\">this</span>.__id] = {};\n        setPrivate.call(<span style=\"color:blue\">this</span>, <span style=\"color:#a31515\">'greeting'</span>, message);\n    }\n    Greeter.prototype.greet = <span style=\"color:blue\">function</span> () {\n        <span style=\"color:blue\">return</span> <span style=\"color:#a31515\">&quot;Hello, &quot;</span> &#43; getPrivate.call(<span style=\"color:blue\">this</span>, <span style=\"color:#a31515\">'greeting'</span>);\n    };\n    <span style=\"color:blue\">return</span> Greeter;\n})();\n</pre>\r\n",
+    "PostedDate": "2013-01-24T01:40:38.823-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1013688",
+    "ThreadId": "397651",
+    "Html": "Private fields are a hack in <em>any</em> language, not just in JavaScript. It worries me to see this many people suggesting<br />\nimplementing private members through closures, and incorrectly at that.<br />\n<br />\nSince member visibility is not possible to implement on a hardware level, it can only be emulated or simulated in<br />\nsoftware - most compilers do this using a combination of name mangling and compile-time visibility information.<br />\nFor example, in GCC's C++ compiler, all functions, classes and other constructs are treated as distinct objects, with<br />\neach class being given their own vtable, containing references to functions for that class - this would be loosely<br />\nanalogous to JavaScript's prototype object. Furthermore, each distinct object, once instantiated inside the compiler's<br />\nlist, is name mangled according to certain rules, resulting in unique names for each class and function, based on<br />\nnamespace and parameter information. Each class instance gets a pointer to its vtable, ensuring the correct<br />\nfunction is called at runtime, regardless of apparent name conflicts (i.e. private methods declared with the same<br />\nname in a parent and child class). If you were to make direct calls to these name-mangled functions, you'd be able<br />\nto access them just fine, as the compiler (at that point) won't be checking for accessess of variables it believes are<br />\noutside the visibility of the programmer, instead preferring to do scope and access level checks on a higher<br />\nsemantic level.<br />\n_(note: I'm writing this, having woken up about 20 minutes earlier - coffee hasn't settled in yet. Any mistakes and/or<br />\ngeneralizations or over-simplifications can be attributed to that, and to trying to make a point understandable by<br />\npeople other than compiler specialists)._ <br />\n<br />\nSo why am I telling you this?<br />\nQuite simply, because I'm wondering why TypeScript doesn't already do what most other compilers do - name<br />\nmangle private fields. Since private fields really should be private to the class being compiled, we can safely assume<br />\nall references to that private field happen inside the file being processed. Hence, we can safely generate a mangled<br />\nname, doing a serach-and-replace for all accesses to that private member. <br />\n<br />\nWhat would need to happen, though, would be to come up with some sane name mangling scheme. For example,<br />\na simple solution would be to concatenate module[] + class name and MD5 hash the value, then call the resulting<br />\nfield <br />\n<pre><code>_p_hash_fieldname\n</code></pre>\n\nThis shouldn't be too difficult to implement in a future release. People depending on access to private fields outside<br />\na class are (or, at the very least, should be) depending on undefined behaviour anyway, so the fallout of such a<br />\nchange should be minimal, but the potential gains in program reliability would be enormous.<br />\n<br />\n<br />\nMy two cents.<br />\n-cb<br />\n<br />\n<br />\nedit: why are my lines split arbitrarily in the actual post, but correctly in preview?<br />\nedit2: manually inserted line breaks<br />\n",
+    "PostedDate": "2013-03-11T22:53:25.83-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1013689",
+    "ThreadId": "397651",
+    "Html": "Accidentally hit reload and got my post posted twice...<br />\n",
+    "PostedDate": "2013-03-11T22:54:09.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1014190",
+    "ThreadId": "397651",
+    "Html": "@codebeard - There was an ECMAScript 6 recommendation at one point for private names, which is effectively what you're suggesting.  It would be names that you couldn't &quot;guess&quot;, but would rather have to have a handle to them.  This would be pretty straightforward to adopt once ES6 adopted it.<br />\n",
+    "PostedDate": "2013-03-12T14:42:25.517-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1014206",
+    "ThreadId": "397651",
+    "Html": "Except for the fact that what I'm suggesting would be implementable <em>now</em>, and completely backwards-compatible <br />\ndown to the first versions of JavaScript.<br />\nNot to mention the fact that ES6 support would need to appear in browsers until that feature could be reliably<br />\nused, no?<br />\n",
+    "PostedDate": "2013-03-12T15:14:19.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054497",
+    "ThreadId": "397651",
+    "Html": "In javascript is often used the revealing prototype pattern. I think with this pattern could be mimic a private function, although private fields cannot be declared on prototype and shared across all instances. Will typescript support private functions?<br />\n<pre><code>    var Greeter = (function () {\n        function Greeter(element) {\n        }\n\n        Greeter.prototype = function () {\n\n            var start = function () {\n            };\n\n            var stop = function () {\n            };\n\n            var privatefunc = function () {\n            }\n\n            return {\n                start: start,\n                stop: stop\n            }\n        }();\n\n        return Greeter;\n    })();</code></pre>\n\n",
+    "PostedDate": "2013-06-09T01:59:35.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054539",
+    "ThreadId": "397651",
+    "Html": "@pbacka,\r<br />\n<br />\nIn your sample it's not possible to access <code>privatefunc</code> from the Greeter constructor. In order to do that we need to move <code>privatefunc</code> to the outer closure:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n  <span style=\"color:Blue;\">var</span> Greeter = (<span style=\"color:Blue;\">function</span> () {\n        <span style=\"color:Blue;\">function</span> Greeter(element) {\n            privatefunc.call(<span style=\"color:Blue;\">this</span>);\n        }\n        <span style=\"color:Blue;\">var</span> privatefunc = <span style=\"color:Blue;\">function</span> () {\n        }\n        Greeter.prototype = <span style=\"color:Blue;\">function</span> () {\n            <span style=\"color:Blue;\">var</span> start = <span style=\"color:Blue;\">function</span> () {\n            };\n            <span style=\"color:Blue;\">var</span> stop = <span style=\"color:Blue;\">function</span> () {\n            };\n            <span style=\"color:Blue;\">return</span> {\n                start: start,\n                stop: stop\n            }\n        }();\n        <span style=\"color:Blue;\">return</span> Greeter;\n    })();\r\n</pre></div>Now once we've done that this suggestion is essentially the same as <a href=\"https://typescript.codeplex.com/discussions/397651#PostDetailsCell_991418\" rel=\"nofollow\">mantsevich's above</a> (the first one - I think the second suggestion is faulty).\r<br />\n<br />\nI don't see why TS shouldn't implemented private methods as functions within the closure.\r<br />\n<br />\nThe only complication is that the &quot;this&quot; context needs to be set explicitly for the private functions. But that shouldn't be too difficult for the compiler.\r<br />\n<br />\nNB: There are at least two separate discussions on this thread: the original one was about private fields, which is not possible to do; this one is about private methods.<br />\n",
+    "PostedDate": "2013-06-09T06:04:50.007-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054601",
+    "ThreadId": "397651",
+    "Html": "\r\n<div>\r\n<p><span style=\"font-size:11.0pt; font-family:\">I for one prefer the design time enforcement of private values rather than run time. It keeps object size down, makes `this` easier to deal with, and produces more readable JavaScript.</span></p>\r\n<p><span style=\"font-size:11.0pt; font-family:\"></span></p>\r\n<p><span style=\"font-size:11.0pt; font-family:\">A community standard in JavaScript to mark fields that should be private is to prepend the name with _, which is what I usually do with private members in TypeScript. This makes it obvious to JavaScript devs using\r\n your code what the intention of a certain method or field is. IIRC, Dart uses _ as the\r\n<i>only</i> method to mark private members.</span></p>\r\n<p><span style=\"font-size:11.0pt; font-family:\"></span></p>\r\n<div>\r\n<div style=\"border:none; border-top:solid #E1E1E1 1.0pt; padding:3.0pt 0in 0in 0in\">\r\n<p><b><span style=\"font-size:11.0pt; font-family:\"></span></b></p>\r\n</div>\r\n</div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-09T12:05:07.223-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054615",
+    "ThreadId": "397651",
+    "Html": "I agree with AndrewGaspar and do exactly the same thing. Private should be enforced at build time only, not run-time. I don't need that extra baggage in my JS code and I too use the _ prefix to let JS devs understand the scope at a glance.<br />\n",
+    "PostedDate": "2013-06-09T13:01:26.697-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1054896",
+    "ThreadId": "397651",
+    "Html": "@AndrewGaspar/@PhotonStorm, it's not clear whether you are responding to my post or not. There is no extra baggage from implementing private <strong>methods</strong>. It would work as follows:\r<br />\n<br />\nThe code<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo{\n    constructor(){\n        <span style=\"color:Blue;\">this</span>.getFoo();\n    }\n    <span style=\"color:Blue;\">private</span> getFoo(){\n    }\n}\r\n</pre></div>should compile into:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Foo() {\n        getFoo.call(<span style=\"color:Blue;\">this</span>);\n    }\n    <span style=\"color:Blue;\">function</span> getFoo(){\n    }\n    <span style=\"color:Blue;\">return</span> Foo;\n})();\r\n</pre></div>At present the private method <code>getFoo</code> compiles into a method on the prototype:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    Foo.prototype.getFoo = <span style=\"color:Blue;\">function</span> () {\n    };\r\n</pre></div>There are at least two problems with this.<br />\n<ul>\n<li>\nPermits junior developers from writing code like <br />\n</li>\n</ul>\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> foo = <span style=\"color:Blue;\">new</span> Foo();\n<span style=\"color:Blue;\">var</span> bar = foo[<span style=\"color:#A31515;\">&quot;getFoo&quot;</span>](); <span style=\"color:Green;\">// Access private method, yay!</span>\r\n</pre></div><ul>\n<li>\nPrevents JavaScript minifiers from doing their job. Because <code>getFoo</code> is on the prototype a minifier will assume it is a public method (without further annotation) and leave it alone. In fact there is no harm in turning 'getFoo' into say 'x' because it is visible only within the closure.<br />\n</li>\n</ul>\nWith regard to the question of private <strong>fields</strong> (e.g. foo.bar = 10), none of the suggestions on this thread would work. It just cannot be done.\r<br />\n<br />\nOne may as well prefix them with an underscore if that makes them feel happier. But I wouldn't get TypeScript to do that on your behalf, because that is a code convention - not a language construct.<br />\n",
+    "PostedDate": "2013-06-10T08:03:37.32-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055122",
+    "ThreadId": "397651",
+    "Html": "\r\n<div dir=\"ltr\">I completely agree that TypeScript shouldn't enforce the addition of an underscore to conform to the code convention. That was just my suggestion to OP on how to best solve his problem rather than enforcing run-time private methods.\r\n<div><br>\r\n</div>\r\n<div>I can see the benefits of just declaring the function inside of the class declaration closure, though. Hm... not sure how I feel about that. It seems reasonable.<br>\r\n</div>\r\n</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-10T15:42:37.07-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055129",
+    "ThreadId": "397651",
+    "Html": "I wonder what difference it would make in terms of speed and garbage collection, especially with an intensively used class. At least traditionally closures have been more expensive (to create and write to) but with modern compiler advances that may no longer be the case.<br />\n",
+    "PostedDate": "2013-06-10T16:19:23.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1055136",
+    "ThreadId": "397651",
+    "Html": "\r\n<div dir=\"ltr\">Well, I mean, closures are already used in class creation regardless of whether or not this change to private methods is made.\r\n<div><br>\r\n</div>\r\n<div style=\"\">My biggest problem with this change I suppose would be that it creates an inconsistent behavior between private members and private methods. Private members can be accessed at run time outside of the class because they have to be attached to the\r\n object instance in order to be accessed by methods and by methods in the super class, but private methods would not be. This might be fine, but there would be that difference.</div>\r\n</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-10T17:18:57.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125428",
+    "ThreadId": "397651",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\nThere is no extra baggage from implementing private <strong>methods</strong>. It would work as follows:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n    <span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n        <span style=\"color:Blue;\">function</span> Foo() {\n            getFoo.call(<span style=\"color:Blue;\">this</span>);\n        }\n        <span style=\"color:Blue;\">function</span> getFoo(){\n        }\n        <span style=\"color:Blue;\">return</span> Foo;\n    })();\r\n</pre></div></blockquote>\nHow would you access private/public members from within your proposed private methods?  It seems like this approach would work only for static methods.  The same would also work for static members.<br />\n<br />\nYou could pass in the values you need when you call the private methods, but then you would need to know which variables the method needed.  If any changes were made to those variables from within the private method, it would be difficult/costly to persist them back to the original instance object.<br />\n",
+    "PostedDate": "2013-11-17T11:53:25.477-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125865",
+    "ThreadId": "397651",
+    "Html": "Well we are setting the &quot;this&quot; context for the private method so it's safe to access private/public members:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Foo() {\n        <span style=\"color:Blue;\">this</span>.bar = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        getFoo.call(<span style=\"color:Blue;\">this</span>);\n    }\n    \n    <span style=\"color:Blue;\">function</span> getFoo(){\n\n        console.log(<span style=\"color:Blue;\">this</span>.bar); <span style=\"color:Green;\">// Bar</span>\n    }\n    \n    <span style=\"color:Blue;\">return</span> Foo;\n})();\r\n</pre></div>",
+    "PostedDate": "2013-11-17T23:50:05.36-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125917",
+    "ThreadId": "397651",
+    "Html": "<strong>nabog wrote:</strong><br />\n<blockquote>\nWell we are setting the &quot;this&quot; context for the private method so it's safe to access private/public members:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Foo() {\n        <span style=\"color:Blue;\">this</span>.bar = <span style=\"color:#A31515;\">&quot;bar&quot;</span>;\n        getFoo.call(<span style=\"color:Blue;\">this</span>);\n    }\n    \n    <span style=\"color:Blue;\">function</span> getFoo(){\n\n        console.log(<span style=\"color:Blue;\">this</span>.bar); <span style=\"color:Green;\">// Bar</span>\n    }\n    \n    <span style=\"color:Blue;\">return</span> Foo;\n})();\r\n</pre></div></blockquote>\nWow, sorry!  I completely read over that.<br />\n<br />\nAnyway, the problem I foresee with this approach is that we don't always know how a method will be called until run-time.  As such, the TypeScript compiler would have to be really really smart to know when to insert .call() / .apply() / .bind().<br />\n<br />\nConsider the following TypeScript code:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> NicknameGenerator {\n    <span style=\"color:Blue;\">private</span> name: <span style=\"color:Blue;\">string</span>;\n    \n    <span style=\"color:Blue;\">public</span> generateNickname(name: <span style=\"color:Blue;\">string</span>, type: <span style=\"color:Blue;\">string</span>) {\n        <span style=\"color:Blue;\">function</span> getDefaultName() {\n            <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&quot;Rebel&quot;</span>;\n        }\n        \n        <span style=\"color:Blue;\">var</span> baseName = name + <span style=\"color:#A31515;\">&quot; the &quot;</span>;\n        <span style=\"color:Blue;\">var</span> methodName = <span style=\"color:#A31515;\">&quot;get&quot;</span> + type.charAt(0).toUpperCase() + type.slice(1) + <span style=\"color:#A31515;\">&quot;Name&quot;</span>;\n        <span style=\"color:Blue;\">var</span> getNickname = <span style=\"color:Blue;\">this</span>[methodName];\n        \n        <span style=\"color:Blue;\">if</span> (!getNickname || <span style=\"color:Blue;\">typeof</span>(getNickname) !== <span style=\"color:#A31515;\">&quot;function&quot;</span>) {\n            getNickname = getDefaultName;\n        }\n        \n        <span style=\"color:Blue;\">var</span> nickname = baseName + getNickname();\n        \n        <span style=\"color:Blue;\">return</span> nickname;\n    }\n    \n    <span style=\"color:Blue;\">private</span> getCoolName() {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&quot;Dude&quot;</span>;\n    }\n    \n    <span style=\"color:Blue;\">private</span> getFratName() {\n        <span style=\"color:Blue;\">return</span> <span style=\"color:#A31515;\">&quot;Bro&quot;</span>;\n    }\n}\n\n<span style=\"color:Blue;\">var</span> nicknameGenerator = <span style=\"color:Blue;\">new</span> NicknameGenerator();\n\nconsole.log(nicknameGenerator.generateNickname(<span style=\"color:#A31515;\">&quot;John&quot;</span>, <span style=\"color:#A31515;\">&quot;cool&quot;</span>));\r\n</pre></div>How would the TypeScript compiler know what to do with the call: <code>getNickname()</code>?  It would have to understand that the value of <code>getNickname</code> varies and sometimes refers to a private member function and sometimes refers to an inner function.  It would then have to use that understanding to compile the code into something like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">if</span> (!getNickname || <span style=\"color:Blue;\">typeof</span>(getNickname) !== <span style=\"color:#A31515;\">&quot;function&quot;</span>) {\n    getNickname = getDefaultName;\n} <span style=\"color:Blue;\">else</span> {\n    getNickname = getNickname.bind(<span style=\"color:Blue;\">this</span>);\n}\r\n</pre></div>I don't think a compiler will ever be that smart... not yet at least :)<br />\n<br />\nYes, this is a fabricated example, but I think it's reasonable to assume that if TypeScript worked as you suggest, there would be some limitations.<br />\n",
+    "PostedDate": "2013-11-18T01:43:00.81-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1125949",
+    "ThreadId": "397651",
+    "Html": "Yes, if the name of the private method were to be generated dynamically then that would cause problems.<br />\n<br />\nIt would also cause problems even if the private methods went on the prototype, because in some future versions the private names may be mangled (e.g. for minification purposes).<br />\n",
+    "PostedDate": "2013-11-18T03:17:47.497-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127615",
+    "ThreadId": "397651",
+    "Html": "Why not represent each private member as a function prefix with the current class name? Something like this:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\nA = (<span style=\"color:Blue;\">function</span>() {\n  <span style=\"color:Blue;\">function</span> A()  {\n    <span style=\"color:Blue;\">this</span>._A$privateMember = <span style=\"color:Blue;\">null</span>;\n  }\n\n  A.prototype.someMethod() {\n    <span style=\"color:Blue;\">return</span> <span style=\"color:Blue;\">this</span>._A$privateMember;\n  }\n\n  <span style=\"color:Blue;\">return</span> A;\n})();\r\n</pre></div>It's uggly, I know, but it works and don't give errors at runtime. If necessary, the prefixed class name could be something like the FullTypeName.<br />\n",
+    "PostedDate": "2013-11-21T09:28:37.747-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127959",
+    "ThreadId": "397651",
+    "Html": "Mangling the names of privates is sort of a split-the-baby solution. Most of the people wanting &quot;real&quot; private variables want closure (i.e. really actually private) privacy and wouldn't be satisfied with properties that still show up on the object, and conversely, most of the people who are satisfied with compile-time enforcement enjoy the ease of debugging that having unmangled property names brings.<br />\n",
+    "PostedDate": "2013-11-22T08:27:02.53-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130579",
+    "ThreadId": "397651",
+    "Html": "<strong>RyanCavanaugh wrote:</strong><br />\n<blockquote>\nMangling the names of privates is sort of a split-the-baby solution. Most of the people wanting &quot;real&quot; private variables want closure (i.e. really actually private) privacy and wouldn't be satisfied with properties that still show up on the object, and conversely, most of the people who are satisfied with compile-time enforcement enjoy the ease of debugging that having unmangled property names brings.<br />\n</blockquote>\nAgree.\r<br />\n<br />\nAlso, private members in JavaScript by convention are typically just pseudo-private, e.g. prefixed with an underscore. If somebody willingly violates the privacy of these members, they do so knowingly, and it is their own responsibility and their problem if for example the name or type of that private member changes in the future.\r<br />\n<br />\nIronically, most languages that do offer private variables also offer some means of circumventing that privacy (typically by reflection) so one might wonder, what is the point really, or is it really worth the effort?\r<br />\n<br />\nIf or when JavaScript itself offers private variables at some time in the future, TypeScript should map it's private variables using that feature - until then, in my opinion, it should stick to what JavaScript and the JavaScript community at large have agreed on.\r<br />\n<br />\nPsuedo-private is &quot;sufficiently private&quot; - privacy in many other languages is mostly advisory anyhow, and sometimes has to be violated for various valid reasons...<br />\n",
+    "PostedDate": "2013-11-30T18:36:49.23-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1130753",
+    "ThreadId": "397651",
+    "Html": "Here's an approach to runtime-enforced private properties that doesn't redefine the function objects per instance and works back through Ecmascript 3. The technique is from a project I've been working at on the side for the past few months with some goals in common with TypeScript, before I came across TypeScript a few days ago.\r<br />\n<br />\nThe above discussion has pretty well shown you can't do this using any single quick trick like closures. Consequently there is a bit more code to work through with this solution.\r<br />\n<br />\nHere's a severely stripped-down version of the concept, written just for this post and optimized for clarity and emphasis on the central parts of the technique. It glosses over things like support for private static members, support for dynamic classes, and ES3 alternatives for some ES5 functions for the sake of brevity. I can show extended code to handle those if there is interest in the overall technique.\r<br />\n<br />\nYou can also load it up &amp; run it at <a href=\"http://jsfiddle.net/Bz3An/\" rel=\"nofollow\">http://jsfiddle.net/Bz3An/</a><br />\n<pre><code>/** D E M O  A P P L I C A T I O N  C O D E **/\n// Making use of the conceptual code below\nvar publicProps = {&quot;contents&quot;: &quot;quick brown foxes&quot;};\nvar privateProps = {&quot;container&quot;: &quot;little boxes&quot;};\n\nvar publicMethods = {\n    &quot;toString&quot;: function(){\n        return this.container + &quot; of &quot; + this.contents;\n    },\n    &quot;setContainer&quot;: function(requestedContainer){\n        if(this.isAllowableContainer(requestedContainer)){\n            this.container = requestedContainer;\n        } else {\n            throw new Error(requestedContainer + &quot; is not an acceptable container for &quot; + this.contents);\n        }\n    }\n};\n\nvar privateMethods = {\n    &quot;isAllowableContainer&quot;: function(container){\n        return this.contents.substr(-2) == container.substr(-2);\n    }\n}\n\n// define a new class\nvar Packer = classGenerator(publicProps, publicMethods, privateProps, privateMethods);\n\n// create an instance of our class\nvar worker1 = new Packer();\n// and see what we've got...\nconsole.log(worker1.toString());\n\nvar worker2 = new Packer();\n// another instance, let's modify the default state\nworker2.setContainer(&quot;big enclosures&quot;);\n\n// confirm worker2 state modified, worker1 state unaffected\nconsole.log(worker2.toString());\nconsole.log(worker1.toString());\n\n// what was the container for worker 2, again?\nconsole.log(&quot;reading worker2's (private) container property externally: &quot; + worker2.container);\n// Oops! Can't read that private property. Public properties are where you'd expect, though\nconsole.log(&quot;reading worker2's contents property externally: &quot; + worker2.contents);\n\n// properties apparent on an instance are only the public members, so privates\n// aren't exposed with things like Object.keys or for..in\nconsole.log(&quot;The properties of worker1 are: &quot; + Object.keys(worker1).join(&quot;, &quot;) + &quot;.&quot;);\n\n// Public methods which call private methods also work as expected.\ntry{\n    worker1.setContainer(&quot;open fields&quot;);\n    throw new Error(&quot;Shouldn't see this output -- isAllowableContainer throws first&quot;);\n} catch (e){\n    console.log(e.toString());\n}\n\n/** C O N C E P T U A L  C O D E **/\nfunction classGenerator(publicProps, publicMethods, privateProps, privateMethods){\n    // A unique function object is set as the locatable constructor of each instance\n    // to provide a good place to retain references to private members\n    function constructorPrototypeInitialization(){\n        c.prototype = Object.create(publicMethods);\n        c.prototype.constructor = function _class(){\n            c.apply(this, arguments);\n        }\n    }\n    \n    function wrapMethod(method){\n        return function(){\n            var priv_context = this.constructor.__privates;\n            var changeTracker = Object.create(priv_context);\n            \n            var retVal = method.apply(changeTracker, arguments);\n\n            // move writes to the correct location\n            var writes = Object.keys(changeTracker);\n            for(var i = 0; i &lt; writes.length; i++){\n                var write = writes[i];\n                if(write in privateProps){\n                    priv_context[write] = changeTracker[write];\n                } else {\n                    this[write] = changeTracker[write];\n                }\n            }\n            \n            return retVal;                              \n        }; \n    }\n    \n    // wrap the app-provided methods so they are called in private context\n    for(var method in publicMethods){\n        publicMethods[method] = wrapMethod(publicMethods[method]);\n    }\n    for(var method in privateMethods){\n        privateMethods[method] = wrapMethod(privateMethods[method]);\n    }\n    \n    var c = function _class(){\n        cloneInto(this, publicProps); // initialize public properties\n        var p;\n        _class.prototype.constructor.__privates = p = Object.create(this);\n        refInto(p, privateMethods); // add references to the private methods\n        cloneInto(p, privateProps); // initialize private properties        \n        \n        // this inherits from the current value of _class.prototype, but reinitialize\n        // for next instance\n        constructorPrototypeInitialization();        \n    }\n    \n    // prep for the first instance\n    constructorPrototypeInitialization();\n    \n    return c;\n}\n\nfunction cloneInto(intoThis, fromThis)\n{\n    var keys = Object.getOwnPropertyNames(fromThis);\n    for(var i = 0; i &lt; keys.length; i++){\n        intoThis[keys[i]] = clone(fromThis[keys[i]]);\n    }\n};\n\nfunction clone(jango){\n    var boba;\n    if(jango == undefined){\n        boba = jango; // null == undefined, so this does both\n    } else if(Array.isArray(jango)){\n        boba = [];\n        for(var i = 0; i &lt; jango.length; i++){\n            boba[i] = clone(jango[i]);\n        }\n    } else if(typeof(jango) == &quot;object&quot;){\n        boba = {};\n        cloneInto(boba, jango);\n    } else {\n        boba = jango;\n    }\n    return boba;\n};\n\nfunction refInto(intoThis, fromThis){\n    &quot;use strict&quot;;\n    for(var member in fromThis){\n        intoThis[member] = fromThis[member];\n    }\n};</code></pre>\n\nWhat's going on here?\r<br />\nThe basic idea is to represent instance state in a two level object inheritance chain that is assembled when an instance of your class is newed up. The base object in the chain is 'this', and public properties are initialized on it in the constructor just like TypeScript compiled code currently does for public <em>and</em> private properties. But here, for private properties the constructor creates a second object inheriting from this and initializes the private properties there. Then you add wrappers around the class methods to call them in the context of the object containing the privates (and inheriting the publics), and voila, runtime-enforced private properties.\r<br />\n<br />\nSome things about this technique that I think are really awesome:<br />\n<ul>\n<li>TypeScript currently litters 'private' members onto its instance-level objects. As a result, potentially practical code performing a for..in over the properties of an instance not only finds out about all the private members, but also has no way of even distinguishing which are supposed to be public (other than knowledge of some naming convention the class author used to denote privates, which isn't typically one of the things you should need to know about a class interface.) With this technique, privates are really private, and don't show up in such inspections of the instance's properties.</li>\n<li>The application provides the class methods as part of the class definition process (which would be compiled away if used in TypeScript), and those method objects are only instantiated once. Within class methods, application developers have full access to public and private members through this.</li>\n<li>\nThe technique extends to the concept of enforced protected members as well (with an additional level of inheritance), something I didn't do above so I could respond to the topic at hand as directly as possible, but something which I definitely think is worth doing.<br />\n</li>\n</ul>\nThere are some ugly realities to Ecmascript that require some extra jiggering, in particular re: writing to properties (without lines 77-85, writes to public properties would end up as overrides on the privates object, but never appear externally), and re: the need for the wrapper functions to reference the privates object of any instance directly, without just sticking it on the instance (unexpected clutter to app developers) and without keeping those references around elsewhere somewhere where they'll later cause memleaks. My best idea so far for this is the separate constructor function per instance, which the privates object is then attached to.\r<br />\n<br />\nSome pre-emptive defense of things that are likely to be criticized:<br />\n<ul>\n<li>Performance. It runs some code when entering and exiting class methods, and it makes member lookups a lookup down an inheritance chain instead of a lookup on a basic object. Entering a class method is O(1), involving just a few lines of overhead code to create the changeTracker object. Exiting a class method is <a href=\"http://jsperf.com/object-keys-with-inheritance\" rel=\"nofollow\">O(n) to the number of properties the method wrote to</a> (since Object.keys gives exactly the properties written to) so will usually be 0 or a few iterations of the 77-85 loop. <a href=\"http://jsperf.com/member-access-time-on-various-length-inheritance-chains\" rel=\"nofollow\">Lookups on objects with inheritance chains are unfortunately slower than on basic objects, but interestingly the performance penalty appears not to worsen when additional layers of inheritance are added</a>, so adding a protected level shouldn't slow it further.</li>\n<li>The lack of absolute privacy of private members. There are means for code outside class methods to sniff out and &quot;hack in&quot; to your &quot;private&quot; data. Absolute privacy is a slight modification away from the above complete example, if you really really want it, by making constructor.__privates a closure that contains and only returns the privates object if passed a key equal to a value initialized randomly within the classGenerator closure. Can post example, but it seems overkill.</li>\n</ul>\n",
+    "PostedDate": "2013-12-01T20:47:54.737-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1131505",
+    "ThreadId": "397651",
+    "Html": "So I'm looking around a bit more at the state of TypeScript and MS's <a href=\"http://blogs.msdn.com/b/typescript/archive/2013/10/17/typescript-and-the-road-to-1-0.aspx\" rel=\"nofollow\">roadmap</a>, and it basically says breaking changes in the compiler are going to stop very soon. Does this mean it is too late for any scheme that makes &quot;private&quot; members private or distinguishable in some way?\r<br />\n<br />\nThere is a long discussion on this thread suggesting there's just no way to do privates, and the TypeScript langauge spec (section 8.2.2) comes right out and says such a thing can't be done. I don't know if I think the exact technique I illustrated above should be adopted by TypeScript, but I believe it is good enough to show that <strong>it can be done</strong>. If member accessibility in TypeScript has been designed based on a belief that it cannot, I think that design deserves one more look before this characteristic of TypeScript is set in stone forever. If it can be done, shouldn't it be?\r<br />\n<br />\nI'd also argue that TypeScript seems poised to evolve much faster than ECMAScript has, and giving privates a bit more teeth now frees up a lot more options for future evolution. If privates are in fact just properties of instantiated classes, that will be the only way TypeScript will ever be able to implement privates in order to preserve compatibility. On the other hand, if privates are not apparent on objects in the ECMAScript manifestation of the code, it would be much safer to assume only other TypeScript-compiled code touches privates, freeing the underlying technique to change completely in later compilers -- perhaps even to map to native privates, if such a thing exists someday.<br />\n",
+    "PostedDate": "2013-12-03T20:07:45.03-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132313",
+    "ThreadId": "397651",
+    "Html": "When we say &quot;possible&quot;, we mean &quot;possible under our design constraints&quot;:<br />\n<ul>\n<li>The emitted JS is idiomatic</li>\n<li>Boilerplate is minimal</li>\n<li>\nNo additional overhead compared to normal JS OOP<br />\n</li>\n</ul>\nThis approach is really interesting, but doesn't meet those constraints. Allocating an extra object per function invocation is going to be unacceptable overhead for most people, and a 'private' approach that can still be circumvented through normal means doesn't meet the bar of closure privacy. It's a trade-off that meets neither major goal.<br />\n",
+    "PostedDate": "2013-12-05T13:37:17.05-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1132836",
+    "ThreadId": "397651",
+    "Html": "Well, my code above doesn't have the benefit of going through a compilation step, and so must be able to execute methods whose bodies are exactly what was declared by the application. If you transform the emitted function bodies according to some rules a compiler could easily implement, you could dispense with the performance overhead at the cost of the emitted method body code being slightly different from the TypeScript method body code (ie, even when not using TypeScript features in your method implementation). A quick look back through this thread makes it look like that approach hasn't been shot down yet...would any such transformations be entertained?<br />\n",
+    "PostedDate": "2013-12-07T14:28:55.763-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1143813",
+    "ThreadId": "397651",
+    "Html": "<strong>i've found this way to create Javascript private variables:</strong><br />\n<pre><code>\nfunction MyClass(value) {\n    var example = value;            // &lt;--- This is Private\n   \n    this.getExample = function() {\n        return example;\n    }; \n}\n\nvar test1 = new MyClass(&quot;test1&quot;);\nvar test2 = new MyClass(&quot;test2&quot;);\n\nalert(test1.getExample()); //test1\nalert(test2.getExample()); //test2</code></pre>\n\n",
+    "PostedDate": "2013-12-29T23:06:45.103-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1143970",
+    "ThreadId": "397651",
+    "Html": "danfromisrael, this creates an extra closure per method per class instance, which was not a performance trade-off we were willing to take.<br />\n",
+    "PostedDate": "2013-12-30T10:40:18.92-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144014",
+    "ThreadId": "397651",
+    "Html": "Yes, not to mention you would end up with an instance-specific function property, instead of a prototype-based one. Performance wise, it's also not good to re-create function properties for <em>every</em> new object (along with closures, which are additional object instances as well).\r<br />\n<br />\nBottom line, for performance reasons, I agree that functions need to stay as prototypes, which unfortunately does mean prototype functions must access instance properties using &quot;this&quot;.  Without closures, like your example, it's not possible to create true private variables (can't have it both ways).\r<br />\n<br />\nThat said, I'm always a fan of hybrid solutions, and if a developer didn't care about performance, I think adding on a new keyword to allow private variables in the fashion you posted would be nice (the compiler could detect usage and move things around as needed I guess), but remember, you can already do what you posted in TypeScript.  There's nothing stopping you from using your code above in TypeScript - it's not a new language. See example:<br />\n<pre><code>class MyClass {\n    getExample:()=&gt;any;\n    constructor(value) {\n    var example = value;            // &lt;--- This is Private\n    this.getExample = () =&gt; {\n        return example;\n    }; \n   }   \n}\nvar mc = new MyClass(123);\nvar result = mc.getExample();\n</code></pre>\n\n(see it in the playground: <a href=\"http://goo.gl/ewaw2S\" rel=\"nofollow\">http://goo.gl/ewaw2S</a>)<br />\n",
+    "PostedDate": "2013-12-30T13:07:19.243-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144102",
+    "ThreadId": "397651",
+    "Html": "Despite all these clever ideas, I still think the simplest answer is: it's not important.\r<br />\n<br />\nPrefixing the variable name with an underscore is &quot;private enough&quot; - you've been warned the property is private, and if you decide to access it anyway, that's your problem, you do so knowingly. Just as, in other languages that have privacy and reflection, you bypass that privacy knowingly.\r<br />\n<br />\nI think, compile-time privacy is the simplest and safest solution - it deviates minimally from normal JS practices and patterns, doesn't sacrifice performance, and doesn't require structural changes if eventually JavaScript gets support for actual private variables; at that time, the compiler would simply (probably optionally) flag the properties as private.\r<br />\n<br />\nWhy invent complicated/contrived solutions to problems that have simple solutions?<br />\n",
+    "PostedDate": "2013-12-30T19:36:44.46-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144321",
+    "ThreadId": "397651",
+    "Html": "mindplay, personally I lean to the &quot;invent a complicated solution&quot; side only as long as making things private is a feature of the language at all. Using a naming convention alone wouldn't bother me, but in TypeScript, to properly make something private involves the code containing redundant information everywhere: say private <em>and</em> put an underscore on the member name. Yes, many developers choose to code this way in other languages too, but TypeScript would be unique in that you'd be required to do both to prevent all unknowing access to things intended to be private (ie, if external JS interfaced with it). That seemed like poor enough language design to me to see if something couldn't be done about it.<br />\n",
+    "PostedDate": "2013-12-31T14:20:51.597-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144410",
+    "ThreadId": "397651",
+    "Html": "IMO any kind of overhead for the sake of truly private methods is unacceptable.\r<br />\n<br />\nHaving been through this discussion a few times, the solution I would now like to see is for TS to provide an option to minify the compiled JS.\r<br />\nThis would naturally mangle private methods - the added benefit, for example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">class</span> Foo {\n    <span style=\"color:Blue;\">public</span> getBar(){\n        <span style=\"color:Blue;\">this</span>.getFoo();\n    }\n    <span style=\"color:Blue;\">private</span> getFoo(){}\n}\r\n</pre></div>Should compile into<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> Foo = (<span style=\"color:Blue;\">function</span> () {\n    <span style=\"color:Blue;\">function</span> Foo() {\n    }\n    Foo.prototype.getBar = <span style=\"color:Blue;\">function</span> () {\n        <span style=\"color:Blue;\">this</span>.p1();\n    };\n\n    Foo.prototype.p1 = <span style=\"color:Blue;\">function</span> () {\n    };\n    <span style=\"color:Blue;\">return</span> Foo;\n})();\r\n</pre></div>This would stop people from treating private methods as just something one accesses with bracket notation: <code>foo[&quot;getFoo&quot;]()</code>\r<br />\n<br />\nOf course this does not provide any security if that is the primary concern. But if you do have state that needs to be protected from hackers (as opposed to novice developers) then that can be achieved via a closure.<br />\n",
+    "PostedDate": "2014-01-01T09:07:35.623-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1144593",
+    "ThreadId": "397651",
+    "Html": "How about simply annotating private members with @private in the generated JavaScript?\r<br />\n<br />\nThat way, even consumers of the compiled JavaScript have been clearly informed, and the need to prefix methods with an underscore to indicate privacy also goes away...\r<br />\n<br />\nBeing able to fully protect state from hackers via closures is a debatable benefit - I can still replace the actual accessors on your prototype if I wanted, or substitute your entire constructor, etc... and in the rare case where that is actually required, you can still use closures in TypeScript. You can also <code>return</code> in a constructor as per JavaScript if you like, and keep anything you wish in the constructor's scope &quot;private&quot;.<br />\n",
+    "PostedDate": "2014-01-02T05:17:59.137-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1149979",
+    "ThreadId": "397651",
+    "Html": "The annotation idea is not bad, because that would enable minifiers such as Google's closure to get down to business on the generated JavaScript file.\r<br />\n<br />\nMy preference is for TypeScript perform the minification in-house. There is a work item out for this: <a href=\"https://typescript.codeplex.com/workitem/157\" rel=\"nofollow\">https://typescript.codeplex.com/workitem/157</a>\r<br />\n<br />\nRegarding the security issue, yes, that is also my point: That needs to be implemented on a case-by-case basis and not something that TypeScript should worry about at all. That can be effected with closures in conjunction with <code>Object.freeze</code> or <code>Object.seal</code> to prevent tampering. These tend to be very special cases IMO.<br />\n",
+    "PostedDate": "2014-01-06T08:03:13.373-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1228499",
+    "ThreadId": "397651",
+    "Html": "I just want to say, prepending public properties with &quot;warning&quot; prefixes, or obfuscating property names, is not encapsulation. It's noise, and makes APIs ugly. Way to uglify a new language, guys. I'd have taken the performance hit; as a user of the language the choice should have been mine.<br />\n",
+    "PostedDate": "2014-03-31T01:48:03.39-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1228574",
+    "ThreadId": "397651",
+    "Html": "For other observers of this thread, here is the performance difference. The cost of object construction is 5x-6x slower than raw prototypes (in Chrome) but honestly it's comparing nanoseconds per instantiation. <a href=\"http://jsfiddle.net/gzqWe/7/\" rel=\"nofollow\">http://jsfiddle.net/gzqWe/7/</a>  Actually, in IE11 the difference is about 1.5x on my machine.<br />\nWon't comment on memory consumption (which, yes I know, is hugely important) as I don't know how to tool for measuring that .. :)<br />\n",
+    "PostedDate": "2014-03-31T05:46:14.257-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1229156",
+    "ThreadId": "397651",
+    "Html": "To make the comparison more apt to real-world code, you should have much more than one method per object.\r<br />\n<br />\nEven having only 4 methods per object instead of 1, the results on my machine (in Chrome) were 1,626 vs 15,444 - nearly a tenfold difference. And that's still a small class.\r<br />\n<br />\nOn the memory side, we can just do math (to avoid getting confused by GC / JIT optimisations that are host-specific). Let's say we have 10 classes, each with 20 private methods, and we create 400 instances of each class. The 'non-private' version needs to allocate 10 * 20 = 200 closures. The 'private' version needs to allocate 20 * 400 = 8,000 closures. In addition to memory pressure, that's a also 20-fold difference in the number of things the GC needs to track and clean up. Having class instances be closures instead of simple data objects with prototype pointers also makes the GC's job quite a bit harder to begin with.<br />\n",
+    "PostedDate": "2014-04-01T13:06:24.44-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": "2014-04-01T13:17:57.547-07:00"
+  },
+  {
+    "Id": "1229162",
+    "ThreadId": "397651",
+    "Html": "What Ryan said.\r<br />\n<br />\nAlso, what's the point in trying to force a feature into the compiled code that the target language doesn't have?\r<br />\n<br />\nSome day JavaScript will have visibility modifiers, and at that point we can use them - until that time, JavaScript members are all public, because that's the way the language works. Trying to emulate different semantics by mangling the generated code is going to do more harm than good, and besides, JavaScript programmers are used to the convention of <code>_</code> meaning (at least) &quot;enter at your own risk&quot;. You may not like that, but then your quarrel is with JavaScript (whose maintainers are working on the matter anyhow) and not with TypeScript.<br />\n",
+    "PostedDate": "2014-04-01T13:26:20.49-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1229166",
+    "ThreadId": "397651",
+    "Html": "Further more, using the same line of thinking, you could argue that generated code should have type-checks - you could generate run-time type-checks everywhere, but does that add any value in a JavaScript world where type-checking isn't something JavaScript developers expect, or will it just get in the way? JavaScript developers do not expect visibility modifiers, because that's not a concept that exists in JavaScript land.\r<br />\n<br />\nIn order for the generated code to be as interoperable with the JavaScript eco system as possible, the generated code needs to not only be true and accurate to TypeScript - it needs to be true to JavaScript, meet JavaScript developers' expectations, and not pollute the eco system with concepts, elements or artifacts that do not belong in that world.\r<br />\n<br />\nJust my personal philosophy.<br />\n",
+    "PostedDate": "2014-04-01T13:35:41.337-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1229203",
+    "ThreadId": "397651",
+    "Html": "I am not against name mangling at all for private members.  IMHO, this would be a deterrent to others wanting to use them.  Instead of just &quot;__myprop&quot;  the private result might be &quot;__myprop123&quot; (the first number perhaps starts with a value based on the current time, and simply increments by 1 globally for each one), or even perhaps something that CANNOT be accessed easily using &quot;.&quot;, such as &quot;__myprop@AXY&quot; (though yes, indexing is still one way).  This is not something far fetched from what is normal in the JS world.  It's common to adorn private properties with <code>$</code> or <code>_</code> or <code>__</code> or <code>__xxx__</code> to prevent access, so I don't see the big deal.  A minimizer changes names also, does it not? (for obfuscation, so...)<br />\n",
+    "PostedDate": "2014-04-01T15:01:11.857-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230168",
+    "ThreadId": "397651",
+    "Html": "<blockquote>\nI am not against name mangling at all for private members.<br />\n</blockquote>\nI believe you will find the TypeScript team is generally against any feature that requires altering the shape of the generated code from the shape of the original TypeScript code.<br />\n<blockquote>\nIt's common to adorn private properties with <code>$</code> or <code>_</code> or <code>__</code> or <code>__xxx__</code> to prevent access<br />\n</blockquote>\nAnd nothing would prevent you from doing that in TypeScript either, e.g. <code>private $getFoo()</code> - same as in JavaScript, prefixing/postfixing variables can be done just the same, if you need to somehow communicate a stricter warning to API consumers - if you absolutely feel you must. Mangling the shape of the code isn't necessary for that. (I still don't recommend it though - whether it's you or the compiler mangling the names, it creates the same maintenance problems.)<br />\n<blockquote>\nA minimizer changes names also, does it not?<br />\n</blockquote>\nYou can't compare that scenario - code that comes out of a minifier is decisively not intended for developer consumption, but for machine consumption. It's optimized for delivery, not for maintenance. Code that comes out of the TypeScript compiler is decisively intended for consumption by JavaScript developers and for ongoing maintenance.<br />\n<br />\nFor the same reasons, TypeScript does not give you an option to compile accessors in a way that requires mangling, e.g. synchronous <code>getX()</code> and <code>setX()</code> methods for a property <code>X</code>  - your options are use them, or don't. Similarly, visibility modifiers, however they are implemented and supported, your options will most likely be use them, or don't - the difference here is that code can &quot;degrade&quot; for JavaScript interpreters that do not support visibility modifiers, without adversely affecting the program at run-time.<br />\n<br />\nEssentially, the problem you're facing here, is strictly a design-time/development-time problem, as far as JavaScript interpreters without support for visibility modifiers are concerned - the feature does not exist and cannot be elegantly modeled in such as way that it will be enforced at run-time, and, because this is not a JavaScript language feature, it isn't expected by JavaScript consumers in the first place. We can't enforce type-hints at run-time either, and we shouldn't, for all the same reasons.<br />\n<br />\nYou're pursuing a solution to a problem that isn't there in the first place. When JavaScript has visibility modifiers, this will become a problem, and the solution will then be very simple and elegant. Until then, visibility modifiers is not something that exists in JavaScript, just like other (design-time/development-time) features in TypeScript that don't exist and aren't (and shouldn't be) modeled in the generated JavaScript code.<br />\n<br />\nJavaScript is more than just a run-time environment to TypeScript - unlike e.g. Dart which has a very limited ability to interop with non-Dart native JavaScript code, in either direction. Name mangling is one reason for that. TypeScript has a much closer relationship with JavaScript than e.g. Dart and that's a big feature to give up to provide developer features for JavaScript consumers at run-time.<br />\n",
+    "PostedDate": "2014-04-03T20:34:33.427-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230181",
+    "ThreadId": "397651",
+    "Html": "<blockquote>\nAnd nothing would prevent you from doing that in TypeScript either<br />\n</blockquote>\nI never said I was prevented.<br />\n<blockquote>\nit creates the same maintenance problems<br />\n</blockquote>\nI have no idea how that would be a maintenance problem, since the compiler would generate the mangled name.<br />\n<blockquote>\nYou can't compare that scenario - code that comes out of a minifier is decisively not intended for developer consumption, but for machine consumption.<br />\n</blockquote>\nTrue in part, but I gather many minimized scripts also contain the added bonus of obfuscating proprietary code (for some people).  I would think mangled names would be inline with this idea.<br />\n<blockquote>\nas far as JavaScript interpreters without support for visibility modifiers are concerned - the feature does not exist<br />\n</blockquote>\nWell, apparently, JavaScript doesn't have type enforcement and generics either.  The way I view TS is that is ADDS a layer of control and type help/protection desired for building large scale JS apps, so this statement doesn't hold much ground.<br />\n<blockquote>\nYou're pursuing a solution to a problem that isn't there in the first place<br />\n</blockquote>\nUntrue - if there was no problem, there would not be a big discussion.  Perhaps not for you, but it is for some it seems.<br />\n<blockquote>\nWhen JavaScript has visibility modifiers, this will become a problem, and the solution will then be very simple and elegant. <br />\n</blockquote>\n... and until then, there's no harm in doing something else.<br />\n<blockquote>\nUntil then, visibility modifiers is not something that exists in JavaScript, just like other features in TypeScript that don't exist and aren't (and shouldn't be) modeled in the generated JavaScript code.<br />\n</blockquote>\nI respect your opinion, and equally disagree. ;)  There are no inheritance keywords in JS either, but coding is required (and code for extending is inserted).  There is no &quot;(x:number, ...args)&quot; in JS implicitly either, so a &quot;for loop&quot; needs to be inserted by TS to create a new array and offset it.  Using lambda expressions inserts a &quot;var _this=this&quot; automatically (for closures), which has caused an issue report at one point (same goes for &quot;_i&quot; in auto generated for loops, in which there is another issue report).  I'm sure there are many more examples.  I see TS as transcoding to JS according to keywords and modifiers, and thus, I don't see it as being such a huge leap.  For that matter, why not just minify private variables ahead of time - that's not far fetched.<br />\n",
+    "PostedDate": "2014-04-03T21:05:50.8-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1230190",
+    "ThreadId": "397651",
+    "Html": "Just a side note, I have used various Google map related APIs many times, which are minified, and many private properties don't have any meaningful names.  You must access them using functions, because there's no guarantee the names (like &quot;$h&quot;, &quot;Uc&quot;, &quot;wb&quot; [taken from an actual map related API object - FOR DEVELOPERS I might add]) will remain the same.  At the same time, there are properties with &quot;_&quot; before the property names, which are mostly likely readonly, but which can also be accessed directly.  I think minifying private properties like this is NOT a bad idea at all, and certainly not even a unique one.<br />\n",
+    "PostedDate": "2014-04-03T21:29:15.847-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

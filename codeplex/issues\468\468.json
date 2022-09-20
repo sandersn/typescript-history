@@ -1,0 +1,190 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:42.223-07:00",
+    "CommentCount": 30,
+    "Custom": null,
+    "Description": "I propose to make \"bind\" keyword for class methods. This way you can bind \"this\" keyword to current class instance.\r\n\r\n\r\nclass Foo {\r\n    public bind someMethod(): void {\r\n        // Here .this is always current Foo instance\r\n    }\r\n}\r\n\r\n\r\ncompiles to\r\n\r\n\r\nvar Foo = (function () {\r\n    function Foo() {\r\n        this.someMethod = this.someMethod.bind(this);\r\n    }\r\n    Foo.prototype.someMethod = function () {\r\n    };\r\n    return Foo;\r\n})();",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-20T09:06:31.767-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Bind \"this\" keyword in method to current class instance with a keyword",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 28,
+    "Id": 468
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Wouldn't it be more correct to bind all member functions by default?  I think it makes more sense to specify the type of 'this' when it is *not* going to be the class that the function is defined in.  So a syntax more like C#'s 'extension methods' make more sense:\n\nclass Foo {\n   public static someUnboundMethod( this : OtherClass ): void {        \n        // this would be of type OtherClass and invalid to be called from 'this.' context\n   }\n}\n\n",
+      "PostedDate": "2012-11-20T10:21:07.77-08:00",
+      "Id": 82777
+    },
+    {
+      "Message": "This completely breaks JavaScript own vs inherited property semantics:\n\nvar Foo = (function () {\n    function Foo() {\n        this.someMethod = this.someMethod.bind(this);\n    }\n    Foo.prototype.someMethod = function () {\n    };\n    return Foo;\n})();\n\n\n",
+      "PostedDate": "2012-11-21T10:09:38.803-08:00",
+      "Id": 82848
+    },
+    {
+      "Message": "I'm using this approach only for event handlers. This is very handy to bind handler to current instance, if you later want to unbind it.\nUsing lambda expression you can't unbind handler easily, you need to add a reference for created function.\n\nHere are example. I have a class with mouse click handler and I want unbind it during first call.\nI found 3 way to make it:\n\n1. Add reference to lambda so you can remove event listener later:\n\nclass Foo {\n\t\n\tprivate lambdaFunc: EventListener;\n\t\n\tconstructor () {\n\t\tthis.lambdaFunc= (e) => { this.clickHandler();};\n\t\tdocument.addEventListener('click', this.lambdaFunc);\n\t}\n\t\n\tprivate clickHandler() {\n\t\tdocument.removeEventListener('click', this.lambdaFunc);\n\t\talert('Hi');\n\t}\n\t\n}\nnew Foo();\n\n\n\n2. Add reference to binded method:\n\nclass Foo {\n\t\n\tprivate bindClickHandler: EventListener;\n\t\n\tconstructor () {\n\t\tthis.bindClickHandler = this.clickHandler.bind(this);\n\t\tdocument.addEventListener('click', this.bindClickHandler);\n\t}\n\t\n\tprivate clickHandler() {\n\t\tdocument.removeEventListener('click', this.bindClickHandler);\n\t\talert('Hi');\n\t}\n\t\n}\nnew Foo();\n\n\n\n3. Bind method in constructor:\n\nclass Foo {\n\t\n\tconstructor () {\n\t\tthis.clickHandler = this.clickHandler.bind(this);\n\t\tdocument.addEventListener('click', this.clickHandler);\n\t}\n\t\n\tprivate clickHandler() {\n\t\tdocument.removeEventListener('click', this.clickHandler);\n\t\talert('Hi');\n\t}\n\t\n}\nnew Foo();\n\n\n\nI like the last one. But you can do it even better: make bind keyword so you can use it like this\n\nconstructor () {\n\tdocument.addEventListener('click', this.clickHandler);\n}\n\nprivate bind clickHandler() {\n\tdocument.removeEventListener('click', this.clickHandler);\n\talert('Hi');\n}\n",
+      "PostedDate": "2013-01-07T06:45:51.357-08:00",
+      "Id": 85490
+    },
+    {
+      "Message": "I think @joewood72 has a point. I would assume that especially in a class `this` always refers to the right context. So I would make bind-the-current-context  the default behavior as well.",
+      "PostedDate": "2013-02-16T09:11:07.817-08:00",
+      "Id": 90566
+    },
+    {
+      "Message": "I think @joewood72 has a point. I would assume, especially in a class, that `this` always refers to the right context. So I would make bind-the-current-context the default behavior for instance methods as well.",
+      "PostedDate": "2013-02-16T09:13:23.88-08:00",
+      "Id": 90567
+    },
+    {
+      "Message": "I understand the desire to see TypeScript offer further help here. However, we consider it very important to maintain JavaScript runtime semantics and to allow interoperation with existing JavaScript coding/usage patterns. ES6 classes will not do any bind-on-extract, and so TypeScript cannot do this implicitly either.\n\n We may be able to add warnings/errors on attempts to extract a method off a class instance. This would at least bring attention to cases where this bug might occur.\n\n I'm also supportive of the \"bind operator\" proposal from Dave Herman, though I think it could be modified to offer even simpler syntax for bind that fits the most common use case of method extraction:\n\nhttp://wiki.ecmascript.org/doku.php?id=strawman:bind_operator\n\n I expect we will look at both the warning and the bind operator as options for TypeScript.",
+      "PostedDate": "2013-02-26T14:36:40.17-08:00",
+      "Id": 91608
+    },
+    {
+      "Message": "> we consider it very important to maintain JavaScript runtime semantics and to allow interoperation with existing JavaScript coding/usage patterns\n\nIf so, then why force adding the \"this\" keyword to every class-member usage, as opposed to JS automatic inference?\n\nWe have the following situation:\n1. \"this\" doesn't add any useful information in determining the execution context; The meaning of \"this\" can be changed arbitrarily by an external caller.\n2. \"this\" in syntactically enforced as opposed to JS.\n\nEither make \"this\" useful, or don't require its inclusion. Currently we have verbose code which does nothing useful.",
+      "PostedDate": "2013-04-16T14:53:46.983-07:00",
+      "Id": 97179
+    },
+    {
+      "Message": "I'd also like to add a 3rd point to my comment above:\n\n3. We don't have the self/_this workaround in TS, which could have mitigated point 1. \nIt's a really weak point for the language. It should be addresses by offering a real solution.\n\nYou shouldn't be afraid to diverge from ES where it's truly problematic. Otherwise you limit the potential impact of TS.",
+      "PostedDate": "2013-04-16T14:58:54.753-07:00",
+      "Id": 97182
+    },
+    {
+      "Message": "I would be happy with Class.this, which would give a closure to class instance as programmer sees it. Just like self pattern. Binding should be left to developer as there already are constructs to handle this in JS.\n\n",
+      "PostedDate": "2013-04-22T12:09:38.59-07:00",
+      "Id": 97707
+    },
+    {
+      "Message": "@yaakovd - Not sure I understand the comment about requiring 'this' keyword on every class-member usage.  JavaScript has the same behavior - both in ES5 and in ES6 classes.  Also not sure I follow the point about not have a self/_this workaround - you can do that if you want in TS as well, or use arrow functions.\n\nI think perhaps you are comparing TS classes to JS code written using the \"closure\" class style used in some JS code.  That style has some benefits, including binding all members by default, but also generally has worse performance and interoperability with other code.  Both in ES6 and in TypeScript, we have adopted the more commonly used \"prototypal\" class pattern as the \"class\" syntax.  This does not itself solve the member binding problem, leaving it the same as it is in existing prototype based JS code.\n\n",
+      "PostedDate": "2013-04-23T09:20:40.757-07:00",
+      "Id": 97834
+    },
+    {
+      "Message": "@v3nom - Could you give an example of what the 'Class.this' approach you describe would look like?",
+      "PostedDate": "2013-04-23T09:21:09.337-07:00",
+      "Id": 97835
+    },
+    {
+      "Message": "The point is that some libraries change 'this' to some specific object and developers do not want to rebind the event handler, they just want to have alternative way of reaching initial this.\n\nSelf in JS:\n``` JS\nfunction A(){\n  var self = {};\n  self.n = 'n';\n  self.someBtn_Click = function(){\n    // self.n will always be correct\n    // 'this' depends on library used to attach the handler\n    console.log(self.n);\n  };\n  return self;\n}\n```\nor \n```JS\nfunction A(){\n  var self = this;\n  this.n = 'n';\n  this.someBtn_Click = function(){\n    // self.n will always be correct\n    // 'this' depends on library used to attach the handler\n    console.log(self.n);\n  };\n}\n```\nPossible way of using self in TS:\n```JS\nclass A{\n  n = 'n';\n  someBtn_Click(){\n     // A.this.n will always be correct\n    // 'this' depends on library used to attach the handler\n    console.log(A.this.n);\n  }\n}\n```\nI am not sure what would be the most idiomatic output for this in JS.\n",
+      "PostedDate": "2013-05-04T10:45:39.377-07:00",
+      "Id": 99377
+    },
+    {
+      "Message": "I agree with joewood72",
+      "PostedDate": "2013-06-01T11:32:47.667-07:00",
+      "Id": 101875
+    },
+    {
+      "Message": "The Class.this looks great.\n\nHaving to move all function bodies to the constructor can't be the solution.",
+      "PostedDate": "2013-07-18T12:17:01.543-07:00",
+      "Id": 106487
+    },
+    {
+      "Message": "Making \"self\" a keyword that points to the bound \"this\" sounds the simplest to me",
+      "PostedDate": "2013-08-01T08:10:48.333-07:00",
+      "Id": 108175
+    },
+    {
+      "Message": "How is this now resolved??",
+      "PostedDate": "2013-08-02T09:49:06.083-07:00",
+      "Id": 108372
+    },
+    {
+      "Message": "???",
+      "PostedDate": "2013-08-03T23:51:39.57-07:00",
+      "Id": 108480
+    },
+    {
+      "Message": "I received an update that it was marked as Resolved!",
+      "PostedDate": "2013-08-04T01:00:50.03-07:00",
+      "Id": 108485
+    },
+    {
+      "Message": "sorry @georgiosd; the ??? was my comment to the same - not to your question. \n\nSo, @microsoft: how is this resolved? putting all function bodies in the constructor seems quite un-elegant to me. ",
+      "PostedDate": "2013-08-04T07:34:45.28-07:00",
+      "Id": 108493
+    },
+    {
+      "Message": "How has this been resolved? Is someone just going around randomly closing issues?\n\nI think it might be as a result of this discussion: https://typescript.codeplex.com/discussions/447071\n\nMarking an issue as \"Resovled\" without any comment on how it was resolved is rather unprofessional, in my opinion, especially considering how many different issues/discussion threads there have been about how to handle \"this\" in a class context and for event handlers.\n\nCan we please have some information on how this issue was resolved?",
+      "PostedDate": "2013-08-07T15:12:56.063-07:00",
+      "Id": 108931
+    },
+    {
+      "Message": "Two days ago, 0.9.1 was released. \nIt introduces a new syntax, where you can assign lambda functions as class member and have access to 'this'.",
+      "PostedDate": "2013-08-07T23:06:05.197-07:00",
+      "Id": 108966
+    },
+    {
+      "Message": "Lars, correct me if I'm wrong but this still depends on the methods to be initialized in the ctor rather than in the body of the class?\n\nFor those who missed it, go here: http://blogs.msdn.com/b/typescript/archive/2013/08/06/announcing-0-9-1.aspx",
+      "PostedDate": "2013-08-07T23:26:32.26-07:00",
+      "Id": 108968
+    },
+    {
+      "Message": "Or rather, I don't understand how the new release solves this issue, based on the example given in the post...",
+      "PostedDate": "2013-08-07T23:29:48.587-07:00",
+      "Id": 108969
+    },
+    {
+      "Message": "For me it looks like you can define the body, not just the type, OUTSIDE of the constructor. \n\n```\nclass Adder {\n    constructor(public x: number, public y: number) { }\n                                                    ^^^^ constructor ends here\n\t\t\t\t\t\t\t\t\t\t\t\t\t\n    addMembers = (evt: MouseEvent) => console.log(this.x + this.y);\n                                                  ^^^^     ^^^^\n}\n```\n\nI tried a simpler sample online - seems to work.\n\n```\nclass Adder {\n    constructor() { }\n    addMembers = (evt: MouseEvent) => console.log(this);\n}\n```\n\nbecomes.\n\n```\nvar Adder = (function () {\n    function Adder() {\n        var _this = this;\n        this.addMembers = function (evt) {\n            return console.log(_this);\n        };\n    }\n    return Adder;\n})();\n```\n\nI think this is a good solution.\nThere is no way you could scope a prototype-based function with a custom \"this\"...",
+      "PostedDate": "2013-08-07T23:38:02.843-07:00",
+      "Id": 108971
+    },
+    {
+      "Message": "Hm, it still requires assignment notation versus the \"normal\" declaration notation. It's definitely a step in the right direction. Consider:\n\n```\nclass Foo {\n\tconstructor() {\n\t\t\n\t}\n\t\n\tbar(): void {\n\t\tconsole.log(this);\n\t}\n\t\n\tbarAssigned = (): void => {\n\t\tconsole.log(this);\n\t}\n}\n```\nCompiles to:\n\n```\nvar Foo = (function () {\n    function Foo() {\n        var _this = this;\n        this.barAssigned = function () {\n            console.log(_this);\n        };\n    }\n    Foo.prototype.bar = function () {\n        console.log(this);\n    };\n    return Foo;\n})();\n```",
+      "PostedDate": "2013-08-07T23:47:44.847-07:00",
+      "Id": 108973
+    },
+    {
+      "Message": "Well, ms chose prototypal methods for the \"normal declaration\" - which is a good choice. But there is no way you can get hold of the real this in a prototype method. The only place you can be sure is the constructor - and there you have to use assignment.\n\nThis is then about JS, not TS. Or am I getting it wrong?\n\nWhat could your example compile to else?",
+      "PostedDate": "2013-08-08T00:03:07.46-07:00",
+      "Id": 108974
+    },
+    {
+      "Message": "I was hoping for equivalent output for both methods. But perhaps that would break JS semantics or something.",
+      "PostedDate": "2013-08-08T02:17:45.5-07:00",
+      "Id": 108987
+    },
+    {
+      "Message": "A couple factors here.  There are a couple ways to get the \"right\" this (binding or using the constructor).  What we settled on was more of the simplest set of changes to accommodate a way of capturing this, by loosening the restrictions around where it can be used.\n\nIt doesn't have special syntax, but this is intentional.  We'd like to stay as close as possible to the ES6 standard, and I'll expect we'll continue to align as it solidifies, and one thing we're hesitant to do is to come up with even more syntax, like the original \"public bind someMethod()\".  We saw this as the easiest and shortest path to the functionality people would need.",
+      "PostedDate": "2013-08-08T09:21:09.627-07:00",
+      "Id": 109031
+    },
+    {
+      "Message": "It's all good - it works as expected and it doesn't take much more than doing it the traditional way. Thanks for being so responsive to user requests!",
+      "PostedDate": "2013-08-08T14:52:40.697-07:00",
+      "Id": 109112
+    },
+    {
+      "Message": "I like class.this, but not introducing new things is a strong point. Current solution was actually what I first tried to do when I saw that TS has ()=>{}. I guess I am not the only one and it should be pretty intuitive for everyone.",
+      "PostedDate": "2013-08-09T02:12:17.637-07:00",
+      "Id": 109168
+    }
+  ]
+}

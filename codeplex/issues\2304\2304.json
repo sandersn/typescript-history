@@ -1,0 +1,95 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:19:45.373-07:00",
+    "CommentCount": 11,
+    "Custom": null,
+    "Description": "Some modules (like `es6-shim`) don't return a usable value but instead polyfill or monkey patch global objects.\r\n\r\nBut the compiler optimises unused imports:\r\n\r\nTake this line:\r\n````\r\nimport foo= require('foo-shim');\r\n````\r\n\r\nSo if `foo` never gets used then this is require() is omitted from the emitted JavaScipt, with the result that the shim never gets executed.\r\n\r\nThe shim can be made to work like so (on `commonjs`):\r\n\r\n````\r\nrequire('foo-shim');\r\n````\r\n\r\nBut is will be passed-through as a plain `require()`, and not be a recognised external module (eg: it won't be transformed with a `define` when we use `amd` module output).",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-03-12T08:39:42.053-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler removes unused import-modules, breaks global shims",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2304
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This works for amd but not for a commonjs module: the import still gets stripped. \n\nWe appreciate the work around as it does the amd codegen and can conditional require to make it work for node.\n\nBut our code should compile clean to both amd AND commonjs module, this is why we use import/require modules over single files.",
+      "PostedDate": "2014-03-12T12:03:19.317-07:00",
+      "Id": 136658
+    },
+    {
+      "Message": "Another workaround is to use the imported name in an otherwise innocuous expression position that makes sure the compiler will not elide it from the emit.",
+      "PostedDate": "2014-04-03T14:30:29.997-07:00",
+      "Id": 140463
+    },
+    {
+      "Message": "Makes sense and easy to annotate with a comment or name: it will do.",
+      "PostedDate": "2014-04-03T15:12:03.203-07:00",
+      "Id": 140473
+    },
+    {
+      "Message": "I got another use case in a valid statement that gets removed:\n\nIf we import/export in one line and not use the variable in the script (like when bundling submodules):\n\n````\nexport import importer = require('./importers/index');\n````\n\nThis is a common pattern in commonjs style code, I'll re-open to see what you think.",
+      "PostedDate": "2014-04-27T07:46:15.783-07:00",
+      "Id": 144496
+    },
+    {
+      "Message": "You can use the `amd-dependency` tag to work around this. See https://typescript.codeplex.com/discussions/439314\n\r\n\r** Closed by RyanCavanaugh 03/12/2014 11:06AM",
+      "PostedDate": "2014-03-12T11:06:13.74-07:00",
+      "Id": 144497
+    },
+    {
+      "Message": "Yeah that seems like a reasonable pattern to support. We'll investigate.",
+      "PostedDate": "2014-05-08T18:28:18.973-07:00",
+      "Id": 145994
+    },
+    {
+      "Message": "Hm, am I missing how you're doing this? Seems to be working as intended:\r\n\r\n```\r\nD:\\test>type a.ts\r\nexport interface Foo { x: string; }\r\nexport var foo: Foo;\r\nD:\\test>type b.ts\r\nexport interface Bar { y: string; }\r\nexport var bar: Bar\r\nD:\\test>type bundle.ts\r\nexport import foo = require('a');\r\nexport import bar = require('b');\r\nD:\\test>type user.ts\r\nimport bundle = require('bundle');\r\nvar x = bundle.foo;\r\nvar y = bundle.bar;\r\nD:\\test>tsc.exe -m commonjs user.ts\r\n\r\nD:\\test>type a.js\r\nexports.foo;\r\n\r\nD:\\test>type b.js\r\nexports.bar;\r\n\r\nD:\\test>type bundle.js\r\nvar foo = require('a');\r\nexports.foo = foo;\r\nvar bar = require('b');\r\nexports.bar = bar;\r\n\r\nD:\\test>type user.js\r\nvar bundle = require('bundle');\r\nvar x = bundle.foo;\r\nvar y = bundle.bar;\r\n```",
+      "PostedDate": "2014-05-08T18:37:36.737-07:00",
+      "Id": 145995
+    },
+    {
+      "Message": "Here is a real world example:\n\nhttps://github.com/DefinitelyTyped/definition-header/blob/f70ddec22d1f57784bc3ec68476515a129b44597/src/index.ts#L11-L15\n\nWe have to use an extra statement trick the compiler into keeping the exports alive (the array at line 15). If we remove this then the 3 exports on line 11-13 get dropped from the output.",
+      "PostedDate": "2014-05-08T19:10:25.46-07:00",
+      "Id": 145999
+    },
+    {
+      "Message": "Ok I see, so you were only using the imports in type position which is why they were elided. But you find cases where although they're only used at a type position in the importing file it is intended that the importing file be able to expose its parts to others who may need that module to have actually been loaded.",
+      "PostedDate": "2014-05-09T18:25:21.077-07:00",
+      "Id": 146150
+    },
+    {
+      "Message": "I don't quite follow that, but I think you see what is going on :)\n\nIn this project we went with a nodejs structure/style, so we split everything up in neat sub parts. This `index.ts` will become the `main` JS file linked from the package.json (the JS is not checked-in but compiles on npm pre_publish).\n\nSo this `export import` is indeed there to expose some internal modules to the package consumers (it is a common pattern).",
+      "PostedDate": "2014-05-09T19:03:35.923-07:00",
+      "Id": 146151
+    },
+    {
+      "Message": "Another case for this when making bundle files:\n````\nimport _pixel = require('./core/pixel');\n\nexport import rgb2hsv = _pixel.rgb2hsv;\nexport import hsv2rgb = _pixel.hsv2rgb;\nexport import rand = _pixel.rand;\n````\n\nHere `_pixel` gets removed by the compiler so the next statements are broken in the output. This is all that remains, which is obviously broken because the require for `_pixel` is gone:\n````\nvar rgb2hsv = _pixel.rgb2hsv;\nexports.rgb2hsv = rgb2hsv;\nvar hsv2rgb = _pixel.hsv2rgb;\nexports.hsv2rgb = hsv2rgb;\nvar rand = _pixel.rand;\nexports.rand = rand;\n````\n",
+      "PostedDate": "2014-06-03T10:53:33.427-07:00",
+      "Id": 148716
+    }
+  ]
+}

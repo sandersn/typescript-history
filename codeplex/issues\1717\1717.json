@@ -1,0 +1,60 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:30:17.65-07:00",
+    "CommentCount": 4,
+    "Custom": null,
+    "Description": "\r\nAccording to [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice):\r\n\r\n___\"If begin is omitted, slice begins from index 0.\"___\r\n\r\nThe current definition is:\r\n\r\n```TypeScript \r\nslice(start: number, end?: number): T[];\r\n```\r\n\r\nShould be\r\n\r\n```TypeScript \r\nslice(start?: number, end?: number): T[];\r\n```\r\nI just noticed that the same issue had been closed previously:\r\nhttps://typescript.codeplex.com/workitem/1379\r\n\r\nBut the linked article on MDN is the same as mine. The MDN syntax and what they say in the description are at odds with each other.\r\n\r\n",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-09-23T13:18:41.363-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Array.slice in Lib.d.ts should permit optional start",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 1717
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is what the ES5 spec says:\n\nThe slice method takes two arguments, start and end, and returns an array containing the elements of the array from element start up to, but not including, element end (or through the end of the array if end is undefined). If start is negative, it is treated as length+start where length is the length of the array. If end is negative, it is treated as length+end where length is the length of the array. The following steps are taken:\n\nNote that the case of start === undefined is not actually specified, but is rather a fall-out of the behavior of `ToInteger(undefined)`",
+      "PostedDate": "2013-09-23T14:05:12.203-07:00",
+      "Id": 115411
+    },
+    {
+      "Message": "ToInteger:\n\nIf number is NaN, return +0.\n\nSo yes, I guess that means if undefined then treat as zero. The following alerts 3 in FF, Chrome, Opera and IE (10):\n\n```JavaScript\nvar len = [1,2,3].slice().length;\nalert(len);\n```\n\nClearly this is a hole in the spec. Not sure what TypeScript's position is on incomplete specs.",
+      "PostedDate": "2013-09-24T04:30:38.89-07:00",
+      "Id": 115465
+    },
+    {
+      "Message": "While omitting the parameter does work, this is an artifact of how getting undefined as the first parameter \"falls back\" to 0 in the internal algorithms.  The documentation does state the first parameter is required.\n\nThat said, if it's a not-uncommon pattern to omit it in order to clone an array, seems like there's no harm in making it optional.  We'll take a look at making this change.",
+      "PostedDate": "2013-09-24T08:59:17.597-07:00",
+      "Id": 115492
+    },
+    {
+      "Message": "@billti - I agree.  Might as well align with common practice so the type checking feels more useful rather than getting in your way for seemingly little benefit.",
+      "PostedDate": "2013-11-25T13:19:02.11-08:00",
+      "Id": 124212
+    }
+  ]
+}

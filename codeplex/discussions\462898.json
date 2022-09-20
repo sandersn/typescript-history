@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "1109766",
+    "ThreadId": "462898",
+    "Html": "I just worked over a 2,000 line enterprise JavaScript module that I wrote, converted it to typescript, and found a number of annoyances. Chief among them is that I removed the whole self = this followed by 100+ usages of &quot;self.&quot; in favor of &quot;this.&quot;, and now all my jQuery, jstree, and jQuery-ui bindings need $.proxy( this.methodName, this). It would be very useful if the bind methods from jQuery and jQuery-ui were able to be annotated that they &quot;lose this&quot; and then the typescript compiler in turn could offer warnings when instance methods were passed into them. Additionally, a recommendation to use $.proxy( this.methodName, this ) would be useful.\r<br />\n<br />\nSimilarly, it might be nice if there were certain compiler-assisted corrections to user code which might perform said replacement integrated into the VS 2013 plugin module.<br />\n",
+    "PostedDate": "2013-10-20T16:45:18.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110044",
+    "ThreadId": "462898",
+    "Html": "Some sample code would make things more interesting.<br />\n",
+    "PostedDate": "2013-10-21T08:18:56.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127648",
+    "ThreadId": "462898",
+    "Html": "I'd like to contribute on this issue. I'm passing for similar problems, and I can show some code.<br />\n<br />\nImagine you have the following simplified markup:<br />\n<pre><code>&lt;div data=bind=&quot;click: loadNextItem&quot;&gt;</code></pre>\n\nand the following simplified model:<br />\n<pre><code>class Model\n{\n    currentItem = ko.observable();\n    loadNextItem()\n    {\n        var currentItem = this.currentItem(); //&lt;-- boom. We can't get the current item\n    }\n}</code></pre>\n\nIn javascript, it could be easily fixed by storing the current &quot;class&quot; into a variable, for example, &quot;_this&quot; in the beginning.<br />\nBut it is not possible in typescript, which leads to some workaround you find over the web.<br />\n<br />\nOne of the solutions I found is:<br />\n<pre><code>class Model\n{\n    currentItem = ko.observable();\n    loadNextItem;\n    constructor()\n    {\n        this.loadNextItem = () =&gt;\n        {\n            var currentItem = this.currentItem(); //got item\n        }\n    }\n}</code></pre>\n\nBut, for me, that is not the solution, because it breaks the capsule! With this, if I need to find where the method is implemented, instead of looking at the method itself, I need to find if this is implemented on a constructor, or who knows where the developer put it. What if he decided to put the implementation in an external class, just because there is no a standard place for it?<br />\n<br />\nAlso, I think the constructor is a better place to initialize things, not to define things. =)<br />\n<br />\nI suggest some form of accessing the current class, or, following the javascript way, give us a form to create our own &quot;_this&quot; variables.<br />\n",
+    "PostedDate": "2013-11-21T10:47:22.763-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127683",
+    "ThreadId": "462898",
+    "Html": "This is basically an issue of behavioral semantics. Much like how in other languages, some methods are threadsafe and some aren't, in JavaScript some methods are &quot;this-safe&quot; and some aren't. It's up to you to manage that behavior.\r<br />\n<br />\nYou can use this syntax form to more elegantly write your class:<br />\n<pre><code>    class Model\n    {\n        currentItem = ko.observable();\n        \n        /** This function is safe to use in callbacks */\n        loadNextItem = () =&gt; {\n            var currentItem = this.currentItem();\n        }\n    }</code></pre>\n\n",
+    "PostedDate": "2013-11-21T11:54:53.103-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1127719",
+    "ThreadId": "462898",
+    "Html": "Cool. I like this is the solution!\r<br />\n<br />\nI've tried some unsucessful way of doing this in the past, but now you pointed me the right sintax!\r<br />\n<br />\nThanks.<br />\n",
+    "PostedDate": "2013-11-21T13:52:31.597-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

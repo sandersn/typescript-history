@@ -1,0 +1,55 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this! The issue has been fixed and can be tried out in the upcoming 0.9.5 release. We also have a beta available (https://typescript.codeplex.com/wikipage?title=TypeScript%200.9.5%20beta) if you'd like to try it out.",
+    "ClosedDate": "2013-11-19T13:37:45.18-08:00",
+    "CommentCount": 3,
+    "Custom": null,
+    "Description": "Try this at the playground:\r\n```\r\nfunction f<T>( g: ( t: T ) => string );\r\nfunction f<T>( g?: ( t: T ) => string ) { return () => null; }\r\n\r\nexport var h = f<string>( s => 's' );\r\n\r\nvar x = h();\r\n```\r\nThe compiler produces the following JS code:\r\n```\r\n    function f(g) {  ...   }\r\n\r\n    exports.h = f(function (s) {\r\n        return 's';\r\n    });\r\n\r\n    var x = h(); // Runtime JS error: identifier 'h' is unbound. Should have been \"exports.h\"\r\n```\r\n\r\nOriginally this problem comes from a real project of mine, but I've simplified it incrementally until it stopped reproducing, and the above code is the very minimum that still exhibits the issue.\r\n\r\nAlso, please don't brush it off on the grounds that the two overloads of `f` only differ by whether the parameter is optional. My original code is a bit more complicated than this: there are more than two overloads, and they have different parameters based on whether `T` extends particular interfaces. The problem, however, still reproduces in this minimal configuration, so I have left out my multiple overloads for simplicity.",
+    "LastUpdatedDate": "2014-01-10T10:34:33.287-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-10T08:00:08.363-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Exported variable is subsequently referenced as if it was local",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 3,
+    "Id": 1478
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Simplified repro\r\n\r\n```\r\nexport var h2: number;\r\nvar x2 = h2; // OK: x2 = exports.h2;\r\n\r\nexport var h3 = undefined;\r\nvar x3 = h3; // Bad: x3 = h3;\r\n```",
+      "PostedDate": "2013-08-12T09:54:24.633-07:00",
+      "Id": 109458
+    },
+    {
+      "Message": "Same goes for assigning null values:\n\n```\nexport var h4 = null;\nvar x4 = h4; // Bad: x4 = h4;\n```\n\nThis is really bad! My existing code base now throws all kinds of '...' is undefined errors. Please increase prio. \nAre there any updates on this issue??",
+      "PostedDate": "2013-09-02T01:24:39.903-07:00",
+      "Id": 111837
+    },
+    {
+      "Message": "This seems to be fixed in 0.9.2",
+      "PostedDate": "2013-09-22T17:46:10.477-07:00",
+      "Id": 115302
+    }
+  ]
+}

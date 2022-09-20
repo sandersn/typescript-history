@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this. This behavior is actually by design.\n\n*Any* time type checking occurs between two types and either of them is 'any', the result is that the types are considered to be assignment compatible. This particular example is just a special case of checking if 'any' is assignment compatible to 'number' in the context of checking assignment compatibility between two function types.\n\nIt's helpful to think of the type system when 'any' is involved less in terms of \"We don't know this will work\" and more in terms of \"We don't know this won't work\".",
+    "ClosedDate": "2012-10-09T12:14:55.583-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The Typescript compiler is incorrectly allowing a function which takes a \"number\" argument to masquerade as a function taking an \"any\" argument. Here's a simple example which shows the incorrect behavior:\r\n\r\n-- BEGIN CODE --\r\n\r\nclass Observable\r\n{\r\n    private myObserver: (eventArg: any, observable: Observable) => void;\r\n\r\n    public Notify(eventArg: any): void\r\n    {\r\n        if (this.myObserver != null)\r\n            this.myObserver(eventArg, this);\r\n    }\r\n\r\n    public Subscribe(observer: (eventArg: any, observable: Observable) => void ): void\r\n    {\r\n        this.myObserver = observer;\r\n    }\r\n}\r\n\r\nclass Subscriber\r\n{\r\n    public myNum: number = 3;\r\n\r\n    public ShouldNotCompile(): void\r\n    {\r\n        var obs = new Observable();\r\n\r\n        var handler = (eventArg: number, observable: Observable) => {\r\n            this.myNum += eventArg * 2;\r\n        }\r\n\r\n        /* v--- THIS SHOULD BE A COMPILE-TIME ERROR ---v */\r\n        obs.Subscribe(handler);\r\n        /* ^--- THIS SHOULD BE A COMPILE-TIME ERROR ---^ */\r\n\r\n       obs.Notify(12); // (works)\r\n\r\n        /* v--- THIS CAUSES A PREVENTABLE RUN-TIME ERROR ---v */\r\n       obs.Notify(\"foo\");\r\n        /* ^--- THIS CAUSES A PREVENTABLE RUN-TIME ERROR ---^ */\r\n    }\r\n}\r\n",
+    "LastUpdatedDate": "2012-10-09T12:14:55.583-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-10-08T08:51:24.88-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Incorrect contravariance on lambda types",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 172
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "1072080",
+    "ThreadId": "451011",
+    "Html": "I want use AMD (require.js) to loading all module async, even third party libraries. (e.g. jquery-ui).<br />\n<br />\n<strong>Background:</strong><br />\nI do some works as following to made it working:<br />\n<ul>\n<li>Made a requirejs config as following:</li>\n</ul>\n<pre><code>require.config({\n    paths: {\n        jquery: '../lib/jquery-2.0.2.min',\n        jqueryui: '../lib/jquery-ui/js/jquery-ui-1.10.3.custom.min',\n    }\n});</code></pre>\n\n<ul>\n<li>download '.d.ts' typing declaration files from <a href=\"https://github.com/borisyankov/DefinitelyTyped\" rel=\"nofollow\">https://github.com/borisyankov/DefinitelyTyped</a></li>\n<li>made a fake module definition file as following to support loading the library through 'import' statement.</li>\n</ul>\n<pre><code>/// &lt;reference path=&quot;require.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;jquery.d.ts&quot; /&gt;\n/// &lt;reference path=&quot;jqueryui.d.ts&quot; /&gt;\ndeclare module 'jquery' {\n    export = jQuery;\n}\ndeclare module 'jqueryui' {\n    export = jQuery;\n}</code></pre>\n\nyou known, jquery-ui has no exports anymore. it just extend the interface 'JQuery'. so, I export jQuery.<br />\n<ul>\n<li>After these all, I can use following code to import jquery easily.</li>\n</ul>\n<pre><code>import $ = module('jquery');</code></pre>\n\nTS compiler will generate js code just like following:<br />\n<pre><code>define([&quot;require&quot;, &quot;exports&quot;, 'jquery'], function (require, exports, __$__) {\n    var $ = __$__;\n    // ...\n}</code></pre>\n\n<strong>Issues:</strong><br />\nBut now, if I import JQuery-UI just like jquery.<br />\n<pre><code>import jqueryui = module('jqueryui');</code></pre>\n\nI found the compiler will do not add dependency to jqueryui anymore. I guess that is caused by compiler optimization, maybe compiler consider it as a unused variable, so remove this dependency away.<br />\n<br />\nI have a workaround for this issues. But I think it is not good. Use import a module explicit, compiler should not remove it.<br />\n",
+    "PostedDate": "2013-07-23T21:16:21.7-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1072301",
+    "ThreadId": "451011",
+    "Html": "If I remember correctly, the import statements are removed when importing modules that only have interfaces.  If they are declare modules or export values, I believe the import statement should stay.  If they don't, it's probably a bug.\r<br />\n<br />\nThat said, this line will likely not work:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">module</span> <span style=\"color:#A31515;\">&#39;jqueryui&#39;</span> {\n    <span style=\"color:Blue;\">export</span> = jQuery;\n}\r\n</pre></div>Since you're trying to export a value that's not defined inside of the module.  I know other people on the forums have worked with this more than I have, so there may be a trick to it.<br />\n",
+    "PostedDate": "2013-07-24T07:24:34.157-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1072360",
+    "ThreadId": "451011",
+    "Html": "Thank you, jonturner,\r<br />\n<br />\nYes, you are right. the issue is caused by the trick. But it is only way I can found to make third-party library working fine to imported by import statements. Does there have another way to make jqueryui importable?\r<br />\n<br />\nThank you<br />\n",
+    "PostedDate": "2013-07-24T08:42:15.803-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

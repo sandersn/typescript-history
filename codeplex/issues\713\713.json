@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Closing as this is more a question. ",
+    "ClosedDate": "2013-02-11T10:37:47.707-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "I know this has been addressed before, just could not find it now, sorry for repetition\r\n\r\nTrying to create a query widget I need something like :\r\n\r\n    $.widget(\"app.somewidget\", {_create:()=>{this.element...}});\r\n\r\ntypescript will convert \"this\" to \"_this\", but placing _this = this in a wrong place (topmost in the file) which of course does not work for the widget.\r\n\r\nI found out this ugly workaround works:\r\n\r\n    var somewidget = {\r\n        _create: () => {\r\n            $(\"<span></span>\").text(\"Something\").insertAfter(this.element);\r\n            () => { this } // weird workaround\r\n        }\r\n    }\r\n    $.widget(\"app.somewidget\", somewidget);\r\n\r\ni.e. adding another closure to force typescript to add an extra _this=this, and this one on the right place:\r\n\r\n    var somewidget = {\r\n        _create: function () {\r\n            var _this = this;\r\n            $(\"<span></span>\").text(\"Something\").insertAfter(_this.element);\r\n            (function () {\r\n                _this;\r\n            });\r\n        }\r\n    };\r\n\r\nSometimes it's just wrong by typescript to add _this=this. Perhaps it would be nice to have some notation to make typescript keep the original syntax?\r\n\r\n            $(\"<span></span>\").text(\"Something\").insertAfter(@this.element);\r\n\r\nAnother ugly workaround to make typescript dont mind my 'this':\r\n\r\n            $(\"<span></span>\").text(\"Something\").insertAfter(eval('this').element);\r\n",
+    "LastUpdatedDate": "2013-02-11T10:37:47.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-09T23:48:21.123-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Again : _this in closure",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 713
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "\"I would use a function, not a closure - wouldn't that solve this issue?\" (Steve Fenton)\n\nvar somewidget = {\n    _create: function(){\n        $(\"<span></span>\").text(\"Something\").insertAfter(this.element);\n    }\n}\n\nIndeed, works perfect, thanks Steve... I obviously need to refresh my knowledge about ()=> vs function in typescript.\n",
+      "PostedDate": "2013-02-10T03:13:28.16-08:00",
+      "Id": 88990
+    }
+  ]
+}

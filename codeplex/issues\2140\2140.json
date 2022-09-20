@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2014-01-30T18:45:42.14-08:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "The following is the sample case. The 'test' variable line is where the type inference fails; the error message has been included as a comment above.\r\n\r\n```\r\nfunction curry<A,B,R>(f: (a: A, b: B) => R): (a: A) => (b: B) => R {\r\n  return (a: A) => (b: B) => f(a, b);\r\n}\r\n\r\nfunction map<A,B>(f: (a: A) => B, a: A[]): B[] {\r\n  var b: B[] = [];\r\n  for (var i in a) {\r\n    b.push(f(a[i]));\r\n  }\r\n  return b;\r\n}\r\n\r\nfunction numToStr(x:number): string {\r\n  return x+\"\";\r\n}\r\n\r\n//\r\n// error TS2012:\r\n//   Cannot convert '(b: {}) => {}' to '(_: number[]) => string[]':\r\n//     Call signatures of types '(b: {}) => {}' and '(_: number[]) => string[]' are incompatible:\r\n//       Type '{}' is missing property 'concat' from type 'string[]'.\r\nvar test: (_:number[]) => string[] = curry(map)(numToStr);\r\n\r\n```\r\n\r\nThis may be a design decision that type inference does not work on expressions, but if so is crippling for higher-order functional programming.\r\n\r\nThat is, the type of 'curry(map)' is still generic, and it is not until the curried function is applied to 'numToStr' that the concrete types are known.",
+    "LastUpdatedDate": "2014-01-30T18:45:42.14-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-01-30T14:12:38.06-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "Type inference fails on expression",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 2140
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is by design at the moment. It is unfortunate that these sorts of patterns aren't supported but our current design doesn't allow the type inference engine to do unification of type parameters and manufacture new generic signature types that preserve the type relationships you desire here. \n\nWhen you see the empty object type ({}) in cases like this that's indicative of type inference being unable to infer anything meaningful about the type argument (hence choosing the least specific thing possible).",
+      "PostedDate": "2014-01-30T18:45:38.49-08:00",
+      "Id": 132188
+    }
+  ]
+}

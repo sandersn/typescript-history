@@ -1,0 +1,66 @@
+[
+  {
+    "Id": "1089304",
+    "ThreadId": "455781",
+    "Html": "I asked this question over on SO (<a href=\"http://stackoverflow.com/questions/18645185/customizing-the-specific-output-files-for-various-typescript-input-files\" rel=\"nofollow\">http://stackoverflow.com/questions/18645185/customizing-the-specific-output-files-for-various-typescript-input-files</a>), but haven't gotten a great answer yet, so I thought I'd pose it here.<br />\n<br />\nWhat's the best practice for fine-grained control over the .js files that the TS compiler creates? Specifically, I've got a project - several projects, actually - where I need to compile, say, every TS file in directory A into one output file, and all the TS files in directory B into a different single output file, and all the TS files in yet a third directory into separate .js files that will all be loaded using the AMD module loader.<br />\n<br />\nThe approach I'd <em>like</em> to use is to use the Visual Studio UI to create different &quot;compilation groups&quot;, each with their own set of configuration parameters. But this isn't supported yet, and I haven't heard anything on the horizon about this being supported.<br />\n<br />\nThe approach that I <em>am</em> using is to build everything using batch files that I run as a post-build step. This works, but it doesn't let me use the &quot;compile on save&quot; feature of the compiler.<br />\n<br />\nI've also tried using the &quot;compile on save&quot; feature, and then load everything up using AMD modules. This is very flexible, but it's a bitch to maintain. Unless you want to load everything dynamically (which doesn't work on large codebases), the only way I've found to make it work is to create two different &quot;Main.ts&quot; files, one of which loads everything dynamically for dev/debugging purposes, and the other is used by the r.js optimizer to create a minified version of everything for production. (And I've usually had to create a third &quot;Main.ts&quot; file if I want to do any unit tests on the codebase.)<br />\n<br />\nI also tried using custom build targets, as mentioned here: <a href=\"http://stackoverflow.com/questions/15651172/typescript-compile-to-single-file-on-save\" rel=\"nofollow\">http://stackoverflow.com/questions/15651172/typescript-compile-to-single-file-on-save</a>. I'm not sure if I was doing something wrong, but I couldn't get the TS compiler to pick up the custom build target.<br />\n<br />\nSo . . . what are other folks doing? Anything clever out there? Anything clever on the horizon?<br />\n",
+    "PostedDate": "2013-09-06T10:57:46.897-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1089851",
+    "ThreadId": "455781",
+    "Html": "@smithkl42, \r<br />\n<br />\none solution is to move the nested folders in your project into separate projects, for example given:<br />\n<pre><code>MasterProject \n   \\Directory A\n           - foo1.ts\n           - foo2.tx\n    \\Directory B\n           - bar1.ts\n           - bar2.ts\n</code></pre>\n\nto this structure<br />\n<pre><code>Project A\n           - foo1.ts\n           - foo2.tx\nProject B\n           - bar1.ts\n           - bar2.ts</code></pre>\n\nThis seems rather obvious so I'm guessing the reason you don't want to do this is because you probably have <strong><em>many</em></strong> &quot;MasterProjects&quot; (probably MVC web projects?) and the JavaScript files cannot be moved because they are picked up by Require JS or some other loader.\r<br />\n<br />\nIMO the idea of a single web project with nested JavaScript folders is rather old school and not amenable for writing scalable JavaScript applications. It is very unfortunate that Visual Studio encourages this practise by providing templates for new projects that follow this bad design.\r<br />\n<br />\nPerhaps it will be possible to offer advice if you are able to share more details.<br />\n",
+    "PostedDate": "2013-09-08T04:44:47.41-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1089962",
+    "ThreadId": "455781",
+    "Html": "@nabog - \r<br />\n<br />\nI've thought about that approach, and might give it a shot. But I'm not sure of the best way to gather all those sub-projects together into the full website (and make sure that they get published). One way, I suppose, would be just to have some post-build jobs that copy over the resulting files - but if I wanted to use the .map files for debugging, I'd need to copy over the .ts files as well, which seems awkward. Plus, I'd need to make sure that all these got checked into git <em>in my main web project</em>, or I don't think they'd get published.\r<br />\n<br />\nAm I thinking about this correctly? Or have I missed something?<br />\n",
+    "PostedDate": "2013-09-08T15:28:36.313-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090129",
+    "ThreadId": "455781",
+    "Html": "What is missing here is that there should be a &quot;Typescript Project&quot; that you can reference in a way similar to how a C# library works. You'd create a project, select the compilation options and build type (single file, multiple file, amd, etc).\r<br />\n<br />\nOnce you add a reference to that project, you would tell VS an output folder in your project.\r<br />\nThis way, it would just copy the output files (one or many depending on the project type) to that folder after build.\r<br />\n<br />\nThis kind of project would solve a lot of issues. There has been talks about this before, lets hope we have this before 1.0.<br />\n",
+    "PostedDate": "2013-09-09T04:03:37.777-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090147",
+    "ThreadId": "455781",
+    "Html": "@nvivo - That idea sounds pretty good to me - though I'll confess that there are lots of folks smarter than me who can often come up with much more interesting solutions than I can and are more qualified to judge.<br />\n<br />\nDoes anybody here have enough experience with Dart or CoffeeScript to have a good sense for how they handle this sort of thing?<br />\n<br />\nAnd until that or something similar becomes available, is my fallback plan of just running the tsc compiler manually as a part of the post-build process probably the best approach? The alternative seems to involve a lot of manual editing of the Microsoft.Typescript.targets file. And on the one hand, I have this sense that if I'm manually editing .targets files, something has gone badly wrong - but on the other, I can see certain benefits, like (supposedly) automatically gathering the output files for publication (I'm not sure how to do that from a batch file).<br />\n",
+    "PostedDate": "2013-09-09T05:07:35.753-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090157",
+    "ThreadId": "455781",
+    "Html": "Just for the record, you don't need to manually edit the project to add a post-build task. There is a tab for that in the project properties in VS.\r<br />\n<br />\nBut I don't like the idea of adding a lot of steps to the post-build process as well.\r<br />\n<br />\nWhat I have been doing for these cases is that I add a single call to grunt in the post build, and control all the typescript compilation in the gruntfile.\r<br />\nGrunt already has lots of plugins to compile, merge and organize files in more ways than typescript can. This was the only sane way I found to manage building typescript files in more complex scenarios.\r<br />\n<br />\nFor simpler cases, I just compile each file separately and bundle them using ASP.NET Bundles.  You don't get to use requirejs, but in simpler scenarios this is usually not needed.\r<br />\n<br />\nIMHO, there is currently no best practice for this because everything is so new and until things are more baked inside VS somehow, everything else will look wrong. Unfortunately, I have my doubts that MSBuild XMLs will get traction on this task.\r<br />\n<br />\nIf someone else have a better way than grunt, I'd like to hear as well.<br />\n",
+    "PostedDate": "2013-09-09T05:34:18.513-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090220",
+    "ThreadId": "455781",
+    "Html": "@smithkl42,\r<br />\n<br />\nHere are a few tips for dealing with the output of the sub-projects:<br />\n<ul>\n<li>\nKeep your development and release workflows separate. For development the JavaScript must not be minified or bundled (furthermore source maps and .ts files must be present if you are going to use them). For release, you need the output to be bundled into one or more files and placed in your website's script folder.<br />\n</li>\n<li>\nTry avoid the post build route. You don't really want any copying to occur.<br />\n</li>\n<li>\nConfigure ASP.Net bundling (or similar) to watch the output folders of your sub-projects. That way your development workflow should be streamlined, because you are able to work with individual files <strong><em>in situ</em></strong>, while letting the bundling mechanism deal with the complexity.<br />\n</li>\n<li>\nFor release there will be some manual work to copy the minified bundles to the script folder in you website. (This also could be automated of course - but it's generally not too much work, considering it occurs  infrequently)<br />\n</li>\n</ul>\nThis is certainly not a happy state of affairs and I agree with @nvivo for the need for referencing a TypeScript project from a website project, which should automagically make the scripts from the referenced project available to the website.\r<br />\n<br />\nThe problem at present is that it is going to take coordination between two or more teams within Microsoft to make this happen (Visual Studio, ASP.Net and TypeScript).\r<br />\n<br />\nThere is no doubt that the community wants to see this happen. There is an item out there in the VS user voice site: <a href=\"http://visualstudio.uservoice.com/forums/121579-visual-studio/suggestions/3331652;\" rel=\"nofollow\">http://visualstudio.uservoice.com/forums/121579-visual-studio/suggestions/3331652;</a> It is currently the third most voted in the JavaScript category.<br />\n",
+    "PostedDate": "2013-09-09T08:22:38.887-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1090227",
+    "ThreadId": "455781",
+    "Html": "@nvivo - Agreed.  Makes sense to support something like a &quot;library project&quot;, where you have a natural way of grouping together subprojects into one project (or alternate configurations like having server/client in the same project).  We've talked about adding that support, so we'll likely go in that direction, or at least do something similar.<br />\n",
+    "PostedDate": "2013-09-09T08:34:55.443-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

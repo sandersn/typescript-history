@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex issues and suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some issues and feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:20:16.473-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "TypeScript allows developers to assign functions of lower arity to functions of greater arity:\r\n```\r\nvar doSomething:(x: number, y: string)=>string = function(x: number) { return \"!\"; };\r\n```\r\n\r\nThis is a known feature of the language. \r\n\r\nWe find it troublesome as it allows a large class of errors. Since TypeScript __will__ check the arguments that are provided, we decided to solve the problem using simulated named arguments by passing an object: the assumption being that TypeScript would check the argument object using the same structural equivalence rules as applied to standard assignment.\r\n\r\n\r\n#Expectation\r\n\r\n__Given__ types TSource and TDestination\r\n..__And__ the compiler rejects assignment of TSource to TDestination\r\n..__And__ a function f with signature (TDestination => void)\r\n__Then__ I expect the compiler to reject an assignment of f:(TDestination=>void) to g:(TSource=>void)\r\n\r\n\r\n#Simple Example\r\n```\r\nclass Ancestor {\r\n\tconstructor(public a: number) {}\r\n}\r\n\r\nclass Descendant extends Ancestor {\r\n\tconstructor(public b: number) { super(10); }\r\n}\r\n\r\nvar a:Ancestor = new Descendant(20); // Correct. Allowed.\r\n\td:Descendant = new Ancestor(20); // Correct. Rejected. \r\n\r\nfunction f(arg:Descendant) { alert(arg.b); };\r\nvar g:(arg:Ancestor)=>void =  f; // Incorrect. Allowed.\r\n```\r\n\r\n#Unfortunate But Fair...\r\nThe case below passes compilation. The getBuzz passed/given does not take all of the arguments passed by the foo function. This is troublesome for API authorship (the compiler will not enforce that consumers pass functions that honor a new argument). However, since the object is being passed into the function it can accept less than what is provided by the foo function (contravariant). This does follow a valid principle of substitution. \r\n \r\n```\r\nfunction foo(args: {name: string; getBuzz: (args:{bar: number; baz: string})=>string}): string {\r\n    return args.getBuzz({\r\n        bar: 20,\r\n        baz: args.name\r\n    });\r\n}\r\n\r\nalert(foo({\r\n    name: \"John\", \r\n    getBuzz: function(args:{bar: number}) { return args.bar + \"\"; }\r\n}));\r\n```\r\n\r\n#Problem\r\nThe compiler erroneously succeeds. The getBuzz passed requires more arguments than provided by foo. The function that accepts bar, baz and buzz should not be assignable to a function that accepts only bar and baz. In this particular case the foo function evaluates to \"undefined\" because the buz argument is never provided.\r\n \r\n```\r\nalert(foo({\r\n    name: \"John\", \r\n    getBuzz: function(args:{bar: number; baz: string; buz: string}) { return args.buz + \"\"; }\r\n}));\r\n```\r\n\r\n#Viable Solution\r\nWe understand that concessions must be made when designing a type system that supports the flexibility of JavaScript. The validation of function arguments as we currently understand them is simply too weak to catch a common pattern of re-factoring that is a significant motivation for the use of TypeScript. \r\n\r\nPlease either fix the checking of function arguments or provide guidance as to how a developer might code such that a change to strategy method signature (OO) or lambda (FP) would be caught by the TypeScript compiler. ",
+    "LastUpdatedDate": "2014-07-28T15:20:16.473-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-06-10T13:29:36.64-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Types of function arguments are not checked",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 15,
+    "Id": 2552
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is particularly worrisome because it means I lose nearly all the type safety of typescript the moment I interact with async APIs. I can write a callback with entirely inappropriate type arguments, and TypeScript will ignore the type error if the types are \"close enough\".\n\nI think typescript really missed an opportunity to typecheck javascript here. You want a typed language to catch errors earlier in the tricky parts of your program, and now callback handling, one of the trickiest parts of programming, is not being effectively typechecked.\n\nIn a real world case, I missed a number of type errors involving Promise<Derived> and Promise<Base>, as typescript considers the two types freely assignable *without casts*. The following code compiles with no errors on TypeScript 1.0 rtm even with the --noImplicitAny flag, even though it contains a terrible type error:\n\n    interface Promise<T> {\n        then<U>(cb: (_:T) => U): Promise<U>;\n    }\n\n    var p1: Promise<string>;\n    var p2: Promise<{}>;\n    var p3: Promise<()=>void>;\n    p2 = p1; // this should be safe, and typescript allows it.\n    p3 = p2; // this is UNSOUND, yet typescript allows it.\n\nI would much prefer if I could turn off this type hole. Specifically, section 3.8.3, bullet 7, subbullet 4, in \"each parameter type in N is assignable to or from the corresponding parameter type in M\", it would be preferable if \"to or from\" were replaced with \"from (not to)\"",
+      "PostedDate": "2014-06-10T16:30:44.323-07:00",
+      "Id": 149328
+    }
+  ]
+}

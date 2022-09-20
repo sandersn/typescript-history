@@ -1,0 +1,45 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": "2013-08-22T12:53:46.073-07:00",
+    "CommentCount": 1,
+    "Custom": null,
+    "Description": "Consider these examples (tested in playground)\r\n```\r\nvar bs = \"global\";\r\nclass C {\r\n\tprivate bs : boolean[] = [];\r\n\tf() { return this.bs } \r\n}\r\nvar c = new C();\r\nvar cf = c.f; // ()=>boolean[] ; incorrect!\r\nvar cbs = c.f(); // boolean[] ; expected\r\n\r\nconsole.log(cf()[0],cf()[0]===true); // g false ; oops!\r\n\r\nvar obj = {bs: [true] // btw: how to annotate here?\r\n\t\t  ,f: function(){return this.bs}};\r\nvar of = obj.f; // ()=>any ; imprecise\r\nvar obs = obj.f(); // any ; imprecise\r\n\r\nconsole.log(of()); // global\r\n```\r\nIn a suitably extended typesystem, 'f' might have a type involving its implicit `this` parameter (roughly `f : (this|) => this.bs`). As it stands, types are imprecise, differ between class-newed and literal object, and are insound.",
+    "LastUpdatedDate": "2013-08-22T12:53:46.073-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-22T04:22:31.83-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "By Design"
+    },
+    "Summary": "multiple issues related to lack of this-typing",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1561
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "This is all by design at the moment. We have talked about 'this' typing in the past as a feature to aid in certain scenarios but it's not one that you'll be seeing before 1.0. The goal of the type system is not necessarily to be 100% sound, as our goal is to model existing JavaScript patterns some of which are inherently unsound and rely on a great deal of dynamic typing.\n\nThe difference between the type of 'this' in classes and object literals is intentional, but something which could also change in the future. Currently the type of 'this' in class members is the instance/static type of the class depending on whether it's an instance/static member (the static type of the class minus constructor functions to be more specific), while in an object literal it is just of type 'any' (see section 4.2 of the language spec). ",
+      "PostedDate": "2013-08-22T12:53:42.3-07:00",
+      "Id": 110795
+    }
+  ]
+}

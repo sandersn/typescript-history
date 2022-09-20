@@ -1,0 +1,122 @@
+[
+  {
+    "Id": "1058969",
+    "ThreadId": "447628",
+    "Html": "I quote: _The &amp;&amp; operator permits the operands to be of any type and produces a result of the same type as the \r<br />\nsecond operand._\r<br />\n<br />\nThis suggests that (0 &amp;&amp; &quot;abc&quot;) should have type <em>string</em>, but of course, it doesn't.<br />\n",
+    "PostedDate": "2013-06-19T21:04:00.687-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062284",
+    "ThreadId": "447628",
+    "Html": "Where do I have to ask to get an answer?<br />\n",
+    "PostedDate": "2013-06-27T22:05:19.217-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062464",
+    "ThreadId": "447628",
+    "Html": "Not sure that I understand your question.<br />\n<br />\nDid you want TypeScript to figure out that 0 will evaluate to false and therefore have the result of (0 &amp;&amp; &quot;abc&quot;) to be number?<br />\n<br />\nAnd for (1 &amp;&amp; &quot;abc&quot;) TypeScript would have to figure out that 1 would not evaluate to false hence have the result be string.<br />\n<br />\nWhat about <br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> x = 0;\n<span style=\"color:Blue;\">var</span> foo = x &amp;&amp; <span style=\"color:#A31515;\">&quot;abc&quot;</span>;\n\r\n</pre></div>",
+    "PostedDate": "2013-06-28T07:06:49.597-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062555",
+    "ThreadId": "447628",
+    "Html": "I think the fix is simple... if both operands are the same type, then the resulting value is that type. Otherwise the type is any, unfortunately. The current spec doesn't make sense.<br />\n",
+    "PostedDate": "2013-06-28T10:20:54.113-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062560",
+    "ThreadId": "447628",
+    "Html": "The type of the left operand is mostly irrelevant because if you get a value that came from the left operand, it's guaranteed to be falsy. The domain of falsy values between two arbitrary operands already overlaps for the important values (null and undefined), and it's really unclear why you would care for the values that lie outside that intersection (&quot;&quot;, NaN, false, and 0).<br />\n<br />\nIt's very difficult to write non-degenerate code where this rule isn't correct for all practical purposes.<br />\n<br />\nSee also <a href=\"http://stackoverflow.com/questions/12693787/why-does-the-operator-produce-the-type-of-the-second-operand/12694771#12694771\" rel=\"nofollow\">http://stackoverflow.com/questions/12693787/why-does-the-operator-produce-the-type-of-the-second-operand/12694771#12694771</a><br />\n",
+    "PostedDate": "2013-06-28T10:27:49.367-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062656",
+    "ThreadId": "447628",
+    "Html": "Ryan, thanks for your reply. \r<br />\n<br />\nTwo responses.  First, the type rules should work for all legal code, not just idiomatic code. Second, in our code base we do indeed have instances of the left argument being in your nonintersecting set and this has led to bugs.  Here's an example: <em>a.length &amp;&amp; a[0].x</em>.  We want the type checker to catch these cases.\r<br />\n<br />\nHere's the thing: given that the type rules for &amp;&amp; and || are just wrong, is there any chance I can convince you (the TypeScript team) to fix them?\r<br />\n<br />\nPossible useful compromises could include the addition of new, well typed, logical operators for TS.<br />\n",
+    "PostedDate": "2013-06-28T15:16:30.01-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062658",
+    "ThreadId": "447628",
+    "Html": "Hi Nabog, in the general case, if the argument types differ, the result must have type <em>any</em>. Claiming the result type is <em>always</em> that of the right argument is obviously wrong in general.<br />\n",
+    "PostedDate": "2013-06-28T15:24:48.1-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062706",
+    "ThreadId": "447628",
+    "Html": "@ralphbecket, \r<br />\n<br />\nwould you care to provide more details of your example? Specifically, about the context: how exactly are you using the value from the assignment?<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">var</span> a = [{x: 10 }];\n<span style=\"color:Blue;\">var</span> aVal = a.length &amp;&amp; a[0].x; <span style=\"color:Green;\">// aVal is either 0 or 10, both numbers</span>\n\n<span style=\"color:Blue;\">var</span> b = [{x: <span style=\"color:#A31515;\">&quot;string&quot;</span> }];\n<span style=\"color:Blue;\">var</span> bVal = b.length &amp;&amp; b[0].x; <span style=\"color:Green;\">// bVal is either 0 or &quot;string&quot;</span>\r\n</pre></div>TypeScript infers <code>bVal</code> to be string, but it can be number at runtime. But to me the second example doesn't exactly smell brilliant.<br />\n",
+    "PostedDate": "2013-06-28T21:54:11.14-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062708",
+    "ThreadId": "447628",
+    "Html": "@nabog\r<br />\n<br />\nIt's irrelevant that the code &quot;smells wrong&quot; (little disagreement from me there, but the whole web world is slightly whiffy), the fact remains it is legal code and the type rule predicts the wrong type.\r<br />\n<br />\nPersonally I'd prefer it if TypeScript forbade non-boolean arguments to logical operators altogether, but I know that would never fly with the community.\r<br />\n<br />\nHowever, a type system that is wrong really is a serious problem.  The point of a type system is to exclude an entire class of errors from your programs.  As it is, I'm wondering now whether there are other idiomatic land mines in the TS spec. other than just &amp;&amp; and ||.<br />\n",
+    "PostedDate": "2013-06-28T22:08:14.273-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1062710",
+    "ThreadId": "447628",
+    "Html": "\r\n<div dir=\"ltr\">You know what we need to solve this problem? New operators! &&& and |||. Those operators produce a value of type 'any'. You can send my payment via PayPal. /sarcasm</div>\r\n<div><br clear=\"all\">\r\n<div>Andrew Gaspar</div>\r\n<br>\r\n<br>\r\n<div></div>\r\n</div>\r\n",
+    "PostedDate": "2013-06-28T22:19:57.963-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063885",
+    "ThreadId": "447628",
+    "Html": "Silence, again?!  I'd have thought an error in the type system would warrant some action.<br />\n",
+    "PostedDate": "2013-07-02T18:52:53.727-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1063901",
+    "ThreadId": "447628",
+    "Html": "It's understandable that some will prefer a type system more oriented toward theoretical concerns than practical ones, but we have seriously looked at the alternatives and consider this the best available option at this time. It's impossible to impose a perfect type system on top of a language like JavaScript and the trade-off we made for &amp;&amp; is one that the vast majority of code will be better off with.<br />\n",
+    "PostedDate": "2013-07-02T20:01:54.85-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064327",
+    "ThreadId": "447628",
+    "Html": "Hi Ryan,\r<br />\n<br />\nthanks for your reply.  I confess, I've never considered correctness as anything other than a practical concern.  Other than &amp;&amp; and ||, are there any other cases you know of where the TypeScript spec. is &quot;wrong, but 'pragmatic'&quot;?\r<br />\n<br />\nI was really hoping TypeScript was a serious attempt to get away from the laissez faire JavaScript world -- debugging this stuff is unbearably tedious.  Is there any chance you will add properly typed variants of the logical operators (&amp;&amp;&amp; and ||| have been proposed)?<br />\n",
+    "PostedDate": "2013-07-03T16:40:28.677-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064445",
+    "ThreadId": "447628",
+    "Html": "@ralphbecket, \r<br />\n<br />\nit seems slightly hypocritical to say on the one hand that it's okay to write code that is &quot;whiffy&quot; and on the other demand that TypeScript deal with the consequences of badly written code.\r<br />\n<br />\nIn a relatively large code base (of some tens of thousands of lines) we've never encountered any bugs from TypeScript having inferring the type from the second operand. Perhaps it's because we do not tolerate &quot;whiffy&quot; code.\r<br />\n<br />\nConversely, if TypeScript only inferred <code>any</code> then it is probably likely the lack of type information would have introduced a bug or two - actually, considering how common this pattern is it's more than likely.\r<br />\n<br />\nSo we would not like to see this behaviour changed.\r<br />\n<br />\nI'd be surprised if you agreed with me on this (especially in the light of my holier than though attitude!) so I think it's best we agree to disagree on this.\r<br />\n<br />\nNoel<br />\n",
+    "PostedDate": "2013-07-04T02:07:18.66-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1064505",
+    "ThreadId": "447628",
+    "Html": "@nabog\r<br />\n<br />\nI must have misled you: I've never considered it acceptable to write whiffy code (we need a better term!) and I don't expect TypeScript to do anything with badly written code other than <em>reject the ill typed parts</em>.\r<br />\n<br />\nAs far as I'm concerned, a type system allows the compiler to prove things about my code.  In particular, if the compiler &quot;proves&quot; that expression <em>e</em> has type number, say, then I expect <em>e</em> to never evaluate to something that is not a number.  Imagine my surprise when, one day, <em>e</em> gives me a boolean back!\r<br />\n<br />\nBy introducing type rules that are &quot;wrong but 'pragmatic'&quot; you throw out the very guarantees I, as a software engineer, was hoping to depend upon.\r<br />\n<br />\nI can accept, even if I disagree with it, that pragmatically (i.e., you'd otherwise lose 99% of your user base) you chose to allow values of type <em>any</em> to be silently assignable to variables of arbitrary type.  Who knows, maybe one day there's be a compiler option that will reject such horrors.  Frankly, I doubt it: it's too easy to abuse and almost none of the TypeScript code base would survive such a restriction.  On my project, I see developers bitten on a daily basis by this noose-like piece of rope.  But that's an argument for another beer.\r<br />\n<br />\nHowever, and here's the key point, the very fact that you added types to JavaScript says you <em>do</em> intend TypeScript programmers to change their programming habits from JavaScript, where anything goes.  Given that, I see nothing inconsistent with expecting people to show more discipline when coding up conditions and conditional expressions in TypeScript than they would need for JavaScript.  Good heavens, it's a superset: you can even add new syntactic sugar to provide principled, sound, convenient solutions for these ubiquitous half-arsed JavaScript idioms.\r<br />\n<br />\nYou might not tolerate &quot;whiffy&quot; code where you work, but I assure you that in many teams there are well meaning developers unknowingly producing just that at a rate faster than those of us who grok type systems can keep up.\r<br />\n<br />\nAll the best,\r<br />\n-- Ralph<br />\n",
+    "PostedDate": "2013-07-04T04:36:19.373-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

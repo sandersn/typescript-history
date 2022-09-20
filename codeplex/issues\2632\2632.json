@@ -1,0 +1,85 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for logging this issue. We've moved to a new codebase on GitHub; please try your issue against the new compiler (once possible) and log an issue on the GitHub site if it still reproduces.",
+    "ClosedDate": "2014-07-21T13:44:55.25-07:00",
+    "CommentCount": 9,
+    "Custom": null,
+    "Description": "\r\nI am using TypeScript 1.0.1\r\n\r\nI was editing a large javascript file and got it to a state where the compiler would generate the following error in VS2013\r\n\r\nDescription:\"Unable to get property 'type' of undefined or null reference\"  File:VSTSC\t\r\n\r\nUnfortunately I could not tell what line was causing this.\r\n\r\nI played around with tsc in node and got to the point where I could see the compile error occurs on line 50022 in tsc.js  (1.0.1).   By placing some console.log statements in the tsc.js file I was able to determine what line in my code was triggering the null reference in the compiler.  It is the \"return;\" statement below.  I stripped out all the other code I could.\r\n\r\nThe code below also does not compile to javascript in the typescript playground either.\r\n\r\n////////////////////////\r\n \r\n\r\ninterface MyElement extends HTMLElement  {\r\n\r\n}\r\n\r\nexport module foo {\r\n\r\n\texport function bar(): MyElement {\r\n\t\tif (false) {\r\n\t\t\treturn;\r\n\t\t}\r\n\t\tvar n2: MyElement = <MyElement>null;\r\n\t\treturn n2;\r\n\t}\r\n}\r\n\r\n\r\n\r\n  \r\n\r\n\r\n\r\n\r\n",
+    "LastUpdatedDate": "2014-07-22T06:22:10.68-07:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2014-07-18T13:33:24.243-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler Error - Unable to get property 'type' of undefined or null reference",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 2,
+    "Id": 2632
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Remove \"export\" before the top most module, unless you are creating a module to be imported using a system like RequireJS.",
+      "PostedDate": "2014-07-18T13:57:15.393-07:00",
+      "Id": 152879
+    },
+    {
+      "Message": "It compiles fine like this: http://goo.gl/rKOHTK",
+      "PostedDate": "2014-07-18T14:00:40.55-07:00",
+      "Id": 152880
+    },
+    {
+      "Message": "\nUnderstood - the compiler will also give you an error if you change the code to return null\n\n    if (false) {\n        return null;\n    }\n\n\"Return type of exported function has or is using private type 'MyElement'.\"",
+      "PostedDate": "2014-07-18T14:21:05.837-07:00",
+      "Id": 152882
+    },
+    {
+      "Message": "I think you need to post more of your code, as it's not very clear what you have going on.  If you removed \"export\" from the module, and are trying to import it somewhere, then that is probably why.  You'll have to put \"export\" back, and add it to the interface as well (i.e. `export interface MyElement...`).",
+      "PostedDate": "2014-07-18T15:50:50.447-07:00",
+      "Id": 152890
+    },
+    {
+      "Message": "\nI am not trying to fix any programming issues in my code.\n\nWhat I am trying to do is submit a bug I found in the compiler\n\nI reduced the code involved to the minimum necessary to replicate the bug.",
+      "PostedDate": "2014-07-19T11:28:25.563-07:00",
+      "Id": 152933
+    },
+    {
+      "Message": "\nTo be clearer around the term \"compiler error\"\n\nIf I return null;  I get a compile error, an error in my code \"Return type of exported function has or is using private type 'MyElement', this is correct and should be expected\n\nIf i just have return;     this case demonstrates an error in the compiler - it causes a TypeError exception at line 50022 in the TypeScript compiler tsc.js, as it tries to use the member 'type' on an undefined reference returned from the function resolveAST(), this is the line of code:\n\n```\n var returnExpressionSymbol = _this.resolveAST(returnStatement.expression, false, context).type;\n\n```\n\nI believe I should get the same compile error in both cases, but the second case illustrates a bug in the compiler\n",
+      "PostedDate": "2014-07-19T11:43:27.58-07:00",
+      "Id": 152934
+    },
+    {
+      "Message": "Also I didn't take the code reduction as far as I could, this also demonstrates the compiler fail with less code:\n\n```\ninterface MyElement extends HTMLElement { \n} \n\nexport function bar(): MyElement {\n\treturn;     // use   return null;    to see correct compiler output     \n}\n\n```",
+      "PostedDate": "2014-07-19T11:54:25.243-07:00",
+      "Id": 152935
+    },
+    {
+      "Message": "This looks like a bug. I'm able to repro this.",
+      "PostedDate": "2014-07-20T01:15:54.06-07:00",
+      "Id": 152963
+    },
+    {
+      "Message": "\nI tried this on the newer compiler over in GitHub and that code doesn't have this specific problem, so I won't move the issue.\n\n\n",
+      "PostedDate": "2014-07-22T06:22:10.68-07:00",
+      "Id": 153151
+    }
+  ]
+}

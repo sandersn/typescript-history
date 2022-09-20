@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:18:10.113-07:00",
+    "CommentCount": 6,
+    "Custom": null,
+    "Description": "I would like to see TypeScript become a fully fledged optimizing compiler producing minified, but _optimized_ JavaScript code similar to what the Google [Closure compiler](http://closure-compiler.appspot.com/home) does.\r\n\r\nSee [discussion thread](https://typescript.codeplex.com/discussions/445557)\r\n\r\nIn the same way we don't write ASM anymore, and we don't care if it's readable, we just want the smallest, fastest, most efficient JS code without optimizing coding practices at editing time. The compiler should take care of that.\r\n\r\nI'm like with the near 1:1 JS output in developer mode, but as we have .map files now, and we minify for production anyway I don't think it's that important. I want to stop worrying about writing small functions and using var instead of const (where the compiler could introduce a literal in the output). I want it to optimise my const string 'tables' and concatenation. I want it to remove unnecessary/unused code, etc.\r\n\r\nI'd like to see all this from the TypeScript compiler, without stringing together all the other technologies in my  build.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-08-21T08:35:18.42-07:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "a True Optimizing Compiler (similar to google closure)",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 34,
+    "Id": 1542
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "FWIW, I disagree - I do care that the code is readable, and I don't care if the code is optimized at editing time; in fact, I prefer it's not.\n\nOptimizing with tools such as the Closure compiler is a deployment task in my world, not something I need (or want) during development.\n\nI see this is a problem to be solved by the IDE, not by the compiler - post-processing the code with Closure compiler, or whatever tools you need/like for post-processing, is something the IDE can/should be able to do when you build your project.\n\nThere are too many tools (and too many opinions) for something like this to make sense as an integrated component in the compiler itself. It's not \"one shoe fits all\" by any means.\n",
+      "PostedDate": "2013-09-25T09:30:53.99-07:00",
+      "Id": 115623
+    },
+    {
+      "Message": "Google Closure is more than just another build step. To make good use of it, code annotations are beneficial. Since Typescript is to some extend annotated javascript, adding also Closure annoitations on top of the typescript code becomes weird. So the question is open how to achieve a smooth transition from typescript code to seriously optimized js output. For instance property flattening might be best accomplished already inside tsc.",
+      "PostedDate": "2013-10-03T05:38:32.737-07:00",
+      "Id": 117329
+    },
+    {
+      "Message": "I think the main issue is that true JavaScript doesn't have enough type information even by way of inference for a post-build step to achieve suitable optimization. I know that Java and .Net optimize at run time but C++ doesn't. C and C++ compilers like many others that don't produce type information need to optimize and compile time because that's where it's best.\n\nI think TypeScript in this case falls into the C++ category because most of the type information is lost when it's turned into JavaScript and therefore true optimization can *only* be done well by the TS compiler.\n\nFurthermore, a TypeScript project can be compiled as a unit rather than as an individual set of JS files. As such even things like removal of unused code is possible. Others have commented on the discussion thread that this is difficult for shared libraries which simply isn't true since the TypeScript project can consider and compile a series of TS files and produce a single output containing just the code it needs, whether one or multiple outputs.\n\nThe C++ compiler can optimize the output binary if it's working with the source files directly, but you wouldn't expect the same level of optimization of you only called into DLLs. Similarly, if you only consider the post-typed JavaScript for optimization you can't achieve optimal results. ",
+      "PostedDate": "2013-10-03T08:29:31.86-07:00",
+      "Id": 117341
+    },
+    {
+      "Message": "> I think the main issue is that true JavaScript doesn't have enough type information even by way of inference for a post-build step to achieve suitable optimization\n\nBy definition then neither does TypeScript - being a true superset of JavaScript, typing has to be optional, and that means type information may or may not be available; you can't count it.\n\nThat said, you could of course still do \"safe only\" optimizations, based on the type-information you do have available - but that doesn't really work as an argument for having these features integrated in the TypeScript compiler; an external post-processing tool could do the optimizations on TypeScript sources just as well...\n",
+      "PostedDate": "2013-10-04T15:11:36.457-07:00",
+      "Id": 117521
+    },
+    {
+      "Message": "This is not a question of \"type information\"\n\nWhy specify options on code visibility intent if we never utilize them. (I know the point is to ensure intent is followed by other programmers) It would make sense that the intent is to eventually support some type of smart optimization. It would be shame to not use the context we have in the TS files just to throw it away and generate larger than necessary JS files\n\nPost processing is fine, and has it so happens the only choice today, but there are optimizations that are just not possible without an understanding of intent, TSC and Closure+JSDOC allow for an expression of that intent so that a truly safe optimization can be preformed.\n\nI just don't understand why would we not want to support a flag on the compiler that could take advantage of the fact that it knows what can be optimized out of the output, why is it good enough to have all this info and then build a file, while in the processes throwing away every thing you know about the source, and then trust some other tool to figure out (guess) how to best optimize a file without the benefit of the programmers original intent, or to be forced into in-lining JSDOC comments into our already TS decorated code so that we can use Closure to do the same optimizations that could have been done as an option during the first pass in the compiler.",
+      "PostedDate": "2014-02-06T00:58:37.033-08:00",
+      "Id": 132801
+    },
+    {
+      "Message": "There is already a workitem on this tracker somewhere for the TS compiler to emit JSDoc's derived from the type information. (I believe the language service can consume existing JSDoc but the compiler doesn't generate any itself.) These JSDoc's can then be used by an optimizer like Google Closure Compiler. The TS compiler doesn't (and shouldn't) have to implement optimization itself.\n\nRegarding GCC-specific annotations: For the most part, GCC uses the same annotations as regular JSDoc's. For libraries (that need to maintain an API even if it's unused), the other thing GCC requires is to have a line such as ```window[\"namespace\"][\"export_name\"] = export_name;```  for all public exports so that it can rename identifiers yet leave the public API intact. If the TS compiler exposed a way to determine which identifiers have been marked with export (perhaps via a generated @exports JSDoc), a post-processor could generate that boilerplate too. (Then again, this is seldom necessary because GCC is supposed to be used to minify applications, not individual libraries, so that it can remove unused pieces of the libraries even if they're supposed to be exported).\n\nFor what it's worth, I used to have a pure JS project where I wanted to use GCC primarily for static analysis over minification, and the above limitation drove me to a combination of Typescript / UglifyJS / JSHint instead. TS handles the type errors, UglifyJS does some verification (unused vars, etc.), and minification (I have a custom pass to minify private variables). JSHint does some more verification. I do have hand-written JSDoc annotations but they're for generating docs, not for optimization. And since this is a library project and not an application, I don't require GCC's ability to drop unused code.",
+      "PostedDate": "2014-02-12T17:02:01.867-08:00",
+      "Id": 133437
+    }
+  ]
+}

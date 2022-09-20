@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "1261682",
+    "ThreadId": "550262",
+    "Html": "In TypeScript when compiled, the whole type system is erased, however in the case of generics, having type erasure remove all generic type declarations in the compiled js code could be a little problematic!<br />\nObviously you cannot have something like this in TypeScript:<br />\n<pre><code>function SomeMethod&lt;T&gt;(n: T) {\n    if (n instanceof T) {\n        // code implementation\n    }\n}</code></pre>\n\n.Net preserves generic type information in the compiled code by design so that full runtime introspection of generics is preserved and it's a good thing! However, I don't understand why designers of TypeScript decided to remove all generic type information at runtime?<br />\n<br />\nIf I understand it correctly, generics in TypeScript could be applied on classes, methods and interfaces. Given that types could be passed by reference in JavaScript, in each case generic type information could be preserved either by the use of type as an argument or explicit type definition.<br />\n<br />\nThe following TypeScript code:<br />\n<pre><code>interface ISomeInterface&lt;T&gt; {\n}\n\nclass SomeClass&lt;TClass&gt; implements ISomeInterface&lt;TClass&gt;{\n    SomeMethod&lt;TMethod&gt;(value: TMethod): void {\n    }\n}\n\nvar obj = new SomeClass&lt;number&gt;();\nobj.SomeMethod(&quot;hello&quot;);</code></pre>\n\ncould be compiled to this one (using type as argument):<br />\n<pre><code>var SomeClass = function () {\n    function SomeClass(TClass) {\n    }\n    SomeClass.prototype.SomeMethod = function (value, TMethod) {\n    };\n    return SomeClass;\n} ();\n\nvar obj = new SomeClass(Number);\nobj.SomeMethod(&quot;hello&quot;, String);</code></pre>\n\nor this one (using explicit type definition)<br />\n<pre><code>var SomeClass$number = function () {\n    var TClass = Number;\n    function SomeClass() {\n    }\n    SomeClass.prototype.SomeMethod = function (value) {\n        var TMethod = value == null ? String : value.constructor;\n    };\n    return SomeClass;\n} ();\n\nvar obj = new SomeClass$number();\nobj.SomeMethod(&quot;hello&quot;);</code></pre>\n\nAny ideas are appreciated...<br />\n",
+    "PostedDate": "2014-07-01T11:28:59.457-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262031",
+    "ThreadId": "550262",
+    "Html": "To get at the crux of what I think you're asking about, you want to be able to either pass types as first-class values or reflect from inside the function what type of generic it's being instantiated with?  As I'm sure you've noticed, neither is supported in TypeScript.\r<br />\n<br />\nPerhaps a couple words as to why and then a couple ways you might be able to do something similar:\r<br />\n<br />\nTypes aren't first-class values for functions because there isn't a runtime representation of a type in TypeScript.  In truth, that's also true of JavaScript, which TypeScript builds on.  For example, in JavaScript if you reflect on a function you find out it's a Function, but short of parsing the function code there aren't ways to get at exactly what the function type is.\r<br />\n<br />\nGeneric types can't be reflected for their shape in part because of the previous note about reflection but also because generics in TypeScript are modular.  Meaning from inside of a generic function the only thing you know about your generic type T is what the constraint says is available and nothing else.  This keeps you from piercing the veil, so that the API you document is the one you require.<br />\n\r<br />\nOne way to work with modular, erased generics would be to use generic constraints to slip a little bit of reflection in there yourself.  Something like:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">enum</span> ReflectionClass { AnimalClass, CatClass };\n\n<span style=\"color:Blue;\">interface</span> Reflection {\n  reflectionId: ReflectionClass;\n}\n\n<span style=\"color:Blue;\">function</span> SomeMethod&lt;T <span style=\"color:Blue;\">extends</span> Reflection&gt;(n: T) {\n    <span style=\"color:Blue;\">if</span> (n.reflectionId == ReflectionClass.AnimalClass) {\n        <span style=\"color:Green;\">// code implementation for Animals</span>\n    }\n}\r\n</pre></div>",
+    "PostedDate": "2014-07-02T09:37:53.783-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262076",
+    "ThreadId": "550262",
+    "Html": "I understand that there isn't a runtime representation of custom types in TypeScript or JavaScript, yet I believe there could be generic type information of some sort inside a compiled JavaScript instead of having type erasure wiping out all generic type info!<br />\n<br />\nTurns out any instance of a function (as class) reflects it's type through the <code>__proto__</code> property! I mean it's correct that you cannot get the type representation of any class in JavaScript using <code>typeof(class)</code> but <code>instanceof</code> operator always knows the true class type of an object by traversing its proto chain!<br />\n<br />\nBesides, I was only making a point by mentioning the lack of <code>instanceof</code> operator for generic types in TypeScript! Turns out there are other issues caused by generic type erasure:<br />\n<ul>\n<li>\nAll instances of generic classes have the exact same static members. Consider the following:<br />\nIf I have a generic class that has static data, then I expect each generic type to have its own copy of that static data. However, TypeScript keeps a single copy of the static data for all generic types. <br />\n</li>\n</ul>\n<pre><code>class SomeClass&lt;T&gt;{\n    private static count: number;\n}</code></pre>\n\n<ul>\n<li>\nThere could not be any <code>new()</code> operator for generic types as there is in C#:<br />\n</li>\n</ul>\n<pre><code>class ItemFactory&lt;T&gt;{\n    public getNewItem(): T {\n        return new T();\n    }\n}</code></pre>\n\n<ul>\n<li>Casting to or from a generic type is impossible:</li>\n</ul>\n<pre><code>class SomeClass {\n    OfType&lt;T&gt;(): T {\n        return &lt;T&gt;this;\n    }\n}</code></pre>\n\n",
+    "PostedDate": "2014-07-02T11:11:48.987-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262107",
+    "ThreadId": "550262",
+    "Html": "Even if we don't get generic types as parameters, it would be nice if the following would possible:<br />\n<pre><code>class SomeClass&lt;T&gt; {\n    constructor(type: typeof T) {\n        // use type T\n        var instance = new T();\n    }\n}\n\nvar myClass: SomeClass&lt;OtherClass&gt; = new SomeClass&lt;OtherClass&gt;(typeof OtherClass);</code></pre>\n\nThis would require that the type T was non-primitive, of course.<br />\n",
+    "PostedDate": "2014-07-02T12:20:03.48-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262167",
+    "ThreadId": "550262",
+    "Html": "There is something close to that already, though not as ideal as you posted:<br />\n<pre><code>class SomeClass&lt;T extends {new (...args): any}&gt; {\n    constructor(type: T) {\n        // use type T\n        var instance = new type();\n    }\n}\nclass OtherClass { }\nvar myClass = new SomeClass&lt;typeof OtherClass&gt;(OtherClass);</code></pre>\n\n",
+    "PostedDate": "2014-07-02T14:50:40.96-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1262230",
+    "ThreadId": "550262",
+    "Html": "That's not actually too awful, it seems.<br />\n",
+    "PostedDate": "2014-07-02T20:33:22.73-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

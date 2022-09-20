@@ -1,0 +1,58 @@
+[
+  {
+    "Id": "1109554",
+    "ThreadId": "462819",
+    "Html": "Just tried updating to the latest 'develop' branch and I'm noticing that all calls to functions declared like this are now breaking (this is from underscore.d.ts):<br />\n<pre><code>    export function memoize(\n        fn: Function,\n        hashFn?: (...args: any[]) =&gt; string): Function;</code></pre>\n\nI'm now seeing error messages like this:<br />\n<pre><code>Supplied parameters do not match any signature of call target:\n    Call signatures of types '(from: any, to: any) =&gt; string' and '(...args: any[]) =&gt; string' are incompatible:\n        Call signature expects 0 or fewer parameters.</code></pre>\n\nThe commonality in all these new errors seems to be a callback function with a specific return type but arbitrary arguments.  This pattern is used in underscore, backbone, etc...<br />\n\r<br />\nWhat is the new proper way to specify a callback function like this with the 'develop' compiler?<br />\n",
+    "PostedDate": "2013-10-19T12:48:45.69-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110160",
+    "ThreadId": "462819",
+    "Html": "Because rest parameters are equivalent to an infinite expansion of optional parameters the arguments for callbacks passed as implementations for this parameter type must also be optional. It's a little weird but optional params in callbacks are actually more restrictive than non-optional params, see <a href=\"https://typescript.codeplex.com/discussions/428458\" rel=\"nofollow\">https://typescript.codeplex.com/discussions/428458</a>. It may or may not be preferable to have some number of overloads where the callbacks have 1-n non-optional parameters.<br />\n",
+    "PostedDate": "2013-10-21T11:28:19.107-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110195",
+    "ThreadId": "462819",
+    "Html": "Ok, thanks for the explanation - I think I understand what you are saying.  So it sounds like the only alternative for the example above is to discard the information about the return type and just specify 'Function' since we don't know what the args are ahead of time:<br />\n<pre><code>    export function memoize(\n        fn: Function,\n        hashFn?: Function): Function;</code></pre>\n\nIs there any consideration of making Function generic on its return type?  Then we could do something like this:<br />\n<pre><code>    export function memoize&lt;T&gt;(\n        fn: Function&lt;T&gt;,\n        hashFn?: Function&lt;string&gt;): Function&lt;T&gt;;</code></pre>\n\n",
+    "PostedDate": "2013-10-21T12:40:41.76-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110242",
+    "ThreadId": "462819",
+    "Html": "You should be able to do something like this yourself with a generic type signature for memoize. For example:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> memoize&lt;T&gt;(x: Func&lt;T&gt;): Func&lt;T&gt;;\n\n<span style=\"color:Blue;\">interface</span> Func&lt;T&gt; {\n    (x: T): T;\n}\n\n<span style=\"color:Blue;\">function</span> doStuff(x: <span style=\"color:Blue;\">number</span>) {\n    <span style=\"color:Blue;\">return</span> x;\n}\n<span style=\"color:Blue;\">var</span> m = memoize(doStuff);\n<span style=\"color:Blue;\">var</span> r = m(2); <span style=\"color:Green;\">// r is number</span>\r\n</pre></div>Does that do what you want? I assume you would just prefer not to update all of underscore, backbone, etc to generic .d.ts files :)<br />\n",
+    "PostedDate": "2013-10-21T14:04:09.363-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110273",
+    "ThreadId": "462819",
+    "Html": "I'm not sure that does what I need.  The problem is that we don't know the input parameter(s) of the function ahead of time.  I was hoping something like this would work but it has the same issue:<br />\n<pre><code>    export function memoize&lt;T&gt;(\n        fn: GenericFunction&lt;T&gt;,\n        hashFn?: GenericFunction&lt;string&gt;): GenericFunction&lt;T&gt;;\n\n    interface GenericFunction&lt;T&gt; {\n        (...args: any[]): T;\n    }</code></pre>\n\n",
+    "PostedDate": "2013-10-21T15:04:22.23-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110551",
+    "ThreadId": "462819",
+    "Html": "Probably the best you can do for Underscore's memoize function is:<br />\n<div style=\"color:Black;background-color:White;\"><pre>\r\n<span style=\"color:Blue;\">declare</span> <span style=\"color:Blue;\">function</span> memoize&lt;T <span style=\"color:Blue;\">extends</span> Function&gt;(fn: T, hashFn?: Function): T;\r\n</pre></div>This will return you a function with the same signature you passed in--and for memoize that's really the thing that matters. There's no generic way to extract the parameters and/or return type from a function type, so the hashFn parameter is probably best left as just Function.<br />\n",
+    "PostedDate": "2013-10-22T06:47:51.92-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1110788",
+    "ThreadId": "462819",
+    "Html": "Ah yeah, good idea - thanks.  Ok, I'll update the definition files on DefinitelyTyped once the big regression from today is fixed so that I can verify the fix (my latest comment on <a href=\"http://typescript.codeplex.com/workitem/1807\" rel=\"nofollow\">http://typescript.codeplex.com/workitem/1807</a> talks about the new regression from today).<br />\n",
+    "PostedDate": "2013-10-22T14:34:10.017-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

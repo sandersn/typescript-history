@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "935157",
+    "ThreadId": "401523",
+    "Html": "\r\n<p>I have encountered 2 problems when using TypeScript with ExtJS:<br>\r\n1. It flag say Ext does not exist in the current context.</p>\r\n<p>2. The following is ok with ExtJs but not with TypeScript.. it says incompatible types in the array.<br>\r\n&nbsp;items: [{<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fieldLabel: 'Update',<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name: 'x',<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xtype: 'hidden'<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }, {<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fieldLabel: 'F1 Caption',<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name: 'F1',<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enforceMaxLength: true,<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; maxLength: 50,<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; readOnly: true,<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; allowBlank: false,<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fieldCls: 'required'<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</p>\r\n<p>The first I can set a variable to override.&nbsp; The second I wish there were a switch to just ignore so that I could get my javascript generated on the right.</p>\r\n",
+    "PostedDate": "2012-11-01T00:15:20.87-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935180",
+    "ThreadId": "401523",
+    "Html": "\r\n<p>1 - &nbsp;You need to create a declaration file for ExtJS. there is a project on Github todo this:</p>\r\n<p><a href=\"https://github.com/zz9pa/extjsTypescript\">https://github.com/zz9pa/extjsTypescript</a></p>\r\n<p>one small example:</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre>declare module Ext {\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">class</span> Panel {\n        constructor ();\n        width: number;\n        height: number;\n        title: string;\n        <strong>items: any[];</strong>\n        initComponent();\n        render(target : Node);\n    }\n\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">var</span> version: string;\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> onReady(fn: Function);\n    <span style=\"color:blue\">export</span> <span style=\"color:blue\">function</span> onReady(fn: Function, scope:any);\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>2 - items should be declared as any[]</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:green\">///&lt;reference path=&quot;../lib/ExtJS/ExtJS.d.ts&quot; /&gt;</span>\n\n<span style=\"color:blue\">class</span> Panel <span style=\"color:blue\">extends</span> Ext.Panel   { \n    initComponent() { \n    \n        <span style=\"color:blue\">this</span>.items = [{\n            fieldLabel: <span style=\"color:#a31515\">'Update'</span>,\n            name: <span style=\"color:#a31515\">'x'</span>,\n            xtype: <span style=\"color:#a31515\">'hidden'</span>\n        }, {\n            fieldLabel: <span style=\"color:#a31515\">'F1 Caption'</span>,\n            name: <span style=\"color:#a31515\">'F1'</span>,\n            enforceMaxLength: <span style=\"color:blue\">true</span>,\n            maxLength: 50,\n            readOnly: <span style=\"color:blue\">true</span>,\n            allowBlank: <span style=\"color:blue\">false</span>,\n            fieldCls: <span style=\"color:#a31515\">'required'</span>\n        }];\n        <span style=\"color:blue\">super</span>.initComponent();\n    }\n\n}\n</pre>\r\n</div>\r\n<p>&nbsp;</p>\r\n<p>You also need declare properties like &quot;title&quot; on constructor or initComponent. If you declare like following pattern it will not work:</p>\r\n<p>&nbsp;</p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">class</span> Panel <span style=\"color:blue\">extends</span> Ext.Panel   { \n    title = <span style=\"color:#a31515\">'myPanel'</span>;\n}\n</pre>\r\n</div>\r\n<p></p>\r\n<p></p>\r\n<div style=\"color:black; background-color:white\">\r\n<pre><span style=\"color:blue\">var</span> Panel = (<span style=\"color:blue\">function</span> (_super) {\n    __extends(Panel, _super);\n    <span style=\"color:blue\">function</span> Panel() {\n        _super.apply(<span style=\"color:blue\">this</span>, arguments); <span style=\"color:green\">// problem is here: calling Ext.Panel constructor before setting title</span>\n\n        <span style=\"color:blue\">this</span>.title = <span style=\"color:#a31515\">'myPanel'</span>;\n    }\n    <span style=\"color:blue\">return</span> Panel;\n})(Ext.Panel);\n</pre>\r\n</div>\r\n<p></p>\r\n",
+    "PostedDate": "2012-11-01T02:20:07.057-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "935538",
+    "ThreadId": "401523",
+    "Html": "<p>Thank-you.</p>\r\n<p>I checked out the project but it errors when I try to convert ext-all.js 4.1.1.&nbsp; Looks like it will take more work than I am able to give it.</p>\r\n<p>Wish that there were pre-converted list of files that one could download... like for ext-all.js download ext-all.ts</p>\r\n<p>&nbsp;</p>",
+    "PostedDate": "2012-11-01T20:29:35.34-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "992915",
+    "ThreadId": "401523",
+    "Html": "\r\n<p>I have just put together a blog on using ExtJs with TypeScript:</p>\r\n<p><a href=\"http://blorkfish.wordpress.com/2013/01/28/using-extjs-with-typescript/\">http://blorkfish.wordpress.com/2013/01/28/using-extjs-with-typescript/</a></p>\r\n<p>This of course is just my experience trying to get ExtJs code compiled and runnable with TypeScript.</p>\r\n<p>Have fun.</p>\r\n",
+    "PostedDate": "2013-01-27T23:51:11.143-08:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  },
+  {
+    "Id": "1273619",
+    "ThreadId": "401523",
+    "Html": "Hi,  I created a custom compiler for ExtJS. I'm going to be using it on several projects, and so I'll try to keep it up to date. It has a definition file for ExtJS 5 and the compiler will infers more of the ExtJs conventions and thus helps out more with intelisense when writing code. For example you can tell the compiler to infer a configuration interface that you can use to pass to the constructor, and then you get help when calling the constructor. Since the typescript language service can be changed for visual studio by changing the typescriptServices.js the changes are available right from Visual Studio. \r<br />\n<br />\n<a href=\"https://typescript4extjs.codeplex.com/\" rel=\"nofollow\">https://typescript4extjs.codeplex.com/</a><br />\n",
+    "PostedDate": "2014-07-17T09:24:57.877-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

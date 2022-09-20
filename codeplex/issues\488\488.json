@@ -1,0 +1,70 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "As part of our move to GitHub, we're closing our CodePlex suggestions and asking that people move them to the GitHub issue tracker for further discussion.  Some feature requests may already be active on GitHub, so please make sure to look for an existing issue before filing a new one.\n\nYou can find our GitHub issue tracker here:\nhttps://github.com/microsoft/typeScript/issues\n",
+    "ClosedDate": "2014-07-28T15:17:22.673-07:00",
+    "CommentCount": 6,
+    "Custom": "lukeh",
+    "Description": "```TypeScript\r\n\"use strict\";\r\nclass SomeClass\r\n{\r\n\tpublic get someProperty():string\r\n\t{\r\n\t\treturn \"some value\";\r\n\t}\r\n}\r\nvar someInstance = new SomeClass();\r\nsomeInstance.someProperty = \"another value\"; //Run-time error. ECMAScript 5.1 - 11.13.1\r\n```\r\n\r\nTested with compiler version 0.8.1.0 and --target ES5\r\n\r\nEdited: previously, I forgot to mention compiler's --target option value.",
+    "LastUpdatedDate": "2017-11-27T11:51:33.707-08:00",
+    "PlannedForRelease": "TypeScript 1.x",
+    "ReleaseVisibleToPublic": true,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2012-11-24T08:35:29.917-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "External"
+    },
+    "Summary": "Compiler allows assignments to read-only properties in strict mode",
+    "Type": {
+      "Name": "Feature",
+      "Id": 1
+    },
+    "VoteCount": 14,
+    "Id": 488
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Luke - what do we want the behavior to be here?",
+      "PostedDate": "2012-11-26T09:59:55.033-08:00",
+      "Id": 83018
+    },
+    {
+      "Message": "We currently allow this because we don't have a notion of 'readonly' in the typesystem.  The problem is that adding readonly values to the type system does a few things we wanted to avoid:\n\n* It begins to enforce a readonly vs readwrite separation, which works its way into our assignment compatibility rules, complicating them\n* It's unclear how much becomes readonly by default.  For example, to member functions become readonly?  \n* It's also unclear how long readonly doesn't apply for.  For example, in a constructor is readonly observed?  If so, how do you safely initialize?\n\nWe went down this path when designing the 'readonly' feature, but ended up backing out because of the complexity it introduced.",
+      "PostedDate": "2013-03-07T16:29:43.843-08:00",
+      "Id": 92618
+    },
+    {
+      "Message": "I was just trying to set readonly properties up when I hit this problem.  I first tried:\n\n```\n\tpublic get val(): number {return this._val;}\n\tprivate set val(v: number) {this._val = v;}\n```\n\nso that I could have a property that the class can set internally but the rest of the code can't: they can only read it.  But TypeScript gives an error saying the visibility of getters and setters has to be the same - why on Earth is that?  C# has the \"{get; private set;}\" syntax for a reason.  It is often very handy to have a calculated property that you don't want setting, yet when using properties it's easy for the client code to try to set it accidentally and you want a compile-time error for that.\n\nI'm going to have to end up doing something like:\n\n```\n\tpublic get_val(): number {return this._val;}\n\tprivate set_val(v: number): void {this._val = v;}\n```\n\nwhich defeats the object of using properties because now all the client code has to write code that looks like function calls:\n\n```\n\t// var v: number = my_obj.val;  // TypeScript won't let me do this...\n\tvar v: number = my_obj.get_val();\n```\n\nand inside the class it's messier too:\n\n```\n\t// this.val = v;        // TypeScript won't let me do this...\n\tthis.set_val(v);\n```\n\nAny chance of simply allowing private setters alongside public getters, and generating an error if code outside the class attempts to call the private setter using property-set syntax?",
+      "PostedDate": "2013-03-15T05:29:44.643-07:00",
+      "Id": 93362
+    },
+    {
+      "Message": "Are there any plans to do this? I would be extremely happy if there were read-only properties.\nIt would make writing and using immutable classes much easier...\nAnd while we're at it, it would be great if these read-only properties could also be part of an interface.\nThanks.",
+      "PostedDate": "2014-04-09T05:46:11.123-07:00",
+      "Id": 141174
+    },
+    {
+      "Message": "The other way around is true too. TS allows reading set-only properties.\n\n```\nclass Foo {\n    set bar(value: number) {\n        console.log(value);\n    }\n}\n\nvar baz = new Foo();\nconsole.log(baz.bar);\n```\n\ncompiles without any errors. This is made worse by the fact that \"use strict\" allows it too.",
+      "PostedDate": "2014-04-18T20:19:44.923-07:00",
+      "Id": 142395
+    },
+    {
+      "Message": "Moved to https://github.com/Microsoft/TypeScript/issues/339",
+      "PostedDate": "2014-08-02T02:25:45.383-07:00",
+      "Id": 154225
+    }
+  ]
+}

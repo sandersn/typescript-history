@@ -1,0 +1,50 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "Thanks for reporting this. This is indeed a construct used by typescript to allow you to map existing javascript libraries to a d.ts file, and is not meant to be implemented.",
+    "ClosedDate": "2013-02-11T10:40:36.57-08:00",
+    "CommentCount": 2,
+    "Custom": null,
+    "Description": "```\r\ninterface ListInterface {\r\n    getObject(index: number): Object;\r\n    [index: number]: Object;\r\n}\r\n\r\nclass List123 implements ListInterface {\r\n    private list: Object[] = [1,2,3];\r\n    getObject(index: number) { return this.list[index] }\r\n    [index: number] { return this.getObject(index) }\r\n}\r\n```\r\n\r\nbut tsc is not liking the  __[index: number]__ class definition . . .\r\n\r\n[Link to this question on stackexchange](http://stackoverflow.com/questions/14791550/how-to-implement-array-signature-method-in-typescript)",
+    "LastUpdatedDate": "2013-02-11T10:40:36.57-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-02-09T13:59:45.517-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Trying to get [ ] property accessor implementation to compile",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 712
+  },
+  "FileAttachments": [],
+  "Comments": [
+    {
+      "Message": "Fixed link: [Link to this question on stackexchange](http://stackoverflow.com/questions/14791550/how-to-implement-array-signature-method-in-typescript )",
+      "PostedDate": "2013-02-09T14:01:10.753-08:00",
+      "Id": 88973
+    },
+    {
+      "Message": "Some type annotations are there for defining JavaScript behaviour and cannot be implemented - the indexer annotation is one such example.\n\nPlease refer to [the related discussion](http://typescript.codeplex.com/discussions/398379).\n\nFor the code sample provided in the question, there is a partial solution because JavaScript objects naturally support indexer notation. Hence one can write:\n\n```\ninterface ListInterface {\n    getObject(index: number): Object;\n}\n\nclass List123 implements ListInterface {\n\n    getObject(index: number) { \n        return <Object> this[index] \n    }\n}\n\nvar list  = new List123();\nlist[1] = \"my object\";\n\nconsole.log(list[1]); // \"my object\"\nconsole.log(list.getObject(1)); // \"my object\";\n\n```",
+      "PostedDate": "2013-02-10T05:17:07.137-08:00",
+      "Id": 88992
+    }
+  ]
+}

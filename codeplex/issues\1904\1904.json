@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "The fix should be visible in the upcoming release. Thanks!",
+    "ClosedDate": "2014-03-31T17:31:34.777-07:00",
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "The following code:\r\n\r\n```\r\nimport ITest = require('ITest');\r\n\r\nclass Test {\r\n  public testing() {\r\n    var testData: ITest[];\r\n    var name = testData[0].name;\r\n  }\r\n}\r\n\r\nexport = Test;\r\n```\r\n\r\nRenders to (AMD): \r\n```\r\ndefine([\"require\", \"exports\", 'ITest'], function(require, exports, __ITest__) {\r\n    var ITest = __ITest__;\r\n\r\n    var Test = (function () {\r\n        function Test() {\r\n        }\r\n        Test.prototype.testing = function () {\r\n            var testData;\r\n\r\n            var name = testData[0].name;\r\n        };\r\n        return Test;\r\n    })();\r\n\r\n    return Test;\r\n});\r\n\r\n```\r\n\r\nNote that the import statement for the interface is being rendered out to the .js where normally anything to do with the interface is compiled out. \r\n\r\nThis is causing an issue for us currently as we're using common interface files in both client (AMD) and server (commonJS) which have incompatible compiled code.\r\n\r\nOur current work around is to declare another interface which specifies an array of the first interface and use that instead of specifying a variable of \"interface[]\".\r\n\r\ne.g. \r\n\r\n```\r\ninterface ITest {\r\n}\r\nexport = ITest;\r\n\r\n-----\r\n\r\ninterface ITestArray {\r\n  tests: ITest[];\r\n}\r\nexport = ITestArray;\r\n\r\n-----\r\n\r\nclass Test {\r\n  public testing() {\r\n    var testData: ITestArray;\r\n    var name = testData.Tests[0].name;\r\n  }\r\n}\r\nexport = Test;\r\n```\r\n\r\nWhich stops the interface import from being rendered into the .js file.",
+    "LastUpdatedDate": "2017-11-27T11:51:34.217-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "typescript",
+    "ReportedDate": "2013-11-18T07:04:44.187-08:00",
+    "Status": {
+      "Name": "Closed",
+      "Id": 4
+    },
+    "ReasonClosed": {
+      "Name": "Fixed"
+    },
+    "Summary": "Array of interface causes interface import to be rendered to JS",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 1904
+  },
+  "FileAttachments": [],
+  "Comments": []
+}
