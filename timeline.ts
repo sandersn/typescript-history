@@ -26,7 +26,7 @@ function mermaid(events: Events, title: string) {
       day: "numeric",
     });
     if (isRelease(event)) {
-      s += `    ${d}: ${event.version} -- ${event.description} ${event.link}\n`;
+      s += `    ${d}: ${event.version} -- ${event.description} ${event.link.replace("https://", "")}\n`;
     } else {
       s += `    ${d}: ${event.title} -- ${event.description}\n`;
     }
@@ -63,6 +63,7 @@ export const releases: Releases = [
     version: "0.8",
     title: "TypeScript 0.8 Released",
     description: `The beta version of Typescript is released for public consumption.`,
+    // TODO: This HAS to be on youtube somewhere
     link: "MSDN video is no longer available",
   },
   {
