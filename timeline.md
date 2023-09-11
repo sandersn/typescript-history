@@ -1,8 +1,13 @@
 ## Timeline of Typescript releases
 
-<iframe src="https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=16h0z4yzl2jevHlLQ_gkV_tG2ZuXpRPGkiqk4soAo79c&font=Default&lang=en&initial_zoom=0&height=650" width="100%" frameborder="0"></iframe>
-
-
+<link title="timeline-styles" rel="stylesheet" 
+              href="https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+<script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+<div id='timeline-embed' style="width: 100%; height: 600px"></div>
+<script type="text/javascript">
+            timeline = new TL.Timeline('timeline-embed',
+            { events: [{ start_date: { year: 2012, month: 12, day: 10 }, text: { headline: "H", text: "much longgger text is long" } }] });
+        </script>
 ```mermaid
 timeline
     title Typescript releases
