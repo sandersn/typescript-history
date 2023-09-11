@@ -5,11 +5,30 @@ type Event = {
     notes?: string,
     skip?: boolean,
 }
-type Events = Array<Event>
-type Releases = Array<Event & {
+type Release = Event & {
     version: string,
     link: string,
-}>
+}
+type Events = Array<Event>
+type Releases = Array<Release>
+function isRelease(e: Event): e is Release {
+    return 'version' in e && 'link' in e
+}
+function mermaid(events: Events, title: string) {
+    let s = "```mermaid\ntimeline\n    title " + title + "\n"
+    for (const event of events) {
+        if (event.skip) { continue}
+        const d = new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: "long", day: 'numeric' })
+        if (isRelease(event)) {
+            s += `    ${d}: ${event.version}; ${event.description} ${event.link}\n`
+        }
+        else {
+            s += `    ${d}: ${event.title}; ${event.description}\n`
+        }
+    }
+    s += "```"
+    return s
+}
 export const external: Events = [{
     date: "2012/10/05",
     title: "First commit in Definitely Typed",
@@ -32,20 +51,20 @@ export const releases: Releases = [{
     date: "2012/10/01",
     version: "0.8",
     title: "TypeScript 0.8 Released",
-    description: `Initial release of TypeScript`,
+    description: `The beta version of Typescript is released for public consumption.`,
     link: "MSDN video is no longer available",
 }, {
     date: "2012/11/15",
     version: "0.8.1",
     title: "TypeScript 0.8.1 Released",
-    description: "Adds source map support.",
+    description: "This is the first update to Typescript. It introduced source map support (called Source Level Debugging).",
     link: "https://devblogs.microsoft.com/typescript/announcing-typescript-0.8.1",
     notes: "Post links to Definitely Typed."
 }, {
     date: "2012/12/05",
     version: "0.8.1.1",
     title: "TypeScript 0.8.1.1 Released",
-    description: "Bug fixes for source map support.",
+    description: "Performance fixes and bug fixes for source map support.",
     link: "https://devblogs.microsoft.com/typescript/announcing-typescript-0-8-1-1/",
     skip: true,
 }, {
@@ -97,8 +116,8 @@ export const releases: Releases = [{
 }, {
     date: "2013/09/09",
     version: "Visual Studio 2013 RC",
-    title: "Visual Studio 2013 RC includes TypeScript 0.9.1.1",
-    description: "",
+    title: "Visual Studio 2013 RC",
+    description: "Visual Studio 2013 RC includes TypeScript 0.9.1.1",
     link: "https://devblogs.microsoft.com/typescript/visual-studio-2013-rc/",
     skip: true,
 }, {
@@ -143,3 +162,7 @@ export const releases: Releases = [{
     link: "https://devblogs.microsoft.com/typescript/announcing-typescript-1-3/",
     notes: "The new language service works better with nested functions, referred to as 'support for functional programming style'.",
 }]
+console.log("## Timeline of Typescript releases\n")
+console.log(mermaid(releases, "Typescript releases"))
+console.log("\n## Timeline of Internal Typescript discussions\n")
+console.log("\n### Timeline of External Events Relevant to Typescript\n")
