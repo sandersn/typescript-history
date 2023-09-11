@@ -1,5 +1,8 @@
 ## Timeline of Typescript releases
 
+<iframe src="https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=16h0z4yzl2jevHlLQ_gkV_tG2ZuXpRPGkiqk4soAo79c&font=Default&lang=en&initial_zoom=0&height=650" width="100%" frameborder="0"></iframe>
+
+
 ```mermaid
 timeline
     title Typescript releases
