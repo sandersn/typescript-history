@@ -6,7 +6,7 @@ timeline
     October 1, 2012: 0.8 -- The beta version of Typescript is released for public consumption. MSDN video is no longer available
     November 15, 2012: 0.8.1 -- This is the first update to Typescript. It introduced source map support (called Source Level Debugging). devblogs.microsoft.com/typescript/announcing-typescript-0.8.1
     January 21, 2013: 0.8.2 -- JSDoc support, compile-on-save, more configurability. devblogs.microsoft.com/typescript/announcing-typescript-0-8-2/
-    February 27, 2013: 0.8.3 -- improved quick info; other improvements in the type system and debugger devblogs.microsoft.com/typescript/announcing-typescript-0-8-3/
+    February 27, 2013: 0.8.3 -- improved quick info. other improvements in the type system and debugger devblogs.microsoft.com/typescript/announcing-typescript-0-8-3/
     June 18, 2013: 0.9 -- Generics, overloading on string literals, export=, enums, namespace merging, re-engineered compiler. devblogs.microsoft.com/typescript/announcing-typescript-0-9/
     August 6, 2013: 0.9.1 -- Improved performance, `typeof`, noImplicitAny devblogs.microsoft.com/typescript/announcing-typescript-0-9-1/
     December 5, 2013: 0.9.5 -- Improved performance, VS project settings, _references.ts devblogs.microsoft.com/typescript/announcing-typescript-0-9-5/

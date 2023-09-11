@@ -26,9 +26,9 @@ function mermaid(events: Events, title: string) {
       day: "numeric",
     });
     if (isRelease(event)) {
-      s += `    ${d}: ${event.version} -- ${event.description} ${event.link.replace("https://", "")}\n`;
+      s += `    ${d}: ${event.version} -- ${event.description.replace(';', '.')} ${event.link.replace("https://", "")}\n`;
     } else {
-      s += `    ${d}: ${event.title} -- ${event.description}\n`;
+      s += `    ${d}: ${event.title} -- ${event.description.replace(';', '.')}\n`;
     }
   }
   s += "```";
