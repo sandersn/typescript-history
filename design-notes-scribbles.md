@@ -560,7 +560,7 @@ Quick notes as I dump the design notes 2011-2014 to PDF.
 
 ## 2013/09/11
 
-New notetaker: Jonathan Turner!
+New notetaker: JT!
 
 - small spec questions
 - enums are *still* inlined by default
