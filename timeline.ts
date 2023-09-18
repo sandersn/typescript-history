@@ -94,7 +94,7 @@ function toTimelineEvent(event: Event) {
       headline: isRelease(event) ? event.version : event.title,
       text:
         event.description +
-        (isRelease(event)
+        (event.link
           ? `<br/><a href="${event.link}">${event.link}</a>`
           : ""),
     },
@@ -194,11 +194,58 @@ export const external: Events = [
 ]
 export const internal: Events = [
   {
-    date: "2012/12/18",
-    title: "Move build to jake",
-    description: "Move build from nmake to jake.",
-    notes: `Mentioned in [this blog post](https://devblogs.microsoft.com/typescript/working-on-0-8-2/).
-    Initial commit is https://github.com/sandersn/typescript-codeplex/commit/09e212f08fcbd6b767994d0f1fd30562eaae0640`,
+    date: "2011/01/21",
+    title: "First design meeting notes",
+    description: "\"Status: get prototype running again.\"<br/> commitment to structural typing from day 1",
+    link: "design-notes/2011:01:21.pdf",
+  },
+  {
+    date: "2011/02/26",
+    title: "Plans for architecture and timeline",
+    description: "<ul><li>Architecture: C++ compiler first, then add an open-source JS one</li><li>Timeline: Annoucement at MIX 2012. This would have been spring 2012, but Mix was a web-focussed developer conference that was cancelled in 2012.</li></ul>",
+    link: "design-notes/2011:02:26.pdf",
+  },
+  {
+    date: "2011/03/14",
+    title: "List of types now includes <tt>any</tt>",
+    description: "Probably the first mention of <tt>any</tt> in the design notes.",
+    link: "design-notes/2011:03:14.pdf",
+  },
+  {
+    date: "2011/04/11",
+    title: "First mention of postfix types",
+    description: "Associated with discussion of how people will want type inference.",
+    link: "design-notes/2011:04:11.pdf",
+  },
+  {
+    date: "2011/05/02",
+    title: "Specific release schedule",
+    description: "Finish by August 2011, announce at MIX 2012.<ul><li>self-hosted compiler</li><li>editor and debugger support</li><li>Windows 8 type definitions</li><li>Playground</li><li>Documentation</li><li>Marketing</li></ul>",
+    link: "design-notes/2011:05:02.pdf",
+  },
+  {
+    date: "2011/05/16",
+    title: "First mention of noImplicitAny",
+    description: "In a discussion on the details of typing.",
+    link: "design-notes/2011:05:16.pdf",
+  },
+  {
+    date: "2011/08/05",
+    title: "First mention of contextual typing as well as ambient declarations",
+    description: "Alongside a discussion of how generics should work.",
+    link: "design-notes/2011:08:05.pdf",
+  },
+  {
+    date: "2011/08/19",
+    title: "First draft of lib.d.ts",
+    description: "Attached to the notes.",
+    link: "design-notes/2011:08:19.pdf",
+  },
+  {
+    date: "2011/09/30",
+    title: "First mention of variance",
+    description: "Alongside an official postponing unions for later.",
+    link: "design-notes/2011:09:30.pdf",
   },
   {
     date: "2014/07/21",

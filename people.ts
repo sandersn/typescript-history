@@ -27,7 +27,7 @@ const people: People = [
   },
   { name: "Jason Freeman", abbreviation: "JF", role: "Engineer, 201x-2015" },
   {
-    name: "Jonathan Turner",
+    name: "JT",
     abbreviation: "JT",
     role: "Program Manager, 2012-2015",
     otherRoles: "Rust PM afterward",
